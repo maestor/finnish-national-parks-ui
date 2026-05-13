@@ -1,4 +1,9 @@
+import { ParkMap } from "@/components/map/park-map";
+import { apiFetch } from "@/lib/api";
+import type { paths } from "@/lib/api-types";
 import { getTranslations } from "next-intl/server";
+
+export const dynamic = "force-dynamic";
 
 export const generateMetadata = async () => {
   const t = await getTranslations("home");
@@ -7,14 +12,24 @@ export const generateMetadata = async () => {
   };
 };
 
+type Park =
+  paths["/api/parks"]["get"]["responses"][200]["content"]["application/json"]["parks"][number];
+
 const HomePage = async () => {
-  const t = await getTranslations("home");
+  let parks: Park[] = [];
+  let error: string | null = null;
+
+  try {
+    const data = await apiFetch<{ parks: Park[] }>("/api/parks");
+    parks = data.parks;
+  } catch (e) {
+    error = e instanceof Error ? e.message : "Tuntematon virhe";
+  }
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center p-8">
-      <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
-      <p className="mt-4 text-muted-foreground">{t("description")}</p>
-    </div>
+    <main className="flex flex-1 flex-col min-h-0">
+      <ParkMap parks={parks} error={error} />
+    </main>
   );
 };
 

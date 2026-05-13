@@ -3,7 +3,9 @@ import { expect, test } from "@playwright/test";
 test("home page loads", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveTitle(/Suomen kansallispuistot/);
-  await expect(page.getByRole("heading", { name: /Suomen kansallispuistot/i })).toBeVisible();
+  await expect(
+    page.getByRole("application", { name: /Suomen kansallispuistojen kartta/i }),
+  ).toBeVisible();
 });
 
 test("control panel page loads", async ({ page }) => {
