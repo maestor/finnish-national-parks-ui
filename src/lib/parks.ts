@@ -9,6 +9,7 @@ export type PersonalPark =
 export type MapPark = Park & {
   visitedSummary?: {
     visited: boolean;
+    visitCount?: number;
   };
 };
 

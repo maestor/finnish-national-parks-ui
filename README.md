@@ -123,3 +123,7 @@ The app is configured as a Progressive Web App using `@serwist/turbopack`, which
 - **Finnish UI copy** — All user-facing text is in Finnish via `next-intl`
 - **Accessibility first** — Semantic HTML, ARIA labels, keyboard navigation, `prefers-reduced-motion` support
 - **Backend boundary is sacred** — No direct DB access; all data flows through the Hono API
+
+## Roadmap
+
+- **Park boundary map** — Render individual park boundaries on a dedicated map view using the `boundaryGeoJson` data already available from the API.

@@ -25,7 +25,18 @@
     "detailTitle": "Puiston tiedot",
     "visitHistory": "Käyntihistoria",
     "notes": "Muistiinpanot",
-    "officialLink": "Luontoon.fi-sivu"
+    "officialLink": "Luontoon.fi-sivu",
+    "type": "Tyyppi",
+    "location": "Sijainti",
+    "area": "Pinta-ala",
+    "established": "Perustettu",
+    "noVisits": "Ei vielä käyntejä.",
+    "addVisit": "Kirjaa käynti",
+    "showDetails": "Näytä lisätiedot",
+    "hideDetails": "Piilota lisätiedot",
+    "noDetails": "Ei lisätietoja",
+    "detailsTitle": "Lisätiedot",
+    "visitNumber": "{number}. käynti"
   },
   "controlPanel": {
     "title": "Hallintapaneeli",
@@ -99,7 +110,9 @@
     "loading": "Ladataan karttaa...",
     "loadError": "Karttatietojen lataus epäonnistui",
     "established": "Perustettu",
-    "officialLink": "Luontoon.fi"
+    "officialLink": "Luontoon.fi",
+    "visits": "Vierailut",
+    "addVisit": "Lisää"
   },
   "errors": {
     "generic": {

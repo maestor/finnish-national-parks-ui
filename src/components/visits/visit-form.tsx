@@ -14,14 +14,15 @@ import remarkGfm from "remark-gfm";
 interface VisitFormProps {
   parks: Park[];
   visitToEdit?: VisitWithPark;
+  defaultParkSlug?: string;
 }
 
-export const VisitForm = ({ parks, visitToEdit }: VisitFormProps) => {
+export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProps) => {
   const t = useTranslations("controlPanel.visits.form");
   const router = useRouter();
   const isEditing = !!visitToEdit;
 
-  const [parkSlug, setParkSlug] = useState(visitToEdit?.parkSlug ?? "");
+  const [parkSlug, setParkSlug] = useState(visitToEdit?.parkSlug ?? defaultParkSlug ?? "");
   const [visitedOn, setVisitedOn] = useState(visitToEdit?.visitedOn ?? "");
   const [note, setNote] = useState(visitToEdit?.note ?? "");
   const [isPreview, setIsPreview] = useState(false);

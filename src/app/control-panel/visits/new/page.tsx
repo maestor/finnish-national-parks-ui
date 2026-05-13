@@ -10,15 +10,20 @@ export const generateMetadata = async () => {
   };
 };
 
-const NewVisitPage = async () => {
+interface NewVisitPageProps {
+  searchParams: Promise<{ park?: string }>;
+}
+
+const NewVisitPage = async ({ searchParams }: NewVisitPageProps) => {
   const t = await getTranslations("controlPanel.visits.newVisit");
+  const { park } = await searchParams;
   const { parks } = await apiFetch<{ parks: Park[] }>("/api/parks");
 
   return (
     <div>
       <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
       <p className="mt-2 text-muted-foreground">{t("description")}</p>
-      <VisitForm parks={parks} />
+      <VisitForm parks={parks} defaultParkSlug={park} />
     </div>
   );
 };
