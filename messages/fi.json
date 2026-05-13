@@ -31,7 +31,22 @@
     "title": "Hallintapaneeli",
     "dashboard": {
       "title": "Yleiskatsaus",
-      "description": "Käyntiesi ja puistotilastojen yhteenveto."
+      "description": "Käyntiesi ja puistotilastojen yhteenveto.",
+      "stats": {
+        "totalVisits": "Käyntejä yhteensä",
+        "uniqueParks": "Käytyjä puistoja",
+        "parksWithNotes": "Muistiinpanoja",
+        "mostVisited": "Eniten käyty"
+      },
+      "progress": {
+        "title": "Puistotyypit",
+        "visitedOfTotal": "{visited} / {total}"
+      },
+      "recentVisits": {
+        "title": "Viimeisimmät käynnit",
+        "viewAll": "Näytä kaikki",
+        "noVisits": "Ei vielä kirjattuja käyntejä."
+      }
     },
     "visits": {
       "title": "Käynnit",
