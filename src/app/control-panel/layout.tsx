@@ -1,14 +1,10 @@
 import { getTranslations } from "next-intl/server";
 
-const ControlPanelLayout = async ({
-  children,
-}: {
-  children: React.ReactNode;
-}) => {
+const ControlPanelLayout = async ({ children }: { children: React.ReactNode }) => {
   const t = await getTranslations("controlPanel");
 
   return (
-    <div className="container flex flex-1 flex-col gap-8 py-8 md:flex-row">
+    <div className="container flex flex-1 flex-col gap-8 py-8 md:flex-row mx-auto">
       <aside className="w-full md:w-64">
         <nav className="flex flex-col gap-2" aria-label={t("title")}>
           <a
