@@ -173,6 +173,10 @@ export const ParkMap = ({ parks, error }: ParkMapProps) => {
       zoom: FINLAND_ZOOM,
       minZoom: 3,
       maxZoom: 16,
+      maxBounds: [
+        [0.0, 51.0],
+        [60.0, 71.0],
+      ],
     });
 
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
