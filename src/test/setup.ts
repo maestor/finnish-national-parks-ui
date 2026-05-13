@@ -11,6 +11,7 @@ vi.mock("@/lib/env", () => ({
 }));
 
 vi.mock("next/navigation", () => ({
+  usePathname: () => "/",
   useRouter: () => ({ push: vi.fn() }),
 }));
 

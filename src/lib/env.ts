@@ -2,8 +2,10 @@ import { z } from "zod";
 
 const envSchema = z.object({
   NEXT_PUBLIC_API_URL: z.string().url(),
-  API_KEY: z.string().min(1),
+  API_KEY: z.string().min(1).optional(),
   NEXT_PUBLIC_MAP_STYLE_URL: z.string().url().optional(),
+  AUTH_JWT_SECRET: z.string().min(1).optional(),
+  AUTH_COOKIE_NAME: z.string().min(1).default("__session"),
 });
 
 type Env = z.infer<typeof envSchema>;
@@ -17,6 +19,8 @@ const validateEnv = (): Env => {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
     API_KEY: process.env.API_KEY,
     NEXT_PUBLIC_MAP_STYLE_URL: process.env.NEXT_PUBLIC_MAP_STYLE_URL,
+    AUTH_JWT_SECRET: process.env.AUTH_JWT_SECRET,
+    AUTH_COOKIE_NAME: process.env.AUTH_COOKIE_NAME,
   });
 
   if (!parsed.success) {

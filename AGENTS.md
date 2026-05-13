@@ -1,5 +1,15 @@
 # Agent Instructions
 
+## Start of Session
+
+When beginning work on this project, **read these documents first** (in order):
+
+1. `docs/DEVELOPMENT.md` — setup, architecture, scripts, auth flow
+2. `docs/TESTING.md` — testing strategy, TDD workflow, project-specific patterns
+3. `README.md` — if you need human-oriented context
+
+Then consult this `AGENTS.md` for coding conventions and workflow rules.
+
 ## Project Context
 
 This is the **Finnish National Parks UI** — a Next.js 16 App Router application consuming a Hono backend API. It is a personal project with two main audiences: a public map view and an admin control panel.
@@ -15,6 +25,10 @@ The correct sequence is:
 2. Run verification (`npm run verify`)
 3. Present a summary of changes for user review
 4. Only commit and push after explicit user approval
+
+### Do Not Launch Dev Server
+
+**Never start `npm run dev` or any local server on your own.** If a running dev server is needed for browser verification, testing, or any other purpose, use an existing one or ask the user to launch it. Do not leave background processes running.
 
 ## Coding Conventions
 

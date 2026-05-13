@@ -7,7 +7,9 @@
     "siteTitle": "Suomen kansallispuistot",
     "nav": {
       "map": "Kartta",
-      "controlPanel": "Hallintapaneeli"
+      "controlPanel": "Hallinta",
+      "login": "Kirjaudu",
+      "logout": "Kirjaudu ulos"
     },
     "themeToggle": {
       "light": "Vaihda vaaleaan teemaan",
@@ -40,6 +42,12 @@
         "description": "Kirjaa uusi käynti kansallispuistoon."
       }
     }
+  },
+  "auth": {
+    "login": "Kirjaudu",
+    "loginToControlPanel": "Kirjaudu hallintaan",
+    "logout": "Kirjaudu ulos",
+    "accessDenied": "Ei hallintaoikeutta."
   },
   "map": {
     "ariaLabel": "Suomen kansallispuistojen kartta",
