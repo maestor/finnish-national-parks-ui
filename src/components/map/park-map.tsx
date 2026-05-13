@@ -10,6 +10,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 interface ParkMapProps {
   parks: MapPark[];
   error?: string | null;
+  isAuthenticated?: boolean;
 }
 
 const FINLAND_CENTER: [number, number] = [26.0, 65.0];
@@ -66,9 +67,15 @@ const createMarkerElement = (park: MapPark) => {
 interface PopupLabels {
   established: string;
   officialLink: string;
+  visits: string;
+  addVisit: string;
 }
 
-const createPopupNode = (park: MapPark, labels: PopupLabels): HTMLElement => {
+const createPopupNode = (
+  park: MapPark,
+  labels: PopupLabels,
+  isAuthenticated: boolean,
+): HTMLElement => {
   const container = document.createElement("div");
   container.className = "p-3 max-w-[260px]";
 
@@ -118,22 +125,49 @@ const createPopupNode = (park: MapPark, labels: PopupLabels): HTMLElement => {
 
   container.appendChild(details);
 
+  const footer = document.createElement("div");
+  footer.className = "mt-2 flex items-center gap-2 text-xs";
+
+  const visitCount = park.visitedSummary?.visitCount ?? 0;
+  const visitsLink = document.createElement("a");
+  visitsLink.href = `/park/${park.slug}`;
+  visitsLink.className = "font-medium text-primary hover:underline";
+  visitsLink.textContent = `${labels.visits} (${visitCount})`;
+  visitsLink.addEventListener("click", (e) => e.stopPropagation());
+  footer.appendChild(visitsLink);
+
   if (park.luontoonUrl) {
+    const separator = document.createElement("span");
+    separator.className = "text-muted-foreground";
+    separator.textContent = "|";
+    footer.appendChild(separator);
+
     const link = document.createElement("a");
     link.href = park.luontoonUrl;
     link.target = "_blank";
     link.rel = "noopener noreferrer";
-    link.className =
-      "mt-2 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline";
+    link.className = "inline-flex items-center gap-1 font-medium text-primary hover:underline";
     link.innerHTML = `${labels.officialLink}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>`;
     link.addEventListener("click", (e) => e.stopPropagation());
-    container.appendChild(link);
+    footer.appendChild(link);
   }
+
+  if (isAuthenticated) {
+    const addLink = document.createElement("a");
+    addLink.href = `/control-panel/visits/new?park=${park.slug}`;
+    addLink.className =
+      "ml-auto inline-flex items-center gap-1 font-medium text-primary hover:underline";
+    addLink.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg><span>${labels.addVisit}</span>`;
+    addLink.addEventListener("click", (e) => e.stopPropagation());
+    footer.appendChild(addLink);
+  }
+
+  container.appendChild(footer);
 
   return container;
 };
 
-export const ParkMap = ({ parks, error }: ParkMapProps) => {
+export const ParkMap = ({ parks, error, isAuthenticated = false }: ParkMapProps) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
@@ -225,6 +259,8 @@ export const ParkMap = ({ parks, error }: ParkMapProps) => {
     const labels: PopupLabels = {
       established: t("established"),
       officialLink: t("officialLink"),
+      visits: t("visits"),
+      addVisit: t("addVisit"),
     };
 
     for (const park of parks) {
@@ -247,7 +283,7 @@ export const ParkMap = ({ parks, error }: ParkMapProps) => {
         },
       })
         .setLngLat([park.markerPoint.lon, park.markerPoint.lat])
-        .setDOMContent(createPopupNode(park, labels));
+        .setDOMContent(createPopupNode(park, labels, isAuthenticated));
 
       popupsRef.current.set(park.slug, popup);
 
@@ -284,7 +320,7 @@ export const ParkMap = ({ parks, error }: ParkMapProps) => {
         setActiveSlug(null);
       });
     }
-  }, [parks, isMapLoaded, t, cancelClose, scheduleClose]);
+  }, [parks, isMapLoaded, t, cancelClose, scheduleClose, isAuthenticated]);
 
   // Sync popup visibility with active/hovered state
   useEffect(() => {

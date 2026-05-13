@@ -22,10 +22,12 @@ type ApiPersonalPark =
 const HomePage = async () => {
   let parks: MapPark[] = [];
   let error: string | null = null;
+  let isAuthenticated = false;
 
   try {
     const data = await apiFetch<{ parks: ApiPersonalPark[] }>("/api/me/parks");
     parks = data.parks;
+    isAuthenticated = true;
   } catch (_e) {
     try {
       const data = await apiFetch<{ parks: ApiPark[] }>("/api/parks");
@@ -41,7 +43,7 @@ const HomePage = async () => {
 
   return (
     <main className="flex flex-1 flex-col min-h-0">
-      <ParkMap parks={parks} error={error} />
+      <ParkMap parks={parks} error={error} isAuthenticated={isAuthenticated} />
     </main>
   );
 };

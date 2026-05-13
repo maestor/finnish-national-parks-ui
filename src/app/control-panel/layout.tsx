@@ -4,7 +4,7 @@ const ControlPanelLayout = async ({ children }: { children: React.ReactNode }) =
   const t = await getTranslations("controlPanel");
 
   return (
-    <div className="container flex flex-1 flex-col gap-8 py-8 md:flex-row mx-auto">
+    <div className="container mx-auto flex flex-1 flex-col gap-8 px-4 py-8 md:flex-row">
       <aside className="w-full md:w-64">
         <nav className="flex flex-col gap-2" aria-label={t("title")}>
           <a

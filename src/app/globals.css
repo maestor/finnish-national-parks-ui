@@ -102,6 +102,14 @@ body {
   }
 }
 
+summary {
+  list-style: none;
+}
+
+summary::-webkit-details-marker {
+  display: none;
+}
+
 /* MapLibre popup theming */
 .maplibregl-popup-content {
   background: hsl(var(--card)) !important;
