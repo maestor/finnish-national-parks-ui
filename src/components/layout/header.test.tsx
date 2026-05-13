@@ -10,6 +10,6 @@ describe("Header", () => {
 
   it("renders theme toggle button", () => {
     render(<Header />);
-    expect(screen.getByRole("button", { name: "layout.themeToggle.dark" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "layout.themeToggle.srLabel" })).toBeInTheDocument();
   });
 });
