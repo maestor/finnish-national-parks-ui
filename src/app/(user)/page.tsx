@@ -23,7 +23,8 @@ const HomePage = async () => {
     const data = await apiFetch<{ parks: Park[] }>("/api/parks");
     parks = data.parks;
   } catch (e) {
-    error = e instanceof Error ? e.message : "Tuntematon virhe";
+    const t = await getTranslations("errors.generic");
+    error = e instanceof Error ? e.message : t("unknownError");
   }
 
   return (

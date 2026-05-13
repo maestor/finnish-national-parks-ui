@@ -3,6 +3,7 @@
 import type { Park } from "@/lib/parks";
 import { getParkTypeColor } from "@/lib/parks";
 import maplibregl from "maplibre-gl";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -62,7 +63,12 @@ const createMarkerElement = (park: Park) => {
   return button;
 };
 
-const createPopupNode = (park: Park): HTMLElement => {
+interface PopupLabels {
+  established: string;
+  officialLink: string;
+}
+
+const createPopupNode = (park: Park, labels: PopupLabels): HTMLElement => {
   const container = document.createElement("div");
   container.className = "p-3 max-w-[260px]";
 
@@ -106,7 +112,7 @@ const createPopupNode = (park: Park): HTMLElement => {
 
   if (park.establishmentYear !== null) {
     const year = document.createElement("p");
-    year.textContent = `Perustettu ${park.establishmentYear}`;
+    year.textContent = `${labels.established} ${park.establishmentYear}`;
     details.appendChild(year);
   }
 
@@ -119,7 +125,7 @@ const createPopupNode = (park: Park): HTMLElement => {
     link.rel = "noopener noreferrer";
     link.className =
       "mt-2 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline";
-    link.innerHTML = `Luontoon.fi<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>`;
+    link.innerHTML = `${labels.officialLink}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>`;
     link.addEventListener("click", (e) => e.stopPropagation());
     container.appendChild(link);
   }
@@ -132,6 +138,7 @@ export const ParkMap = ({ parks, error }: ParkMapProps) => {
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
   const router = useRouter();
+  const t = useTranslations("map");
   const [isMapLoaded, setIsMapLoaded] = useState(false);
 
   const handleMarkerClick = useCallback(
@@ -185,9 +192,14 @@ export const ParkMap = ({ parks, error }: ParkMapProps) => {
 
     if (parks.length === 0) return;
 
+    const labels: PopupLabels = {
+      established: t("established"),
+      officialLink: t("officialLink"),
+    };
+
     for (const park of parks) {
       const el = createMarkerElement(park);
-      const popupNode = createPopupNode(park);
+      const popupNode = createPopupNode(park, labels);
 
       const popup = new maplibregl.Popup({
         offset: [0, -8],
@@ -223,12 +235,12 @@ export const ParkMap = ({ parks, error }: ParkMapProps) => {
 
       markersRef.current.push(marker);
     }
-  }, [parks, isMapLoaded, handleMarkerClick]);
+  }, [parks, isMapLoaded, handleMarkerClick, t]);
 
   if (error) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center p-8 text-center">
-        <p className="text-destructive font-medium">Karttatietojen lataus epäonnistui</p>
+        <p className="text-destructive font-medium">{t("loadError")}</p>
         <p className="mt-2 text-sm text-muted-foreground">{error}</p>
       </div>
     );
@@ -240,13 +252,13 @@ export const ParkMap = ({ parks, error }: ParkMapProps) => {
         ref={mapContainerRef}
         className="flex-1"
         role="application"
-        aria-label="Suomen kansallispuistojen kartta"
+        aria-label={t("ariaLabel")}
       />
       {!isMapLoaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
           <div className="flex flex-col items-center gap-2">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            <span className="text-sm text-muted-foreground">Ladataan karttaa...</span>
+            <span className="text-sm text-muted-foreground">{t("loading")}</span>
           </div>
         </div>
       )}

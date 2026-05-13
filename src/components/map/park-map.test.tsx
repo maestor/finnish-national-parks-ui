@@ -37,24 +37,22 @@ vi.mock("maplibre-gl", () => ({
 describe("ParkMap", () => {
   it("renders map container with accessible label", () => {
     render(<ParkMap parks={[]} />);
-    expect(
-      screen.getByRole("application", { name: /Suomen kansallispuistojen kartta/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("application", { name: "map.ariaLabel" })).toBeInTheDocument();
   });
 
   it("shows loading spinner before map is loaded", () => {
     render(<ParkMap parks={[]} />);
-    expect(screen.getByText(/Ladataan karttaa/i)).toBeInTheDocument();
+    expect(screen.getByText("map.loading")).toBeInTheDocument();
   });
 
   it("displays error message when error prop is provided", () => {
     render(<ParkMap parks={[]} error="API error" />);
-    expect(screen.getByText(/Karttatietojen lataus epäonnistui/i)).toBeInTheDocument();
+    expect(screen.getByText("map.loadError")).toBeInTheDocument();
     expect(screen.getByText("API error")).toBeInTheDocument();
   });
 
   it("does not show loading spinner when error is present", () => {
     render(<ParkMap parks={[]} error="API error" />);
-    expect(screen.queryByText(/Ladataan karttaa/i)).not.toBeInTheDocument();
+    expect(screen.queryByText("map.loading")).not.toBeInTheDocument();
   });
 });

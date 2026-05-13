@@ -4,6 +4,18 @@
 
 This is the **Finnish National Parks UI** — a Next.js 16 App Router application consuming a Hono backend API. It is a personal project with two main audiences: a public map view and an admin control panel.
 
+## Workflow
+
+### User Review Before Git Mutations
+
+**Never commit, push, reset, rebase, or perform any other git mutation without explicit user confirmation.** After completing code changes, present a summary of what was changed and wait for the user to approve before running `git add`, `git commit`, or `git push`. This rule applies even if the user has approved git operations in earlier conversations.
+
+The correct sequence is:
+1. Make the requested changes
+2. Run verification (`npm run verify`)
+3. Present a summary of changes for user review
+4. Only commit and push after explicit user approval
+
 ## Coding Conventions
 
 ### Arrow Functions Only
@@ -55,7 +67,7 @@ Backend is assumed to be running at `http://localhost:3004`.
 - Default locale is **Finnish (`fi`)** — all UI copy is in Finnish
 - Translation keys live in `messages/fi.json`
 - Tests should use translation keys via `I18nProvider` test helper
-- Future languages can be added by creating new message files and updating `src/middleware.ts`
+- Future languages can be added by creating new message files and updating `src/i18n/request.ts`
 
 ## Pre-installed Skills
 
@@ -85,6 +97,6 @@ Skills are referenced from the project root. If they need to be moved to comply 
 | `src/lib/env.ts` | Zod-validated environment variables |
 | `src/lib/api-types.ts` | Auto-generated from backend OpenAPI |
 | `src/i18n/request.ts` | `next-intl` request-scoped config |
-| `src/middleware.ts` | Locale routing middleware |
+| `src/i18n/request.ts` | `next-intl` request config (locale hardcoded to `fi`) |
 | `src/app/sw.ts` | Serwist service worker |
 | `messages/fi.json` | Finnish translation messages |

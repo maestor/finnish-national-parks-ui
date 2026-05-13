@@ -41,7 +41,17 @@
       }
     }
   },
+  "map": {
+    "ariaLabel": "Suomen kansallispuistojen kartta",
+    "loading": "Ladataan karttaa...",
+    "loadError": "Karttatietojen lataus epäonnistui",
+    "established": "Perustettu",
+    "officialLink": "Luontoon.fi"
+  },
   "errors": {
+    "generic": {
+      "unknownError": "Tuntematon virhe"
+    },
     "notFound": {
       "title": "404",
       "description": "Tätä sivua ei löytynyt.",
