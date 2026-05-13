@@ -12,6 +12,14 @@ export type MapPark = Park & {
   };
 };
 
+export type Visit =
+  paths["/api/me/parks"]["get"]["responses"][200]["content"]["application/json"]["parks"][number]["visits"][number];
+
+export type VisitWithPark = Visit & {
+  parkSlug: string;
+  parkName: string;
+};
+
 export const getVisitStatusColor = (park: MapPark): string => {
   if (park.visitedSummary?.visited) {
     return "#16a34a";

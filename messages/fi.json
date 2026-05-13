@@ -40,6 +40,36 @@
       "newVisit": {
         "title": "Uusi käynti",
         "description": "Kirjaa uusi käynti kansallispuistoon."
+      },
+      "editVisit": {
+        "title": "Muokkaa käyntiä",
+        "description": "Päivitä käynnin tietoja."
+      },
+      "form": {
+        "parkLabel": "Puisto",
+        "parkPlaceholder": "Valitse puisto",
+        "dateLabel": "Käyntipäivä",
+        "noteLabel": "Muistiinpanot",
+        "notePlaceholder": "Kirjoita muistiinpanoja markdown-muodossa...",
+        "markdownGuide": "Markdown-opas",
+        "preview": "Esikatselu",
+        "edit": "Muokkaa",
+        "submit": "Tallenna",
+        "cancel": "Peruuta",
+        "validation": {
+          "parkRequired": "Valitse puisto",
+          "dateRequired": "Anna käyntipäivä"
+        }
+      },
+      "list": {
+        "parkName": "Puisto",
+        "visitDate": "Käyntipäivä",
+        "actions": "Toiminnot",
+        "edit": "Muokkaa",
+        "delete": "Poista",
+        "noVisits": "Ei vielä kirjattuja käyntejä.",
+        "addFirstVisit": "Lisää ensimmäinen käynti",
+        "deleteConfirm": "Haluatko varmasti poistaa tämän käynnin?"
       }
     }
   },

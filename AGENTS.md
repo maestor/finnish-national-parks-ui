@@ -14,17 +14,25 @@ Then consult this `AGENTS.md` for coding conventions and workflow rules.
 
 This is the **Finnish National Parks UI** — a Next.js 16 App Router application consuming a Hono backend API. It is a personal project with two main audiences: a public map view and an admin control panel.
 
+## Git and Change Hygiene
+
+- **PR-based workflow:** All changes must be developed on a dedicated branch (`feature/<name>`, `bugfix/<name>`, `chore/<name>`, `docs/<name>`, etc.) and submitted as a pull request against `main`. Do not push directly to `main`.
+- **Commit conventions:** Use meaningful, independent commits with descriptive prefixes:
+  - `Feature:` — new behavior or endpoints
+  - `Fix:` — bug fixes
+  - `Chore:` — tooling, dependencies, config
+  - `Docs:` — documentation updates
+  - `Refactor:` — code restructuring without behavior change
+  - `Test:` — test-only changes
+- A single PR may contain multiple commits.
+- **Quality gate:** `npm run verify` must pass before any task or PR is considered ready. The only exception is changes that are entirely outside what `verify` validates — for example, pure documentation updates (README, DEVELOPMENT, TESTING, AGENTS, plans) or repository configuration that does not affect code, tests, or types. In those cases, skip `verify` and note the exception in the PR description.
+- **Review requirement:** User review and explicit acceptance are required before merging.
+- Keep documentation-only changes separate from implementation changes when practical.
+- Do not revert user changes.
+- Do not hand-edit generated files once generation exists.
+- Keep changes scoped to the current request.
+
 ## Workflow
-
-### User Review Before Git Mutations
-
-**Never commit, push, reset, rebase, or perform any other git mutation without explicit user confirmation.** After completing code changes, present a summary of what was changed and wait for the user to approve before running `git add`, `git commit`, or `git push`. This rule applies even if the user has approved git operations in earlier conversations.
-
-The correct sequence is:
-1. Make the requested changes
-2. Run verification (`npm run verify`)
-3. Present a summary of changes for user review
-4. Only commit and push after explicit user approval
 
 ### Do Not Launch Dev Server
 
