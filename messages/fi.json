@@ -1,0 +1,55 @@
+{
+  "metadata": {
+    "title": "Suomen kansallispuistot",
+    "description": "Tutki Suomen kansallispuistoja, seuraa käyntejäsi ja hallitse ulkoiluseikkailujasi."
+  },
+  "layout": {
+    "siteTitle": "Suomen kansallispuistot",
+    "nav": {
+      "map": "Kartta",
+      "controlPanel": "Hallintapaneeli"
+    },
+    "themeToggle": {
+      "light": "Vaihda vaaleaan teemaan",
+      "dark": "Vaihda tummaan teemaan",
+      "srLabel": "Vaihda teema"
+    }
+  },
+  "home": {
+    "title": "Suomen kansallispuistot",
+    "description": "Interaktiivinen kartta tulossa pian. Selaa kaikkia kansallispuistoja ja suunnittele käyntisi."
+  },
+  "park": {
+    "detailTitle": "Puiston tiedot",
+    "visitHistory": "Käyntihistoria",
+    "notes": "Muistiinpanot",
+    "officialLink": "Luontoon.fi-sivu"
+  },
+  "controlPanel": {
+    "title": "Hallintapaneeli",
+    "dashboard": {
+      "title": "Yleiskatsaus",
+      "description": "Käyntiesi ja puistotilastojen yhteenveto."
+    },
+    "visits": {
+      "title": "Käynnit",
+      "description": "Hallitse puistokäyntejäsi. Lisää, muokkaa tai poista käyntitietoja.",
+      "addVisit": "Lisää käynti",
+      "newVisit": {
+        "title": "Uusi käynti",
+        "description": "Kirjaa uusi käynti kansallispuistoon."
+      }
+    }
+  },
+  "errors": {
+    "notFound": {
+      "title": "404",
+      "description": "Tätä sivua ei löytynyt.",
+      "goHome": "Palaa etusivulle"
+    },
+    "offline": {
+      "title": "Olet offline-tilassa",
+      "description": "Sivu ei ole saatavilla ilman internetyhteyttä. Tarkista yhteytesi ja yritä uudelleen."
+    }
+  }
+}
