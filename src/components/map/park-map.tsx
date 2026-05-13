@@ -1,21 +1,20 @@
 "use client";
 
-import type { Park } from "@/lib/parks";
-import { getParkTypeColor } from "@/lib/parks";
+import type { MapPark } from "@/lib/parks";
+import { getVisitStatusColor } from "@/lib/parks";
 import maplibregl from "maplibre-gl";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 interface ParkMapProps {
-  parks: Park[];
+  parks: MapPark[];
   error?: string | null;
 }
 
-// Finland bounds for initial viewport
 const FINLAND_CENTER: [number, number] = [26.0, 65.0];
 const FINLAND_ZOOM = 4.5;
+const HOVER_CLOSE_DELAY = 300;
 
 const getMapStyle = () => {
   const mapStyleUrl = process.env.NEXT_PUBLIC_MAP_STYLE_URL as string | undefined;
@@ -45,14 +44,15 @@ const getMapStyle = () => {
   } as maplibregl.StyleSpecification;
 };
 
-const createMarkerElement = (park: Park) => {
+const createMarkerElement = (park: MapPark) => {
   const button = document.createElement("button");
   button.type = "button";
   button.className =
-    "group relative flex items-center justify-center w-8 h-8 -mt-4 -ml-4 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-full";
+    "group relative flex items-center justify-center w-8 h-8 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-full";
   button.setAttribute("aria-label", `${park.name}, ${park.type.name}`);
+  button.dataset.slug = park.slug;
 
-  const color = getParkTypeColor(park.type.slug);
+  const color = getVisitStatusColor(park);
 
   button.innerHTML = `
     <svg viewBox="0 0 24 24" fill="${color}" class="w-6 h-6 drop-shadow-md transition-transform group-hover:scale-110" xmlns="http://www.w3.org/2000/svg">
@@ -68,11 +68,11 @@ interface PopupLabels {
   officialLink: string;
 }
 
-const createPopupNode = (park: Park, labels: PopupLabels): HTMLElement => {
+const createPopupNode = (park: MapPark, labels: PopupLabels): HTMLElement => {
   const container = document.createElement("div");
   container.className = "p-3 max-w-[260px]";
 
-  const color = getParkTypeColor(park.type.slug);
+  const color = getVisitStatusColor(park);
 
   const header = document.createElement("header");
   header.className = "flex items-start gap-2";
@@ -137,17 +137,31 @@ export const ParkMap = ({ parks, error }: ParkMapProps) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
-  const router = useRouter();
+  const popupsRef = useRef<Map<string, maplibregl.Popup>>(new Map());
+  const shownPopupsRef = useRef<Set<string>>(new Set());
+  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const t = useTranslations("map");
   const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const [activeSlug, setActiveSlug] = useState<string | null>(null);
+  const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
 
-  const handleMarkerClick = useCallback(
-    (slug: string) => {
-      router.push(`/park/${slug}`);
-    },
-    [router],
-  );
+  const cancelClose = useCallback(() => {
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
+    }
+  }, []);
 
+  const scheduleClose = useCallback(() => {
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+    }
+    hoverTimerRef.current = setTimeout(() => {
+      setHoveredSlug(null);
+    }, HOVER_CLOSE_DELAY);
+  }, []);
+
+  // Initialize map
   useEffect(() => {
     const container = mapContainerRef.current;
     if (!container) return;
@@ -170,25 +184,37 @@ export const ParkMap = ({ parks, error }: ParkMapProps) => {
     mapRef.current = map;
 
     return () => {
+      cancelClose();
       for (const marker of markersRef.current) {
         marker.remove();
       }
       markersRef.current = [];
+      for (const popup of popupsRef.current.values()) {
+        popup.remove();
+      }
+      popupsRef.current.clear();
+      shownPopupsRef.current.clear();
       map.remove();
       mapRef.current = null;
       setIsMapLoaded(false);
     };
-  }, []);
+  }, [cancelClose]);
 
+  // Create markers and popups when parks or map load state changes
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !isMapLoaded) return;
 
-    // Clear existing markers
+    // Clear existing markers and popups
     for (const marker of markersRef.current) {
       marker.remove();
     }
     markersRef.current = [];
+    for (const popup of popupsRef.current.values()) {
+      popup.remove();
+    }
+    popupsRef.current.clear();
+    shownPopupsRef.current.clear();
 
     if (parks.length === 0) return;
 
@@ -199,43 +225,116 @@ export const ParkMap = ({ parks, error }: ParkMapProps) => {
 
     for (const park of parks) {
       const el = createMarkerElement(park);
-      const popupNode = createPopupNode(park, labels);
 
       const popup = new maplibregl.Popup({
-        offset: [0, -8],
         closeButton: false,
         closeOnClick: false,
         maxWidth: "280px",
-      }).setDOMContent(popupNode);
+        offset: {
+          center: [0, 12],
+          top: [0, 0],
+          bottom: [0, -30],
+          left: [16, -16],
+          right: [-16, -16],
+          "top-left": [0, 0],
+          "top-right": [0, 0],
+          "bottom-left": [0, -32],
+          "bottom-right": [0, -32],
+        },
+      })
+        .setLngLat([park.markerPoint.lon, park.markerPoint.lat])
+        .setDOMContent(createPopupNode(park, labels));
+
+      popupsRef.current.set(park.slug, popup);
 
       const marker = new maplibregl.Marker({ element: el, anchor: "bottom" })
         .setLngLat([park.markerPoint.lon, park.markerPoint.lat])
-        .setPopup(popup)
         .addTo(map);
 
+      markersRef.current.push(marker);
+
+      // Pin interactions
       el.addEventListener("click", () => {
-        handleMarkerClick(park.slug);
+        cancelClose();
+        setHoveredSlug(null);
+        setActiveSlug((current) => (current === park.slug ? current : park.slug));
       });
 
       el.addEventListener("mouseenter", () => {
-        marker.togglePopup();
+        cancelClose();
+        setActiveSlug(park.slug);
+        setHoveredSlug(park.slug);
       });
 
       el.addEventListener("mouseleave", () => {
-        popup.remove();
+        scheduleClose();
       });
 
       el.addEventListener("focus", () => {
-        marker.togglePopup();
+        cancelClose();
+        setHoveredSlug(null);
+        setActiveSlug(park.slug);
       });
 
       el.addEventListener("blur", () => {
-        popup.remove();
+        setActiveSlug(null);
       });
-
-      markersRef.current.push(marker);
     }
-  }, [parks, isMapLoaded, handleMarkerClick, t]);
+  }, [parks, isMapLoaded, t, cancelClose, scheduleClose]);
+
+  // Sync popup visibility with active/hovered state
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    for (const [slug, popup] of popupsRef.current) {
+      const shouldShow = activeSlug === slug || hoveredSlug === slug;
+      const isShown = shownPopupsRef.current.has(slug);
+
+      if (shouldShow && !isShown) {
+        popup.addTo(map);
+        shownPopupsRef.current.add(slug);
+
+        const content = popup.getElement();
+        const wrapper = content?.parentElement;
+        if (wrapper) {
+          wrapper.addEventListener("mouseenter", cancelClose);
+          wrapper.addEventListener("mouseleave", scheduleClose);
+        }
+      } else if (!shouldShow && isShown) {
+        popup.remove();
+        shownPopupsRef.current.delete(slug);
+      }
+    }
+  }, [activeSlug, hoveredSlug, cancelClose, scheduleClose]);
+
+  // Click outside to close active popup
+  useEffect(() => {
+    const handleDocumentClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const isInsideMarker = !!target.closest(".maplibregl-marker");
+      const isInsidePopup = !!target.closest(".maplibregl-popup");
+
+      if (!isInsideMarker && !isInsidePopup) {
+        setActiveSlug(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleDocumentClick);
+    return () => document.removeEventListener("mousedown", handleDocumentClick);
+  }, []);
+
+  // Escape to close active popup
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setActiveSlug(null);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   if (error) {
     return (

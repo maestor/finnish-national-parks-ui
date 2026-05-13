@@ -4,9 +4,7 @@ import { ParkMap } from "./park-map";
 
 const createMockMarker = () => ({
   setLngLat: vi.fn().mockReturnThis(),
-  setPopup: vi.fn().mockReturnThis(),
   addTo: vi.fn().mockReturnThis(),
-  togglePopup: vi.fn().mockReturnThis(),
   getElement: vi.fn(() => {
     const el = document.createElement("button");
     el.addEventListener = vi.fn();
@@ -15,8 +13,18 @@ const createMockMarker = () => ({
 });
 
 const createMockPopup = () => ({
+  setLngLat: vi.fn().mockReturnThis(),
   setDOMContent: vi.fn().mockReturnThis(),
+  addTo: vi.fn().mockReturnThis(),
   remove: vi.fn(),
+  getElement: vi.fn(() => {
+    const content = document.createElement("div");
+    content.className = "maplibregl-popup-content";
+    const wrapper = document.createElement("div");
+    wrapper.className = "maplibregl-popup";
+    wrapper.appendChild(content);
+    return content;
+  }),
 });
 
 const createMockMap = () => ({

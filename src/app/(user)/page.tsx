@@ -1,6 +1,7 @@
 import { ParkMap } from "@/components/map/park-map";
 import { apiFetch } from "@/lib/api";
 import type { paths } from "@/lib/api-types";
+import type { MapPark } from "@/lib/parks";
 import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
@@ -12,19 +13,30 @@ export const generateMetadata = async () => {
   };
 };
 
-type Park =
+type ApiPark =
   paths["/api/parks"]["get"]["responses"][200]["content"]["application/json"]["parks"][number];
 
+type ApiPersonalPark =
+  paths["/api/me/parks"]["get"]["responses"][200]["content"]["application/json"]["parks"][number];
+
 const HomePage = async () => {
-  let parks: Park[] = [];
+  let parks: MapPark[] = [];
   let error: string | null = null;
 
   try {
-    const data = await apiFetch<{ parks: Park[] }>("/api/parks");
+    const data = await apiFetch<{ parks: ApiPersonalPark[] }>("/api/me/parks");
     parks = data.parks;
-  } catch (e) {
-    const t = await getTranslations("errors.generic");
-    error = e instanceof Error ? e.message : t("unknownError");
+  } catch (_e) {
+    try {
+      const data = await apiFetch<{ parks: ApiPark[] }>("/api/parks");
+      parks = data.parks.map((park) => ({
+        ...park,
+        visitedSummary: { visited: false },
+      }));
+    } catch (fallbackErr) {
+      const t = await getTranslations("errors.generic");
+      error = fallbackErr instanceof Error ? fallbackErr.message : t("unknownError");
+    }
   }
 
   return (
