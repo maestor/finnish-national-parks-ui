@@ -11,6 +11,12 @@
       "login": "Kirjaudu",
       "logout": "Kirjaudu ulos"
     },
+    "parkSearch": {
+      "label": "Hae puistoa",
+      "placeholder": "Hae puistoa...",
+      "loading": "Ladataan puistoja...",
+      "empty": "Hakua vastaavia puistoja ei löytynyt."
+    },
     "themeToggle": {
       "light": "Vaihda vaaleaan teemaan",
       "dark": "Vaihda tummaan teemaan",
@@ -18,7 +24,16 @@
     }
   },
   "home": {
-    "title": "Suomen kansallispuistot"
+    "title": "Suomen kansallispuistot",
+    "filters": {
+      "all": "Kaikki",
+      "nationalParks": "Kansallispuistot",
+      "hikingAreas": "Retkeilyalueet",
+      "wildernessAreas": "Erämaa-alueet",
+      "visited": "Käydyt",
+      "notVisited": "Käymättömät",
+      "results": "{count} kohdetta"
+    }
   },
   "park": {
     "detailTitle": "Puiston tiedot",
