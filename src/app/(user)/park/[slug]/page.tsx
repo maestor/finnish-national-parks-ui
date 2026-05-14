@@ -3,7 +3,7 @@ import { VisitAccordion } from "@/components/park/visit-accordion";
 import { apiFetch } from "@/lib/api";
 import type { paths } from "@/lib/api-types";
 import type { PersonalPark } from "@/lib/parks";
-import { ExternalLink, MapPin } from "lucide-react";
+import { ExternalLink, MapPin, NotebookPen } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 
@@ -102,7 +102,10 @@ const ParkDetailPage = async ({ params }: ParkDetailPageProps) => {
 
       <div className="mt-8">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold tracking-tight">{t("visitHistory")}</h2>
+          <div className="flex items-center gap-2">
+            <NotebookPen className="h-4 w-4 text-primary" aria-hidden="true" />
+            <h2 className="text-lg font-semibold tracking-tight">{t("visitHistory")}</h2>
+          </div>
           <Link
             href={`/control-panel/visits/new?park=${slug}`}
             className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
