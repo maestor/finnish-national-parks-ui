@@ -3,7 +3,7 @@
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import type { Park } from "@/lib/parks";
-import { MapPin, Search } from "lucide-react";
+import { MapPin, Search, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -14,11 +14,13 @@ export const HomeParkSearch = () => {
   const t = useTranslations("layout.parkSearch");
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
+  const mobileInputRef = useRef<HTMLInputElement>(null);
   const [parks, setParks] = useState<Park[]>([]);
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -58,12 +60,19 @@ export const HomeParkSearch = () => {
 
       if (!containerRef.current?.contains(target)) {
         setIsOpen(false);
+        setIsMobileOpen(false);
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (isMobileOpen) {
+      mobileInputRef.current?.focus();
+    }
+  }, [isMobileOpen]);
 
   const results = useMemo(() => {
     const trimmedQuery = query.trim().toLocaleLowerCase("fi-FI");
@@ -83,6 +92,7 @@ export const HomeParkSearch = () => {
   const navigateToPark = (park: Park) => {
     setQuery("");
     setIsOpen(false);
+    setIsMobileOpen(false);
     router.push(`/park/${park.slug}`);
   };
 
@@ -113,43 +123,93 @@ export const HomeParkSearch = () => {
 
     if (event.key === "Escape") {
       setIsOpen(false);
+      setIsMobileOpen(false);
     }
   };
 
   return (
-    <div ref={containerRef} className="relative hidden w-full max-w-md md:block">
-      <label htmlFor="home-park-search" className="sr-only">
-        {t("label")}
-      </label>
-      <Search
-        className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-        aria-hidden="true"
-      />
-      <input
-        id="home-park-search"
-        type="search"
-        value={query}
-        onChange={(event) => {
-          setQuery(event.target.value);
+    <div ref={containerRef} className="relative w-full md:max-w-md">
+      <button
+        type="button"
+        onClick={() => {
           setHighlightedIndex(0);
-          setIsOpen(true);
+          setIsOpen((current) => !current);
+          setIsMobileOpen((current) => !current);
         }}
-        onFocus={() => setIsOpen(true)}
-        onKeyDown={handleKeyDown}
-        placeholder={t("placeholder")}
-        className="h-9 w-full rounded-full border border-border bg-background/90 pl-9 pr-3 text-sm text-foreground shadow-sm backdrop-blur transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        autoComplete="off"
-        role="combobox"
-        aria-autocomplete="list"
-        aria-expanded={isOpen}
+        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background/90 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden"
+        aria-label={t("label")}
+        aria-expanded={isMobileOpen}
         aria-controls="home-park-search-results"
-      />
+      >
+        {isMobileOpen ? (
+          <X className="h-4 w-4" aria-hidden="true" />
+        ) : (
+          <Search className="h-4 w-4" aria-hidden="true" />
+        )}
+      </button>
+
+      <div className="hidden md:block">
+        <label htmlFor="home-park-search" className="sr-only">
+          {t("label")}
+        </label>
+        <Search
+          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+          aria-hidden="true"
+        />
+        <input
+          id="home-park-search"
+          type="search"
+          value={query}
+          onChange={(event) => {
+            setQuery(event.target.value);
+            setHighlightedIndex(0);
+            setIsOpen(true);
+          }}
+          onFocus={() => setIsOpen(true)}
+          onKeyDown={handleKeyDown}
+          placeholder={t("placeholder")}
+          className="h-9 w-full rounded-full border border-border bg-background/90 pl-9 pr-3 text-sm text-foreground shadow-sm backdrop-blur transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          autoComplete="off"
+          role="combobox"
+          aria-autocomplete="list"
+          aria-expanded={isOpen}
+          aria-controls="home-park-search-results"
+        />
+      </div>
 
       {isOpen && (
         <div
           id="home-park-search-results"
           className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-50 overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-xl"
         >
+          {isMobileOpen && (
+            <div className="border-b border-border p-2 md:hidden">
+              <label htmlFor="home-park-search-mobile" className="sr-only">
+                {t("label")}
+              </label>
+              <div className="relative">
+                <Search
+                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                  aria-hidden="true"
+                />
+                <input
+                  ref={mobileInputRef}
+                  id="home-park-search-mobile"
+                  type="search"
+                  value={query}
+                  onChange={(event) => {
+                    setQuery(event.target.value);
+                    setHighlightedIndex(0);
+                  }}
+                  onKeyDown={handleKeyDown}
+                  placeholder={t("placeholder")}
+                  className="h-9 w-full rounded-full border border-border bg-background/90 pl-9 pr-3 text-sm text-foreground shadow-sm backdrop-blur transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  autoComplete="off"
+                />
+              </div>
+            </div>
+          )}
+
           {isLoading ? (
             <p className="px-4 py-3 text-sm text-muted-foreground">{t("loading")}</p>
           ) : results.length === 0 ? (

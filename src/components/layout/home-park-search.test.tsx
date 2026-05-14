@@ -73,4 +73,14 @@ describe("HomeParkSearch", () => {
       expect(screen.getByText("layout.parkSearch.empty")).toBeInTheDocument();
     });
   });
+
+  it("opens a mobile search panel from the header button", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({ parks });
+
+    render(<HomeParkSearch />);
+
+    await userEvent.click(screen.getByRole("button", { name: "layout.parkSearch.label" }));
+
+    expect(screen.getByRole("searchbox")).toBeInTheDocument();
+  });
 });

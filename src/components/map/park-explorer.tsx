@@ -60,7 +60,7 @@ export const ParkExplorer = ({ parks, error, isAuthenticated = false }: ParkExpl
 
   return (
     <div className="relative flex flex-1 min-h-0">
-      <div className="pointer-events-none absolute left-4 right-4 top-4 z-10">
+      <div className="pointer-events-none absolute left-6 right-20 top-2 z-10 sm:left-8 sm:right-24">
         <div className="pointer-events-auto flex flex-wrap items-center gap-2 rounded-2xl border border-border/70 bg-background/90 p-2 shadow-lg backdrop-blur">
           {filterOptions.map((option) => (
             <Button
@@ -74,7 +74,7 @@ export const ParkExplorer = ({ parks, error, isAuthenticated = false }: ParkExpl
               {option.label}
             </Button>
           ))}
-          <span className="ml-auto text-xs text-muted-foreground">
+          <span className="basis-full text-xs text-muted-foreground sm:ml-auto sm:basis-auto">
             {t("results", { count: filteredParks.length })}
           </span>
         </div>
