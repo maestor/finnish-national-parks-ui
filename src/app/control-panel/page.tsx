@@ -20,7 +20,9 @@ const ControlPanelPage = async () => {
 
   const uniqueParks = parks.filter((park) => park.visitedSummary.visited).length;
 
-  const parksWithNotes = parks.filter((park) => park.note !== null).length;
+  const visitsWithNotes = parks
+    .flatMap((park) => park.visits)
+    .filter((visit) => visit.note !== null).length;
 
   const mostVisitedPark = parks.reduce<{ name: string; visitCount: number } | null>((max, park) => {
     const count = park.visitedSummary.visitCount;
@@ -70,7 +72,7 @@ const ControlPanelPage = async () => {
       <StatsCards
         totalVisits={totalVisits}
         uniqueParks={uniqueParks}
-        parksWithNotes={parksWithNotes}
+        parksWithNotes={visitsWithNotes}
         mostVisitedPark={mostVisitedPark}
       />
       <ProgressSection items={progressItems} />

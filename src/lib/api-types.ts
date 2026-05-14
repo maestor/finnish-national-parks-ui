@@ -44,6 +44,217 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/auth/google": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Redirect to Google OAuth consent screen */
+        302: {
+          headers: {
+            /** @description Google OAuth authorization URL */
+            Location?: string;
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description OAuth not configured */
+        503: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              /** @example Not found */
+              error: string;
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/auth/google/callback": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: {
+      parameters: {
+        query?: {
+          code?: string;
+          error?: string;
+          state?: string;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Redirect to frontend after authentication */
+        302: {
+          headers: {
+            /** @description Frontend redirect URL */
+            Location?: string;
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description OAuth not configured */
+        503: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              /** @example Not found */
+              error: string;
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/auth/me": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Current authenticated user */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              /** @example admin@example.com */
+              email: string;
+              /** @example 123456789 */
+              id: string;
+              /** @example Admin User */
+              name: string;
+              /** @example https://lh3.googleusercontent.com/photo.jpg */
+              picture: string;
+            };
+          };
+        };
+        /** @description Not authenticated */
+        401: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              /** @example Not found */
+              error: string;
+            };
+          };
+        };
+        /** @description OAuth not configured */
+        503: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              /** @example Not found */
+              error: string;
+            };
+          };
+        };
+      };
+    };
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/auth/logout": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Logged out successfully */
+        204: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+        /** @description OAuth not configured */
+        503: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content: {
+            "application/json": {
+              /** @example Not found */
+              error: string;
+            };
+          };
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/parks": {
     parameters: {
       query?: never;
@@ -284,19 +495,17 @@ export interface paths {
                 /** Format: date-time */
                 sourceEventDate: string | null;
                 updatedAt: string;
-                note: {
-                  note: string;
-                  updatedAt: string;
-                } | null;
                 visitedSummary: {
                   lastVisitedOn: string | null;
                   visitCount: number;
                   visited: boolean;
                 };
                 visits: {
+                  author: string | null;
                   createdAt: string;
                   id: number;
                   note: string | null;
+                  route: string | null;
                   updatedAt: string;
                   visitedOn: string;
                 }[];
@@ -374,19 +583,17 @@ export interface paths {
               /** Format: date-time */
               sourceEventDate: string | null;
               updatedAt: string;
-              note: {
-                note: string;
-                updatedAt: string;
-              } | null;
               visitedSummary: {
                 lastVisitedOn: string | null;
                 visitCount: number;
                 visited: boolean;
               };
               visits: {
+                author: string | null;
                 createdAt: string;
                 id: number;
                 note: string | null;
+                route: string | null;
                 updatedAt: string;
                 visitedOn: string;
               }[];
@@ -415,66 +622,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/me/parks/{slug}/note": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          slug: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: {
-        content: {
-          "application/json": {
-            note: string;
-          };
-        };
-      };
-      responses: {
-        /** @description Updated personal note */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              note: {
-                note: string;
-                updatedAt: string;
-              } | null;
-            };
-          };
-        };
-        /** @description Park was not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              /** @example Not found */
-              error: string;
-            };
-          };
-        };
-      };
-    };
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   "/api/me/parks/{slug}/visits": {
     parameters: {
       query?: never;
@@ -496,7 +643,9 @@ export interface paths {
       requestBody?: {
         content: {
           "application/json": {
+            author?: string | null;
             note?: string | null;
+            route?: string | null;
             visitedOn: string;
           };
         };
@@ -509,9 +658,11 @@ export interface paths {
           };
           content: {
             "application/json": {
+              author: string | null;
               createdAt: string;
               id: number;
               note: string | null;
+              route: string | null;
               updatedAt: string;
               visitedOn: string;
             };
@@ -593,7 +744,9 @@ export interface paths {
       requestBody?: {
         content: {
           "application/json": {
+            author?: string | null;
             note?: string | null;
+            route?: string | null;
             visitedOn?: string;
           };
         };
@@ -606,9 +759,11 @@ export interface paths {
           };
           content: {
             "application/json": {
+              author: string | null;
               createdAt: string;
               id: number;
               note: string | null;
+              route: string | null;
               updatedAt: string;
               visitedOn: string;
             };
