@@ -2,6 +2,10 @@ import type { MapPark } from "@/lib/parks";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import {
+  HomeMapControlsProvider,
+  useHomeMapControls,
+} from "../providers/home-map-controls-provider";
 import { ParkExplorer } from "./park-explorer";
 
 vi.mock("./park-map", () => ({
@@ -56,6 +60,16 @@ const parks: MapPark[] = [
   },
 ];
 
+const MobileFilterToggleHarness = () => {
+  const { toggleMobileFilters } = useHomeMapControls();
+
+  return (
+    <button type="button" onClick={toggleMobileFilters}>
+      toggle-mobile-filters
+    </button>
+  );
+};
+
 describe("ParkExplorer", () => {
   it("filters the visible parks by selected type", async () => {
     render(<ParkExplorer parks={parks} />);
@@ -80,11 +94,16 @@ describe("ParkExplorer", () => {
   });
 
   it("keeps mobile filters collapsed until opened and closes after selection", async () => {
-    render(<ParkExplorer parks={parks} isAuthenticated />);
+    render(
+      <HomeMapControlsProvider>
+        <MobileFilterToggleHarness />
+        <ParkExplorer parks={parks} isAuthenticated />
+      </HomeMapControlsProvider>,
+    );
 
     expect(document.querySelector("#park-map-filters-mobile")).not.toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("button", { name: "home.filters.toggle" }));
+    await userEvent.click(screen.getByRole("button", { name: "toggle-mobile-filters" }));
 
     expect(document.querySelector("#park-map-filters-mobile")).toBeInTheDocument();
 

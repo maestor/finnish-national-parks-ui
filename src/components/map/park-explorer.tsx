@@ -3,9 +3,9 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import type { MapPark } from "@/lib/parks";
-import { SlidersHorizontal, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
+import { useHomeMapControls } from "../providers/home-map-controls-provider";
 import { ParkMap } from "./park-map";
 
 type MapFilter =
@@ -25,7 +25,7 @@ interface ParkExplorerProps {
 export const ParkExplorer = ({ parks, error, isAuthenticated = false }: ParkExplorerProps) => {
   const t = useTranslations("home.filters");
   const [activeFilter, setActiveFilter] = useState<MapFilter>("all");
-  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+  const { isMobileFiltersOpen, closeMobileFilters } = useHomeMapControls();
 
   const filterOptions = useMemo(() => {
     const options: Array<{ id: MapFilter; label: string }> = [
@@ -62,35 +62,16 @@ export const ParkExplorer = ({ parks, error, isAuthenticated = false }: ParkExpl
 
   const selectFilter = (filter: MapFilter) => {
     setActiveFilter(filter);
-    setIsMobileFiltersOpen(false);
+    closeMobileFilters();
   };
 
   return (
     <div className="relative flex flex-1 min-h-0">
       <div className="pointer-events-none absolute inset-x-4 top-2 z-10 md:hidden">
-        <div className="pointer-events-auto flex justify-end">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setIsMobileFiltersOpen((current) => !current)}
-            className="rounded-full bg-background/90 shadow-lg backdrop-blur"
-            aria-expanded={isMobileFiltersOpen}
-            aria-controls="park-map-filters-mobile"
-          >
-            {isMobileFiltersOpen ? (
-              <X className="h-4 w-4" aria-hidden="true" />
-            ) : (
-              <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
-            )}
-            {t("toggle")}
-          </Button>
-        </div>
-
         {isMobileFiltersOpen ? (
           <div
             id="park-map-filters-mobile"
-            className="mt-2 rounded-2xl border border-border/70 bg-background/90 p-2 shadow-lg backdrop-blur"
+            className="pointer-events-auto rounded-2xl border border-border/70 bg-background/90 p-2 shadow-lg backdrop-blur"
           >
             <div className="flex flex-wrap items-center gap-2">
               {filterOptions.map((option) => (

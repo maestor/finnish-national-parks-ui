@@ -8,6 +8,7 @@
     "nav": {
       "map": "Kartta",
       "controlPanel": "Hallinta",
+      "filters": "Suodata karttaa",
       "login": "Kirjaudu",
       "logout": "Kirjaudu ulos"
     },
@@ -26,7 +27,6 @@
   "home": {
     "title": "Suomen kansallispuistot",
     "filters": {
-      "toggle": "Suodata karttaa",
       "all": "Kaikki",
       "nationalParks": "Kansallispuistot",
       "hikingAreas": "Retkeilyalueet",

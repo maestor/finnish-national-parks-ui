@@ -128,7 +128,7 @@ export const HomeParkSearch = () => {
   };
 
   return (
-    <div ref={containerRef} className="relative w-full md:max-w-md">
+    <div ref={containerRef} className="relative w-auto md:w-full md:max-w-md">
       <button
         type="button"
         onClick={() => {
@@ -180,7 +180,7 @@ export const HomeParkSearch = () => {
       {isOpen && (
         <div
           id="home-park-search-results"
-          className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-50 overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-xl"
+          className="fixed left-4 right-4 top-16 z-50 overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-xl md:absolute md:left-0 md:right-0 md:top-[calc(100%+0.5rem)]"
         >
           {isMobileOpen && (
             <div className="border-b border-border p-2 md:hidden">
