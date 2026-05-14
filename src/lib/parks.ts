@@ -3,8 +3,17 @@ import type { paths } from "./api-types";
 export type Park =
   paths["/api/parks"]["get"]["responses"][200]["content"]["application/json"]["parks"][number];
 
-export type PersonalPark =
+type ApiPersonalPark =
   paths["/api/me/parks"]["get"]["responses"][200]["content"]["application/json"]["parks"][number];
+
+type ApiVisit =
+  paths["/api/me/parks"]["get"]["responses"][200]["content"]["application/json"]["parks"][number]["visits"][number];
+
+export type VisitImage = ApiVisit["images"][number];
+
+export type Visit = ApiVisit;
+
+export type PersonalPark = ApiPersonalPark;
 
 export type MapPark = Park & {
   visitedSummary?: {
@@ -12,9 +21,6 @@ export type MapPark = Park & {
     visitCount?: number;
   };
 };
-
-export type Visit =
-  paths["/api/me/parks"]["get"]["responses"][200]["content"]["application/json"]["parks"][number]["visits"][number];
 
 export type VisitWithPark = Visit & {
   parkSlug: string;

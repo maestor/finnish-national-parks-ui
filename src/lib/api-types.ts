@@ -4,796 +4,1060 @@
  */
 
 export interface paths {
-  "/health": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Health check response */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              /** @enum {boolean} */
-              ok: true;
-              /** @enum {string} */
-              service: "finnish-national-parks-api";
+    "/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
             };
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/auth/google": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Redirect to Google OAuth consent screen */
-        302: {
-          headers: {
-            /** @description Google OAuth authorization URL */
-            Location?: string;
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        /** @description OAuth not configured */
-        503: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              /** @example Not found */
-              error: string;
-            };
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/auth/google/callback": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get: {
-      parameters: {
-        query?: {
-          code?: string;
-          error?: string;
-          state?: string;
-        };
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Redirect to frontend after authentication */
-        302: {
-          headers: {
-            /** @description Frontend redirect URL */
-            Location?: string;
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        /** @description OAuth not configured */
-        503: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              /** @example Not found */
-              error: string;
-            };
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/auth/me": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Current authenticated user */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              /** @example admin@example.com */
-              email: string;
-              /** @example 123456789 */
-              id: string;
-              /** @example Admin User */
-              name: string;
-              /** @example https://lh3.googleusercontent.com/photo.jpg */
-              picture: string;
-            };
-          };
-        };
-        /** @description Not authenticated */
-        401: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              /** @example Not found */
-              error: string;
-            };
-          };
-        };
-        /** @description OAuth not configured */
-        503: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              /** @example Not found */
-              error: string;
-            };
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/auth/logout": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Logged out successfully */
-        204: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        /** @description OAuth not configured */
-        503: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              /** @example Not found */
-              error: string;
-            };
-          };
-        };
-      };
-    };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/parks": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get: {
-      parameters: {
-        query?: {
-          type?: "state-hiking-area" | "wilderness-area" | "national-park" | "other-nature-reserve";
-        };
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Catalog park list */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              parks: {
-                areaKm2: number | null;
-                boundingBox: {
-                  maxLat: number;
-                  maxLon: number;
-                  minLat: number;
-                  minLon: number;
+            requestBody?: never;
+            responses: {
+                /** @description Health check response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            ok: true;
+                            /** @enum {string} */
+                            service: "finnish-national-parks-api";
+                        };
+                    };
                 };
-                establishmentYear: number | null;
-                locationLabel: string;
-                luontoonUrl: string | null;
-                markerPoint: {
-                  lat: number;
-                  lon: number;
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/google": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Redirect to Google OAuth consent screen */
+                302: {
+                    headers: {
+                        /** @description Google OAuth authorization URL */
+                        Location?: string;
+                        [name: string]: unknown;
+                    };
+                    content?: never;
                 };
-                name: string;
-                slug: string;
-                type: {
-                  code: number;
-                  id: number;
-                  name: string;
-                  /** @enum {string} */
-                  slug:
-                    | "state-hiking-area"
-                    | "wilderness-area"
-                    | "national-park"
-                    | "other-nature-reserve";
+                /** @description OAuth not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
                 };
-              }[];
             };
-          };
         };
-        /** @description Catalog park list not modified */
-        304: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-      };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/parks/{slug}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get: {
-      parameters: {
-        query?: {
-          includeBoundary?: "true" | "false";
+    "/auth/google/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        header?: never;
-        path: {
-          slug: string;
-        };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Catalog park detail */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              areaKm2: number | null;
-              boundingBox: {
-                maxLat: number;
-                maxLon: number;
-                minLat: number;
-                minLon: number;
-              };
-              establishmentYear: number | null;
-              locationLabel: string;
-              luontoonUrl: string | null;
-              markerPoint: {
-                lat: number;
-                lon: number;
-              };
-              name: string;
-              slug: string;
-              type: {
-                code: number;
-                id: number;
-                name: string;
-                /** @enum {string} */
-                slug:
-                  | "state-hiking-area"
-                  | "wilderness-area"
-                  | "national-park"
-                  | "other-nature-reserve";
-              };
-              boundaryGeoJson?: {
-                features: {
-                  geometry: {
-                    coordinates: number[][][];
-                    /** @enum {string} */
-                    type: "Polygon";
-                  };
-                  /** @enum {string} */
-                  type: "Feature";
-                }[];
-                /** @enum {string} */
-                type: "FeatureCollection";
-              };
-              /** @enum {string} */
-              catalogStatus: "active" | "inactive";
-              lipasId: number;
-              municipalityCode: number | null;
-              postalOffice: string | null;
-              /** Format: date-time */
-              sourceEventDate: string | null;
-              updatedAt: string;
-            };
-          };
-        };
-        /** @description Catalog park detail not modified */
-        304: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        /** @description Park was not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              /** @example Not found */
-              error: string;
-            };
-          };
-        };
-      };
-    };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/me/parks": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path?: never;
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Personal park list */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              parks: {
-                areaKm2: number | null;
-                boundingBox: {
-                  maxLat: number;
-                  maxLon: number;
-                  minLat: number;
-                  minLon: number;
+        get: {
+            parameters: {
+                query?: {
+                    code?: string;
+                    error?: string;
+                    state?: string;
                 };
-                establishmentYear: number | null;
-                locationLabel: string;
-                luontoonUrl: string | null;
-                markerPoint: {
-                  lat: number;
-                  lon: number;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Redirect to frontend after authentication */
+                302: {
+                    headers: {
+                        /** @description Frontend redirect URL */
+                        Location?: string;
+                        [name: string]: unknown;
+                    };
+                    content?: never;
                 };
-                name: string;
-                slug: string;
-                type: {
-                  code: number;
-                  id: number;
-                  name: string;
-                  /** @enum {string} */
-                  slug:
-                    | "state-hiking-area"
-                    | "wilderness-area"
-                    | "national-park"
-                    | "other-nature-reserve";
+                /** @description OAuth not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
                 };
-                /** @enum {string} */
-                catalogStatus: "active" | "inactive";
-                lipasId: number;
-                municipalityCode: number | null;
-                postalOffice: string | null;
-                /** Format: date-time */
-                sourceEventDate: string | null;
-                updatedAt: string;
-                visitedSummary: {
-                  lastVisitedOn: string | null;
-                  visitCount: number;
-                  visited: boolean;
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Current authenticated user */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example admin@example.com */
+                            email: string;
+                            /** @example 123456789 */
+                            id: string;
+                            /** @example Admin User */
+                            name: string;
+                            /** @example https://lh3.googleusercontent.com/photo.jpg */
+                            picture: string;
+                        };
+                    };
                 };
-                visits: {
-                  author: string | null;
-                  createdAt: string;
-                  id: number;
-                  note: string | null;
-                  route: string | null;
-                  updatedAt: string;
-                  visitedOn: string;
-                }[];
-              }[];
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
             };
-          };
         };
-      };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/me/parks/{slug}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          slug: string;
+    "/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Personal park detail */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              areaKm2: number | null;
-              boundingBox: {
-                maxLat: number;
-                maxLon: number;
-                minLat: number;
-                minLon: number;
-              };
-              establishmentYear: number | null;
-              locationLabel: string;
-              luontoonUrl: string | null;
-              markerPoint: {
-                lat: number;
-                lon: number;
-              };
-              name: string;
-              slug: string;
-              type: {
-                code: number;
-                id: number;
-                name: string;
-                /** @enum {string} */
-                slug:
-                  | "state-hiking-area"
-                  | "wilderness-area"
-                  | "national-park"
-                  | "other-nature-reserve";
-              };
-              /** @enum {string} */
-              catalogStatus: "active" | "inactive";
-              lipasId: number;
-              municipalityCode: number | null;
-              postalOffice: string | null;
-              /** Format: date-time */
-              sourceEventDate: string | null;
-              updatedAt: string;
-              visitedSummary: {
-                lastVisitedOn: string | null;
-                visitCount: number;
-                visited: boolean;
-              };
-              visits: {
-                author: string | null;
-                createdAt: string;
-                id: number;
-                note: string | null;
-                route: string | null;
-                updatedAt: string;
-                visitedOn: string;
-              }[];
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
             };
-          };
-        };
-        /** @description Park was not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              /** @example Not found */
-              error: string;
+            requestBody?: never;
+            responses: {
+                /** @description Logged out successfully */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description OAuth not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
             };
-          };
         };
-      };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/me/parks/{slug}/visits": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          slug: string;
+    "/api/parks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        cookie?: never;
-      };
-      requestBody?: {
-        content: {
-          "application/json": {
-            author?: string | null;
-            note?: string | null;
-            route?: string | null;
-            visitedOn: string;
-          };
-        };
-      };
-      responses: {
-        /** @description Created park visit */
-        201: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              author: string | null;
-              createdAt: string;
-              id: number;
-              note: string | null;
-              route: string | null;
-              updatedAt: string;
-              visitedOn: string;
+        get: {
+            parameters: {
+                query?: {
+                    type?: "state-hiking-area" | "wilderness-area" | "national-park" | "other-nature-reserve";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
             };
-          };
-        };
-        /** @description Park was not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              /** @example Not found */
-              error: string;
+            requestBody?: never;
+            responses: {
+                /** @description Catalog park list */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            parks: {
+                                areaKm2: number | null;
+                                boundingBox: {
+                                    maxLat: number;
+                                    maxLon: number;
+                                    minLat: number;
+                                    minLon: number;
+                                };
+                                establishmentYear: number | null;
+                                locationLabel: string;
+                                luontoonUrl: string | null;
+                                markerPoint: {
+                                    lat: number;
+                                    lon: number;
+                                };
+                                name: string;
+                                slug: string;
+                                type: {
+                                    code: number;
+                                    id: number;
+                                    name: string;
+                                    /** @enum {string} */
+                                    slug: "state-hiking-area" | "wilderness-area" | "national-park" | "other-nature-reserve";
+                                };
+                            }[];
+                        };
+                    };
+                };
+                /** @description Catalog park list not modified */
+                304: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
             };
-          };
         };
-      };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/me/visits/{id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          id: number | null;
+    "/api/parks/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        cookie?: never;
-      };
-      requestBody?: never;
-      responses: {
-        /** @description Deleted park visit */
-        204: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content?: never;
-        };
-        /** @description Visit was not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              /** @example Not found */
-              error: string;
+        get: {
+            parameters: {
+                query?: {
+                    includeBoundary?: "true" | "false";
+                };
+                header?: never;
+                path: {
+                    slug: string;
+                };
+                cookie?: never;
             };
-          };
-        };
-      };
-    };
-    options?: never;
-    head?: never;
-    patch: {
-      parameters: {
-        query?: never;
-        header?: never;
-        path: {
-          id: number | null;
-        };
-        cookie?: never;
-      };
-      requestBody?: {
-        content: {
-          "application/json": {
-            author?: string | null;
-            note?: string | null;
-            route?: string | null;
-            visitedOn?: string;
-          };
-        };
-      };
-      responses: {
-        /** @description Updated park visit */
-        200: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              author: string | null;
-              createdAt: string;
-              id: number;
-              note: string | null;
-              route: string | null;
-              updatedAt: string;
-              visitedOn: string;
+            requestBody?: never;
+            responses: {
+                /** @description Catalog park detail */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            areaKm2: number | null;
+                            boundingBox: {
+                                maxLat: number;
+                                maxLon: number;
+                                minLat: number;
+                                minLon: number;
+                            };
+                            establishmentYear: number | null;
+                            locationLabel: string;
+                            luontoonUrl: string | null;
+                            markerPoint: {
+                                lat: number;
+                                lon: number;
+                            };
+                            name: string;
+                            slug: string;
+                            type: {
+                                code: number;
+                                id: number;
+                                name: string;
+                                /** @enum {string} */
+                                slug: "state-hiking-area" | "wilderness-area" | "national-park" | "other-nature-reserve";
+                            };
+                            boundaryGeoJson?: {
+                                features: {
+                                    geometry: {
+                                        coordinates: number[][][];
+                                        /** @enum {string} */
+                                        type: "Polygon";
+                                    };
+                                    /** @enum {string} */
+                                    type: "Feature";
+                                }[];
+                                /** @enum {string} */
+                                type: "FeatureCollection";
+                            };
+                            /** @enum {string} */
+                            catalogStatus: "active" | "inactive";
+                            lipasId: number;
+                            municipalityCode: number | null;
+                            postalOffice: string | null;
+                            /** Format: date-time */
+                            sourceEventDate: string | null;
+                            updatedAt: string;
+                        };
+                    };
+                };
+                /** @description Catalog park detail not modified */
+                304: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Park was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
             };
-          };
         };
-        /** @description Visit was not found */
-        404: {
-          headers: {
-            [name: string]: unknown;
-          };
-          content: {
-            "application/json": {
-              /** @example Not found */
-              error: string;
-            };
-          };
-        };
-      };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    trace?: never;
-  };
+    "/api/me/parks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Personal park list */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            parks: {
+                                areaKm2: number | null;
+                                boundingBox: {
+                                    maxLat: number;
+                                    maxLon: number;
+                                    minLat: number;
+                                    minLon: number;
+                                };
+                                establishmentYear: number | null;
+                                locationLabel: string;
+                                luontoonUrl: string | null;
+                                markerPoint: {
+                                    lat: number;
+                                    lon: number;
+                                };
+                                name: string;
+                                slug: string;
+                                type: {
+                                    code: number;
+                                    id: number;
+                                    name: string;
+                                    /** @enum {string} */
+                                    slug: "state-hiking-area" | "wilderness-area" | "national-park" | "other-nature-reserve";
+                                };
+                                /** @enum {string} */
+                                catalogStatus: "active" | "inactive";
+                                lipasId: number;
+                                municipalityCode: number | null;
+                                postalOffice: string | null;
+                                /** Format: date-time */
+                                sourceEventDate: string | null;
+                                updatedAt: string;
+                                visitedSummary: {
+                                    lastVisitedOn: string | null;
+                                    visitCount: number;
+                                    visited: boolean;
+                                };
+                                visits: {
+                                    author: string | null;
+                                    createdAt: string;
+                                    id: number;
+                                    images: {
+                                        id: number;
+                                        /** Format: uri */
+                                        fullUrl: string;
+                                        /** Format: uri */
+                                        thumbUrl: string;
+                                        fullWidth: number | null;
+                                        fullHeight: number | null;
+                                        thumbWidth: number | null;
+                                        thumbHeight: number | null;
+                                        originalName: string | null;
+                                        displayOrder: number;
+                                        createdAt: string;
+                                    }[];
+                                    note: string | null;
+                                    route: string | null;
+                                    updatedAt: string;
+                                    visitedOn: string;
+                                }[];
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/parks/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    slug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Personal park detail */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            areaKm2: number | null;
+                            boundingBox: {
+                                maxLat: number;
+                                maxLon: number;
+                                minLat: number;
+                                minLon: number;
+                            };
+                            establishmentYear: number | null;
+                            locationLabel: string;
+                            luontoonUrl: string | null;
+                            markerPoint: {
+                                lat: number;
+                                lon: number;
+                            };
+                            name: string;
+                            slug: string;
+                            type: {
+                                code: number;
+                                id: number;
+                                name: string;
+                                /** @enum {string} */
+                                slug: "state-hiking-area" | "wilderness-area" | "national-park" | "other-nature-reserve";
+                            };
+                            /** @enum {string} */
+                            catalogStatus: "active" | "inactive";
+                            lipasId: number;
+                            municipalityCode: number | null;
+                            postalOffice: string | null;
+                            /** Format: date-time */
+                            sourceEventDate: string | null;
+                            updatedAt: string;
+                            visitedSummary: {
+                                lastVisitedOn: string | null;
+                                visitCount: number;
+                                visited: boolean;
+                            };
+                            visits: {
+                                author: string | null;
+                                createdAt: string;
+                                id: number;
+                                images: {
+                                    id: number;
+                                    /** Format: uri */
+                                    fullUrl: string;
+                                    /** Format: uri */
+                                    thumbUrl: string;
+                                    fullWidth: number | null;
+                                    fullHeight: number | null;
+                                    thumbWidth: number | null;
+                                    thumbHeight: number | null;
+                                    originalName: string | null;
+                                    displayOrder: number;
+                                    createdAt: string;
+                                }[];
+                                note: string | null;
+                                route: string | null;
+                                updatedAt: string;
+                                visitedOn: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Park was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/parks/{slug}/visits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    slug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        author?: string | null;
+                        note?: string | null;
+                        route?: string | null;
+                        visitedOn: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Created park visit */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            author: string | null;
+                            createdAt: string;
+                            id: number;
+                            images: {
+                                id: number;
+                                /** Format: uri */
+                                fullUrl: string;
+                                /** Format: uri */
+                                thumbUrl: string;
+                                fullWidth: number | null;
+                                fullHeight: number | null;
+                                thumbWidth: number | null;
+                                thumbHeight: number | null;
+                                originalName: string | null;
+                                displayOrder: number;
+                                createdAt: string;
+                            }[];
+                            note: string | null;
+                            route: string | null;
+                            updatedAt: string;
+                            visitedOn: string;
+                        };
+                    };
+                };
+                /** @description Park was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/visits/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted park visit */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Visit was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        author?: string | null;
+                        note?: string | null;
+                        route?: string | null;
+                        visitedOn?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Updated park visit */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            author: string | null;
+                            createdAt: string;
+                            id: number;
+                            images: {
+                                id: number;
+                                /** Format: uri */
+                                fullUrl: string;
+                                /** Format: uri */
+                                thumbUrl: string;
+                                fullWidth: number | null;
+                                fullHeight: number | null;
+                                thumbWidth: number | null;
+                                thumbHeight: number | null;
+                                originalName: string | null;
+                                displayOrder: number;
+                                createdAt: string;
+                            }[];
+                            note: string | null;
+                            route: string | null;
+                            updatedAt: string;
+                            visitedOn: string;
+                        };
+                    };
+                };
+                /** @description Visit was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/me/visits/{id}/images": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        images?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Uploaded visit images */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            errors: {
+                                originalName: string;
+                                reason: string;
+                            }[];
+                            images: {
+                                id: number;
+                                /** Format: uri */
+                                fullUrl: string;
+                                /** Format: uri */
+                                thumbUrl: string;
+                                fullWidth: number | null;
+                                fullHeight: number | null;
+                                thumbWidth: number | null;
+                                thumbHeight: number | null;
+                                originalName: string | null;
+                                displayOrder: number;
+                                createdAt: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description No images provided */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Visit was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description File too large */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Invalid file type or all uploads failed */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/visits/{visitId}/images/{imageId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    imageId: number | null;
+                    visitId: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted visit image */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Image or visit was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/visits/{id}/images/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        imageIds: number[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Reordered visit images */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Visit was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Invalid image order */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-  schemas: never;
-  responses: never;
-  parameters: never;
-  requestBodies: never;
-  headers: never;
-  pathItems: never;
+    schemas: never;
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
 export type $defs = Record<string, never>;
 export type operations = Record<string, never>;

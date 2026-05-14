@@ -35,6 +35,7 @@ interface ParkBoundaryMapProps {
 const SOURCE_ID = "park-boundary";
 const FILL_LAYER_ID = "park-boundary-fill";
 const OUTLINE_LAYER_ID = "park-boundary-outline";
+const MAP_PADDING = 40;
 
 const getMapStyle = () => {
   const mapStyleUrl = process.env.NEXT_PUBLIC_MAP_STYLE_URL as string | undefined;
@@ -155,7 +156,12 @@ export const ParkBoundaryMap = ({
       [boundingBox.maxLon, boundingBox.maxLat],
     ];
 
-    map.fitBounds(bounds, { padding: 40, duration: 0 });
+    map.fitBounds(bounds, { padding: MAP_PADDING, duration: 0 });
+
+    const fittedCamera = map.cameraForBounds(bounds, { padding: MAP_PADDING });
+    if (typeof fittedCamera?.zoom === "number") {
+      map.setMinZoom(fittedCamera.zoom);
+    }
 
     // Add marker at park center
     markerRef.current?.remove();

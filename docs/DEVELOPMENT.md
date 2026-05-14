@@ -117,7 +117,12 @@ The backend handles:
 - Google OAuth flow (`/auth/google`, `/auth/google/callback`)
 - Session cookie (`__session` JWT)
 - Park catalog API (`/api/parks`)
-- Personal data API (`/api/me/*`) — visits, notes
+- Legacy `/api/me/*` routes for visit and note content
+
+Route naming caveat:
+- In this project, **all `GET` endpoints are public-readable**, including `GET /api/me/*`.
+- **Non-`GET` endpoints require authenticated admin access.**
+- The `/api/me/*` naming is legacy and misleading here; it does **not** imply that `GET` responses are private or user-specific.
 
 ---
 
@@ -152,7 +157,7 @@ const visit = await apiFetch<Visit>("/api/me/parks/pallas/visits", {
 ```
 
 - Automatically sends `Authorization: Bearer <API_KEY>` header
-- Sends cookies (`credentials: "include"`) in browser for auth endpoints
+- Sends cookies (`credentials: "include"`) in browser for auth and admin write endpoints
 - Throws `ApiError` on non-2xx responses
 - Handles empty-body 204 responses
 
@@ -199,4 +204,5 @@ See `AGENTS.md` for the full convention list. Key rules:
 - Port: **3004**
 - Auth endpoints: `/auth/google`, `/auth/google/callback`, `/auth/me`, `/auth/logout`
 - API endpoints: `/api/parks`, `/api/parks/{slug}`, `/api/me/*`
+- `GET` endpoints are public-readable; non-`GET` endpoints require authenticated admin access
 - OpenAPI doc: `http://localhost:3004/openapi.json`

@@ -34,6 +34,8 @@
     "noDetails": "Ei lisätietoja",
     "detailsTitle": "Lisätiedot",
     "authorTitle": "Kirjoittanut",
+    "imagesTitle": "Kuvat",
+    "imageCount": "{count} kuvaa",
     "visitNumber": "{number}. käynti",
     "boundaryMapTitle": "Puiston kartta"
   },
@@ -69,7 +71,8 @@
       "edit": "Muokkaa",
       "editVisit": {
         "title": "Muokkaa käyntiä",
-        "description": "Päivitä käynnin tietoja."
+        "description": "Päivitä käynnin tietoja.",
+        "createdNotice": "Käynti tallennettiin. Voit jatkaa sen muokkaamista täällä."
       },
       "form": {
         "parkLabel": "Puisto",
@@ -87,7 +90,7 @@
         "submit": "Tallenna",
         "delete": "Poista",
         "deleteConfirm": "Haluatko varmasti poistaa tämän käynnin?",
-        "cancel": "Peruuta",
+        "back": "Palaa takaisin",
         "validation": {
           "parkRequired": "Valitse puisto",
           "dateRequired": "Anna käyntipäivä"
@@ -99,6 +102,25 @@
         "visitDate": "Käyntipäivä",
         "noVisits": "Ei vielä kirjattuja käyntejä.",
         "addFirstVisit": "Lisää ensimmäinen käynti"
+      },
+      "images": {
+        "title": "Käyntikuvat",
+        "selectFiles": "Valitse kuvia",
+        "selectedCount": "{count} kuvaa valittu",
+        "upload": "Lähetä kuvat",
+        "uploading": "Lähetetään...",
+        "uploadFailed": "Kuvien lähetys epäonnistui",
+        "uploadSuccess": "{count, plural, one {# kuva lisättiin.} other {# kuvaa lisättiin.}}",
+        "deleteImage": "Poista kuva",
+        "deleteConfirm": "Haluatko varmasti poistaa tämän kuvan?",
+        "deleteFailed": "Kuvan poisto epäonnistui",
+        "deleteSuccess": "Kuva poistettiin.",
+        "moveLeft": "Siirrä kuva vasemmalle",
+        "moveRight": "Siirrä kuva oikealle",
+        "reorderFailed": "Kuvien järjestyksen päivitys epäonnistui",
+        "reorderSuccess": "Kuvien järjestys päivitettiin.",
+        "removeFile": "Poista valinta",
+        "unsupportedType": "Tiedostomuotoa ei tueta: {name}"
       }
     }
   },
@@ -107,6 +129,18 @@
     "loginToControlPanel": "Kirjaudu hallintaan",
     "logout": "Kirjaudu ulos",
     "accessDenied": "Ei hallintaoikeutta."
+  },
+  "imageGallery": {
+    "dialogLabel": "Käyntikuvat",
+    "open": "Avaa kuva {index}",
+    "scrollPrevious": "Näytä edelliset kuvat",
+    "scrollNext": "Näytä seuraavat kuvat",
+    "activeImage": "Kuva {index}",
+    "close": "Sulje kuva",
+    "closeBackdrop": "Sulje kuvanäkymä",
+    "previous": "Edellinen kuva",
+    "next": "Seuraava kuva",
+    "position": "Kuva {current} / {total}"
   },
   "map": {
     "ariaLabel": "Suomen kansallispuistojen kartta",

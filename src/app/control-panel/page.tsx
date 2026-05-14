@@ -5,6 +5,8 @@ import { apiFetch } from "@/lib/api";
 import type { PersonalPark } from "@/lib/parks";
 import { getTranslations } from "next-intl/server";
 
+export const dynamic = "force-dynamic";
+
 export const generateMetadata = async () => {
   const t = await getTranslations("controlPanel");
   return {
