@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/header";
+import { HomeMapControlsProvider } from "@/components/providers/home-map-controls-provider";
 import { SerwistProvider } from "@/components/providers/serwist-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import messages from "../../messages/fi.json";
@@ -68,10 +69,12 @@ const RootLayout = async ({
               enableSystem
               disableTransitionOnChange
             >
-              <div className="relative flex min-h-screen flex-col">
-                <Header />
-                <main className="flex flex-1 flex-col">{children}</main>
-              </div>
+              <HomeMapControlsProvider>
+                <div className="relative flex min-h-screen flex-col">
+                  <Header />
+                  <main className="flex flex-1 flex-col">{children}</main>
+                </div>
+              </HomeMapControlsProvider>
             </ThemeProvider>
           </SerwistProvider>
         </NextIntlClientProvider>

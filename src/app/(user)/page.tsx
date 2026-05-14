@@ -1,4 +1,4 @@
-import { ParkMap } from "@/components/map/park-map";
+import { ParkExplorer } from "@/components/map/park-explorer";
 import { apiFetch } from "@/lib/api";
 import type { paths } from "@/lib/api-types";
 import type { MapPark } from "@/lib/parks";
@@ -43,7 +43,7 @@ const HomePage = async () => {
 
   return (
     <main className="flex flex-1 flex-col min-h-0">
-      <ParkMap parks={parks} error={error} isAuthenticated={isAuthenticated} />
+      <ParkExplorer parks={parks} error={error} isAuthenticated={isAuthenticated} />
     </main>
   );
 };

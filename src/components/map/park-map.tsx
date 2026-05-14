@@ -174,10 +174,15 @@ export const ParkMap = ({ parks, error, isAuthenticated = false }: ParkMapProps)
   const popupsRef = useRef<Map<string, maplibregl.Popup>>(new Map());
   const shownPopupsRef = useRef<Set<string>>(new Set());
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const activeSlugRef = useRef<string | null>(null);
   const t = useTranslations("map");
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [activeSlug, setActiveSlug] = useState<string | null>(null);
   const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
+
+  useEffect(() => {
+    activeSlugRef.current = activeSlug;
+  }, [activeSlug]);
 
   const cancelClose = useCallback(() => {
     if (hoverTimerRef.current) {
@@ -193,6 +198,23 @@ export const ParkMap = ({ parks, error, isAuthenticated = false }: ParkMapProps)
     hoverTimerRef.current = setTimeout(() => {
       setHoveredSlug(null);
     }, HOVER_CLOSE_DELAY);
+  }, []);
+
+  const closeActivePopupIfFocusLeftMapPopup = useCallback((slug: string) => {
+    window.setTimeout(() => {
+      const focusedElement = document.activeElement;
+      if (!(focusedElement instanceof HTMLElement)) {
+        setActiveSlug((current) => (current === slug ? null : current));
+        return;
+      }
+
+      const isInsideMarker = !!focusedElement.closest(".maplibregl-marker");
+      const isInsidePopup = !!focusedElement.closest(".maplibregl-popup");
+
+      if (!isInsideMarker && !isInsidePopup) {
+        setActiveSlug((current) => (current === slug ? null : current));
+      }
+    }, 0);
   }, []);
 
   // Initialize map
@@ -297,12 +319,15 @@ export const ParkMap = ({ parks, error, isAuthenticated = false }: ParkMapProps)
       el.addEventListener("click", () => {
         cancelClose();
         setHoveredSlug(null);
-        setActiveSlug((current) => (current === park.slug ? current : park.slug));
+        setActiveSlug((current) => (current === park.slug ? null : park.slug));
       });
 
       el.addEventListener("mouseenter", () => {
+        if (activeSlugRef.current && activeSlugRef.current !== park.slug) {
+          return;
+        }
+
         cancelClose();
-        setActiveSlug(park.slug);
         setHoveredSlug(park.slug);
       });
 
@@ -317,10 +342,18 @@ export const ParkMap = ({ parks, error, isAuthenticated = false }: ParkMapProps)
       });
 
       el.addEventListener("blur", () => {
-        setActiveSlug(null);
+        closeActivePopupIfFocusLeftMapPopup(park.slug);
       });
     }
-  }, [parks, isMapLoaded, t, cancelClose, scheduleClose, isAuthenticated]);
+  }, [
+    parks,
+    isMapLoaded,
+    t,
+    cancelClose,
+    scheduleClose,
+    isAuthenticated,
+    closeActivePopupIfFocusLeftMapPopup,
+  ]);
 
   // Sync popup visibility with active/hovered state
   useEffect(() => {
@@ -328,25 +361,18 @@ export const ParkMap = ({ parks, error, isAuthenticated = false }: ParkMapProps)
     if (!map) return;
 
     for (const [slug, popup] of popupsRef.current) {
-      const shouldShow = activeSlug === slug || hoveredSlug === slug;
+      const shouldShow = activeSlug === slug || (activeSlug === null && hoveredSlug === slug);
       const isShown = shownPopupsRef.current.has(slug);
 
       if (shouldShow && !isShown) {
         popup.addTo(map);
         shownPopupsRef.current.add(slug);
-
-        const content = popup.getElement();
-        const wrapper = content?.parentElement;
-        if (wrapper) {
-          wrapper.addEventListener("mouseenter", cancelClose);
-          wrapper.addEventListener("mouseleave", scheduleClose);
-        }
       } else if (!shouldShow && isShown) {
         popup.remove();
         shownPopupsRef.current.delete(slug);
       }
     }
-  }, [activeSlug, hoveredSlug, cancelClose, scheduleClose]);
+  }, [activeSlug, hoveredSlug]);
 
   // Click outside to close active popup
   useEffect(() => {
@@ -357,6 +383,7 @@ export const ParkMap = ({ parks, error, isAuthenticated = false }: ParkMapProps)
 
       if (!isInsideMarker && !isInsidePopup) {
         setActiveSlug(null);
+        setHoveredSlug(null);
       }
     };
 
@@ -369,6 +396,7 @@ export const ParkMap = ({ parks, error, isAuthenticated = false }: ParkMapProps)
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setActiveSlug(null);
+        setHoveredSlug(null);
       }
     };
 

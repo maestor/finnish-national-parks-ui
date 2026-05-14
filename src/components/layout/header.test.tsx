@@ -1,6 +1,14 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { Header } from "./header";
+
+vi.mock("@/hooks/use-auth", () => ({
+  useAuth: () => ({ isAuthenticated: false, isLoading: true, logout: vi.fn(), user: null }),
+}));
+
+vi.mock("./home-park-search", () => ({
+  HomeParkSearch: () => <div>home-park-search</div>,
+}));
 
 describe("Header", () => {
   it("renders site title link", () => {
