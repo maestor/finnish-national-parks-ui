@@ -13,21 +13,21 @@ The app serves two audiences:
 
 ## Tech Stack
 
-| Layer | Choice |
-|-------|--------|
-| Framework | Next.js 16 (App Router, Turbopack) |
-| Language | TypeScript (strict mode) |
-| Styling | Tailwind CSS v4 |
-| UI Primitives | Custom components with Radix-style patterns |
-| Theming | `next-themes` (dark / light / system) |
-| Icons | Lucide React |
-| Map | MapLibre GL JS |
-| API Client | Typed fetch wrapper + OpenAPI-generated types |
-| State | React hooks (Context + useReducer / useState) |
-| PWA | `@serwist/turbopack` (Turbopack-compatible) |
-| i18n | `next-intl` (Finnish default, extensible) |
-| Testing | Vitest + React Testing Library + Playwright |
-| Lint / Format | Biome |
+| Layer         | Choice                                        |
+| ------------- | --------------------------------------------- |
+| Framework     | Next.js 16 (App Router, Turbopack)            |
+| Language      | TypeScript (strict mode)                      |
+| Styling       | Tailwind CSS v4                               |
+| UI Primitives | Custom components with Radix-style patterns   |
+| Theming       | `next-themes` (dark / light / system)         |
+| Icons         | Lucide React                                  |
+| Map           | MapLibre GL JS                                |
+| API Client    | Typed fetch wrapper + OpenAPI-generated types |
+| State         | React hooks (Context + useReducer / useState) |
+| PWA           | `@serwist/turbopack` (Turbopack-compatible)   |
+| i18n          | `next-intl` (Finnish default, extensible)     |
+| Testing       | Vitest + React Testing Library + Playwright   |
+| Lint / Format | Biome                                         |
 
 ## Project Structure
 
@@ -126,4 +126,4 @@ The app is configured as a Progressive Web App using `@serwist/turbopack`, which
 
 ## Roadmap
 
-- *Empty — all planned features are implemented.*
+- Currently empty before next ideas
