@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { apiFetch } from "@/lib/api";
-import type { Park, VisitWithPark } from "@/lib/parks";
+import type { Park, Visit, VisitWithPark } from "@/lib/parks";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -61,8 +61,10 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
             note: note || null,
           }),
         });
+        router.push("/control-panel/visits");
+        router.refresh();
       } else {
-        await apiFetch(`/api/me/parks/${parkSlug}/visits`, {
+        const createdVisit = await apiFetch<Visit>(`/api/me/parks/${parkSlug}/visits`, {
           method: "POST",
           body: JSON.stringify({
             visitedOn,
@@ -71,9 +73,8 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
             note: note || null,
           }),
         });
+        router.push(`/control-panel/visits/${createdVisit.id}/edit?created=1`);
       }
-      router.push("/control-panel/visits");
-      router.refresh();
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : String(error));
     } finally {

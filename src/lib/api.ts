@@ -19,12 +19,19 @@ const getApiKey = (): string | undefined => {
   return env.API_KEY;
 };
 
+const isFormDataBody = (body: BodyInit | null | undefined): body is FormData => {
+  return typeof FormData !== "undefined" && body instanceof FormData;
+};
+
 export const apiFetch = async <T>(path: string, options?: RequestInit): Promise<T> => {
   const url = `${env.NEXT_PUBLIC_API_URL}${path}`;
   const apiKey = getApiKey();
+  const body = options?.body;
 
   const headers = new Headers(options?.headers);
-  headers.set("Content-Type", "application/json");
+  if (body && !isFormDataBody(body) && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
 
   if (apiKey) {
     headers.set("Authorization", `Bearer ${apiKey}`);

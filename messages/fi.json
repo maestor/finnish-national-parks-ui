@@ -34,6 +34,8 @@
     "noDetails": "Ei lisätietoja",
     "detailsTitle": "Lisätiedot",
     "authorTitle": "Kirjoittanut",
+    "imagesTitle": "Kuvat",
+    "imageCount": "{count} kuvaa",
     "visitNumber": "{number}. käynti",
     "boundaryMapTitle": "Puiston kartta"
   },
@@ -69,7 +71,8 @@
       "edit": "Muokkaa",
       "editVisit": {
         "title": "Muokkaa käyntiä",
-        "description": "Päivitä käynnin tietoja."
+        "description": "Päivitä käynnin tietoja.",
+        "createdNotice": "Käynti tallennettiin. Voit jatkaa sen muokkaamista täällä."
       },
       "form": {
         "parkLabel": "Puisto",
@@ -107,6 +110,15 @@
     "loginToControlPanel": "Kirjaudu hallintaan",
     "logout": "Kirjaudu ulos",
     "accessDenied": "Ei hallintaoikeutta."
+  },
+  "imageGallery": {
+    "dialogLabel": "Käyntikuvat",
+    "open": "Avaa kuva {index}",
+    "activeImage": "Kuva {index}",
+    "close": "Sulje kuva",
+    "previous": "Edellinen kuva",
+    "next": "Seuraava kuva",
+    "position": "Kuva {current} / {total}"
   },
   "map": {
     "ariaLabel": "Suomen kansallispuistojen kartta",

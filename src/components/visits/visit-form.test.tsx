@@ -21,6 +21,43 @@ const parks = [
 ] as Park[];
 
 describe("VisitForm", () => {
+  it("redirects a newly created visit to the edit page", async () => {
+    const { apiFetch } = await import("@/lib/api");
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      id: 42,
+      visitedOn: "2024-06-15",
+      route: null,
+      author: null,
+      note: null,
+      createdAt: "2024-06-15T00:00:00Z",
+      updatedAt: "2024-06-15T00:00:00Z",
+    });
+
+    render(<VisitForm parks={parks} />);
+
+    await userEvent.selectOptions(
+      screen.getByLabelText(/controlPanel.visits.form.parkLabel/i),
+      "pallas",
+    );
+    await userEvent.type(
+      screen.getByLabelText(/controlPanel.visits.form.dateLabel/i),
+      "2024-06-15",
+    );
+    await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.submit/i }));
+
+    expect(apiFetch).toHaveBeenCalledWith("/api/me/parks/pallas/visits", {
+      method: "POST",
+      body: JSON.stringify({
+        visitedOn: "2024-06-15",
+        route: null,
+        author: null,
+        note: null,
+      }),
+    });
+    expect(mockPush).toHaveBeenCalledWith("/control-panel/visits/42/edit?created=1");
+    expect(mockRefresh).not.toHaveBeenCalled();
+  });
+
   it("renders create form fields", () => {
     render(<VisitForm parks={parks} />);
 
@@ -59,6 +96,7 @@ describe("VisitForm", () => {
       note: "Great hike",
       createdAt: "2024-06-15T00:00:00Z",
       updatedAt: "2024-06-15T00:00:00Z",
+      images: [],
     };
 
     render(<VisitForm parks={parks} visitToEdit={visitToEdit} />);

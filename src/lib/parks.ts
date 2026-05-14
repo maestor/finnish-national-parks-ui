@@ -3,8 +3,32 @@ import type { paths } from "./api-types";
 export type Park =
   paths["/api/parks"]["get"]["responses"][200]["content"]["application/json"]["parks"][number];
 
-export type PersonalPark =
+type ApiPersonalPark =
   paths["/api/me/parks"]["get"]["responses"][200]["content"]["application/json"]["parks"][number];
+
+type ApiVisit =
+  paths["/api/me/parks"]["get"]["responses"][200]["content"]["application/json"]["parks"][number]["visits"][number];
+
+export interface VisitImage {
+  id: number;
+  fullUrl: string;
+  thumbUrl: string;
+  fullWidth: number | null;
+  fullHeight: number | null;
+  thumbWidth: number | null;
+  thumbHeight: number | null;
+  originalName: string | null;
+  displayOrder: number;
+  createdAt: string;
+}
+
+export type Visit = ApiVisit & {
+  images?: VisitImage[];
+};
+
+export type PersonalPark = Omit<ApiPersonalPark, "visits"> & {
+  visits: Visit[];
+};
 
 export type MapPark = Park & {
   visitedSummary?: {
@@ -12,9 +36,6 @@ export type MapPark = Park & {
     visitCount?: number;
   };
 };
-
-export type Visit =
-  paths["/api/me/parks"]["get"]["responses"][200]["content"]["application/json"]["parks"][number]["visits"][number];
 
 export type VisitWithPark = Visit & {
   parkSlug: string;

@@ -1,19 +1,13 @@
 "use client";
 
 import { EditVisitLink } from "@/components/visits/edit-visit-link";
-import { ChevronDown, FileText, Route, User } from "lucide-react";
+import { VisitImageGallery } from "@/components/visits/visit-image-gallery";
+import type { Visit } from "@/lib/parks";
+import { ChevronDown, FileText, Images, Route, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-
-interface Visit {
-  id: number;
-  visitedOn: string;
-  route: string | null;
-  author: string | null;
-  note: string | null;
-}
 
 interface VisitAccordionProps {
   visits: Visit[];
@@ -63,7 +57,9 @@ export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionPro
     <div className="space-y-3">
       {displayVisits.map((visit) => {
         const number = visitNumbers.get(visit.id) ?? 0;
-        const hasDetails = !!visit.note || !!visit.route || !!visit.author;
+        const imageCount = visit.images?.length ?? 0;
+        const hasImages = imageCount > 0;
+        const hasDetails = !!visit.note || !!visit.route || !!visit.author || hasImages;
         const isOpen = openId === visit.id;
         const seasonBorder = getSeasonBorderClass(visit.visitedOn);
 
@@ -108,6 +104,12 @@ export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionPro
                     {visit.route}
                   </span>
                 )}
+                {hasImages && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                    <Images className="h-3 w-3" aria-hidden="true" />
+                    {t("imageCount", { count: imageCount })}
+                  </span>
+                )}
               </span>
               <span className="flex shrink-0 items-center gap-1.5">
                 {isEditable && (
@@ -143,6 +145,15 @@ export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionPro
                         {t("authorTitle")}
                       </h3>
                       <p className="text-sm">{visit.author}</p>
+                    </>
+                  )}
+                  {hasImages && visit.images && (
+                    <>
+                      <h3 className="flex items-center gap-2 text-base font-semibold border-b pb-2">
+                        <Images className="h-4 w-4 text-muted-foreground" />
+                        {t("imagesTitle")}
+                      </h3>
+                      <VisitImageGallery images={visit.images} />
                     </>
                   )}
                 </div>
