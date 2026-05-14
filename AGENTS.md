@@ -31,6 +31,10 @@ This is the Finnish National Parks UI, a Next.js 16 App Router application consu
 - Keep changes scoped to the current request.
 - Never start `npm run dev` or any local server on your own. If a server is needed, use an existing one or ask the user to launch it.
 
+## Cleanup and Documentation Hygiene
+- **Never leave unused code behind.** Before finishing any task, remove dead code: orphaned imports, unused variables or parameters, unused translation keys, unreachable components, and stale comments. A passing `npm run verify` is not sufficient proof — grep for removed references explicitly.
+- **Documentation must stay in sync.** Any change that affects behavior, architecture, environment variables, API usage, or feature status must update the relevant docs (`README.md`, `AGENTS.md`, `docs/**`, roadmaps, etc.) in the same PR. Do not treat docs as an afterthought.
+
 ## Coding Conventions
 - All function definitions must use `const` arrow functions. Pure `function` declarations are not allowed.
 - TypeScript strict mode is enabled. No `any` without explicit justification. All env vars are Zod-validated.
