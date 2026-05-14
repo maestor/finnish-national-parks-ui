@@ -2,6 +2,7 @@ import { VisitAccordion } from "@/components/park/visit-accordion";
 import { apiFetch } from "@/lib/api";
 import type { paths } from "@/lib/api-types";
 import type { PersonalPark } from "@/lib/parks";
+import { ExternalLink } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 
@@ -72,9 +73,11 @@ const ParkDetailPage = async ({ params }: ParkDetailPageProps) => {
             href={publicPark.luontoonUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex w-fit items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex w-fit items-center gap-1 text-sm font-medium text-primary underline-offset-4 hover:underline"
+            aria-label={`${t("officialLink")} (avautuu uuteen välilehteen)`}
           >
             {t("officialLink")}
+            <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
           </a>
         )}
       </div>
@@ -106,7 +109,7 @@ const ParkDetailPage = async ({ params }: ParkDetailPageProps) => {
 
         {visits.length > 0 ? (
           <div className="mt-4">
-            <VisitAccordion visits={visits} />
+            <VisitAccordion visits={visits} isEditable={!!personalPark} />
           </div>
         ) : (
           <p className="mt-4 text-muted-foreground">{t("noVisits")}</p>
