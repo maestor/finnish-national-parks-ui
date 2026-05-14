@@ -28,6 +28,7 @@ This is the **Finnish National Parks UI** — a Next.js 16 App Router applicatio
 - **Quality gate:** `npm run verify` must pass before any task or PR is considered ready. The only exception is changes that are entirely outside what `verify` validates — for example, pure documentation updates (README, DEVELOPMENT, TESTING, AGENTS, plans) or repository configuration that does not affect code, tests, or types. In those cases, skip `verify` and note the exception in the PR description.
 - **Review requirement:** User review and explicit acceptance are required before merging.
 - Keep documentation-only changes separate from implementation changes when practical.
+- **Documentation must stay current:** Whenever implementation changes affect architecture, API surface, component structure, conventions, environment variables, scripts, or any behavior described in project docs, update the relevant documentation as part of the same task. Do not leave documentation outdated or ask the user whether docs need updating — identify gaps proactively and fix them. This applies to `AGENTS.md`, `DEVELOPMENT.md`, `TESTING.md`, and `README.md`.
 - Do not revert user changes.
 - Do not hand-edit generated files once generation exists.
 - Keep changes scoped to the current request.
@@ -118,7 +119,6 @@ Skills are referenced from the project root. If they need to be moved to comply 
 | `src/lib/api.ts` | Typed fetch client to Hono backend |
 | `src/lib/env.ts` | Zod-validated environment variables |
 | `src/lib/api-types.ts` | Auto-generated from backend OpenAPI |
-| `src/i18n/request.ts` | `next-intl` request-scoped config |
 | `src/i18n/request.ts` | `next-intl` request config (locale hardcoded to `fi`) |
 | `src/app/sw.ts` | Serwist service worker |
 | `messages/fi.json` | Finnish translation messages |

@@ -40,10 +40,14 @@ src/
 │   ├── layout.tsx              # Root layout with providers
 │   └── globals.css             # Tailwind v4 + CSS variables
 ├── components/
+│   ├── auth/                   # Auth-related UI
+│   ├── dashboard/              # Dashboard stats & recent visits
 │   ├── layout/                 # Header, theme toggle
 │   ├── map/                    # MapLibre wrapper
+│   ├── park/                   # Park detail page sections
 │   ├── providers/              # Theme, Serwist, i18n providers
-│   └── ui/                     # Button, inputs, cards
+│   ├── ui/                     # Button, inputs, cards
+│   └── visits/                 # Visit forms, lists, edit links
 ├── hooks/                      # Custom React hooks
 ├── lib/                        # API client, env validation, auth
 ├── i18n/request.ts             # next-intl request config

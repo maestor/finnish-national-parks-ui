@@ -85,15 +85,17 @@ The `AUTH_JWT_SECRET` must match the backend's `AUTH_JWT_SECRET` exactly.
 
 ```
 src/app/
-  (user)/           # Public routes (grouped, no layout effect)
-    page.tsx        # Map frontpage
-    park/[slug]/    # Park detail pages
-  control-panel/    # Admin routes (protected by proxy)
-    layout.tsx      # Sidebar layout
-    page.tsx        # Dashboard
-    visits/         # Visit management
-  login/            # OAuth login page
-  proxy.ts          # Route protection (Next.js 16 proxy convention)
+  (user)/                   # Public routes (grouped, no layout effect)
+    page.tsx                # Map frontpage
+    park/[slug]/            # Park detail pages
+  control-panel/            # Admin routes (protected by proxy)
+    layout.tsx              # Sidebar layout
+    page.tsx                # Dashboard
+    visits/
+      page.tsx              # Visits list
+      [id]/edit/page.tsx    # Edit visit form
+  login/                    # OAuth login page
+  proxy.ts                  # Route protection (Next.js 16 proxy convention)
 ```
 
 ### Server vs Client Components
@@ -147,7 +149,12 @@ const parks = await apiFetch<{ parks: Park[] }>("/api/parks");
 // POST
 const visit = await apiFetch<Visit>("/api/me/parks/pallas/visits", {
   method: "POST",
-  body: JSON.stringify({ visitedOn: "2024-06-15" }),
+  body: JSON.stringify({
+    visitedOn: "2024-06-15",
+    route: "Pyhä-Luoston reitti",   // optional
+    author: "Matti",               // optional
+    note: "Hieno sää.",            // optional
+  }),
 });
 ```
 
