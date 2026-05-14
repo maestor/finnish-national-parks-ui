@@ -126,4 +126,4 @@ The app is configured as a Progressive Web App using `@serwist/turbopack`, which
 
 ## Roadmap
 
-- **Park boundary map** — Render individual park boundaries on a dedicated map view using the `boundaryGeoJson` data already available from the API.
+- *Empty — all planned features are implemented.*
