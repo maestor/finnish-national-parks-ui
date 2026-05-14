@@ -58,7 +58,7 @@ const ParkDetailPage = async ({ params }: ParkDetailPageProps) => {
   const visits = personalPark?.visits ?? [];
 
   return (
-    <article className="mx-auto max-w-5xl px-4 py-8">
+    <article className="mx-auto md:w-full max-w-5xl px-4 py-8">
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="text-3xl font-bold tracking-tight">{publicPark.name}</h1>
         <span className="inline-flex items-center rounded-full border bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
