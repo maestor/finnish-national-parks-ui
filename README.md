@@ -126,4 +126,4 @@ The app is configured as a Progressive Web App using `@serwist/turbopack`, which
 
 ## Roadmap
 
-- Currently empty before next ideas
+- Visit images for park visits: [`docs/plans/visit-images-frontend.md`](docs/plans/visit-images-frontend.md)
