@@ -26,6 +26,8 @@ describe("VisitForm", () => {
 
     expect(screen.getByLabelText(/controlPanel.visits.form.parkLabel/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/controlPanel.visits.form.dateLabel/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/controlPanel.visits.form.routeLabel/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/controlPanel.visits.form.authorLabel/i)).toBeInTheDocument();
     expect(screen.getByText(/controlPanel.visits.form.noteLabel/i)).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /controlPanel.visits.form.submit/i }),
@@ -46,12 +48,14 @@ describe("VisitForm", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders edit mode with prefilled values and read-only park", () => {
+  it("renders edit mode with prefilled values, read-only park and delete button", () => {
     const visitToEdit = {
       id: 1,
       parkSlug: "pallas",
       parkName: "Pallas-Yllästunturi",
       visitedOn: "2024-06-15",
+      route: "Pallas-Yllästunturin reitti",
+      author: "Maija Meikäläinen",
       note: "Great hike",
       createdAt: "2024-06-15T00:00:00Z",
       updatedAt: "2024-06-15T00:00:00Z",
@@ -61,7 +65,12 @@ describe("VisitForm", () => {
 
     expect(screen.getByText("Pallas-Yllästunturi")).toBeInTheDocument();
     expect(screen.getByDisplayValue("2024-06-15")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Pallas-Yllästunturin reitti")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Maija Meikäläinen")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Great hike")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /controlPanel.visits.form.delete/i }),
+    ).toBeInTheDocument();
   });
 
   it("toggles markdown preview", async () => {
