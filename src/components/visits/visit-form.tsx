@@ -24,6 +24,8 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
 
   const [parkSlug, setParkSlug] = useState(visitToEdit?.parkSlug ?? defaultParkSlug ?? "");
   const [visitedOn, setVisitedOn] = useState(visitToEdit?.visitedOn ?? "");
+  const [route, setRoute] = useState(visitToEdit?.route ?? "");
+  const [author, setAuthor] = useState(visitToEdit?.author ?? "");
   const [note, setNote] = useState(visitToEdit?.note ?? "");
   const [isPreview, setIsPreview] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -54,6 +56,8 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
           method: "PATCH",
           body: JSON.stringify({
             visitedOn,
+            route: route || null,
+            author: author || null,
             note: note || null,
           }),
         });
@@ -62,10 +66,29 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
           method: "POST",
           body: JSON.stringify({
             visitedOn,
+            route: route || null,
+            author: author || null,
             note: note || null,
           }),
         });
       }
+      router.push("/control-panel/visits");
+      router.refresh();
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!visitToEdit) return;
+    if (!window.confirm(t("deleteConfirm"))) {
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      await apiFetch(`/api/me/visits/${visitToEdit.id}`, { method: "DELETE" });
       router.push("/control-panel/visits");
       router.refresh();
     } catch (error) {
@@ -120,6 +143,30 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
       </div>
 
       <div className="space-y-2">
+        <Label htmlFor="route">{t("routeLabel")}</Label>
+        <input
+          id="route"
+          type="text"
+          value={route}
+          onChange={(e) => setRoute(e.target.value)}
+          placeholder={t("routePlaceholder")}
+          className={`${inputClassName} h-10`}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="author">{t("authorLabel")}</Label>
+        <input
+          id="author"
+          type="text"
+          value={author}
+          onChange={(e) => setAuthor(e.target.value)}
+          placeholder={t("authorPlaceholder")}
+          className={`${inputClassName} h-10`}
+        />
+      </div>
+
+      <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label htmlFor="note">{t("noteLabel")}</Label>
           <div className="flex items-center gap-3">
@@ -162,6 +209,16 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? "..." : t("submit")}
         </Button>
+        {isEditing && (
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={isSubmitting}
+          >
+            {t("delete")}
+          </Button>
+        )}
         <Link
           href="/control-panel/visits"
           className="text-sm text-muted-foreground underline hover:text-foreground"

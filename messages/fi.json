@@ -25,7 +25,7 @@
     "detailTitle": "Puiston tiedot",
     "visitHistory": "Käyntihistoria",
     "notes": "Muistiinpanot",
-    "officialLink": "Luontoon.fi-sivu",
+    "officialLink": "Luontoon.fi",
     "type": "Tyyppi",
     "location": "Sijainti",
     "area": "Pinta-ala",
@@ -36,6 +36,7 @@
     "hideDetails": "Piilota lisätiedot",
     "noDetails": "Ei lisätietoja",
     "detailsTitle": "Lisätiedot",
+    "authorTitle": "Kirjoittanut",
     "visitNumber": "{number}. käynti"
   },
   "controlPanel": {
@@ -67,6 +68,7 @@
         "title": "Uusi käynti",
         "description": "Kirjaa uusi käynti kansallispuistoon."
       },
+      "edit": "Muokkaa",
       "editVisit": {
         "title": "Muokkaa käyntiä",
         "description": "Päivitä käynnin tietoja."
@@ -75,12 +77,18 @@
         "parkLabel": "Puisto",
         "parkPlaceholder": "Valitse puisto",
         "dateLabel": "Käyntipäivä",
+        "routeLabel": "Reitti",
+        "routePlaceholder": "Esim. Pallas-Yllästunturin reitti",
+        "authorLabel": "Kirjoittaja",
+        "authorPlaceholder": "Esim. Maija Meikäläinen",
         "noteLabel": "Muistiinpanot",
         "notePlaceholder": "Kirjoita muistiinpanoja markdown-muodossa...",
         "markdownGuide": "Markdown-opas",
         "preview": "Esikatselu",
         "edit": "Muokkaa",
         "submit": "Tallenna",
+        "delete": "Poista",
+        "deleteConfirm": "Haluatko varmasti poistaa tämän käynnin?",
         "cancel": "Peruuta",
         "validation": {
           "parkRequired": "Valitse puisto",
@@ -89,9 +97,8 @@
       },
       "list": {
         "parkName": "Puisto",
+        "route": "Reitti",
         "visitDate": "Käyntipäivä",
-        "actions": "Toiminnot",
-        "edit": "Muokkaa",
         "delete": "Poista",
         "noVisits": "Ei vielä kirjattuja käyntejä.",
         "addFirstVisit": "Lisää ensimmäinen käynti",
