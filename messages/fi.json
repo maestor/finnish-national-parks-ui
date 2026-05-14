@@ -37,7 +37,8 @@
     "noDetails": "Ei lisätietoja",
     "detailsTitle": "Lisätiedot",
     "authorTitle": "Kirjoittanut",
-    "visitNumber": "{number}. käynti"
+    "visitNumber": "{number}. käynti",
+    "boundaryMapTitle": "Sijainti ja rajaus"
   },
   "controlPanel": {
     "title": "Hallintapaneeli",
@@ -114,6 +115,7 @@
   },
   "map": {
     "ariaLabel": "Suomen kansallispuistojen kartta",
+    "boundaryAriaLabel": "{parkName} rajaus kartalla",
     "loading": "Ladataan karttaa...",
     "loadError": "Karttatietojen lataus epäonnistui",
     "established": "Perustettu",
