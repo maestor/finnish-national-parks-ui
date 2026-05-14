@@ -1,8 +1,9 @@
+import { ParkBoundaryMap } from "@/components/map/park-boundary-map";
 import { VisitAccordion } from "@/components/park/visit-accordion";
 import { apiFetch } from "@/lib/api";
 import type { paths } from "@/lib/api-types";
 import type { PersonalPark } from "@/lib/parks";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, MapPin, NotebookPen } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 
@@ -23,7 +24,9 @@ const ParkDetailPage = async ({ params }: ParkDetailPageProps) => {
   const { slug } = await params;
   const t = await getTranslations("park");
 
-  const publicPark = await apiFetch<ApiPark>(`/api/parks/${slug}`).catch(() => null);
+  const publicPark = await apiFetch<ApiPark>(`/api/parks/${slug}?includeBoundary=true`).catch(
+    () => null,
+  );
 
   const personalPark = await apiFetch<PersonalPark>(`/api/me/parks/${slug}`).catch(() => null);
 
@@ -82,9 +85,27 @@ const ParkDetailPage = async ({ params }: ParkDetailPageProps) => {
         )}
       </div>
 
+      {publicPark.boundaryGeoJson && (
+        <div className="mt-8">
+          <div className="mb-3 flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-primary" aria-hidden="true" />
+            <h2 className="text-lg font-semibold tracking-tight">{t("boundaryMapTitle")}</h2>
+          </div>
+          <ParkBoundaryMap
+            boundaryGeoJson={publicPark.boundaryGeoJson}
+            boundingBox={publicPark.boundingBox}
+            markerPoint={publicPark.markerPoint}
+            parkName={publicPark.name}
+          />
+        </div>
+      )}
+
       <div className="mt-8">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold tracking-tight">{t("visitHistory")}</h2>
+          <div className="flex items-center gap-2">
+            <NotebookPen className="h-4 w-4 text-primary" aria-hidden="true" />
+            <h2 className="text-lg font-semibold tracking-tight">{t("visitHistory")}</h2>
+          </div>
           <Link
             href={`/control-panel/visits/new?park=${slug}`}
             className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
