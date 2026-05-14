@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next";
 
 const manifest = (): MetadataRoute.Manifest => {
   return {
-    name: "Suomen kansallispuistot",
-    short_name: "Kansallispuistot",
-    description: "Tutki Suomen kansallispuistoja ja seuraa käyntejäsi",
+    name: "Reissuvihko",
+    short_name: "Reissuvihko",
+    description: "Tutki Suomen retkeilypuistoja ja seuraa käyntejäsi",
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",

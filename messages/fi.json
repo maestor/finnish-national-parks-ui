@@ -1,10 +1,10 @@
 {
   "metadata": {
-    "title": "Suomen kansallispuistot",
-    "description": "Tutki Suomen kansallispuistoja, seuraa käyntejäsi ja hallitse ulkoiluseikkailujasi."
+    "title": "Reissuvihko",
+    "description": "Tutki Suomen retkeilypuistoja, seuraa käyntejäsi ja hallitse ulkoiluseikkailujasi."
   },
   "layout": {
-    "siteTitle": "Suomen kansallispuistot",
+    "siteTitle": "Reissuvihko",
     "nav": {
       "map": "Kartta",
       "controlPanel": "Hallinta",
@@ -25,12 +25,13 @@
     }
   },
   "home": {
-    "title": "Suomen kansallispuistot",
+    "title": "Reissuvihko",
     "filters": {
       "all": "Kaikki",
       "nationalParks": "Kansallispuistot",
       "hikingAreas": "Retkeilyalueet",
       "wildernessAreas": "Erämaa-alueet",
+      "otherNatureReserves": "Muut kohteet",
       "visited": "Käydyt",
       "notVisited": "Käymättömät",
       "results": "{count} kohdetta"
@@ -159,7 +160,7 @@
     "position": "Kuva {current} / {total}"
   },
   "map": {
-    "ariaLabel": "Suomen kansallispuistojen kartta",
+    "ariaLabel": "Suomen retkeilypuistojen kartta",
     "boundaryAriaLabel": "{parkName} rajaus kartalla",
     "loading": "Ladataan karttaa...",
     "loadError": "Karttatietojen lataus epäonnistui",

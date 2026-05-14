@@ -8,11 +8,11 @@ Read the `intelligence-testing` skill (`.agents/skills/intelligence-testing/`) f
 
 ## Testing Stack
 
-| Layer | Tool | Command |
-|-------|------|---------|
-| Unit / Component | Vitest + jsdom + Testing Library | `npm run test` |
-| E2E | Playwright | `npm run test:e2e` |
-| Quality Gate | All of the above + typecheck + lint + build | `npm run verify` |
+| Layer            | Tool                                        | Command            |
+| ---------------- | ------------------------------------------- | ------------------ |
+| Unit / Component | Vitest + jsdom + Testing Library            | `npm run test`     |
+| E2E              | Playwright                                  | `npm run test:e2e` |
+| Quality Gate     | All of the above + typecheck + lint + build | `npm run verify`   |
 
 ---
 
@@ -43,6 +43,7 @@ describe("Header", () => {
 ```
 
 **Key conventions:**
+
 - Query by role, label, or text — not by CSS class or test-id
 - Use translation keys (e.g., `"layout.siteTitle"`) because tests mock `next-intl`
 - Mock external libraries at the module level (see `park-map.test.tsx` for `maplibre-gl` mock)
@@ -64,7 +65,7 @@ import { expect, test } from "@playwright/test";
 
 test("home page loads", async ({ page }) => {
   await page.goto("/");
-  await expect(page).toHaveTitle(/Suomen kansallispuistot/);
+  await expect(page).toHaveTitle(/Reissuvihko/);
 });
 ```
 
@@ -132,6 +133,7 @@ For every feature or fix:
 ### Global Mocks (`src/test/setup.ts`)
 
 Already configured:
+
 - `next-intl` — returns translation keys as strings (`"namespace.key"`)
 - `next/navigation` — mocked router
 - `@/lib/env` — mocked environment variables for test environment
@@ -146,7 +148,7 @@ import { I18nProvider } from "@/test/i18n";
 render(
   <I18nProvider>
     <MyComponent />
-  </I18nProvider>
+  </I18nProvider>,
 );
 ```
 
