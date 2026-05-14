@@ -1,12 +1,10 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { apiFetch } from "@/lib/api";
+import { EditVisitLink } from "@/components/visits/edit-visit-link";
 import type { PersonalPark, VisitWithPark } from "@/lib/parks";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo } from "react";
 
 interface VisitListProps {
   parks: PersonalPark[];
@@ -14,8 +12,6 @@ interface VisitListProps {
 
 export const VisitList = ({ parks }: VisitListProps) => {
   const t = useTranslations("controlPanel.visits.list");
-  const router = useRouter();
-  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const visits: VisitWithPark[] = useMemo(() => {
     const result: VisitWithPark[] = [];
@@ -30,24 +26,6 @@ export const VisitList = ({ parks }: VisitListProps) => {
     }
     return result.sort((a, b) => new Date(b.visitedOn).getTime() - new Date(a.visitedOn).getTime());
   }, [parks]);
-
-  const handleDelete = useCallback(
-    async (id: number) => {
-      if (!window.confirm(t("deleteConfirm"))) {
-        return;
-      }
-      setDeletingId(id);
-      try {
-        await apiFetch(`/api/me/visits/${id}`, { method: "DELETE" });
-        router.refresh();
-      } catch (error) {
-        window.alert(error instanceof Error ? error.message : String(error));
-      } finally {
-        setDeletingId(null);
-      }
-    },
-    [router, t],
-  );
 
   if (visits.length === 0) {
     return (
@@ -69,8 +47,9 @@ export const VisitList = ({ parks }: VisitListProps) => {
         <thead className="bg-muted">
           <tr>
             <th className="px-4 py-3 text-left font-medium">{t("parkName")}</th>
+            <th className="px-4 py-3 text-left font-medium">{t("route")}</th>
             <th className="px-4 py-3 text-left font-medium">{t("visitDate")}</th>
-            <th className="px-4 py-3 text-right font-medium">{t("actions")}</th>
+            <th className="px-4 py-3 text-right font-medium" />
           </tr>
         </thead>
         <tbody className="divide-y">
@@ -81,25 +60,14 @@ export const VisitList = ({ parks }: VisitListProps) => {
                   {visit.parkName}
                 </Link>
               </td>
+              <td className="px-4 py-3">{visit.route ?? "–"}</td>
               <td className="px-4 py-3">{visit.visitedOn}</td>
               <td className="px-4 py-3 text-right">
-                <div className="flex items-center justify-end gap-2">
-                  <Link
-                    href={`/control-panel/visits/${visit.id}/edit`}
-                    className="inline-flex items-center justify-center rounded-md px-3 py-1.5 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
-                  >
-                    {t("edit")}
-                  </Link>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleDelete(visit.id)}
-                    disabled={deletingId === visit.id}
-                    className="text-xs"
-                  >
-                    {t("delete")}
-                  </Button>
-                </div>
+                <EditVisitLink
+                  visitId={visit.id}
+                  className="inline-flex items-center justify-center rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                  iconClassName="h-4 w-4"
+                />
               </td>
             </tr>
           ))}

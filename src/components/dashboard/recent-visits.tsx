@@ -1,3 +1,4 @@
+import { EditVisitLink } from "@/components/visits/edit-visit-link";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
@@ -38,7 +39,10 @@ export const RecentVisits = ({ visits }: RecentVisitsProps) => {
               >
                 {visit.parkName}
               </Link>
-              <span className="text-sm text-muted-foreground">{visit.visitedOn}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">{visit.visitedOn}</span>
+                <EditVisitLink visitId={visit.id} />
+              </div>
             </li>
           ))}
         </ul>

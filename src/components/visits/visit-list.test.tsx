@@ -19,6 +19,7 @@ const parks = [
       {
         id: 1,
         visitedOn: "2024-06-15",
+        route: "Pallas-reitti",
         note: "Great hike",
         createdAt: "2024-06-15T00:00:00Z",
         updatedAt: "2024-06-15T00:00:00Z",
@@ -32,6 +33,7 @@ const parks = [
       {
         id: 2,
         visitedOn: "2024-07-20",
+        route: null,
         note: null,
         createdAt: "2024-07-20T00:00:00Z",
         updatedAt: "2024-07-20T00:00:00Z",
@@ -51,6 +53,8 @@ describe("VisitList", () => {
     expect(screen.getByText("2024-07-20")).toBeInTheDocument();
     expect(screen.getByText("Pallas-Yllästunturi")).toBeInTheDocument();
     expect(screen.getByText("2024-06-15")).toBeInTheDocument();
+    expect(screen.getByText("Pallas-reitti")).toBeInTheDocument();
+    expect(screen.getAllByText("–").length).toBe(1);
   });
 
   it("shows empty state when no visits exist", () => {
@@ -62,10 +66,9 @@ describe("VisitList", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders edit and delete actions", () => {
+  it("renders edit icon links", () => {
     render(<VisitList parks={parks} />);
 
-    expect(screen.getAllByText("controlPanel.visits.list.edit").length).toBe(2);
-    expect(screen.getAllByText("controlPanel.visits.list.delete").length).toBe(2);
+    expect(screen.getAllByLabelText("controlPanel.visits.edit").length).toBe(2);
   });
 });
