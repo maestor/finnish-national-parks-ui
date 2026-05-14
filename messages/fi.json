@@ -18,15 +18,12 @@
     }
   },
   "home": {
-    "title": "Suomen kansallispuistot",
-    "description": "Interaktiivinen kartta tulossa pian. Selaa kaikkia kansallispuistoja ja suunnittele käyntisi."
+    "title": "Suomen kansallispuistot"
   },
   "park": {
     "detailTitle": "Puiston tiedot",
     "visitHistory": "Käyntihistoria",
-    "notes": "Muistiinpanot",
     "officialLink": "Luontoon.fi",
-    "type": "Tyyppi",
     "location": "Sijainti",
     "area": "Pinta-ala",
     "established": "Perustettu",
@@ -100,10 +97,8 @@
         "parkName": "Puisto",
         "route": "Reitti",
         "visitDate": "Käyntipäivä",
-        "delete": "Poista",
         "noVisits": "Ei vielä kirjattuja käyntejä.",
-        "addFirstVisit": "Lisää ensimmäinen käynti",
-        "deleteConfirm": "Haluatko varmasti poistaa tämän käynnin?"
+        "addFirstVisit": "Lisää ensimmäinen käynti"
       }
     }
   },

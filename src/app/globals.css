@@ -117,9 +117,7 @@ summary::-webkit-details-marker {
   color: hsl(var(--card-foreground)) !important;
   border-radius: var(--radius-md) !important;
   padding: 0 !important;
-  box-shadow:
-    0 4px 6px -1px rgb(0 0 0 / 0.1),
-    0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
 }
 
 .maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
@@ -159,7 +157,5 @@ summary::-webkit-details-marker {
 }
 
 .dark .maplibregl-popup-content {
-  box-shadow:
-    0 4px 6px -1px rgb(0 0 0 / 0.3),
-    0 2px 4px -2px rgb(0 0 0 / 0.3) !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3) !important;
 }
