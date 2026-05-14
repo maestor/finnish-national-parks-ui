@@ -78,4 +78,19 @@ describe("ParkExplorer", () => {
     expect(screen.getByRole("button", { name: "home.filters.visited" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "home.filters.notVisited" })).toBeInTheDocument();
   });
+
+  it("keeps mobile filters collapsed until opened and closes after selection", async () => {
+    render(<ParkExplorer parks={parks} isAuthenticated />);
+
+    expect(document.querySelector("#park-map-filters-mobile")).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "home.filters.toggle" }));
+
+    expect(document.querySelector("#park-map-filters-mobile")).toBeInTheDocument();
+
+    await userEvent.click(screen.getAllByRole("button", { name: "home.filters.hikingAreas" })[0]);
+
+    expect(document.querySelector("#park-map-filters-mobile")).not.toBeInTheDocument();
+    expect(screen.getByText("count:1")).toBeInTheDocument();
+  });
 });

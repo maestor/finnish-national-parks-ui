@@ -26,6 +26,7 @@
   "home": {
     "title": "Suomen kansallispuistot",
     "filters": {
+      "toggle": "Suodata karttaa",
       "all": "Kaikki",
       "nationalParks": "Kansallispuistot",
       "hikingAreas": "Retkeilyalueet",
