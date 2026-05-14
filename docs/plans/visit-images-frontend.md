@@ -4,6 +4,31 @@
 
 Prepare the Next.js frontend for visit images without blocking on unfinished backend endpoints. The immediate goal is to ship the frontend seams that are safe now, keep the current visit flow moving, and avoid introducing assumptions that will be expensive to unwind once the backend contract lands.
 
+## Status Snapshot
+
+### Done now
+
+- Frontend plan written and aligned with the current repo structure.
+- API client made safe for future `multipart/form-data` uploads.
+- Shared visit types extended so the UI can accept `visit.images` once the backend starts returning it.
+- New visit creation now redirects into the edit flow, which is the right insertion point for image upload.
+- Public visit UI has an image gallery seam ready to light up when image metadata arrives.
+- Repo docs now clarify the legacy `/api/me/*` naming and the real access rule: all `GET` endpoints are public-readable, while non-`GET` endpoints require authenticated admin access.
+
+### Still blocked on backend
+
+- Upload endpoint: `POST /api/me/visits/{id}/images`
+- Delete endpoint: `DELETE /api/me/visits/{id}/images/{imageId}`
+- Visit responses enriched with `images`
+- Final response shape for partial upload success
+
+### Remaining frontend work after backend readiness
+
+- Show persisted images on edit and park views from real API data
+- Add upload UI to the edit page
+- Add deletion controls for existing images
+- Consider reorder later if it still feels necessary after upload/delete is stable
+
 ## Review Notes For The Backend Plan
 
 ### 1. Make the upload response explicitly per-file
@@ -37,7 +62,7 @@ If image data exists only on park-detail responses, the edit page will need an e
 
 ### 3. Separate metadata caching from asset caching
 
-The backend plan says to keep `Cache-Control: private, no-store` on personal image routes, but the same plan serves image files from a public R2 bucket URL. Those headers can protect JSON metadata responses, but they will not meaningfully control cache behavior for direct bucket asset URLs. The cleaner split is:
+The backend plan says to keep `Cache-Control: private, no-store` on visit image metadata routes, but the same plan serves image files from a public R2 bucket URL. Those headers can protect JSON metadata responses, but they will not meaningfully control cache behavior for direct bucket asset URLs. The cleaner split is:
 
 - visit metadata responses: `private, no-store`
 - immutable image object URLs: long-lived cache headers
@@ -49,6 +74,7 @@ If stronger privacy is needed later, switch delivery to proxied or presigned URL
 - Visit creation currently begins from [`VisitForm`](/Users/maestor/Projects/finnish-national-parks-ui/src/components/visits/visit-form.tsx).
 - New visits are created through `POST /api/me/parks/{slug}/visits`, which already returns the new visit ID.
 - Edit and list views currently source visit data from `GET /api/me/parks`.
+- Backend naming caveat: in this app, `/api/me/*` is legacy naming only. All `GET` endpoints are public-readable, while non-`GET` endpoints require authenticated admin access.
 - The repo does not use React Query or SWR today, so image refresh should continue to use local component state plus `router.refresh()` rather than introducing a new data layer for this feature alone.
 - The shared API client previously forced `Content-Type: application/json` for every request, which would have broken multipart uploads.
 
@@ -70,6 +96,10 @@ After creating a visit, the UI now redirects to `/control-panel/visits/{id}/edit
 
 The visit accordion can now render visit images when `visit.images` exists. The lightbox/gallery behavior is in place, but it remains dormant until the backend starts returning image metadata.
 
+### 5. Route naming confusion documented
+
+The frontend docs now state the real contract explicitly: `/api/me/*` is legacy naming only in this app, all `GET` endpoints are public-readable, and only non-`GET` endpoints require authenticated admin access.
+
 ## Backend Contract Needed Before Upload UI
 
 The frontend should wait for these backend pieces before wiring the uploader:
@@ -78,6 +108,8 @@ The frontend should wait for these backend pieces before wiring the uploader:
 2. `DELETE /api/me/visits/{id}/images/{imageId}`
 3. visit payloads that include `images`
 4. a final upload response schema for partial success
+
+There is no further must-do frontend implementation work before those pieces exist. Anything else now would mostly be placeholder UI or guesswork against an unfinished contract.
 
 ## Frontend Rollout After Backend Readiness
 
