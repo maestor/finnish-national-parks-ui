@@ -15,8 +15,10 @@ type ApiPark = paths["/api/parks/{slug}"]["get"]["responses"][200]["content"]["a
 
 export const generateMetadata = async ({ params }: ParkDetailPageProps) => {
   const { slug } = await params;
+  const park = await apiFetch<ApiPark>(`/api/parks/${slug}`).catch(() => null);
+
   return {
-    title: slug.replace(/-/g, " "),
+    title: park?.name ?? slug.replace(/-/g, " "),
   };
 };
 
@@ -32,7 +34,7 @@ const ParkDetailPage = async ({ params }: ParkDetailPageProps) => {
 
   if (!publicPark) {
     return (
-      <article className="container mx-auto px-4 py-8">
+      <article className="mx-auto max-w-5xl px-4 py-8">
         <p className="text-muted-foreground">{t("detailTitle")}</p>
       </article>
     );
@@ -56,7 +58,7 @@ const ParkDetailPage = async ({ params }: ParkDetailPageProps) => {
   const visits = personalPark?.visits ?? [];
 
   return (
-    <article className="container mx-auto px-4 py-8">
+    <article className="mx-auto max-w-5xl px-4 py-8">
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="text-3xl font-bold tracking-tight">{publicPark.name}</h1>
         <span className="inline-flex items-center rounded-full border bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">

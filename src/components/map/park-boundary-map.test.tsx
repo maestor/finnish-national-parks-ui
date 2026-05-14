@@ -33,6 +33,8 @@ const createMockMap = ({ autoLoad = true } = {}) => {
     removeLayer: vi.fn(),
     removeSource: vi.fn(),
     fitBounds: vi.fn(),
+    cameraForBounds: vi.fn(() => ({ zoom: 8 })),
+    setMinZoom: vi.fn(),
   };
 };
 
@@ -114,5 +116,19 @@ describe("ParkBoundaryMap", () => {
       />,
     );
     expect(screen.getByText("map.loading")).toBeInTheDocument();
+  });
+
+  it("locks minimum zoom to the fitted park bounds", () => {
+    render(
+      <ParkBoundaryMap
+        boundaryGeoJson={mockBoundaryGeoJson}
+        boundingBox={mockBoundingBox}
+        markerPoint={mockMarkerPoint}
+        parkName="Test Park"
+      />,
+    );
+
+    expect(mockMap.cameraForBounds).toHaveBeenCalled();
+    expect(mockMap.setMinZoom).toHaveBeenCalledWith(8);
   });
 });

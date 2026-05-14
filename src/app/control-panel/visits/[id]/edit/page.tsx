@@ -1,8 +1,11 @@
 import { VisitForm } from "@/components/visits/visit-form";
+import { VisitImageSection } from "@/components/visits/visit-image-section";
 import { apiFetch } from "@/lib/api";
 import type { Park, PersonalPark, VisitWithPark } from "@/lib/parks";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
+
+export const dynamic = "force-dynamic";
 
 interface EditVisitPageProps {
   params: Promise<{ id: string }>;
@@ -53,6 +56,7 @@ const EditVisitPage = async ({ params, searchParams }: EditVisitPageProps) => {
         </output>
       )}
       <VisitForm parks={parks} visitToEdit={visitToEdit} />
+      <VisitImageSection visitId={visitToEdit.id} images={visitToEdit.images} />
     </div>
   );
 };

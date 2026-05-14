@@ -6,13 +6,14 @@ import { VisitForm } from "./visit-form";
 
 const mockPush = vi.fn();
 const mockRefresh = vi.fn();
+const mockBack = vi.fn();
 
 vi.mock("@/lib/api", () => ({
   apiFetch: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: mockPush, refresh: mockRefresh }),
+  useRouter: () => ({ push: mockPush, refresh: mockRefresh, back: mockBack }),
 }));
 
 const parks = [
@@ -121,5 +122,13 @@ describe("VisitForm", () => {
     await userEvent.click(previewButton);
 
     expect(screen.getByRole("heading", { name: "Hello" })).toBeInTheDocument();
+  });
+
+  it("goes back to the previous page from the back action", async () => {
+    render(<VisitForm parks={parks} />);
+
+    await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.back/i }));
+
+    expect(mockBack).toHaveBeenCalled();
   });
 });

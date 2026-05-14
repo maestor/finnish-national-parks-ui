@@ -4,6 +4,8 @@ import type { PersonalPark } from "@/lib/parks";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 export const generateMetadata = async () => {
   const t = await getTranslations("controlPanel");
   return {

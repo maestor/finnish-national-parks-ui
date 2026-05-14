@@ -5,7 +5,6 @@ import { Label } from "@/components/ui/label";
 import { apiFetch } from "@/lib/api";
 import type { Park, Visit, VisitWithPark } from "@/lib/parks";
 import { useTranslations } from "next-intl";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
@@ -31,6 +30,10 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const handleBack = () => {
+    router.back();
+  };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -138,7 +141,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
           lang="fi"
           value={visitedOn}
           onChange={(e) => setVisitedOn(e.target.value)}
-          className={`${inputClassName} h-10`}
+          className={`${inputClassName} h-10 max-w-56`}
         />
         {errors.visitedOn && <p className="text-sm text-destructive">{errors.visitedOn}</p>}
       </div>
@@ -220,12 +223,13 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
             {t("delete")}
           </Button>
         )}
-        <Link
-          href="/control-panel/visits"
+        <button
+          type="button"
+          onClick={handleBack}
           className="text-sm text-muted-foreground underline hover:text-foreground"
         >
-          {t("cancel")}
-        </Link>
+          {t("back")}
+        </button>
       </div>
     </form>
   );

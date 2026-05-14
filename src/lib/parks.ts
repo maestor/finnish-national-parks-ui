@@ -9,26 +9,11 @@ type ApiPersonalPark =
 type ApiVisit =
   paths["/api/me/parks"]["get"]["responses"][200]["content"]["application/json"]["parks"][number]["visits"][number];
 
-export interface VisitImage {
-  id: number;
-  fullUrl: string;
-  thumbUrl: string;
-  fullWidth: number | null;
-  fullHeight: number | null;
-  thumbWidth: number | null;
-  thumbHeight: number | null;
-  originalName: string | null;
-  displayOrder: number;
-  createdAt: string;
-}
+export type VisitImage = ApiVisit["images"][number];
 
-export type Visit = ApiVisit & {
-  images?: VisitImage[];
-};
+export type Visit = ApiVisit;
 
-export type PersonalPark = Omit<ApiPersonalPark, "visits"> & {
-  visits: Visit[];
-};
+export type PersonalPark = ApiPersonalPark;
 
 export type MapPark = Park & {
   visitedSummary?: {

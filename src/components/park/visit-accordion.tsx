@@ -138,6 +138,15 @@ export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionPro
                       </div>
                     </>
                   )}
+                  {hasImages && visit.images && (
+                    <>
+                      <h3 className="flex items-center gap-2 text-base font-semibold border-b pb-2">
+                        <Images className="h-4 w-4 text-muted-foreground" />
+                        {t("imagesTitle")}
+                      </h3>
+                      <VisitImageGallery images={visit.images} centerThumbnailsWhenStatic />
+                    </>
+                  )}
                   {visit.author && (
                     <>
                       <h3 className="flex items-center gap-2 text-base font-semibold border-b pb-2">
@@ -145,15 +154,6 @@ export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionPro
                         {t("authorTitle")}
                       </h3>
                       <p className="text-sm">{visit.author}</p>
-                    </>
-                  )}
-                  {hasImages && visit.images && (
-                    <>
-                      <h3 className="flex items-center gap-2 text-base font-semibold border-b pb-2">
-                        <Images className="h-4 w-4 text-muted-foreground" />
-                        {t("imagesTitle")}
-                      </h3>
-                      <VisitImageGallery images={visit.images} />
                     </>
                   )}
                 </div>

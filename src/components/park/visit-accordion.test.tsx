@@ -13,6 +13,7 @@ describe("VisitAccordion", () => {
       note: null,
       createdAt: "2024-01-15T00:00:00Z",
       updatedAt: "2024-01-15T00:00:00Z",
+      images: [],
     },
     {
       id: 2,
@@ -22,6 +23,7 @@ describe("VisitAccordion", () => {
       note: "Great hike",
       createdAt: "2024-03-20T00:00:00Z",
       updatedAt: "2024-03-20T00:00:00Z",
+      images: [],
     },
     {
       id: 3,
@@ -31,6 +33,7 @@ describe("VisitAccordion", () => {
       note: "Summer trip",
       createdAt: "2024-07-31T00:00:00Z",
       updatedAt: "2024-07-31T00:00:00Z",
+      images: [],
     },
     {
       id: 4,

@@ -12,22 +12,19 @@ Prepare the Next.js frontend for visit images without blocking on unfinished bac
 - API client made safe for future `multipart/form-data` uploads.
 - Shared visit types extended so the UI can accept `visit.images` once the backend starts returning it.
 - New visit creation now redirects into the edit flow, which is the right insertion point for image upload.
-- Public visit UI has an image gallery seam ready to light up when image metadata arrives.
+- Public visit UI now renders persisted visit images with a horizontally scrolling thumbnail rail and centered lightbox.
 - Repo docs now clarify the legacy `/api/me/*` naming and the real access rule: all `GET` endpoints are public-readable, while non-`GET` endpoints require authenticated admin access.
+- API types regenerated from the backend OpenAPI spec; `VisitImage` is now derived from the generated contract.
+- `VisitImageSection` component added to the edit page with file upload, delete, and button-based reorder functionality.
+- Finnish translations added for image upload and delete UI.
+- Tests added for `VisitImageSection`.
+- Gallery and lightbox styling polished for the public park page, including centered thumbnails, conditional rail arrows, and a dark-mode-safe close button.
+- Park visit details now place the author section below images.
 
-### Still blocked on backend
+### Remaining frontend work
 
-- Upload endpoint: `POST /api/me/visits/{id}/images`
-- Delete endpoint: `DELETE /api/me/visits/{id}/images/{imageId}`
-- Visit responses enriched with `images`
-- Final response shape for partial upload success
-
-### Remaining frontend work after backend readiness
-
-- Show persisted images on edit and park views from real API data
-- Add upload UI to the edit page
-- Add deletion controls for existing images
-- Consider reorder later if it still feels necessary after upload/delete is stable
+- Keep drag-and-drop out of the first frontend slice unless button-based reorder proves too clumsy in production.
+- Add client-side image compression later if large mobile uploads are painful in practice.
 
 ## Review Notes For The Backend Plan
 
@@ -94,45 +91,48 @@ After creating a visit, the UI now redirects to `/control-panel/visits/{id}/edit
 
 ### 4. Image display seam
 
-The visit accordion can now render visit images when `visit.images` exists. The lightbox/gallery behavior is in place, but it remains dormant until the backend starts returning image metadata.
+The visit accordion now renders real visit images from API data. The public park page uses a horizontal thumbnail rail, conditional scroll controls, and a centered lightbox overlay that behaves correctly in dark mode.
 
 ### 5. Route naming confusion documented
 
 The frontend docs now state the real contract explicitly: `/api/me/*` is legacy naming only in this app, all `GET` endpoints are public-readable, and only non-`GET` endpoints require authenticated admin access.
 
-## Backend Contract Needed Before Upload UI
+## Backend Contract Status
 
-The frontend should wait for these backend pieces before wiring the uploader:
+The backend contract is now wired into the frontend:
 
-1. `POST /api/me/visits/{id}/images`
-2. `DELETE /api/me/visits/{id}/images/{imageId}`
-3. visit payloads that include `images`
-4. a final upload response schema for partial success
+1. ✅ `POST /api/me/visits/{id}/images` — used by `VisitImageSection`
+2. ✅ `DELETE /api/me/visits/{visitId}/images/{imageId}` — used by `VisitImageSection`
+3. ✅ visit payloads include `images` — reflected in regenerated `api-types.ts`
+4. ✅ upload response shape — `{ images: VisitImage[], errors: { originalName, reason }[] }`
 
-There is no further must-do frontend implementation work before those pieces exist. Anything else now would mostly be placeholder UI or guesswork against an unfinished contract.
+## Frontend Rollout (Completed)
 
-## Frontend Rollout After Backend Readiness
+### Phase 1. Show persisted images on edit and park views ✅
 
-### Phase 1. Show persisted images on edit and park views
+- `VisitAccordion` and `VisitImageGallery` now render real `visit.images` from API data.
+- Edit page displays existing images via `VisitImageSection`.
 
-- Reuse the shipped gallery component with real API data.
-- Render existing images in the edit view alongside visit details.
+### Phase 2. Add upload UI to the edit page ✅
 
-### Phase 2. Add upload UI to the edit page
+- `VisitImageSection` handles file selection, previews, and upload via `FormData`.
+- Calls `router.refresh()` after successful upload.
+- Shows per-file and backend error messages.
 
-- Add `VisitImageUploader` as a client component on the edit page.
-- Use `FormData` with one or more files plus optional client upload IDs.
-- Keep local preview state in the uploader and call `router.refresh()` after upload completion.
+### Phase 3. Add deletion ✅
 
-### Phase 3. Add deletion
+- Remove button on each image in the edit page with confirmation.
+- Optimistic removal from local state before refresh.
 
-- Add remove buttons per image in the edit page only.
-- Confirm deletion and optimistically remove the image from local state before refresh.
+### Phase 4. Add basic reorder controls ✅
 
-### Phase 4. Consider reorder only after basic upload/delete feels good
+- Button-based left/right reorder is now in place on the edit page.
+- Drag-and-drop remains intentionally deferred.
+
+### Phase 5. Consider drag-and-drop later
 
 - Do not add drag-and-drop in the first frontend slice.
-- If ordering is needed later, prefer `@dnd-kit`.
+- If richer ordering is still needed later, prefer `@dnd-kit`.
 
 ## Suggested Frontend Dependencies Later
 
