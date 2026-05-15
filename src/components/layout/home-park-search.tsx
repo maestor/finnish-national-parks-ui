@@ -9,6 +9,10 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 const MAX_RESULTS = 8;
+const SEARCH_ICON_CLASS_NAME =
+  "pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-foreground/60";
+const SEARCH_INPUT_CLASS_NAME =
+  "h-9 w-full rounded-full border border-border bg-background/90 pl-9 pr-3 text-sm text-foreground shadow-sm backdrop-blur transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring appearance-none [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none [&::-webkit-search-results-button]:appearance-none [&::-webkit-search-results-decoration]:appearance-none";
 
 export const HomeParkSearch = () => {
   const t = useTranslations("layout.parkSearch");
@@ -152,10 +156,7 @@ export const HomeParkSearch = () => {
         <label htmlFor="home-park-search" className="sr-only">
           {t("label")}
         </label>
-        <Search
-          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-          aria-hidden="true"
-        />
+        <Search className={SEARCH_ICON_CLASS_NAME} aria-hidden="true" />
         <input
           id="home-park-search"
           type="search"
@@ -168,7 +169,7 @@ export const HomeParkSearch = () => {
           onFocus={() => setIsOpen(true)}
           onKeyDown={handleKeyDown}
           placeholder={t("placeholder")}
-          className="h-9 w-full rounded-full border border-border bg-background/90 pl-9 pr-3 text-sm text-foreground shadow-sm backdrop-blur transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className={SEARCH_INPUT_CLASS_NAME}
           autoComplete="off"
           role="combobox"
           aria-autocomplete="list"
@@ -188,10 +189,7 @@ export const HomeParkSearch = () => {
                 {t("label")}
               </label>
               <div className="relative">
-                <Search
-                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                  aria-hidden="true"
-                />
+                <Search className={SEARCH_ICON_CLASS_NAME} aria-hidden="true" />
                 <input
                   ref={mobileInputRef}
                   id="home-park-search-mobile"
@@ -203,7 +201,7 @@ export const HomeParkSearch = () => {
                   }}
                   onKeyDown={handleKeyDown}
                   placeholder={t("placeholder")}
-                  className="h-9 w-full rounded-full border border-border bg-background/90 pl-9 pr-3 text-sm text-foreground shadow-sm backdrop-blur transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className={SEARCH_INPUT_CLASS_NAME}
                   autoComplete="off"
                 />
               </div>

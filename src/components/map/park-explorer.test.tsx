@@ -1,5 +1,5 @@
 import type { MapPark } from "@/lib/parks";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import {
@@ -93,6 +93,21 @@ describe("ParkExplorer", () => {
     expect(screen.getByRole("button", { name: "home.filters.notVisited" })).toBeInTheDocument();
   });
 
+  it("renders desktop filters as a floating vertical overlay on the left", () => {
+    const { container } = render(<ParkExplorer parks={parks} isAuthenticated />);
+
+    const desktopSidebar = container.querySelector("aside");
+
+    expect(desktopSidebar).toBeInTheDocument();
+    expect(desktopSidebar).toHaveClass("absolute", "left-4", "w-40", "md:top-4");
+
+    const buttons = within(desktopSidebar as HTMLElement).getAllByRole("button");
+
+    expect(buttons).toHaveLength(7);
+    expect(buttons[0]).toHaveTextContent("home.filters.all");
+    expect(buttons[1]).toHaveTextContent("home.filters.nationalParks");
+  });
+
   it("keeps mobile filters collapsed until opened and closes after selection", async () => {
     render(
       <HomeMapControlsProvider>
@@ -101,15 +116,22 @@ describe("ParkExplorer", () => {
       </HomeMapControlsProvider>,
     );
 
-    expect(document.querySelector("#park-map-filters-mobile")).not.toBeInTheDocument();
+    const mobileFilters = document.querySelector("#park-map-filters-mobile");
+
+    expect(mobileFilters).toBeInTheDocument();
+    expect(mobileFilters).toHaveClass("hidden");
 
     await userEvent.click(screen.getByRole("button", { name: "toggle-mobile-filters" }));
 
-    expect(document.querySelector("#park-map-filters-mobile")).toBeInTheDocument();
+    expect(mobileFilters).toHaveClass("block");
 
-    await userEvent.click(screen.getAllByRole("button", { name: "home.filters.hikingAreas" })[0]);
+    await userEvent.click(
+      within(mobileFilters as HTMLElement).getByRole("button", {
+        name: "home.filters.hikingAreas",
+      }),
+    );
 
-    expect(document.querySelector("#park-map-filters-mobile")).not.toBeInTheDocument();
+    expect(mobileFilters).toHaveClass("hidden");
     expect(screen.getByText("count:1")).toBeInTheDocument();
   });
 });
