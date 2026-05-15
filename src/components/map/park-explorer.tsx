@@ -68,57 +68,40 @@ export const ParkExplorer = ({ parks, error, isAuthenticated = false }: ParkExpl
     closeMobileFilters();
   };
 
+  const filterPanel = (
+    <div className="pointer-events-auto flex flex-col gap-2 rounded-3xl border border-border/70 bg-background/95 p-3 shadow-lg backdrop-blur">
+      {filterOptions.map((option) => (
+        <Button
+          key={option.id}
+          type="button"
+          variant={activeFilter === option.id ? "default" : "outline"}
+          size="sm"
+          onClick={() => selectFilter(option.id)}
+          className={cn(
+            "w-full justify-center rounded-2xl px-3 text-left",
+            activeFilter !== option.id && "bg-background/70",
+          )}
+        >
+          {option.label}
+        </Button>
+      ))}
+      <span className="text-xs text-center text-muted-foreground">
+        {t("results", { count: filteredParks.length })}
+      </span>
+    </div>
+  );
+
   return (
     <div className="relative flex flex-1 min-h-0">
-      <div className="pointer-events-none absolute inset-x-4 top-2 z-10 md:hidden">
-        {isMobileFiltersOpen ? (
-          <div
-            id="park-map-filters-mobile"
-            className="pointer-events-auto rounded-2xl border border-border/70 bg-background/90 p-2 shadow-lg backdrop-blur"
-          >
-            <div className="flex flex-wrap items-center gap-2">
-              {filterOptions.map((option) => (
-                <Button
-                  key={option.id}
-                  type="button"
-                  variant={activeFilter === option.id ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => selectFilter(option.id)}
-                  className={cn(
-                    "rounded-full px-3",
-                    activeFilter !== option.id && "bg-background/70",
-                  )}
-                >
-                  {option.label}
-                </Button>
-              ))}
-              <span className="basis-full text-xs text-muted-foreground">
-                {t("results", { count: filteredParks.length })}
-              </span>
-            </div>
-          </div>
-        ) : null}
-      </div>
-
-      <div className="pointer-events-none absolute left-6 right-20 top-2 z-10 hidden md:block md:left-8 md:right-24">
-        <div className="pointer-events-auto flex flex-wrap items-center gap-2 rounded-2xl border border-border/70 bg-background/90 p-2 shadow-lg backdrop-blur">
-          {filterOptions.map((option) => (
-            <Button
-              key={option.id}
-              type="button"
-              variant={activeFilter === option.id ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveFilter(option.id)}
-              className={cn("rounded-full px-3", activeFilter !== option.id && "bg-background/70")}
-            >
-              {option.label}
-            </Button>
-          ))}
-          <span className="basis-full text-xs text-muted-foreground sm:ml-auto sm:basis-auto">
-            {t("results", { count: filteredParks.length })}
-          </span>
-        </div>
-      </div>
+      <aside
+        id="park-map-filters-mobile"
+        className={cn(
+          "pointer-events-none absolute left-4 z-10 w-40 md:top-4 md:block",
+          isMobileFiltersOpen ? "top-2 block" : "hidden top-2",
+        )}
+      >
+        {filterPanel}
+      </aside>
 
       <ParkMap parks={filteredParks} error={error} isAuthenticated={isAuthenticated} />
     </div>

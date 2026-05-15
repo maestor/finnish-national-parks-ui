@@ -83,4 +83,20 @@ describe("HomeParkSearch", () => {
 
     expect(screen.getByRole("searchbox")).toBeInTheDocument();
   });
+
+  it("renders the desktop search icon with visible foreground contrast styling", () => {
+    vi.mocked(apiFetch).mockImplementationOnce(() => new Promise(() => {}));
+
+    const { container } = render(<HomeParkSearch />);
+    const icon = container.querySelector('svg[class*="text-foreground/60"]');
+    const input = screen.getByRole("combobox", { name: "layout.parkSearch.label" });
+
+    expect(icon).toBeInTheDocument();
+    expect(icon).toHaveClass("z-10");
+    expect(input).toHaveClass(
+      "appearance-none",
+      "[&::-webkit-search-decoration]:appearance-none",
+      "[&::-webkit-search-results-decoration]:appearance-none",
+    );
+  });
 });
