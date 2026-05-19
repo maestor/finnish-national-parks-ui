@@ -88,13 +88,15 @@ The dev server runs on **port 4300** by default: `http://localhost:4300`
 ### Quality Gates
 
 ```bash
-npm run verify        # typecheck + lint + unit tests
+npm run verify        # typecheck + lint + unit tests + build
 npm run typecheck     # TypeScript strict check
 npm run lint          # Biome lint & format check
 npm run test          # Vitest unit tests
 npm run test:e2e      # Playwright E2E (chromium only)
 npm run test:e2e:all  # Playwright E2E (all browsers)
 ```
+
+Pull requests targeting `main` run the same `npm run verify` gate in GitHub Actions.
 
 ### Build
 

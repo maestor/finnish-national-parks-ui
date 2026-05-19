@@ -75,7 +75,7 @@ The `AUTH_JWT_SECRET` must match the backend's `AUTH_JWT_SECRET` exactly.
 | `npm run verify` | Full gate: typecheck → lint → test → build |
 | `npm run generate:api-types` | Regenerate `src/lib/api-types.ts` from backend OpenAPI |
 
-**Always run `npm run verify` before asking for review.**
+**Always run `npm run verify` before asking for review.** Pull requests targeting `main` also run the same `npm run verify` gate in GitHub Actions.
 
 ---
 
