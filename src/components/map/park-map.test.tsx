@@ -5,10 +5,12 @@ import { ParkMap } from "./park-map";
 
 const loadHandlers: Array<() => void> = [];
 const markerElements: HTMLElement[] = [];
+const resizeObservers: MockResizeObserver[] = [];
 const popupInstances: Array<{
   addTo: ReturnType<typeof vi.fn>;
   remove: ReturnType<typeof vi.fn>;
 }> = [];
+let mapOptions: Record<string, unknown> | null = null;
 
 const parks: MapPark[] = [
   {
@@ -96,12 +98,27 @@ const createMockMap = () => ({
     }
   }),
   remove: vi.fn(),
+  resize: vi.fn(),
   addControl: vi.fn(),
 });
 
+class MockResizeObserver {
+  observe = vi.fn();
+  disconnect = vi.fn();
+
+  constructor() {
+    resizeObservers.push(this);
+  }
+}
+
+global.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
+
 vi.mock("maplibre-gl", () => ({
   default: {
-    Map: vi.fn(() => createMockMap()),
+    Map: vi.fn((options?: Record<string, unknown>) => {
+      mapOptions = options ?? null;
+      return createMockMap();
+    }),
     Marker: vi.fn((options?: { element?: HTMLElement }) => createMockMarker(options)),
     Popup: vi.fn(() => createMockPopup()),
     NavigationControl: vi.fn(),
@@ -113,6 +130,8 @@ describe("ParkMap", () => {
     loadHandlers.length = 0;
     markerElements.length = 0;
     popupInstances.length = 0;
+    resizeObservers.length = 0;
+    mapOptions = null;
   });
 
   afterEach(() => {
@@ -128,6 +147,23 @@ describe("ParkMap", () => {
   it("shows loading spinner before map is loaded", () => {
     render(<ParkMap parks={[]} />);
     expect(screen.getByText("map.loading")).toBeInTheDocument();
+  });
+
+  it("initializes the map against Finland bounds and observes container resizes", () => {
+    render(<ParkMap parks={[]} />);
+
+    expect(mapOptions).toMatchObject({
+      bounds: [
+        [19.0, 59.5],
+        [32.0, 70.5],
+      ],
+      fitBoundsOptions: {
+        duration: 0,
+        padding: 24,
+      },
+    });
+    expect(resizeObservers).toHaveLength(1);
+    expect(resizeObservers[0]?.observe).toHaveBeenCalledTimes(1);
   });
 
   it("displays error message when error prop is provided", () => {

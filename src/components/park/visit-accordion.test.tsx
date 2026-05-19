@@ -58,6 +58,16 @@ describe("VisitAccordion", () => {
         },
       ],
     },
+    {
+      id: 5,
+      visitedOn: "2024-09-01",
+      route: null,
+      author: "Vain kirjoittaja",
+      note: null,
+      createdAt: "2024-09-01T00:00:00Z",
+      updatedAt: "2024-09-01T00:00:00Z",
+      images: [],
+    },
   ];
 
   it("renders visits sorted newest first with correct numbering", () => {
@@ -65,19 +75,19 @@ describe("VisitAccordion", () => {
 
     // Visit numbers are shown as translated badges via park.visitNumber
     const badges = screen.getAllByText(/park\.visitNumber/);
-    expect(badges.length).toBe(4);
+    expect(badges.length).toBe(5);
   });
 
-  it("shows expandable items for visits with details", () => {
+  it("shows expandable items for visits with notes, images or authors", () => {
     render(<VisitAccordion visits={visits} />);
 
     const toggleButtons = screen.getAllByRole("button", {
       name: /park\.(showDetails|hideDetails)/i,
     });
-    expect(toggleButtons.length).toBe(3);
+    expect(toggleButtons.length).toBe(4);
   });
 
-  it("shows non-expandable items for visits without any details", () => {
+  it("shows non-expandable items when a visit has no expandable content", () => {
     render(<VisitAccordion visits={visits} />);
 
     expect(screen.getByText("15.1.2024")).toBeInTheDocument();
@@ -91,10 +101,9 @@ describe("VisitAccordion", () => {
     expect(screen.getByText("Nuuksion reitti")).toBeInTheDocument();
   });
 
-  it("displays author section when present", () => {
+  it("displays author in the expanded details section when present", () => {
     render(<VisitAccordion visits={visits} />);
 
-    // Latest visit (id: 4) is expanded by default and has an author
     expect(screen.getByText("Pekka Puistossa")).toBeInTheDocument();
     expect(screen.getAllByText("park.authorTitle").length).toBeGreaterThanOrEqual(1);
   });
@@ -109,7 +118,7 @@ describe("VisitAccordion", () => {
   it("shows edit links when editable", () => {
     render(<VisitAccordion visits={visits} isEditable />);
 
-    expect(screen.getAllByLabelText("controlPanel.visits.edit").length).toBe(4);
+    expect(screen.getAllByLabelText("controlPanel.visits.edit").length).toBe(5);
   });
 
   it("does not show edit links when not editable", () => {
