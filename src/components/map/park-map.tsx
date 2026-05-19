@@ -13,8 +13,11 @@ interface ParkMapProps {
   isAuthenticated?: boolean;
 }
 
-const FINLAND_CENTER: [number, number] = [26.0, 65.0];
-const FINLAND_ZOOM = 4.5;
+const FINLAND_BOUNDS: maplibregl.LngLatBoundsLike = [
+  [19.0, 59.5],
+  [32.0, 70.5],
+];
+const MAP_PADDING = 24;
 const HOVER_CLOSE_DELAY = 300;
 
 const getMapStyle = () => {
@@ -225,8 +228,11 @@ export const ParkMap = ({ parks, error, isAuthenticated = false }: ParkMapProps)
     const map = new maplibregl.Map({
       container,
       style: getMapStyle(),
-      center: FINLAND_CENTER,
-      zoom: FINLAND_ZOOM,
+      bounds: FINLAND_BOUNDS,
+      fitBoundsOptions: {
+        duration: 0,
+        padding: MAP_PADDING,
+      },
       minZoom: 3,
       maxZoom: 16,
       maxBounds: [
@@ -243,8 +249,14 @@ export const ParkMap = ({ parks, error, isAuthenticated = false }: ParkMapProps)
 
     mapRef.current = map;
 
+    const resizeObserver = new ResizeObserver(() => {
+      map.resize();
+    });
+    resizeObserver.observe(container);
+
     return () => {
       cancelClose();
+      resizeObserver.disconnect();
       for (const marker of markersRef.current) {
         marker.remove();
       }

@@ -4,7 +4,9 @@
 1. Read `docs/DEVELOPMENT.md` for setup, architecture, scripts, and auth flow.
 2. Read `docs/TESTING.md` for testing strategy, TDD workflow, and project-specific patterns.
 3. Read `README.md` if you need human-oriented context.
-4. Then use this file for repo-specific conventions and overrides.
+4. If the request is likely to change files or Git state, use `$git-pr-workflow` immediately after the doc read-through.
+5. Before any edits on a change task, check the current branch and switch off `main` to a repo-valid working branch.
+6. Then use this file for repo-specific conventions and overrides.
 
 ## Shared Skills
 - Use `$project-documentation` when updating `README.md`, `docs/**`, contributor guidance, or repository workflow docs.

@@ -14,6 +14,11 @@ interface VisitAccordionProps {
   isEditable?: boolean;
 }
 
+const hasExpandableContent = (visit: Visit) => {
+  const hasImages = (visit.images?.length ?? 0) > 0;
+  return !!visit.note || !!visit.author || hasImages;
+};
+
 const getSeasonBorderClass = (dateStr: string): string => {
   const month = new Date(dateStr).getMonth() + 1;
   if (month >= 3 && month <= 5) return "border-l-emerald-500";
@@ -48,8 +53,8 @@ export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionPro
     return new Date(dateStr).toLocaleDateString("fi-FI");
   };
 
-  const toggle = (id: number, hasNotes: boolean) => {
-    if (!hasNotes) return;
+  const toggle = (id: number, isExpandable: boolean) => {
+    if (!isExpandable) return;
     setOpenId((current) => (current === id ? null : id));
   };
 
@@ -59,21 +64,27 @@ export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionPro
         const number = visitNumbers.get(visit.id) ?? 0;
         const imageCount = visit.images?.length ?? 0;
         const hasImages = imageCount > 0;
-        const hasDetails = !!visit.note || !!visit.route || !!visit.author || hasImages;
+        const isExpandable = hasExpandableContent(visit);
         const isOpen = openId === visit.id;
         const seasonBorder = getSeasonBorderClass(visit.visitedOn);
 
-        if (!hasDetails) {
+        if (!isExpandable) {
           return (
             <div
               key={visit.id}
               className={`flex items-center justify-between rounded-lg border bg-card shadow-sm ${seasonBorder} border-l-4 px-4 py-3`}
             >
-              <span className="flex items-center gap-2 text-sm font-medium">
+              <span className="flex flex-wrap items-center gap-2 text-sm font-medium">
                 <span className="inline-flex items-center justify-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
                   {t("visitNumber", { number })}
                 </span>
-                {formatDate(visit.visitedOn)}
+                <span>{formatDate(visit.visitedOn)}</span>
+                {visit.route && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-700 px-2 py-0.5 text-xs font-semibold text-white dark:bg-emerald-500/15 dark:text-emerald-400">
+                    <Route className="h-3 w-3" aria-hidden="true" />
+                    {visit.route}
+                  </span>
+                )}
               </span>
               {isEditable && <EditVisitLink visitId={visit.id} />}
             </div>
@@ -87,7 +98,7 @@ export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionPro
           >
             <button
               type="button"
-              onClick={() => toggle(visit.id, hasDetails)}
+              onClick={() => toggle(visit.id, isExpandable)}
               className="flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-3 text-left"
               aria-expanded={isOpen}
               title={isOpen ? t("hideDetails") : t("showDetails")}
@@ -100,7 +111,7 @@ export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionPro
                 <span className="text-sm font-medium">{formatDate(visit.visitedOn)}</span>
                 {visit.route && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-emerald-700 px-2 py-0.5 text-xs font-semibold text-white dark:bg-emerald-500/15 dark:text-emerald-400">
-                    <Route className="h-3 w-3" />
+                    <Route className="h-3 w-3" aria-hidden="true" />
                     {visit.route}
                   </span>
                 )}
