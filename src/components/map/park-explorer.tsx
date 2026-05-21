@@ -52,8 +52,12 @@ export const ParkExplorer = ({ parks, error, isAuthenticated = false }: ParkExpl
       case "national-park":
       case "state-hiking-area":
       case "wilderness-area":
-      case "other-nature-reserve":
         return parks.filter((park) => park.type.slug === activeFilter);
+      case "other-nature-reserve":
+        return parks.filter(
+          (park) =>
+            !["national-park", "state-hiking-area", "wilderness-area"].includes(park.type.slug),
+        );
       case "visited":
         return parks.filter((park) => park.visitedSummary?.visited);
       case "not-visited":
