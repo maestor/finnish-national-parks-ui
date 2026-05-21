@@ -1,5 +1,6 @@
 import "@testing-library/jest-dom/vitest";
 
+import type { ReactNode } from "react";
 import { vi } from "vitest";
 
 vi.mock("@/lib/env", () => ({
@@ -15,9 +16,7 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
 }));
 
-vi.mock("next-intl", async () => {
-  const actual = await vi.importActual<typeof import("next-intl")>("next-intl");
-
+vi.mock("next-intl", () => {
   const createT = (namespace?: string) => {
     const t = (key: string) => (namespace ? `${namespace}.${key}` : key);
     t.rich = (key: string) => (namespace ? `${namespace}.${key}` : key);
@@ -26,7 +25,7 @@ vi.mock("next-intl", async () => {
   };
 
   return {
-    ...actual,
     useTranslations: createT,
+    NextIntlClientProvider: ({ children }: { children: ReactNode }) => children,
   };
 });

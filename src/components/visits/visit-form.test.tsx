@@ -1,5 +1,5 @@
 import type { Park } from "@/lib/parks";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { VisitForm } from "./visit-form";
@@ -40,14 +40,12 @@ describe("VisitForm", () => {
 
     render(<VisitForm parks={parks} />);
 
-    await userEvent.selectOptions(
-      screen.getByLabelText(/controlPanel.visits.form.parkLabel/i),
-      "pallas",
-    );
-    await userEvent.type(
-      screen.getByLabelText(/controlPanel.visits.form.dateLabel/i),
-      "2024-06-15",
-    );
+    fireEvent.change(screen.getByLabelText(/controlPanel.visits.form.parkLabel/i), {
+      target: { value: "pallas" },
+    });
+    fireEvent.change(screen.getByLabelText(/controlPanel.visits.form.dateLabel/i), {
+      target: { value: "2024-06-15" },
+    });
     await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.submit/i }));
 
     expect(apiFetch).toHaveBeenCalledWith("/api/me/parks/pallas/visits", {
@@ -59,7 +57,9 @@ describe("VisitForm", () => {
         note: null,
       }),
     });
-    expect(mockPush).toHaveBeenCalledWith("/control-panel/visits/42/edit?created=1");
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith("/control-panel/visits/42/edit?created=1");
+    });
     expect(mockRefresh).not.toHaveBeenCalled();
   });
 
@@ -80,7 +80,7 @@ describe("VisitForm", () => {
     render(<VisitForm parks={parks} />);
 
     const submitButton = screen.getByRole("button", { name: /controlPanel.visits.form.submit/i });
-    await userEvent.click(submitButton);
+    fireEvent.click(submitButton);
 
     expect(
       screen.getByText("controlPanel.visits.form.validation.parkRequired"),
@@ -146,9 +146,13 @@ describe("VisitForm", () => {
         note: "Great hike",
       }),
     });
-    expect(mockPush).not.toHaveBeenCalled();
-    expect(mockRefresh).not.toHaveBeenCalled();
-    expect(screen.getByRole("status")).toHaveTextContent("controlPanel.visits.form.updateSuccess");
+    await waitFor(() => {
+      expect(mockPush).not.toHaveBeenCalled();
+      expect(mockRefresh).not.toHaveBeenCalled();
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "controlPanel.visits.form.updateSuccess",
+      );
+    });
     expect(
       screen.getByRole("link", { name: "controlPanel.visits.form.viewAllVisits" }),
     ).toHaveAttribute("href", "/control-panel/visits");
@@ -158,10 +162,10 @@ describe("VisitForm", () => {
     render(<VisitForm parks={parks} />);
 
     const textarea = screen.getByPlaceholderText("controlPanel.visits.form.notePlaceholder");
-    await userEvent.type(textarea, "# Hello");
+    fireEvent.change(textarea, { target: { value: "# Hello" } });
 
     const previewButton = screen.getByText("controlPanel.visits.form.preview");
-    await userEvent.click(previewButton);
+    fireEvent.click(previewButton);
 
     expect(screen.getByRole("heading", { name: "Hello" })).toBeInTheDocument();
   });
@@ -169,7 +173,7 @@ describe("VisitForm", () => {
   it("goes back to the previous page from the back action", async () => {
     render(<VisitForm parks={parks} />);
 
-    await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.back/i }));
+    fireEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.back/i }));
 
     expect(mockBack).toHaveBeenCalled();
   });

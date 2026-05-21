@@ -11,6 +11,7 @@ Read the `intelligence-testing` skill (`.agents/skills/intelligence-testing/`) f
 | Layer            | Tool                                        | Command            |
 | ---------------- | ------------------------------------------- | ------------------ |
 | Unit / Component | Vitest + jsdom + Testing Library            | `npm run test`     |
+| Coverage         | Vitest + V8 coverage                        | `npm run test:coverage` |
 | E2E              | Playwright                                  | `npm run test:e2e` |
 | Quality Gate     | All of the above + typecheck + lint + build | `npm run verify`   |
 
@@ -80,6 +81,14 @@ npm run test:e2e:all
 ```
 
 Playwright automatically starts the dev server (`npm run dev`) if not already running.
+
+## Coverage Baseline
+
+Use `npm run test:coverage` when you want the current coverage baseline for the Vitest suite.
+
+- Follow the `intelligence-testing` skill when deciding what coverage work matters: protect realistic behavior first, then measure.
+- The command writes reports to `coverage/`, including an HTML report and `coverage-summary.json` for before/after comparisons.
+- Treat coverage as a feedback tool, not a replacement for behavior-first test selection.
 
 ### 3. Unit Tests (Vitest)
 

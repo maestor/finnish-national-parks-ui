@@ -69,6 +69,7 @@ The `AUTH_JWT_SECRET` must match the backend's `AUTH_JWT_SECRET` exactly.
 | `npm run lint` | Biome lint check |
 | `npm run lint:fix` | Auto-fix Biome issues |
 | `npm run test` | Run Vitest unit/component tests once |
+| `npm run test:coverage` | Run Vitest with V8 coverage summary + HTML report |
 | `npm run test:watch` | Run Vitest in watch mode |
 | `npm run test:e2e` | Run Playwright E2E (Chromium only) |
 | `npm run test:e2e:all` | Run Playwright E2E (all browsers) |

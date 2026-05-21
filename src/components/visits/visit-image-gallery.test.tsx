@@ -1,6 +1,5 @@
 import type { VisitImage } from "@/lib/parks";
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { VisitImageGallery } from "./visit-image-gallery";
 
@@ -65,7 +64,7 @@ describe("VisitImageGallery", () => {
     render(<VisitImageGallery images={images} />);
 
     const [firstThumbnail] = screen.getAllByRole("button", { name: /imageGallery.open/i });
-    await userEvent.click(firstThumbnail);
+    fireEvent.click(firstThumbnail);
 
     expect(screen.getByRole("dialog", { name: "imageGallery.dialogLabel" })).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "imageGallery.activeImage" })).toBeInTheDocument();
@@ -75,8 +74,8 @@ describe("VisitImageGallery", () => {
     render(<VisitImageGallery images={images} />);
 
     const [firstThumbnail] = screen.getAllByRole("button", { name: /imageGallery.open/i });
-    await userEvent.click(firstThumbnail);
-    await userEvent.click(screen.getByRole("button", { name: "imageGallery.close" }));
+    fireEvent.click(firstThumbnail);
+    fireEvent.click(screen.getByRole("button", { name: "imageGallery.close" }));
 
     expect(
       screen.queryByRole("dialog", { name: "imageGallery.dialogLabel" }),

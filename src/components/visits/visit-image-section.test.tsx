@@ -1,7 +1,6 @@
 import { apiFetch } from "@/lib/api";
 import type { VisitImage } from "@/lib/parks";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { VisitImageSection } from "./visit-image-section";
 
@@ -69,7 +68,7 @@ describe("VisitImageSection", () => {
     const deleteButtons = screen.getAllByRole("button", {
       name: "controlPanel.visits.images.deleteImage",
     });
-    await userEvent.click(deleteButtons[0]);
+    fireEvent.click(deleteButtons[0]);
 
     expect(window.confirm).toHaveBeenCalledWith("controlPanel.visits.images.deleteConfirm");
     await waitFor(() => {
@@ -89,7 +88,7 @@ describe("VisitImageSection", () => {
     const moveLeftButtons = screen.getAllByRole("button", {
       name: "controlPanel.visits.images.moveLeft",
     });
-    await userEvent.click(moveLeftButtons[1]);
+    fireEvent.click(moveLeftButtons[1]);
 
     await waitFor(() => {
       expect(apiFetch).toHaveBeenCalledWith("/api/me/visits/10/images/reorder", {
@@ -109,7 +108,7 @@ describe("VisitImageSection", () => {
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
     const file = new File(["dummy"], "test.jpg", { type: "image/jpeg" });
 
-    await userEvent.upload(fileInput, file);
+    fireEvent.change(fileInput, { target: { files: [file] } });
 
     expect(screen.getByText("controlPanel.visits.images.selectedCount")).toBeInTheDocument();
     expect(
@@ -141,10 +140,10 @@ describe("VisitImageSection", () => {
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
     const file = new File(["dummy"], "test.jpg", { type: "image/jpeg" });
 
-    await userEvent.upload(fileInput, file);
+    fireEvent.change(fileInput, { target: { files: [file] } });
 
     const uploadButton = screen.getByRole("button", { name: "controlPanel.visits.images.upload" });
-    await userEvent.click(uploadButton);
+    fireEvent.click(uploadButton);
 
     await waitFor(() => {
       expect(apiFetch).toHaveBeenCalledWith("/api/me/visits/10/images", {
@@ -180,10 +179,10 @@ describe("VisitImageSection", () => {
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
     const file = new File(["dummy"], "big.jpg", { type: "image/jpeg" });
 
-    await userEvent.upload(fileInput, file);
+    fireEvent.change(fileInput, { target: { files: [file] } });
 
     const uploadButton = screen.getByRole("button", { name: "controlPanel.visits.images.upload" });
-    await userEvent.click(uploadButton);
+    fireEvent.click(uploadButton);
 
     await waitFor(() => {
       expect(screen.getByRole("alert")).toHaveTextContent("big.jpg: File too large");
