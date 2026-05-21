@@ -46,9 +46,23 @@ describe("Header", () => {
 **Key conventions:**
 
 - Query by role, label, or text — not by CSS class or test-id
+- Prefer `userEvent` for clicks, typing, selection, and toggle behavior; keep `fireEvent` for lower-level cases such as custom keyboard events, file inputs, or browser APIs that `userEvent` does not model well
 - Use translation keys (e.g., `"layout.siteTitle"`) because tests mock `next-intl`
 - Mock external libraries at the module level (see `park-map.test.tsx` for `maplibre-gl` mock)
 - Mock `env.ts` values in `src/test/setup.ts` if needed
+
+### 1.5. Route / App Router Integration Tests
+
+**Use for:** `page.tsx` and `layout.tsx` modules, route shells, metadata, and page-level fallbacks.
+
+**Bias:** Prefer integration-style route tests over isolated page rendering when working in the App Router.
+
+Project-specific expectations:
+
+- Render page modules through the real segment layout when practical so the test proves the route shell, not only the page body
+- Test `generateMetadata` for page modules when titles or other metadata are part of the user-visible route contract
+- Mock heavy child components where needed, but keep the page or layout composition real
+- Use these tests to cover route-level success, empty, error, and not-found behavior before dropping to helper-only tests
 
 ### 2. E2E Tests (Playwright)
 
@@ -90,6 +104,7 @@ Use `npm run test:coverage` when you want the current coverage baseline for the 
 - The command writes reports to `coverage/`, including an HTML report and `coverage-summary.json` for before/after comparisons.
 - The report intentionally excludes non-app noise such as top-level tool config files, `next-env.d.ts`, `e2e/**` specs, generated API types, `src/test/**` helpers, and framework-only entrypoints like the proxy, manifest, robots, and Serwist/service worker bridge files.
 - Coverage thresholds are enforced at `90%` for statements, functions, and lines, and `83%` for branches.
+- Keep runtime hooks, `lib/**`, i18n request code, and other real app support modules in the report unless the team explicitly decides they are outside the product-code baseline.
 - Treat coverage as a feedback tool, not a replacement for behavior-first test selection.
 
 ### 3. Unit Tests (Vitest)

@@ -66,6 +66,13 @@ This is the Finnish National Parks UI, a Next.js 16 App Router application consu
 - Tests should use translation keys via the `I18nProvider` test helper.
 - Future languages can be added by creating new message files and updating `src/i18n/request.ts`.
 
+## Testing Standards
+- Prefer behavior-first tests that exercise what the user sees or does, not component internals.
+- For UI interactions, prefer `@testing-library/user-event` over `fireEvent` unless you need a lower-level browser event.
+- For Next.js App Router pages, prefer integration-style tests that render page modules through the real segment layout when practical.
+- When route metadata is part of the user-visible contract, cover `generateMetadata` in tests alongside route rendering.
+- Coverage exclusions should stay limited to non-product noise such as tool config, generated files, test helpers, and framework-only entrypoints. Do not exclude real runtime app code just to improve the report.
+
 ## Environment Assumptions
 - Dev server port: `4300`
 - Backend port: `3004`

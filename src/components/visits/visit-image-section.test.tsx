@@ -203,8 +203,10 @@ describe("VisitImageSection", () => {
         body: expect.any(FormData),
       });
     });
-    expect(mockRefresh).toHaveBeenCalled();
-    expect(screen.getByText("controlPanel.visits.images.uploadSuccess")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(mockRefresh).toHaveBeenCalled();
+    });
+    expect(await screen.findByText("controlPanel.visits.images.uploadSuccess")).toBeInTheDocument();
   });
 
   it("shows upload errors for unsupported file types", async () => {
