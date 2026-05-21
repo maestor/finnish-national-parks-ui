@@ -1,5 +1,5 @@
 import type { Park } from "@/lib/parks";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { VisitForm } from "./visit-form";
@@ -21,9 +21,26 @@ const parks = [
   { slug: "nuuksio", name: "Nuuksio" },
 ] as Park[];
 
+const visitToEdit = {
+  id: 1,
+  parkSlug: "pallas",
+  parkName: "Pallas-Yllästunturi",
+  visitedOn: "2024-06-15",
+  route: "Pallas-Yllästunturin reitti",
+  author: "Maija Meikäläinen",
+  note: "Great hike",
+  createdAt: "2024-06-15T00:00:00Z",
+  updatedAt: "2024-06-15T00:00:00Z",
+  images: [],
+};
+
 describe("VisitForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubGlobal(
+      "confirm",
+      vi.fn(() => true),
+    );
   });
 
   it("redirects a newly created visit to the edit page", async () => {
@@ -40,14 +57,12 @@ describe("VisitForm", () => {
 
     render(<VisitForm parks={parks} />);
 
-    await userEvent.selectOptions(
-      screen.getByLabelText(/controlPanel.visits.form.parkLabel/i),
-      "pallas",
-    );
-    await userEvent.type(
-      screen.getByLabelText(/controlPanel.visits.form.dateLabel/i),
-      "2024-06-15",
-    );
+    fireEvent.change(screen.getByLabelText(/controlPanel.visits.form.parkLabel/i), {
+      target: { value: "pallas" },
+    });
+    fireEvent.change(screen.getByLabelText(/controlPanel.visits.form.dateLabel/i), {
+      target: { value: "2024-06-15" },
+    });
     await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.submit/i }));
 
     expect(apiFetch).toHaveBeenCalledWith("/api/me/parks/pallas/visits", {
@@ -59,7 +74,9 @@ describe("VisitForm", () => {
         note: null,
       }),
     });
-    expect(mockPush).toHaveBeenCalledWith("/control-panel/visits/42/edit?created=1");
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith("/control-panel/visits/42/edit?created=1");
+    });
     expect(mockRefresh).not.toHaveBeenCalled();
   });
 
@@ -76,11 +93,17 @@ describe("VisitForm", () => {
     ).toBeInTheDocument();
   });
 
+  it("uses the default park when creating a visit from a park page", () => {
+    render(<VisitForm parks={parks} defaultParkSlug="nuuksio" />);
+
+    expect(screen.getByLabelText(/controlPanel.visits.form.parkLabel/i)).toHaveValue("nuuksio");
+  });
+
   it("shows validation errors when required fields are empty", async () => {
     render(<VisitForm parks={parks} />);
 
     const submitButton = screen.getByRole("button", { name: /controlPanel.visits.form.submit/i });
-    await userEvent.click(submitButton);
+    fireEvent.click(submitButton);
 
     expect(
       screen.getByText("controlPanel.visits.form.validation.parkRequired"),
@@ -91,19 +114,6 @@ describe("VisitForm", () => {
   });
 
   it("renders edit mode with prefilled values, read-only park and delete button", () => {
-    const visitToEdit = {
-      id: 1,
-      parkSlug: "pallas",
-      parkName: "Pallas-Yllästunturi",
-      visitedOn: "2024-06-15",
-      route: "Pallas-Yllästunturin reitti",
-      author: "Maija Meikäläinen",
-      note: "Great hike",
-      createdAt: "2024-06-15T00:00:00Z",
-      updatedAt: "2024-06-15T00:00:00Z",
-      images: [],
-    };
-
     render(<VisitForm parks={parks} visitToEdit={visitToEdit} />);
 
     expect(screen.getByText("Pallas-Yllästunturi")).toBeInTheDocument();
@@ -120,19 +130,6 @@ describe("VisitForm", () => {
     const { apiFetch } = await import("@/lib/api");
     vi.mocked(apiFetch).mockResolvedValueOnce(undefined);
 
-    const visitToEdit = {
-      id: 1,
-      parkSlug: "pallas",
-      parkName: "Pallas-Yllästunturi",
-      visitedOn: "2024-06-15",
-      route: "Pallas-Yllästunturin reitti",
-      author: "Maija Meikäläinen",
-      note: "Great hike",
-      createdAt: "2024-06-15T00:00:00Z",
-      updatedAt: "2024-06-15T00:00:00Z",
-      images: [],
-    };
-
     render(<VisitForm parks={parks} visitToEdit={visitToEdit} />);
 
     await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.submit/i }));
@@ -146,30 +143,110 @@ describe("VisitForm", () => {
         note: "Great hike",
       }),
     });
-    expect(mockPush).not.toHaveBeenCalled();
-    expect(mockRefresh).not.toHaveBeenCalled();
-    expect(screen.getByRole("status")).toHaveTextContent("controlPanel.visits.form.updateSuccess");
+    await waitFor(() => {
+      expect(mockPush).not.toHaveBeenCalled();
+      expect(mockRefresh).not.toHaveBeenCalled();
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "controlPanel.visits.form.updateSuccess",
+      );
+    });
     expect(
       screen.getByRole("link", { name: "controlPanel.visits.form.viewAllVisits" }),
     ).toHaveAttribute("href", "/control-panel/visits");
+  });
+
+  it("shows the API error when creating a visit fails", async () => {
+    const { apiFetch } = await import("@/lib/api");
+    vi.mocked(apiFetch).mockRejectedValueOnce(new Error("create failed"));
+
+    render(<VisitForm parks={parks} />);
+
+    await userEvent.selectOptions(
+      screen.getByLabelText(/controlPanel.visits.form.parkLabel/i),
+      "pallas",
+    );
+    await userEvent.type(
+      screen.getByLabelText(/controlPanel.visits.form.dateLabel/i),
+      "2024-06-15",
+    );
+    await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.submit/i }));
+
+    expect(await screen.findByText("create failed")).toBeInTheDocument();
+    expect(mockPush).not.toHaveBeenCalled();
   });
 
   it("toggles markdown preview", async () => {
     render(<VisitForm parks={parks} />);
 
     const textarea = screen.getByPlaceholderText("controlPanel.visits.form.notePlaceholder");
-    await userEvent.type(textarea, "# Hello");
+    fireEvent.change(textarea, { target: { value: "# Hello" } });
 
     const previewButton = screen.getByText("controlPanel.visits.form.preview");
-    await userEvent.click(previewButton);
+    fireEvent.click(previewButton);
 
     expect(screen.getByRole("heading", { name: "Hello" })).toBeInTheDocument();
+  });
+
+  it("returns from preview mode back to editable markdown text", async () => {
+    render(<VisitForm parks={parks} />);
+
+    const noteField = screen.getByPlaceholderText("controlPanel.visits.form.notePlaceholder");
+    await userEvent.type(noteField, "Retkimuistiinpanot");
+
+    await userEvent.click(screen.getByRole("button", { name: "controlPanel.visits.form.preview" }));
+    await userEvent.click(screen.getByRole("button", { name: "controlPanel.visits.form.edit" }));
+
+    expect(screen.getByPlaceholderText("controlPanel.visits.form.notePlaceholder")).toHaveValue(
+      "Retkimuistiinpanot",
+    );
+  });
+
+  it("does not delete when the user cancels the confirmation", async () => {
+    const { apiFetch } = await import("@/lib/api");
+    vi.stubGlobal(
+      "confirm",
+      vi.fn(() => false),
+    );
+
+    render(<VisitForm parks={parks} visitToEdit={visitToEdit} />);
+
+    await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.delete/i }));
+
+    expect(apiFetch).not.toHaveBeenCalled();
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(mockRefresh).not.toHaveBeenCalled();
+  });
+
+  it("returns to the visits list after deleting a visit", async () => {
+    const { apiFetch } = await import("@/lib/api");
+    vi.mocked(apiFetch).mockResolvedValueOnce(undefined);
+
+    render(<VisitForm parks={parks} visitToEdit={visitToEdit} />);
+
+    await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.delete/i }));
+
+    expect(apiFetch).toHaveBeenCalledWith("/api/me/visits/1", { method: "DELETE" });
+    expect(mockPush).toHaveBeenCalledWith("/control-panel/visits");
+    expect(mockRefresh).toHaveBeenCalled();
+  });
+
+  it("shows the delete error and stays on the form when removing a visit fails", async () => {
+    const { apiFetch } = await import("@/lib/api");
+    vi.mocked(apiFetch).mockRejectedValueOnce(new Error("delete failed"));
+
+    render(<VisitForm parks={parks} visitToEdit={visitToEdit} />);
+
+    await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.delete/i }));
+
+    expect(await screen.findByText("delete failed")).toBeInTheDocument();
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(mockRefresh).not.toHaveBeenCalled();
   });
 
   it("goes back to the previous page from the back action", async () => {
     render(<VisitForm parks={parks} />);
 
-    await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.back/i }));
+    fireEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.back/i }));
 
     expect(mockBack).toHaveBeenCalled();
   });

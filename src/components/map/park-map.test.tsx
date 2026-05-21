@@ -207,4 +207,40 @@ describe("ParkMap", () => {
     expect(document.body).toHaveTextContent("Pallas-Yllästunturin kansallispuisto");
     expect(document.body).not.toHaveTextContent("Hetta");
   });
+
+  it("shows an add visit link in the popup for authenticated users", () => {
+    render(<ParkMap parks={parks} isAuthenticated />);
+    triggerMapLoad();
+
+    fireEvent.mouseEnter(markerElements[0]);
+
+    expect(screen.getByRole("link", { name: "map.addVisit" })).toHaveAttribute(
+      "href",
+      "/control-panel/visits/new?park=pallas",
+    );
+  });
+
+  it("closes an active popup when clicking outside the map popup and markers", () => {
+    render(<ParkMap parks={parks} />);
+    triggerMapLoad();
+
+    fireEvent.click(markerElements[0]);
+    expect(document.body).toHaveTextContent("Pallas-Yllästunturin kansallispuisto");
+
+    fireEvent.mouseDown(document.body);
+
+    expect(document.querySelector(".maplibregl-popup")).not.toBeInTheDocument();
+  });
+
+  it("closes an active popup when pressing escape", () => {
+    render(<ParkMap parks={parks} />);
+    triggerMapLoad();
+
+    fireEvent.click(markerElements[0]);
+    expect(document.body).toHaveTextContent("Pallas-Yllästunturin kansallispuisto");
+
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    expect(document.querySelector(".maplibregl-popup")).not.toBeInTheDocument();
+  });
 });

@@ -1,8 +1,9 @@
 import type { VisitImage } from "@/lib/parks";
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { VisitImageGallery } from "./visit-image-gallery";
+
+const scrollByMock = vi.fn();
 
 const images: VisitImage[] = [
   {
@@ -41,6 +42,11 @@ describe("VisitImageGallery", () => {
       configurable: true,
       get: () => 500,
     });
+    Object.defineProperty(HTMLElement.prototype, "scrollBy", {
+      configurable: true,
+      value: scrollByMock,
+    });
+    scrollByMock.mockClear();
   });
 
   afterEach(() => {
@@ -65,7 +71,7 @@ describe("VisitImageGallery", () => {
     render(<VisitImageGallery images={images} />);
 
     const [firstThumbnail] = screen.getAllByRole("button", { name: /imageGallery.open/i });
-    await userEvent.click(firstThumbnail);
+    fireEvent.click(firstThumbnail);
 
     expect(screen.getByRole("dialog", { name: "imageGallery.dialogLabel" })).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "imageGallery.activeImage" })).toBeInTheDocument();
@@ -75,8 +81,8 @@ describe("VisitImageGallery", () => {
     render(<VisitImageGallery images={images} />);
 
     const [firstThumbnail] = screen.getAllByRole("button", { name: /imageGallery.open/i });
-    await userEvent.click(firstThumbnail);
-    await userEvent.click(screen.getByRole("button", { name: "imageGallery.close" }));
+    fireEvent.click(firstThumbnail);
+    fireEvent.click(screen.getByRole("button", { name: "imageGallery.close" }));
 
     expect(
       screen.queryByRole("dialog", { name: "imageGallery.dialogLabel" }),
@@ -151,6 +157,76 @@ describe("VisitImageGallery", () => {
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "imageGallery.scrollNext" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("scrolls the thumbnail rail when the rail controls are clicked", () => {
+    render(<VisitImageGallery images={images} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "imageGallery.scrollPrevious" }));
+    fireEvent.click(screen.getByRole("button", { name: "imageGallery.scrollNext" }));
+
+    expect(scrollByMock).toHaveBeenNthCalledWith(1, {
+      left: -320,
+      behavior: "smooth",
+    });
+    expect(scrollByMock).toHaveBeenNthCalledWith(2, {
+      left: 320,
+      behavior: "smooth",
+    });
+  });
+
+  it("supports previous and next navigation inside the lightbox", () => {
+    render(<VisitImageGallery images={images} />);
+
+    const [firstThumbnail] = screen.getAllByRole("button", { name: /imageGallery.open/i });
+    fireEvent.click(firstThumbnail);
+
+    expect(screen.getByText("imageGallery.position")).toHaveTextContent("imageGallery.position");
+    expect(screen.getByRole("img", { name: "imageGallery.activeImage" })).toHaveAttribute(
+      "src",
+      "https://example.com/full-1.jpg",
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "imageGallery.next" }));
+
+    expect(screen.getByRole("img", { name: "imageGallery.activeImage" })).toHaveAttribute(
+      "src",
+      "https://example.com/full-2.jpg",
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "imageGallery.previous" }));
+
+    expect(screen.getByRole("img", { name: "imageGallery.activeImage" })).toHaveAttribute(
+      "src",
+      "https://example.com/full-1.jpg",
+    );
+  });
+
+  it("supports keyboard navigation and escape in the lightbox", () => {
+    render(<VisitImageGallery images={images} />);
+
+    const [firstThumbnail] = screen.getAllByRole("button", { name: /imageGallery.open/i });
+    fireEvent.click(firstThumbnail);
+
+    fireEvent.keyDown(window, { key: "ArrowRight" });
+
+    expect(screen.getByRole("img", { name: "imageGallery.activeImage" })).toHaveAttribute(
+      "src",
+      "https://example.com/full-2.jpg",
+    );
+
+    fireEvent.keyDown(window, { key: "ArrowLeft" });
+
+    expect(screen.getByRole("img", { name: "imageGallery.activeImage" })).toHaveAttribute(
+      "src",
+      "https://example.com/full-1.jpg",
+    );
+
+    fireEvent.keyDown(window, { key: "Escape" });
+
+    expect(
+      screen.queryByRole("dialog", { name: "imageGallery.dialogLabel" }),
     ).not.toBeInTheDocument();
   });
 });

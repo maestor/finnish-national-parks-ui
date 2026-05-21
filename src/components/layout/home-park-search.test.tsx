@@ -1,6 +1,6 @@
 import { apiFetch } from "@/lib/api";
 import type { Park } from "@/lib/parks";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { HomeParkSearch } from "./home-park-search";
@@ -48,7 +48,7 @@ describe("HomeParkSearch", () => {
     render(<HomeParkSearch />);
 
     const input = screen.getByRole("combobox", { name: "layout.parkSearch.label" });
-    await userEvent.type(input, "päij");
+    fireEvent.change(input, { target: { value: "päij" } });
 
     await waitFor(() => {
       expect(
@@ -56,7 +56,7 @@ describe("HomeParkSearch", () => {
       ).toBeInTheDocument();
     });
 
-    await userEvent.click(screen.getByRole("button", { name: /Päijänteen kansallispuisto/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Päijänteen kansallispuisto/i }));
 
     expect(mockPush).toHaveBeenCalledWith("/park/paijanne");
   });
@@ -67,11 +67,31 @@ describe("HomeParkSearch", () => {
     render(<HomeParkSearch />);
 
     const input = screen.getByRole("combobox", { name: "layout.parkSearch.label" });
-    await userEvent.type(input, "xyz");
+    fireEvent.change(input, { target: { value: "xyz" } });
 
     await waitFor(() => {
       expect(screen.getByText("layout.parkSearch.empty")).toBeInTheDocument();
     });
+  });
+
+  it("supports keyboard navigation from the desktop search field", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({ parks });
+
+    render(<HomeParkSearch />);
+
+    const input = screen.getByRole("combobox", { name: "layout.parkSearch.label" });
+
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /Päijänteen kansallispuisto/i }),
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    expect(mockPush).toHaveBeenCalledWith("/park/paijanne");
   });
 
   it("opens a mobile search panel from the header button", async () => {
@@ -82,6 +102,27 @@ describe("HomeParkSearch", () => {
     await userEvent.click(screen.getByRole("button", { name: "layout.parkSearch.label" }));
 
     expect(screen.getByRole("searchbox")).toBeInTheDocument();
+  });
+
+  it("filters in the mobile search field and closes on escape", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({ parks });
+
+    render(<HomeParkSearch />);
+
+    await userEvent.click(screen.getByRole("button", { name: "layout.parkSearch.label" }));
+
+    const mobileInput = screen.getByRole("searchbox");
+    fireEvent.change(mobileInput, { target: { value: "xyz" } });
+
+    await waitFor(() => {
+      expect(screen.getByText("layout.parkSearch.empty")).toBeInTheDocument();
+    });
+
+    fireEvent.keyDown(mobileInput, { key: "Escape" });
+
+    await waitFor(() => {
+      expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
+    });
   });
 
   it("renders the desktop search icon with visible foreground contrast styling", () => {

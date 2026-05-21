@@ -1,8 +1,7 @@
 import { apiFetch } from "@/lib/api";
 import type { VisitImage } from "@/lib/parks";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { VisitImageSection } from "./visit-image-section";
 
 const mockRefresh = vi.fn();
@@ -52,6 +51,11 @@ const images: VisitImage[] = [
 ];
 
 describe("VisitImageSection", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    window.confirm = vi.fn(() => true);
+  });
+
   it("renders existing images", () => {
     render(<VisitImageSection visitId={10} images={images} />);
 
@@ -62,14 +66,13 @@ describe("VisitImageSection", () => {
 
   it("deletes an image after confirmation", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce(undefined);
-    window.confirm = vi.fn(() => true);
 
     render(<VisitImageSection visitId={10} images={images} />);
 
     const deleteButtons = screen.getAllByRole("button", {
       name: "controlPanel.visits.images.deleteImage",
     });
-    await userEvent.click(deleteButtons[0]);
+    fireEvent.click(deleteButtons[0]);
 
     expect(window.confirm).toHaveBeenCalledWith("controlPanel.visits.images.deleteConfirm");
     await waitFor(() => {
@@ -81,6 +84,38 @@ describe("VisitImageSection", () => {
     expect(screen.getByText("controlPanel.visits.images.deleteSuccess")).toBeInTheDocument();
   });
 
+  it("does not delete an image when confirmation is cancelled", () => {
+    window.confirm = vi.fn(() => false);
+
+    render(<VisitImageSection visitId={10} images={images} />);
+
+    const deleteButtons = screen.getAllByRole("button", {
+      name: "controlPanel.visits.images.deleteImage",
+    });
+    fireEvent.click(deleteButtons[0]);
+
+    expect(apiFetch).not.toHaveBeenCalled();
+    expect(mockRefresh).not.toHaveBeenCalled();
+  });
+
+  it("restores the image and shows an error if deleting fails", async () => {
+    vi.mocked(apiFetch).mockRejectedValueOnce(new Error("delete failed"));
+
+    render(<VisitImageSection visitId={10} images={images} />);
+
+    const deleteButtons = screen.getAllByRole("button", {
+      name: "controlPanel.visits.images.deleteImage",
+    });
+    fireEvent.click(deleteButtons[0]);
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent("delete failed");
+    });
+
+    expect(mockRefresh).not.toHaveBeenCalled();
+    expect(screen.getAllByRole("presentation")).toHaveLength(2);
+  });
+
   it("reorders an image to the left", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce(undefined);
 
@@ -89,7 +124,7 @@ describe("VisitImageSection", () => {
     const moveLeftButtons = screen.getAllByRole("button", {
       name: "controlPanel.visits.images.moveLeft",
     });
-    await userEvent.click(moveLeftButtons[1]);
+    fireEvent.click(moveLeftButtons[1]);
 
     await waitFor(() => {
       expect(apiFetch).toHaveBeenCalledWith("/api/me/visits/10/images/reorder", {
@@ -109,12 +144,28 @@ describe("VisitImageSection", () => {
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
     const file = new File(["dummy"], "test.jpg", { type: "image/jpeg" });
 
-    await userEvent.upload(fileInput, file);
+    fireEvent.change(fileInput, { target: { files: [file] } });
 
     expect(screen.getByText("controlPanel.visits.images.selectedCount")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "controlPanel.visits.images.upload" }),
     ).toBeInTheDocument();
+  });
+
+  it("removes a selected file before upload", async () => {
+    const { container } = render(<VisitImageSection visitId={10} images={[]} />);
+
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File(["dummy"], "test.jpg", { type: "image/jpeg" });
+
+    fireEvent.change(fileInput, { target: { files: [file] } });
+    fireEvent.click(screen.getByRole("button", { name: "controlPanel.visits.images.removeFile" }));
+
+    expect(screen.queryByText("controlPanel.visits.images.selectedCount")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "controlPanel.visits.images.upload" }),
+    ).not.toBeInTheDocument();
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:mock-url");
   });
 
   it("uploads files and refreshes the page", async () => {
@@ -141,10 +192,10 @@ describe("VisitImageSection", () => {
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
     const file = new File(["dummy"], "test.jpg", { type: "image/jpeg" });
 
-    await userEvent.upload(fileInput, file);
+    fireEvent.change(fileInput, { target: { files: [file] } });
 
     const uploadButton = screen.getByRole("button", { name: "controlPanel.visits.images.upload" });
-    await userEvent.click(uploadButton);
+    fireEvent.click(uploadButton);
 
     await waitFor(() => {
       expect(apiFetch).toHaveBeenCalledWith("/api/me/visits/10/images", {
@@ -152,8 +203,10 @@ describe("VisitImageSection", () => {
         body: expect.any(FormData),
       });
     });
-    expect(mockRefresh).toHaveBeenCalled();
-    expect(screen.getByText("controlPanel.visits.images.uploadSuccess")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(mockRefresh).toHaveBeenCalled();
+    });
+    expect(await screen.findByText("controlPanel.visits.images.uploadSuccess")).toBeInTheDocument();
   });
 
   it("shows upload errors for unsupported file types", async () => {
@@ -180,13 +233,31 @@ describe("VisitImageSection", () => {
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
     const file = new File(["dummy"], "big.jpg", { type: "image/jpeg" });
 
-    await userEvent.upload(fileInput, file);
+    fireEvent.change(fileInput, { target: { files: [file] } });
 
     const uploadButton = screen.getByRole("button", { name: "controlPanel.visits.images.upload" });
-    await userEvent.click(uploadButton);
+    fireEvent.click(uploadButton);
 
     await waitFor(() => {
       expect(screen.getByRole("alert")).toHaveTextContent("big.jpg: File too large");
     });
+  });
+
+  it("shows an upload error when the upload request fails", async () => {
+    vi.mocked(apiFetch).mockRejectedValueOnce(new Error("upload failed"));
+
+    const { container } = render(<VisitImageSection visitId={10} images={[]} />);
+
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File(["dummy"], "test.jpg", { type: "image/jpeg" });
+
+    fireEvent.change(fileInput, { target: { files: [file] } });
+    fireEvent.click(screen.getByRole("button", { name: "controlPanel.visits.images.upload" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent("upload failed");
+    });
+
+    expect(mockRefresh).not.toHaveBeenCalled();
   });
 });

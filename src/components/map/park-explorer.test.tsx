@@ -1,6 +1,5 @@
 import type { MapPark } from "@/lib/parks";
-import { render, screen, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import {
   HomeMapControlsProvider,
@@ -76,7 +75,7 @@ describe("ParkExplorer", () => {
 
     expect(screen.getByText("count:3")).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("button", { name: "home.filters.hikingAreas" }));
+    fireEvent.click(screen.getByRole("button", { name: "home.filters.hikingAreas" }));
 
     expect(screen.getByText("count:1")).toBeInTheDocument();
     expect(screen.getByText("Iso-Syötteen retkeilyalue")).toBeInTheDocument();
@@ -121,11 +120,11 @@ describe("ParkExplorer", () => {
     expect(mobileFilters).toBeInTheDocument();
     expect(mobileFilters).toHaveClass("hidden");
 
-    await userEvent.click(screen.getByRole("button", { name: "toggle-mobile-filters" }));
+    fireEvent.click(screen.getByRole("button", { name: "toggle-mobile-filters" }));
 
     expect(mobileFilters).toHaveClass("block");
 
-    await userEvent.click(
+    fireEvent.click(
       within(mobileFilters as HTMLElement).getByRole("button", {
         name: "home.filters.hikingAreas",
       }),

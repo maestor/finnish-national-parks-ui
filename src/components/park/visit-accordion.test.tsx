@@ -1,5 +1,6 @@
 import type { Visit } from "@/lib/parks";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { VisitAccordion } from "./visit-accordion";
 
@@ -8,7 +9,7 @@ describe("VisitAccordion", () => {
     {
       id: 1,
       visitedOn: "2024-01-15",
-      route: null,
+      route: "Talvireitti",
       author: null,
       note: null,
       createdAt: "2024-01-15T00:00:00Z",
@@ -70,6 +71,26 @@ describe("VisitAccordion", () => {
     },
   ];
 
+  const getVisitToggle = (dateLabel: string) => {
+    const button = screen.getByText(dateLabel).closest("button");
+
+    if (!(button instanceof HTMLButtonElement)) {
+      throw new Error(`No toggle button found for ${dateLabel}`);
+    }
+
+    return button;
+  };
+
+  const getVisitCard = (dateLabel: string) => {
+    const card = screen.getByText(dateLabel).closest(".rounded-lg");
+
+    if (!(card instanceof HTMLDivElement)) {
+      throw new Error(`No visit card found for ${dateLabel}`);
+    }
+
+    return card;
+  };
+
   it("renders visits sorted newest first with correct numbering", () => {
     render(<VisitAccordion visits={visits} />);
 
@@ -87,11 +108,49 @@ describe("VisitAccordion", () => {
     expect(toggleButtons.length).toBe(4);
   });
 
+  it("opens the newest expandable visit by default", () => {
+    render(<VisitAccordion visits={visits} />);
+
+    expect(getVisitToggle("1.9.2024")).toHaveAttribute("aria-expanded", "true");
+    expect(getVisitToggle("15.8.2024")).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("lets the user switch between detailed visits and collapse the active one", async () => {
+    const user = userEvent.setup();
+
+    render(<VisitAccordion visits={visits} />);
+
+    const newestVisit = getVisitToggle("1.9.2024");
+    const imageVisit = getVisitToggle("15.8.2024");
+
+    await user.click(imageVisit);
+
+    expect(newestVisit).toHaveAttribute("aria-expanded", "false");
+    expect(imageVisit).toHaveAttribute("aria-expanded", "true");
+
+    await user.click(imageVisit);
+
+    expect(imageVisit).toHaveAttribute("aria-expanded", "false");
+  });
+
   it("shows non-expandable items when a visit has no expandable content", () => {
     render(<VisitAccordion visits={visits} />);
 
     expect(screen.getByText("15.1.2024")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /15\.1\.2024/ })).not.toBeInTheDocument();
+  });
+
+  it("keeps plain visits non-interactive even when clicked by surrounding controls", async () => {
+    const user = userEvent.setup();
+
+    render(<VisitAccordion visits={visits} />);
+
+    const plainVisitCard = getVisitCard("15.1.2024");
+
+    await user.click(plainVisitCard);
+
+    expect(screen.getAllByRole("button", { name: "park.showDetails" })).toHaveLength(3);
+    expect(screen.getAllByRole("button", { name: "park.hideDetails" })).toHaveLength(1);
   });
 
   it("displays route badge when present", () => {
@@ -121,9 +180,36 @@ describe("VisitAccordion", () => {
     expect(screen.getAllByLabelText("controlPanel.visits.edit").length).toBe(5);
   });
 
+  it("does not toggle an expanded visit when the edit link is clicked", async () => {
+    const user = userEvent.setup();
+
+    render(<VisitAccordion visits={visits} isEditable />);
+
+    const imageVisit = getVisitToggle("15.8.2024");
+
+    await user.click(imageVisit);
+    expect(imageVisit).toHaveAttribute("aria-expanded", "true");
+
+    const editLink = within(imageVisit).getByRole("link", { name: "controlPanel.visits.edit" });
+    editLink.addEventListener("click", (event) => event.preventDefault());
+
+    await user.click(editLink);
+
+    expect(imageVisit).toHaveAttribute("aria-expanded", "true");
+  });
+
   it("does not show edit links when not editable", () => {
     render(<VisitAccordion visits={visits} />);
 
     expect(screen.queryByLabelText("controlPanel.visits.edit")).not.toBeInTheDocument();
+  });
+
+  it("applies the seasonal accent border for each visit month", () => {
+    render(<VisitAccordion visits={visits} />);
+
+    expect(getVisitCard("15.1.2024")).toHaveClass("border-l-sky-500");
+    expect(getVisitCard("20.3.2024")).toHaveClass("border-l-emerald-500");
+    expect(getVisitCard("31.7.2024")).toHaveClass("border-l-amber-500");
+    expect(getVisitCard("1.9.2024")).toHaveClass("border-l-orange-500");
   });
 });
