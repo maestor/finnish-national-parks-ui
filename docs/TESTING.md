@@ -88,6 +88,8 @@ Use `npm run test:coverage` when you want the current coverage baseline for the 
 
 - Follow the `intelligence-testing` skill when deciding what coverage work matters: protect realistic behavior first, then measure.
 - The command writes reports to `coverage/`, including an HTML report and `coverage-summary.json` for before/after comparisons.
+- The report intentionally excludes non-app noise such as top-level tool config files, `next-env.d.ts`, `e2e/**` specs, generated API types, `src/test/**` helpers, and framework-only entrypoints like the proxy, manifest, robots, and Serwist/service worker bridge files.
+- Coverage thresholds are enforced at `90%` for statements, functions, and lines, and `83%` for branches.
 - Treat coverage as a feedback tool, not a replacement for behavior-first test selection.
 
 ### 3. Unit Tests (Vitest)
@@ -204,6 +206,6 @@ vi.mock("@/hooks/use-auth", () => ({
 npm run verify
 ```
 
-This runs: typecheck → lint → test → build.
+This runs: typecheck → lint → coverage-tested Vitest suite → build.
 
 If any step fails, fix before review. If environment limits block verification (e.g., backend not running), report the specific gap clearly.

@@ -3,13 +3,23 @@ import type { Park, PersonalPark } from "@/lib/parks";
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import UserLayout from "./(user)/layout";
-import HomePage from "./(user)/page";
-import ParkDetailPage from "./(user)/park/[slug]/page";
+import HomePage, { generateMetadata as generateHomeMetadata } from "./(user)/page";
+import ParkDetailPage, {
+  generateMetadata as generateParkDetailMetadata,
+} from "./(user)/park/[slug]/page";
 import ControlPanelLayout from "./control-panel/layout";
-import ControlPanelPage from "./control-panel/page";
-import EditVisitPage from "./control-panel/visits/[id]/edit/page";
-import NewVisitPage from "./control-panel/visits/new/page";
-import VisitsPage from "./control-panel/visits/page";
+import ControlPanelPage, {
+  generateMetadata as generateControlPanelMetadata,
+} from "./control-panel/page";
+import EditVisitPage, {
+  generateMetadata as generateEditVisitMetadata,
+} from "./control-panel/visits/[id]/edit/page";
+import NewVisitPage, {
+  generateMetadata as generateNewVisitMetadata,
+} from "./control-panel/visits/new/page";
+import VisitsPage, {
+  generateMetadata as generateVisitsMetadata,
+} from "./control-panel/visits/page";
 import LoginPage from "./login/page";
 import NotFoundPage from "./not-found";
 import OfflinePage from "./~offline/page";
@@ -207,6 +217,24 @@ describe("App pages", () => {
     expect(screen.getByTestId("park-explorer")).toHaveTextContent("parks:1|auth:false|error:none");
   });
 
+  it("shows the fallback error message when both home page park requests fail", async () => {
+    vi.mocked(apiFetch)
+      .mockRejectedValueOnce(new Error("unauthorized"))
+      .mockRejectedValueOnce(new Error("backend offline"));
+
+    await renderPublicRoute(await HomePage());
+
+    expect(screen.getByTestId("park-explorer")).toHaveTextContent(
+      "parks:0|auth:false|error:backend offline",
+    );
+  });
+
+  it("builds translated metadata for the home page", async () => {
+    await expect(generateHomeMetadata()).resolves.toEqual({
+      title: "home.title",
+    });
+  });
+
   it("renders the park detail page with main content and visit history", async () => {
     vi.mocked(apiFetch)
       .mockResolvedValueOnce({
@@ -236,6 +264,24 @@ describe("App pages", () => {
     expect(screen.getByText("park.detailTitle")).toBeInTheDocument();
   });
 
+  it("builds park detail metadata from the fetched park name and falls back to the slug", async () => {
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({ name: "Pallas-Yllästunturi" })
+      .mockRejectedValueOnce(new Error("missing"));
+
+    await expect(
+      generateParkDetailMetadata({ params: Promise.resolve({ slug: "pallas-yllastunturi" }) }),
+    ).resolves.toEqual({
+      title: "Pallas-Yllästunturi",
+    });
+
+    await expect(
+      generateParkDetailMetadata({ params: Promise.resolve({ slug: "repovesi-kansallispuisto" }) }),
+    ).resolves.toEqual({
+      title: "repovesi kansallispuisto",
+    });
+  });
+
   it("renders the control panel overview page", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce({ parks: [personalPark] });
 
@@ -260,6 +306,12 @@ describe("App pages", () => {
     expect(screen.getByTestId("recent-visits")).toHaveTextContent("visits:1");
   });
 
+  it("builds metadata for the control panel dashboard", async () => {
+    await expect(generateControlPanelMetadata()).resolves.toEqual({
+      title: "controlPanel.title",
+    });
+  });
+
   it("renders the visits list page", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce({ parks: [personalPark] });
 
@@ -272,6 +324,12 @@ describe("App pages", () => {
       "/control-panel/visits/new",
     );
     expect(screen.getByTestId("visit-list")).toHaveTextContent("parks:1");
+  });
+
+  it("builds metadata for the visits list page", async () => {
+    await expect(generateVisitsMetadata()).resolves.toEqual({
+      title: "controlPanel.visits.title",
+    });
   });
 
   it("renders the new visit page with the selected park preset", async () => {
@@ -287,6 +345,12 @@ describe("App pages", () => {
       screen.getByRole("heading", { name: "controlPanel.visits.newVisit.title" }),
     ).toBeInTheDocument();
     expect(screen.getByTestId("visit-form")).toHaveTextContent("parks:1|edit:new|default:pallas");
+  });
+
+  it("builds metadata for the new visit page", async () => {
+    await expect(generateNewVisitMetadata()).resolves.toEqual({
+      title: "controlPanel.visits.newVisit.title",
+    });
   });
 
   it("renders the edit visit page with the created notice and edit helpers", async () => {
@@ -307,6 +371,12 @@ describe("App pages", () => {
     expect(screen.getByText("controlPanel.visits.editVisit.createdNotice")).toBeInTheDocument();
     expect(screen.getByTestId("visit-form")).toHaveTextContent("parks:1|edit:10|default:none");
     expect(screen.getByTestId("visit-image-section")).toHaveTextContent("visit:10|images:1");
+  });
+
+  it("builds metadata for the edit visit page", async () => {
+    await expect(generateEditVisitMetadata()).resolves.toEqual({
+      title: "controlPanel.visits.editVisit.title",
+    });
   });
 
   it("calls notFound when the edit visit page cannot find the requested visit", async () => {
