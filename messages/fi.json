@@ -105,6 +105,8 @@
         "preview": "Esikatselu",
         "edit": "Muokkaa",
         "submit": "Tallenna",
+        "updateSuccess": "Käynnin tiedot päivitettiin onnistuneesti.",
+        "viewAllVisits": "Siirry käyntilistaan",
         "delete": "Poista",
         "deleteConfirm": "Haluatko varmasti poistaa tämän käynnin?",
         "back": "Palaa takaisin",
