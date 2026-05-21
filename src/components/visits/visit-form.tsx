@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { apiFetch } from "@/lib/api";
 import type { Park, Visit, VisitWithPark } from "@/lib/parks";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
@@ -30,6 +31,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   const handleBack = () => {
     router.back();
@@ -39,6 +41,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
     event.preventDefault();
     setErrors({});
     setSubmitError(null);
+    setStatusMessage(null);
 
     const validationErrors: Record<string, string> = {};
     if (!isEditing && !parkSlug) {
@@ -64,8 +67,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
             note: note || null,
           }),
         });
-        router.push("/control-panel/visits");
-        router.refresh();
+        setStatusMessage(t("updateSuccess"));
       } else {
         const createdVisit = await apiFetch<Visit>(`/api/me/parks/${parkSlug}/visits`, {
           method: "POST",
@@ -208,6 +210,20 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
       </div>
 
       {submitError && <p className="text-sm text-destructive">{submitError}</p>}
+      {statusMessage && (
+        <output
+          aria-live="polite"
+          className="block rounded-lg border border-emerald-600/20 bg-emerald-600/10 px-4 py-3 text-sm text-emerald-900 dark:text-emerald-200"
+        >
+          <span>{statusMessage}</span>{" "}
+          <Link
+            href="/control-panel/visits"
+            className="font-medium underline underline-offset-4 hover:text-emerald-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:hover:text-emerald-100"
+          >
+            {t("viewAllVisits")}
+          </Link>
+        </output>
+      )}
 
       <div className="flex items-center gap-4">
         <Button type="submit" disabled={isSubmitting}>

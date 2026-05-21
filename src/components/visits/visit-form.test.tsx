@@ -1,7 +1,7 @@
 import type { Park } from "@/lib/parks";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { VisitForm } from "./visit-form";
 
 const mockPush = vi.fn();
@@ -22,6 +22,10 @@ const parks = [
 ] as Park[];
 
 describe("VisitForm", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("redirects a newly created visit to the edit page", async () => {
     const { apiFetch } = await import("@/lib/api");
     vi.mocked(apiFetch).mockResolvedValueOnce({
@@ -110,6 +114,44 @@ describe("VisitForm", () => {
     expect(
       screen.getByRole("button", { name: /controlPanel.visits.form.delete/i }),
     ).toBeInTheDocument();
+  });
+
+  it("shows a success notice and visits list link after editing a visit", async () => {
+    const { apiFetch } = await import("@/lib/api");
+    vi.mocked(apiFetch).mockResolvedValueOnce(undefined);
+
+    const visitToEdit = {
+      id: 1,
+      parkSlug: "pallas",
+      parkName: "Pallas-Yllästunturi",
+      visitedOn: "2024-06-15",
+      route: "Pallas-Yllästunturin reitti",
+      author: "Maija Meikäläinen",
+      note: "Great hike",
+      createdAt: "2024-06-15T00:00:00Z",
+      updatedAt: "2024-06-15T00:00:00Z",
+      images: [],
+    };
+
+    render(<VisitForm parks={parks} visitToEdit={visitToEdit} />);
+
+    await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.submit/i }));
+
+    expect(apiFetch).toHaveBeenCalledWith("/api/me/visits/1", {
+      method: "PATCH",
+      body: JSON.stringify({
+        visitedOn: "2024-06-15",
+        route: "Pallas-Yllästunturin reitti",
+        author: "Maija Meikäläinen",
+        note: "Great hike",
+      }),
+    });
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(mockRefresh).not.toHaveBeenCalled();
+    expect(screen.getByRole("status")).toHaveTextContent("controlPanel.visits.form.updateSuccess");
+    expect(
+      screen.getByRole("link", { name: "controlPanel.visits.form.viewAllVisits" }),
+    ).toHaveAttribute("href", "/control-panel/visits");
   });
 
   it("toggles markdown preview", async () => {
