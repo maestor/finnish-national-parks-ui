@@ -5,12 +5,14 @@ import { getVisitStatusColor } from "@/lib/parks";
 import maplibregl from "maplibre-gl";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { HomeParkFocusRequest } from "../providers/home-map-controls-provider";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 interface ParkMapProps {
   parks: MapPark[];
   error?: string | null;
   isAuthenticated?: boolean;
+  homeParkFocusRequest?: HomeParkFocusRequest | null;
 }
 
 const FINLAND_BOUNDS: maplibregl.LngLatBoundsLike = [
@@ -19,6 +21,12 @@ const FINLAND_BOUNDS: maplibregl.LngLatBoundsLike = [
 ];
 const MAP_PADDING = 24;
 const HOVER_CLOSE_DELAY = 300;
+const PARK_FOCUS_PADDING = {
+  top: 104,
+  right: 48,
+  bottom: 48,
+  left: 48,
+} as const;
 
 const getMapStyle = () => {
   const mapStyleUrl = process.env.NEXT_PUBLIC_MAP_STYLE_URL as string | undefined;
@@ -71,6 +79,7 @@ interface PopupLabels {
   established: string;
   officialLink: string;
   visits: string;
+  openParkPage: string;
   addVisit: string;
 }
 
@@ -126,51 +135,62 @@ const createPopupNode = (
     details.appendChild(year);
   }
 
+  if (park.luontoonUrl) {
+    const officialLink = document.createElement("a");
+    officialLink.href = park.luontoonUrl;
+    officialLink.target = "_blank";
+    officialLink.rel = "noopener noreferrer";
+    officialLink.className =
+      "inline-flex items-center gap-1 font-medium text-primary hover:underline";
+    officialLink.innerHTML = `${labels.officialLink}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>`;
+    officialLink.addEventListener("click", (e) => e.stopPropagation());
+    details.appendChild(officialLink);
+  }
+
   container.appendChild(details);
 
-  const footer = document.createElement("div");
-  footer.className = "mt-2 flex items-center gap-2 text-xs";
+  const summaryRow = document.createElement("div");
+  summaryRow.className = "mt-3 flex items-center gap-4 border-t border-border/60 pt-3 text-xs";
 
   const visitCount = park.visitedSummary?.visitCount ?? 0;
-  const visitsLink = document.createElement("a");
-  visitsLink.href = `/park/${park.slug}`;
-  visitsLink.className = "font-medium text-primary hover:underline";
-  visitsLink.textContent = `${labels.visits} (${visitCount})`;
-  visitsLink.addEventListener("click", (e) => e.stopPropagation());
-  footer.appendChild(visitsLink);
+  const visitsCount = document.createElement("span");
+  visitsCount.className = "font-medium text-foreground";
+  visitsCount.textContent = `${labels.visits} (${visitCount})`;
+  summaryRow.appendChild(visitsCount);
 
-  if (park.luontoonUrl) {
-    const separator = document.createElement("span");
-    separator.className = "text-muted-foreground";
-    separator.textContent = "|";
-    footer.appendChild(separator);
+  const parkLink = document.createElement("a");
+  parkLink.href = `/park/${park.slug}`;
+  parkLink.className = "font-medium text-primary hover:underline";
+  parkLink.textContent = labels.openParkPage;
+  parkLink.addEventListener("click", (e) => e.stopPropagation());
+  summaryRow.appendChild(parkLink);
+  container.appendChild(summaryRow);
 
-    const link = document.createElement("a");
-    link.href = park.luontoonUrl;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    link.className = "inline-flex items-center gap-1 font-medium text-primary hover:underline";
-    link.innerHTML = `${labels.officialLink}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>`;
-    link.addEventListener("click", (e) => e.stopPropagation());
-    footer.appendChild(link);
-  }
+  const actionRow = document.createElement("div");
+  actionRow.className = "mt-3 flex items-center gap-4 text-xs";
 
   if (isAuthenticated) {
     const addLink = document.createElement("a");
     addLink.href = `/control-panel/visits/new?park=${park.slug}`;
-    addLink.className =
-      "ml-auto inline-flex items-center gap-1 font-medium text-primary hover:underline";
+    addLink.className = "inline-flex items-center gap-1 font-medium text-primary hover:underline";
     addLink.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg><span>${labels.addVisit}</span>`;
     addLink.addEventListener("click", (e) => e.stopPropagation());
-    footer.appendChild(addLink);
+    actionRow.appendChild(addLink);
   }
 
-  container.appendChild(footer);
+  if (isAuthenticated) {
+    container.appendChild(actionRow);
+  }
 
   return container;
 };
 
-export const ParkMap = ({ parks, error, isAuthenticated = false }: ParkMapProps) => {
+export const ParkMap = ({
+  parks,
+  error,
+  isAuthenticated = false,
+  homeParkFocusRequest = null,
+}: ParkMapProps) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
@@ -219,6 +239,32 @@ export const ParkMap = ({ parks, error, isAuthenticated = false }: ParkMapProps)
       }
     }, 0);
   }, []);
+
+  const focusPark = useCallback(
+    (park: MapPark) => {
+      cancelClose();
+      setHoveredSlug(null);
+      setActiveSlug(park.slug);
+
+      const map = mapRef.current;
+      if (!map) {
+        return;
+      }
+
+      map.fitBounds(
+        [
+          [park.boundingBox.minLon, park.boundingBox.minLat],
+          [park.boundingBox.maxLon, park.boundingBox.maxLat],
+        ],
+        {
+          duration: 1200,
+          maxZoom: 11,
+          padding: PARK_FOCUS_PADDING,
+        },
+      );
+    },
+    [cancelClose],
+  );
 
   // Initialize map
   useEffect(() => {
@@ -294,6 +340,7 @@ export const ParkMap = ({ parks, error, isAuthenticated = false }: ParkMapProps)
       established: t("established"),
       officialLink: t("officialLink"),
       visits: t("visits"),
+      openParkPage: t("openParkPage"),
       addVisit: t("addVisit"),
     };
 
@@ -329,9 +376,14 @@ export const ParkMap = ({ parks, error, isAuthenticated = false }: ParkMapProps)
 
       // Pin interactions
       el.addEventListener("click", () => {
-        cancelClose();
-        setHoveredSlug(null);
-        setActiveSlug((current) => (current === park.slug ? null : park.slug));
+        if (activeSlugRef.current === park.slug) {
+          cancelClose();
+          setHoveredSlug(null);
+          setActiveSlug(null);
+          return;
+        }
+
+        focusPark(park);
       });
 
       el.addEventListener("mouseenter", () => {
@@ -348,9 +400,7 @@ export const ParkMap = ({ parks, error, isAuthenticated = false }: ParkMapProps)
       });
 
       el.addEventListener("focus", () => {
-        cancelClose();
-        setHoveredSlug(null);
-        setActiveSlug(park.slug);
+        focusPark(park);
       });
 
       el.addEventListener("blur", () => {
@@ -365,7 +415,21 @@ export const ParkMap = ({ parks, error, isAuthenticated = false }: ParkMapProps)
     scheduleClose,
     isAuthenticated,
     closeActivePopupIfFocusLeftMapPopup,
+    focusPark,
   ]);
+
+  useEffect(() => {
+    if (!isMapLoaded || !homeParkFocusRequest) {
+      return;
+    }
+
+    const park = parks.find(({ slug }) => slug === homeParkFocusRequest.slug);
+    if (!park) {
+      return;
+    }
+
+    focusPark(park);
+  }, [focusPark, homeParkFocusRequest, isMapLoaded, parks]);
 
   // Sync popup visibility with active/hovered state
   useEffect(() => {

@@ -7,10 +7,22 @@ import {
 } from "../providers/home-map-controls-provider";
 import { ParkExplorer } from "./park-explorer";
 
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/",
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 vi.mock("./park-map", () => ({
-  ParkMap: ({ parks }: { parks: MapPark[] }) => (
+  ParkMap: ({
+    parks,
+    homeParkFocusRequest,
+  }: {
+    parks: MapPark[];
+    homeParkFocusRequest?: { slug: string } | null;
+  }) => (
     <div>
       <p>count:{parks.length}</p>
+      <p>focus:{homeParkFocusRequest?.slug ?? "none"}</p>
       <ul>
         {parks.map((park) => (
           <li key={park.slug}>{park.name}</li>
@@ -60,12 +72,17 @@ const parks: MapPark[] = [
 ];
 
 const MobileFilterToggleHarness = () => {
-  const { toggleMobileFilters } = useHomeMapControls();
+  const { toggleMobileFilters, focusParkOnHome } = useHomeMapControls();
 
   return (
-    <button type="button" onClick={toggleMobileFilters}>
-      toggle-mobile-filters
-    </button>
+    <>
+      <button type="button" onClick={toggleMobileFilters}>
+        toggle-mobile-filters
+      </button>
+      <button type="button" onClick={() => focusParkOnHome("teijo")}>
+        focus-teijo
+      </button>
+    </>
   );
 };
 
@@ -132,5 +149,23 @@ describe("ParkExplorer", () => {
 
     expect(mobileFilters).toHaveClass("hidden");
     expect(screen.getByText("count:1")).toBeInTheDocument();
+  });
+
+  it("resets filters so a focused park from the header search stays visible on the map", () => {
+    render(
+      <HomeMapControlsProvider>
+        <MobileFilterToggleHarness />
+        <ParkExplorer parks={parks} />
+      </HomeMapControlsProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "home.filters.hikingAreas" }));
+
+    expect(screen.getByText("count:1")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "focus-teijo" }));
+
+    expect(screen.getByText("count:3")).toBeInTheDocument();
+    expect(screen.getByText("focus:teijo")).toBeInTheDocument();
   });
 });

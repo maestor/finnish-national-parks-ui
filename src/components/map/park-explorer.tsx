@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import type { MapPark } from "@/lib/parks";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useHomeMapControls } from "../providers/home-map-controls-provider";
 import { ParkMap } from "./park-map";
 
@@ -26,7 +26,7 @@ interface ParkExplorerProps {
 export const ParkExplorer = ({ parks, error, isAuthenticated = false }: ParkExplorerProps) => {
   const t = useTranslations("home.filters");
   const [activeFilter, setActiveFilter] = useState<MapFilter>("all");
-  const { isMobileFiltersOpen, closeMobileFilters } = useHomeMapControls();
+  const { isMobileFiltersOpen, closeMobileFilters, homeParkFocusRequest } = useHomeMapControls();
 
   const filterOptions = useMemo(() => {
     const options: Array<{ id: MapFilter; label: string }> = [
@@ -72,6 +72,20 @@ export const ParkExplorer = ({ parks, error, isAuthenticated = false }: ParkExpl
     closeMobileFilters();
   };
 
+  useEffect(() => {
+    if (!homeParkFocusRequest) {
+      return;
+    }
+
+    const focusedParkVisible = filteredParks.some(
+      (park) => park.slug === homeParkFocusRequest.slug,
+    );
+
+    if (!focusedParkVisible) {
+      setActiveFilter("all");
+    }
+  }, [filteredParks, homeParkFocusRequest]);
+
   const filterPanel = (
     <div className="pointer-events-auto flex flex-col gap-2 rounded-3xl border border-border/70 bg-background/95 p-3 shadow-lg backdrop-blur">
       {filterOptions.map((option) => (
@@ -107,7 +121,12 @@ export const ParkExplorer = ({ parks, error, isAuthenticated = false }: ParkExpl
         {filterPanel}
       </aside>
 
-      <ParkMap parks={filteredParks} error={error} isAuthenticated={isAuthenticated} />
+      <ParkMap
+        parks={filteredParks}
+        error={error}
+        isAuthenticated={isAuthenticated}
+        homeParkFocusRequest={homeParkFocusRequest}
+      />
     </div>
   );
 };

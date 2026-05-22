@@ -250,6 +250,10 @@ describe("App pages", () => {
       "href",
       "/control-panel/visits/new?park=pallas",
     );
+    expect(screen.getByRole("link", { name: "park.showInFinlandsMap" })).toHaveAttribute(
+      "href",
+      "/?park=pallas",
+    );
     expect(screen.getByTestId("park-boundary-map")).toHaveTextContent("Pallas-Yllästunturi");
     expect(screen.getByTestId("visit-accordion")).toHaveTextContent("visits:1|editable:true");
   });

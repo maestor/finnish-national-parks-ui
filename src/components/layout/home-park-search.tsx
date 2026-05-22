@@ -5,8 +5,10 @@ import { cn } from "@/lib/cn";
 import type { Park } from "@/lib/parks";
 import { MapPin, Search, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useHomeMapControls } from "../providers/home-map-controls-provider";
 
 const MAX_RESULTS = 8;
 const SEARCH_ICON_CLASS_NAME =
@@ -17,6 +19,8 @@ const SEARCH_INPUT_CLASS_NAME =
 export const HomeParkSearch = () => {
   const t = useTranslations("layout.parkSearch");
   const router = useRouter();
+  const pathname = usePathname();
+  const { closeMobileFilters, focusParkOnHome } = useHomeMapControls();
   const containerRef = useRef<HTMLDivElement>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
   const [parks, setParks] = useState<Park[]>([]);
@@ -25,6 +29,7 @@ export const HomeParkSearch = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const isHomePage = pathname === "/";
 
   useEffect(() => {
     let mounted = true;
@@ -93,10 +98,17 @@ export const HomeParkSearch = () => {
     return filteredParks.slice(0, MAX_RESULTS);
   }, [parks, query]);
 
-  const navigateToPark = (park: Park) => {
+  const activatePark = (park: Park) => {
     setQuery("");
     setIsOpen(false);
     setIsMobileOpen(false);
+
+    if (isHomePage) {
+      closeMobileFilters();
+      focusParkOnHome(park.slug);
+      return;
+    }
+
     router.push(`/park/${park.slug}`);
   };
 
@@ -121,7 +133,7 @@ export const HomeParkSearch = () => {
 
     if (event.key === "Enter" && results[highlightedIndex]) {
       event.preventDefault();
-      navigateToPark(results[highlightedIndex]);
+      activatePark(results[highlightedIndex]);
       return;
     }
 
@@ -216,26 +228,40 @@ export const HomeParkSearch = () => {
             <ul className="py-1">
               {results.map((park, index) => (
                 <li key={park.slug}>
-                  <button
-                    type="button"
-                    onMouseEnter={() => setHighlightedIndex(index)}
-                    onClick={() => navigateToPark(park)}
+                  <div
                     className={cn(
-                      "flex w-full items-start gap-3 px-4 py-2.5 text-left transition-colors",
-                      highlightedIndex === index
-                        ? "bg-accent text-accent-foreground"
-                        : "hover:bg-accent hover:text-accent-foreground",
+                      "flex items-center gap-2 px-2 py-1.5",
+                      highlightedIndex === index && "bg-accent text-accent-foreground",
                     )}
                   >
-                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm font-medium">{park.name}</span>
-                      <span className="block truncate text-xs text-muted-foreground">
-                        {park.type.name}
-                        {park.locationLabel ? ` · ${park.locationLabel}` : ""}
+                    <button
+                      type="button"
+                      onMouseEnter={() => setHighlightedIndex(index)}
+                      onClick={() => activatePark(park)}
+                      className="flex min-w-0 flex-1 items-start gap-3 rounded-xl px-2 py-1 text-left transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-medium">{park.name}</span>
+                        <span className="block truncate text-xs text-muted-foreground">
+                          {park.type.name}
+                        </span>
                       </span>
-                    </span>
-                  </button>
+                    </button>
+                    {isHomePage && (
+                      <Link
+                        href={`/park/${park.slug}`}
+                        onClick={() => {
+                          setQuery("");
+                          setIsOpen(false);
+                          setIsMobileOpen(false);
+                        }}
+                        className="shrink-0 rounded-full border border-border px-2.5 py-1 text-xs font-medium text-primary transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        {t("openParkPage")}
+                      </Link>
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>

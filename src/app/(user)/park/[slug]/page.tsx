@@ -89,9 +89,18 @@ const ParkDetailPage = async ({ params }: ParkDetailPageProps) => {
 
       {publicPark.boundaryGeoJson && (
         <div className="mt-8">
-          <div className="mb-3 flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-primary" aria-hidden="true" />
-            <h2 className="text-lg font-semibold tracking-tight">{t("boundaryMapTitle")}</h2>
+          <div className="mb-3 flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-primary" aria-hidden="true" />
+              <h2 className="text-lg font-semibold tracking-tight">{t("boundaryMapTitle")}</h2>
+            </div>
+            <Link
+              href={`/?park=${slug}`}
+              prefetch
+              className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+            >
+              {t("showInFinlandsMap")}
+            </Link>
           </div>
           <ParkBoundaryMap
             boundaryGeoJson={publicPark.boundaryGeoJson}

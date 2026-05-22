@@ -20,25 +20,30 @@ type ApiPersonalPark =
   paths["/api/me/parks"]["get"]["responses"][200]["content"]["application/json"]["parks"][number];
 
 const HomePage = async () => {
+  const [personalParksResult, publicParksResult] = await Promise.allSettled([
+    apiFetch<{ parks: ApiPersonalPark[] }>("/api/me/parks"),
+    apiFetch<{ parks: ApiPark[] }>("/api/parks"),
+  ]);
+
   let parks: MapPark[] = [];
   let error: string | null = null;
   let isAuthenticated = false;
 
-  try {
-    const data = await apiFetch<{ parks: ApiPersonalPark[] }>("/api/me/parks");
-    parks = data.parks;
+  if (personalParksResult.status === "fulfilled") {
+    parks = personalParksResult.value.parks;
     isAuthenticated = true;
-  } catch (_e) {
-    try {
-      const data = await apiFetch<{ parks: ApiPark[] }>("/api/parks");
-      parks = data.parks.map((park) => ({
-        ...park,
-        visitedSummary: { visited: false },
-      }));
-    } catch (fallbackErr) {
-      const t = await getTranslations("errors.generic");
-      error = fallbackErr instanceof Error ? fallbackErr.message : t("unknownError");
-    }
+  } else if (publicParksResult.status === "fulfilled") {
+    parks = publicParksResult.value.parks.map((park) => ({
+      ...park,
+      visitedSummary: { visited: false },
+    }));
+  } else {
+    const t = await getTranslations("errors.generic");
+    const failure =
+      publicParksResult.reason instanceof Error
+        ? publicParksResult.reason
+        : personalParksResult.reason;
+    error = failure instanceof Error ? failure.message : t("unknownError");
   }
 
   return (

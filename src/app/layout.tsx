@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
 import { Header } from "@/components/layout/header";
 import { HomeMapControlsProvider } from "@/components/providers/home-map-controls-provider";
@@ -69,12 +70,14 @@ const RootLayout = async ({
               enableSystem
               disableTransitionOnChange
             >
-              <HomeMapControlsProvider>
-                <div className="relative flex min-h-screen flex-col">
-                  <Header />
-                  <main className="flex flex-1 flex-col">{children}</main>
-                </div>
-              </HomeMapControlsProvider>
+              <Suspense>
+                <HomeMapControlsProvider>
+                  <div className="relative flex min-h-screen flex-col">
+                    <Header />
+                    <main className="flex flex-1 flex-col">{children}</main>
+                  </div>
+                </HomeMapControlsProvider>
+              </Suspense>
             </ThemeProvider>
           </SerwistProvider>
         </NextIntlClientProvider>
