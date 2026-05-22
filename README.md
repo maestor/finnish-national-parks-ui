@@ -9,7 +9,7 @@ This is a Finnish-language, PWA-capable web application built with Next.js 16 Ap
 The app serves two audiences:
 
 - **Public view** — Interactive map with persistent park search, smooth park focusing, and visit history
-- **Admin view** — Adding and editing visits, notes, and park details via `/control-panel`
+- **Admin view** — Adding and editing visits plus hiding parks from the catalog via `/control-panel`
 
 ## Tech Stack
 
@@ -125,7 +125,3 @@ The app is configured as a Progressive Web App using `@serwist/turbopack`, which
 - **Finnish UI copy** — All user-facing text is in Finnish via `next-intl`
 - **Accessibility first** — Semantic HTML, ARIA labels, keyboard navigation, `prefers-reduced-motion` support
 - **Backend boundary is sacred** — No direct DB access; all data flows through the Hono API
-
-## Roadmap
-
-- Visit images for park visits: [`docs/plans/visit-images-frontend.md`](docs/plans/visit-images-frontend.md)

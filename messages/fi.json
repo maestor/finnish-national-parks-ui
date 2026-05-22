@@ -79,6 +79,18 @@
         "noVisits": "Ei vielä kirjattuja käyntejä."
       }
     },
+    "parks": {
+      "title": "Puistot",
+      "description": "Hallitse näkyvissä olevia puistoja. Piilotettu puisto katoaa kaikista rajapinnoista.",
+      "warning": "Puiston piilottaminen poistaa sen näkyvistä kaikista rajapinnoista eikä toimintoa voi vielä perua hallinnasta.",
+      "parkName": "Puisto",
+      "parkType": "Tyyppi",
+      "location": "Sijainti",
+      "removeAction": "Poista näkyvistä",
+      "removing": "Poistetaan...",
+      "confirmRemove": "Haluatko varmasti poistaa puiston \"{parkName}\" näkyvistä? Puisto katoaa kaikista rajapinnoista.",
+      "empty": "Ei hallittavia puistoja."
+    },
     "visits": {
       "title": "Käynnit",
       "description": "Hallitse puistokäyntejäsi. Lisää, muokkaa tai poista käyntitietoja.",

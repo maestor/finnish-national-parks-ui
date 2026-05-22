@@ -11,6 +11,7 @@ import ControlPanelLayout from "./control-panel/layout";
 import ControlPanelPage, {
   generateMetadata as generateControlPanelMetadata,
 } from "./control-panel/page";
+import ParksPage, { generateMetadata as generateParksMetadata } from "./control-panel/parks/page";
 import EditVisitPage, {
   generateMetadata as generateEditVisitMetadata,
 } from "./control-panel/visits/[id]/edit/page";
@@ -114,6 +115,12 @@ vi.mock("@/components/dashboard/recent-visits", () => ({
 vi.mock("@/components/visits/visit-list", () => ({
   VisitList: ({ visits }: { visits: VisitWithPark[] }) => (
     <div data-testid="visit-list">visits:{visits.length}</div>
+  ),
+}));
+
+vi.mock("@/components/parks/park-list", () => ({
+  ParkList: ({ parks }: { parks: Park[] }) => (
+    <div data-testid="park-list">parks:{parks.length}</div>
   ),
 }));
 
@@ -320,6 +327,10 @@ describe("App pages", () => {
       "href",
       "/control-panel",
     );
+    expect(screen.getByRole("link", { name: "controlPanel.parks.title" })).toHaveAttribute(
+      "href",
+      "/control-panel/parks",
+    );
     expect(screen.getByRole("link", { name: "controlPanel.visits.title" })).toHaveAttribute(
       "href",
       "/control-panel/visits",
@@ -334,6 +345,22 @@ describe("App pages", () => {
   it("builds metadata for the control panel dashboard", async () => {
     await expect(generateControlPanelMetadata()).resolves.toEqual({
       title: "controlPanel.title",
+    });
+  });
+
+  it("renders the parks list page", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({ parks: [publicPark] });
+
+    await renderControlPanelRoute(await ParksPage());
+
+    expect(screen.getByRole("heading", { name: "controlPanel.parks.title" })).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "controlPanel.title" })).toBeInTheDocument();
+    expect(screen.getByTestId("park-list")).toHaveTextContent("parks:1");
+  });
+
+  it("builds metadata for the parks list page", async () => {
+    await expect(generateParksMetadata()).resolves.toEqual({
+      title: "controlPanel.parks.title",
     });
   });
 

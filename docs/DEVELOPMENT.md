@@ -92,6 +92,7 @@ src/app/
   control-panel/    # Admin routes (protected by proxy)
     layout.tsx      # Sidebar layout
     page.tsx        # Dashboard
+    parks/          # Park visibility management
     visits/         # Visit management
   login/            # OAuth login page
   proxy.ts          # Route protection (Next.js 16 proxy convention)
