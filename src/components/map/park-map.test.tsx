@@ -24,7 +24,7 @@ const parks: MapPark[] = [
     boundingBox: { minLat: 67, minLon: 23, maxLat: 68, maxLon: 24 },
     markerPoint: { lat: 67.5, lon: 23.5 },
     type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },
-    visitedSummary: { visited: false },
+    visitedSummary: { visited: false, visitCount: 0, lastVisitedOn: null },
   },
   {
     slug: "hetta",
@@ -36,7 +36,7 @@ const parks: MapPark[] = [
     boundingBox: { minLat: 67.1, minLon: 23.1, maxLat: 67.2, maxLon: 23.2 },
     markerPoint: { lat: 67.15, lon: 23.15 },
     type: { code: 4, id: 4, name: "Muu luonnonsuojelualue", slug: "other-nature-reserve" },
-    visitedSummary: { visited: false },
+    visitedSummary: { visited: false, visitCount: 0, lastVisitedOn: null },
   },
 ];
 
@@ -256,8 +256,8 @@ describe("ParkMap", () => {
     expect(document.body).toHaveTextContent("Hetta");
   });
 
-  it("shows an add visit link in the popup for authenticated users", () => {
-    render(<ParkMap parks={parks} isAuthenticated />);
+  it("shows an add visit link in the popup when visit management is enabled", () => {
+    render(<ParkMap parks={parks} canManageVisits />);
     triggerMapLoad();
 
     fireEvent.mouseEnter(markerElements[0]);

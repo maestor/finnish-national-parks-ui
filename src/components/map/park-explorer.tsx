@@ -20,32 +20,25 @@ type MapFilter =
 interface ParkExplorerProps {
   parks: MapPark[];
   error?: string | null;
-  isAuthenticated?: boolean;
+  canManageVisits?: boolean;
 }
 
-export const ParkExplorer = ({ parks, error, isAuthenticated = false }: ParkExplorerProps) => {
+export const ParkExplorer = ({ parks, error, canManageVisits = false }: ParkExplorerProps) => {
   const t = useTranslations("home.filters");
   const [activeFilter, setActiveFilter] = useState<MapFilter>("all");
   const { isMobileFiltersOpen, closeMobileFilters, homeParkFocusRequest } = useHomeMapControls();
 
   const filterOptions = useMemo(() => {
-    const options: Array<{ id: MapFilter; label: string }> = [
+    return [
       { id: "all", label: t("all") },
       { id: "national-park", label: t("nationalParks") },
       { id: "state-hiking-area", label: t("hikingAreas") },
       { id: "wilderness-area", label: t("wildernessAreas") },
       { id: "other-nature-reserve", label: t("otherNatureReserves") },
-    ];
-
-    if (isAuthenticated) {
-      options.push(
-        { id: "visited", label: t("visited") },
-        { id: "not-visited", label: t("notVisited") },
-      );
-    }
-
-    return options;
-  }, [isAuthenticated, t]);
+      { id: "visited", label: t("visited") },
+      { id: "not-visited", label: t("notVisited") },
+    ] satisfies Array<{ id: MapFilter; label: string }>;
+  }, [t]);
 
   const filteredParks = useMemo(() => {
     switch (activeFilter) {
@@ -59,9 +52,9 @@ export const ParkExplorer = ({ parks, error, isAuthenticated = false }: ParkExpl
             !["national-park", "state-hiking-area", "wilderness-area"].includes(park.type.slug),
         );
       case "visited":
-        return parks.filter((park) => park.visitedSummary?.visited);
+        return parks.filter((park) => park.visitedSummary.visited);
       case "not-visited":
-        return parks.filter((park) => !park.visitedSummary?.visited);
+        return parks.filter((park) => !park.visitedSummary.visited);
       default:
         return parks;
     }
@@ -124,7 +117,7 @@ export const ParkExplorer = ({ parks, error, isAuthenticated = false }: ParkExpl
       <ParkMap
         parks={filteredParks}
         error={error}
-        isAuthenticated={isAuthenticated}
+        canManageVisits={canManageVisits}
         homeParkFocusRequest={homeParkFocusRequest}
       />
     </div>

@@ -1,8 +1,7 @@
 import { ParkBoundaryMap } from "@/components/map/park-boundary-map";
 import { VisitAccordion } from "@/components/park/visit-accordion";
 import { apiFetch } from "@/lib/api";
-import type { paths } from "@/lib/api-types";
-import type { PersonalPark } from "@/lib/parks";
+import type { ParkDetail, ParkVisits } from "@/lib/parks";
 import { ExternalLink, MapPin, NotebookPen } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
@@ -11,11 +10,9 @@ interface ParkDetailPageProps {
   params: Promise<{ slug: string }>;
 }
 
-type ApiPark = paths["/api/parks/{slug}"]["get"]["responses"][200]["content"]["application/json"];
-
 export const generateMetadata = async ({ params }: ParkDetailPageProps) => {
   const { slug } = await params;
-  const park = await apiFetch<ApiPark>(`/api/parks/${slug}`).catch(() => null);
+  const park = await apiFetch<ParkDetail>(`/api/parks/${slug}`).catch(() => null);
 
   return {
     title: park?.name ?? slug.replace(/-/g, " "),
@@ -26,11 +23,11 @@ const ParkDetailPage = async ({ params }: ParkDetailPageProps) => {
   const { slug } = await params;
   const t = await getTranslations("park");
 
-  const publicPark = await apiFetch<ApiPark>(`/api/parks/${slug}?includeBoundary=true`).catch(
+  const publicPark = await apiFetch<ParkDetail>(`/api/parks/${slug}?includeBoundary=true`).catch(
     () => null,
   );
 
-  const personalPark = await apiFetch<PersonalPark>(`/api/me/parks/${slug}`).catch(() => null);
+  const parkVisits = await apiFetch<ParkVisits>(`/api/parks/${slug}/visits`).catch(() => null);
 
   if (!publicPark) {
     return (
@@ -55,7 +52,7 @@ const ParkDetailPage = async ({ params }: ParkDetailPageProps) => {
       : []),
   ];
 
-  const visits = personalPark?.visits ?? [];
+  const visits = parkVisits?.visits ?? [];
 
   return (
     <article className="mx-auto md:w-full max-w-5xl px-4 py-8">
@@ -141,7 +138,7 @@ const ParkDetailPage = async ({ params }: ParkDetailPageProps) => {
 
         {visits.length > 0 ? (
           <div className="mt-4">
-            <VisitAccordion visits={visits} isEditable={!!personalPark} />
+            <VisitAccordion visits={visits} isEditable={parkVisits !== null} />
           </div>
         ) : (
           <p className="mt-4 text-muted-foreground">{t("noVisits")}</p>

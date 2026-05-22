@@ -1,5 +1,5 @@
 import { apiFetch } from "@/lib/api";
-import type { Park, PersonalPark } from "@/lib/parks";
+import type { Park, Visit, VisitWithPark } from "@/lib/parks";
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import UserLayout from "./(user)/layout";
@@ -50,14 +50,14 @@ vi.mock("@/components/map/park-explorer", () => ({
   ParkExplorer: ({
     parks,
     error,
-    isAuthenticated,
+    canManageVisits,
   }: {
     parks: Park[];
     error?: string | null;
-    isAuthenticated?: boolean;
+    canManageVisits?: boolean;
   }) => (
     <div data-testid="park-explorer">
-      parks:{parks.length}|auth:{String(isAuthenticated)}|error:{error ?? "none"}
+      parks:{parks.length}|auth:{String(canManageVisits)}|error:{error ?? "none"}
     </div>
   ),
 }));
@@ -112,8 +112,8 @@ vi.mock("@/components/dashboard/recent-visits", () => ({
 }));
 
 vi.mock("@/components/visits/visit-list", () => ({
-  VisitList: ({ parks }: { parks: PersonalPark[] }) => (
-    <div data-testid="visit-list">parks:{parks.length}</div>
+  VisitList: ({ visits }: { visits: VisitWithPark[] }) => (
+    <div data-testid="visit-list">visits:{visits.length}</div>
   ),
 }));
 
@@ -175,13 +175,15 @@ const personalVisit = {
       createdAt: "2024-06-15T10:00:00Z",
     },
   ],
-};
+} satisfies Visit;
 
-const personalPark = {
-  ...publicPark,
-  visitedSummary: { visited: true, visitCount: 1 },
-  visits: [personalVisit],
-} as PersonalPark;
+const visitWithPark = {
+  ...personalVisit,
+  park: {
+    name: publicPark.name,
+    slug: publicPark.slug,
+  },
+} satisfies VisitWithPark;
 
 const renderPublicRoute = async (page: React.ReactNode) => {
   render(UserLayout({ children: page }));
@@ -200,17 +202,26 @@ describe("App pages", () => {
   });
 
   it("renders the home page with authenticated parks", async () => {
-    vi.mocked(apiFetch).mockResolvedValueOnce({ parks: [personalPark] });
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({ parks: [publicPark] })
+      .mockResolvedValueOnce({ visits: [visitWithPark] })
+      .mockResolvedValueOnce({
+        email: "admin@example.com",
+        id: "1",
+        name: "Admin",
+        picture: "https://example.com/avatar.jpg",
+      });
 
     await renderPublicRoute(await HomePage());
 
     expect(screen.getByTestId("park-explorer")).toHaveTextContent("parks:1|auth:true|error:none");
   });
 
-  it("falls back to public parks on the home page when personal data fails", async () => {
+  it("shows parks without visit summaries when visit data fails on the home page", async () => {
     vi.mocked(apiFetch)
-      .mockRejectedValueOnce(new Error("unauthorized"))
-      .mockResolvedValueOnce({ parks: [publicPark] });
+      .mockResolvedValueOnce({ parks: [publicPark] })
+      .mockRejectedValueOnce(new Error("visits unavailable"))
+      .mockRejectedValueOnce(new Error("unauthorized"));
 
     await renderPublicRoute(await HomePage());
 
@@ -219,8 +230,9 @@ describe("App pages", () => {
 
   it("shows the fallback error message when both home page park requests fail", async () => {
     vi.mocked(apiFetch)
-      .mockRejectedValueOnce(new Error("unauthorized"))
-      .mockRejectedValueOnce(new Error("backend offline"));
+      .mockRejectedValueOnce(new Error("backend offline"))
+      .mockRejectedValueOnce(new Error("backend offline"))
+      .mockRejectedValueOnce(new Error("unauthorized"));
 
     await renderPublicRoute(await HomePage());
 
@@ -241,7 +253,14 @@ describe("App pages", () => {
         ...publicPark,
         boundaryGeoJson: { type: "FeatureCollection", features: [] },
       })
-      .mockResolvedValueOnce(personalPark);
+      .mockResolvedValueOnce({
+        visitedSummary: {
+          visited: true,
+          visitCount: 1,
+          lastVisitedOn: "2024-06-15",
+        },
+        visits: [personalVisit],
+      });
 
     await renderPublicRoute(await ParkDetailPage({ params: Promise.resolve({ slug: "pallas" }) }));
 
@@ -287,7 +306,9 @@ describe("App pages", () => {
   });
 
   it("renders the control panel overview page", async () => {
-    vi.mocked(apiFetch).mockResolvedValueOnce({ parks: [personalPark] });
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({ parks: [publicPark] })
+      .mockResolvedValueOnce({ visits: [visitWithPark] });
 
     await renderControlPanelRoute(await ControlPanelPage());
 
@@ -317,7 +338,7 @@ describe("App pages", () => {
   });
 
   it("renders the visits list page", async () => {
-    vi.mocked(apiFetch).mockResolvedValueOnce({ parks: [personalPark] });
+    vi.mocked(apiFetch).mockResolvedValueOnce({ visits: [visitWithPark] });
 
     await renderControlPanelRoute(await VisitsPage());
 
@@ -327,7 +348,7 @@ describe("App pages", () => {
       "href",
       "/control-panel/visits/new",
     );
-    expect(screen.getByTestId("visit-list")).toHaveTextContent("parks:1");
+    expect(screen.getByTestId("visit-list")).toHaveTextContent("visits:1");
   });
 
   it("builds metadata for the visits list page", async () => {
@@ -360,7 +381,7 @@ describe("App pages", () => {
   it("renders the edit visit page with the created notice and edit helpers", async () => {
     vi.mocked(apiFetch)
       .mockResolvedValueOnce({ parks: [publicPark] })
-      .mockResolvedValueOnce({ parks: [personalPark] });
+      .mockResolvedValueOnce(visitWithPark);
 
     await renderControlPanelRoute(
       await EditVisitPage({
@@ -386,7 +407,7 @@ describe("App pages", () => {
   it("calls notFound when the edit visit page cannot find the requested visit", async () => {
     vi.mocked(apiFetch)
       .mockResolvedValueOnce({ parks: [publicPark] })
-      .mockResolvedValueOnce({ parks: [personalPark] });
+      .mockResolvedValueOnce(null);
 
     await expect(
       EditVisitPage({

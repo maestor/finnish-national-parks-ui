@@ -43,7 +43,7 @@ const parks: MapPark[] = [
     boundingBox: { minLat: 61, minLon: 25, maxLat: 62, maxLon: 26 },
     markerPoint: { lat: 61.5, lon: 25.5 },
     type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },
-    visitedSummary: { visited: true },
+    visitedSummary: { visited: true, visitCount: 1, lastVisitedOn: "2024-06-15" },
   },
   {
     slug: "teijo",
@@ -55,7 +55,7 @@ const parks: MapPark[] = [
     boundingBox: { minLat: 60, minLon: 22, maxLat: 61, maxLon: 23 },
     markerPoint: { lat: 60.5, lon: 22.5 },
     type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },
-    visitedSummary: { visited: false },
+    visitedSummary: { visited: false, visitCount: 0, lastVisitedOn: null },
   },
   {
     slug: "syote",
@@ -67,7 +67,7 @@ const parks: MapPark[] = [
     boundingBox: { minLat: 65, minLon: 28, maxLat: 66, maxLon: 29 },
     markerPoint: { lat: 65.5, lon: 28.5 },
     type: { code: 2, id: 2, name: "Valtion retkeilyalue", slug: "state-hiking-area" },
-    visitedSummary: { visited: false },
+    visitedSummary: { visited: false, visitCount: 0, lastVisitedOn: null },
   },
 ];
 
@@ -98,19 +98,15 @@ describe("ParkExplorer", () => {
     expect(screen.getByText("Iso-Syötteen retkeilyalue")).toBeInTheDocument();
   });
 
-  it("shows visited filters only for authenticated users", () => {
-    const { rerender } = render(<ParkExplorer parks={parks} />);
-
-    expect(screen.queryByRole("button", { name: "home.filters.visited" })).not.toBeInTheDocument();
-
-    rerender(<ParkExplorer parks={parks} isAuthenticated />);
+  it("shows visited filters for all users when visit history is public", () => {
+    render(<ParkExplorer parks={parks} />);
 
     expect(screen.getByRole("button", { name: "home.filters.visited" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "home.filters.notVisited" })).toBeInTheDocument();
   });
 
   it("renders desktop filters as a floating vertical overlay on the left", () => {
-    const { container } = render(<ParkExplorer parks={parks} isAuthenticated />);
+    const { container } = render(<ParkExplorer parks={parks} />);
 
     const desktopSidebar = container.querySelector("aside");
 
@@ -128,7 +124,7 @@ describe("ParkExplorer", () => {
     render(
       <HomeMapControlsProvider>
         <MobileFilterToggleHarness />
-        <ParkExplorer parks={parks} isAuthenticated />
+        <ParkExplorer parks={parks} />
       </HomeMapControlsProvider>,
     );
 

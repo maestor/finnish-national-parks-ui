@@ -11,7 +11,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 interface ParkMapProps {
   parks: MapPark[];
   error?: string | null;
-  isAuthenticated?: boolean;
+  canManageVisits?: boolean;
   homeParkFocusRequest?: HomeParkFocusRequest | null;
 }
 
@@ -86,7 +86,7 @@ interface PopupLabels {
 const createPopupNode = (
   park: MapPark,
   labels: PopupLabels,
-  isAuthenticated: boolean,
+  canManageVisits: boolean,
 ): HTMLElement => {
   const container = document.createElement("div");
   container.className = "p-3 max-w-[260px]";
@@ -152,7 +152,7 @@ const createPopupNode = (
   const summaryRow = document.createElement("div");
   summaryRow.className = "mt-3 flex items-center gap-4 border-t border-border/60 pt-3 text-xs";
 
-  const visitCount = park.visitedSummary?.visitCount ?? 0;
+  const visitCount = park.visitedSummary.visitCount;
   const visitsCount = document.createElement("span");
   visitsCount.className = "font-medium text-foreground";
   visitsCount.textContent = `${labels.visits} (${visitCount})`;
@@ -169,7 +169,7 @@ const createPopupNode = (
   const actionRow = document.createElement("div");
   actionRow.className = "mt-3 flex items-center gap-4 text-xs";
 
-  if (isAuthenticated) {
+  if (canManageVisits) {
     const addLink = document.createElement("a");
     addLink.href = `/control-panel/visits/new?park=${park.slug}`;
     addLink.className = "inline-flex items-center gap-1 font-medium text-primary hover:underline";
@@ -178,7 +178,7 @@ const createPopupNode = (
     actionRow.appendChild(addLink);
   }
 
-  if (isAuthenticated) {
+  if (canManageVisits) {
     container.appendChild(actionRow);
   }
 
@@ -188,7 +188,7 @@ const createPopupNode = (
 export const ParkMap = ({
   parks,
   error,
-  isAuthenticated = false,
+  canManageVisits = false,
   homeParkFocusRequest = null,
 }: ParkMapProps) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -364,7 +364,7 @@ export const ParkMap = ({
         },
       })
         .setLngLat([park.markerPoint.lon, park.markerPoint.lat])
-        .setDOMContent(createPopupNode(park, labels, isAuthenticated));
+        .setDOMContent(createPopupNode(park, labels, canManageVisits));
 
       popupsRef.current.set(park.slug, popup);
 
@@ -413,7 +413,7 @@ export const ParkMap = ({
     t,
     cancelClose,
     scheduleClose,
-    isAuthenticated,
+    canManageVisits,
     closeActivePopupIfFocusLeftMapPopup,
     focusPark,
   ]);

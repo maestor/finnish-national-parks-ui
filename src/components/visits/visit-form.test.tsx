@@ -23,8 +23,10 @@ const parks = [
 
 const visitToEdit = {
   id: 1,
-  parkSlug: "pallas",
-  parkName: "Pallas-Yllästunturi",
+  park: {
+    slug: "pallas",
+    name: "Pallas-Yllästunturi",
+  },
   visitedOn: "2024-06-15",
   route: "Pallas-Yllästunturin reitti",
   author: "Maija Meikäläinen",
@@ -65,7 +67,7 @@ describe("VisitForm", () => {
     });
     await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.submit/i }));
 
-    expect(apiFetch).toHaveBeenCalledWith("/api/me/parks/pallas/visits", {
+    expect(apiFetch).toHaveBeenCalledWith("/api/parks/pallas/visits", {
       method: "POST",
       body: JSON.stringify({
         visitedOn: "2024-06-15",
@@ -134,7 +136,7 @@ describe("VisitForm", () => {
 
     await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.submit/i }));
 
-    expect(apiFetch).toHaveBeenCalledWith("/api/me/visits/1", {
+    expect(apiFetch).toHaveBeenCalledWith("/api/visits/1", {
       method: "PATCH",
       body: JSON.stringify({
         visitedOn: "2024-06-15",
@@ -225,7 +227,7 @@ describe("VisitForm", () => {
 
     await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.delete/i }));
 
-    expect(apiFetch).toHaveBeenCalledWith("/api/me/visits/1", { method: "DELETE" });
+    expect(apiFetch).toHaveBeenCalledWith("/api/visits/1", { method: "DELETE" });
     expect(mockPush).toHaveBeenCalledWith("/control-panel/visits");
     expect(mockRefresh).toHaveBeenCalled();
   });

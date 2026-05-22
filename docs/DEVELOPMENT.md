@@ -117,13 +117,13 @@ Browser → Next.js App → apiFetch() → Hono Backend (:3004)
 The backend handles:
 - Google OAuth flow (`/auth/google`, `/auth/google/callback`)
 - Session cookie (`__session` JWT)
-- Park catalog API (`/api/parks`)
-- Legacy `/api/me/*` routes for visit and note content
+- Park catalog API (`/api/parks`, `/api/parks/{slug}`)
+- Park visit history API (`/api/parks/{slug}/visits`)
+- Visit management API (`/api/visits`, `/api/visits/{id}`, image routes under `/api/visits/{id}`)
 
 Route naming caveat:
-- In this project, **all `GET` endpoints are public-readable**, including `GET /api/me/*`.
+- In this project, **all `GET` endpoints are public-readable**, including `GET /api/visits` and `GET /api/parks/{slug}/visits`.
 - **Non-`GET` endpoints require authenticated admin access.**
-- The `/api/me/*` naming is legacy and misleading here; it does **not** imply that `GET` responses are private or user-specific.
 
 ---
 
@@ -151,7 +151,7 @@ import { apiFetch } from "@/lib/api";
 const parks = await apiFetch<{ parks: Park[] }>("/api/parks");
 
 // POST
-const visit = await apiFetch<Visit>("/api/me/parks/pallas/visits", {
+const visit = await apiFetch<Visit>("/api/parks/pallas/visits", {
   method: "POST",
   body: JSON.stringify({ visitedOn: "2024-06-15" }),
 });
@@ -204,6 +204,6 @@ See `AGENTS.md` for the full convention list. Key rules:
 
 - Port: **3004**
 - Auth endpoints: `/auth/google`, `/auth/google/callback`, `/auth/me`, `/auth/logout`
-- API endpoints: `/api/parks`, `/api/parks/{slug}`, `/api/me/*`
+- API endpoints: `/api/parks`, `/api/parks/{slug}`, `/api/parks/{slug}/visits`, `/api/parks/{slug}/removed`, `/api/visits`, `/api/visits/{id}`
 - `GET` endpoints are public-readable; non-`GET` endpoints require authenticated admin access
 - OpenAPI doc: `http://localhost:3004/openapi.json`
