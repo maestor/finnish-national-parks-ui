@@ -28,9 +28,11 @@ export const Header = () => {
           </Link>
         </div>
         <div className="flex flex-1 items-center gap-3">
-          {isHomePage && (
-            <div className="flex items-center gap-2 md:flex-1">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <div className="min-w-0 flex-1">
               <HomeParkSearch />
+            </div>
+            {isHomePage && (
               <button
                 type="button"
                 onClick={toggleMobileFilters}
@@ -45,8 +47,8 @@ export const Header = () => {
                   <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
                 )}
               </button>
-            </div>
-          )}
+            )}
+          </div>
           <div className="ml-auto flex items-center space-x-2">
             {!auth.isLoading &&
               (auth.isAuthenticated ? (

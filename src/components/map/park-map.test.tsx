@@ -11,6 +11,7 @@ const popupInstances: Array<{
   remove: ReturnType<typeof vi.fn>;
 }> = [];
 let mapOptions: Record<string, unknown> | null = null;
+const fitBoundsMock = vi.fn();
 
 const parks: MapPark[] = [
   {
@@ -100,6 +101,7 @@ const createMockMap = () => ({
   remove: vi.fn(),
   resize: vi.fn(),
   addControl: vi.fn(),
+  fitBounds: fitBoundsMock,
 });
 
 class MockResizeObserver {
@@ -132,6 +134,7 @@ describe("ParkMap", () => {
     popupInstances.length = 0;
     resizeObservers.length = 0;
     mapOptions = null;
+    fitBoundsMock.mockReset();
   });
 
   afterEach(() => {
@@ -208,12 +211,61 @@ describe("ParkMap", () => {
     expect(document.body).not.toHaveTextContent("Hetta");
   });
 
+  it("zooms toward a park when a marker is activated", () => {
+    render(<ParkMap parks={parks} />);
+    triggerMapLoad();
+
+    fireEvent.click(markerElements[0]);
+
+    expect(fitBoundsMock).toHaveBeenCalledWith(
+      [
+        [23, 67],
+        [24, 68],
+      ],
+      expect.objectContaining({
+        duration: 1200,
+        maxZoom: 11,
+      }),
+    );
+  });
+
+  it("activates a park from an external home search focus request", () => {
+    const { rerender } = render(<ParkMap parks={parks} />);
+    triggerMapLoad();
+
+    rerender(
+      <ParkMap
+        parks={parks}
+        homeParkFocusRequest={{
+          requestId: 1,
+          slug: "hetta",
+        }}
+      />,
+    );
+
+    expect(fitBoundsMock).toHaveBeenCalledWith(
+      [
+        [23.1, 67.1],
+        [23.2, 67.2],
+      ],
+      expect.objectContaining({
+        duration: 1200,
+        maxZoom: 11,
+      }),
+    );
+    expect(document.body).toHaveTextContent("Hetta");
+  });
+
   it("shows an add visit link in the popup for authenticated users", () => {
     render(<ParkMap parks={parks} isAuthenticated />);
     triggerMapLoad();
 
     fireEvent.mouseEnter(markerElements[0]);
 
+    expect(screen.getByRole("link", { name: "map.openParkPage" })).toHaveAttribute(
+      "href",
+      "/park/pallas",
+    );
     expect(screen.getByRole("link", { name: "map.addVisit" })).toHaveAttribute(
       "href",
       "/control-panel/visits/new?park=pallas",

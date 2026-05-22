@@ -16,7 +16,8 @@
       "label": "Hae puistoa",
       "placeholder": "Hae puistoa...",
       "loading": "Ladataan puistoja...",
-      "empty": "Hakua vastaavia puistoja ei löytynyt."
+      "empty": "Hakua vastaavia puistoja ei löytynyt.",
+      "openParkPage": "Avaa puistosivu"
     },
     "themeToggle": {
       "light": "Vaihda vaaleaan teemaan",
@@ -54,7 +55,8 @@
     "imagesTitle": "Kuvat",
     "imageCount": "{count} kuvaa",
     "visitNumber": "{number}. käynti",
-    "boundaryMapTitle": "Puiston kartta"
+    "boundaryMapTitle": "Puiston kartta",
+    "showInFinlandsMap": "Näytä Suomen kartalla"
   },
   "controlPanel": {
     "title": "Hallintapaneeli",
@@ -169,7 +171,8 @@
     "established": "Perustettu",
     "officialLink": "Luontoon.fi",
     "visits": "Vierailut",
-    "addVisit": "Lisää"
+    "openParkPage": "Avaa puistosivu",
+    "addVisit": "Lisää käynti"
   },
   "errors": {
     "generic": {

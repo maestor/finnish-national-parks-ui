@@ -1,19 +1,53 @@
+import {
+  HomeMapControlsProvider,
+  useHomeMapControls,
+} from "@/components/providers/home-map-controls-provider";
 import { apiFetch } from "@/lib/api";
 import type { Park } from "@/lib/parks";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import type { AnchorHTMLAttributes } from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { HomeParkSearch } from "./home-park-search";
 
-const mockPush = vi.fn();
+const { mockPush, pathnameState, searchParamsState } = vi.hoisted(() => ({
+  mockPush: vi.fn(),
+  pathnameState: {
+    value: "/",
+  },
+  searchParamsState: {
+    value: "",
+  },
+}));
 
 vi.mock("@/lib/api", () => ({
   apiFetch: vi.fn(),
 }));
 
+vi.mock("next/link", () => ({
+  default: ({
+    children,
+    href,
+    onClick,
+    ...props
+  }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) => (
+    <a
+      href={href}
+      onClick={(event) => {
+        event.preventDefault();
+        onClick?.(event);
+      }}
+      {...props}
+    >
+      {children}
+    </a>
+  ),
+}));
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
-  usePathname: () => "/",
+  usePathname: () => pathnameState.value,
+  useSearchParams: () => new URLSearchParams(searchParamsState.value),
 }));
 
 const parks: Park[] = [
@@ -41,11 +75,52 @@ const parks: Park[] = [
   },
 ];
 
+const FocusRequestProbe = () => {
+  const { homeParkFocusRequest } = useHomeMapControls();
+
+  return <div data-testid="focus-request">{homeParkFocusRequest?.slug ?? "none"}</div>;
+};
+
+const renderSearch = () =>
+  render(
+    <HomeMapControlsProvider>
+      <HomeParkSearch />
+      <FocusRequestProbe />
+    </HomeMapControlsProvider>,
+  );
+
 describe("HomeParkSearch", () => {
-  it("filters parks by query and navigates to a park page", async () => {
+  beforeEach(() => {
+    mockPush.mockReset();
+    pathnameState.value = "/";
+    searchParamsState.value = "";
+  });
+
+  it("filters parks by query and activates the matching park on the home map", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce({ parks });
 
-    render(<HomeParkSearch />);
+    renderSearch();
+
+    const input = screen.getByRole("combobox", { name: "layout.parkSearch.label" });
+    fireEvent.change(input, { target: { value: "päij" } });
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /Päijänteen kansallispuisto/i }),
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /Päijänteen kansallispuisto/i }));
+
+    expect(screen.getByTestId("focus-request")).toHaveTextContent("paijanne");
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it("navigates to a park page when search is used outside the home page", async () => {
+    pathnameState.value = "/park/pallas";
+    vi.mocked(apiFetch).mockResolvedValueOnce({ parks });
+
+    renderSearch();
 
     const input = screen.getByRole("combobox", { name: "layout.parkSearch.label" });
     fireEvent.change(input, { target: { value: "päij" } });
@@ -64,7 +139,7 @@ describe("HomeParkSearch", () => {
   it("shows an empty state when no parks match the query", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce({ parks });
 
-    render(<HomeParkSearch />);
+    renderSearch();
 
     const input = screen.getByRole("combobox", { name: "layout.parkSearch.label" });
     fireEvent.change(input, { target: { value: "xyz" } });
@@ -74,10 +149,23 @@ describe("HomeParkSearch", () => {
     });
   });
 
+  it("falls back to an empty result set if park loading fails", async () => {
+    vi.mocked(apiFetch).mockRejectedValueOnce(new Error("offline"));
+
+    renderSearch();
+
+    const input = screen.getByRole("combobox", { name: "layout.parkSearch.label" });
+    fireEvent.focus(input);
+
+    await waitFor(() => {
+      expect(screen.getByText("layout.parkSearch.empty")).toBeInTheDocument();
+    });
+  });
+
   it("supports keyboard navigation from the desktop search field", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce({ parks });
 
-    render(<HomeParkSearch />);
+    renderSearch();
 
     const input = screen.getByRole("combobox", { name: "layout.parkSearch.label" });
 
@@ -91,13 +179,30 @@ describe("HomeParkSearch", () => {
 
     fireEvent.keyDown(input, { key: "Enter" });
 
-    expect(mockPush).toHaveBeenCalledWith("/park/paijanne");
+    expect(screen.getByTestId("focus-request")).toHaveTextContent("paijanne");
+  });
+
+  it("supports moving the highlight back upward from the desktop search field", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({ parks });
+
+    renderSearch();
+
+    const input = screen.getByRole("combobox", { name: "layout.parkSearch.label" });
+
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+    await screen.findByRole("button", { name: /Päijänteen kansallispuisto/i });
+
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+    fireEvent.keyDown(input, { key: "ArrowUp" });
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    expect(screen.getByTestId("focus-request")).toHaveTextContent("paijanne");
   });
 
   it("opens a mobile search panel from the header button", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce({ parks });
 
-    render(<HomeParkSearch />);
+    renderSearch();
 
     await userEvent.click(screen.getByRole("button", { name: "layout.parkSearch.label" }));
 
@@ -107,7 +212,7 @@ describe("HomeParkSearch", () => {
   it("filters in the mobile search field and closes on escape", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce({ parks });
 
-    render(<HomeParkSearch />);
+    renderSearch();
 
     await userEvent.click(screen.getByRole("button", { name: "layout.parkSearch.label" }));
 
@@ -125,10 +230,29 @@ describe("HomeParkSearch", () => {
     });
   });
 
+  it("closes the open result list when clicking outside the search container", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({ parks });
+
+    renderSearch();
+
+    const input = screen.getByRole("combobox", { name: "layout.parkSearch.label" });
+    fireEvent.focus(input);
+
+    await screen.findByRole("button", { name: /Päijänteen kansallispuisto/i });
+
+    fireEvent.mouseDown(document.body);
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("button", { name: /Päijänteen kansallispuisto/i }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
   it("renders the desktop search icon with visible foreground contrast styling", () => {
     vi.mocked(apiFetch).mockImplementationOnce(() => new Promise(() => {}));
 
-    const { container } = render(<HomeParkSearch />);
+    const { container } = renderSearch();
     const icon = container.querySelector('svg[class*="text-foreground/60"]');
     const input = screen.getByRole("combobox", { name: "layout.parkSearch.label" });
 
@@ -139,5 +263,62 @@ describe("HomeParkSearch", () => {
       "[&::-webkit-search-decoration]:appearance-none",
       "[&::-webkit-search-results-decoration]:appearance-none",
     );
+  });
+
+  it("shows only the park type in the result meta line", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({ parks });
+
+    renderSearch();
+
+    const input = screen.getByRole("combobox", { name: "layout.parkSearch.label" });
+    fireEvent.change(input, { target: { value: "päij" } });
+
+    const result = await screen.findByRole("button", { name: /Päijänteen kansallispuisto/i });
+
+    expect(result).toHaveTextContent("Kansallispuisto");
+    expect(result).not.toHaveTextContent("Päijät-Häme");
+  });
+
+  it("offers a direct park-page link beside home map search results", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({ parks });
+
+    renderSearch();
+
+    const input = screen.getByRole("combobox", { name: "layout.parkSearch.label" });
+    fireEvent.change(input, { target: { value: "päij" } });
+
+    expect(
+      await screen.findByRole("link", { name: "layout.parkSearch.openParkPage" }),
+    ).toHaveAttribute("href", "/park/paijanne");
+  });
+
+  it("closes the result list when the direct park-page link is activated", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({ parks });
+
+    renderSearch();
+
+    const input = screen.getByRole("combobox", { name: "layout.parkSearch.label" });
+    fireEvent.change(input, { target: { value: "päij" } });
+
+    await userEvent.click(
+      await screen.findByRole("link", { name: "layout.parkSearch.openParkPage" }),
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("link", { name: "layout.parkSearch.openParkPage" }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  it("reads a park query parameter into the shared home focus state", async () => {
+    searchParamsState.value = "park=teijo";
+    vi.mocked(apiFetch).mockResolvedValueOnce({ parks });
+
+    renderSearch();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("focus-request")).toHaveTextContent("teijo");
+    });
   });
 });

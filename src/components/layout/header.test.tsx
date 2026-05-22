@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Header } from "./header";
 
-const { authState, pathnameState } = vi.hoisted(() => ({
+const { authState, pathnameState, searchParamsState } = vi.hoisted(() => ({
   authState: {
     isAuthenticated: false,
     isLoading: true,
@@ -12,6 +12,9 @@ const { authState, pathnameState } = vi.hoisted(() => ({
   },
   pathnameState: {
     value: "/",
+  },
+  searchParamsState: {
+    value: "",
   },
 }));
 
@@ -22,6 +25,7 @@ vi.mock("@/hooks/use-auth", () => ({
 vi.mock("next/navigation", () => ({
   usePathname: () => pathnameState.value,
   useRouter: () => ({ push: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(searchParamsState.value),
 }));
 
 vi.mock("./home-park-search", () => ({
@@ -34,6 +38,7 @@ describe("Header", () => {
     authState.isLoading = true;
     authState.logout.mockClear();
     pathnameState.value = "/";
+    searchParamsState.value = "";
   });
 
   it("renders site title link", () => {
@@ -68,6 +73,19 @@ describe("Header", () => {
       "href",
       "/control-panel",
     );
+  });
+
+  it("keeps park search available outside the home page", () => {
+    pathnameState.value = "/control-panel/visits";
+
+    render(
+      <HomeMapControlsProvider>
+        <Header />
+      </HomeMapControlsProvider>,
+    );
+
+    expect(screen.getByText("home-park-search")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "layout.nav.filters" })).not.toBeInTheDocument();
   });
 
   it("shows a logout button inside the control panel and calls logout", async () => {

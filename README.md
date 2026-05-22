@@ -8,7 +8,7 @@ This is a Finnish-language, PWA-capable web application built with Next.js 16 Ap
 
 The app serves two audiences:
 
-- **Public view** — Interactive map for browsing parks and viewing visit history
+- **Public view** — Interactive map with persistent park search, smooth park focusing, and visit history
 - **Admin view** — Adding and editing visits, notes, and park details via `/control-panel`
 
 ## Tech Stack
