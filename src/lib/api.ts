@@ -55,6 +55,20 @@ const isFormDataBody = (body: BodyInit | null | undefined): body is FormData => 
   return typeof FormData !== "undefined" && body instanceof FormData;
 };
 
+const getServerCookieHeader = async (): Promise<string | null> => {
+  if (typeof window !== "undefined") {
+    return null;
+  }
+
+  try {
+    const { headers } = await import("next/headers");
+    const requestHeaders = await headers();
+    return requestHeaders.get("cookie");
+  } catch {
+    return null;
+  }
+};
+
 export const apiFetch = async <T>(path: string, options?: RequestInit): Promise<T> => {
   const url = `${env.NEXT_PUBLIC_API_URL}${path}`;
   const apiKey = getApiKey();
@@ -67,6 +81,11 @@ export const apiFetch = async <T>(path: string, options?: RequestInit): Promise<
 
   if (apiKey) {
     headers.set("Authorization", `Bearer ${apiKey}`);
+  }
+
+  const cookieHeader = await getServerCookieHeader();
+  if (cookieHeader && !headers.has("cookie")) {
+    headers.set("cookie", cookieHeader);
   }
 
   const fetchOptions: RequestInit = {

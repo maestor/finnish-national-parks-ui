@@ -2,7 +2,7 @@ import { ProgressSection } from "@/components/dashboard/progress-section";
 import { RecentVisits } from "@/components/dashboard/recent-visits";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { apiFetch } from "@/lib/api";
-import type { PersonalPark } from "@/lib/parks";
+import { type Park, type VisitWithPark, buildVisitedSummaryByParkSlug } from "@/lib/parks";
 import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
@@ -16,18 +16,18 @@ export const generateMetadata = async () => {
 
 const ControlPanelPage = async () => {
   const t = await getTranslations("controlPanel.dashboard");
-  const { parks } = await apiFetch<{ parks: PersonalPark[] }>("/api/me/parks");
+  const [{ parks }, { visits }] = await Promise.all([
+    apiFetch<{ parks: Park[] }>("/api/parks"),
+    apiFetch<{ visits: VisitWithPark[] }>("/api/visits"),
+  ]);
 
-  const totalVisits = parks.reduce((sum, park) => sum + park.visitedSummary.visitCount, 0);
-
-  const uniqueParks = parks.filter((park) => park.visitedSummary.visited).length;
-
-  const visitsWithNotes = parks
-    .flatMap((park) => park.visits)
-    .filter((visit) => visit.note !== null).length;
+  const totalVisits = visits.length;
+  const uniqueParks = new Set(visits.map((visit) => visit.park.slug)).size;
+  const visitsWithNotes = visits.filter((visit) => visit.note !== null).length;
+  const visitedSummaryByParkSlug = buildVisitedSummaryByParkSlug(visits);
 
   const mostVisitedPark = parks.reduce<{ name: string; visitCount: number } | null>((max, park) => {
-    const count = park.visitedSummary.visitCount;
+    const count = visitedSummaryByParkSlug.get(park.slug)?.visitCount ?? 0;
     if (count > 0 && (!max || count > max.visitCount)) {
       return { name: park.name, visitCount: count };
     }
@@ -36,17 +36,18 @@ const ControlPanelPage = async () => {
 
   const typeMap = new Map<string, { typeName: string; visited: number; total: number }>();
   for (const park of parks) {
+    const visitCount = visitedSummaryByParkSlug.get(park.slug)?.visitCount ?? 0;
     const slug = park.type.slug;
     const existing = typeMap.get(slug);
     if (existing) {
       existing.total += 1;
-      if (park.visitedSummary.visited) {
+      if (visitCount > 0) {
         existing.visited += 1;
       }
     } else {
       typeMap.set(slug, {
         typeName: park.type.name,
-        visited: park.visitedSummary.visited ? 1 : 0,
+        visited: visitCount > 0 ? 1 : 0,
         total: 1,
       });
     }
@@ -55,15 +56,13 @@ const ControlPanelPage = async () => {
     a.typeName.localeCompare(b.typeName),
   );
 
-  const recentVisits = parks
-    .flatMap((park) =>
-      park.visits.map((visit) => ({
-        id: visit.id,
-        parkName: park.name,
-        parkSlug: park.slug,
-        visitedOn: visit.visitedOn,
-      })),
-    )
+  const recentVisits = visits
+    .map((visit) => ({
+      id: visit.id,
+      parkName: visit.park.name,
+      parkSlug: visit.park.slug,
+      visitedOn: visit.visitedOn,
+    }))
     .sort((a, b) => new Date(b.visitedOn).getTime() - new Date(a.visitedOn).getTime())
     .slice(0, 5);
 

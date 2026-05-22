@@ -76,7 +76,7 @@ describe("VisitImageSection", () => {
 
     expect(window.confirm).toHaveBeenCalledWith("controlPanel.visits.images.deleteConfirm");
     await waitFor(() => {
-      expect(apiFetch).toHaveBeenCalledWith("/api/me/visits/10/images/1", {
+      expect(apiFetch).toHaveBeenCalledWith("/api/visits/10/images/1", {
         method: "DELETE",
       });
     });
@@ -127,7 +127,7 @@ describe("VisitImageSection", () => {
     fireEvent.click(moveLeftButtons[1]);
 
     await waitFor(() => {
-      expect(apiFetch).toHaveBeenCalledWith("/api/me/visits/10/images/reorder", {
+      expect(apiFetch).toHaveBeenCalledWith("/api/visits/10/images/reorder", {
         method: "PATCH",
         body: JSON.stringify({
           imageIds: [2, 1],
@@ -198,7 +198,7 @@ describe("VisitImageSection", () => {
     fireEvent.click(uploadButton);
 
     await waitFor(() => {
-      expect(apiFetch).toHaveBeenCalledWith("/api/me/visits/10/images", {
+      expect(apiFetch).toHaveBeenCalledWith("/api/visits/10/images", {
         method: "POST",
         body: expect.any(FormData),
       });

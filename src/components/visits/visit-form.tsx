@@ -22,7 +22,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
   const router = useRouter();
   const isEditing = !!visitToEdit;
 
-  const [parkSlug, setParkSlug] = useState(visitToEdit?.parkSlug ?? defaultParkSlug ?? "");
+  const [parkSlug, setParkSlug] = useState(visitToEdit?.park.slug ?? defaultParkSlug ?? "");
   const [visitedOn, setVisitedOn] = useState(visitToEdit?.visitedOn ?? "");
   const [route, setRoute] = useState(visitToEdit?.route ?? "");
   const [author, setAuthor] = useState(visitToEdit?.author ?? "");
@@ -58,7 +58,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
     setIsSubmitting(true);
     try {
       if (isEditing && visitToEdit) {
-        await apiFetch(`/api/me/visits/${visitToEdit.id}`, {
+        await apiFetch(`/api/visits/${visitToEdit.id}`, {
           method: "PATCH",
           body: JSON.stringify({
             visitedOn,
@@ -69,7 +69,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
         });
         setStatusMessage(t("updateSuccess"));
       } else {
-        const createdVisit = await apiFetch<Visit>(`/api/me/parks/${parkSlug}/visits`, {
+        const createdVisit = await apiFetch<Visit>(`/api/parks/${parkSlug}/visits`, {
           method: "POST",
           body: JSON.stringify({
             visitedOn,
@@ -94,7 +94,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
     }
     setIsSubmitting(true);
     try {
-      await apiFetch(`/api/me/visits/${visitToEdit.id}`, { method: "DELETE" });
+      await apiFetch(`/api/visits/${visitToEdit.id}`, { method: "DELETE" });
       router.push("/control-panel/visits");
       router.refresh();
     } catch (error) {
@@ -114,7 +114,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
           {t("parkLabel")}
         </Label>
         {isEditing ? (
-          <div className={`${inputClassName} bg-muted`}>{visitToEdit?.parkName}</div>
+          <div className={`${inputClassName} bg-muted`}>{visitToEdit?.park.name}</div>
         ) : (
           <select
             id="park"

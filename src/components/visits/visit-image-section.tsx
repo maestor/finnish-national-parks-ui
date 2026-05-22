@@ -92,7 +92,7 @@ export const VisitImageSection = ({ visitId, images }: VisitImageSectionProps) =
       const response = await apiFetch<{
         images: VisitImage[];
         errors: { originalName: string; reason: string }[];
-      }>(`/api/me/visits/${visitId}/images`, {
+      }>(`/api/visits/${visitId}/images`, {
         method: "POST",
         body: formData,
       });
@@ -129,7 +129,7 @@ export const VisitImageSection = ({ visitId, images }: VisitImageSectionProps) =
     setLocalImages((prev) => prev.filter((img) => img.id !== imageId));
 
     try {
-      await apiFetch(`/api/me/visits/${visitId}/images/${imageId}`, {
+      await apiFetch(`/api/visits/${visitId}/images/${imageId}`, {
         method: "DELETE",
       });
       setStatusMessage(t("deleteSuccess"));
@@ -162,7 +162,7 @@ export const VisitImageSection = ({ visitId, images }: VisitImageSectionProps) =
     setLocalImages(nextImages);
 
     try {
-      await apiFetch(`/api/me/visits/${visitId}/images/reorder`, {
+      await apiFetch(`/api/visits/${visitId}/images/reorder`, {
         method: "PATCH",
         body: JSON.stringify({
           imageIds: nextImages.map((image) => image.id),

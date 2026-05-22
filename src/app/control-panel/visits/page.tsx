@@ -1,6 +1,6 @@
 import { VisitList } from "@/components/visits/visit-list";
 import { apiFetch } from "@/lib/api";
-import type { PersonalPark } from "@/lib/parks";
+import type { VisitWithPark } from "@/lib/parks";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 
@@ -15,7 +15,7 @@ export const generateMetadata = async () => {
 
 const VisitsPage = async () => {
   const t = await getTranslations("controlPanel.visits");
-  const { parks } = await apiFetch<{ parks: PersonalPark[] }>("/api/me/parks");
+  const { visits } = await apiFetch<{ visits: VisitWithPark[] }>("/api/visits");
 
   return (
     <div>
@@ -29,7 +29,7 @@ const VisitsPage = async () => {
         </Link>
       </div>
       <p className="mt-2 text-muted-foreground">{t("description")}</p>
-      <VisitList parks={parks} />
+      <VisitList visits={visits} />
     </div>
   );
 };

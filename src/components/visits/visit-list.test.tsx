@@ -1,4 +1,4 @@
-import type { PersonalPark } from "@/lib/parks";
+import type { VisitWithPark } from "@/lib/parks";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { VisitList } from "./visit-list";
@@ -11,40 +11,40 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: vi.fn() }),
 }));
 
-const parks = [
+const visits = [
   {
-    slug: "pallas",
-    name: "Pallas-Yllästunturi",
-    visits: [
-      {
-        id: 1,
-        visitedOn: "2024-06-15",
-        route: "Pallas-reitti",
-        note: "Great hike",
-        createdAt: "2024-06-15T00:00:00Z",
-        updatedAt: "2024-06-15T00:00:00Z",
-      },
-    ],
+    id: 1,
+    visitedOn: "2024-06-15",
+    route: "Pallas-reitti",
+    author: null,
+    note: "Great hike",
+    createdAt: "2024-06-15T00:00:00Z",
+    updatedAt: "2024-06-15T00:00:00Z",
+    images: [],
+    park: {
+      slug: "pallas",
+      name: "Pallas-Yllästunturi",
+    },
   },
   {
-    slug: "nuuksio",
-    name: "Nuuksio",
-    visits: [
-      {
-        id: 2,
-        visitedOn: "2024-07-20",
-        route: null,
-        note: null,
-        createdAt: "2024-07-20T00:00:00Z",
-        updatedAt: "2024-07-20T00:00:00Z",
-      },
-    ],
+    id: 2,
+    visitedOn: "2024-07-20",
+    route: null,
+    author: null,
+    note: null,
+    createdAt: "2024-07-20T00:00:00Z",
+    updatedAt: "2024-07-20T00:00:00Z",
+    images: [],
+    park: {
+      slug: "nuuksio",
+      name: "Nuuksio",
+    },
   },
-] as PersonalPark[];
+] as VisitWithPark[];
 
 describe("VisitList", () => {
   it("renders visits sorted by date descending", () => {
-    render(<VisitList parks={parks} />);
+    render(<VisitList visits={visits} />);
 
     const rows = screen.getAllByRole("row");
     expect(rows.length).toBe(3); // header + 2 visits
@@ -58,7 +58,7 @@ describe("VisitList", () => {
   });
 
   it("shows empty state when no visits exist", () => {
-    render(<VisitList parks={[]} />);
+    render(<VisitList visits={[]} />);
 
     expect(screen.getByText("controlPanel.visits.list.noVisits")).toBeInTheDocument();
     expect(
@@ -67,7 +67,7 @@ describe("VisitList", () => {
   });
 
   it("renders edit icon links", () => {
-    render(<VisitList parks={parks} />);
+    render(<VisitList visits={visits} />);
 
     expect(screen.getAllByLabelText("controlPanel.visits.edit").length).toBe(2);
   });

@@ -1,7 +1,7 @@
 import { VisitForm } from "@/components/visits/visit-form";
 import { VisitImageSection } from "@/components/visits/visit-image-section";
 import { apiFetch } from "@/lib/api";
-import type { Park, PersonalPark, VisitWithPark } from "@/lib/parks";
+import type { Park, VisitWithPark } from "@/lib/parks";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
@@ -25,21 +25,12 @@ const EditVisitPage = async ({ params, searchParams }: EditVisitPageProps) => {
   const { created } = await searchParams;
   const visitId = Number(id);
 
-  const [{ parks }, { parks: personalParks }] = await Promise.all([
+  const [{ parks }, visitToEdit] = await Promise.all([
     apiFetch<{ parks: Park[] }>("/api/parks"),
-    apiFetch<{ parks: PersonalPark[] }>("/api/me/parks"),
+    apiFetch<VisitWithPark>(`/api/visits/${visitId}`).catch(() => null),
   ]);
 
-  let visitToEdit: VisitWithPark | undefined;
-  for (const park of personalParks) {
-    const visit = park.visits.find((v) => v.id === visitId);
-    if (visit) {
-      visitToEdit = { ...visit, parkSlug: park.slug, parkName: park.name };
-      break;
-    }
-  }
-
-  if (!visitToEdit) {
+  if (visitToEdit === null) {
     notFound();
   }
 

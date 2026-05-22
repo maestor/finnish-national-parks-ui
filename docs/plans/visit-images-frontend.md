@@ -13,7 +13,7 @@ Prepare the Next.js frontend for visit images without blocking on unfinished bac
 - Shared visit types extended so the UI can accept `visit.images` once the backend starts returning it.
 - New visit creation now redirects into the edit flow, which is the right insertion point for image upload.
 - Public visit UI now renders persisted visit images with a horizontally scrolling thumbnail rail and centered lightbox.
-- Repo docs now clarify the legacy `/api/me/*` naming and the real access rule: all `GET` endpoints are public-readable, while non-`GET` endpoints require authenticated admin access.
+- Repo docs now clarify the current visit contract and the real access rule: all `GET` endpoints are public-readable, while non-`GET` endpoints require authenticated admin access.
 - API types regenerated from the backend OpenAPI spec; `VisitImage` is now derived from the generated contract.
 - `VisitImageSection` component added to the edit page with file upload, delete, and button-based reorder functionality.
 - Finnish translations added for image upload and delete UI.
@@ -30,7 +30,7 @@ Prepare the Next.js frontend for visit images without blocking on unfinished bac
 
 ### 1. Make the upload response explicitly per-file
 
-The backend plan says `POST /api/me/visits/{id}/images` returns an array of images, but it also requires partial success with per-file errors. Those two ideas conflict. The frontend uploader will need a stable result shape such as:
+The backend plan says `POST /api/visits/{id}/images` returns an array of images, but it also requires partial success with per-file errors. Those two ideas conflict. The frontend uploader will need a stable result shape such as:
 
 ```ts
 {
@@ -49,10 +49,11 @@ Without that, the UI cannot reliably match server results back to individual que
 
 ### 2. Include `images` everywhere a visit is returned
 
-The current frontend edit and list views derive visits from `GET /api/me/parks`, not only from park-detail responses. The backend contract should therefore add `images` to the shared visit schema everywhere it appears, including:
+The current frontend edit and list views derive visits from flat visit resources, not only from park-detail responses. The backend contract should therefore add `images` to the shared visit schema everywhere it appears, including:
 
-- `GET /api/me/parks`
-- `GET /api/me/parks/{slug}`
+- `GET /api/visits`
+- `GET /api/visits/{id}`
+- `GET /api/parks/{slug}/visits`
 - any future single-visit responses
 
 If image data exists only on park-detail responses, the edit page will need an extra fetch that is unnecessary today.
@@ -69,9 +70,9 @@ If stronger privacy is needed later, switch delivery to proxied or presigned URL
 ## Current Frontend Reality
 
 - Visit creation currently begins from [`VisitForm`](/Users/maestor/Projects/finnish-national-parks-ui/src/components/visits/visit-form.tsx).
-- New visits are created through `POST /api/me/parks/{slug}/visits`, which already returns the new visit ID.
-- Edit and list views currently source visit data from `GET /api/me/parks`.
-- Backend naming caveat: in this app, `/api/me/*` is legacy naming only. All `GET` endpoints are public-readable, while non-`GET` endpoints require authenticated admin access.
+- New visits are created through `POST /api/parks/{slug}/visits`, which already returns the new visit ID.
+- Edit and list views currently source visit data from `GET /api/visits`, and park detail history from `GET /api/parks/{slug}/visits`.
+- In this app, all `GET` endpoints are public-readable. Non-`GET` endpoints require authenticated admin access.
 - The repo does not use React Query or SWR today, so image refresh should continue to use local component state plus `router.refresh()` rather than introducing a new data layer for this feature alone.
 - The shared API client previously forced `Content-Type: application/json` for every request, which would have broken multipart uploads.
 
@@ -95,14 +96,14 @@ The visit accordion now renders real visit images from API data. The public park
 
 ### 5. Route naming confusion documented
 
-The frontend docs now state the real contract explicitly: `/api/me/*` is legacy naming only in this app, all `GET` endpoints are public-readable, and only non-`GET` endpoints require authenticated admin access.
+The frontend docs now state the real contract explicitly: visit data is split across `/api/visits` and `/api/parks/{slug}/visits`, all `GET` endpoints are public-readable, and only non-`GET` endpoints require authenticated admin access.
 
 ## Backend Contract Status
 
 The backend contract is now wired into the frontend:
 
-1. ✅ `POST /api/me/visits/{id}/images` — used by `VisitImageSection`
-2. ✅ `DELETE /api/me/visits/{visitId}/images/{imageId}` — used by `VisitImageSection`
+1. ✅ `POST /api/visits/{id}/images` — used by `VisitImageSection`
+2. ✅ `DELETE /api/visits/{visitId}/images/{imageId}` — used by `VisitImageSection`
 3. ✅ visit payloads include `images` — reflected in regenerated `api-types.ts`
 4. ✅ upload response shape — `{ images: VisitImage[], errors: { originalName, reason }[] }`
 

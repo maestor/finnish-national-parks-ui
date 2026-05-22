@@ -1,33 +1,25 @@
 "use client";
 
 import { EditVisitLink } from "@/components/visits/edit-visit-link";
-import type { PersonalPark, VisitWithPark } from "@/lib/parks";
+import type { VisitWithPark } from "@/lib/parks";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useMemo } from "react";
 
 interface VisitListProps {
-  parks: PersonalPark[];
+  visits: VisitWithPark[];
 }
 
-export const VisitList = ({ parks }: VisitListProps) => {
+export const VisitList = ({ visits }: VisitListProps) => {
   const t = useTranslations("controlPanel.visits.list");
 
-  const visits: VisitWithPark[] = useMemo(() => {
-    const result: VisitWithPark[] = [];
-    for (const park of parks) {
-      for (const visit of park.visits) {
-        result.push({
-          ...visit,
-          parkSlug: park.slug,
-          parkName: park.name,
-        });
-      }
-    }
-    return result.sort((a, b) => new Date(b.visitedOn).getTime() - new Date(a.visitedOn).getTime());
-  }, [parks]);
+  const sortedVisits = useMemo(() => {
+    return [...visits].sort(
+      (a, b) => new Date(b.visitedOn).getTime() - new Date(a.visitedOn).getTime(),
+    );
+  }, [visits]);
 
-  if (visits.length === 0) {
+  if (sortedVisits.length === 0) {
     return (
       <div className="mt-6 rounded-lg border border-dashed p-8 text-center">
         <p className="text-muted-foreground">{t("noVisits")}</p>
@@ -53,11 +45,11 @@ export const VisitList = ({ parks }: VisitListProps) => {
           </tr>
         </thead>
         <tbody className="divide-y">
-          {visits.map((visit) => (
+          {sortedVisits.map((visit) => (
             <tr key={visit.id}>
               <td className="px-4 py-3">
-                <Link href={`/park/${visit.parkSlug}`} className="hover:underline">
-                  {visit.parkName}
+                <Link href={`/park/${visit.park.slug}`} className="hover:underline">
+                  {visit.park.name}
                 </Link>
               </td>
               <td className="px-4 py-3">{visit.route ?? "–"}</td>
