@@ -207,9 +207,21 @@ describe("VisitAccordion", () => {
   it("applies the seasonal accent border for each visit month", () => {
     render(<VisitAccordion visits={visits} />);
 
-    expect(getVisitCard("15.1.2024")).toHaveClass("border-l-sky-500");
-    expect(getVisitCard("20.3.2024")).toHaveClass("border-l-emerald-500");
-    expect(getVisitCard("31.7.2024")).toHaveClass("border-l-amber-500");
-    expect(getVisitCard("1.9.2024")).toHaveClass("border-l-orange-500");
+    expect(getVisitCard("15.1.2024")).toHaveClass("border-l-sky-600", "dark:border-l-cyan-400");
+    expect(getVisitCard("20.3.2024")).toHaveClass(
+      "border-l-emerald-600",
+      "dark:border-l-emerald-400",
+    );
+    expect(getVisitCard("31.7.2024")).toHaveClass("border-l-amber-500", "dark:border-l-amber-300");
+    expect(getVisitCard("1.9.2024")).toHaveClass("border-l-orange-600", "dark:border-l-orange-400");
+  });
+
+  it("shows a season emoji before the visit number badge in each header", () => {
+    render(<VisitAccordion visits={visits} />);
+
+    expect(getVisitCard("15.1.2024")).toHaveTextContent("❄️");
+    expect(getVisitCard("20.3.2024")).toHaveTextContent("🌱");
+    expect(getVisitCard("31.7.2024")).toHaveTextContent("☀️");
+    expect(getVisitCard("1.9.2024")).toHaveTextContent("🍂");
   });
 });

@@ -14,17 +14,45 @@ interface VisitAccordionProps {
   isEditable?: boolean;
 }
 
+interface SeasonPresentation {
+  badgeClass: string;
+  borderClass: string;
+  emoji: string;
+}
+
 const hasExpandableContent = (visit: Visit) => {
   const hasImages = (visit.images?.length ?? 0) > 0;
   return !!visit.note || !!visit.author || hasImages;
 };
 
-const getSeasonBorderClass = (dateStr: string): string => {
+const getSeasonPresentation = (dateStr: string): SeasonPresentation => {
   const month = new Date(dateStr).getMonth() + 1;
-  if (month >= 3 && month <= 5) return "border-l-emerald-500";
-  if (month >= 6 && month <= 8) return "border-l-amber-500";
-  if (month >= 9 && month <= 11) return "border-l-orange-500";
-  return "border-l-sky-500";
+  if (month >= 3 && month <= 5) {
+    return {
+      emoji: "🌱",
+      borderClass: "border-l-emerald-600 dark:border-l-emerald-400",
+      badgeClass: "bg-emerald-600/15 text-emerald-800 dark:bg-emerald-400/15 dark:text-emerald-300",
+    };
+  }
+  if (month >= 6 && month <= 8) {
+    return {
+      emoji: "☀️",
+      borderClass: "border-l-amber-500 dark:border-l-amber-300",
+      badgeClass: "bg-amber-500/15 text-amber-800 dark:bg-amber-300/15 dark:text-amber-200",
+    };
+  }
+  if (month >= 9 && month <= 11) {
+    return {
+      emoji: "🍂",
+      borderClass: "border-l-orange-600 dark:border-l-orange-400",
+      badgeClass: "bg-orange-600/15 text-orange-800 dark:bg-orange-400/15 dark:text-orange-200",
+    };
+  }
+  return {
+    emoji: "❄️",
+    borderClass: "border-l-sky-600 dark:border-l-cyan-400",
+    badgeClass: "bg-sky-600/15 text-sky-800 dark:bg-cyan-400/15 dark:text-cyan-200",
+  };
 };
 
 export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionProps) => {
@@ -66,22 +94,28 @@ export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionPro
         const hasImages = imageCount > 0;
         const isExpandable = hasExpandableContent(visit);
         const isOpen = openId === visit.id;
-        const seasonBorder = getSeasonBorderClass(visit.visitedOn);
+        const season = getSeasonPresentation(visit.visitedOn);
 
         if (!isExpandable) {
           return (
             <div
               key={visit.id}
-              className={`flex items-center justify-between rounded-lg border bg-card shadow-sm ${seasonBorder} border-l-4 px-4 py-3`}
+              className={`flex items-center justify-between rounded-lg border bg-card shadow-sm ${season.borderClass} border-l-4 px-4 py-3`}
             >
-              <span className="flex flex-wrap items-center gap-2 text-sm font-medium">
-                <span className="inline-flex items-center justify-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
+              <span className="flex flex-wrap items-center gap-2.5 text-sm font-medium">
+                <span
+                  aria-hidden="true"
+                  className={`inline-flex items-center justify-center rounded-full px-2.5 py-1 text-sm leading-none ${season.badgeClass}`}
+                >
+                  {season.emoji}
+                </span>
+                <span className="inline-flex items-center justify-center rounded-full bg-primary/10 px-2.5 py-1 text-sm leading-none font-bold text-primary">
                   {t("visitNumber", { number })}
                 </span>
-                <span>{formatDate(visit.visitedOn)}</span>
+                <span className="text-base">{formatDate(visit.visitedOn)}</span>
                 {visit.route && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-700 px-2 py-0.5 text-xs font-semibold text-white dark:bg-emerald-500/15 dark:text-emerald-400">
-                    <Route className="h-3 w-3" aria-hidden="true" />
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-700 px-2.5 py-1 text-sm leading-none font-semibold text-white dark:bg-emerald-500/15 dark:text-emerald-400">
+                    <Route className="h-3.5 w-3.5" aria-hidden="true" />
                     {visit.route}
                   </span>
                 )}
@@ -94,7 +128,7 @@ export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionPro
         return (
           <div
             key={visit.id}
-            className={`overflow-hidden rounded-lg border bg-card shadow-sm ${seasonBorder} border-l-4`}
+            className={`overflow-hidden rounded-lg border bg-card shadow-sm ${season.borderClass} border-l-4`}
           >
             <button
               type="button"
@@ -104,20 +138,26 @@ export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionPro
               title={isOpen ? t("hideDetails") : t("showDetails")}
               aria-label={isOpen ? t("hideDetails") : t("showDetails")}
             >
-              <span className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center justify-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
+              <span className="flex flex-wrap items-center gap-2.5 text-sm font-medium">
+                <span
+                  aria-hidden="true"
+                  className={`inline-flex items-center justify-center rounded-full px-2.5 py-1 text-sm leading-none ${season.badgeClass}`}
+                >
+                  {season.emoji}
+                </span>
+                <span className="inline-flex items-center justify-center rounded-full bg-primary/10 px-2.5 py-1 text-sm leading-none font-bold text-primary">
                   {t("visitNumber", { number })}
                 </span>
-                <span className="text-sm font-medium">{formatDate(visit.visitedOn)}</span>
+                <span className="text-base">{formatDate(visit.visitedOn)}</span>
                 {visit.route && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-700 px-2 py-0.5 text-xs font-semibold text-white dark:bg-emerald-500/15 dark:text-emerald-400">
-                    <Route className="h-3 w-3" aria-hidden="true" />
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-700 px-2.5 py-1 text-sm leading-none font-semibold text-white dark:bg-emerald-500/15 dark:text-emerald-400">
+                    <Route className="h-3.5 w-3.5" aria-hidden="true" />
                     {visit.route}
                   </span>
                 )}
                 {hasImages && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
-                    <Images className="h-3 w-3" aria-hidden="true" />
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-sm leading-none font-semibold text-primary">
+                    <Images className="h-3.5 w-3.5" aria-hidden="true" />
                     {t("imageCount", { count: imageCount })}
                   </span>
                 )}
