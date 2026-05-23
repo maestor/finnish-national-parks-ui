@@ -11,12 +11,17 @@ import { useEffect, useMemo, useState } from "react";
 
 interface ParkListProps {
   parks: Park[];
+  removedParks: Park[];
 }
 
-export const ParkList = ({ parks }: ParkListProps) => {
+type ParkTab = "visible" | "hidden";
+
+export const ParkList = ({ parks, removedParks }: ParkListProps) => {
   const t = useTranslations("controlPanel.parks");
   const router = useRouter();
   const [localParks, setLocalParks] = useState(parks);
+  const [localRemovedParks, setLocalRemovedParks] = useState(removedParks);
+  const [activeTab, setActiveTab] = useState<ParkTab>("visible");
   const [pendingSlug, setPendingSlug] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -24,13 +29,23 @@ export const ParkList = ({ parks }: ParkListProps) => {
     setLocalParks(parks);
   }, [parks]);
 
+  useEffect(() => {
+    setLocalRemovedParks(removedParks);
+  }, [removedParks]);
+
   const sortedParks = useMemo(() => {
     return [...localParks].sort((left, right) => left.name.localeCompare(right.name, "fi-FI"));
   }, [localParks]);
 
-  const handleRemove = async (park: Park) => {
+  const sortedRemovedParks = useMemo(() => {
+    return [...localRemovedParks].sort((left, right) =>
+      left.name.localeCompare(right.name, "fi-FI"),
+    );
+  }, [localRemovedParks]);
+
+  const updateParkVisibility = async (park: Park, removed: boolean) => {
     const confirmed = window.confirm(
-      t("confirmRemove", {
+      t(removed ? "confirmRemove" : "confirmRestore", {
         parkName: park.name,
       }),
     );
@@ -45,11 +60,19 @@ export const ParkList = ({ parks }: ParkListProps) => {
     try {
       await apiFetch(`/api/parks/${park.slug}/removed`, {
         method: "PATCH",
-        body: JSON.stringify({ removed: true }),
+        body: JSON.stringify({ removed }),
       });
 
       await revalidatePublicCache({ parkSlug: park.slug });
-      setLocalParks((current) => current.filter((currentPark) => currentPark.slug !== park.slug));
+      if (removed) {
+        setLocalParks((current) => current.filter((currentPark) => currentPark.slug !== park.slug));
+        setLocalRemovedParks((current) => [...current, park]);
+      } else {
+        setLocalRemovedParks((current) =>
+          current.filter((currentPark) => currentPark.slug !== park.slug),
+        );
+        setLocalParks((current) => [...current, park]);
+      }
       router.refresh();
     } catch (error) {
       setActionError(error instanceof Error ? error.message : String(error));
@@ -58,18 +81,54 @@ export const ParkList = ({ parks }: ParkListProps) => {
     }
   };
 
-  if (sortedParks.length === 0) {
+  const displayedParks = activeTab === "visible" ? sortedParks : sortedRemovedParks;
+  const notice = activeTab === "visible" ? t("visibleNotice") : t("hiddenNotice");
+
+  if (sortedParks.length === 0 && sortedRemovedParks.length === 0) {
     return (
       <div className="mt-6 rounded-lg border border-dashed p-8 text-center">
-        <p className="text-muted-foreground">{t("empty")}</p>
+        <p className="text-muted-foreground">{t("emptyAll")}</p>
       </div>
     );
   }
 
   return (
     <div className="mt-6 space-y-4">
+      <div
+        className="inline-flex rounded-xl border border-border bg-muted/60 p-1"
+        role="tablist"
+        aria-label={t("tabs.ariaLabel")}
+      >
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "visible"}
+          onClick={() => setActiveTab("visible")}
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            activeTab === "visible"
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          {t("tabs.visible")}
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "hidden"}
+          onClick={() => setActiveTab("hidden")}
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            activeTab === "hidden"
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          {t("tabs.hidden")}
+        </button>
+      </div>
+
       <p className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-950 dark:text-amber-100">
-        {t("warning")}
+        {notice}
       </p>
 
       {actionError && (
@@ -81,46 +140,61 @@ export const ParkList = ({ parks }: ParkListProps) => {
         </p>
       )}
 
-      <div className="overflow-hidden rounded-lg border">
-        <table className="w-full text-sm">
-          <thead className="bg-muted">
-            <tr>
-              <th className="px-4 py-3 text-left font-medium">{t("parkName")}</th>
-              <th className="px-4 py-3 text-left font-medium">{t("parkType")}</th>
-              <th className="px-4 py-3 text-left font-medium">{t("location")}</th>
-              <th className="px-4 py-3 text-right font-medium" />
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {sortedParks.map((park) => {
-              const isRemoving = pendingSlug === park.slug;
+      {displayedParks.length === 0 ? (
+        <div className="rounded-lg border border-dashed p-8 text-center">
+          <p className="text-muted-foreground">
+            {activeTab === "visible" ? t("emptyVisible") : t("emptyHidden")}
+          </p>
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-lg border">
+          <table className="w-full text-sm">
+            <thead className="bg-muted">
+              <tr>
+                <th className="px-4 py-3 text-left font-medium">{t("parkName")}</th>
+                <th className="px-4 py-3 text-left font-medium">{t("parkType")}</th>
+                <th className="px-4 py-3 text-left font-medium">{t("location")}</th>
+                <th className="px-4 py-3 text-right font-medium" />
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {displayedParks.map((park) => {
+                const isUpdating = pendingSlug === park.slug;
+                const isVisibleTab = activeTab === "visible";
 
-              return (
-                <tr key={park.slug}>
-                  <td className="px-4 py-3">
-                    <Link href={`/park/${park.slug}`} className="font-medium hover:underline">
-                      {park.name}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3">{park.type.name}</td>
-                  <td className="px-4 py-3">{park.locationLabel}</td>
-                  <td className="px-4 py-3 text-right">
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleRemove(park)}
-                      disabled={isRemoving}
-                    >
-                      {isRemoving ? t("removing") : t("removeAction")}
-                    </Button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+                return (
+                  <tr key={park.slug}>
+                    <td className="px-4 py-3">
+                      <Link href={`/park/${park.slug}`} className="font-medium hover:underline">
+                        {park.name}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3">{park.type.name}</td>
+                    <td className="px-4 py-3">{park.locationLabel}</td>
+                    <td className="px-4 py-3 text-right">
+                      <Button
+                        type="button"
+                        variant={isVisibleTab ? "destructive" : "outline"}
+                        size="sm"
+                        onClick={() => updateParkVisibility(park, isVisibleTab)}
+                        disabled={isUpdating}
+                      >
+                        {isUpdating
+                          ? isVisibleTab
+                            ? t("removing")
+                            : t("restoring")
+                          : isVisibleTab
+                            ? t("removeAction")
+                            : t("restoreAction")}
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };

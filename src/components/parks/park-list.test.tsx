@@ -46,6 +46,20 @@ const parks: Park[] = [
   },
 ];
 
+const removedParks: Park[] = [
+  {
+    slug: "repovesi",
+    name: "Repoveden kansallispuisto",
+    areaKm2: 15,
+    locationLabel: "Kouvola",
+    luontoonUrl: null,
+    establishmentYear: 2003,
+    boundingBox: { minLat: 61, minLon: 26, maxLat: 62, maxLon: 27 },
+    markerPoint: { lat: 61.3, lon: 26.5 },
+    type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },
+  },
+];
+
 describe("ParkList", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -56,7 +70,7 @@ describe("ParkList", () => {
   });
 
   it("renders parks sorted by name with links to the public park pages", () => {
-    render(<ParkList parks={parks} />);
+    render(<ParkList parks={parks} removedParks={removedParks} />);
 
     const rows = screen.getAllByRole("row");
     expect(rows).toHaveLength(3);
@@ -73,7 +87,7 @@ describe("ParkList", () => {
   it("removes a park after confirmation and refreshes the route", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce(undefined);
 
-    render(<ParkList parks={parks} />);
+    render(<ParkList parks={parks} removedParks={removedParks} />);
 
     fireEvent.click(screen.getAllByRole("button", { name: "controlPanel.parks.removeAction" })[0]);
 
@@ -99,7 +113,7 @@ describe("ParkList", () => {
       vi.fn(() => false),
     );
 
-    render(<ParkList parks={parks} />);
+    render(<ParkList parks={parks} removedParks={removedParks} />);
 
     fireEvent.click(screen.getAllByRole("button", { name: "controlPanel.parks.removeAction" })[0]);
 
@@ -110,7 +124,7 @@ describe("ParkList", () => {
   it("shows an error when park removal fails", async () => {
     vi.mocked(apiFetch).mockRejectedValueOnce(new Error("remove failed"));
 
-    render(<ParkList parks={parks} />);
+    render(<ParkList parks={parks} removedParks={removedParks} />);
 
     fireEvent.click(screen.getAllByRole("button", { name: "controlPanel.parks.removeAction" })[0]);
 
@@ -122,9 +136,43 @@ describe("ParkList", () => {
     expect(screen.getByRole("link", { name: "Aulangon luonnonsuojelualue" })).toBeInTheDocument();
   });
 
-  it("shows an empty state when there are no parks to manage", () => {
-    render(<ParkList parks={[]} />);
+  it("shows removed parks on the hidden tab and restores them", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce(undefined);
 
-    expect(screen.getByText("controlPanel.parks.empty")).toBeInTheDocument();
+    render(<ParkList parks={parks} removedParks={removedParks} />);
+
+    fireEvent.click(screen.getByRole("tab", { name: "controlPanel.parks.tabs.hidden" }));
+    fireEvent.click(screen.getByRole("button", { name: "controlPanel.parks.restoreAction" }));
+
+    expect(window.confirm).toHaveBeenCalledWith("controlPanel.parks.confirmRestore");
+
+    await waitFor(() => {
+      expect(apiFetch).toHaveBeenCalledWith("/api/parks/repovesi/removed", {
+        method: "PATCH",
+        body: JSON.stringify({ removed: false }),
+      });
+    });
+
+    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "repovesi" });
+    expect(mockRefresh).toHaveBeenCalled();
+    expect(
+      screen.queryByRole("link", { name: "Repoveden kansallispuisto" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows an empty state when there are no parks in the active tab", () => {
+    render(<ParkList parks={[]} removedParks={removedParks} />);
+
+    expect(screen.getByText("controlPanel.parks.emptyVisible")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "controlPanel.parks.tabs.hidden" }));
+
+    expect(screen.getByRole("link", { name: "Repoveden kansallispuisto" })).toBeInTheDocument();
+  });
+
+  it("shows an empty state when there are no parks to manage at all", () => {
+    render(<ParkList parks={[]} removedParks={[]} />);
+
+    expect(screen.getByText("controlPanel.parks.emptyAll")).toBeInTheDocument();
   });
 });
