@@ -92,11 +92,11 @@ const renderSearch = () =>
 describe("HomeParkSearch", () => {
   beforeEach(() => {
     mockPush.mockReset();
-    pathnameState.value = "/";
+    pathnameState.value = "/parks";
     searchParamsState.value = "";
   });
 
-  it("filters parks by query and activates the matching park on the home map", async () => {
+  it("filters parks by query and activates the matching park on the parks map", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce({ parks });
 
     renderSearch();
@@ -116,7 +116,7 @@ describe("HomeParkSearch", () => {
     expect(mockPush).not.toHaveBeenCalled();
   });
 
-  it("navigates to a park page when search is used outside the home page", async () => {
+  it("navigates to a park page when search is used outside the parks map page", async () => {
     pathnameState.value = "/park/pallas";
     vi.mocked(apiFetch).mockResolvedValueOnce({ parks });
 
@@ -311,7 +311,7 @@ describe("HomeParkSearch", () => {
     });
   });
 
-  it("reads a park query parameter into the shared home focus state", async () => {
+  it("reads a park query parameter into the shared parks map focus state", async () => {
     searchParamsState.value = "park=teijo";
     vi.mocked(apiFetch).mockResolvedValueOnce({ parks });
 

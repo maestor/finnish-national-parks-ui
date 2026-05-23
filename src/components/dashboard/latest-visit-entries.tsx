@@ -1,31 +1,31 @@
 import { EditVisitLink } from "@/components/visits/edit-visit-link";
 import Link from "next/link";
 
-interface RecentVisit {
+interface LatestVisitEntry {
   id: number;
   parkName: string;
   parkSlug: string;
-  visitedOn: string;
+  createdAt: string;
 }
 
-interface RecentVisitsProps {
+interface LatestVisitEntriesProps {
   title: string;
   emptyMessage: string;
-  visits: RecentVisit[];
+  visits: LatestVisitEntry[];
   showEditLinks?: boolean;
 }
 
-export const RecentVisits = ({
+export const LatestVisitEntries = ({
   title,
   emptyMessage,
   visits,
   showEditLinks = false,
-}: RecentVisitsProps) => {
+}: LatestVisitEntriesProps) => {
   const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString("fi-FI");
 
   return (
-    <section className="mt-8" aria-labelledby="recent-visits-title">
-      <h2 id="recent-visits-title" className="text-lg font-semibold tracking-tight">
+    <section className="mt-8" aria-labelledby="latest-visit-entries-title">
+      <h2 id="latest-visit-entries-title" className="text-lg font-semibold tracking-tight">
         {title}
       </h2>
       {visits.length === 0 ? (
@@ -33,7 +33,7 @@ export const RecentVisits = ({
       ) : (
         <ul className="mt-4 divide-y rounded-lg border">
           {visits.map((visit) => (
-            <li key={visit.id} className="flex items-center justify-between px-4 py-3">
+            <li key={visit.id} className="flex items-center justify-between gap-4 px-4 py-3">
               <Link
                 href={`/park/${visit.parkSlug}`}
                 className="text-sm font-medium hover:underline"
@@ -41,7 +41,7 @@ export const RecentVisits = ({
                 {visit.parkName}
               </Link>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">{formatDate(visit.visitedOn)}</span>
+                <span className="text-sm text-muted-foreground">{formatDate(visit.createdAt)}</span>
                 {showEditLinks ? <EditVisitLink visitId={visit.id} /> : null}
               </div>
             </li>

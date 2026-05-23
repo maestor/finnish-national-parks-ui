@@ -4,7 +4,7 @@
 
 **Finnish National Parks UI** is a Next.js 16 App Router application that consumes a separate Hono backend API. It serves two audiences:
 
-- **Public visitors** — an interactive map of Finnish national parks
+- **Public visitors** — a visit-focused landing page plus an interactive map of Finnish national parks
 - **Admin users** — a control panel for managing park visit history and notes
 
 Authentication is Google OAuth with an allowlist managed by the backend.
@@ -87,11 +87,12 @@ The `AUTH_JWT_SECRET` must match the backend's `AUTH_JWT_SECRET` exactly.
 ```
 src/app/
   (user)/           # Public routes (grouped, no layout effect)
-    page.tsx        # Map frontpage
+    page.tsx        # Public landing page
+    parks/page.tsx  # Map route
     park/[slug]/    # Park detail pages
   control-panel/    # Admin routes (protected by proxy)
     layout.tsx      # Sidebar layout
-    page.tsx        # Dashboard
+    page.tsx        # Admin landing page
     parks/          # Park visibility management
     visits/         # Visit management
   login/            # OAuth login page
