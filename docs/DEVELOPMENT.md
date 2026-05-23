@@ -13,17 +13,17 @@ Authentication is Google OAuth with an allowlist managed by the backend.
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Framework | Next.js 16 (App Router, Turbopack) |
-| Language | TypeScript 5 (strict mode) |
-| Styling | Tailwind CSS v4 + CSS variables |
-| UI Icons | Lucide React |
-| i18n | next-intl (Finnish `fi` hardcoded) |
-| Theme | next-themes (dark/light/system) |
-| PWA | Serwist |
-| Testing | Vitest + jsdom, Testing Library, Playwright |
-| Lint/Format | Biome |
+| Layer       | Technology                                      |
+| ----------- | ----------------------------------------------- |
+| Framework   | Next.js 16 (App Router, Turbopack)              |
+| Language    | TypeScript 5 (strict mode)                      |
+| Styling     | Tailwind CSS v4 + CSS variables                 |
+| UI Icons    | Lucide React                                    |
+| i18n        | next-intl (Finnish `fi` hardcoded)              |
+| Theme       | next-themes (dark/light/system)                 |
+| PWA         | Serwist                                         |
+| Testing     | Vitest + jsdom, Testing Library, Playwright     |
+| Lint/Format | Biome                                           |
 | HTTP Client | Hand-rolled `fetch` wrapper in `src/lib/api.ts` |
 
 ---
@@ -60,21 +60,21 @@ The `AUTH_JWT_SECRET` must match the backend's `AUTH_JWT_SECRET` exactly.
 
 ## Available Scripts
 
-| Command | Purpose |
-|---------|---------|
-| `npm run dev` | Start dev server on `http://localhost:4300` |
-| `npm run build` | Production build |
-| `npm run start` | Start production server |
-| `npm run typecheck` | TypeScript check (`tsc --noEmit`) |
-| `npm run lint` | Biome lint check |
-| `npm run lint:fix` | Auto-fix Biome issues |
-| `npm run test` | Run Vitest unit/component tests once |
-| `npm run test:coverage` | Run Vitest with V8 coverage summary + HTML report |
-| `npm run test:watch` | Run Vitest in watch mode |
-| `npm run test:e2e` | Run Playwright E2E (Chromium only) |
-| `npm run test:e2e:all` | Run Playwright E2E (all browsers) |
-| `npm run verify` | Full gate: typecheck → lint → test:coverage → build |
-| `npm run generate:api-types` | Regenerate `src/lib/api-types.ts` from backend OpenAPI |
+| Command                      | Purpose                                                 |
+| ---------------------------- | ------------------------------------------------------- |
+| `npm run dev`                | Start dev server on `http://localhost:4300`             |
+| `npm run build`              | Production build                                        |
+| `npm run start`              | Start production server                                 |
+| `npm run typecheck`          | TypeScript check (`tsc --noEmit`)                       |
+| `npm run lint`               | Biome lint check                                        |
+| `npm run lint:fix`           | Auto-fix Biome issues                                   |
+| `npm run test`               | Run Vitest unit/component tests once                    |
+| `npm run test:coverage`      | Run Vitest with V8 coverage summary + HTML report       |
+| `npm run test:watch`         | Run Vitest in watch mode                                |
+| `npm run test:e2e`           | Run Playwright E2E (Chromium only)                      |
+| `npm run test:e2e:all`       | Run Playwright E2E (all browsers)                       |
+| `npm run verify`             | Full gate: typecheck → lint:fix → test:coverage → build |
+| `npm run generate:api-types` | Regenerate `src/lib/api-types.ts` from backend OpenAPI  |
 
 **Always run `npm run verify` before asking for review.** Pull requests targeting `main` also run the same `npm run verify` gate in GitHub Actions.
 
@@ -117,6 +117,7 @@ Browser → Next.js App → apiFetch() → Hono Backend (:3004)
 ```
 
 The backend handles:
+
 - Google OAuth flow (`/auth/google`, `/auth/google/callback`)
 - Session cookie (`__session` JWT)
 - Park catalog API (`/api/parks`, `/api/parks/{slug}`)
@@ -125,6 +126,7 @@ The backend handles:
 - Public summary API for cacheable landing and map data (`/api/public/home-summary`, `/api/public/map-summary`)
 
 Route naming caveat:
+
 - In this project, **all `GET` endpoints are public-readable**, including `GET /api/visits` and `GET /api/parks/{slug}/visits`.
 - **Non-`GET` endpoints require authenticated admin access.**
 
