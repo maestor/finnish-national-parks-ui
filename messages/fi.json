@@ -29,8 +29,13 @@
   "home": {
     "title": "Reissuvihko",
     "mapTitle": "Puistokartta",
-    "description": "Reissuvihko kokoaa puistokäynnit, retkimuistot ja oman etenemisesi yhteen näkymään.\n\nSeuraa missä olet jo käynyt, mihin haluat seuraavaksi ja miten käynnit jakautuvat eri puistotyyppeihin.",
+    "summary": "Reissuvihko kokoaa puistokäynnit, retkimuistot ja oman etenemisesi yhteen näkymään.",
+    "description": "Seuraa missä olet jo käynyt, mihin haluat seuraavaksi ja miten käynnit jakautuvat eri puistotyyppeihin.\n\nTutustu karttaan, selaa viimeisimpiä käyntejä ja hahmota omaa retkihistoriaasi yhdestä näkymästä.",
     "openMap": "Siirry kartalle",
+    "intro": {
+      "showInfo": "Mistä on kyse?",
+      "hideInfo": "Piilota info"
+    },
     "statistics": {
       "title": "Käynnit",
       "totalVisits": "Käyntejä yhteensä",

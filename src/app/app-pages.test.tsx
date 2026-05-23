@@ -132,6 +132,24 @@ vi.mock("@/components/dashboard/latest-visit-entries", () => ({
   ),
 }));
 
+vi.mock("@/components/home/home-intro", () => ({
+  HomeIntro: ({
+    title,
+    summary,
+    openMapLabel,
+    infoClosedLabel,
+  }: {
+    title: string;
+    summary: string;
+    openMapLabel: string;
+    infoClosedLabel: string;
+  }) => (
+    <div data-testid="home-intro">
+      title:{title}|summary:{summary}|map:{openMapLabel}|info:{infoClosedLabel}
+    </div>
+  ),
+}));
+
 vi.mock("@/components/visits/visit-list", () => ({
   VisitList: ({ visits }: { visits: VisitWithPark[] }) => (
     <div data-testid="visit-list">visits:{visits.length}</div>
@@ -241,8 +259,9 @@ describe("App pages", () => {
 
     await renderPublicRoute(await HomePage());
 
-    expect(screen.getByRole("heading", { name: "home.title" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "home.openMap" })).toHaveAttribute("href", "/parks");
+    expect(screen.getByTestId("home-intro")).toHaveTextContent(
+      "title:home.title|summary:home.summary|map:home.openMap|info:home.intro.showInfo",
+    );
     expect(screen.getByTestId("home-visit-stats")).toHaveTextContent(
       "total:1|items:2|first:home.statistics.allParks",
     );

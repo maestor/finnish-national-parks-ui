@@ -1,3 +1,5 @@
+import { BarChart3 } from "lucide-react";
+
 interface ProgressItem {
   label: string;
   visited: number;
@@ -25,7 +27,10 @@ export const HomeVisitStats = ({
     <section className="mt-10" aria-labelledby="home-visit-stats-title">
       <div className="rounded-3xl border border-border/80 bg-muted/35 p-6 text-card-foreground shadow-sm dark:bg-card">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
+          <div className="flex items-center gap-3">
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-border/70 bg-background text-foreground shadow-sm dark:bg-background/80">
+              <BarChart3 className="h-4 w-4 text-primary" aria-hidden="true" />
+            </span>
             <h2 id="home-visit-stats-title" className="text-xl font-semibold tracking-tight">
               {sectionTitle}
             </h2>

@@ -2,12 +2,11 @@ import { HomeVisitStats } from "@/components/dashboard/home-visit-stats";
 import { LatestVisitEntries } from "@/components/dashboard/latest-visit-entries";
 import { MostVisitedParks } from "@/components/dashboard/most-visited-parks";
 import { RecentVisits } from "@/components/dashboard/recent-visits";
+import { HomeIntro } from "@/components/home/home-intro";
 import { apiFetch } from "@/lib/api";
 import type { paths } from "@/lib/api-types";
 import { type VisitWithPark, buildVisitedSummaryByParkSlug } from "@/lib/parks";
-import { MapPin } from "lucide-react";
 import { getTranslations } from "next-intl/server";
-import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -110,22 +109,15 @@ const HomePage = async () => {
     .filter(Boolean);
 
   return (
-    <main className="container mx-auto flex flex-1 flex-col px-4 py-8">
-      <div className="max-w-3xl">
-        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{t("title")}</h1>
-        <div className="mt-4 space-y-4 text-muted-foreground">
-          {descriptionParagraphs.map((paragraph) => (
-            <p key={paragraph}>{paragraph}</p>
-          ))}
-        </div>
-        <Link
-          href="/parks"
-          className="mt-5 inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
-        >
-          <MapPin className="h-4 w-4 text-primary" aria-hidden="true" />
-          {t("openMap")}
-        </Link>
-      </div>
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 py-8">
+      <HomeIntro
+        title={t("title")}
+        summary={t("summary")}
+        descriptionParagraphs={descriptionParagraphs}
+        openMapLabel={t("openMap")}
+        infoClosedLabel={t("intro.showInfo")}
+        infoOpenLabel={t("intro.hideInfo")}
+      />
 
       <HomeVisitStats
         sectionTitle={t("statistics.title")}
@@ -133,24 +125,28 @@ const HomePage = async () => {
         totalVisits={visits.length}
         progressItems={progressItems}
       />
-      <MostVisitedParks
-        title={t("mostVisitedParks.title")}
-        emptyMessage={t("mostVisitedParks.empty")}
-        visitCountLabel={t("mostVisitedParks.visitCount")}
-        parks={mostVisitedParks}
-      />
-      <RecentVisits
-        title={t("recentVisits.title")}
-        emptyMessage={t("recentVisits.empty")}
-        visits={recentVisits}
-        showEditLinks={canManageVisits}
-      />
-      <LatestVisitEntries
-        title={t("latestEntries.title")}
-        emptyMessage={t("latestEntries.empty")}
-        visits={latestVisitEntries}
-        showEditLinks={canManageVisits}
-      />
+      <div className="mt-8 space-y-6">
+        <MostVisitedParks
+          title={t("mostVisitedParks.title")}
+          emptyMessage={t("mostVisitedParks.empty")}
+          visitCountLabel={t("mostVisitedParks.visitCount")}
+          parks={mostVisitedParks}
+        />
+        <div className="grid gap-6 xl:grid-cols-2">
+          <RecentVisits
+            title={t("recentVisits.title")}
+            emptyMessage={t("recentVisits.empty")}
+            visits={recentVisits}
+            showEditLinks={canManageVisits}
+          />
+          <LatestVisitEntries
+            title={t("latestEntries.title")}
+            emptyMessage={t("latestEntries.empty")}
+            visits={latestVisitEntries}
+            showEditLinks={canManageVisits}
+          />
+        </div>
+      </div>
     </main>
   );
 };
