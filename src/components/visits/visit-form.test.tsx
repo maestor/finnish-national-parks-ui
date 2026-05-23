@@ -136,11 +136,34 @@ describe("VisitForm", () => {
     ).toBeInTheDocument();
   });
 
+  it("disables the edit save button until something changes", async () => {
+    render(<VisitForm parks={parks} visitToEdit={visitToEdit} />);
+
+    const submitButton = screen.getByRole("button", {
+      name: /controlPanel.visits.form.submit/i,
+    });
+    expect(submitButton).toBeDisabled();
+
+    await userEvent.clear(screen.getByLabelText(/controlPanel.visits.form.routeLabel/i));
+    await userEvent.type(screen.getByLabelText(/controlPanel.visits.form.routeLabel/i), "Hetta");
+    expect(submitButton).toBeEnabled();
+
+    await userEvent.clear(screen.getByLabelText(/controlPanel.visits.form.routeLabel/i));
+    await userEvent.type(
+      screen.getByLabelText(/controlPanel.visits.form.routeLabel/i),
+      "Pallas-Yllästunturin reitti",
+    );
+    expect(submitButton).toBeDisabled();
+  });
+
   it("shows a success notice and visits list link after editing a visit", async () => {
     const { apiFetch } = await import("@/lib/api");
     vi.mocked(apiFetch).mockResolvedValueOnce(undefined);
 
     render(<VisitForm parks={parks} visitToEdit={visitToEdit} />);
+
+    await userEvent.clear(screen.getByLabelText(/controlPanel.visits.form.routeLabel/i));
+    await userEvent.type(screen.getByLabelText(/controlPanel.visits.form.routeLabel/i), "Hetta");
 
     await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.submit/i }));
 
@@ -148,7 +171,7 @@ describe("VisitForm", () => {
       method: "PATCH",
       body: JSON.stringify({
         visitedOn: "2024-06-15",
-        route: "Pallas-Yllästunturin reitti",
+        route: "Hetta",
         author: "Maija Meikäläinen",
         note: "Great hike",
       }),

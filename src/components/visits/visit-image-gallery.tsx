@@ -4,7 +4,7 @@ import { cn } from "@/lib/cn";
 import type { VisitImage } from "@/lib/parks";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import type { ReactNode } from "react";
+import type { ButtonHTMLAttributes, HTMLAttributes, MouseEvent, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 
 interface VisitImageGalleryProps {
@@ -13,6 +13,16 @@ interface VisitImageGalleryProps {
   dialogLabel?: string;
   centerThumbnailsWhenStatic?: boolean;
   thumbnailLayout?: "carousel" | "grid";
+  getThumbnailProps?: (image: VisitImage, index: number) => HTMLAttributes<HTMLDivElement>;
+  getThumbnailButtonProps?: (
+    image: VisitImage,
+    index: number,
+  ) => ButtonHTMLAttributes<HTMLButtonElement>;
+  onThumbnailClick?: (
+    image: VisitImage,
+    index: number,
+    event: MouseEvent<HTMLButtonElement>,
+  ) => void;
   renderThumbnailOverlay?: (image: VisitImage, index: number) => ReactNode;
 }
 
@@ -24,6 +34,9 @@ export const VisitImageGallery = ({
   dialogLabel,
   centerThumbnailsWhenStatic = false,
   thumbnailLayout = "carousel",
+  getThumbnailProps,
+  getThumbnailButtonProps,
+  onThumbnailClick,
   renderThumbnailOverlay,
 }: VisitImageGalleryProps) => {
   const t = useTranslations("imageGallery");
@@ -185,36 +198,60 @@ export const VisitImageGallery = ({
               usesCarouselLayout && canScrollThumbnails && "px-10",
             )}
           >
-            {images.map((image, index) => (
-              <div
-                key={image.id}
-                className={cn(
-                  "group relative",
-                  usesCarouselLayout
-                    ? "w-28 shrink-0 snap-start sm:w-32 md:w-36"
-                    : "w-28 shrink-0 sm:w-32",
-                )}
-              >
-                <button
-                  type="button"
-                  onClick={() => setActiveIndex(index)}
-                  className="block w-full overflow-hidden rounded-xl border bg-muted text-left shadow-sm transition-transform hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  aria-label={t("open", { index: index + 1 })}
+            {images.map((image, index) => {
+              const thumbnailProps = getThumbnailProps?.(image, index);
+              const thumbnailButtonProps = getThumbnailButtonProps?.(image, index);
+
+              return (
+                <div
+                  key={image.id}
+                  {...thumbnailProps}
+                  className={cn(
+                    "group relative",
+                    usesCarouselLayout
+                      ? "w-28 shrink-0 snap-start sm:w-32 md:w-36"
+                      : "w-28 shrink-0 sm:w-32",
+                    thumbnailProps?.className,
+                  )}
                 >
-                  <img
-                    src={image.thumbUrl}
-                    alt=""
-                    className="aspect-square h-full w-full object-cover"
-                    loading="lazy"
-                  />
-                </button>
-                {renderThumbnailOverlay && (
-                  <div className="pointer-events-none absolute inset-0">
-                    {renderThumbnailOverlay(image, index)}
-                  </div>
-                )}
-              </div>
-            ))}
+                  <button
+                    type="button"
+                    {...thumbnailButtonProps}
+                    onClick={(event) => {
+                      thumbnailButtonProps?.onClick?.(event);
+                      if (event.defaultPrevented) {
+                        return;
+                      }
+
+                      onThumbnailClick?.(image, index, event);
+                      if (event.defaultPrevented) {
+                        return;
+                      }
+
+                      setActiveIndex(index);
+                    }}
+                    className={cn(
+                      "block w-full overflow-hidden rounded-xl border bg-muted text-left shadow-sm transition-transform hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                      thumbnailButtonProps?.className,
+                    )}
+                    aria-label={t("open", { index: index + 1 })}
+                  >
+                    <img
+                      src={image.thumbUrl}
+                      alt=""
+                      className="aspect-square h-full w-full object-cover"
+                      loading="lazy"
+                      draggable={false}
+                    />
+                  </button>
+                  {renderThumbnailOverlay && (
+                    <div className="pointer-events-none absolute inset-0">
+                      {renderThumbnailOverlay(image, index)}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

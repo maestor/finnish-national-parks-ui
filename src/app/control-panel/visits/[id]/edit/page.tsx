@@ -3,6 +3,7 @@ import { VisitImageSection } from "@/components/visits/visit-image-section";
 import { apiFetch } from "@/lib/api";
 import type { Park, VisitWithPark } from "@/lib/parks";
 import { getTranslations } from "next-intl/server";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -38,6 +39,12 @@ const EditVisitPage = async ({ params, searchParams }: EditVisitPageProps) => {
     <div>
       <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
       <p className="mt-2 text-muted-foreground">{t("description")}</p>
+      <Link
+        href={`/park/${visitToEdit.park.slug}`}
+        className="mt-3 inline-flex text-sm font-medium text-primary underline underline-offset-4 hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      >
+        {t("viewParkPage")}
+      </Link>
       {created === "1" && (
         <output
           aria-live="polite"
@@ -51,6 +58,7 @@ const EditVisitPage = async ({ params, searchParams }: EditVisitPageProps) => {
         visitId={visitToEdit.id}
         images={visitToEdit.images}
         parkSlug={visitToEdit.park.slug}
+        sectionTitle={t("manageImages")}
       />
     </div>
   );

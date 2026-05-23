@@ -77,6 +77,14 @@ describe("VisitImageGallery", () => {
     expect(screen.getByRole("img", { name: "imageGallery.activeImage" })).toBeInTheDocument();
   });
 
+  it("disables native browser dragging for thumbnail images", () => {
+    render(<VisitImageGallery images={images} />);
+
+    const [firstThumbnailImage] = screen.getAllByRole("presentation");
+
+    expect(firstThumbnailImage).toHaveAttribute("draggable", "false");
+  });
+
   it("closes the lightbox from the close button", async () => {
     render(<VisitImageGallery images={images} />);
 
