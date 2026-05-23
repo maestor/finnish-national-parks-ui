@@ -15,6 +15,21 @@ export const VisitList = ({ visits }: VisitListProps) => {
   const t = useTranslations("controlPanel.visits.list");
   const [query, setQuery] = useState("");
   const [selectedParkSlug, setSelectedParkSlug] = useState("");
+  const renderStatusBadge = (isComplete: boolean) => (
+    <span
+      className={`inline-flex min-w-20 items-center justify-center rounded-full border px-2.5 py-1 text-xs font-medium ${
+        isComplete
+          ? "border-emerald-600/20 bg-emerald-600/10 text-emerald-900 dark:text-emerald-200"
+          : "border-destructive/20 bg-destructive/10 text-destructive dark:border-rose-400/30 dark:bg-rose-400/12 dark:text-rose-200"
+      }`}
+    >
+      <span
+        aria-hidden="true"
+        className={`mr-1.5 h-2 w-2 rounded-full ${isComplete ? "bg-emerald-600" : "bg-destructive dark:bg-rose-300"}`}
+      />
+      {isComplete ? t("complete") : t("missing")}
+    </span>
+  );
 
   const sortedVisits = useMemo(() => {
     return [...visits].sort(
@@ -97,6 +112,8 @@ export const VisitList = ({ visits }: VisitListProps) => {
                 <th className="px-4 py-3 text-left font-medium">{t("parkName")}</th>
                 <th className="px-4 py-3 text-left font-medium">{t("route")}</th>
                 <th className="px-4 py-3 text-left font-medium">{t("visitDate")}</th>
+                <th className="px-4 py-3 text-center font-medium">{t("noteStatus")}</th>
+                <th className="px-4 py-3 text-center font-medium">{t("imageStatus")}</th>
                 <th className="px-4 py-3 text-right font-medium" />
               </tr>
             </thead>
@@ -110,6 +127,12 @@ export const VisitList = ({ visits }: VisitListProps) => {
                   </td>
                   <td className="px-4 py-3">{visit.route ?? "–"}</td>
                   <td className="px-4 py-3">{visit.visitedOn}</td>
+                  <td className="px-4 py-3 text-center">
+                    {renderStatusBadge(Boolean(visit.note?.trim()))}
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    {renderStatusBadge(visit.images.length > 0)}
+                  </td>
                   <td className="px-4 py-3 text-right">
                     <EditVisitLink
                       visitId={visit.id}
