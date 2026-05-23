@@ -1,5 +1,6 @@
 import type { VisitWithPark } from "@/lib/parks";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { VisitList } from "./visit-list";
 
@@ -49,9 +50,9 @@ describe("VisitList", () => {
     const rows = screen.getAllByRole("row");
     expect(rows.length).toBe(3); // header + 2 visits
 
-    expect(screen.getByText("Nuuksio")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Nuuksio" })).toBeInTheDocument();
     expect(screen.getByText("2024-07-20")).toBeInTheDocument();
-    expect(screen.getByText("Pallas-Yllästunturi")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Pallas-Yllästunturi" })).toBeInTheDocument();
     expect(screen.getByText("2024-06-15")).toBeInTheDocument();
     expect(screen.getByText("Pallas-reitti")).toBeInTheDocument();
     expect(screen.getAllByText("–").length).toBe(1);
@@ -70,5 +71,41 @@ describe("VisitList", () => {
     render(<VisitList visits={visits} />);
 
     expect(screen.getAllByLabelText("controlPanel.visits.edit").length).toBe(2);
+  });
+
+  it("filters visits by search query and selected park", async () => {
+    const user = userEvent.setup();
+
+    render(<VisitList visits={visits} />);
+
+    await user.type(
+      screen.getByLabelText("controlPanel.visits.list.filters.searchLabel"),
+      "Pallas",
+    );
+
+    expect(screen.getByRole("link", { name: "Pallas-Yllästunturi" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Nuuksio" })).not.toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText("controlPanel.visits.list.filters.searchLabel"));
+    await user.selectOptions(
+      screen.getByLabelText("controlPanel.visits.list.filters.parkLabel"),
+      "nuuksio",
+    );
+
+    expect(screen.getByRole("link", { name: "Nuuksio" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Pallas-Yllästunturi" })).not.toBeInTheDocument();
+  });
+
+  it("shows filtered empty state when no rows match", async () => {
+    const user = userEvent.setup();
+
+    render(<VisitList visits={visits} />);
+
+    await user.type(
+      screen.getByLabelText("controlPanel.visits.list.filters.searchLabel"),
+      "Lemmenjoki",
+    );
+
+    expect(screen.getByText("controlPanel.visits.list.emptyFiltered")).toBeInTheDocument();
   });
 });

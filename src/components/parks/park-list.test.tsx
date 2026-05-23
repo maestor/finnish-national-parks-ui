@@ -1,6 +1,7 @@
 import { apiFetch } from "@/lib/api";
 import type { Park } from "@/lib/parks";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ParkList } from "./park-list";
 
@@ -158,6 +159,28 @@ describe("ParkList", () => {
     expect(
       screen.queryByRole("link", { name: "Repoveden kansallispuisto" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("filters parks by search query and type", async () => {
+    const user = userEvent.setup();
+
+    render(<ParkList parks={parks} removedParks={removedParks} />);
+
+    await user.type(screen.getByLabelText("controlPanel.parks.filters.searchLabel"), "Teijo");
+
+    expect(screen.getByRole("link", { name: "Teijon kansallispuisto" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "Aulangon luonnonsuojelualue" }),
+    ).not.toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText("controlPanel.parks.filters.searchLabel"));
+    await user.selectOptions(
+      screen.getByLabelText("controlPanel.parks.filters.typeLabel"),
+      "other-nature-reserve",
+    );
+
+    expect(screen.getByRole("link", { name: "Aulangon luonnonsuojelualue" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Teijon kansallispuisto" })).not.toBeInTheDocument();
   });
 
   it("shows an empty state when there are no parks in the active tab", () => {

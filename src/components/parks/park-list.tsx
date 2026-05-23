@@ -1,5 +1,6 @@
 "use client";
 
+import { AdminTableFilters } from "@/components/admin/admin-table-filters";
 import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api";
 import type { Park } from "@/lib/parks";
@@ -22,6 +23,8 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
   const [localParks, setLocalParks] = useState(parks);
   const [localRemovedParks, setLocalRemovedParks] = useState(removedParks);
   const [activeTab, setActiveTab] = useState<ParkTab>("visible");
+  const [query, setQuery] = useState("");
+  const [selectedTypeSlug, setSelectedTypeSlug] = useState("");
   const [pendingSlug, setPendingSlug] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -42,6 +45,21 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
       left.name.localeCompare(right.name, "fi-FI"),
     );
   }, [localRemovedParks]);
+
+  const typeOptions = useMemo(() => {
+    const typeEntries = [...localParks, ...localRemovedParks].map((park) => park.type);
+    const uniqueTypes = Array.from(
+      new Map(typeEntries.map((type) => [type.slug, type])).values(),
+    ).sort((left, right) => left.name.localeCompare(right.name, "fi-FI"));
+
+    return [
+      { label: t("filters.allTypes"), value: "" },
+      ...uniqueTypes.map((type) => ({
+        label: type.name,
+        value: type.slug,
+      })),
+    ];
+  }, [localParks, localRemovedParks, t]);
 
   const updateParkVisibility = async (park: Park, removed: boolean) => {
     const confirmed = window.confirm(
@@ -82,7 +100,18 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
   };
 
   const displayedParks = activeTab === "visible" ? sortedParks : sortedRemovedParks;
+  const normalizedQuery = query.trim().toLocaleLowerCase("fi-FI");
+  const filteredParks = displayedParks.filter((park) => {
+    const matchesType = selectedTypeSlug ? park.type.slug === selectedTypeSlug : true;
+    const haystack = [park.name, park.locationLabel, park.type.name]
+      .join(" ")
+      .toLocaleLowerCase("fi-FI");
+    const matchesQuery = normalizedQuery ? haystack.includes(normalizedQuery) : true;
+
+    return matchesType && matchesQuery;
+  });
   const notice = activeTab === "visible" ? t("visibleNotice") : t("hiddenNotice");
+  const resultCountLabel = t("filters.results", { count: filteredParks.length });
 
   if (sortedParks.length === 0 && sortedRemovedParks.length === 0) {
     return (
@@ -131,6 +160,28 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
         {notice}
       </p>
 
+      <AdminTableFilters
+        query={query}
+        onQueryChange={setQuery}
+        queryLabel={t("filters.searchLabel")}
+        queryPlaceholder={t("filters.searchPlaceholder")}
+        resultCountLabel={resultCountLabel}
+        resetLabel={t("filters.reset")}
+        onReset={() => {
+          setQuery("");
+          setSelectedTypeSlug("");
+        }}
+        selects={[
+          {
+            id: "parks-type-filter",
+            label: t("filters.typeLabel"),
+            options: typeOptions,
+            value: selectedTypeSlug,
+            onChange: setSelectedTypeSlug,
+          },
+        ]}
+      />
+
       {actionError && (
         <p
           className="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive"
@@ -146,6 +197,10 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
             {activeTab === "visible" ? t("emptyVisible") : t("emptyHidden")}
           </p>
         </div>
+      ) : filteredParks.length === 0 ? (
+        <div className="rounded-lg border border-dashed p-8 text-center">
+          <p className="text-muted-foreground">{t("emptyFiltered")}</p>
+        </div>
       ) : (
         <div className="overflow-hidden rounded-lg border">
           <table className="w-full text-sm">
@@ -158,7 +213,7 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {displayedParks.map((park) => {
+              {filteredParks.map((park) => {
                 const isUpdating = pendingSlug === park.slug;
                 const isVisibleTab = activeTab === "visible";
 
