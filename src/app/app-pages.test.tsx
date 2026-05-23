@@ -184,8 +184,10 @@ vi.mock("@/components/visits/visit-list", () => ({
 }));
 
 vi.mock("@/components/parks/park-list", () => ({
-  ParkList: ({ parks }: { parks: Park[] }) => (
-    <div data-testid="park-list">parks:{parks.length}</div>
+  ParkList: ({ parks, removedParks }: { parks: Park[]; removedParks: Park[] }) => (
+    <div data-testid="park-list">
+      parks:{parks.length}|removed:{removedParks.length}
+    </div>
   ),
 }));
 
@@ -457,13 +459,15 @@ describe("App pages", () => {
   });
 
   it("renders the parks list page", async () => {
-    vi.mocked(apiFetch).mockResolvedValueOnce({ parks: [publicPark] });
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({ parks: [publicPark] })
+      .mockResolvedValueOnce({ parks: [] });
 
     await renderControlPanelRoute(await ParksPage());
 
     expect(screen.getByRole("heading", { name: "controlPanel.parks.title" })).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "controlPanel.title" })).toBeInTheDocument();
-    expect(screen.getByTestId("park-list")).toHaveTextContent("parks:1");
+    expect(screen.getByTestId("park-list")).toHaveTextContent("parks:1|removed:0");
   });
 
   it("builds metadata for the parks list page", async () => {

@@ -93,15 +93,35 @@
     },
     "parks": {
       "title": "Puistot",
-      "description": "Hallitse näkyvissä olevia puistoja. Piilotettu puisto katoaa kaikista rajapinnoista.",
-      "warning": "Puiston piilottaminen poistaa sen näkyvistä kaikista rajapinnoista eikä toimintoa voi vielä perua hallinnasta.",
+      "description": "Hallitse puistojen näkyvyyttä julkisissa näkymissä. Voit piilottaa puiston näkyvistä tai palauttaa piilotetun puiston takaisin.",
+      "tabs": {
+        "ariaLabel": "Puistojen näkyvyysvälilehdet",
+        "visible": "Näkyvissä",
+        "hidden": "Piilotetut"
+      },
+      "filters": {
+        "searchLabel": "Haku",
+        "searchPlaceholder": "Hae puistoa tai sijaintia",
+        "typeLabel": "Puistotyyppi",
+        "allTypes": "Kaikki tyypit",
+        "results": "{count} puistoa",
+        "reset": "Tyhjennä suodattimet"
+      },
+      "visibleNotice": "Puiston piilottaminen poistaa sen näkyvistä julkisista näkymistä ja rajapinnoista. Voit palauttaa puiston myöhemmin Piilotetut-välilehdeltä.",
+      "hiddenNotice": "Piilotetut puistot eivät näy julkisissa näkymissä. Palauta puisto näkyviin, jos haluat sen takaisin julkisiin rajapintoihin.",
       "parkName": "Puisto",
       "parkType": "Tyyppi",
       "location": "Sijainti",
       "removeAction": "Poista näkyvistä",
       "removing": "Poistetaan...",
+      "restoreAction": "Palauta näkyviin",
+      "restoring": "Palautetaan...",
       "confirmRemove": "Haluatko varmasti poistaa puiston \"{parkName}\" näkyvistä? Puisto katoaa kaikista rajapinnoista.",
-      "empty": "Ei hallittavia puistoja."
+      "confirmRestore": "Haluatko varmasti palauttaa puiston \"{parkName}\" näkyviin?",
+      "emptyAll": "Ei hallittavia puistoja.",
+      "emptyVisible": "Ei näkyvissä olevia puistoja.",
+      "emptyHidden": "Ei piilotettuja puistoja.",
+      "emptyFiltered": "Yksikään puisto ei vastaa nykyisiä suodattimia."
     },
     "visits": {
       "title": "Käynnit",
@@ -145,7 +165,16 @@
         "parkName": "Puisto",
         "route": "Reitti",
         "visitDate": "Käyntipäivä",
+        "filters": {
+          "searchLabel": "Haku",
+          "searchPlaceholder": "Hae puistoa tai reittiä",
+          "parkLabel": "Puisto",
+          "allParks": "Kaikki puistot",
+          "results": "{count} käyntiä",
+          "reset": "Tyhjennä suodattimet"
+        },
         "noVisits": "Ei vielä kirjattuja käyntejä.",
+        "emptyFiltered": "Yksikään käynti ei vastaa nykyisiä suodattimia.",
         "addFirstVisit": "Lisää ensimmäinen käynti"
       },
       "images": {
