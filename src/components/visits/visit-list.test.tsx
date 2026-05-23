@@ -108,4 +108,28 @@ describe("VisitList", () => {
 
     expect(screen.getByText("controlPanel.visits.list.emptyFiltered")).toBeInTheDocument();
   });
+
+  it("resets the filters after narrowing the visit list", async () => {
+    const user = userEvent.setup();
+
+    render(<VisitList visits={visits} />);
+
+    await user.type(
+      screen.getByLabelText("controlPanel.visits.list.filters.searchLabel"),
+      "Pallas",
+    );
+    await user.selectOptions(
+      screen.getByLabelText("controlPanel.visits.list.filters.parkLabel"),
+      "pallas",
+    );
+
+    expect(screen.queryByRole("link", { name: "Nuuksio" })).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: "controlPanel.visits.list.filters.reset" }),
+    );
+
+    expect(screen.getByRole("link", { name: "Nuuksio" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Pallas-Yllästunturi" })).toBeInTheDocument();
+  });
 });

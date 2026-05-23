@@ -183,6 +183,22 @@ describe("ParkList", () => {
     expect(screen.queryByRole("link", { name: "Teijon kansallispuisto" })).not.toBeInTheDocument();
   });
 
+  it("shows filtered empty state and resets the filters", async () => {
+    const user = userEvent.setup();
+
+    render(<ParkList parks={parks} removedParks={removedParks} />);
+
+    await user.type(screen.getByLabelText("controlPanel.parks.filters.searchLabel"), "Lemmenjoki");
+
+    expect(screen.getByText("controlPanel.parks.emptyFiltered")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "controlPanel.parks.filters.reset" }));
+
+    expect(screen.queryByText("controlPanel.parks.emptyFiltered")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Teijon kansallispuisto" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Aulangon luonnonsuojelualue" })).toBeInTheDocument();
+  });
+
   it("shows an empty state when there are no parks in the active tab", () => {
     render(<ParkList parks={[]} removedParks={removedParks} />);
 
