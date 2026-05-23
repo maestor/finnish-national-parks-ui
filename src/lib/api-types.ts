@@ -265,7 +265,7 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    type?: "outdoor-recreation-area" | "state-hiking-area" | "wilderness-area" | "national-park" | "other-nature-reserve";
+                    type?: "outdoor-recreation-area" | "state-hiking-area" | "wilderness-area" | "national-park" | "other-nature-reserve" | "nature-trail";
                 };
                 header?: never;
                 path?: never;
@@ -302,7 +302,7 @@ export interface paths {
                                     id: number;
                                     name: string;
                                     /** @enum {string} */
-                                    slug: "outdoor-recreation-area" | "state-hiking-area" | "wilderness-area" | "national-park" | "other-nature-reserve";
+                                    slug: "outdoor-recreation-area" | "state-hiking-area" | "wilderness-area" | "national-park" | "other-nature-reserve" | "nature-trail";
                                 };
                             }[];
                         };
@@ -370,7 +370,7 @@ export interface paths {
                                     id: number;
                                     name: string;
                                     /** @enum {string} */
-                                    slug: "outdoor-recreation-area" | "state-hiking-area" | "wilderness-area" | "national-park" | "other-nature-reserve";
+                                    slug: "outdoor-recreation-area" | "state-hiking-area" | "wilderness-area" | "national-park" | "other-nature-reserve" | "nature-trail";
                                 };
                                 /** @enum {string} */
                                 catalogStatus: "active" | "inactive";
@@ -439,7 +439,7 @@ export interface paths {
                                 id: number;
                                 name: string;
                                 /** @enum {string} */
-                                slug: "outdoor-recreation-area" | "state-hiking-area" | "wilderness-area" | "national-park" | "other-nature-reserve";
+                                slug: "outdoor-recreation-area" | "state-hiking-area" | "wilderness-area" | "national-park" | "other-nature-reserve" | "nature-trail";
                             };
                             boundaryGeoJson?: {
                                 features: {
@@ -447,6 +447,10 @@ export interface paths {
                                         coordinates: number[][][];
                                         /** @enum {string} */
                                         type: "Polygon";
+                                    } | {
+                                        coordinates: number[][];
+                                        /** @enum {string} */
+                                        type: "LineString";
                                     };
                                     /** @enum {string} */
                                     type: "Feature";
@@ -690,7 +694,7 @@ export interface paths {
                                     id: number;
                                     name: string;
                                     /** @enum {string} */
-                                    slug: "outdoor-recreation-area" | "state-hiking-area" | "wilderness-area" | "national-park" | "other-nature-reserve";
+                                    slug: "outdoor-recreation-area" | "state-hiking-area" | "wilderness-area" | "national-park" | "other-nature-reserve" | "nature-trail";
                                 };
                                 visitedParks: number;
                             }[];
@@ -775,7 +779,7 @@ export interface paths {
                                     id: number;
                                     name: string;
                                     /** @enum {string} */
-                                    slug: "outdoor-recreation-area" | "state-hiking-area" | "wilderness-area" | "national-park" | "other-nature-reserve";
+                                    slug: "outdoor-recreation-area" | "state-hiking-area" | "wilderness-area" | "national-park" | "other-nature-reserve" | "nature-trail";
                                 };
                                 visitedSummary: {
                                     lastVisitedOn: string | null;

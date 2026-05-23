@@ -9,15 +9,24 @@ import { useEffect, useMemo, useState } from "react";
 import { useHomeMapControls } from "../providers/home-map-controls-provider";
 import { ParkMap } from "./park-map";
 
-type MapFilter =
-  | "all"
-  | "national-park"
-  | "state-hiking-area"
-  | "wilderness-area"
-  | "other-nature-reserve"
-  | "outdoor-recreation-area"
-  | "visited"
-  | "not-visited";
+type ParkTypeFilter = MapPark["type"]["slug"];
+type MapFilter = "all" | ParkTypeFilter | "visited" | "not-visited";
+type ParkTypeFilterLabelKey =
+  | "nationalParks"
+  | "hikingAreas"
+  | "wildernessAreas"
+  | "otherNatureReserves"
+  | "outdoorRecreationAreas"
+  | "natureTrails";
+
+const PARK_TYPE_FILTER_LABEL_KEYS: Record<ParkTypeFilter, ParkTypeFilterLabelKey> = {
+  "national-park": "nationalParks",
+  "state-hiking-area": "hikingAreas",
+  "wilderness-area": "wildernessAreas",
+  "other-nature-reserve": "otherNatureReserves",
+  "outdoor-recreation-area": "outdoorRecreationAreas",
+  "nature-trail": "natureTrails",
+};
 
 interface ParkExplorerProps {
   parks: MapPark[];
@@ -31,13 +40,16 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
   const { isMobileFiltersOpen, closeMobileFilters, homeParkFocusRequest } = useHomeMapControls();
 
   const filterOptions = useMemo(() => {
+    const parkTypeFilterOptions = (
+      Object.entries(PARK_TYPE_FILTER_LABEL_KEYS) as Array<[ParkTypeFilter, ParkTypeFilterLabelKey]>
+    ).map(([id, labelKey]) => ({
+      id,
+      label: t(labelKey),
+    }));
+
     return [
       { id: "all", label: t("all") },
-      { id: "national-park", label: t("nationalParks") },
-      { id: "state-hiking-area", label: t("hikingAreas") },
-      { id: "wilderness-area", label: t("wildernessAreas") },
-      { id: "other-nature-reserve", label: t("otherNatureReserves") },
-      { id: "outdoor-recreation-area", label: t("outdoorRecreationAreas") },
+      ...parkTypeFilterOptions,
       { id: "visited", label: t("visited") },
       { id: "not-visited", label: t("notVisited") },
     ] satisfies Array<{ id: MapFilter; label: string }>;
@@ -50,6 +62,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
       case "wilderness-area":
       case "other-nature-reserve":
       case "outdoor-recreation-area":
+      case "nature-trail":
         return parks.filter((park) => park.type.slug === activeFilter);
       case "visited":
         return parks.filter((park) => park.visitedSummary.visited);

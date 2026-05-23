@@ -4,7 +4,7 @@ const manifest = (): MetadataRoute.Manifest => {
   return {
     name: "Reissuvihko",
     short_name: "Reissuvihko",
-    description: "Tutki Suomen retkeilypuistoja ja seuraa käyntejäsi",
+    description: "Tutki Suomen retkipaikkoja ja seuraa käyntejäsi",
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",

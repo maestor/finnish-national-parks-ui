@@ -81,6 +81,18 @@ const parks: MapPark[] = [
     type: { code: 2, id: 2, name: "Valtion retkeilyalue", slug: "state-hiking-area" },
     visitedSummary: { visited: false, visitCount: 0, lastVisitedOn: null },
   },
+  {
+    slug: "punkaharju",
+    name: "Punkaharjun luontopolku",
+    areaKm2: null,
+    location: "Savonlinna",
+    luontoonUrl: null,
+    establishmentYear: null,
+    boundingBox: { minLat: 61, minLon: 29, maxLat: 62, maxLon: 30 },
+    markerPoint: { lat: 61.8, lon: 29.3 },
+    type: { code: 6, id: 6, name: "Luontopolku", slug: "nature-trail" },
+    visitedSummary: { visited: false, visitCount: 0, lastVisitedOn: null },
+  },
 ];
 
 const MobileFilterToggleHarness = () => {
@@ -110,16 +122,16 @@ describe("ParkExplorer", () => {
     expect(screen.getByText("admin:true")).toBeInTheDocument();
   });
 
-  it("filters the visible parks by selected type", async () => {
+  it("filters the visible parks by selected type, including nature trails", async () => {
     render(<ParkExplorer parks={parks} />);
 
-    expect(screen.getByText("count:3")).toBeInTheDocument();
+    expect(screen.getByText("count:4")).toBeInTheDocument();
     expect(screen.getByText("admin:false")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "home.filters.hikingAreas" }));
+    fireEvent.click(screen.getByRole("button", { name: "home.filters.natureTrails" }));
 
     expect(screen.getByText("count:1")).toBeInTheDocument();
-    expect(screen.getByText("Iso-Syötteen retkeilyalue")).toBeInTheDocument();
+    expect(screen.getByText("Punkaharjun luontopolku")).toBeInTheDocument();
   });
 
   it("shows visited filters for all users when visit history is public", () => {
@@ -139,9 +151,10 @@ describe("ParkExplorer", () => {
 
     const buttons = within(desktopSidebar as HTMLElement).getAllByRole("button");
 
-    expect(buttons).toHaveLength(8);
+    expect(buttons).toHaveLength(9);
     expect(buttons[0]).toHaveTextContent("home.filters.all");
     expect(buttons[1]).toHaveTextContent("home.filters.nationalParks");
+    expect(buttons[6]).toHaveTextContent("home.filters.natureTrails");
   });
 
   it("keeps mobile filters collapsed until opened and closes after selection", async () => {
@@ -185,7 +198,7 @@ describe("ParkExplorer", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "focus-teijo" }));
 
-    expect(screen.getByText("count:3")).toBeInTheDocument();
+    expect(screen.getByText("count:4")).toBeInTheDocument();
     expect(screen.getByText("focus:teijo")).toBeInTheDocument();
   });
 });
