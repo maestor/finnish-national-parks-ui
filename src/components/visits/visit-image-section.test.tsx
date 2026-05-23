@@ -5,9 +5,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { VisitImageSection } from "./visit-image-section";
 
 const mockRefresh = vi.fn();
+const { mockRevalidatePublicCache } = vi.hoisted(() => ({
+  mockRevalidatePublicCache: vi.fn(async () => true),
+}));
 
 vi.mock("@/lib/api", () => ({
   apiFetch: vi.fn(),
+}));
+
+vi.mock("@/lib/public-cache", () => ({
+  revalidatePublicCache: mockRevalidatePublicCache,
 }));
 
 vi.mock("next/navigation", () => ({
@@ -57,7 +64,7 @@ describe("VisitImageSection", () => {
   });
 
   it("renders existing images", () => {
-    render(<VisitImageSection visitId={10} images={images} />);
+    render(<VisitImageSection visitId={10} images={images} parkSlug="pallas" />);
 
     expect(screen.getByText("controlPanel.visits.images.title")).toBeInTheDocument();
     const imgs = screen.getAllByRole("presentation");
@@ -67,7 +74,7 @@ describe("VisitImageSection", () => {
   it("deletes an image after confirmation", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce(undefined);
 
-    render(<VisitImageSection visitId={10} images={images} />);
+    render(<VisitImageSection visitId={10} images={images} parkSlug="pallas" />);
 
     const deleteButtons = screen.getAllByRole("button", {
       name: "controlPanel.visits.images.deleteImage",
@@ -80,6 +87,7 @@ describe("VisitImageSection", () => {
         method: "DELETE",
       });
     });
+    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "pallas" });
     expect(mockRefresh).toHaveBeenCalled();
     expect(screen.getByText("controlPanel.visits.images.deleteSuccess")).toBeInTheDocument();
   });
@@ -87,7 +95,7 @@ describe("VisitImageSection", () => {
   it("does not delete an image when confirmation is cancelled", () => {
     window.confirm = vi.fn(() => false);
 
-    render(<VisitImageSection visitId={10} images={images} />);
+    render(<VisitImageSection visitId={10} images={images} parkSlug="pallas" />);
 
     const deleteButtons = screen.getAllByRole("button", {
       name: "controlPanel.visits.images.deleteImage",
@@ -101,7 +109,7 @@ describe("VisitImageSection", () => {
   it("restores the image and shows an error if deleting fails", async () => {
     vi.mocked(apiFetch).mockRejectedValueOnce(new Error("delete failed"));
 
-    render(<VisitImageSection visitId={10} images={images} />);
+    render(<VisitImageSection visitId={10} images={images} parkSlug="pallas" />);
 
     const deleteButtons = screen.getAllByRole("button", {
       name: "controlPanel.visits.images.deleteImage",
@@ -119,7 +127,7 @@ describe("VisitImageSection", () => {
   it("reorders an image to the left", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce(undefined);
 
-    render(<VisitImageSection visitId={10} images={images} />);
+    render(<VisitImageSection visitId={10} images={images} parkSlug="pallas" />);
 
     const moveLeftButtons = screen.getAllByRole("button", {
       name: "controlPanel.visits.images.moveLeft",
@@ -134,12 +142,13 @@ describe("VisitImageSection", () => {
         }),
       });
     });
+    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "pallas" });
     expect(mockRefresh).toHaveBeenCalled();
     expect(screen.getByText("controlPanel.visits.images.reorderSuccess")).toBeInTheDocument();
   });
 
   it("shows upload controls after selecting files", async () => {
-    const { container } = render(<VisitImageSection visitId={10} images={[]} />);
+    const { container } = render(<VisitImageSection visitId={10} images={[]} parkSlug="pallas" />);
 
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
     const file = new File(["dummy"], "test.jpg", { type: "image/jpeg" });
@@ -153,7 +162,7 @@ describe("VisitImageSection", () => {
   });
 
   it("removes a selected file before upload", async () => {
-    const { container } = render(<VisitImageSection visitId={10} images={[]} />);
+    const { container } = render(<VisitImageSection visitId={10} images={[]} parkSlug="pallas" />);
 
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
     const file = new File(["dummy"], "test.jpg", { type: "image/jpeg" });
@@ -187,7 +196,7 @@ describe("VisitImageSection", () => {
       errors: [],
     });
 
-    const { container } = render(<VisitImageSection visitId={10} images={[]} />);
+    const { container } = render(<VisitImageSection visitId={10} images={[]} parkSlug="pallas" />);
 
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
     const file = new File(["dummy"], "test.jpg", { type: "image/jpeg" });
@@ -203,6 +212,7 @@ describe("VisitImageSection", () => {
         body: expect.any(FormData),
       });
     });
+    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "pallas" });
     await waitFor(() => {
       expect(mockRefresh).toHaveBeenCalled();
     });
@@ -210,7 +220,7 @@ describe("VisitImageSection", () => {
   });
 
   it("shows upload errors for unsupported file types", async () => {
-    const { container } = render(<VisitImageSection visitId={10} images={[]} />);
+    const { container } = render(<VisitImageSection visitId={10} images={[]} parkSlug="pallas" />);
 
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
     const file = new File(["dummy"], "test.txt", { type: "text/plain" });
@@ -228,7 +238,7 @@ describe("VisitImageSection", () => {
       errors: [{ originalName: "big.jpg", reason: "File too large" }],
     });
 
-    const { container } = render(<VisitImageSection visitId={10} images={[]} />);
+    const { container } = render(<VisitImageSection visitId={10} images={[]} parkSlug="pallas" />);
 
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
     const file = new File(["dummy"], "big.jpg", { type: "image/jpeg" });
@@ -246,7 +256,7 @@ describe("VisitImageSection", () => {
   it("shows an upload error when the upload request fails", async () => {
     vi.mocked(apiFetch).mockRejectedValueOnce(new Error("upload failed"));
 
-    const { container } = render(<VisitImageSection visitId={10} images={[]} />);
+    const { container } = render(<VisitImageSection visitId={10} images={[]} parkSlug="pallas" />);
 
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
     const file = new File(["dummy"], "test.jpg", { type: "image/jpeg" });

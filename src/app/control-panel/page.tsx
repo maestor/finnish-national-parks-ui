@@ -1,3 +1,4 @@
+import { PostLoginReturnRedirector } from "@/components/auth/post-login-return-redirector";
 import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +15,7 @@ const ControlPanelPage = async () => {
 
   return (
     <div className="max-w-2xl">
+      <PostLoginReturnRedirector />
       <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
       <p className="mt-2 text-muted-foreground">{t("description")}</p>
     </div>

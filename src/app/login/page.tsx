@@ -1,4 +1,4 @@
-import { env } from "@/lib/env";
+import { LoginLink } from "@/components/auth/login-link";
 import { getTranslations } from "next-intl/server";
 
 const LoginPage = async ({
@@ -20,12 +20,9 @@ const LoginPage = async ({
             {t("accessDenied")}
           </p>
         )}
-        <a
-          href={`${env.NEXT_PUBLIC_API_URL}/auth/google`}
-          className="inline-flex items-center justify-center rounded-md bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground transition-colors hover:bg-secondary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
+        <LoginLink className="inline-flex items-center justify-center rounded-md bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground transition-colors hover:bg-secondary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           {t("loginToControlPanel")}
-        </a>
+        </LoginLink>
       </div>
     </main>
   );

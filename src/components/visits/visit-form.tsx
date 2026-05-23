@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { apiFetch } from "@/lib/api";
 import type { Park, Visit, VisitWithPark } from "@/lib/parks";
+import { revalidatePublicCache } from "@/lib/public-cache";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -67,6 +68,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
             note: note || null,
           }),
         });
+        await revalidatePublicCache({ parkSlug: visitToEdit.park.slug });
         setStatusMessage(t("updateSuccess"));
       } else {
         const createdVisit = await apiFetch<Visit>(`/api/parks/${parkSlug}/visits`, {
@@ -78,6 +80,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
             note: note || null,
           }),
         });
+        await revalidatePublicCache({ parkSlug });
         router.push(`/control-panel/visits/${createdVisit.id}/edit?created=1`);
       }
     } catch (error) {
@@ -95,6 +98,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
     setIsSubmitting(true);
     try {
       await apiFetch(`/api/visits/${visitToEdit.id}`, { method: "DELETE" });
+      await revalidatePublicCache({ parkSlug: visitToEdit.park.slug });
       router.push("/control-panel/visits");
       router.refresh();
     } catch (error) {

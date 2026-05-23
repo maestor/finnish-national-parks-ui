@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { VisitImageGallery } from "@/components/visits/visit-image-gallery";
 import { apiFetch } from "@/lib/api";
 import type { VisitImage } from "@/lib/parks";
+import { revalidatePublicCache } from "@/lib/public-cache";
 import { ArrowLeft, ArrowRight, Images, Trash2, Upload, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -12,11 +13,12 @@ import { useEffect, useRef, useState } from "react";
 interface VisitImageSectionProps {
   visitId: number;
   images: VisitImage[];
+  parkSlug: string;
 }
 
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
-export const VisitImageSection = ({ visitId, images }: VisitImageSectionProps) => {
+export const VisitImageSection = ({ visitId, images, parkSlug }: VisitImageSectionProps) => {
   const t = useTranslations("controlPanel.visits.images");
   const router = useRouter();
   const [localImages, setLocalImages] = useState(images);
@@ -109,6 +111,7 @@ export const VisitImageSection = ({ visitId, images }: VisitImageSectionProps) =
       }
 
       if (response.images.length > 0) {
+        await revalidatePublicCache({ parkSlug });
         setStatusMessage(t("uploadSuccess", { count: response.images.length }));
         router.refresh();
       }
@@ -132,6 +135,7 @@ export const VisitImageSection = ({ visitId, images }: VisitImageSectionProps) =
       await apiFetch(`/api/visits/${visitId}/images/${imageId}`, {
         method: "DELETE",
       });
+      await revalidatePublicCache({ parkSlug });
       setStatusMessage(t("deleteSuccess"));
       router.refresh();
     } catch (error) {
@@ -168,6 +172,7 @@ export const VisitImageSection = ({ visitId, images }: VisitImageSectionProps) =
           imageIds: nextImages.map((image) => image.id),
         }),
       });
+      await revalidatePublicCache({ parkSlug });
       setStatusMessage(t("reorderSuccess"));
       router.refresh();
     } catch (error) {

@@ -5,9 +5,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ParkList } from "./park-list";
 
 const mockRefresh = vi.fn();
+const { mockRevalidatePublicCache } = vi.hoisted(() => ({
+  mockRevalidatePublicCache: vi.fn(async () => true),
+}));
 
 vi.mock("@/lib/api", () => ({
   apiFetch: vi.fn(),
+}));
+
+vi.mock("@/lib/public-cache", () => ({
+  revalidatePublicCache: mockRevalidatePublicCache,
 }));
 
 vi.mock("next/navigation", () => ({
@@ -79,6 +86,7 @@ describe("ParkList", () => {
       });
     });
 
+    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "aulanko" });
     expect(mockRefresh).toHaveBeenCalled();
     expect(
       screen.queryByRole("link", { name: "Aulangon luonnonsuojelualue" }),

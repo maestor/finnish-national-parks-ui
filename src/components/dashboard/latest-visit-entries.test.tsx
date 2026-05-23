@@ -36,4 +36,28 @@ describe("LatestVisitEntries", () => {
 
     expect(screen.getByText("Ei käyntikirjauksia")).toBeInTheDocument();
   });
+
+  it("renders public summary entries without ids", () => {
+    render(
+      <LatestVisitEntries
+        title="Uusimmat käyntikirjaukset"
+        emptyMessage="Ei käyntikirjauksia"
+        visits={[
+          {
+            parkName: "Pallas",
+            parkSlug: "pallas",
+            createdAt: "2024-06-15T10:00:00Z",
+          },
+          {
+            parkName: "Nuuksio",
+            parkSlug: "nuuksio",
+            createdAt: "2024-07-20T11:00:00Z",
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("Pallas")).toBeInTheDocument();
+    expect(screen.getByText("Nuuksio")).toBeInTheDocument();
+  });
 });

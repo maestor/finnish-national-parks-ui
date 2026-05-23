@@ -7,9 +7,16 @@ import { VisitForm } from "./visit-form";
 const mockPush = vi.fn();
 const mockRefresh = vi.fn();
 const mockBack = vi.fn();
+const { mockRevalidatePublicCache } = vi.hoisted(() => ({
+  mockRevalidatePublicCache: vi.fn(async () => true),
+}));
 
 vi.mock("@/lib/api", () => ({
   apiFetch: vi.fn(),
+}));
+
+vi.mock("@/lib/public-cache", () => ({
+  revalidatePublicCache: mockRevalidatePublicCache,
 }));
 
 vi.mock("next/navigation", () => ({
@@ -79,6 +86,7 @@ describe("VisitForm", () => {
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith("/control-panel/visits/42/edit?created=1");
     });
+    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "pallas" });
     expect(mockRefresh).not.toHaveBeenCalled();
   });
 
@@ -152,6 +160,7 @@ describe("VisitForm", () => {
         "controlPanel.visits.form.updateSuccess",
       );
     });
+    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "pallas" });
     expect(
       screen.getByRole("link", { name: "controlPanel.visits.form.viewAllVisits" }),
     ).toHaveAttribute("href", "/control-panel/visits");
@@ -228,6 +237,7 @@ describe("VisitForm", () => {
     await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.delete/i }));
 
     expect(apiFetch).toHaveBeenCalledWith("/api/visits/1", { method: "DELETE" });
+    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "pallas" });
     expect(mockPush).toHaveBeenCalledWith("/control-panel/visits");
     expect(mockRefresh).toHaveBeenCalled();
   });

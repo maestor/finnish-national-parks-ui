@@ -7,6 +7,15 @@ import {
 } from "../providers/home-map-controls-provider";
 import { ParkExplorer } from "./park-explorer";
 
+const mockUseAuth = vi.fn(() => ({
+  isAuthenticated: false,
+  isLoading: false,
+}));
+
+vi.mock("@/hooks/use-auth", () => ({
+  useAuth: () => mockUseAuth(),
+}));
+
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",
   useSearchParams: () => new URLSearchParams(),
@@ -15,13 +24,16 @@ vi.mock("next/navigation", () => ({
 vi.mock("./park-map", () => ({
   ParkMap: ({
     parks,
+    canManageVisits,
     homeParkFocusRequest,
   }: {
     parks: MapPark[];
+    canManageVisits?: boolean;
     homeParkFocusRequest?: { slug: string } | null;
   }) => (
     <div>
       <p>count:{parks.length}</p>
+      <p>admin:{String(canManageVisits)}</p>
       <p>focus:{homeParkFocusRequest?.slug ?? "none"}</p>
       <ul>
         {parks.map((park) => (
@@ -87,10 +99,22 @@ const MobileFilterToggleHarness = () => {
 };
 
 describe("ParkExplorer", () => {
+  it("enables map admin quick actions for authenticated users", () => {
+    mockUseAuth.mockReturnValueOnce({
+      isAuthenticated: true,
+      isLoading: false,
+    });
+
+    render(<ParkExplorer parks={parks} />);
+
+    expect(screen.getByText("admin:true")).toBeInTheDocument();
+  });
+
   it("filters the visible parks by selected type", async () => {
     render(<ParkExplorer parks={parks} />);
 
     expect(screen.getByText("count:3")).toBeInTheDocument();
+    expect(screen.getByText("admin:false")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "home.filters.hikingAreas" }));
 

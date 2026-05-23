@@ -69,9 +69,26 @@ const getServerCookieHeader = async (): Promise<string | null> => {
   }
 };
 
-export const apiFetch = async <T>(path: string, options?: RequestInit): Promise<T> => {
+interface ApiFetchOptions extends RequestInit {
+  includeApiKey?: boolean;
+  includeBrowserCredentials?: boolean;
+  includeServerCookies?: boolean;
+  next?: {
+    revalidate?: number | false;
+    tags?: string[];
+  };
+}
+
+const performApiFetch = async <T>(
+  path: string,
+  {
+    includeApiKey = true,
+    includeBrowserCredentials = true,
+    includeServerCookies = false,
+    ...options
+  }: ApiFetchOptions = {},
+): Promise<T> => {
   const url = `${env.NEXT_PUBLIC_API_URL}${path}`;
-  const apiKey = getApiKey();
   const body = options?.body;
 
   const headers = new Headers(options?.headers);
@@ -79,11 +96,12 @@ export const apiFetch = async <T>(path: string, options?: RequestInit): Promise<
     headers.set("Content-Type", "application/json");
   }
 
+  const apiKey = includeApiKey ? getApiKey() : undefined;
   if (apiKey) {
     headers.set("Authorization", `Bearer ${apiKey}`);
   }
 
-  const cookieHeader = await getServerCookieHeader();
+  const cookieHeader = includeServerCookies ? await getServerCookieHeader() : null;
   if (cookieHeader && !headers.has("cookie")) {
     headers.set("cookie", cookieHeader);
   }
@@ -93,7 +111,7 @@ export const apiFetch = async <T>(path: string, options?: RequestInit): Promise<
     headers,
   };
 
-  if (typeof window !== "undefined") {
+  if (typeof window !== "undefined" && includeBrowserCredentials) {
     fetchOptions.credentials = "include";
   }
 
@@ -115,5 +133,22 @@ export const apiFetch = async <T>(path: string, options?: RequestInit): Promise<
 
   return response.json() as Promise<T>;
 };
+
+export const apiFetch = async <T>(path: string, options?: ApiFetchOptions): Promise<T> =>
+  performApiFetch<T>(path, options);
+
+export const apiAuthFetch = async <T>(path: string, options?: ApiFetchOptions): Promise<T> =>
+  performApiFetch<T>(path, {
+    ...options,
+    includeServerCookies: true,
+  });
+
+export const apiPublicFetch = async <T>(path: string, options?: ApiFetchOptions): Promise<T> =>
+  performApiFetch<T>(path, {
+    ...options,
+    includeApiKey: false,
+    includeBrowserCredentials: false,
+    includeServerCookies: false,
+  });
 
 export { ApiError };
