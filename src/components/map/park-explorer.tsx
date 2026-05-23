@@ -15,6 +15,7 @@ type MapFilter =
   | "state-hiking-area"
   | "wilderness-area"
   | "other-nature-reserve"
+  | "outdoor-recreation-area"
   | "visited"
   | "not-visited";
 
@@ -36,6 +37,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
       { id: "state-hiking-area", label: t("hikingAreas") },
       { id: "wilderness-area", label: t("wildernessAreas") },
       { id: "other-nature-reserve", label: t("otherNatureReserves") },
+      { id: "outdoor-recreation-area", label: t("outdoorRecreationAreas") },
       { id: "visited", label: t("visited") },
       { id: "not-visited", label: t("notVisited") },
     ] satisfies Array<{ id: MapFilter; label: string }>;
@@ -46,12 +48,9 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
       case "national-park":
       case "state-hiking-area":
       case "wilderness-area":
-        return parks.filter((park) => park.type.slug === activeFilter);
       case "other-nature-reserve":
-        return parks.filter(
-          (park) =>
-            !["national-park", "state-hiking-area", "wilderness-area"].includes(park.type.slug),
-        );
+      case "outdoor-recreation-area":
+        return parks.filter((park) => park.type.slug === activeFilter);
       case "visited":
         return parks.filter((park) => park.visitedSummary.visited);
       case "not-visited":

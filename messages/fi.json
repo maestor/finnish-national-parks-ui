@@ -59,7 +59,8 @@
       "nationalParks": "Kansallispuistot",
       "hikingAreas": "Retkeilyalueet",
       "wildernessAreas": "Erämaa-alueet",
-      "otherNatureReserves": "Muut kohteet",
+      "otherNatureReserves": "Luonnonsuojelut",
+      "outdoorRecreationAreas": "Virkistysalueet",
       "visited": "Käydyt",
       "notVisited": "Käymättömät",
       "results": "{count} kohdetta"
