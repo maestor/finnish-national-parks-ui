@@ -1,7 +1,7 @@
 {
   "metadata": {
     "title": "Reissuvihko",
-    "description": "Tutki Suomen retkeilypuistoja, seuraa käyntejäsi ja hallitse ulkoiluseikkailujasi."
+    "description": "Tutki Suomen retkipaikkoja, seuraa käyntejäsi ja hallitse ulkoiluseikkailujasi."
   },
   "layout": {
     "siteTitle": "Reissuvihko",
@@ -14,11 +14,11 @@
       "logout": "Kirjaudu ulos"
     },
     "parkSearch": {
-      "label": "Hae puistoa",
-      "placeholder": "Hae puistoa...",
-      "loading": "Ladataan puistoja...",
-      "empty": "Hakua vastaavia puistoja ei löytynyt.",
-      "openParkPage": "Avaa puistosivu"
+      "label": "Hae paikkaa",
+      "placeholder": "Hae paikkaa...",
+      "loading": "Ladataan paikkoja...",
+      "empty": "Hakua vastaavia paikkoja ei löytynyt.",
+      "openParkPage": "Avaa paikan sivu"
     },
     "themeToggle": {
       "light": "Vaihda vaaleaan teemaan",
@@ -28,9 +28,9 @@
   },
   "home": {
     "title": "Reissuvihko",
-    "mapTitle": "Puistokartta",
-    "summary": "Reissuvihko kokoaa tekijöidensä puistokäynnit, retkimuistot ja oman etenemisen yhteen näkymään.",
-    "description": "Vuokko ja Kalle tutustuivat toisiinsa vuonna 2017 ja yhteiseen matkaan on kuulunut aina jaettu intohimo luonnossa liikkumiseen.\n\nKäytyjä kansallispuistoja on keräilty jo tovi sähkökaapin oveen kiinnitettävien magneettien muodossa ja kaikenlaisilla muillakin metsäreiteillä on vierailtu aina mahdollisuuksien mukaan.\n\nKallen pitkä tausta ohjelmointialalla ja tekoälyavusteisen tekemisen harjoittelu synnytti Reissuvihkon: Nyt puistokäynnit muistoineen ovat näppärästi dokumentoitu yhdelle sivustolle.\n\nTervetuloa seuraamaan meidän matkaa luonnon äärellä ja hakemaan vaikka inspiraatiota omiin retkiin!",
+    "mapTitle": "Paikkakartta",
+    "summary": "Reissuvihko kokoaa tekijöidensä käynnit retkipaikoissa, retkimuistot ja oman etenemisen yhteen näkymään.",
+    "description": "Vuokko ja Kalle tutustuivat toisiinsa vuonna 2017 ja yhteiseen matkaan on kuulunut aina jaettu intohimo luonnossa liikkumiseen.\n\nKäytyjä kansallispuistoja on keräilty jo tovi sähkökaapin oveen kiinnitettävien magneettien muodossa ja kaikenlaisilla muillakin metsäreiteillä on vierailtu aina mahdollisuuksien mukaan.\n\nKallen pitkä tausta ohjelmointialalla ja tekoälyavusteisen tekemisen harjoittelu synnytti Reissuvihkon: Nyt paikkakäynnit muistoineen ovat näppärästi dokumentoitu yhdelle sivustolle.\n\nTervetuloa seuraamaan meidän matkaa luonnon äärellä ja hakemaan vaikka inspiraatiota omiin retkiin!",
     "openMap": "Siirry kartalle",
     "intro": {
       "showInfo": "Mistä on kyse?",
@@ -39,10 +39,10 @@
     "statistics": {
       "title": "Käynnit",
       "totalVisits": "Käyntejä yhteensä",
-      "allParks": "Kaikki puistot"
+      "allParks": "Kaikki paikat"
     },
     "mostVisitedParks": {
-      "title": "Eniten käydyt puistot",
+      "title": "Eniten käydyt paikat",
       "visitCount": "käyntiä",
       "empty": "Ei vielä käyntitietoja."
     },
@@ -61,13 +61,14 @@
       "wildernessAreas": "Erämaa-alueet",
       "otherNatureReserves": "Luonnonsuojelut",
       "outdoorRecreationAreas": "Virkistysalueet",
+      "natureTrails": "Luontopolut",
       "visited": "Käydyt",
       "notVisited": "Käymättömät",
       "results": "{count} kohdetta"
     }
   },
   "park": {
-    "detailTitle": "Puiston tiedot",
+    "detailTitle": "Paikan tiedot",
     "visitHistory": "Käyntihistoria",
     "officialLink": "Luontoon.fi",
     "location": "Sijainti",
@@ -83,66 +84,66 @@
     "imagesTitle": "Kuvat",
     "imageCount": "{count} kuvaa",
     "visitNumber": "{number}. käynti",
-    "boundaryMapTitle": "Puiston kartta",
+    "boundaryMapTitle": "Paikan kartta",
     "showInFinlandsMap": "Näytä Suomen kartalla"
   },
   "controlPanel": {
     "title": "Hallinta",
     "dashboard": {
       "title": "Hallinta",
-      "description": "Täällä voit muokata puistoja ja hallita käyntikirjauksia."
+      "description": "Täällä voit muokata paikkoja ja hallita käyntikirjauksia."
     },
     "parks": {
-      "title": "Puistot",
-      "description": "Hallitse puistojen näkyvyyttä julkisissa näkymissä. Voit piilottaa puiston näkyvistä tai palauttaa piilotetun puiston takaisin.",
+      "title": "Paikat",
+      "description": "Hallitse paikkojen näkyvyyttä julkisissa näkymissä. Voit piilottaa paikan näkyvistä tai palauttaa piilotetun paikan takaisin.",
       "tabs": {
-        "ariaLabel": "Puistojen näkyvyysvälilehdet",
+        "ariaLabel": "Paikkojen näkyvyysvälilehdet",
         "visible": "Näkyvissä",
         "hidden": "Piilotetut"
       },
       "filters": {
         "searchLabel": "Haku",
-        "searchPlaceholder": "Hae puistoa tai sijaintia",
-        "typeLabel": "Puistotyyppi",
+        "searchPlaceholder": "Hae paikkaa tai sijaintia",
+        "typeLabel": "Paikkatyyppi",
         "allTypes": "Kaikki tyypit",
-        "results": "{count} puistoa",
+        "results": "{count} paikkaa",
         "reset": "Tyhjennä suodattimet"
       },
-      "visibleNotice": "Puiston piilottaminen poistaa sen näkyvistä julkisista näkymistä ja rajapinnoista. Voit palauttaa puiston myöhemmin Piilotetut-välilehdeltä.",
-      "hiddenNotice": "Piilotetut puistot eivät näy julkisissa näkymissä. Palauta puisto näkyviin, jos haluat sen takaisin julkisiin rajapintoihin.",
-      "parkName": "Puisto",
+      "visibleNotice": "Paikan piilottaminen poistaa sen näkyvistä julkisista näkymistä ja rajapinnoista. Voit palauttaa paikan myöhemmin Piilotetut-välilehdeltä.",
+      "hiddenNotice": "Piilotetut paikat eivät näy julkisissa näkymissä. Palauta paikka näkyviin, jos haluat sen takaisin julkisiin rajapintoihin.",
+      "parkName": "Paikka",
       "parkType": "Tyyppi",
       "location": "Sijainti",
       "removeAction": "Poista näkyvistä",
       "removing": "Poistetaan...",
       "restoreAction": "Palauta näkyviin",
       "restoring": "Palautetaan...",
-      "confirmRemove": "Haluatko varmasti poistaa puiston \"{parkName}\" näkyvistä? Puisto katoaa kaikista rajapinnoista.",
-      "confirmRestore": "Haluatko varmasti palauttaa puiston \"{parkName}\" näkyviin?",
-      "emptyAll": "Ei hallittavia puistoja.",
-      "emptyVisible": "Ei näkyvissä olevia puistoja.",
-      "emptyHidden": "Ei piilotettuja puistoja.",
-      "emptyFiltered": "Yksikään puisto ei vastaa nykyisiä suodattimia."
+      "confirmRemove": "Haluatko varmasti poistaa paikan \"{parkName}\" näkyvistä? Paikka katoaa kaikista rajapinnoista.",
+      "confirmRestore": "Haluatko varmasti palauttaa paikan \"{parkName}\" näkyviin?",
+      "emptyAll": "Ei hallittavia paikkoja.",
+      "emptyVisible": "Ei näkyvissä olevia paikkoja.",
+      "emptyHidden": "Ei piilotettuja paikkoja.",
+      "emptyFiltered": "Yksikään paikka ei vastaa nykyisiä suodattimia."
     },
     "visits": {
       "title": "Käynnit",
-      "description": "Hallitse puistokäyntejäsi. Lisää, muokkaa tai poista käyntitietoja.",
+      "description": "Hallitse paikkakäyntejäsi. Lisää, muokkaa tai poista käyntitietoja.",
       "addVisit": "Lisää käynti",
       "newVisit": {
         "title": "Uusi käynti",
-        "description": "Kirjaa uusi käynti kansallispuistoon."
+        "description": "Kirjaa uusi käynti paikkaan."
       },
       "edit": "Muokkaa",
       "editVisit": {
         "title": "Muokkaa käyntiä",
         "description": "Päivitä käynnin tietoja.",
         "createdNotice": "Käynti tallennettiin. Voit jatkaa sen muokkaamista täällä.",
-        "viewParkPage": "Siirry puiston sivulle",
+        "viewParkPage": "Siirry paikan sivulle",
         "manageImages": "Kuvien hallinta"
       },
       "form": {
-        "parkLabel": "Puisto",
-        "parkPlaceholder": "Valitse puisto",
+        "parkLabel": "Paikka",
+        "parkPlaceholder": "Valitse paikka",
         "dateLabel": "Käyntipäivä",
         "routeLabel": "Reitti",
         "routePlaceholder": "Esim. Pallas-Yllästunturin reitti",
@@ -160,12 +161,12 @@
         "deleteConfirm": "Haluatko varmasti poistaa tämän käynnin?",
         "back": "Palaa takaisin",
         "validation": {
-          "parkRequired": "Valitse puisto",
+          "parkRequired": "Valitse paikka",
           "dateRequired": "Anna käyntipäivä"
         }
       },
       "list": {
-        "parkName": "Puisto",
+        "parkName": "Paikka",
         "route": "Reitti",
         "visitDate": "Käyntipäivä",
         "noteStatus": "Muistiinpanot",
@@ -174,9 +175,9 @@
         "missing": "Puuttuu",
         "filters": {
           "searchLabel": "Haku",
-          "searchPlaceholder": "Hae puistoa tai reittiä",
-          "parkLabel": "Puisto",
-          "allParks": "Kaikki puistot",
+          "searchPlaceholder": "Hae paikkaa tai reittiä",
+          "parkLabel": "Paikka",
+          "allParks": "Kaikki paikat",
           "results": "{count} käyntiä",
           "reset": "Tyhjennä suodattimet"
         },
@@ -228,14 +229,14 @@
     "position": "Kuva {current} / {total}"
   },
   "map": {
-    "ariaLabel": "Suomen retkeilypuistojen kartta",
+    "ariaLabel": "Suomen retkipaikkojen kartta",
     "boundaryAriaLabel": "{parkName} rajaus kartalla",
     "loading": "Ladataan karttaa...",
     "loadError": "Karttatietojen lataus epäonnistui",
     "established": "Perustettu",
     "officialLink": "Luontoon.fi",
     "visits": "Vierailut",
-    "openParkPage": "Avaa puistosivu",
+    "openParkPage": "Avaa paikan sivu",
     "addVisit": "Lisää käynti"
   },
   "errors": {

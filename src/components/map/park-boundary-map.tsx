@@ -1,21 +1,12 @@
 "use client";
 
+import type { ParkDetail } from "@/lib/parks";
 import maplibregl from "maplibre-gl";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
 
-interface BoundaryGeoJson {
-  type: "FeatureCollection";
-  features: {
-    type: "Feature";
-    geometry: {
-      type: "Polygon";
-      coordinates: number[][][];
-    };
-    properties?: Record<string, unknown> | null;
-  }[];
-}
+type BoundaryGeoJson = NonNullable<ParkDetail["boundaryGeoJson"]>;
 
 interface ParkBoundaryMapProps {
   boundaryGeoJson: BoundaryGeoJson;
