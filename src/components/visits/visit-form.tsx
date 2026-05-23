@@ -33,6 +33,13 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const isEditDirty =
+    !visitToEdit ||
+    visitedOn !== visitToEdit.visitedOn ||
+    route !== (visitToEdit.route ?? "") ||
+    author !== (visitToEdit.author ?? "") ||
+    note !== (visitToEdit.note ?? "");
+  const isSubmitDisabled = isSubmitting || (isEditing && !isEditDirty);
 
   const handleBack = () => {
     router.back();
@@ -53,6 +60,10 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
     }
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+      return;
+    }
+
+    if (isEditing && !isEditDirty) {
       return;
     }
 
@@ -230,7 +241,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
       )}
 
       <div className="flex items-center gap-4">
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" disabled={isSubmitDisabled}>
           {isSubmitting ? "..." : t("submit")}
         </Button>
         {isEditing && (

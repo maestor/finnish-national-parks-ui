@@ -532,6 +532,9 @@ describe("App pages", () => {
     expect(
       screen.getByRole("heading", { name: "controlPanel.visits.editVisit.title" }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "controlPanel.visits.editVisit.viewParkPage" }),
+    ).toHaveAttribute("href", "/park/pallas");
     expect(screen.getByText("controlPanel.visits.editVisit.createdNotice")).toBeInTheDocument();
     expect(screen.getByTestId("visit-form")).toHaveTextContent("parks:1|edit:10|default:none");
     expect(screen.getByTestId("visit-image-section")).toHaveTextContent("visit:10|images:1");

@@ -135,7 +135,9 @@
       "editVisit": {
         "title": "Muokkaa käyntiä",
         "description": "Päivitä käynnin tietoja.",
-        "createdNotice": "Käynti tallennettiin. Voit jatkaa sen muokkaamista täällä."
+        "createdNotice": "Käynti tallennettiin. Voit jatkaa sen muokkaamista täällä.",
+        "viewParkPage": "Siirry puiston sivulle",
+        "manageImages": "Kuvien hallinta"
       },
       "form": {
         "parkLabel": "Puisto",
@@ -179,7 +181,7 @@
       },
       "images": {
         "title": "Käyntikuvat",
-        "selectFiles": "Valitse kuvia",
+        "selectFiles": "Lisää uusia kuvia",
         "selectedCount": "{count} kuvaa valittu",
         "upload": "Lähetä kuvat",
         "uploading": "Lähetetään...",
@@ -189,8 +191,12 @@
         "deleteConfirm": "Haluatko varmasti poistaa tämän kuvan?",
         "deleteFailed": "Kuvan poisto epäonnistui",
         "deleteSuccess": "Kuva poistettiin.",
-        "moveLeft": "Siirrä kuva vasemmalle",
-        "moveRight": "Siirrä kuva oikealle",
+        "reorderHint": "Raahaa kuvia uuteen järjestykseen tai käytä nuolinäppäimiä, kun kuva on valittuna. Tallenna uusi järjestys, kun olet valmis.",
+        "pendingReorderHint": "Raahaa valittuja kuvia haluamaasi järjestykseen ennen lähetystä. Voit käyttää myös nuolinäppäimiä.",
+        "reorderPendingImage": "Järjestä valittu kuva {index}",
+        "saveOrder": "Tallenna uusi järjestys",
+        "restoreOrder": "Palauta alkuperäinen järjestys",
+        "savingOrder": "Tallennetaan järjestystä...",
         "reorderFailed": "Kuvien järjestyksen päivitys epäonnistui",
         "reorderSuccess": "Kuvien järjestys päivitettiin.",
         "removeFile": "Poista valinta",
