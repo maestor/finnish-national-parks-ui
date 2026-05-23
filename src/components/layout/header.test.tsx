@@ -57,13 +57,13 @@ describe("Header", () => {
   it("shows mobile and desktop login links for unauthenticated users when auth loading has finished", () => {
     authState.isLoading = false;
 
-    render(<Header />);
+    const { container } = render(<Header />);
 
-    const loginLinks = screen.getAllByRole("link", { name: "layout.nav.login" });
+    const loginLinks = container.querySelectorAll('a[href="/auth/login"]');
 
     expect(loginLinks).toHaveLength(2);
-    expect(loginLinks[0]).toHaveAttribute("href", "http://localhost:3004/auth/google");
-    expect(loginLinks[1]).toHaveAttribute("href", "http://localhost:3004/auth/google");
+    expect(loginLinks[0]).toHaveAttribute("href", "/auth/login");
+    expect(loginLinks[1]).toHaveAttribute("href", "/auth/login");
   });
 
   it("shows mobile and desktop control panel links for authenticated users outside the control panel", () => {

@@ -47,7 +47,11 @@ const EditVisitPage = async ({ params, searchParams }: EditVisitPageProps) => {
         </output>
       )}
       <VisitForm parks={parks} visitToEdit={visitToEdit} />
-      <VisitImageSection visitId={visitToEdit.id} images={visitToEdit.images} />
+      <VisitImageSection
+        visitId={visitToEdit.id}
+        images={visitToEdit.images}
+        parkSlug={visitToEdit.park.slug}
+      />
     </div>
   );
 };

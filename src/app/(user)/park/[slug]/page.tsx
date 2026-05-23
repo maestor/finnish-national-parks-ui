@@ -1,8 +1,7 @@
 import { ParkBoundaryMap } from "@/components/map/park-boundary-map";
-import { VisitAccordion } from "@/components/park/visit-accordion";
-import { apiFetch } from "@/lib/api";
-import type { ParkDetail, ParkVisits } from "@/lib/parks";
-import { ExternalLink, MapPin, NotebookPen } from "lucide-react";
+import { ParkVisitHistory } from "@/components/park/park-visit-history";
+import { fetchPublicParkDetail, fetchPublicParkVisits } from "@/lib/public-summaries";
+import { ExternalLink, MapPin } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 
@@ -12,7 +11,7 @@ interface ParkDetailPageProps {
 
 export const generateMetadata = async ({ params }: ParkDetailPageProps) => {
   const { slug } = await params;
-  const park = await apiFetch<ParkDetail>(`/api/parks/${slug}`).catch(() => null);
+  const park = await fetchPublicParkDetail(slug).catch(() => null);
 
   return {
     title: park?.name ?? slug.replace(/-/g, " "),
@@ -23,11 +22,9 @@ const ParkDetailPage = async ({ params }: ParkDetailPageProps) => {
   const { slug } = await params;
   const t = await getTranslations("park");
 
-  const publicPark = await apiFetch<ParkDetail>(`/api/parks/${slug}?includeBoundary=true`).catch(
-    () => null,
-  );
+  const publicPark = await fetchPublicParkDetail(slug, { includeBoundary: true }).catch(() => null);
 
-  const parkVisits = await apiFetch<ParkVisits>(`/api/parks/${slug}/visits`).catch(() => null);
+  const parkVisits = await fetchPublicParkVisits(slug).catch(() => null);
 
   if (!publicPark) {
     return (
@@ -108,42 +105,13 @@ const ParkDetailPage = async ({ params }: ParkDetailPageProps) => {
         </div>
       )}
 
-      <div className="mt-8">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <NotebookPen className="h-4 w-4 text-primary" aria-hidden="true" />
-            <h2 className="text-lg font-semibold tracking-tight">{t("visitHistory")}</h2>
-          </div>
-          <Link
-            href={`/control-panel/visits/new?park=${slug}`}
-            className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-3.5 w-3.5"
-              aria-hidden="true"
-            >
-              <path d="M5 12h14" />
-              <path d="M12 5v14" />
-            </svg>
-            {t("addVisit")}
-          </Link>
-        </div>
-
-        {visits.length > 0 ? (
-          <div className="mt-4">
-            <VisitAccordion visits={visits} isEditable={parkVisits !== null} />
-          </div>
-        ) : (
-          <p className="mt-4 text-muted-foreground">{t("noVisits")}</p>
-        )}
-      </div>
+      <ParkVisitHistory
+        title={t("visitHistory")}
+        addVisitLabel={t("addVisit")}
+        noVisitsLabel={t("noVisits")}
+        parkSlug={slug}
+        visits={visits}
+      />
     </article>
   );
 };

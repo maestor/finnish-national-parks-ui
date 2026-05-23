@@ -36,6 +36,22 @@ describe("RecentVisits", () => {
     expect(screen.queryByLabelText("controlPanel.visits.edit")).not.toBeInTheDocument();
   });
 
+  it("renders public summary visits without ids", () => {
+    render(
+      <RecentVisits
+        title="Viimeisimmät käynnit"
+        emptyMessage="Ei käyntejä"
+        visits={[
+          { parkName: "Pallas", parkSlug: "pallas", visitedOn: "2024-06-15" },
+          { parkName: "Nuuksio", parkSlug: "nuuksio", visitedOn: "2024-07-20" },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("Pallas")).toBeInTheDocument();
+    expect(screen.getByText("Nuuksio")).toBeInTheDocument();
+  });
+
   it("shows empty state when no visits", () => {
     render(<RecentVisits title="Viimeisimmät käynnit" emptyMessage="Ei käyntejä" visits={[]} />);
 

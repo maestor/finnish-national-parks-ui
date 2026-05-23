@@ -1,7 +1,7 @@
 "use client";
 
+import { LoginLink } from "@/components/auth/login-link";
 import { useAuth } from "@/hooks/use-auth";
-import { env } from "@/lib/env";
 import { House, LogIn, LogOut, MapPin, Settings, SlidersHorizontal, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -107,19 +107,15 @@ export const Header = () => {
                 )
               ) : (
                 <>
-                  <a
-                    href={`${env.NEXT_PUBLIC_API_URL}/auth/google`}
+                  <LoginLink
                     className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background/90 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden"
                     aria-label={t("nav.login")}
                   >
                     <LogIn className="h-4 w-4" aria-hidden="true" />
-                  </a>
-                  <a
-                    href={`${env.NEXT_PUBLIC_API_URL}/auth/google`}
-                    className="hidden text-sm font-medium transition-colors hover:text-primary md:inline-flex"
-                  >
+                  </LoginLink>
+                  <LoginLink className="hidden text-sm font-medium transition-colors hover:text-primary md:inline-flex">
                     {t("nav.login")}
-                  </a>
+                  </LoginLink>
                 </>
               ))}
             <ThemeToggle />

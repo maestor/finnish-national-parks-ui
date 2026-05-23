@@ -4,7 +4,7 @@ import { NotebookPen } from "lucide-react";
 import Link from "next/link";
 
 interface LatestVisitEntry {
-  id: number;
+  id?: number;
   parkName: string;
   parkSlug: string;
   createdAt: string;
@@ -24,6 +24,8 @@ export const LatestVisitEntries = ({
   showEditLinks = false,
 }: LatestVisitEntriesProps) => {
   const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString("fi-FI");
+  const getVisitKey = (visit: LatestVisitEntry) =>
+    visit.id ?? `${visit.parkSlug}:${visit.createdAt}`;
 
   return (
     <DashboardSectionCard
@@ -42,7 +44,7 @@ export const LatestVisitEntries = ({
         <ul className="space-y-3">
           {visits.map((visit) => (
             <li
-              key={visit.id}
+              key={getVisitKey(visit)}
               className="flex flex-col items-start justify-between gap-3 rounded-2xl border border-border/70 bg-background/90 px-4 py-3 shadow-sm transition-colors hover:bg-background sm:flex-row sm:items-center dark:bg-background/70"
             >
               <Link
@@ -55,7 +57,7 @@ export const LatestVisitEntries = ({
                 <span className="rounded-full border border-border/70 bg-muted/80 px-3 py-1 text-xs font-medium text-muted-foreground sm:text-sm">
                   {formatDate(visit.createdAt)}
                 </span>
-                {showEditLinks ? (
+                {showEditLinks && visit.id !== undefined ? (
                   <EditVisitLink
                     visitId={visit.id}
                     className="inline-flex items-center justify-center rounded-full border border-border/70 bg-background p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"

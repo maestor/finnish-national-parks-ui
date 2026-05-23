@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/cn";
 import type { MapPark } from "@/lib/parks";
 import { useTranslations } from "next-intl";
@@ -20,11 +21,11 @@ type MapFilter =
 interface ParkExplorerProps {
   parks: MapPark[];
   error?: string | null;
-  canManageVisits?: boolean;
 }
 
-export const ParkExplorer = ({ parks, error, canManageVisits = false }: ParkExplorerProps) => {
+export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
   const t = useTranslations("home.filters");
+  const auth = useAuth();
   const [activeFilter, setActiveFilter] = useState<MapFilter>("all");
   const { isMobileFiltersOpen, closeMobileFilters, homeParkFocusRequest } = useHomeMapControls();
 
@@ -117,7 +118,7 @@ export const ParkExplorer = ({ parks, error, canManageVisits = false }: ParkExpl
       <ParkMap
         parks={filteredParks}
         error={error}
-        canManageVisits={canManageVisits}
+        canManageVisits={auth.isAuthenticated}
         homeParkFocusRequest={homeParkFocusRequest}
       />
     </div>

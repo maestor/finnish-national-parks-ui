@@ -122,10 +122,19 @@ The backend handles:
 - Park catalog API (`/api/parks`, `/api/parks/{slug}`)
 - Park visit history API (`/api/parks/{slug}/visits`)
 - Visit management API (`/api/visits`, `/api/visits/{id}`, image routes under `/api/visits/{id}`)
+- Public summary API for cacheable landing and map data (`/api/public/home-summary`, `/api/public/map-summary`)
 
 Route naming caveat:
 - In this project, **all `GET` endpoints are public-readable**, including `GET /api/visits` and `GET /api/parks/{slug}/visits`.
 - **Non-`GET` endpoints require authenticated admin access.**
+
+### Public Page Data Strategy
+
+- The public home page (`/`) reads `GET /api/public/home-summary`.
+- The public map page (`/parks`) reads `GET /api/public/map-summary`.
+- Public park detail pages still read `GET /api/parks/{slug}` and `GET /api/parks/{slug}/visits`, but those reads now use cacheable public fetches instead of request-bound cookie forwarding.
+- Admin-only quick links on public pages are resolved client-side with `useAuth`, so the page HTML can stay cache-friendly while signed-in users still see edit and add-visit affordances after hydration.
+- Visit and public park mutations call the local Next.js route `POST /api/revalidate-public-cache` so the frontend can invalidate cached public pages immediately after a successful write.
 
 ---
 
@@ -163,6 +172,12 @@ const visit = await apiFetch<Visit>("/api/parks/pallas/visits", {
 - Sends cookies (`credentials: "include"`) in browser for auth and admin write endpoints
 - Throws `ApiError` on non-2xx responses
 - Handles empty-body 204 responses
+
+Use `apiPublicFetch<T>(path, options?)` for cacheable public server-side reads:
+
+- Does **not** send the API key header
+- Does **not** forward request cookies
+- Can be tagged with Next.js cache tags for explicit revalidation after writes
 
 ---
 
@@ -207,5 +222,6 @@ See `AGENTS.md` for the full convention list. Key rules:
 - Port: **3004**
 - Auth endpoints: `/auth/google`, `/auth/google/callback`, `/auth/me`, `/auth/logout`
 - API endpoints: `/api/parks`, `/api/parks/{slug}`, `/api/parks/{slug}/visits`, `/api/parks/{slug}/removed`, `/api/visits`, `/api/visits/{id}`
+- Public summary endpoints: `/api/public/home-summary`, `/api/public/map-summary`
 - `GET` endpoints are public-readable; non-`GET` endpoints require authenticated admin access
 - OpenAPI doc: `http://localhost:3004/openapi.json`

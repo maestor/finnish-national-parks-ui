@@ -325,6 +325,72 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/parks/removed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Removed parks for admin visibility management */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            parks: {
+                                areaKm2: number | null;
+                                boundingBox: {
+                                    maxLat: number;
+                                    maxLon: number;
+                                    minLat: number;
+                                    minLon: number;
+                                };
+                                establishmentYear: number | null;
+                                locationLabel: string;
+                                luontoonUrl: string | null;
+                                markerPoint: {
+                                    lat: number;
+                                    lon: number;
+                                };
+                                name: string;
+                                slug: string;
+                                type: {
+                                    code: number;
+                                    id: number;
+                                    name: string;
+                                    /** @enum {string} */
+                                    slug: "outdoor-recreation-area" | "state-hiking-area" | "wilderness-area" | "national-park" | "other-nature-reserve";
+                                };
+                                /** @enum {string} */
+                                catalogStatus: "active" | "inactive";
+                                /** @enum {boolean} */
+                                removed: true;
+                                updatedAt: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/parks/{slug}": {
         parameters: {
             query?: never;
@@ -564,6 +630,173 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/home-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Public visit summary for the home page */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: date-time */
+                            updatedAt: string | null;
+                            version: number;
+                            latestVisitEntries: {
+                                /** Format: date-time */
+                                createdAt: string;
+                                id: number;
+                                park: {
+                                    name: string;
+                                    slug: string;
+                                };
+                                /** Format: date-time */
+                                updatedAt: string;
+                                visitedOn: string;
+                            }[];
+                            mostVisitedParks: {
+                                lastVisitedOn: string | null;
+                                park: {
+                                    name: string;
+                                    slug: string;
+                                };
+                                visitCount: number;
+                            }[];
+                            progressByType: {
+                                totalParks: number;
+                                totalVisits: number;
+                                type: {
+                                    code: number;
+                                    id: number;
+                                    name: string;
+                                    /** @enum {string} */
+                                    slug: "outdoor-recreation-area" | "state-hiking-area" | "wilderness-area" | "national-park" | "other-nature-reserve";
+                                };
+                                visitedParks: number;
+                            }[];
+                            recentVisits: {
+                                park: {
+                                    name: string;
+                                    slug: string;
+                                };
+                                visitedSummary: {
+                                    lastVisitedOn: string | null;
+                                    visitCount: number;
+                                    visited: boolean;
+                                };
+                            }[];
+                            totalVisits: number;
+                            uniqueVisitedParks: number;
+                        };
+                    };
+                };
+                /** @description Public home summary not modified */
+                304: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/map-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Public park and visit summary for the map page */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: date-time */
+                            updatedAt: string | null;
+                            version: number;
+                            parks: {
+                                areaKm2: number | null;
+                                boundingBox: {
+                                    maxLat: number;
+                                    maxLon: number;
+                                    minLat: number;
+                                    minLon: number;
+                                };
+                                establishmentYear: number | null;
+                                locationLabel: string;
+                                luontoonUrl: string | null;
+                                markerPoint: {
+                                    lat: number;
+                                    lon: number;
+                                };
+                                name: string;
+                                slug: string;
+                                type: {
+                                    code: number;
+                                    id: number;
+                                    name: string;
+                                    /** @enum {string} */
+                                    slug: "outdoor-recreation-area" | "state-hiking-area" | "wilderness-area" | "national-park" | "other-nature-reserve";
+                                };
+                                visitedSummary: {
+                                    lastVisitedOn: string | null;
+                                    visitCount: number;
+                                    visited: boolean;
+                                };
+                            }[];
+                        };
+                    };
+                };
+                /** @description Public map summary not modified */
+                304: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;

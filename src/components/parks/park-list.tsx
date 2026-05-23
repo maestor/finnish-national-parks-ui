@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api";
 import type { Park } from "@/lib/parks";
+import { revalidatePublicCache } from "@/lib/public-cache";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -47,6 +48,7 @@ export const ParkList = ({ parks }: ParkListProps) => {
         body: JSON.stringify({ removed: true }),
       });
 
+      await revalidatePublicCache({ parkSlug: park.slug });
       setLocalParks((current) => current.filter((currentPark) => currentPark.slug !== park.slug));
       router.refresh();
     } catch (error) {
