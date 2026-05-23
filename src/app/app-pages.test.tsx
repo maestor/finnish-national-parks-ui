@@ -565,7 +565,7 @@ describe("App pages", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("auth.accessDenied");
     expect(screen.getByRole("link", { name: "auth.loginToControlPanel" })).toHaveAttribute(
       "href",
-      "http://localhost:3004/auth/google",
+      "/auth/login",
     );
   });
 

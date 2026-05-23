@@ -59,11 +59,11 @@ describe("Header", () => {
 
     const { container } = render(<Header />);
 
-    const loginLinks = container.querySelectorAll('a[href="http://localhost:3004/auth/google"]');
+    const loginLinks = container.querySelectorAll('a[href="/auth/login"]');
 
     expect(loginLinks).toHaveLength(2);
-    expect(loginLinks[0]).toHaveAttribute("href", "http://localhost:3004/auth/google");
-    expect(loginLinks[1]).toHaveAttribute("href", "http://localhost:3004/auth/google");
+    expect(loginLinks[0]).toHaveAttribute("href", "/auth/login");
+    expect(loginLinks[1]).toHaveAttribute("href", "/auth/login");
   });
 
   it("shows mobile and desktop control panel links for authenticated users outside the control panel", () => {

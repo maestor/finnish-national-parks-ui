@@ -11,6 +11,8 @@ import {
 } from "@/lib/public-summaries";
 import { getTranslations } from "next-intl/server";
 
+export const dynamic = "force-dynamic";
+
 export const generateMetadata = async () => {
   const t = await getTranslations("home");
   return {

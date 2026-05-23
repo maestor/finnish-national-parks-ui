@@ -15,7 +15,7 @@ describe("LoginLink", () => {
     render(<LoginLink>Kirjaudu</LoginLink>);
 
     const link = screen.getByRole("link", { name: "Kirjaudu" });
-    expect(link).toHaveAttribute("href", "http://localhost:3004/auth/google");
+    expect(link).toHaveAttribute("href", "/auth/login");
     link.addEventListener("click", (event) => event.preventDefault());
 
     fireEvent.click(link);

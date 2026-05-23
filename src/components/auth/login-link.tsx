@@ -1,6 +1,5 @@
 "use client";
 
-import { env } from "@/lib/env";
 import {
   getCurrentPathWithSearchAndHash,
   storePostLoginRedirectPath,
@@ -12,6 +11,8 @@ interface LoginLinkProps {
   className?: string;
 }
 
+const LOGIN_START_PATH = "/auth/login";
+
 export const LoginLink = ({ ariaLabel, children, className }: LoginLinkProps) => {
   const handleClick = () => {
     const currentPath = getCurrentPathWithSearchAndHash();
@@ -21,12 +22,7 @@ export const LoginLink = ({ ariaLabel, children, className }: LoginLinkProps) =>
   };
 
   return (
-    <a
-      href={`${env.NEXT_PUBLIC_API_URL}/auth/google`}
-      className={className}
-      aria-label={ariaLabel}
-      onClick={handleClick}
-    >
+    <a href={LOGIN_START_PATH} className={className} aria-label={ariaLabel} onClick={handleClick}>
       {children}
     </a>
   );
