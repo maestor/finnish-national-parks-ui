@@ -167,6 +167,10 @@
         "parkName": "Puisto",
         "route": "Reitti",
         "visitDate": "Käyntipäivä",
+        "noteStatus": "Muistiinpanot",
+        "imageStatus": "Kuvat",
+        "complete": "Valmis",
+        "missing": "Puuttuu",
         "filters": {
           "searchLabel": "Haku",
           "searchPlaceholder": "Hae puistoa tai reittiä",

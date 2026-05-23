@@ -1,5 +1,5 @@
 import type { VisitWithPark } from "@/lib/parks";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { VisitList } from "./visit-list";
@@ -21,7 +21,20 @@ const visits = [
     note: "Great hike",
     createdAt: "2024-06-15T00:00:00Z",
     updatedAt: "2024-06-15T00:00:00Z",
-    images: [],
+    images: [
+      {
+        id: 11,
+        fullUrl: "https://example.com/full-11.jpg",
+        thumbUrl: "https://example.com/thumb-11.jpg",
+        fullWidth: 1200,
+        fullHeight: 900,
+        thumbWidth: 400,
+        thumbHeight: 300,
+        originalName: "pallas.jpg",
+        displayOrder: 0,
+        createdAt: "2024-06-15T00:00:00Z",
+      },
+    ],
     park: {
       slug: "pallas",
       name: "Pallas-Yllästunturi",
@@ -56,6 +69,29 @@ describe("VisitList", () => {
     expect(screen.getByText("2024-06-15")).toBeInTheDocument();
     expect(screen.getByText("Pallas-reitti")).toBeInTheDocument();
     expect(screen.getAllByText("–").length).toBe(1);
+    expect(
+      screen.getByRole("columnheader", { name: "controlPanel.visits.list.noteStatus" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: "controlPanel.visits.list.imageStatus" }),
+    ).toBeInTheDocument();
+  });
+
+  it("shows note and image status badges for each visit", () => {
+    render(<VisitList visits={visits} />);
+
+    const pallasRow = screen.getByRole("link", { name: "Pallas-Yllästunturi" }).closest("tr");
+    const nuuksioRow = screen.getByRole("link", { name: "Nuuksio" }).closest("tr");
+
+    expect(pallasRow).not.toBeNull();
+    expect(nuuksioRow).not.toBeNull();
+
+    expect(
+      within(pallasRow as HTMLElement).getAllByText("controlPanel.visits.list.complete"),
+    ).toHaveLength(2);
+    expect(
+      within(nuuksioRow as HTMLElement).getAllByText("controlPanel.visits.list.missing"),
+    ).toHaveLength(2);
   });
 
   it("shows empty state when no visits exist", () => {

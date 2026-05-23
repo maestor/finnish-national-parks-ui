@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 
 interface AdminTableFilterOption {
   label: string;
@@ -61,18 +62,17 @@ export const AdminTableFilters = ({
             <label htmlFor={select.id} className="text-sm font-medium">
               {select.label}
             </label>
-            <select
+            <Select
               id={select.id}
               value={select.value}
               onChange={(event) => select.onChange(event.target.value)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               {select.options.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
         ))}
       </div>

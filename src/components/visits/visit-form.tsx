@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { apiFetch } from "@/lib/api";
 import type { Park, Visit, VisitWithPark } from "@/lib/parks";
 import { revalidatePublicCache } from "@/lib/public-cache";
@@ -131,11 +132,11 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
         {isEditing ? (
           <div className={`${inputClassName} bg-muted`}>{visitToEdit?.park.name}</div>
         ) : (
-          <select
+          <Select
             id="park"
             value={parkSlug}
             onChange={(e) => setParkSlug(e.target.value)}
-            className={`${inputClassName} h-10`}
+            className="h-10"
           >
             <option value="">{t("parkPlaceholder")}</option>
             {parks.map((park) => (
@@ -143,7 +144,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
                 {park.name}
               </option>
             ))}
-          </select>
+          </Select>
         )}
         {errors.parkSlug && <p className="text-sm text-destructive">{errors.parkSlug}</p>}
       </div>
