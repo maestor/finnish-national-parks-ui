@@ -103,7 +103,7 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
   const normalizedQuery = query.trim().toLocaleLowerCase("fi-FI");
   const filteredParks = displayedParks.filter((park) => {
     const matchesType = selectedTypeSlug ? park.type.slug === selectedTypeSlug : true;
-    const haystack = [park.name, park.locationLabel, park.type.name]
+    const haystack = [park.name, park.location, park.type.name]
       .join(" ")
       .toLocaleLowerCase("fi-FI");
     const matchesQuery = normalizedQuery ? haystack.includes(normalizedQuery) : true;
@@ -225,7 +225,7 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
                       </Link>
                     </td>
                     <td className="px-4 py-3">{park.type.name}</td>
-                    <td className="px-4 py-3">{park.locationLabel}</td>
+                    <td className="px-4 py-3">{park.location}</td>
                     <td className="px-4 py-3 text-right">
                       <Button
                         type="button"

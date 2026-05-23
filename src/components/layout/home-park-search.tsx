@@ -89,7 +89,7 @@ export const HomeParkSearch = () => {
       trimmedQuery.length === 0
         ? parks
         : parks.filter((park) => {
-            const haystacks = [park.name, park.type.name, park.locationLabel];
+            const haystacks = [park.name, park.type.name, park.location];
             return haystacks.some((value) =>
               value.toLocaleLowerCase("fi-FI").includes(trimmedQuery),
             );
