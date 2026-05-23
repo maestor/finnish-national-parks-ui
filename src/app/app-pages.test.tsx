@@ -223,7 +223,7 @@ const publicPark = {
   slug: "pallas",
   name: "Pallas-Yllästunturi",
   areaKm2: 14,
-  locationLabel: "Lappi",
+  location: "Lappi",
   luontoonUrl: "https://example.com/pallas",
   establishmentYear: 1938,
   boundingBox: { minLat: 67, minLon: 23, maxLat: 68, maxLon: 25 },

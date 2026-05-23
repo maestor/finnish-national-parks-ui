@@ -289,7 +289,7 @@ export interface paths {
                                     minLon: number;
                                 };
                                 establishmentYear: number | null;
-                                locationLabel: string;
+                                location: string;
                                 luontoonUrl: string | null;
                                 markerPoint: {
                                     lat: number;
@@ -357,7 +357,7 @@ export interface paths {
                                     minLon: number;
                                 };
                                 establishmentYear: number | null;
-                                locationLabel: string;
+                                location: string;
                                 luontoonUrl: string | null;
                                 markerPoint: {
                                     lat: number;
@@ -426,7 +426,7 @@ export interface paths {
                                 minLon: number;
                             };
                             establishmentYear: number | null;
-                            locationLabel: string;
+                            location: string;
                             luontoonUrl: string | null;
                             markerPoint: {
                                 lat: number;
@@ -762,7 +762,7 @@ export interface paths {
                                     minLon: number;
                                 };
                                 establishmentYear: number | null;
-                                locationLabel: string;
+                                location: string;
                                 luontoonUrl: string | null;
                                 markerPoint: {
                                     lat: number;
