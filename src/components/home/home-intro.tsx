@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, CircleHelp, MapPin } from "lucide-react";
+import { CircleHelp, MapPin } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -41,10 +41,6 @@ export const HomeIntro = ({
         >
           <CircleHelp className="h-4 w-4 text-primary" aria-hidden="true" />
           {infoButtonLabel}
-          <ChevronDown
-            className={`h-4 w-4 text-muted-foreground transition-transform duration-300 motion-reduce:transition-none ${isInfoOpen ? "rotate-180" : ""}`}
-            aria-hidden="true"
-          />
         </button>
         <Link
           href="/parks"
@@ -58,7 +54,9 @@ export const HomeIntro = ({
       <div
         id="home-intro-description"
         aria-hidden={!isInfoOpen}
-        className="mt-4 grid transition-[grid-template-rows,opacity] duration-300 ease-in-out motion-reduce:transition-none"
+        className={`grid transition-[grid-template-rows,opacity,margin] duration-300 ease-in-out motion-reduce:transition-none ${
+          isInfoOpen ? "mt-4" : "mt-0"
+        }`}
         style={{
           gridTemplateRows: isInfoOpen ? "1fr" : "0fr",
           opacity: isInfoOpen ? 1 : 0,
