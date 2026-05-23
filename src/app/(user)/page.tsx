@@ -125,14 +125,14 @@ const HomePage = async () => {
         totalVisits={visits.length}
         progressItems={progressItems}
       />
-      <div className="mt-8 space-y-6">
+      <div className="mt-4 space-y-4">
         <MostVisitedParks
           title={t("mostVisitedParks.title")}
           emptyMessage={t("mostVisitedParks.empty")}
           visitCountLabel={t("mostVisitedParks.visitCount")}
           parks={mostVisitedParks}
         />
-        <div className="grid gap-6 xl:grid-cols-2">
+        <div className="grid gap-4 xl:grid-cols-2">
           <RecentVisits
             title={t("recentVisits.title")}
             emptyMessage={t("recentVisits.empty")}

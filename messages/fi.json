@@ -29,8 +29,8 @@
   "home": {
     "title": "Reissuvihko",
     "mapTitle": "Puistokartta",
-    "summary": "Reissuvihko kokoaa puistokäynnit, retkimuistot ja oman etenemisesi yhteen näkymään.",
-    "description": "Seuraa missä olet jo käynyt, mihin haluat seuraavaksi ja miten käynnit jakautuvat eri puistotyyppeihin.\n\nTutustu karttaan, selaa viimeisimpiä käyntejä ja hahmota omaa retkihistoriaasi yhdestä näkymästä.",
+    "summary": "Reissuvihko kokoaa tekijöidensä puistokäynnit, retkimuistot ja oman etenemisen yhteen näkymään.",
+    "description": "Vuokko ja Kalle tutustuivat toisiinsa vuonna 2017 ja yhteiseen matkaan on kuulunut aina jaettu intohimo luonnossa liikkumiseen.\n\nKäytyjä kansallispuistoja on keräilty jo tovi sähkökaapin oveen kiinnitettävien magneettien muodossa ja kaikenlaisilla muillakin metsäreiteillä on vierailtu aina mahdollisuuksien mukaan.\n\nKallen pitkä tausta ohjelmointialalla ja tekoälyavusteisen tekemisen harjoittelu synnytti Reissuvihkon: Nyt puistokäynnit muistoineen ovat näppärästi dokumentoitu yhdelle sivustolle.\n\nTervetuloa seuraamaan meidän matkaa luonnon äärellä ja hakemaan vaikka inspiraatiota omiin retkiin!",
     "openMap": "Siirry kartalle",
     "intro": {
       "showInfo": "Mistä on kyse?",
