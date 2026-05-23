@@ -6,6 +6,7 @@
   "layout": {
     "siteTitle": "Reissuvihko",
     "nav": {
+      "home": "Etusivu",
       "map": "Kartta",
       "controlPanel": "Hallinta",
       "filters": "Suodata karttaa",
@@ -27,6 +28,27 @@
   },
   "home": {
     "title": "Reissuvihko",
+    "mapTitle": "Puistokartta",
+    "description": "Reissuvihko kokoaa puistokäynnit, retkimuistot ja oman etenemisesi yhteen näkymään.\n\nSeuraa missä olet jo käynyt, mihin haluat seuraavaksi ja miten käynnit jakautuvat eri puistotyyppeihin.",
+    "openMap": "Siirry kartalle",
+    "statistics": {
+      "title": "Käynnit",
+      "totalVisits": "Käyntejä yhteensä",
+      "allParks": "Kaikki puistot"
+    },
+    "mostVisitedParks": {
+      "title": "Eniten käydyt puistot",
+      "visitCount": "käyntiä",
+      "empty": "Ei vielä käyntitietoja."
+    },
+    "recentVisits": {
+      "title": "Viimeisimmät käynnit",
+      "empty": "Ei vielä kirjattuja käyntejä."
+    },
+    "latestEntries": {
+      "title": "Uusimmat käyntikirjaukset",
+      "empty": "Ei vielä käyntikirjauksia."
+    },
     "filters": {
       "all": "Kaikki",
       "nationalParks": "Kansallispuistot",
@@ -59,25 +81,10 @@
     "showInFinlandsMap": "Näytä Suomen kartalla"
   },
   "controlPanel": {
-    "title": "Hallintapaneeli",
+    "title": "Hallinta",
     "dashboard": {
-      "title": "Yleiskatsaus",
-      "description": "Käyntiesi ja puistotilastojen yhteenveto.",
-      "stats": {
-        "totalVisits": "Käyntejä yhteensä",
-        "uniqueParks": "Käytyjä puistoja",
-        "parksWithNotes": "Muistiinpanoja",
-        "mostVisited": "Eniten käyty"
-      },
-      "progress": {
-        "title": "Puistotyypit",
-        "visitedOfTotal": "{visited} / {total}"
-      },
-      "recentVisits": {
-        "title": "Viimeisimmät käynnit",
-        "viewAll": "Näytä kaikki",
-        "noVisits": "Ei vielä kirjattuja käyntejä."
-      }
+      "title": "Hallinta",
+      "description": "Täällä voit muokata puistoja ja hallita käyntikirjauksia."
     },
     "parks": {
       "title": "Puistot",

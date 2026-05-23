@@ -92,7 +92,7 @@ const ParkDetailPage = async ({ params }: ParkDetailPageProps) => {
               <h2 className="text-lg font-semibold tracking-tight">{t("boundaryMapTitle")}</h2>
             </div>
             <Link
-              href={`/?park=${slug}`}
+              href={`/parks?park=${slug}`}
               prefetch
               className="text-sm font-medium text-primary underline-offset-4 hover:underline"
             >

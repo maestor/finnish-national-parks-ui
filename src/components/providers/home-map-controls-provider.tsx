@@ -53,7 +53,7 @@ export const HomeMapControlsProvider = ({
   }, []);
 
   useEffect(() => {
-    const parkSlug = pathname === "/" ? searchParams.get("park") : null;
+    const parkSlug = pathname === "/parks" ? searchParams.get("park") : null;
 
     if (!parkSlug) {
       lastHandledParkParamRef.current = null;

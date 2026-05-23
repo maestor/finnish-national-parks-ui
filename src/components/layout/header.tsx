@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/hooks/use-auth";
 import { env } from "@/lib/env";
-import { MapPin, SlidersHorizontal, X } from "lucide-react";
+import { House, LogIn, LogOut, MapPin, Settings, SlidersHorizontal, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -15,16 +15,17 @@ export const Header = () => {
   const auth = useAuth();
   const pathname = usePathname();
   const isControlPanel = pathname?.startsWith("/control-panel") ?? false;
-  const isHomePage = pathname === "/";
+  const isRootPage = pathname === "/";
+  const isParksMapPage = pathname === "/parks";
   const { isMobileFiltersOpen, toggleMobileFilters } = useHomeMapControls();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-14 items-center gap-3 px-4">
         <div className="mr-4 flex">
-          <Link href="/" className="mr-6 flex items-center space-x-2">
+          <Link href="/parks" className="mr-6 flex items-center space-x-2">
             <MapPin className="h-6 w-6 text-primary" aria-hidden="true" />
-            <span className="hidden font-bold sm:inline-block">{t("siteTitle")}</span>
+            <span className="font-bold">{t("siteTitle")}</span>
           </Link>
         </div>
         <div className="flex flex-1 items-center gap-3">
@@ -32,7 +33,7 @@ export const Header = () => {
             <div className="min-w-0 flex-1">
               <HomeParkSearch />
             </div>
-            {isHomePage && (
+            {isParksMapPage && (
               <button
                 type="button"
                 onClick={toggleMobileFilters}
@@ -50,31 +51,76 @@ export const Header = () => {
             )}
           </div>
           <div className="ml-auto flex items-center space-x-2">
+            {!isRootPage && (
+              <>
+                <Link
+                  href="/"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background/90 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden"
+                  aria-label={t("nav.home")}
+                >
+                  <House className="h-4 w-4" aria-hidden="true" />
+                </Link>
+                <Link
+                  href="/"
+                  className="hidden text-sm font-medium transition-colors hover:text-primary md:inline-flex"
+                >
+                  {t("nav.home")}
+                </Link>
+              </>
+            )}
             {!auth.isLoading &&
               (auth.isAuthenticated ? (
                 isControlPanel ? (
-                  <button
-                    type="button"
-                    onClick={auth.logout}
-                    className="cursor-pointer text-sm font-medium transition-colors hover:text-primary"
-                  >
-                    {t("nav.logout")}
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      onClick={auth.logout}
+                      className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-border bg-background/90 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden"
+                      aria-label={t("nav.logout")}
+                    >
+                      <LogOut className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={auth.logout}
+                      className="hidden cursor-pointer text-sm font-medium transition-colors hover:text-primary md:inline-flex"
+                    >
+                      {t("nav.logout")}
+                    </button>
+                  </>
                 ) : (
-                  <Link
-                    href="/control-panel"
-                    className="text-sm font-medium transition-colors hover:text-primary"
-                  >
-                    {t("nav.controlPanel")}
-                  </Link>
+                  <>
+                    <Link
+                      href="/control-panel"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background/90 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden"
+                      aria-label={t("nav.controlPanel")}
+                    >
+                      <Settings className="h-4 w-4" aria-hidden="true" />
+                    </Link>
+                    <Link
+                      href="/control-panel"
+                      className="hidden text-sm font-medium transition-colors hover:text-primary md:inline-flex"
+                    >
+                      {t("nav.controlPanel")}
+                    </Link>
+                  </>
                 )
               ) : (
-                <a
-                  href={`${env.NEXT_PUBLIC_API_URL}/auth/google`}
-                  className="text-sm font-medium transition-colors hover:text-primary"
-                >
-                  {t("nav.login")}
-                </a>
+                <>
+                  <a
+                    href={`${env.NEXT_PUBLIC_API_URL}/auth/google`}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background/90 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden"
+                    aria-label={t("nav.login")}
+                  >
+                    <LogIn className="h-4 w-4" aria-hidden="true" />
+                  </a>
+                  <a
+                    href={`${env.NEXT_PUBLIC_API_URL}/auth/google`}
+                    className="hidden text-sm font-medium transition-colors hover:text-primary md:inline-flex"
+                  >
+                    {t("nav.login")}
+                  </a>
+                </>
               ))}
             <ThemeToggle />
           </div>

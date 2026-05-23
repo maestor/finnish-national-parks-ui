@@ -37,13 +37,16 @@ describe("Header", () => {
     authState.isAuthenticated = false;
     authState.isLoading = true;
     authState.logout.mockClear();
-    pathnameState.value = "/";
+    pathnameState.value = "/parks";
     searchParamsState.value = "";
   });
 
-  it("renders site title link", () => {
+  it("renders the site title link to the parks map", () => {
     render(<Header />);
-    expect(screen.getByRole("link", { name: "layout.siteTitle" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "layout.siteTitle" })).toHaveAttribute(
+      "href",
+      "/parks",
+    );
   });
 
   it("renders theme toggle button", () => {
@@ -51,31 +54,33 @@ describe("Header", () => {
     expect(screen.getByRole("button", { name: "layout.themeToggle.srLabel" })).toBeInTheDocument();
   });
 
-  it("shows the login link for unauthenticated users when auth loading has finished", () => {
+  it("shows mobile and desktop login links for unauthenticated users when auth loading has finished", () => {
     authState.isLoading = false;
 
     render(<Header />);
 
-    expect(screen.getByRole("link", { name: "layout.nav.login" })).toHaveAttribute(
-      "href",
-      "http://localhost:3004/auth/google",
-    );
+    const loginLinks = screen.getAllByRole("link", { name: "layout.nav.login" });
+
+    expect(loginLinks).toHaveLength(2);
+    expect(loginLinks[0]).toHaveAttribute("href", "http://localhost:3004/auth/google");
+    expect(loginLinks[1]).toHaveAttribute("href", "http://localhost:3004/auth/google");
   });
 
-  it("shows a control panel link for authenticated users outside the control panel", () => {
+  it("shows mobile and desktop control panel links for authenticated users outside the control panel", () => {
     authState.isAuthenticated = true;
     authState.isLoading = false;
-    pathnameState.value = "/";
+    pathnameState.value = "/parks";
 
     render(<Header />);
 
-    expect(screen.getByRole("link", { name: "layout.nav.controlPanel" })).toHaveAttribute(
-      "href",
-      "/control-panel",
-    );
+    const controlPanelLinks = screen.getAllByRole("link", { name: "layout.nav.controlPanel" });
+
+    expect(controlPanelLinks).toHaveLength(2);
+    expect(controlPanelLinks[0]).toHaveAttribute("href", "/control-panel");
+    expect(controlPanelLinks[1]).toHaveAttribute("href", "/control-panel");
   });
 
-  it("keeps park search available outside the home page", () => {
+  it("keeps park search available outside the parks map page", () => {
     pathnameState.value = "/control-panel/visits";
 
     render(
@@ -88,6 +93,18 @@ describe("Header", () => {
     expect(screen.queryByRole("button", { name: "layout.nav.filters" })).not.toBeInTheDocument();
   });
 
+  it("shows mobile and desktop home links outside the root page", () => {
+    pathnameState.value = "/parks";
+
+    render(<Header />);
+
+    const homeLinks = screen.getAllByRole("link", { name: "layout.nav.home" });
+
+    expect(homeLinks).toHaveLength(2);
+    expect(homeLinks[0]).toHaveAttribute("href", "/");
+    expect(homeLinks[1]).toHaveAttribute("href", "/");
+  });
+
   it("shows a logout button inside the control panel and calls logout", async () => {
     authState.isAuthenticated = true;
     authState.isLoading = false;
@@ -95,12 +112,16 @@ describe("Header", () => {
 
     render(<Header />);
 
-    await userEvent.click(screen.getByRole("button", { name: "layout.nav.logout" }));
+    const logoutButtons = screen.getAllByRole("button", { name: "layout.nav.logout" });
+
+    expect(logoutButtons).toHaveLength(2);
+
+    await userEvent.click(logoutButtons[0]);
 
     expect(authState.logout).toHaveBeenCalled();
   });
 
-  it("toggles the mobile filters button state on the home page", async () => {
+  it("toggles the mobile filters button state on the parks map page", async () => {
     render(
       <HomeMapControlsProvider>
         <Header />

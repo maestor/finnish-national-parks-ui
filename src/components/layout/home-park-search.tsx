@@ -29,7 +29,7 @@ export const HomeParkSearch = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const isHomePage = pathname === "/";
+  const isParksMapPage = pathname === "/parks";
 
   useEffect(() => {
     let mounted = true;
@@ -103,7 +103,7 @@ export const HomeParkSearch = () => {
     setIsOpen(false);
     setIsMobileOpen(false);
 
-    if (isHomePage) {
+    if (isParksMapPage) {
       closeMobileFilters();
       focusParkOnHome(park.slug);
       return;
@@ -248,7 +248,7 @@ export const HomeParkSearch = () => {
                         </span>
                       </span>
                     </button>
-                    {isHomePage && (
+                    {isParksMapPage && (
                       <Link
                         href={`/park/${park.slug}`}
                         onClick={() => {

@@ -7,6 +7,7 @@ import HomePage, { generateMetadata as generateHomeMetadata } from "./(user)/pag
 import ParkDetailPage, {
   generateMetadata as generateParkDetailMetadata,
 } from "./(user)/park/[slug]/page";
+import ParksMapPage, { generateMetadata as generateParksMapMetadata } from "./(user)/parks/page";
 import ControlPanelLayout from "./control-panel/layout";
 import ControlPanelPage, {
   generateMetadata as generateControlPanelMetadata,
@@ -77,39 +78,58 @@ vi.mock("@/components/park/visit-accordion", () => ({
   ),
 }));
 
-vi.mock("@/components/dashboard/stats-cards", () => ({
-  StatsCards: ({
+vi.mock("@/components/dashboard/home-visit-stats", () => ({
+  HomeVisitStats: ({
     totalVisits,
-    uniqueParks,
-    parksWithNotes,
-    mostVisitedPark,
+    progressItems,
   }: {
     totalVisits: number;
-    uniqueParks: number;
-    parksWithNotes: number;
-    mostVisitedPark: { name: string; visitCount: number } | null;
+    progressItems: { label: string; visited: number; total: number }[];
   }) => (
-    <div data-testid="stats-cards">
-      total:{totalVisits}|unique:{uniqueParks}|notes:{parksWithNotes}|most:
-      {mostVisitedPark ? `${mostVisitedPark.name}:${mostVisitedPark.visitCount}` : "none"}
+    <div data-testid="home-visit-stats">
+      total:{totalVisits}|items:{progressItems.length}|first:{progressItems[0]?.label ?? "none"}
     </div>
   ),
 }));
 
-vi.mock("@/components/dashboard/progress-section", () => ({
-  ProgressSection: ({
-    items,
+vi.mock("@/components/dashboard/most-visited-parks", () => ({
+  MostVisitedParks: ({
+    parks,
   }: {
-    items: { typeName: string; visited: number; total: number }[];
-  }) => <div data-testid="progress-section">items:{items.length}</div>,
+    parks: { parkName: string; parkSlug: string; visitCount: number }[];
+  }) => (
+    <div data-testid="most-visited-parks">
+      parks:{parks.length}|top:{parks[0] ? `${parks[0].parkName}:${parks[0].visitCount}` : "none"}
+    </div>
+  ),
 }));
 
 vi.mock("@/components/dashboard/recent-visits", () => ({
   RecentVisits: ({
     visits,
+    showEditLinks,
   }: {
     visits: { id: number; parkName: string; parkSlug: string; visitedOn: string }[];
-  }) => <div data-testid="recent-visits">visits:{visits.length}</div>,
+    showEditLinks?: boolean;
+  }) => (
+    <div data-testid="recent-visits">
+      visits:{visits.length}|edit:{String(showEditLinks)}
+    </div>
+  ),
+}));
+
+vi.mock("@/components/dashboard/latest-visit-entries", () => ({
+  LatestVisitEntries: ({
+    visits,
+    showEditLinks,
+  }: {
+    visits: { id: number; parkName: string; parkSlug: string; createdAt: string }[];
+    showEditLinks?: boolean;
+  }) => (
+    <div data-testid="latest-visit-entries">
+      visits:{visits.length}|edit:{String(showEditLinks)}
+    </div>
+  ),
 }));
 
 vi.mock("@/components/visits/visit-list", () => ({
@@ -208,7 +228,7 @@ describe("App pages", () => {
     });
   });
 
-  it("renders the home page with authenticated parks", async () => {
+  it("renders the root page with visit statistics and authenticated edit affordances", async () => {
     vi.mocked(apiFetch)
       .mockResolvedValueOnce({ parks: [publicPark] })
       .mockResolvedValueOnce({ visits: [visitWithPark] })
@@ -221,27 +241,64 @@ describe("App pages", () => {
 
     await renderPublicRoute(await HomePage());
 
+    expect(screen.getByRole("heading", { name: "home.title" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "home.openMap" })).toHaveAttribute("href", "/parks");
+    expect(screen.getByTestId("home-visit-stats")).toHaveTextContent(
+      "total:1|items:2|first:home.statistics.allParks",
+    );
+    expect(screen.getByTestId("most-visited-parks")).toHaveTextContent(
+      "parks:1|top:Pallas-Yllästunturi:1",
+    );
+    expect(screen.getByTestId("recent-visits")).toHaveTextContent("visits:1|edit:true");
+    expect(screen.getByTestId("latest-visit-entries")).toHaveTextContent("visits:1|edit:true");
+  });
+
+  it("renders the root page without edit affordances when auth lookup fails", async () => {
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({ parks: [publicPark] })
+      .mockResolvedValueOnce({ visits: [visitWithPark] })
+      .mockRejectedValueOnce(new Error("unauthorized"));
+
+    await renderPublicRoute(await HomePage());
+
+    expect(screen.getByTestId("recent-visits")).toHaveTextContent("visits:1|edit:false");
+    expect(screen.getByTestId("latest-visit-entries")).toHaveTextContent("visits:1|edit:false");
+  });
+
+  it("renders the parks map page with authenticated parks", async () => {
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({ parks: [publicPark] })
+      .mockResolvedValueOnce({ visits: [visitWithPark] })
+      .mockResolvedValueOnce({
+        email: "admin@example.com",
+        id: "1",
+        name: "Admin",
+        picture: "https://example.com/avatar.jpg",
+      });
+
+    await renderPublicRoute(await ParksMapPage());
+
     expect(screen.getByTestId("park-explorer")).toHaveTextContent("parks:1|auth:true|error:none");
   });
 
-  it("shows parks without visit summaries when visit data fails on the home page", async () => {
+  it("shows parks without visit summaries when visit data fails on the parks map page", async () => {
     vi.mocked(apiFetch)
       .mockResolvedValueOnce({ parks: [publicPark] })
       .mockRejectedValueOnce(new Error("visits unavailable"))
       .mockRejectedValueOnce(new Error("unauthorized"));
 
-    await renderPublicRoute(await HomePage());
+    await renderPublicRoute(await ParksMapPage());
 
     expect(screen.getByTestId("park-explorer")).toHaveTextContent("parks:1|auth:false|error:none");
   });
 
-  it("shows the fallback error message when both home page park requests fail", async () => {
+  it("shows the fallback error message when both parks map page park requests fail", async () => {
     vi.mocked(apiFetch)
       .mockRejectedValueOnce(new Error("backend offline"))
       .mockRejectedValueOnce(new Error("backend offline"))
       .mockRejectedValueOnce(new Error("unauthorized"));
 
-    await renderPublicRoute(await HomePage());
+    await renderPublicRoute(await ParksMapPage());
 
     expect(screen.getByTestId("park-explorer")).toHaveTextContent(
       "parks:0|auth:false|error:backend offline",
@@ -251,6 +308,12 @@ describe("App pages", () => {
   it("builds translated metadata for the home page", async () => {
     await expect(generateHomeMetadata()).resolves.toEqual({
       title: "home.title",
+    });
+  });
+
+  it("builds translated metadata for the parks map page", async () => {
+    await expect(generateParksMapMetadata()).resolves.toEqual({
+      title: "home.mapTitle",
     });
   });
 
@@ -278,7 +341,7 @@ describe("App pages", () => {
     );
     expect(screen.getByRole("link", { name: "park.showInFinlandsMap" })).toHaveAttribute(
       "href",
-      "/?park=pallas",
+      "/parks?park=pallas",
     );
     expect(screen.getByTestId("park-boundary-map")).toHaveTextContent("Pallas-Yllästunturi");
     expect(screen.getByTestId("visit-accordion")).toHaveTextContent("visits:1|editable:true");
@@ -313,10 +376,6 @@ describe("App pages", () => {
   });
 
   it("renders the control panel overview page", async () => {
-    vi.mocked(apiFetch)
-      .mockResolvedValueOnce({ parks: [publicPark] })
-      .mockResolvedValueOnce({ visits: [visitWithPark] });
-
     await renderControlPanelRoute(await ControlPanelPage());
 
     expect(
@@ -335,11 +394,7 @@ describe("App pages", () => {
       "href",
       "/control-panel/visits",
     );
-    expect(screen.getByTestId("stats-cards")).toHaveTextContent(
-      "total:1|unique:1|notes:1|most:Pallas-Yllästunturi:1",
-    );
-    expect(screen.getByTestId("progress-section")).toHaveTextContent("items:1");
-    expect(screen.getByTestId("recent-visits")).toHaveTextContent("visits:1");
+    expect(screen.getByText("controlPanel.dashboard.description")).toBeInTheDocument();
   });
 
   it("builds metadata for the control panel dashboard", async () => {

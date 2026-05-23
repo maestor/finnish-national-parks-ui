@@ -1,8 +1,13 @@
-import { ParkExplorer } from "@/components/map/park-explorer";
+import { HomeVisitStats } from "@/components/dashboard/home-visit-stats";
+import { LatestVisitEntries } from "@/components/dashboard/latest-visit-entries";
+import { MostVisitedParks } from "@/components/dashboard/most-visited-parks";
+import { RecentVisits } from "@/components/dashboard/recent-visits";
 import { apiFetch } from "@/lib/api";
 import type { paths } from "@/lib/api-types";
-import { type MapPark, mergeParksWithVisitSummaries } from "@/lib/parks";
+import { type VisitWithPark, buildVisitedSummaryByParkSlug } from "@/lib/parks";
+import { MapPin } from "lucide-react";
 import { getTranslations } from "next-intl/server";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -17,34 +22,135 @@ type ApiPark =
   paths["/api/parks"]["get"]["responses"][200]["content"]["application/json"]["parks"][number];
 
 type AuthUser = paths["/auth/me"]["get"]["responses"][200]["content"]["application/json"];
-type VisitWithPark =
-  paths["/api/visits"]["get"]["responses"][200]["content"]["application/json"]["visits"][number];
 
 const HomePage = async () => {
+  const t = await getTranslations("home");
   const [parksResult, visitsResult, authResult] = await Promise.allSettled([
     apiFetch<{ parks: ApiPark[] }>("/api/parks"),
     apiFetch<{ visits: VisitWithPark[] }>("/api/visits"),
     apiFetch<AuthUser>("/auth/me"),
   ]);
 
-  let parks: MapPark[] = [];
-  let error: string | null = null;
+  const parks = parksResult.status === "fulfilled" ? parksResult.value.parks : [];
+  const visits = visitsResult.status === "fulfilled" ? visitsResult.value.visits : [];
   const canManageVisits = authResult.status === "fulfilled";
+  const visitedSummaryByParkSlug = buildVisitedSummaryByParkSlug(visits);
+  const uniqueParks = new Set(visits.map((visit) => visit.park.slug)).size;
 
-  if (parksResult.status === "fulfilled") {
-    parks = mergeParksWithVisitSummaries(
-      parksResult.value.parks,
-      visitsResult.status === "fulfilled" ? visitsResult.value.visits : [],
-    );
-  } else {
-    const t = await getTranslations("errors.generic");
-    const failure = parksResult.reason;
-    error = failure instanceof Error ? failure.message : t("unknownError");
+  const typeMap = new Map<string, { label: string; visited: number; total: number }>();
+  for (const park of parks) {
+    const hasVisits = (visitedSummaryByParkSlug.get(park.slug)?.visitCount ?? 0) > 0;
+    const existing = typeMap.get(park.type.slug);
+
+    if (existing) {
+      existing.total += 1;
+      if (hasVisits) {
+        existing.visited += 1;
+      }
+      continue;
+    }
+
+    typeMap.set(park.type.slug, {
+      label: park.type.name,
+      visited: hasVisits ? 1 : 0,
+      total: 1,
+    });
   }
 
+  const progressItems =
+    parks.length > 0
+      ? [
+          {
+            label: t("statistics.allParks"),
+            visited: uniqueParks,
+            total: parks.length,
+          },
+          ...Array.from(typeMap.values()).sort((left, right) =>
+            left.label.localeCompare(right.label, "fi-FI"),
+          ),
+        ]
+      : [];
+
+  const mostVisitedParks = parks
+    .map((park) => ({
+      parkName: park.name,
+      parkSlug: park.slug,
+      visitCount: visitedSummaryByParkSlug.get(park.slug)?.visitCount ?? 0,
+    }))
+    .filter((park) => park.visitCount > 0)
+    .sort(
+      (left, right) =>
+        right.visitCount - left.visitCount || left.parkName.localeCompare(right.parkName, "fi-FI"),
+    )
+    .slice(0, 5);
+
+  const recentVisits = [...visits]
+    .sort((left, right) => right.visitedOn.localeCompare(left.visitedOn))
+    .slice(0, 5)
+    .map((visit) => ({
+      id: visit.id,
+      parkName: visit.park.name,
+      parkSlug: visit.park.slug,
+      visitedOn: visit.visitedOn,
+    }));
+
+  const latestVisitEntries = [...visits]
+    .sort((left, right) => right.createdAt.localeCompare(left.createdAt))
+    .slice(0, 5)
+    .map((visit) => ({
+      id: visit.id,
+      parkName: visit.park.name,
+      parkSlug: visit.park.slug,
+      createdAt: visit.createdAt,
+    }));
+
+  const descriptionParagraphs = t("description")
+    .split("\n\n")
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
+
   return (
-    <main className="flex flex-1 flex-col min-h-0">
-      <ParkExplorer parks={parks} error={error} canManageVisits={canManageVisits} />
+    <main className="container mx-auto flex flex-1 flex-col px-4 py-8">
+      <div className="max-w-3xl">
+        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{t("title")}</h1>
+        <div className="mt-4 space-y-4 text-muted-foreground">
+          {descriptionParagraphs.map((paragraph) => (
+            <p key={paragraph}>{paragraph}</p>
+          ))}
+        </div>
+        <Link
+          href="/parks"
+          className="mt-5 inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+        >
+          <MapPin className="h-4 w-4 text-primary" aria-hidden="true" />
+          {t("openMap")}
+        </Link>
+      </div>
+
+      <HomeVisitStats
+        sectionTitle={t("statistics.title")}
+        totalVisitsLabel={t("statistics.totalVisits")}
+        totalVisits={visits.length}
+        progressItems={progressItems}
+      />
+      <MostVisitedParks
+        title={t("mostVisitedParks.title")}
+        emptyMessage={t("mostVisitedParks.empty")}
+        visitCountLabel={t("mostVisitedParks.visitCount")}
+        parks={mostVisitedParks}
+      />
+      <RecentVisits
+        title={t("recentVisits.title")}
+        emptyMessage={t("recentVisits.empty")}
+        visits={recentVisits}
+        showEditLinks={canManageVisits}
+      />
+      <LatestVisitEntries
+        title={t("latestEntries.title")}
+        emptyMessage={t("latestEntries.empty")}
+        visits={latestVisitEntries}
+        showEditLinks={canManageVisits}
+      />
     </main>
   );
 };
