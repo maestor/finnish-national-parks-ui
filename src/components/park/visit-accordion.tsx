@@ -102,20 +102,20 @@ export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionPro
               key={visit.id}
               className={`flex items-center justify-between rounded-lg border bg-card shadow-sm ${season.borderClass} border-l-4 px-4 py-3`}
             >
-              <span className="flex flex-wrap items-center gap-2.5 text-sm font-medium sm:text-base">
+              <span className="flex flex-wrap items-center gap-2.5 text-sm font-medium">
                 <span
                   aria-hidden="true"
-                  className={`inline-flex items-center justify-center rounded-full px-2.5 py-1 text-sm leading-none sm:text-base ${season.badgeClass}`}
+                  className={`inline-flex items-center justify-center rounded-full px-2.5 py-1 text-sm leading-none ${season.badgeClass}`}
                 >
                   {season.emoji}
                 </span>
-                <span className="inline-flex items-center justify-center rounded-full bg-primary/10 px-2.5 py-1 text-sm leading-none font-bold text-primary sm:text-base">
+                <span className="inline-flex items-center justify-center rounded-full bg-primary/10 px-2.5 py-1 text-sm leading-none font-bold text-primary">
                   {t("visitNumber", { number })}
                 </span>
-                <span className="text-base sm:text-lg">{formatDate(visit.visitedOn)}</span>
+                <span className="text-base">{formatDate(visit.visitedOn)}</span>
                 {visit.route && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-700 px-2.5 py-1 text-sm leading-none font-semibold text-white dark:bg-emerald-500/15 dark:text-emerald-400 sm:text-base">
-                    <Route className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-700 px-2.5 py-1 text-sm leading-none font-semibold text-white dark:bg-emerald-500/15 dark:text-emerald-400">
+                    <Route className="h-3.5 w-3.5" aria-hidden="true" />
                     {visit.route}
                   </span>
                 )}
@@ -138,26 +138,26 @@ export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionPro
               title={isOpen ? t("hideDetails") : t("showDetails")}
               aria-label={isOpen ? t("hideDetails") : t("showDetails")}
             >
-              <span className="flex flex-wrap items-center gap-2.5 text-sm font-medium sm:text-base">
+              <span className="flex flex-wrap items-center gap-2.5 text-sm font-medium">
                 <span
                   aria-hidden="true"
-                  className={`inline-flex items-center justify-center rounded-full px-2.5 py-1 text-sm leading-none sm:text-base ${season.badgeClass}`}
+                  className={`inline-flex items-center justify-center rounded-full px-2.5 py-1 text-sm leading-none ${season.badgeClass}`}
                 >
                   {season.emoji}
                 </span>
-                <span className="inline-flex items-center justify-center rounded-full bg-primary/10 px-2.5 py-1 text-sm leading-none font-bold text-primary sm:text-base">
+                <span className="inline-flex items-center justify-center rounded-full bg-primary/10 px-2.5 py-1 text-sm leading-none font-bold text-primary">
                   {t("visitNumber", { number })}
                 </span>
-                <span className="text-base sm:text-lg">{formatDate(visit.visitedOn)}</span>
+                <span className="text-base">{formatDate(visit.visitedOn)}</span>
                 {visit.route && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-700 px-2.5 py-1 text-sm leading-none font-semibold text-white dark:bg-emerald-500/15 dark:text-emerald-400 sm:text-base">
-                    <Route className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-700 px-2.5 py-1 text-sm leading-none font-semibold text-white dark:bg-emerald-500/15 dark:text-emerald-400">
+                    <Route className="h-3.5 w-3.5" aria-hidden="true" />
                     {visit.route}
                   </span>
                 )}
                 {hasImages && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-sm leading-none font-semibold text-primary sm:text-base">
-                    <Images className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-sm leading-none font-semibold text-primary">
+                    <Images className="h-3.5 w-3.5" aria-hidden="true" />
                     {t("imageCount", { count: imageCount })}
                   </span>
                 )}
