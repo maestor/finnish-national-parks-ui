@@ -1,5 +1,6 @@
 import { apiPublicFetch } from "./api";
 import type { paths } from "./api-types";
+import { getParkTypeFilterSortIndex } from "./park-type-filters";
 import type { ParkDetail, ParkVisits, VisitWithPark } from "./parks";
 import { PUBLIC_HOME_SUMMARY_TAG, PUBLIC_MAP_SUMMARY_TAG, getPublicParkTag } from "./public-cache";
 
@@ -96,8 +97,16 @@ export const createHomeProgressItems = (
         label: item.type.name,
         visited: item.visitedParks,
         total: item.totalParks,
+        sortIndex: getParkTypeFilterSortIndex(item.type.slug),
       }))
-      .sort((left, right) => left.label.localeCompare(right.label, "fi-FI")),
+      .sort((left, right) => {
+        if (left.sortIndex !== right.sortIndex) {
+          return left.sortIndex - right.sortIndex;
+        }
+
+        return left.label.localeCompare(right.label, "fi-FI");
+      })
+      .map(({ sortIndex: _sortIndex, ...item }) => item),
   ];
 };
 

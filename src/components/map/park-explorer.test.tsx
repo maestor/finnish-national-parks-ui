@@ -106,6 +106,9 @@ const MobileFilterToggleHarness = () => {
       <button type="button" onClick={() => focusParkOnHome("teijo")}>
         focus-teijo
       </button>
+      <button type="button" onClick={() => focusParkOnHome("punkaharju")}>
+        focus-punkaharju
+      </button>
     </>
   );
 };
@@ -125,8 +128,9 @@ describe("ParkExplorer", () => {
   it("filters the visible parks by selected type, including nature trails", async () => {
     render(<ParkExplorer parks={parks} />);
 
-    expect(screen.getByText("count:4")).toBeInTheDocument();
+    expect(screen.getByText("count:3")).toBeInTheDocument();
     expect(screen.getByText("admin:false")).toBeInTheDocument();
+    expect(screen.queryByText("Punkaharjun luontopolku")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "home.filters.natureTrails" }));
 
@@ -198,7 +202,26 @@ describe("ParkExplorer", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "focus-teijo" }));
 
-    expect(screen.getByText("count:4")).toBeInTheDocument();
+    expect(screen.getByText("count:3")).toBeInTheDocument();
     expect(screen.getByText("focus:teijo")).toBeInTheDocument();
+  });
+
+  it("switches to the nature trail filter when header search focuses a trail", () => {
+    render(
+      <HomeMapControlsProvider>
+        <MobileFilterToggleHarness />
+        <ParkExplorer parks={parks} />
+      </HomeMapControlsProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "home.filters.hikingAreas" }));
+
+    expect(screen.getByText("count:1")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "focus-punkaharju" }));
+
+    expect(screen.getByText("count:1")).toBeInTheDocument();
+    expect(screen.getByText("focus:punkaharju")).toBeInTheDocument();
+    expect(screen.getByText("Punkaharjun luontopolku")).toBeInTheDocument();
   });
 });
