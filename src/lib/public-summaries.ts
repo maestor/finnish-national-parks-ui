@@ -36,6 +36,8 @@ export interface HomeLatestVisitEntryItem {
   createdAt: string;
 }
 
+const HOME_ACTIVITY_ITEM_LIMIT = 10;
+
 export const fetchPublicHomeSummary = async (): Promise<PublicHomeSummary> =>
   apiPublicFetch<PublicHomeSummary>("/api/public/home-summary", {
     cache: "force-cache",
@@ -120,7 +122,7 @@ export const createHomeMostVisitedParks = (summary: PublicHomeSummary): HomeMost
 export const createHomeRecentVisitsFromSummary = (
   summary: PublicHomeSummary,
 ): HomeRecentVisitItem[] =>
-  summary.recentVisits.slice(0, 5).map((visit) => ({
+  summary.recentVisits.slice(0, HOME_ACTIVITY_ITEM_LIMIT).map((visit) => ({
     parkName: visit.park.name,
     parkSlug: visit.park.slug,
     visitedOn: visit.visitedSummary.lastVisitedOn,
@@ -131,7 +133,7 @@ export const createHomeLatestVisitEntriesFromSummary = (
 ): HomeLatestVisitEntryItem[] =>
   [...summary.latestVisitEntries]
     .sort((left, right) => right.createdAt.localeCompare(left.createdAt) || right.id - left.id)
-    .slice(0, 5)
+    .slice(0, HOME_ACTIVITY_ITEM_LIMIT)
     .map((visit) => ({
       id: visit.id,
       parkName: visit.park.name,
@@ -144,7 +146,7 @@ export const createHomeRecentVisitsFromVisitList = (
 ): HomeRecentVisitItem[] =>
   [...visits]
     .sort((left, right) => right.visitedOn.localeCompare(left.visitedOn))
-    .slice(0, 5)
+    .slice(0, HOME_ACTIVITY_ITEM_LIMIT)
     .map((visit) => ({
       id: visit.id,
       parkName: visit.park.name,
@@ -157,7 +159,7 @@ export const createHomeLatestVisitEntriesFromVisitList = (
 ): HomeLatestVisitEntryItem[] =>
   [...visits]
     .sort((left, right) => right.createdAt.localeCompare(left.createdAt))
-    .slice(0, 5)
+    .slice(0, HOME_ACTIVITY_ITEM_LIMIT)
     .map((visit) => ({
       id: visit.id,
       parkName: visit.park.name,

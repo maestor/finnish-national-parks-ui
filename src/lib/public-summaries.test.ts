@@ -166,9 +166,9 @@ describe("createHomeProgressItems", () => {
     ]);
   });
 
-  it("limits public recent visits to the first five items", () => {
+  it("limits public recent visits to the first ten items", () => {
     const summary = buildSummary();
-    summary.recentVisits = Array.from({ length: 7 }, (_, index) => ({
+    summary.recentVisits = Array.from({ length: 12 }, (_, index) => ({
       park: {
         name: `Park ${index + 1}`,
         slug: `park-${index + 1}`,
@@ -182,13 +182,18 @@ describe("createHomeProgressItems", () => {
 
     const recentVisits = createHomeRecentVisitsFromSummary(summary);
 
-    expect(recentVisits).toHaveLength(5);
+    expect(recentVisits).toHaveLength(10);
     expect(recentVisits.map((visit) => visit.parkSlug)).toEqual([
       "park-1",
       "park-2",
       "park-3",
       "park-4",
       "park-5",
+      "park-6",
+      "park-7",
+      "park-8",
+      "park-9",
+      "park-10",
     ]);
   });
 
