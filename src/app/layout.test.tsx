@@ -136,6 +136,11 @@ describe("RootLayout", () => {
         statusBarStyle: "default",
         title: "metadata.title",
       },
+      icons: {
+        icon: [{ url: "/icons/favicon-32x32.png", sizes: "32x32", type: "image/png" }],
+        shortcut: ["/icons/favicon-32x32.png"],
+        apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+      },
       formatDetection: {
         telephone: false,
       },
