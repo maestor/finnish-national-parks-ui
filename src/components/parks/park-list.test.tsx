@@ -103,9 +103,11 @@ describe("ParkList", () => {
 
     expect(mockRevalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "aulanko" });
     expect(mockRefresh).toHaveBeenCalled();
-    expect(
-      screen.queryByRole("link", { name: "Aulangon luonnonsuojelualue" }),
-    ).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("link", { name: "Aulangon luonnonsuojelualue" }),
+      ).not.toBeInTheDocument();
+    });
   });
 
   it("does not call the API when park removal is cancelled", () => {
@@ -156,9 +158,11 @@ describe("ParkList", () => {
 
     expect(mockRevalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "repovesi" });
     expect(mockRefresh).toHaveBeenCalled();
-    expect(
-      screen.queryByRole("link", { name: "Repoveden kansallispuisto" }),
-    ).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("link", { name: "Repoveden kansallispuisto" }),
+      ).not.toBeInTheDocument();
+    });
   });
 
   it("filters parks by search query and type", async () => {
