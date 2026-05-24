@@ -45,6 +45,8 @@ export const VisitImageGallery = ({
   const hasMultipleImages = images.length > 1;
   const usesCarouselLayout = thumbnailLayout === "carousel";
   const thumbnailsRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
   const activeImage =
     activeIndex === null
       ? null
@@ -55,6 +57,8 @@ export const VisitImageGallery = ({
 
   useEffect(() => {
     if (activeIndex === null) {
+      previouslyFocusedElementRef.current?.focus();
+      previouslyFocusedElementRef.current = null;
       return;
     }
 
@@ -87,6 +91,7 @@ export const VisitImageGallery = ({
       }
     };
 
+    closeButtonRef.current?.focus();
     window.addEventListener("keydown", handleKeyDown);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
@@ -228,6 +233,7 @@ export const VisitImageGallery = ({
                         return;
                       }
 
+                      previouslyFocusedElementRef.current = event.currentTarget;
                       setActiveIndex(index);
                     }}
                     className={cn(
@@ -289,6 +295,7 @@ export const VisitImageGallery = ({
                 />
                 <button
                   type="button"
+                  ref={closeButtonRef}
                   onClick={() => setActiveIndex(null)}
                   className="absolute right-3 top-3 inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   aria-label={t("close")}

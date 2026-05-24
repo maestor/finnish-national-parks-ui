@@ -75,6 +75,7 @@ describe("VisitImageGallery", () => {
 
     expect(screen.getByRole("dialog", { name: "imageGallery.dialogLabel" })).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "imageGallery.activeImage" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "imageGallery.close" })).toHaveFocus();
   });
 
   it("disables native browser dragging for thumbnail images", () => {
@@ -95,6 +96,7 @@ describe("VisitImageGallery", () => {
     expect(
       screen.queryByRole("dialog", { name: "imageGallery.dialogLabel" }),
     ).not.toBeInTheDocument();
+    expect(firstThumbnail).toHaveFocus();
   });
 
   it("hides rail controls when thumbnails do not overflow", () => {

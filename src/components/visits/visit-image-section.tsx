@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { VisitImageGallery } from "@/components/visits/visit-image-gallery";
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/cn";
+import { prepareImageFileForUpload } from "@/lib/image-upload";
 import type { VisitImage } from "@/lib/parks";
 import { revalidatePublicCache } from "@/lib/public-cache";
 import { Images, Trash2, Upload, X } from "lucide-react";
@@ -82,6 +83,7 @@ export const VisitImageSection = ({
   const [localImages, setLocalImages] = useState(images);
   const [savedImageOrder, setSavedImageOrder] = useState(images.map((image) => String(image.id)));
   const [pendingImages, setPendingImages] = useState<PendingImage[]>([]);
+  const [isPreparingImages, setIsPreparingImages] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isReordering, setIsReordering] = useState(false);
   const [uploadErrors, setUploadErrors] = useState<string[]>([]);
@@ -289,24 +291,37 @@ export const VisitImageSection = ({
     }
   };
 
-  const handleFileSelect = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? []);
     const validFiles: PendingImage[] = [];
     const errors: string[] = [];
     setActionError(null);
     setStatusMessage(null);
+    setUploadErrors([]);
+    setIsPreparingImages(true);
 
-    for (const file of files) {
-      if (ACCEPTED_TYPES.includes(file.type)) {
-        pendingImageIdRef.current += 1;
-        validFiles.push({
-          id: `pending-image-${pendingImageIdRef.current}`,
-          file,
-          previewUrl: URL.createObjectURL(file),
-        });
-      } else {
-        errors.push(t("unsupportedType", { name: file.name }));
+    try {
+      for (const file of files) {
+        if (!ACCEPTED_TYPES.includes(file.type)) {
+          errors.push(t("unsupportedType", { name: file.name }));
+          continue;
+        }
+
+        try {
+          const preparedFile = await prepareImageFileForUpload(file);
+          pendingImageIdRef.current += 1;
+          validFiles.push({
+            id: `pending-image-${pendingImageIdRef.current}`,
+            file: preparedFile,
+            previewUrl: URL.createObjectURL(preparedFile),
+          });
+        } catch {
+          errors.push(t("preprocessFailed", { name: file.name }));
+        }
       }
+    } finally {
+      setIsPreparingImages(false);
+      event.target.value = "";
     }
 
     if (errors.length > 0) {
@@ -316,8 +331,6 @@ export const VisitImageSection = ({
     if (validFiles.length > 0) {
       setPendingImages((currentImages) => [...currentImages, ...validFiles]);
     }
-
-    event.target.value = "";
   };
 
   const handleRemoveFile = (pendingImageId: string) => {
@@ -334,7 +347,7 @@ export const VisitImageSection = ({
   };
 
   const handleUpload = async () => {
-    if (pendingImages.length === 0) {
+    if (pendingImages.length === 0 || isPreparingImages) {
       return;
     }
 
@@ -584,7 +597,12 @@ export const VisitImageSection = ({
 
       <div className="space-y-3">
         <div className="flex flex-wrap items-center gap-4">
-          <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isPreparingImages || isUploading}
+          >
             <Upload className="h-4 w-4" aria-hidden="true" />
             {t("selectFiles")}
           </Button>
@@ -594,9 +612,13 @@ export const VisitImageSection = ({
             multiple
             accept="image/jpeg,image/png,image/webp"
             onChange={handleFileSelect}
+            disabled={isPreparingImages || isUploading}
             className="sr-only"
             aria-label={t("selectFiles")}
           />
+          {isPreparingImages && (
+            <span className="text-sm text-muted-foreground">{t("preparing")}</span>
+          )}
           {pendingImages.length > 0 && (
             <span className="text-sm text-muted-foreground">
               {t("selectedCount", { count: pendingImages.length })}
@@ -672,7 +694,7 @@ export const VisitImageSection = ({
           <Button
             type="button"
             onClick={handleUpload}
-            disabled={isUploading || activeDrag?.collection === "pending"}
+            disabled={isPreparingImages || isUploading || activeDrag?.collection === "pending"}
           >
             {isUploading ? t("uploading") : t("upload")}
           </Button>
