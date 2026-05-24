@@ -109,11 +109,13 @@ src/app/
 ### Data Flow
 
 ```
-Browser → Next.js App → apiFetch() → Hono Backend (:3004)
-                ↓
-         Proxy verifies JWT cookie
-                ↓
-         Control-panel routes protected
+Browser → Next.js App
+          ├─ server-side reads → Hono Backend (:3004)
+          └─ browser auth/admin writes → Next.js proxy routes → Hono Backend (:3004)
+                               ↓
+                        Proxy verifies JWT cookie
+                               ↓
+                        Control-panel routes protected
 ```
 
 The backend handles:
@@ -143,13 +145,14 @@ Route naming caveat:
 ## Authentication Flow
 
 1. User clicks **"Kirjaudu"** → goes to `/login`
-2. Clicks **"Kirjaudu Googlella"** → redirects to backend `/auth/google`
-3. Backend redirects to Google OAuth consent screen
-4. Google redirects back to backend `/auth/google/callback`
-5. Backend validates allowlist, sets `__session` cookie, redirects to `/control-panel`
-6. `src/proxy.ts` verifies the cookie on every `/control-panel/*` request
-7. Header shows **"Hallinta"** link when authenticated
-8. Control panel has **"Kirjaudu ulos"** logout button
+2. Clicks **"Kirjaudu Googlella"** → goes to frontend `/auth/login`
+3. Frontend redirects to proxied `/auth/google`
+4. Backend redirects to Google OAuth consent screen
+5. Google redirects back to frontend `/auth/google/callback`, which proxies the backend callback
+6. Backend validates allowlist, sets `__session` cookie through the frontend response, then redirects to `/control-panel`
+7. `src/proxy.ts` verifies the cookie on every `/control-panel/*` request
+8. Header shows **"Hallinta"** link when authenticated
+9. Control panel has **"Kirjaudu ulos"** logout button
 
 ---
 
@@ -170,10 +173,13 @@ const visit = await apiFetch<Visit>("/api/parks/pallas/visits", {
 });
 ```
 
-- Automatically sends `Authorization: Bearer <API_KEY>` header
+- For server-side requests, sends `Authorization: Bearer <API_KEY>` directly to the backend
+- For browser-side calls, uses same-origin frontend routes such as `/auth/me` and `/api/visits/:id`
 - Sends cookies (`credentials: "include"`) in browser for auth and admin write endpoints
 - Throws `ApiError` on non-2xx responses
 - Handles empty-body 204 responses
+
+The browser does **not** need direct access to `API_KEY`. Next.js route handlers relay browser auth and admin write requests to the backend and attach the server-side key there.
 
 Use `apiPublicFetch<T>(path, options?)` for cacheable public server-side reads:
 
@@ -235,3 +241,10 @@ See `AGENTS.md` for the full convention list. Key rules:
 - Public summary endpoints: `/api/public/home-summary`, `/api/public/map-summary`
 - `GET` endpoints are public-readable; non-`GET` endpoints require authenticated admin access
 - OpenAPI doc: `http://localhost:3004/openapi.json`
+
+## Production Deployment Notes
+
+- The frontend expects `NEXT_PUBLIC_API_URL`, `API_KEY`, and `AUTH_JWT_SECRET` to be set in Vercel.
+- `AUTH_JWT_SECRET` must match the backend exactly so `src/proxy.ts` can verify the session JWT.
+- For production auth, prefer custom domains such as `app.example.com` and `api.example.com` over two separate default `*.vercel.app` domains.
+- See [docs/DEPLOYMENT.md](./DEPLOYMENT.md) for the full deployment checklist.

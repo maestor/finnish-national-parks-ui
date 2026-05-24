@@ -16,10 +16,11 @@ describe("auth login route", () => {
     vi.clearAllMocks();
   });
 
-  it("redirects to the backend Google auth endpoint", async () => {
-    const response = await GET();
+  it("redirects to the local Google auth proxy route", async () => {
+    const request = new Request("https://frontend.example/auth/login");
+    const response = await GET(request);
 
-    expect(redirectMock).toHaveBeenCalledWith("http://localhost:3004/auth/google");
-    expect(response).toEqual({ redirectedTo: "http://localhost:3004/auth/google" });
+    expect(redirectMock).toHaveBeenCalledWith(new URL("/auth/google", request.url));
+    expect(response).toEqual({ redirectedTo: new URL("/auth/google", request.url) });
   });
 });
