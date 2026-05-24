@@ -217,6 +217,14 @@ See `AGENTS.md` for the full convention list. Key rules:
 - **Tailwind v4** — semantic tokens (`bg-background`, `text-primary`)
 - **Dark mode** — use `dark:` variants, test both themes
 
+## PWA Assets
+
+- The web app manifest is defined in `src/app/manifest.ts`
+- The Serwist worker source lives in `src/app/sw.ts`
+- The service worker route is exposed from `src/app/serwist/[path]/route.ts`
+- App install icons are served from `src/app/icons/`
+- The shared icon artwork and image responses live in `src/lib/pwa-icon.tsx`
+
 ---
 
 ## Backend Assumptions

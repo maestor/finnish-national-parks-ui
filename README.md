@@ -119,6 +119,13 @@ The backend exposes its spec at `http://localhost:3004/openapi.json`.
 
 The app is configured as a Progressive Web App using `@serwist/turbopack`, which is compatible with Next.js 16's default Turbopack bundler. The service worker is disabled in development and built automatically in production.
 
+Current PWA support includes:
+
+- Web app manifest with standalone display mode
+- Serwist-powered service worker and offline document fallback at `src/app/~offline/page.tsx`
+- Route-served install icons under `src/app/icons/`
+- Dedicated favicon and Apple touch icon metadata
+
 ## Conventions
 
 - **Arrow functions only** — Enforced via Biome (`useArrowFunction: error`)
