@@ -1,6 +1,16 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { apiFetch } from "./api";
 import type { PublicHomeSummary } from "./public-summaries";
-import { createHomeProgressItems } from "./public-summaries";
+import {
+  createHomeProgressItems,
+  fetchPublicParkDetail,
+  fetchPublicParkVisits,
+} from "./public-summaries";
+
+vi.mock("./api", () => ({
+  apiFetch: vi.fn(),
+  apiPublicFetch: vi.fn(),
+}));
 
 const buildSummary = (): PublicHomeSummary => ({
   totalVisits: 12,
@@ -81,6 +91,10 @@ const buildSummary = (): PublicHomeSummary => ({
 });
 
 describe("createHomeProgressItems", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("orders park type progress items to match the map filters", () => {
     const progressItems = createHomeProgressItems(buildSummary(), "Kaikki paikat");
 
@@ -93,5 +107,31 @@ describe("createHomeProgressItems", () => {
       "Virkistysalueet",
       "Luontopolut",
     ]);
+  });
+
+  it("fetches public park detail through the server-side API client", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({ slug: "riisitunturi" });
+
+    await fetchPublicParkDetail("riisitunturi", { includeBoundary: true });
+
+    expect(apiFetch).toHaveBeenCalledWith("/api/parks/riisitunturi?includeBoundary=true", {
+      cache: "force-cache",
+      next: {
+        tags: ["public-park:riisitunturi"],
+      },
+    });
+  });
+
+  it("fetches public park visits through the server-side API client", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({ visits: [] });
+
+    await fetchPublicParkVisits("riisitunturi");
+
+    expect(apiFetch).toHaveBeenCalledWith("/api/parks/riisitunturi/visits", {
+      cache: "force-cache",
+      next: {
+        tags: ["public-park:riisitunturi"],
+      },
+    });
   });
 });

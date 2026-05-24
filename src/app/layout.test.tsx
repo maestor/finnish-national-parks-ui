@@ -50,8 +50,16 @@ vi.mock("@/components/providers/home-map-controls-provider", () => ({
 }));
 
 vi.mock("@/components/providers/serwist-provider", () => ({
-  SerwistProvider: ({ children, swUrl }: { children: ReactNode; swUrl: string }) => {
-    serwistProviderPropsMock({ swUrl });
+  SerwistProvider: ({
+    children,
+    swUrl,
+    disable,
+  }: {
+    children: ReactNode;
+    swUrl: string;
+    disable?: boolean;
+  }) => {
+    serwistProviderPropsMock({ swUrl, disable });
     return <div data-testid="serwist-provider">{children}</div>;
   },
 }));
@@ -112,7 +120,10 @@ describe("RootLayout", () => {
         locale: "fi",
       }),
     );
-    expect(serwistProviderPropsMock).toHaveBeenCalledWith({ swUrl: "/serwist/sw.js" });
+    expect(serwistProviderPropsMock).toHaveBeenCalledWith({
+      swUrl: "/serwist/sw.js",
+      disable: false,
+    });
     expect(themeProviderPropsMock).toHaveBeenCalledWith({
       attribute: "class",
       defaultTheme: "system",
@@ -137,8 +148,11 @@ describe("RootLayout", () => {
         title: "metadata.title",
       },
       icons: {
-        icon: [{ url: "/icons/favicon-32x32.png", sizes: "32x32", type: "image/png" }],
-        shortcut: ["/icons/favicon-32x32.png"],
+        icon: [
+          { url: "/favicon.ico", sizes: "32x32", type: "image/png" },
+          { url: "/icons/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+        ],
+        shortcut: ["/favicon.ico"],
         apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
       },
       formatDetection: {

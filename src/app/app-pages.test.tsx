@@ -377,7 +377,7 @@ describe("App pages", () => {
   });
 
   it("renders the park detail page with main content and visit history", async () => {
-    vi.mocked(apiPublicFetch)
+    vi.mocked(apiFetch)
       .mockResolvedValueOnce({
         ...publicPark,
         boundaryGeoJson: { type: "FeatureCollection", features: [] },
@@ -403,7 +403,7 @@ describe("App pages", () => {
   });
 
   it("renders a simple fallback when the park detail page cannot load the park", async () => {
-    vi.mocked(apiPublicFetch).mockResolvedValueOnce(null).mockResolvedValueOnce(null);
+    vi.mocked(apiFetch).mockResolvedValueOnce(null).mockResolvedValueOnce(null);
 
     await renderPublicRoute(
       await ParkDetailPage({ params: Promise.resolve({ slug: "missing-park" }) }),
@@ -413,7 +413,7 @@ describe("App pages", () => {
   });
 
   it("builds park detail metadata from the fetched park name and falls back to the slug", async () => {
-    vi.mocked(apiPublicFetch)
+    vi.mocked(apiFetch)
       .mockResolvedValueOnce({ name: "Pallas-Yllästunturi" })
       .mockRejectedValueOnce(new Error("missing"));
 
