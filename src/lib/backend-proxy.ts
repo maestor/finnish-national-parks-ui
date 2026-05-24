@@ -4,7 +4,7 @@ interface ProxyRequestOptions {
   includeApiKey?: boolean;
 }
 
-const BACKEND_ORIGIN = new URL(env.NEXT_PUBLIC_API_URL).origin;
+const getBackendOrigin = (): string => new URL(env.NEXT_PUBLIC_API_URL).origin;
 
 const getBackendUrl = (request: Request, backendPath: string): URL => {
   const requestUrl = new URL(request.url);
@@ -34,6 +34,7 @@ const buildProxyRequestHeaders = (request: Request, includeApiKey: boolean): Hea
 
 const buildProxyResponseHeaders = (response: Response, request: Request): Headers => {
   const headers = new Headers();
+  const backendOrigin = getBackendOrigin();
 
   response.headers.forEach((value, key) => {
     const normalizedKey = key.toLowerCase();
@@ -41,9 +42,9 @@ const buildProxyResponseHeaders = (response: Response, request: Request): Header
       return;
     }
 
-    if (normalizedKey === "location" && value.startsWith(BACKEND_ORIGIN)) {
+    if (normalizedKey === "location" && value.startsWith(backendOrigin)) {
       const requestOrigin = new URL(request.url).origin;
-      headers.set(key, `${requestOrigin}${value.slice(BACKEND_ORIGIN.length)}`);
+      headers.set(key, `${requestOrigin}${value.slice(backendOrigin.length)}`);
       return;
     }
 
