@@ -1,5 +1,6 @@
 import { DashboardSectionCard } from "@/components/dashboard/dashboard-section-card";
 import { EditVisitLink } from "@/components/visits/edit-visit-link";
+import { formatFinnishDate } from "@/lib/fi-date";
 import { NotebookPen } from "lucide-react";
 import Link from "next/link";
 
@@ -23,7 +24,6 @@ export const LatestVisitEntries = ({
   visits,
   showEditLinks = false,
 }: LatestVisitEntriesProps) => {
-  const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString("fi-FI");
   const getVisitKey = (visit: LatestVisitEntry) =>
     visit.id ?? `${visit.parkSlug}:${visit.createdAt}`;
 
@@ -55,7 +55,7 @@ export const LatestVisitEntries = ({
               </Link>
               <div className="flex items-center gap-2 sm:shrink-0">
                 <span className="rounded-full border border-border/70 bg-muted/80 px-3 py-1 text-xs font-medium text-muted-foreground sm:text-sm">
-                  {formatDate(visit.createdAt)}
+                  {formatFinnishDate(visit.createdAt)}
                 </span>
                 {showEditLinks && visit.id !== undefined ? (
                   <EditVisitLink

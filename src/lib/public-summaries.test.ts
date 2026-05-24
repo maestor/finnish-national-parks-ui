@@ -2,7 +2,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { apiFetch } from "./api";
 import type { PublicHomeSummary } from "./public-summaries";
 import {
+  createHomeLatestVisitEntriesFromSummary,
   createHomeProgressItems,
+  createHomeRecentVisitsFromSummary,
   fetchPublicParkDetail,
   fetchPublicParkVisits,
 } from "./public-summaries";
@@ -106,6 +108,87 @@ describe("createHomeProgressItems", () => {
       "Muut LS-alueet",
       "Virkistysalueet",
       "Luontopolut",
+    ]);
+  });
+
+  it("sorts latest visit entries from the public summary by newest creation time", () => {
+    const summary = buildSummary();
+    summary.latestVisitEntries = [
+      {
+        id: 2,
+        createdAt: "2024-06-15T10:00:00.000Z",
+        updatedAt: "2024-06-15T10:00:00.000Z",
+        visitedOn: "2024-06-15",
+        park: {
+          name: "Nuuksio",
+          slug: "nuuksio",
+        },
+      },
+      {
+        id: 5,
+        createdAt: "2024-06-16T10:00:00.000Z",
+        updatedAt: "2024-06-16T10:00:00.000Z",
+        visitedOn: "2024-06-16",
+        park: {
+          name: "Pallas",
+          slug: "pallas",
+        },
+      },
+      {
+        id: 4,
+        createdAt: "2024-06-16T10:00:00.000Z",
+        updatedAt: "2024-06-16T10:00:00.000Z",
+        visitedOn: "2024-06-16",
+        park: {
+          name: "Oulanka",
+          slug: "oulanka",
+        },
+      },
+      {
+        id: 1,
+        createdAt: "2024-06-14T10:00:00.000Z",
+        updatedAt: "2024-06-14T10:00:00.000Z",
+        visitedOn: "2024-06-14",
+        park: {
+          name: "Riisitunturi",
+          slug: "riisitunturi",
+        },
+      },
+    ];
+
+    const latestVisitEntries = createHomeLatestVisitEntriesFromSummary(summary);
+
+    expect(latestVisitEntries.map((visit) => visit.parkSlug)).toEqual([
+      "pallas",
+      "oulanka",
+      "nuuksio",
+      "riisitunturi",
+    ]);
+  });
+
+  it("limits public recent visits to the first five items", () => {
+    const summary = buildSummary();
+    summary.recentVisits = Array.from({ length: 7 }, (_, index) => ({
+      park: {
+        name: `Park ${index + 1}`,
+        slug: `park-${index + 1}`,
+      },
+      visitedSummary: {
+        lastVisitedOn: `2024-06-${String(index + 10).padStart(2, "0")}`,
+        visitCount: index + 1,
+        visited: true,
+      },
+    }));
+
+    const recentVisits = createHomeRecentVisitsFromSummary(summary);
+
+    expect(recentVisits).toHaveLength(5);
+    expect(recentVisits.map((visit) => visit.parkSlug)).toEqual([
+      "park-1",
+      "park-2",
+      "park-3",
+      "park-4",
+      "park-5",
     ]);
   });
 
