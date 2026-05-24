@@ -1,4 +1,5 @@
 import { apiFetch } from "@/lib/api";
+import { prepareImageFileForUpload } from "@/lib/image-upload";
 import type { VisitImage } from "@/lib/parks";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -12,6 +13,10 @@ const { mockRevalidatePublicCache } = vi.hoisted(() => ({
 
 vi.mock("@/lib/api", () => ({
   apiFetch: vi.fn(),
+}));
+
+vi.mock("@/lib/image-upload", () => ({
+  prepareImageFileForUpload: vi.fn(async (file: File) => file),
 }));
 
 vi.mock("@/lib/public-cache", () => ({
@@ -226,6 +231,30 @@ describe("VisitImageSection", () => {
     ).toBeInTheDocument();
   });
 
+  it("navigates inside the lightbox without reordering the saved images", () => {
+    const { container } = render(
+      <VisitImageSection visitId={10} images={images} parkSlug="pallas" />,
+    );
+
+    const [firstThumbnail] = screen.getAllByRole("button", {
+      name: /imageGallery.open/i,
+    });
+    fireEvent.click(firstThumbnail);
+
+    expect(screen.getByRole("button", { name: "imageGallery.close" })).toHaveFocus();
+
+    fireEvent.keyDown(document.activeElement ?? window, { key: "ArrowRight" });
+
+    expect(screen.getByRole("img", { name: "imageGallery.activeImage" })).toHaveAttribute(
+      "src",
+      "https://example.com/full-2.jpg",
+    );
+    expect(getSavedImageOrder(container)).toEqual(["1", "2"]);
+    expect(
+      screen.queryByRole("button", { name: "controlPanel.visits.images.saveOrder" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("supports keyboard reordering for saved images", () => {
     const { container } = render(
       <VisitImageSection visitId={10} images={images} parkSlug="pallas" />,
@@ -265,7 +294,7 @@ describe("VisitImageSection", () => {
     expect(apiFetch).not.toHaveBeenCalled();
   });
 
-  it("shows upload controls after selecting files", () => {
+  it("shows upload controls after selecting files", async () => {
     const { container } = render(<VisitImageSection visitId={10} images={[]} parkSlug="pallas" />);
 
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
@@ -273,19 +302,26 @@ describe("VisitImageSection", () => {
 
     fireEvent.change(fileInput, { target: { files: [file] } });
 
-    expect(screen.getByText("controlPanel.visits.images.selectedCount")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("controlPanel.visits.images.selectedCount")).toBeInTheDocument();
+    });
     expect(
       screen.getByRole("button", { name: "controlPanel.visits.images.upload" }),
     ).toBeInTheDocument();
   });
 
-  it("removes a selected file before upload", () => {
+  it("removes a selected file before upload", async () => {
     const { container } = render(<VisitImageSection visitId={10} images={[]} parkSlug="pallas" />);
 
     const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
     const file = new File(["dummy"], "test.jpg", { type: "image/jpeg" });
 
     fireEvent.change(fileInput, { target: { files: [file] } });
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: "controlPanel.visits.images.removeFile" }),
+      ).toBeInTheDocument();
+    });
     fireEvent.click(screen.getByRole("button", { name: "controlPanel.visits.images.removeFile" }));
 
     expect(screen.queryByText("controlPanel.visits.images.selectedCount")).not.toBeInTheDocument();
@@ -308,6 +344,9 @@ describe("VisitImageSection", () => {
     const secondFile = new File(["dummy"], "second.jpg", { type: "image/jpeg" });
 
     fireEvent.change(fileInput, { target: { files: [firstFile, secondFile] } });
+    await waitFor(() => {
+      expect(screen.getByText("controlPanel.visits.images.selectedCount")).toBeInTheDocument();
+    });
 
     const initialPendingOrder = getPendingImageOrder(container);
     const secondPendingId = initialPendingOrder[1];
@@ -351,6 +390,45 @@ describe("VisitImageSection", () => {
     expect(uploadedFileNames).toEqual(["second.jpg", "first.jpg"]);
   });
 
+  it("uploads preprocessed files instead of the original files", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      images: [],
+      errors: [],
+    });
+    vi.mocked(prepareImageFileForUpload).mockImplementation(async (file) => {
+      return new File([`optimized:${file.name}`], `optimized-${file.name}`, {
+        type: "image/webp",
+      });
+    });
+
+    const { container } = render(<VisitImageSection visitId={10} images={[]} parkSlug="pallas" />);
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const originalFile = new File(["dummy"], "large.jpg", { type: "image/jpeg" });
+
+    fireEvent.change(fileInput, { target: { files: [originalFile] } });
+
+    await waitFor(() => {
+      expect(screen.getByText("controlPanel.visits.images.selectedCount")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "controlPanel.visits.images.upload" }));
+
+    await waitFor(() => {
+      expect(apiFetch).toHaveBeenCalledWith("/api/visits/10/images", {
+        method: "POST",
+        body: expect.any(FormData),
+      });
+    });
+
+    const requestInit = vi.mocked(apiFetch).mock.calls[0]?.[1];
+    const formData = requestInit?.body as FormData;
+    const uploadedFiles = formData.getAll("images") as File[];
+
+    expect(uploadedFiles).toHaveLength(1);
+    expect(uploadedFiles[0]?.name).toBe("optimized-large.jpg");
+    expect(uploadedFiles[0]?.type).toBe("image/webp");
+  });
+
   it("shows upload errors for unsupported file types", () => {
     const { container } = render(<VisitImageSection visitId={10} images={[]} parkSlug="pallas" />);
 
@@ -362,6 +440,25 @@ describe("VisitImageSection", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(
       "controlPanel.visits.images.unsupportedType",
     );
+  });
+
+  it("shows a preprocessing error when a selected image cannot be optimized", async () => {
+    vi.mocked(prepareImageFileForUpload).mockRejectedValueOnce(new Error("optimize failed"));
+
+    const { container } = render(<VisitImageSection visitId={10} images={[]} parkSlug="pallas" />);
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File(["dummy"], "broken.jpg", { type: "image/jpeg" });
+
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "controlPanel.visits.images.preprocessFailed",
+      );
+    });
+    expect(
+      screen.queryByRole("button", { name: "controlPanel.visits.images.upload" }),
+    ).not.toBeInTheDocument();
   });
 
   it("shows per-file errors from the backend", async () => {
@@ -376,6 +473,9 @@ describe("VisitImageSection", () => {
     const file = new File(["dummy"], "big.jpg", { type: "image/jpeg" });
 
     fireEvent.change(fileInput, { target: { files: [file] } });
+    await waitFor(() => {
+      expect(screen.getByText("controlPanel.visits.images.selectedCount")).toBeInTheDocument();
+    });
 
     const uploadButton = screen.getByRole("button", { name: "controlPanel.visits.images.upload" });
     fireEvent.click(uploadButton);
@@ -394,6 +494,9 @@ describe("VisitImageSection", () => {
     const file = new File(["dummy"], "test.jpg", { type: "image/jpeg" });
 
     fireEvent.change(fileInput, { target: { files: [file] } });
+    await waitFor(() => {
+      expect(screen.getByText("controlPanel.visits.images.selectedCount")).toBeInTheDocument();
+    });
     fireEvent.click(screen.getByRole("button", { name: "controlPanel.visits.images.upload" }));
 
     await waitFor(() => {
