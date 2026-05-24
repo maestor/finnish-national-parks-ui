@@ -38,7 +38,12 @@ const buildProxyResponseHeaders = (response: Response, request: Request): Header
 
   response.headers.forEach((value, key) => {
     const normalizedKey = key.toLowerCase();
-    if (normalizedKey === "content-length" || normalizedKey === "set-cookie") {
+    if (
+      normalizedKey === "content-length" ||
+      normalizedKey === "content-encoding" ||
+      normalizedKey === "transfer-encoding" ||
+      normalizedKey === "set-cookie"
+    ) {
       return;
     }
 
