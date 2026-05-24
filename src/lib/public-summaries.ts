@@ -1,4 +1,4 @@
-import { apiPublicFetch } from "./api";
+import { apiFetch, apiPublicFetch } from "./api";
 import type { paths } from "./api-types";
 import { getParkTypeFilterSortIndex } from "./park-type-filters";
 import type { ParkDetail, ParkVisits, VisitWithPark } from "./parks";
@@ -58,7 +58,7 @@ export const fetchPublicParkDetail = async (
     includeBoundary?: boolean;
   },
 ): Promise<ParkDetail> =>
-  apiPublicFetch<ParkDetail>(
+  apiFetch<ParkDetail>(
     `/api/parks/${slug}${options?.includeBoundary ? "?includeBoundary=true" : ""}`,
     {
       cache: "force-cache",
@@ -69,7 +69,7 @@ export const fetchPublicParkDetail = async (
   );
 
 export const fetchPublicParkVisits = async (slug: string): Promise<ParkVisits> =>
-  apiPublicFetch<ParkVisits>(`/api/parks/${slug}/visits`, {
+  apiFetch<ParkVisits>(`/api/parks/${slug}/visits`, {
     cache: "force-cache",
     next: {
       tags: [getPublicParkTag(slug)],

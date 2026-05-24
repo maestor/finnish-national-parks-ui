@@ -10,6 +10,7 @@ vi.mock("@/lib/backend-proxy", () => ({
 
 import { PATCH as patchParkRemoved } from "./parks/[slug]/removed/route";
 import { POST as postParkVisit } from "./parks/[slug]/visits/route";
+import { GET as getParks } from "./parks/route";
 import { DELETE as deleteVisitImage } from "./visits/[id]/images/[imageId]/route";
 import { PATCH as patchVisitImageOrder } from "./visits/[id]/images/reorder/route";
 import { POST as postVisitImage } from "./visits/[id]/images/route";
@@ -28,6 +29,14 @@ describe("api proxy routes", () => {
     await patchParkRemoved(request, { params: Promise.resolve({ slug: "pallas" }) });
 
     expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/parks/pallas/removed");
+  });
+
+  it("proxies public park listing reads", async () => {
+    const request = new Request("https://frontend.example/api/parks");
+
+    await getParks(request);
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/parks");
   });
 
   it("proxies visit creation for a park", async () => {

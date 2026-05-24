@@ -21,7 +21,14 @@ NEXT_PUBLIC_MAP_STYLE_URL=https://demotiles.maplibre.org/style.json
 - Public page data is fetched server-side from the backend.
 - Browser auth requests such as `/auth/me` and `/auth/logout` are proxied through Next.js route handlers.
 - Browser admin write requests are also proxied through Next.js route handlers.
+- Browser park search requests are also proxied through Next.js route handlers.
 - The OAuth start and callback routes are proxied through the frontend host so the session cookie can be stored on the frontend domain.
+
+## Current PWA note
+
+Service worker registration is currently disabled in production builds.
+
+This is intentional for now because the deployed Serwist worker route was returning `500` on Vercel. The rest of the frontend remains deployable and functional without the service worker while public pages and auth are stabilized.
 
 ## Important domain rule
 
