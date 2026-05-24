@@ -64,4 +64,27 @@ describe("proxyBackendRequest", () => {
     expect(response.headers.get("location")).toBe("https://frontend.example/control-panel");
     expect(response.headers.get("set-cookie")).toContain("__session=signed-token");
   });
+
+  it("strips backend encoding headers that would break browser decoding on the proxied response", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(JSON.stringify({ parks: [] }), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Content-Encoding": "gzip",
+          "Transfer-Encoding": "chunked",
+          "Content-Length": "123",
+        },
+      }),
+    );
+
+    const request = new Request("https://frontend.example/api/parks");
+
+    const response = await proxyBackendRequest(request, "/api/parks");
+
+    expect(response.headers.get("content-encoding")).toBeNull();
+    expect(response.headers.get("transfer-encoding")).toBeNull();
+    expect(response.headers.get("content-length")).toBeNull();
+    expect(response.headers.get("content-type")).toBe("application/json");
+  });
 });

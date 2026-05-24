@@ -1,14 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./route";
 
-const { redirectMock } = vi.hoisted(() => ({
-  redirectMock: vi.fn((url: URL | string, status?: number) => ({ redirectedTo: url, status })),
+const { createPwaIconResponseMock } = vi.hoisted(() => ({
+  createPwaIconResponseMock: vi.fn((size: number) => ({ size })),
 }));
 
-vi.mock("next/server", () => ({
-  NextResponse: {
-    redirect: redirectMock,
-  },
+vi.mock("@/lib/pwa-icon", () => ({
+  createPwaIconResponse: createPwaIconResponseMock,
 }));
 
 describe("favicon route", () => {
@@ -16,17 +14,10 @@ describe("favicon route", () => {
     vi.clearAllMocks();
   });
 
-  it("redirects the browser favicon path to the generated png icon", async () => {
-    const request = new Request("https://frontend.example/favicon.ico");
-    const response = await GET(request);
+  it("serves the browser favicon path from the generated 32 pixel icon", async () => {
+    const response = await GET();
 
-    expect(redirectMock).toHaveBeenCalledWith(
-      new URL("/icons/favicon-32x32.png", request.url),
-      308,
-    );
-    expect(response).toEqual({
-      redirectedTo: new URL("/icons/favicon-32x32.png", request.url),
-      status: 308,
-    });
+    expect(createPwaIconResponseMock).toHaveBeenCalledWith(32);
+    expect(response).toEqual({ size: 32 });
   });
 });

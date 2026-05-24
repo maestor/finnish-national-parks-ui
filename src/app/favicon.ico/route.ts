@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
+import { createPwaIconResponse } from "@/lib/pwa-icon";
 
-export const GET = async (request: Request) =>
-  NextResponse.redirect(new URL("/icons/favicon-32x32.png", request.url), 308);
+export const GET = async () => createPwaIconResponse(32);

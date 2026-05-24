@@ -148,10 +148,7 @@ describe("RootLayout", () => {
         title: "metadata.title",
       },
       icons: {
-        icon: [
-          { url: "/favicon.ico", sizes: "32x32", type: "image/png" },
-          { url: "/icons/favicon-32x32.png", sizes: "32x32", type: "image/png" },
-        ],
+        icon: [{ url: "/favicon.ico", sizes: "32x32", type: "image/png" }],
         shortcut: ["/favicon.ico"],
         apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
       },
