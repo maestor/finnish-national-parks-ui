@@ -9,7 +9,7 @@ describe("RecentVisits", () => {
         title="Viimeisimmät käynnit"
         emptyMessage="Ei käyntejä"
         visits={[
-          { id: 1, parkName: "Pallas", parkSlug: "pallas", visitedOn: "2024-06-15" },
+          { id: 1, parkName: "Pallas", parkSlug: "pallas", visitedOn: "2024-06-15T22:30:00Z" },
           { id: 2, parkName: "Nuuksio", parkSlug: "nuuksio", visitedOn: "2024-07-20" },
         ]}
         showEditLinks
@@ -18,7 +18,7 @@ describe("RecentVisits", () => {
 
     expect(screen.getByRole("heading", { name: "Viimeisimmät käynnit" })).toBeInTheDocument();
     expect(screen.getByText("Pallas")).toBeInTheDocument();
-    expect(screen.getByText("15.6.2024")).toBeInTheDocument();
+    expect(screen.getByText("16.6.2024")).toBeInTheDocument();
     expect(screen.getByText("Nuuksio")).toBeInTheDocument();
     expect(screen.getByText("20.7.2024")).toBeInTheDocument();
     expect(screen.getAllByLabelText("controlPanel.visits.edit").length).toBe(2);

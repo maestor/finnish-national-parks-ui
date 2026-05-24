@@ -13,7 +13,7 @@ describe("LatestVisitEntries", () => {
             id: 1,
             parkName: "Pallas",
             parkSlug: "pallas",
-            createdAt: "2024-06-15T10:00:00Z",
+            createdAt: "2024-06-15T22:30:00Z",
           },
         ]}
         showEditLinks
@@ -21,7 +21,7 @@ describe("LatestVisitEntries", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Uusimmat käyntikirjaukset" })).toBeInTheDocument();
-    expect(screen.getByText("15.6.2024")).toBeInTheDocument();
+    expect(screen.getByText("16.6.2024")).toBeInTheDocument();
     expect(screen.getByLabelText("controlPanel.visits.edit")).toBeInTheDocument();
   });
 

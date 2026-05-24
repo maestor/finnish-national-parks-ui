@@ -1,5 +1,6 @@
 import { DashboardSectionCard } from "@/components/dashboard/dashboard-section-card";
 import { EditVisitLink } from "@/components/visits/edit-visit-link";
+import { formatOptionalFinnishDate } from "@/lib/fi-date";
 import { Footprints } from "lucide-react";
 import Link from "next/link";
 
@@ -23,8 +24,6 @@ export const RecentVisits = ({
   visits,
   showEditLinks = false,
 }: RecentVisitsProps) => {
-  const formatDate = (dateStr: string | null) =>
-    dateStr ? new Date(dateStr).toLocaleDateString("fi-FI") : "-";
   const getVisitKey = (visit: RecentVisit) =>
     visit.id ?? `${visit.parkSlug}:${visit.visitedOn ?? "unknown-date"}`;
 
@@ -56,7 +55,7 @@ export const RecentVisits = ({
               </Link>
               <div className="flex items-center gap-2 sm:shrink-0">
                 <span className="rounded-full border border-border/70 bg-muted/80 px-3 py-1 text-xs font-medium text-muted-foreground sm:text-sm">
-                  {formatDate(visit.visitedOn)}
+                  {formatOptionalFinnishDate(visit.visitedOn)}
                 </span>
                 {showEditLinks && visit.id !== undefined ? (
                   <EditVisitLink

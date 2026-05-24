@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET as getAppleTouchIcon } from "./apple-touch-icon.png/route";
-import { GET as getFavicon32 } from "./favicon-32x32.png/route";
 import { GET as getIcon192 } from "./icon-192x192.png/route";
 import { GET as getIcon512 } from "./icon-512x512.png/route";
 
@@ -15,11 +14,6 @@ vi.mock("@/lib/pwa-icon", () => ({
 describe("icon routes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  it("serves the 32 pixel favicon", () => {
-    expect(getFavicon32()).toEqual({ size: 32 });
-    expect(createPwaIconResponseMock).toHaveBeenCalledWith(32);
   });
 
   it("serves the Apple touch icon", () => {

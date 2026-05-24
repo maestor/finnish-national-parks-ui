@@ -36,8 +36,8 @@ export const generateMetadata = async (): Promise<Metadata> => {
       title: t("title"),
     },
     icons: {
-      icon: [{ url: "/favicon.ico", sizes: "32x32", type: "image/png" }],
-      shortcut: ["/favicon.ico"],
+      icon: [{ url: "/favicon.svg", sizes: "any", type: "image/svg+xml" }],
+      shortcut: ["/favicon.svg"],
       apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
     },
     formatDetection: {

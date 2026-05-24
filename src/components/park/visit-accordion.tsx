@@ -2,6 +2,7 @@
 
 import { EditVisitLink } from "@/components/visits/edit-visit-link";
 import { VisitImageGallery } from "@/components/visits/visit-image-gallery";
+import { formatFinnishDate } from "@/lib/fi-date";
 import type { Visit } from "@/lib/parks";
 import { ChevronDown, FileText, Images, Route, User } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -76,11 +77,6 @@ export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionPro
   const displayVisits = [...visits].sort(
     (a, b) => new Date(b.visitedOn).getTime() - new Date(a.visitedOn).getTime(),
   );
-
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString("fi-FI");
-  };
-
   const toggle = (id: number, isExpandable: boolean) => {
     if (!isExpandable) return;
     setOpenId((current) => (current === id ? null : id));
@@ -112,7 +108,7 @@ export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionPro
                 <span className="inline-flex items-center justify-center rounded-full bg-primary/10 px-2.5 py-1 text-sm leading-none font-bold text-primary">
                   {t("visitNumber", { number })}
                 </span>
-                <span className="text-base">{formatDate(visit.visitedOn)}</span>
+                <span className="text-base">{formatFinnishDate(visit.visitedOn)}</span>
                 {visit.route && (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-700 px-2.5 py-1 text-sm leading-none font-semibold text-white dark:bg-emerald-500/15 dark:text-emerald-400">
                     <Route className="h-3.5 w-3.5" aria-hidden="true" />
@@ -148,7 +144,7 @@ export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionPro
                 <span className="inline-flex items-center justify-center rounded-full bg-primary/10 px-2.5 py-1 text-sm leading-none font-bold text-primary">
                   {t("visitNumber", { number })}
                 </span>
-                <span className="text-base">{formatDate(visit.visitedOn)}</span>
+                <span className="text-base">{formatFinnishDate(visit.visitedOn)}</span>
                 {visit.route && (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-700 px-2.5 py-1 text-sm leading-none font-semibold text-white dark:bg-emerald-500/15 dark:text-emerald-400">
                     <Route className="h-3.5 w-3.5" aria-hidden="true" />
