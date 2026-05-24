@@ -55,11 +55,11 @@
       "empty": "Ei vielä käyntikirjauksia."
     },
     "filters": {
-      "all": "Kaikki",
+      "all": "Kaikki alueet",
       "nationalParks": "Kansallispuistot",
       "hikingAreas": "Retkeilyalueet",
       "wildernessAreas": "Erämaa-alueet",
-      "otherNatureReserves": "Luonnonsuojelut",
+      "otherNatureReserves": "Muut LS-alueet",
       "outdoorRecreationAreas": "Virkistysalueet",
       "natureTrails": "Luontopolut",
       "visited": "Käydyt",

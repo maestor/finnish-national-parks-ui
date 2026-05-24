@@ -3,30 +3,24 @@
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/cn";
+import {
+  PARK_TYPE_FILTER_LABEL_KEYS,
+  type ParkTypeFilterLabelKey,
+  type ParkTypeSlug,
+} from "@/lib/park-type-filters";
 import type { MapPark } from "@/lib/parks";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { useHomeMapControls } from "../providers/home-map-controls-provider";
 import { ParkMap } from "./park-map";
 
-type ParkTypeFilter = MapPark["type"]["slug"];
+type ParkTypeFilter = ParkTypeSlug;
 type MapFilter = "all" | ParkTypeFilter | "visited" | "not-visited";
-type ParkTypeFilterLabelKey =
-  | "nationalParks"
-  | "hikingAreas"
-  | "wildernessAreas"
-  | "otherNatureReserves"
-  | "outdoorRecreationAreas"
-  | "natureTrails";
 
-const PARK_TYPE_FILTER_LABEL_KEYS: Record<ParkTypeFilter, ParkTypeFilterLabelKey> = {
-  "national-park": "nationalParks",
-  "state-hiking-area": "hikingAreas",
-  "wilderness-area": "wildernessAreas",
-  "other-nature-reserve": "otherNatureReserves",
-  "outdoor-recreation-area": "outdoorRecreationAreas",
-  "nature-trail": "natureTrails",
-};
+const isAreaPark = (park: MapPark) => park.type.slug !== "nature-trail";
+
+const getFallbackFilterForFocusedPark = (park: MapPark): MapFilter =>
+  isAreaPark(park) ? "all" : park.type.slug;
 
 interface ParkExplorerProps {
   parks: MapPark[];
@@ -69,7 +63,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
       case "not-visited":
         return parks.filter((park) => !park.visitedSummary.visited);
       default:
-        return parks;
+        return parks.filter(isAreaPark);
     }
   }, [activeFilter, parks]);
 
@@ -88,9 +82,11 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
     );
 
     if (!focusedParkVisible) {
-      setActiveFilter("all");
+      const focusedPark = parks.find((park) => park.slug === homeParkFocusRequest.slug);
+
+      setActiveFilter(focusedPark ? getFallbackFilterForFocusedPark(focusedPark) : "all");
     }
-  }, [filteredParks, homeParkFocusRequest]);
+  }, [filteredParks, homeParkFocusRequest, parks]);
 
   const filterPanel = (
     <div className="pointer-events-auto flex flex-col gap-2 rounded-3xl border border-border/70 bg-background/95 p-3 shadow-lg backdrop-blur">
