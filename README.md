@@ -74,8 +74,11 @@ cp .env.local.example .env.local
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:3004
 API_KEY=your-hono-api-key
+AUTH_JWT_SECRET=at-least-32-characters-shared-secret
 NEXT_PUBLIC_MAP_STYLE_URL=https://demotiles.maplibre.org/style.json
 ```
+
+The frontend keeps `API_KEY` server-side. Browser auth and admin write requests are proxied through Next.js route handlers, so visitors do not need the backend key in client-side JavaScript.
 
 ### Development
 
@@ -114,6 +117,10 @@ npm run generate:api-types
 ```
 
 The backend exposes its spec at `http://localhost:3004/openapi.json`.
+
+## Deployment
+
+Vercel deployment notes live in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## PWA
 

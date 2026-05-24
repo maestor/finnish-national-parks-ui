@@ -2,10 +2,6 @@ import { apiFetch, apiPublicFetch } from "./api";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("./auth", () => ({
-  getStoredApiKey: () => undefined,
-}));
-
 vi.mock("next/headers", () => ({
   headers: vi.fn(async () => new Headers({ cookie: "__session=test-session" })),
 }));
@@ -93,5 +89,28 @@ describe("apiFetch", () => {
         writable: true,
       });
     }
+  });
+
+  it("uses same-origin paths for browser-side requests", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: new Headers(),
+      json: async () => ({ ok: true }),
+    } as Response);
+
+    await apiFetch("/auth/me");
+
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      "/auth/me",
+      expect.objectContaining({
+        credentials: "include",
+        headers: expect.any(Headers),
+      }),
+    );
+
+    const [, options] = vi.mocked(globalThis.fetch).mock.calls[0] ?? [];
+    const headers = options?.headers as Headers;
+    expect(headers.get("authorization")).toBeNull();
   });
 });

@@ -1,4 +1,3 @@
-import { getStoredApiKey } from "./auth";
 import { env } from "./env";
 
 class ApiError extends Error {
@@ -45,9 +44,9 @@ const getMessageFromErrorBody = (body: string): string | null => {
 
 const getApiKey = (): string | undefined => {
   if (typeof window !== "undefined") {
-    const stored = getStoredApiKey();
-    if (stored) return stored;
+    return undefined;
   }
+
   return env.API_KEY;
 };
 
@@ -88,7 +87,7 @@ const performApiFetch = async <T>(
     ...options
   }: ApiFetchOptions = {},
 ): Promise<T> => {
-  const url = `${env.NEXT_PUBLIC_API_URL}${path}`;
+  const url = typeof window === "undefined" ? `${env.NEXT_PUBLIC_API_URL}${path}` : path;
   const body = options?.body;
 
   const headers = new Headers(options?.headers);
