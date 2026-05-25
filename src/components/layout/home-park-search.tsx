@@ -20,6 +20,8 @@ const SEARCH_INPUT_CLASS_NAME =
   "h-9 w-full rounded-full pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring appearance-none [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none [&::-webkit-search-results-button]:appearance-none [&::-webkit-search-results-decoration]:appearance-none";
 const SEARCH_RESULTS_PANEL_CLASS_NAME =
   "fixed left-2 right-2 top-16 z-[70] flex min-h-0 max-h-[calc(100dvh-5rem)] flex-col overflow-hidden rounded-[1.75rem] border border-white/55 bg-white/88 text-popover-foreground shadow-[0_28px_60px_rgba(148,163,184,0.28)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/88 dark:shadow-[0_32px_64px_rgba(2,6,23,0.44)] md:absolute md:left-0 md:right-0 md:top-[calc(100%+0.75rem)] md:max-h-none";
+const MOBILE_SEARCH_RESULTS_PANEL_CLASS_NAME =
+  "bg-white/98 shadow-[0_32px_72px_rgba(148,163,184,0.32)] dark:bg-slate-950/97 dark:shadow-[0_36px_76px_rgba(2,6,23,0.52)]";
 
 export const HomeParkSearch = () => {
   const t = useTranslations("layout.parkSearch");
@@ -201,10 +203,10 @@ export const HomeParkSearch = () => {
       {isOpen && (
         <div
           id="home-park-search-results"
-          className={SEARCH_RESULTS_PANEL_CLASS_NAME}
+          className={cn(SEARCH_RESULTS_PANEL_CLASS_NAME, isMobileOpen && MOBILE_SEARCH_RESULTS_PANEL_CLASS_NAME)}
         >
           {isMobileOpen && (
-            <div className="border-b border-white/35 p-2 dark:border-white/10 md:hidden">
+            <div className="border-b border-white/35 bg-white/96 p-2 dark:border-white/10 dark:bg-slate-950/96 md:hidden">
               <label htmlFor="home-park-search-mobile" className="sr-only">
                 {t("label")}
               </label>
@@ -233,7 +235,12 @@ export const HomeParkSearch = () => {
           ) : results.length === 0 ? (
             <p className="px-4 py-3 text-sm text-muted-foreground">{t("empty")}</p>
           ) : (
-            <ul className="max-h-[calc(100dvh-9.5rem)] flex-1 overflow-y-auto overscroll-contain px-2 py-2 touch-pan-y [-webkit-overflow-scrolling:touch] md:max-h-80">
+            <ul
+              className={cn(
+                "max-h-[calc(100dvh-9.5rem)] flex-1 overflow-y-auto overscroll-contain px-2 py-2 touch-pan-y [-webkit-overflow-scrolling:touch] md:max-h-80",
+                isMobileOpen && "bg-white/96 dark:bg-slate-950/96",
+              )}
+            >
               {results.map((park, index) => (
                 <li
                   key={park.slug}
@@ -242,6 +249,7 @@ export const HomeParkSearch = () => {
                   <div
                     className={cn(
                       "flex items-center gap-2 px-2 py-1.5",
+                      isMobileOpen && "rounded-[1.35rem]",
                       highlightedIndex === index &&
                         "rounded-2xl bg-white/85 text-foreground shadow-[0_12px_24px_rgba(148,163,184,0.18)] dark:bg-slate-900/82 dark:shadow-[0_16px_28px_rgba(2,6,23,0.28)]",
                     )}
