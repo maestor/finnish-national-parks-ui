@@ -11,13 +11,19 @@ export const AppIconArtwork = ({
   style,
   testId,
 }: AppIconArtworkProps = {}): ReactElement => {
+  const svgStyle: CSSProperties = {
+    width: "100%",
+    height: "100%",
+    ...style,
+  };
+
   return (
     // biome-ignore lint/a11y/noSvgWithoutTitle: this SVG is decorative and reused by next/og, where a <title> becomes visible text in generated images.
     <svg
       aria-hidden={ariaHidden}
       data-testid={testId}
       fill="none"
-      style={style}
+      style={svgStyle}
       viewBox="0 0 512 512"
       xmlns="http://www.w3.org/2000/svg"
     >

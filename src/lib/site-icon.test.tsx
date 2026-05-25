@@ -1,7 +1,7 @@
 import { render } from "@testing-library/react";
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { PwaIcon, createPwaIconResponse } from "./pwa-icon";
+import { SiteIcon, createSiteIconResponse } from "./site-icon";
 
 const { imageResponseMock } = vi.hoisted(() => ({
   imageResponseMock: vi.fn((element: ReactElement, options: { width: number; height: number }) => ({
@@ -14,28 +14,27 @@ vi.mock("next/og", () => ({
   ImageResponse: imageResponseMock,
 }));
 
-describe("pwa icon", () => {
-  it("renders the integrated forest and water map pin artwork", () => {
-    const { container } = render(<PwaIcon />);
+describe("site icon", () => {
+  it("renders the favicon-style artwork full-bleed for tiny icon consumers", () => {
+    const { container } = render(<SiteIcon />);
     const icon = container.querySelector("svg");
 
-    expect(icon).toHaveAttribute("viewBox", "0 0 512 512");
+    expect(icon).toHaveAttribute("viewBox", "0 0 64 64");
     expect(icon).toHaveStyle({ width: "100%", height: "100%" });
-    expect(icon?.querySelector("path")).toBeTruthy();
   });
 
   it("builds an image response at the requested size", () => {
-    const response = createPwaIconResponse(192);
+    const response = createSiteIconResponse(32);
 
     expect(imageResponseMock).toHaveBeenCalledWith(expect.any(Object), {
-      width: 192,
-      height: 192,
+      width: 32,
+      height: 32,
     });
     expect(response).toEqual({
       element: expect.any(Object),
       options: {
-        width: 192,
-        height: 192,
+        width: 32,
+        height: 32,
       },
     });
   });

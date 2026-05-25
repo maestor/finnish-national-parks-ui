@@ -110,10 +110,11 @@ src/app/
 ### App Metadata Assets
 
 - `public/favicon.svg` is the browser favicon.
-- `src/app/icons/**` serves the generated PWA and Apple touch icons.
+- `src/app/icons/**` serves the generated small PNG site icons, PWA icons, and Apple touch icon.
 - `src/app/opengraph-image.tsx` provides the square Open Graph share image used by chat apps such as Slack and WhatsApp.
 - `src/app/twitter-image.tsx` provides the landscape social preview for Twitter/X.
 - Set `NEXT_PUBLIC_SITE_URL` to the deployed canonical origin so generated social image URLs resolve correctly for crawlers and link preview bots.
+- Small icon consumers such as Slack badges and launcher surfaces should prefer the favicon-style artwork rather than the larger share-card icon treatment.
 - Do not reuse favicon or PWA icon assets as social preview images. Share previews need their own composition to avoid crawler-side cropping.
 
 ### Data Flow
