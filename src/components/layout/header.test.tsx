@@ -65,6 +65,12 @@ describe("Header", () => {
     expect(within(siteTitleLink).getByTestId("header-brand-mark")).toBeInTheDocument();
   });
 
+  it("keeps the sticky header overflow visible for layered search and menus", () => {
+    const { container } = render(<Header />);
+
+    expect(container.querySelector("header")).not.toHaveClass("overflow-hidden");
+  });
+
   it("renders theme toggle button", () => {
     render(<Header />);
     expect(screen.getByRole("button", { name: "layout.themeToggle.srLabel" })).toBeInTheDocument();

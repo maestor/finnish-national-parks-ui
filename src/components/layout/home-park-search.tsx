@@ -18,6 +18,8 @@ const SEARCH_ICON_CLASS_NAME =
   "pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-foreground/60";
 const SEARCH_INPUT_CLASS_NAME =
   "h-9 w-full rounded-full pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring appearance-none [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none [&::-webkit-search-results-button]:appearance-none [&::-webkit-search-results-decoration]:appearance-none";
+const SEARCH_RESULTS_PANEL_CLASS_NAME =
+  "fixed left-2 right-2 top-16 z-[70] flex min-h-0 max-h-[calc(100dvh-5rem)] flex-col overflow-hidden rounded-[1.75rem] border border-white/55 bg-white/88 text-popover-foreground shadow-[0_28px_60px_rgba(148,163,184,0.28)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/88 dark:shadow-[0_32px_64px_rgba(2,6,23,0.44)] md:absolute md:left-0 md:right-0 md:top-[calc(100%+0.75rem)] md:max-h-none";
 
 export const HomeParkSearch = () => {
   const t = useTranslations("layout.parkSearch");
@@ -199,7 +201,7 @@ export const HomeParkSearch = () => {
       {isOpen && (
         <div
           id="home-park-search-results"
-          className="fixed left-2 right-2 top-16 z-50 flex min-h-0 max-h-[calc(100dvh-5rem)] flex-col overflow-hidden rounded-[1.75rem] border border-white/45 bg-white/82 text-popover-foreground shadow-[0_24px_52px_rgba(148,163,184,0.24)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/82 dark:shadow-[0_28px_56px_rgba(2,6,23,0.4)] md:absolute md:left-0 md:right-0 md:top-[calc(100%+0.5rem)] md:max-h-none"
+          className={SEARCH_RESULTS_PANEL_CLASS_NAME}
         >
           {isMobileOpen && (
             <div className="border-b border-white/35 p-2 dark:border-white/10 md:hidden">
@@ -231,9 +233,12 @@ export const HomeParkSearch = () => {
           ) : results.length === 0 ? (
             <p className="px-4 py-3 text-sm text-muted-foreground">{t("empty")}</p>
           ) : (
-            <ul className="max-h-[calc(100dvh-9.5rem)] flex-1 overflow-y-auto overscroll-contain py-1 touch-pan-y [-webkit-overflow-scrolling:touch] md:max-h-80">
+            <ul className="max-h-[calc(100dvh-9.5rem)] flex-1 overflow-y-auto overscroll-contain px-2 py-2 touch-pan-y [-webkit-overflow-scrolling:touch] md:max-h-80">
               {results.map((park, index) => (
-                <li key={park.slug}>
+                <li
+                  key={park.slug}
+                  className="border-b border-white/35 last:border-b-0 dark:border-white/8"
+                >
                   <div
                     className={cn(
                       "flex items-center gap-2 px-2 py-1.5",
