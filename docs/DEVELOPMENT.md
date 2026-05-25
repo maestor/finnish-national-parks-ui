@@ -52,6 +52,7 @@ AUTH_JWT_SECRET=at-least-32-characters-shared-secret
 # Optional
 NEXT_PUBLIC_MAP_STYLE_URL=https://demotiles.maplibre.org/style.json
 AUTH_COOKIE_NAME=__session
+NEXT_PUBLIC_SITE_URL=https://reissuvihko.vercel.app
 ```
 
 The `AUTH_JWT_SECRET` must match the backend's `AUTH_JWT_SECRET` exactly.
@@ -105,6 +106,15 @@ src/app/
 - **Client Components**: Mark with `"use client"`, use `useTranslations` from `next-intl`
 - **Pages**: Default exports only
 - **Everything else**: Named exports
+
+### App Metadata Assets
+
+- `public/favicon.svg` is the browser favicon.
+- `src/app/icons/**` serves the generated PWA and Apple touch icons.
+- `src/app/opengraph-image.tsx` provides the square Open Graph share image used by chat apps such as Slack and WhatsApp.
+- `src/app/twitter-image.tsx` provides the landscape social preview for Twitter/X.
+- Set `NEXT_PUBLIC_SITE_URL` to the deployed canonical origin so generated social image URLs resolve correctly for crawlers and link preview bots.
+- Do not reuse favicon or PWA icon assets as social preview images. Share previews need their own composition to avoid crawler-side cropping.
 
 ### Data Flow
 

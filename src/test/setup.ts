@@ -6,8 +6,11 @@ import { vi } from "vitest";
 vi.mock("@/lib/env", () => ({
   env: {
     NEXT_PUBLIC_API_URL: "http://localhost:3004",
+    NEXT_PUBLIC_SITE_URL: "https://reissuvihko.example.com",
     API_KEY: "test-api-key",
     NEXT_PUBLIC_MAP_STYLE_URL: undefined,
+    VERCEL_PROJECT_PRODUCTION_URL: undefined,
+    VERCEL_URL: undefined,
   },
 }));
 

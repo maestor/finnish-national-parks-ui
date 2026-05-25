@@ -8,6 +8,7 @@ import { Header } from "@/components/layout/header";
 import { HomeMapControlsProvider } from "@/components/providers/home-map-controls-provider";
 import { SerwistProvider } from "@/components/providers/serwist-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import { env } from "@/lib/env";
 import messages from "../../messages/fi.json";
 
 const geistSans = Geist({
@@ -20,16 +21,44 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const toMetadataBase = (value: string): URL => {
+  if (value.startsWith("http://") || value.startsWith("https://")) {
+    return new URL(value);
+  }
+
+  return new URL(`https://${value}`);
+};
+
+const resolveMetadataBase = (): URL => {
+  const configuredBase =
+    env.NEXT_PUBLIC_SITE_URL ?? env.VERCEL_PROJECT_PRODUCTION_URL ?? env.VERCEL_URL;
+
+  return configuredBase ? toMetadataBase(configuredBase) : new URL("http://localhost:4300");
+};
+
 export const generateMetadata = async (): Promise<Metadata> => {
   const t = await getTranslations("metadata");
 
   return {
+    metadataBase: resolveMetadataBase(),
     title: {
       default: t("title"),
       template: `%s | ${t("title")}`,
     },
     description: t("description"),
     applicationName: t("title"),
+    openGraph: {
+      title: t("title"),
+      description: t("description"),
+      siteName: t("title"),
+      type: "website",
+      locale: "fi_FI",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: t("title"),
+      description: t("description"),
+    },
     appleWebApp: {
       capable: true,
       statusBarStyle: "default",
