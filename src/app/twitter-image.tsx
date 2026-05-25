@@ -1,7 +1,8 @@
 import { createSocialPreviewImageResponse } from "@/lib/social-preview-image";
 import messages from "../../messages/fi.json";
 
-export const alt = "Reissuvihko: tutki Suomen retkipaikkoja ja seuraa ulkoiluseikkailuja.";
+export const alt =
+  "Reissuvihko: tutki Suomen retkipaikkoja ja seuraa tekijöiden ulkoiluseikkailuja.";
 export const size = {
   width: 1200,
   height: 630,

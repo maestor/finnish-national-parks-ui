@@ -25,14 +25,14 @@ describe("social image routes", () => {
 
   it("serves the square Open Graph image metadata route", () => {
     expect(openGraphAlt).toBe(
-      "Reissuvihko: tutki Suomen retkipaikkoja ja seuraa ulkoiluseikkailuja.",
+      "Reissuvihko: tutki Suomen retkipaikkoja ja seuraa tekijöiden ulkoiluseikkailuja.",
     );
     expect(openGraphContentType).toBe("image/png");
     expect(openGraphSize).toEqual({ width: 1200, height: 1200 });
     expect(OpenGraphImage()).toEqual({
       title: "Reissuvihko",
       description:
-        "Tutki Suomen retkipaikkoja, seuraa käyntejäsi ja hallitse ulkoiluseikkailujasi.",
+        "Reissuvihko kokoaa tekijöidensä käynnit Suomen retkeilypaikoissa, tarinat kuvineen muistoina retkistä sekä etenemisen samoihin kuoriin.",
       variant: "square",
       width: 1200,
       height: 1200,
@@ -41,14 +41,14 @@ describe("social image routes", () => {
 
   it("serves the landscape Twitter image metadata route", () => {
     expect(twitterAlt).toBe(
-      "Reissuvihko: tutki Suomen retkipaikkoja ja seuraa ulkoiluseikkailuja.",
+      "Reissuvihko: tutki Suomen retkipaikkoja ja seuraa tekijöiden ulkoiluseikkailuja.",
     );
     expect(twitterContentType).toBe("image/png");
     expect(twitterSize).toEqual({ width: 1200, height: 630 });
     expect(TwitterImage()).toEqual({
       title: "Reissuvihko",
       description:
-        "Tutki Suomen retkipaikkoja, seuraa käyntejäsi ja hallitse ulkoiluseikkailujasi.",
+        "Reissuvihko kokoaa tekijöidensä käynnit Suomen retkeilypaikoissa, tarinat kuvineen muistoina retkistä sekä etenemisen samoihin kuoriin.",
       variant: "landscape",
       width: 1200,
       height: 630,

@@ -23,7 +23,7 @@ describe("social preview image", () => {
     render(
       <SocialPreviewImage
         title="Reissuvihko"
-        description="Tutki Suomen retkipaikkoja, seuraa käyntejäsi ja hallitse ulkoiluseikkailujasi."
+        description="Reissuvihko kokoaa tekijöidensä käynnit Suomen retkeilypaikoissa, tarinat kuvineen muistoina retkistä sekä etenemisen samoihin kuoriin."
         variant="square"
       />,
     );
@@ -31,7 +31,7 @@ describe("social preview image", () => {
     expect(screen.getByText("Reissuvihko")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Tutki Suomen retkipaikkoja, seuraa käyntejäsi ja hallitse ulkoiluseikkailujasi.",
+        "Reissuvihko kokoaa tekijöidensä käynnit Suomen retkeilypaikoissa, tarinat kuvineen muistoina retkistä sekä etenemisen samoihin kuoriin.",
       ),
     ).toBeInTheDocument();
     expect(screen.getByTestId("social-preview-icon")).toHaveAttribute("viewBox", "0 0 512 512");
@@ -46,7 +46,7 @@ describe("social preview image", () => {
       const response = createSocialPreviewImageResponse({
         title: "Reissuvihko",
         description:
-          "Tutki Suomen retkipaikkoja, seuraa käyntejäsi ja hallitse ulkoiluseikkailujasi.",
+          "Reissuvihko kokoaa tekijöidensä käynnit Suomen retkeilypaikoissa, tarinat kuvineen muistoina retkistä sekä etenemisen samoihin kuoriin.",
         variant,
         width,
         height,
