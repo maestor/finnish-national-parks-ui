@@ -102,7 +102,7 @@ export const HomeParkSearch = () => {
           });
 
     return filteredParks;
-  }, [isMobileOpen, parks, query]);
+  }, [parks, query]);
 
   const activatePark = (park: Park) => {
     setQuery("");
@@ -202,7 +202,10 @@ export const HomeParkSearch = () => {
       {isOpen && (
         <div
           id="home-park-search-results"
-          className={cn(SEARCH_RESULTS_PANEL_CLASS_NAME, isMobileOpen && MOBILE_SEARCH_RESULTS_PANEL_CLASS_NAME)}
+          className={cn(
+            SEARCH_RESULTS_PANEL_CLASS_NAME,
+            isMobileOpen && MOBILE_SEARCH_RESULTS_PANEL_CLASS_NAME,
+          )}
         >
           {isMobileOpen && (
             <div className="border-b border-white/35 bg-white/96 p-2 dark:border-white/10 dark:bg-slate-950/96 md:hidden">

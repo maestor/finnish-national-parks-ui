@@ -134,9 +134,7 @@ export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionPro
                 >
                   {season.emoji}
                 </span>
-                <span className={VISIT_BADGE_CLASS_NAME}>
-                  {t("visitNumber", { number })}
-                </span>
+                <span className={VISIT_BADGE_CLASS_NAME}>{t("visitNumber", { number })}</span>
                 <span className="text-base">{formatFinnishDate(visit.visitedOn)}</span>
                 {visit.route && (
                   <span className={ROUTE_BADGE_CLASS_NAME}>
@@ -170,9 +168,7 @@ export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionPro
                 >
                   {season.emoji}
                 </span>
-                <span className={VISIT_BADGE_CLASS_NAME}>
-                  {t("visitNumber", { number })}
-                </span>
+                <span className={VISIT_BADGE_CLASS_NAME}>{t("visitNumber", { number })}</span>
                 <span className="text-base">{formatFinnishDate(visit.visitedOn)}</span>
                 {visit.route && (
                   <span className={ROUTE_BADGE_CLASS_NAME}>

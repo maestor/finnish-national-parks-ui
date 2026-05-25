@@ -561,7 +561,7 @@ export const ParkMap = ({
   // Sync popup visibility with active/hovered state
   useEffect(() => {
     syncPopupVisibility();
-  }, [activeSlug, hoveredSlug, syncPopupVisibility]);
+  }, [syncPopupVisibility]);
 
   // Click outside to close active popup
   useEffect(() => {

@@ -44,10 +44,7 @@ export const HomeIntro = ({
           <CircleHelp className="h-4 w-4 text-primary" aria-hidden="true" />
           {infoButtonLabel}
         </button>
-        <Link
-          href="/parks"
-          className={actionClassName}
-        >
+        <Link href="/parks" className={actionClassName}>
           <MapPin className="h-4 w-4 text-primary" aria-hidden="true" />
           {openMapLabel}
         </Link>

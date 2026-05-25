@@ -32,8 +32,7 @@
 
 :root {
   --background: 0 0% 100%;
-  --background-image:
-    radial-gradient(circle at top left, rgba(22, 101, 52, 0.12), transparent 26%),
+  --background-image: radial-gradient(circle at top left, rgba(22, 101, 52, 0.12), transparent 26%),
     radial-gradient(circle at top right, rgba(37, 99, 235, 0.1), transparent 22%),
     linear-gradient(180deg, #eff6f8 0%, #eef4f7 42%, #edf3f9 100%);
   --foreground: 240 10% 3.9%;
@@ -61,8 +60,7 @@
 
 .dark {
   --background: 240 10% 3.9%;
-  --background-image:
-    radial-gradient(circle at top left, rgba(22, 101, 52, 0.18), transparent 24%),
+  --background-image: radial-gradient(circle at top left, rgba(22, 101, 52, 0.18), transparent 24%),
     radial-gradient(circle at top right, rgba(37, 99, 235, 0.16), transparent 22%),
     linear-gradient(180deg, #09111d 0%, #0d1627 46%, #111827 100%);
   --foreground: 0 0% 98%;
@@ -129,9 +127,7 @@ summary::-webkit-details-marker {
   border-radius: 1.5rem !important;
   backdrop-filter: blur(20px) !important;
   padding: 0 !important;
-  box-shadow:
-    0 24px 60px rgb(148 163 184 / 0.2),
-    inset 0 1px 0 rgb(255 255 255 / 0.5) !important;
+  box-shadow: 0 24px 60px rgb(148 163 184 / 0.2), inset 0 1px 0 rgb(255 255 255 / 0.5) !important;
 }
 
 .maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
@@ -173,9 +169,7 @@ summary::-webkit-details-marker {
 .dark .maplibregl-popup-content {
   background: rgb(2 6 23 / 0.86) !important;
   border-color: rgb(255 255 255 / 0.1) !important;
-  box-shadow:
-    0 28px 64px rgb(2 6 23 / 0.42),
-    inset 0 1px 0 rgb(255 255 255 / 0.08) !important;
+  box-shadow: 0 28px 64px rgb(2 6 23 / 0.42), inset 0 1px 0 rgb(255 255 255 / 0.08) !important;
 }
 
 .dark .maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
