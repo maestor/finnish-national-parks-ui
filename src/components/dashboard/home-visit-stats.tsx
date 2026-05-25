@@ -1,9 +1,11 @@
 import { BarChart3 } from "lucide-react";
+import Link from "next/link";
 
 interface ProgressItem {
   label: string;
   visited: number;
   total: number;
+  mapFilter?: string;
 }
 
 interface HomeVisitStatsProps {
@@ -44,12 +46,8 @@ export const HomeVisitStats = ({
         <div className="mt-6 space-y-4">
           {progressItems.map((item) => {
             const percentage = item.total > 0 ? Math.round((item.visited / item.total) * 100) : 0;
-
-            return (
-              <div
-                key={item.label}
-                className="rounded-[1.45rem] border border-white/45 bg-white/62 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)] backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/48 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
-              >
+            const itemContent = (
+              <>
                 <div className="flex items-center justify-between gap-4 text-sm">
                   <span className="font-medium">{item.label}</span>
                   <span className="text-foreground/68 dark:text-sky-100/72">
@@ -62,7 +60,28 @@ export const HomeVisitStats = ({
                     style={{ width: `${percentage}%` }}
                   />
                 </div>
-              </div>
+              </>
+            );
+
+            const itemClassName =
+              "block rounded-[1.45rem] border border-white/45 bg-white/62 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)] backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/48 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
+
+            if (!item.mapFilter) {
+              return (
+                <div key={item.label} className={itemClassName}>
+                  {itemContent}
+                </div>
+              );
+            }
+
+            return (
+              <Link
+                key={item.label}
+                href={`/parks?filter=${item.mapFilter}`}
+                className={`${itemClassName} transition-[transform,border-color,box-shadow] hover:-translate-y-px hover:border-sky-300/80 hover:shadow-[0_14px_28px_rgba(148,163,184,0.16),inset_0_1px_0_rgba(255,255,255,0.58)] dark:hover:border-sky-300/24 dark:hover:shadow-[0_18px_34px_rgba(2,6,23,0.28),inset_0_1px_0_rgba(255,255,255,0.08)]`}
+              >
+                {itemContent}
+              </Link>
             );
           })}
         </div>

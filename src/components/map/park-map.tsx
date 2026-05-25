@@ -327,29 +327,29 @@ export const ParkMap = ({
     [cancelClose],
   );
 
-  const syncPopupVisibility = useCallback(() => {
-    const map = mapRef.current;
-    if (!map) {
-      return;
-    }
-
-    const currentActiveSlug = activeSlugRef.current;
-    const currentHoveredSlug = hoveredSlugRef.current;
-
-    for (const [slug, popup] of popupsRef.current) {
-      const shouldShow =
-        currentActiveSlug === slug || (currentActiveSlug === null && currentHoveredSlug === slug);
-      const isShown = shownPopupsRef.current.has(slug);
-
-      if (shouldShow && !isShown) {
-        popup.addTo(map);
-        shownPopupsRef.current.add(slug);
-      } else if (!shouldShow && isShown) {
-        popup.remove();
-        shownPopupsRef.current.delete(slug);
+  const syncPopupVisibility = useCallback(
+    (currentActiveSlug: string | null, currentHoveredSlug: string | null) => {
+      const map = mapRef.current;
+      if (!map) {
+        return;
       }
-    }
-  }, []);
+
+      for (const [slug, popup] of popupsRef.current) {
+        const shouldShow =
+          currentActiveSlug === slug || (currentActiveSlug === null && currentHoveredSlug === slug);
+        const isShown = shownPopupsRef.current.has(slug);
+
+        if (shouldShow && !isShown) {
+          popup.addTo(map);
+          shownPopupsRef.current.add(slug);
+        } else if (!shouldShow && isShown) {
+          popup.remove();
+          shownPopupsRef.current.delete(slug);
+        }
+      }
+    },
+    [],
+  );
 
   // Initialize map
   useEffect(() => {
@@ -493,7 +493,7 @@ export const ParkMap = ({
       });
     }
 
-    syncPopupVisibility();
+    syncPopupVisibility(activeSlugRef.current, hoveredSlugRef.current);
   }, [
     parks,
     isMapLoaded,
@@ -560,8 +560,8 @@ export const ParkMap = ({
 
   // Sync popup visibility with active/hovered state
   useEffect(() => {
-    syncPopupVisibility();
-  }, [syncPopupVisibility]);
+    syncPopupVisibility(activeSlug, hoveredSlug);
+  }, [activeSlug, hoveredSlug, syncPopupVisibility]);
 
   // Click outside to close active popup
   useEffect(() => {

@@ -11,7 +11,7 @@ describe("HomeVisitStats", () => {
         totalVisits={12}
         progressItems={[
           { label: "Kaikki puistot", visited: 5, total: 10 },
-          { label: "Kansallispuistot", visited: 3, total: 8 },
+          { label: "Kansallispuistot", visited: 3, total: 8, mapFilter: "national-park" },
         ]}
       />,
     );
@@ -21,6 +21,10 @@ describe("HomeVisitStats", () => {
     expect(screen.getByText("12")).toBeInTheDocument();
     expect(screen.getByText("Kaikki puistot")).toBeInTheDocument();
     expect(screen.getByText("5 / 10")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Kansallispuistot/i })).toHaveAttribute(
+      "href",
+      "/parks?filter=national-park",
+    );
     expect(screen.queryByText("Käynnit tyypeittäin")).not.toBeInTheDocument();
   });
 
