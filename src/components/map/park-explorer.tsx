@@ -31,6 +31,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
   const t = useTranslations("home.filters");
   const auth = useAuth();
   const [activeFilter, setActiveFilter] = useState<MapFilter>("all");
+  const [mapResetRequestId, setMapResetRequestId] = useState(0);
   const { isMobileFiltersOpen, closeMobileFilters, homeParkFocusRequest } = useHomeMapControls();
 
   const filterOptions = useMemo(() => {
@@ -69,6 +70,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
 
   const selectFilter = (filter: MapFilter) => {
     setActiveFilter(filter);
+    setMapResetRequestId((current) => current + 1);
     closeMobileFilters();
   };
 
@@ -128,6 +130,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
         error={error}
         canManageVisits={auth.isAuthenticated}
         homeParkFocusRequest={homeParkFocusRequest}
+        resetViewRequestId={mapResetRequestId}
       />
     </div>
   );

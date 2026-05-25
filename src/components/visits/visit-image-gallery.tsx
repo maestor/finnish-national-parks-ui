@@ -27,6 +27,7 @@ interface VisitImageGalleryProps {
 }
 
 const THUMBNAIL_SCROLL_AMOUNT = 320;
+const SWIPE_THRESHOLD = 48;
 
 export const VisitImageGallery = ({
   images,
@@ -47,6 +48,7 @@ export const VisitImageGallery = ({
   const thumbnailsRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const activeImage =
     activeIndex === null
       ? null
@@ -163,6 +165,43 @@ export const VisitImageGallery = ({
       left: direction === "previous" ? -THUMBNAIL_SCROLL_AMOUNT : THUMBNAIL_SCROLL_AMOUNT,
       behavior: "smooth",
     });
+  };
+
+  const handleLightboxTouchStart = (event: React.TouchEvent<HTMLElement>) => {
+    const touch = event.changedTouches[0];
+    if (!touch) {
+      return;
+    }
+
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleLightboxTouchEnd = (event: React.TouchEvent<HTMLElement>) => {
+    if (!hasMultipleImages || !touchStartRef.current) {
+      touchStartRef.current = null;
+      return;
+    }
+
+    const touch = event.changedTouches[0];
+    if (!touch) {
+      touchStartRef.current = null;
+      return;
+    }
+
+    const deltaX = touch.clientX - touchStartRef.current.x;
+    const deltaY = touch.clientY - touchStartRef.current.y;
+    touchStartRef.current = null;
+
+    if (Math.abs(deltaX) < SWIPE_THRESHOLD || Math.abs(deltaY) > Math.abs(deltaX)) {
+      return;
+    }
+
+    if (deltaX < 0) {
+      showNextImage();
+      return;
+    }
+
+    showPreviousImage();
   };
 
   return (
@@ -292,6 +331,8 @@ export const VisitImageGallery = ({
                   src={activeImage.image.fullUrl}
                   alt={t("activeImage", { index: activeImage.index + 1 })}
                   className="max-h-[74vh] w-auto max-w-full rounded-xl object-contain"
+                  onTouchStart={handleLightboxTouchStart}
+                  onTouchEnd={handleLightboxTouchEnd}
                 />
                 <button
                   type="button"

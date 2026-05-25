@@ -33,4 +33,28 @@ describe("MostVisitedParks", () => {
 
     expect(screen.getByText("Ei käyntejä")).toBeInTheDocument();
   });
+
+  it("allows long park names to wrap on mobile instead of truncating them", () => {
+    render(
+      <MostVisitedParks
+        title="Eniten käydyt puistot"
+        emptyMessage="Ei käyntejä"
+        visitCountLabel="käyntiä"
+        parks={[
+          {
+            parkName: "Kuusijärven luonto- ja virkistysalue",
+            parkSlug: "kuusijarvi",
+            visitCount: 5,
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "Kuusijärven luonto- ja virkistysalue" })).toHaveClass(
+      "whitespace-normal",
+    );
+    expect(
+      screen.getByRole("link", { name: "Kuusijärven luonto- ja virkistysalue" }),
+    ).not.toHaveClass("truncate");
+  });
 });

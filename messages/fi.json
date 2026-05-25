@@ -7,9 +7,11 @@
     "siteTitle": "Reissuvihko",
     "nav": {
       "home": "Etusivu",
-      "map": "Kartta",
+      "map": "Paikat",
       "controlPanel": "Hallinta",
       "filters": "Suodata karttaa",
+      "menu": "Valikko",
+      "closeMenu": "Sulje valikko",
       "login": "Kirjaudu",
       "logout": "Kirjaudu ulos"
     },
@@ -23,6 +25,8 @@
     "themeToggle": {
       "light": "Vaihda vaaleaan teemaan",
       "dark": "Vaihda tummaan teemaan",
+      "lightMode": "Vaalea tila",
+      "darkMode": "Tumma tila",
       "srLabel": "Vaihda teema"
     }
   },

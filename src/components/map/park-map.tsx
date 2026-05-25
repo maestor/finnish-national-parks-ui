@@ -13,6 +13,7 @@ interface ParkMapProps {
   error?: string | null;
   canManageVisits?: boolean;
   homeParkFocusRequest?: HomeParkFocusRequest | null;
+  resetViewRequestId?: number;
 }
 
 const FINLAND_BOUNDS: maplibregl.LngLatBoundsLike = [
@@ -27,6 +28,32 @@ const PARK_FOCUS_PADDING = {
   bottom: 48,
   left: 48,
 } as const;
+
+const getBoundsForVisibleParks = (parks: MapPark[]): maplibregl.LngLatBoundsLike => {
+  if (parks.length === 0) {
+    return FINLAND_BOUNDS;
+  }
+
+  const combinedBounds = parks.reduce(
+    (currentBounds, park) => ({
+      minLon: Math.min(currentBounds.minLon, park.boundingBox.minLon),
+      minLat: Math.min(currentBounds.minLat, park.boundingBox.minLat),
+      maxLon: Math.max(currentBounds.maxLon, park.boundingBox.maxLon),
+      maxLat: Math.max(currentBounds.maxLat, park.boundingBox.maxLat),
+    }),
+    {
+      minLon: parks[0].boundingBox.minLon,
+      minLat: parks[0].boundingBox.minLat,
+      maxLon: parks[0].boundingBox.maxLon,
+      maxLat: parks[0].boundingBox.maxLat,
+    },
+  );
+
+  return [
+    [combinedBounds.minLon, combinedBounds.minLat],
+    [combinedBounds.maxLon, combinedBounds.maxLat],
+  ];
+};
 
 const getMapStyle = () => {
   const mapStyleUrl = process.env.NEXT_PUBLIC_MAP_STYLE_URL as string | undefined;
@@ -190,6 +217,7 @@ export const ParkMap = ({
   error,
   canManageVisits = false,
   homeParkFocusRequest = null,
+  resetViewRequestId = 0,
 }: ParkMapProps) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -198,6 +226,7 @@ export const ParkMap = ({
   const shownPopupsRef = useRef<Set<string>>(new Set());
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeSlugRef = useRef<string | null>(null);
+  const lastHandledResetViewRequestIdRef = useRef(0);
   const t = useTranslations("map");
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [activeSlug, setActiveSlug] = useState<string | null>(null);
@@ -206,6 +235,18 @@ export const ParkMap = ({
   useEffect(() => {
     activeSlugRef.current = activeSlug;
   }, [activeSlug]);
+
+  useEffect(() => {
+    const visibleSlugs = new Set(parks.map((park) => park.slug));
+
+    if (activeSlug && !visibleSlugs.has(activeSlug)) {
+      setActiveSlug(null);
+    }
+
+    if (hoveredSlug && !visibleSlugs.has(hoveredSlug)) {
+      setHoveredSlug(null);
+    }
+  }, [activeSlug, hoveredSlug, parks]);
 
   const cancelClose = useCallback(() => {
     if (hoverTimerRef.current) {
@@ -430,6 +471,26 @@ export const ParkMap = ({
 
     focusPark(park);
   }, [focusPark, homeParkFocusRequest, isMapLoaded, parks]);
+
+  useEffect(() => {
+    if (!isMapLoaded || resetViewRequestId <= 0) {
+      return;
+    }
+
+    if (lastHandledResetViewRequestIdRef.current === resetViewRequestId) {
+      return;
+    }
+
+    lastHandledResetViewRequestIdRef.current = resetViewRequestId;
+    setActiveSlug(null);
+    setHoveredSlug(null);
+    cancelClose();
+    mapRef.current?.fitBounds(getBoundsForVisibleParks(parks), {
+      duration: 800,
+      maxZoom: parks.length > 0 ? 11 : undefined,
+      padding: parks.length > 0 ? PARK_FOCUS_PADDING : MAP_PADDING,
+    });
+  }, [cancelClose, isMapLoaded, parks, resetViewRequestId]);
 
   // Sync popup visibility with active/hovered state
   useEffect(() => {

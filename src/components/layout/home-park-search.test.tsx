@@ -75,6 +75,18 @@ const parks: Park[] = [
   },
 ];
 
+const mobileScrollableParks: Park[] = Array.from({ length: 12 }, (_, index) => ({
+  slug: `park-${index + 1}`,
+  name: `Kansallispuisto ${index + 1}`,
+  areaKm2: index + 1,
+  location: `Alue ${index + 1}`,
+  luontoonUrl: null,
+  establishmentYear: 2000 + index,
+  boundingBox: { minLat: 60 + index, minLon: 24, maxLat: 60.5 + index, maxLon: 24.5 },
+  markerPoint: { lat: 60.25 + index, lon: 24.25 },
+  type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },
+}));
+
 const FocusRequestProbe = () => {
   const { homeParkFocusRequest } = useHomeMapControls();
 
@@ -228,6 +240,24 @@ describe("HomeParkSearch", () => {
     await waitFor(() => {
       expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
     });
+  });
+
+  it("renders mobile results in a touch-scrollable list", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({ parks: mobileScrollableParks });
+
+    renderSearch();
+
+    await userEvent.click(screen.getByRole("button", { name: "layout.parkSearch.label" }));
+
+    const mobileInput = screen.getByRole("searchbox");
+    fireEvent.change(mobileInput, { target: { value: "Kansallispuisto" } });
+
+    const resultsList = await screen.findByRole("list");
+
+    expect(resultsList).toHaveClass("overflow-y-auto");
+    expect(resultsList).toHaveClass("overscroll-contain");
+    expect(resultsList).toHaveClass("touch-pan-y");
+    expect(screen.getByRole("button", { name: /Kansallispuisto 12/i })).toBeInTheDocument();
   });
 
   it("closes the open result list when clicking outside the search container", async () => {

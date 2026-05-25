@@ -1,22 +1,28 @@
 import { HomeMapControlsProvider } from "@/components/providers/home-map-controls-provider";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Header } from "./header";
 
-const { authState, pathnameState, searchParamsState } = vi.hoisted(() => ({
-  authState: {
-    isAuthenticated: false,
-    isLoading: true,
-    logout: vi.fn(),
-  },
-  pathnameState: {
-    value: "/",
-  },
-  searchParamsState: {
-    value: "",
-  },
-}));
+const { authState, pathnameState, searchParamsState, setThemeMock, themeState } = vi.hoisted(
+  () => ({
+    authState: {
+      isAuthenticated: false,
+      isLoading: true,
+      logout: vi.fn(),
+    },
+    pathnameState: {
+      value: "/",
+    },
+    searchParamsState: {
+      value: "",
+    },
+    setThemeMock: vi.fn(),
+    themeState: {
+      value: "light",
+    },
+  }),
+);
 
 vi.mock("@/hooks/use-auth", () => ({
   useAuth: () => ({ ...authState, user: null }),
@@ -26,6 +32,13 @@ vi.mock("next/navigation", () => ({
   usePathname: () => pathnameState.value,
   useRouter: () => ({ push: vi.fn() }),
   useSearchParams: () => new URLSearchParams(searchParamsState.value),
+}));
+
+vi.mock("next-themes", () => ({
+  useTheme: () => ({
+    theme: themeState.value,
+    setTheme: setThemeMock,
+  }),
 }));
 
 vi.mock("./home-park-search", () => ({
@@ -39,6 +52,8 @@ describe("Header", () => {
     authState.logout.mockClear();
     pathnameState.value = "/parks";
     searchParamsState.value = "";
+    themeState.value = "light";
+    setThemeMock.mockReset();
   });
 
   it("renders the site title link to the parks map", () => {
@@ -52,32 +67,38 @@ describe("Header", () => {
   it("renders theme toggle button", () => {
     render(<Header />);
     expect(screen.getByRole("button", { name: "layout.themeToggle.srLabel" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "layout.themeToggle.srLabel" })).toHaveAttribute(
+      "title",
+      "layout.themeToggle.dark",
+    );
   });
 
-  it("shows mobile and desktop login links for unauthenticated users when auth loading has finished", () => {
+  it("shows the desktop login icon for unauthenticated users when auth loading has finished", () => {
     authState.isLoading = false;
 
-    const { container } = render(<Header />);
+    render(<Header />);
 
-    const loginLinks = container.querySelectorAll('a[href="/auth/login"]');
-
-    expect(loginLinks).toHaveLength(2);
-    expect(loginLinks[0]).toHaveAttribute("href", "/auth/login");
-    expect(loginLinks[1]).toHaveAttribute("href", "/auth/login");
+    expect(screen.getByRole("link", { name: "layout.nav.login" })).toHaveAttribute(
+      "href",
+      "/auth/login",
+    );
+    expect(screen.getByRole("link", { name: "layout.nav.login" })).toHaveAttribute(
+      "title",
+      "layout.nav.login",
+    );
   });
 
-  it("shows mobile and desktop control panel links for authenticated users outside the control panel", () => {
+  it("shows the desktop control panel link for authenticated users outside the control panel", () => {
     authState.isAuthenticated = true;
     authState.isLoading = false;
     pathnameState.value = "/parks";
 
     render(<Header />);
 
-    const controlPanelLinks = screen.getAllByRole("link", { name: "layout.nav.controlPanel" });
-
-    expect(controlPanelLinks).toHaveLength(2);
-    expect(controlPanelLinks[0]).toHaveAttribute("href", "/control-panel");
-    expect(controlPanelLinks[1]).toHaveAttribute("href", "/control-panel");
+    expect(screen.getByRole("link", { name: "layout.nav.controlPanel" })).toHaveAttribute(
+      "href",
+      "/control-panel",
+    );
   });
 
   it("keeps park search available outside the parks map page", () => {
@@ -93,30 +114,27 @@ describe("Header", () => {
     expect(screen.queryByRole("button", { name: "layout.nav.filters" })).not.toBeInTheDocument();
   });
 
-  it("shows mobile and desktop home links outside the root page", () => {
+  it("shows desktop navigation links for home and map", () => {
     pathnameState.value = "/parks";
 
     render(<Header />);
 
-    const homeLinks = screen.getAllByRole("link", { name: "layout.nav.home" });
-
-    expect(homeLinks).toHaveLength(2);
-    expect(homeLinks[0]).toHaveAttribute("href", "/");
-    expect(homeLinks[1]).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "layout.nav.home" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "layout.nav.map" })).toHaveAttribute("href", "/parks");
   });
 
-  it("shows a logout button inside the control panel and calls logout", async () => {
+  it("shows a desktop logout icon and calls logout", async () => {
     authState.isAuthenticated = true;
     authState.isLoading = false;
     pathnameState.value = "/control-panel/visits";
 
     render(<Header />);
 
-    const logoutButtons = screen.getAllByRole("button", { name: "layout.nav.logout" });
+    const logoutButton = screen.getByRole("button", { name: "layout.nav.logout" });
 
-    expect(logoutButtons).toHaveLength(2);
+    expect(logoutButton).toHaveAttribute("title", "layout.nav.logout");
 
-    await userEvent.click(logoutButtons[0]);
+    await userEvent.click(logoutButton);
 
     expect(authState.logout).toHaveBeenCalled();
   });
@@ -136,5 +154,36 @@ describe("Header", () => {
     await userEvent.click(toggle);
 
     expect(toggle).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("opens a mobile menu sheet with navigation and session actions", async () => {
+    authState.isAuthenticated = true;
+    authState.isLoading = false;
+
+    render(<Header />);
+
+    await userEvent.click(screen.getByRole("button", { name: "layout.nav.menu" }));
+
+    const dialog = screen.getByRole("dialog", { name: "layout.nav.menu" });
+
+    await waitFor(() => {
+      expect(dialog).toHaveClass("translate-x-0");
+    });
+    expect(within(dialog).getByRole("link", { name: "layout.nav.home" })).toHaveAttribute(
+      "href",
+      "/",
+    );
+    expect(within(dialog).getByRole("link", { name: "layout.nav.map" })).toHaveAttribute(
+      "href",
+      "/parks",
+    );
+    expect(within(dialog).getByRole("link", { name: "layout.nav.controlPanel" })).toHaveAttribute(
+      "href",
+      "/control-panel",
+    );
+    expect(
+      within(dialog).getByRole("button", { name: "layout.themeToggle.darkMode" }),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "layout.nav.logout" })).toBeInTheDocument();
   });
 });

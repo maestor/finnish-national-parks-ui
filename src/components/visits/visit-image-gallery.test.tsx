@@ -239,4 +239,25 @@ describe("VisitImageGallery", () => {
       screen.queryByRole("dialog", { name: "imageGallery.dialogLabel" }),
     ).not.toBeInTheDocument();
   });
+
+  it("supports swipe navigation inside the lightbox", () => {
+    render(<VisitImageGallery images={images} />);
+
+    const [firstThumbnail] = screen.getAllByRole("button", { name: /imageGallery.open/i });
+    fireEvent.click(firstThumbnail);
+
+    const activeImage = screen.getByRole("img", { name: "imageGallery.activeImage" });
+
+    fireEvent.touchStart(activeImage, {
+      changedTouches: [{ clientX: 220, clientY: 100 }],
+    });
+    fireEvent.touchEnd(activeImage, {
+      changedTouches: [{ clientX: 80, clientY: 110 }],
+    });
+
+    expect(screen.getByRole("img", { name: "imageGallery.activeImage" })).toHaveAttribute(
+      "src",
+      "https://example.com/full-2.jpg",
+    );
+  });
 });

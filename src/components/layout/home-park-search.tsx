@@ -7,10 +7,11 @@ import { MapPin, Search, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useHomeMapControls } from "../providers/home-map-controls-provider";
 
-const MAX_RESULTS = 8;
+const MAX_DESKTOP_RESULTS = 8;
 const SEARCH_ICON_CLASS_NAME =
   "pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-foreground/60";
 const SEARCH_INPUT_CLASS_NAME =
@@ -95,8 +96,8 @@ export const HomeParkSearch = () => {
             );
           });
 
-    return filteredParks.slice(0, MAX_RESULTS);
-  }, [parks, query]);
+    return filteredParks.slice(0, isMobileOpen ? filteredParks.length : MAX_DESKTOP_RESULTS);
+  }, [isMobileOpen, parks, query]);
 
   const activatePark = (park: Park) => {
     setQuery("");
@@ -112,7 +113,7 @@ export const HomeParkSearch = () => {
     router.push(`/park/${park.slug}`);
   };
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
     if (!isOpen && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
       setIsOpen(true);
       event.preventDefault();
@@ -193,7 +194,7 @@ export const HomeParkSearch = () => {
       {isOpen && (
         <div
           id="home-park-search-results"
-          className="fixed left-4 right-4 top-16 z-50 overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-xl md:absolute md:left-0 md:right-0 md:top-[calc(100%+0.5rem)]"
+          className="fixed left-4 right-4 top-16 z-50 flex min-h-0 max-h-[calc(100dvh-5rem)] flex-col overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-xl md:absolute md:left-0 md:right-0 md:top-[calc(100%+0.5rem)] md:max-h-none"
         >
           {isMobileOpen && (
             <div className="border-b border-border p-2 md:hidden">
@@ -225,7 +226,7 @@ export const HomeParkSearch = () => {
           ) : results.length === 0 ? (
             <p className="px-4 py-3 text-sm text-muted-foreground">{t("empty")}</p>
           ) : (
-            <ul className="py-1">
+            <ul className="max-h-[calc(100dvh-9.5rem)] flex-1 overflow-y-auto overscroll-contain py-1 touch-pan-y [-webkit-overflow-scrolling:touch] md:max-h-80">
               {results.map((park, index) => (
                 <li key={park.slug}>
                   <div
