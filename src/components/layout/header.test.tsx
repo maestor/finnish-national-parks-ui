@@ -58,10 +58,11 @@ describe("Header", () => {
 
   it("renders the site title link to the parks map", () => {
     render(<Header />);
-    expect(screen.getByRole("link", { name: "layout.siteTitle" })).toHaveAttribute(
-      "href",
-      "/parks",
-    );
+
+    const siteTitleLink = screen.getByRole("link", { name: "layout.siteTitle" });
+
+    expect(siteTitleLink).toHaveAttribute("href", "/parks");
+    expect(within(siteTitleLink).getByTestId("header-brand-mark")).toBeInTheDocument();
   });
 
   it("renders theme toggle button", () => {

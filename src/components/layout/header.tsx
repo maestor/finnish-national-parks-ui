@@ -1,6 +1,7 @@
 "use client";
 
 import { LoginLink } from "@/components/auth/login-link";
+import { HeaderBrandMark } from "@/components/layout/header-brand-mark";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/cn";
 import { House, LogIn, LogOut, MapPin, Menu, Settings, SlidersHorizontal, X } from "lucide-react";
@@ -14,6 +15,7 @@ import { ThemeToggle } from "./theme-toggle";
 
 const DESKTOP_NAV_LINK_CLASS =
   "inline-flex items-center rounded-full px-3 py-2 text-sm font-medium text-foreground/80 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+const DESKTOP_ACTIVE_NAV_LINK_CLASS = "bg-white/75 text-foreground shadow-sm dark:bg-slate-950/45";
 const DESKTOP_ICON_BUTTON_CLASS =
   "inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background/90 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 const MOBILE_SHEET_ITEM_CLASS =
@@ -121,11 +123,22 @@ export const Header = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto flex h-14 items-center gap-2 px-4 md:gap-3">
-          <Link href="/parks" className="flex min-w-0 items-center gap-2">
-            <MapPin className="h-6 w-6 text-primary" aria-hidden="true" />
-            <span className="truncate font-bold">{t("siteTitle")}</span>
+      <header className="sticky top-0 z-50 w-full overflow-hidden border-b border-border/70 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(118deg,rgba(22,101,52,0.16)_0%,rgba(15,118,110,0.12)_46%,rgba(37,99,235,0.18)_100%)] dark:bg-[linear-gradient(118deg,rgba(22,101,52,0.28)_0%,rgba(15,118,110,0.24)_46%,rgba(37,99,235,0.3)_100%)]"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.22),transparent_32%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.1),transparent_32%)]"
+        />
+        <div className="relative container mx-auto flex h-14 items-center gap-2 px-4 md:gap-3">
+          <Link
+            href="/parks"
+            className="flex min-w-0 items-center gap-3 rounded-full border border-white/35 bg-white/70 py-1 pl-2 pr-3 text-foreground shadow-sm backdrop-blur-sm transition-colors hover:bg-white/85 dark:border-white/10 dark:bg-slate-950/30 dark:hover:bg-slate-950/45"
+          >
+            <HeaderBrandMark testId="header-brand-mark" />
+            <span className="truncate font-bold tracking-tight">{t("siteTitle")}</span>
           </Link>
 
           <div className="hidden items-center gap-1 md:flex">
@@ -136,7 +149,7 @@ export const Header = () => {
                 aria-current={item.isCurrent ? "page" : undefined}
                 className={cn(
                   DESKTOP_NAV_LINK_CLASS,
-                  item.isCurrent && "bg-accent text-accent-foreground",
+                  item.isCurrent && DESKTOP_ACTIVE_NAV_LINK_CLASS,
                 )}
               >
                 {item.label}
