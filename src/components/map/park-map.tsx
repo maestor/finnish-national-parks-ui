@@ -87,15 +87,14 @@ const createMarkerElement = (park: MapPark) => {
   const button = document.createElement("button");
   button.type = "button";
   button.className =
-    "group relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+    "group relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
   button.setAttribute("aria-label", `${park.name}, ${park.type.name}`);
   button.dataset.slug = park.slug;
 
   const color = getVisitStatusColor(park);
 
   button.innerHTML = `
-    <span class="absolute inset-1 rounded-full bg-white/82 shadow-[0_10px_20px_rgba(15,23,42,0.18)] backdrop-blur-sm dark:bg-slate-950/68"></span>
-    <svg viewBox="0 0 24 24" fill="${color}" class="relative h-6 w-6 drop-shadow-[0_8px_14px_rgba(15,23,42,0.22)] transition-transform group-hover:scale-110" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 24 24" fill="${color}" class="h-6 w-6 drop-shadow-md transition-transform group-hover:scale-110" xmlns="http://www.w3.org/2000/svg">
       <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
     </svg>
   `;
