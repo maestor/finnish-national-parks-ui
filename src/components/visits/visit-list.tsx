@@ -64,7 +64,7 @@ export const VisitList = ({ visits }: VisitListProps) => {
 
   if (sortedVisits.length === 0) {
     return (
-      <div className="mt-6 rounded-lg border border-dashed p-8 text-center">
+      <div className="mt-6 rounded-[1.5rem] border border-dashed border-white/45 bg-white/48 p-8 text-center backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/38">
         <p className="text-muted-foreground">{t("noVisits")}</p>
         <Link
           href="/control-panel/visits/new"
@@ -101,13 +101,13 @@ export const VisitList = ({ visits }: VisitListProps) => {
       />
 
       {filteredVisits.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-8 text-center">
+        <div className="rounded-[1.5rem] border border-dashed border-white/45 bg-white/48 p-8 text-center backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/38">
           <p className="text-muted-foreground">{t("emptyFiltered")}</p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border">
+        <div className="overflow-hidden rounded-[1.6rem] border border-white/45 bg-white/56 shadow-[0_18px_36px_rgba(148,163,184,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/38 dark:shadow-[0_22px_40px_rgba(2,6,23,0.28)]">
           <table className="w-full text-sm">
-            <thead className="bg-muted">
+            <thead className="bg-white/74 dark:bg-slate-950/56">
               <tr>
                 <th className="px-4 py-3 text-left font-medium">{t("parkName")}</th>
                 <th className="px-4 py-3 text-left font-medium">{t("route")}</th>
@@ -117,9 +117,12 @@ export const VisitList = ({ visits }: VisitListProps) => {
                 <th className="px-4 py-3 text-right font-medium" />
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-white/30 dark:divide-white/8">
               {filteredVisits.map((visit) => (
-                <tr key={visit.id}>
+                <tr
+                  key={visit.id}
+                  className="transition-colors hover:bg-white/56 dark:hover:bg-slate-950/42"
+                >
                   <td className="px-4 py-3">
                     <Link href={`/park/${visit.park.slug}`} className="hover:underline">
                       {visit.park.name}
@@ -136,7 +139,7 @@ export const VisitList = ({ visits }: VisitListProps) => {
                   <td className="px-4 py-3 text-right">
                     <EditVisitLink
                       visitId={visit.id}
-                      className="inline-flex items-center justify-center rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                      className="inline-flex items-center justify-center rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-white/72 hover:text-foreground dark:hover:bg-slate-950/58"
                       iconClassName="h-4 w-4"
                     />
                   </td>

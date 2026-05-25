@@ -309,7 +309,7 @@ export const VisitImageGallery = ({
         >
           <button
             type="button"
-            className="absolute inset-0 bg-black/85 backdrop-blur-sm"
+            className="absolute inset-0 bg-[linear-gradient(180deg,rgba(236,245,248,0.94),rgba(223,236,245,0.97))] backdrop-blur-md dark:bg-[linear-gradient(180deg,rgba(9,17,29,0.94),rgba(17,24,39,0.97))]"
             onClick={() => setActiveIndex(null)}
             aria-label={t("closeBackdrop")}
           />
@@ -318,7 +318,7 @@ export const VisitImageGallery = ({
               <button
                 type="button"
                 onClick={showPreviousImage}
-                className="absolute left-4 top-1/2 z-10 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-background/90 text-foreground shadow-lg backdrop-blur transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                className="absolute left-4 top-1/2 z-10 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/45 bg-white/82 text-foreground shadow-[0_18px_38px_rgba(148,163,184,0.26)] backdrop-blur-md transition-colors hover:bg-white/94 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/62 dark:hover:bg-slate-950/78 dark:shadow-[0_20px_40px_rgba(2,6,23,0.42)]"
                 aria-label={t("previous")}
               >
                 <ChevronLeft className="h-5 w-5" aria-hidden="true" />
@@ -326,7 +326,7 @@ export const VisitImageGallery = ({
             )}
 
             <div className="relative flex max-h-full w-full max-w-6xl flex-col items-center gap-4">
-              <div className="relative flex max-h-[82vh] w-full items-center justify-center rounded-2xl border border-white/10 bg-black/35 p-3 shadow-2xl sm:p-4">
+              <div className="relative flex max-h-[82vh] w-full items-center justify-center rounded-[1.75rem] border border-white/50 bg-white/68 p-3 shadow-[0_28px_64px_rgba(148,163,184,0.22)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[0_32px_72px_rgba(2,6,23,0.44)] sm:p-4">
                 <img
                   src={activeImage.image.fullUrl}
                   alt={t("activeImage", { index: activeImage.index + 1 })}
@@ -338,14 +338,14 @@ export const VisitImageGallery = ({
                   type="button"
                   ref={closeButtonRef}
                   onClick={() => setActiveIndex(null)}
-                  className="absolute right-3 top-3 inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="absolute right-3 top-3 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/45 bg-white/86 text-foreground shadow-[0_16px_32px_rgba(148,163,184,0.24)] backdrop-blur-md transition-colors hover:bg-white/96 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/66 dark:hover:bg-slate-950/82 dark:shadow-[0_18px_36px_rgba(2,6,23,0.42)]"
                   aria-label={t("close")}
                 >
                   <X className="h-5 w-5" aria-hidden="true" />
                 </button>
               </div>
 
-              <p className="rounded-full bg-black/55 px-3 py-1 text-center text-sm text-white/85">
+              <p className="rounded-full border border-white/50 bg-white/76 px-3 py-1 text-center text-sm text-foreground/78 shadow-[0_14px_28px_rgba(148,163,184,0.18)] backdrop-blur-md dark:border-white/10 dark:bg-slate-950/62 dark:text-sky-100/78 dark:shadow-[0_18px_32px_rgba(2,6,23,0.36)]">
                 {t("position", { current: activeImage.index + 1, total: images.length })}
               </p>
             </div>
@@ -354,7 +354,7 @@ export const VisitImageGallery = ({
               <button
                 type="button"
                 onClick={showNextImage}
-                className="absolute right-4 top-1/2 z-10 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-background/90 text-foreground shadow-lg backdrop-blur transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                className="absolute right-4 top-1/2 z-10 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/45 bg-white/82 text-foreground shadow-[0_18px_38px_rgba(148,163,184,0.26)] backdrop-blur-md transition-colors hover:bg-white/94 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/62 dark:hover:bg-slate-950/78 dark:shadow-[0_20px_40px_rgba(2,6,23,0.42)]"
                 aria-label={t("next")}
               >
                 <ChevronRight className="h-5 w-5" aria-hidden="true" />

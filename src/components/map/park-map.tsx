@@ -87,14 +87,15 @@ const createMarkerElement = (park: MapPark) => {
   const button = document.createElement("button");
   button.type = "button";
   button.className =
-    "group relative flex items-center justify-center w-8 h-8 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-full";
+    "group relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
   button.setAttribute("aria-label", `${park.name}, ${park.type.name}`);
   button.dataset.slug = park.slug;
 
   const color = getVisitStatusColor(park);
 
   button.innerHTML = `
-    <svg viewBox="0 0 24 24" fill="${color}" class="w-6 h-6 drop-shadow-md transition-transform group-hover:scale-110" xmlns="http://www.w3.org/2000/svg">
+    <span class="absolute inset-1 rounded-full bg-white/82 shadow-[0_10px_20px_rgba(15,23,42,0.18)] backdrop-blur-sm dark:bg-slate-950/68"></span>
+    <svg viewBox="0 0 24 24" fill="${color}" class="relative h-6 w-6 drop-shadow-[0_8px_14px_rgba(15,23,42,0.22)] transition-transform group-hover:scale-110" xmlns="http://www.w3.org/2000/svg">
       <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
     </svg>
   `;
@@ -116,18 +117,18 @@ const createPopupNode = (
   canManageVisits: boolean,
 ): HTMLElement => {
   const container = document.createElement("div");
-  container.className = "p-3 max-w-[260px]";
+  container.className = "max-w-[280px] p-3 text-foreground";
 
   const color = getVisitStatusColor(park);
 
   const header = document.createElement("header");
-  header.className = "flex items-start gap-2";
+  header.className = "flex items-start gap-3";
 
   const pinIcon = document.createElement("span");
   pinIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}" class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>`;
 
   const title = document.createElement("h3");
-  title.className = "font-semibold text-sm leading-tight";
+  title.className = "text-sm leading-tight font-semibold";
   title.textContent = park.name;
 
   header.appendChild(pinIcon);
@@ -135,16 +136,18 @@ const createPopupNode = (
   container.appendChild(header);
 
   const details = document.createElement("div");
-  details.className = "mt-2 space-y-1 text-xs text-muted-foreground";
+  details.className = "mt-3 space-y-2 text-xs text-muted-foreground";
 
   const typeRow = document.createElement("p");
-  typeRow.className = "flex items-center gap-1.5";
+  typeRow.className =
+    "flex items-center gap-1.5 rounded-xl border border-white/45 bg-white/72 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)] dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
   typeRow.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 shrink-0" aria-hidden="true"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg><span>${park.type.name}</span>`;
   details.appendChild(typeRow);
 
   if (park.location) {
     const loc = document.createElement("p");
-    loc.className = "truncate";
+    loc.className =
+      "truncate rounded-xl border border-white/45 bg-white/72 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)] dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
     loc.textContent = park.location;
     loc.title = park.location;
     details.appendChild(loc);
@@ -152,12 +155,16 @@ const createPopupNode = (
 
   if (park.areaKm2 !== null) {
     const area = document.createElement("p");
+    area.className =
+      "rounded-xl border border-white/45 bg-white/72 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)] dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
     area.textContent = `${park.areaKm2} km²`;
     details.appendChild(area);
   }
 
   if (park.establishmentYear !== null) {
     const year = document.createElement("p");
+    year.className =
+      "rounded-xl border border-white/45 bg-white/72 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)] dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
     year.textContent = `${labels.established} ${park.establishmentYear}`;
     details.appendChild(year);
   }
@@ -168,7 +175,7 @@ const createPopupNode = (
     officialLink.target = "_blank";
     officialLink.rel = "noopener noreferrer";
     officialLink.className =
-      "inline-flex items-center gap-1 font-medium text-primary hover:underline";
+      "inline-flex items-center gap-1 self-start rounded-full border border-sky-200/70 bg-white/74 px-3 py-1.5 font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 dark:border-sky-300/15 dark:bg-slate-950/62 dark:hover:bg-slate-950/78";
     officialLink.innerHTML = `${labels.officialLink}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>`;
     officialLink.addEventListener("click", (e) => e.stopPropagation());
     details.appendChild(officialLink);
@@ -177,29 +184,33 @@ const createPopupNode = (
   container.appendChild(details);
 
   const summaryRow = document.createElement("div");
-  summaryRow.className = "mt-3 flex items-center gap-4 border-t border-border/60 pt-3 text-xs";
+  summaryRow.className =
+    "mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/35 pt-3 text-xs dark:border-white/10";
 
   const visitCount = park.visitedSummary.visitCount;
   const visitsCount = document.createElement("span");
-  visitsCount.className = "font-medium text-foreground";
+  visitsCount.className =
+    "inline-flex items-center rounded-full border border-white/45 bg-white/72 px-3 py-1 font-medium text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] dark:border-white/10 dark:bg-slate-950/56 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
   visitsCount.textContent = `${labels.visits} (${visitCount})`;
   summaryRow.appendChild(visitsCount);
 
   const parkLink = document.createElement("a");
   parkLink.href = `/park/${park.slug}`;
-  parkLink.className = "font-medium text-primary hover:underline";
+  parkLink.className =
+    "inline-flex items-center rounded-full border border-sky-200/70 bg-white/74 px-3 py-1.5 font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 dark:border-sky-300/15 dark:bg-slate-950/62 dark:hover:bg-slate-950/78";
   parkLink.textContent = labels.openParkPage;
   parkLink.addEventListener("click", (e) => e.stopPropagation());
   summaryRow.appendChild(parkLink);
   container.appendChild(summaryRow);
 
   const actionRow = document.createElement("div");
-  actionRow.className = "mt-3 flex items-center gap-4 text-xs";
+  actionRow.className = "mt-3 flex items-center gap-2 text-xs";
 
   if (canManageVisits) {
     const addLink = document.createElement("a");
     addLink.href = `/control-panel/visits/new?park=${park.slug}`;
-    addLink.className = "inline-flex items-center gap-1 font-medium text-primary hover:underline";
+    addLink.className =
+      "inline-flex items-center gap-1 rounded-full border border-emerald-200/70 bg-white/74 px-3 py-1.5 font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 dark:border-emerald-300/15 dark:bg-slate-950/62 dark:hover:bg-slate-950/78";
     addLink.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg><span>${labels.addVisit}</span>`;
     addLink.addEventListener("click", (e) => e.stopPropagation());
     actionRow.appendChild(addLink);
