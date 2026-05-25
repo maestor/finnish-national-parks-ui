@@ -285,7 +285,7 @@ export const Header = () => {
               </nav>
             </div>
 
-            <div className="mt-auto rounded-[1.6rem] border border-white/40 bg-white/56 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.42)] dark:border-white/8 dark:bg-slate-950/44 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+            <div className="rounded-[1.6rem] border border-white/40 bg-white/56 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.42)] dark:border-white/8 dark:bg-slate-950/44 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
               <div className="flex flex-col gap-1">
                 <ThemeToggle
                   showLabel
