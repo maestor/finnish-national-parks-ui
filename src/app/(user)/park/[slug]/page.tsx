@@ -67,10 +67,10 @@ const ParkDetailPage = async ({ params }: ParkDetailPageProps) => {
           {facts.map((fact) => (
             <div
               key={fact.label}
-              className="flex h-full min-h-[5.75rem] flex-col justify-between rounded-2xl border border-white/40 bg-white/48 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.42)] dark:border-white/8 dark:bg-slate-950/36 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+              className="flex h-full min-h-[5.75rem] flex-col rounded-2xl border border-sky-200/45 bg-[linear-gradient(145deg,rgba(255,255,255,0.82),rgba(237,245,249,0.92))] px-4 py-3 shadow-[0_14px_28px_rgba(148,163,184,0.12),inset_0_1px_0_rgba(255,255,255,0.58)] dark:border-white/8 dark:bg-slate-950/36 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
             >
               <p className="text-xs text-muted-foreground">{fact.label}</p>
-              <p className="mt-0.5 text-sm font-medium">{fact.value}</p>
+              <p className="mt-3 text-sm font-medium">{fact.value}</p>
             </div>
           ))}
           {publicPark.luontoonUrl && (
@@ -78,11 +78,11 @@ const ParkDetailPage = async ({ params }: ParkDetailPageProps) => {
               href={publicPark.luontoonUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex h-full min-h-[5.75rem] w-full items-center justify-between gap-3 rounded-2xl border border-sky-200/70 bg-white/56 px-4 py-3 text-sm font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/82 dark:border-sky-300/15 dark:bg-slate-950/36 dark:hover:bg-slate-950/54"
+              className="inline-flex h-full min-h-[5.75rem] w-full items-start justify-between gap-3 rounded-2xl border border-sky-200/70 bg-[linear-gradient(145deg,rgba(255,255,255,0.84),rgba(236,245,251,0.94))] px-4 py-3 text-sm font-medium text-primary shadow-[0_14px_28px_rgba(148,163,184,0.12),inset_0_1px_0_rgba(255,255,255,0.6)] transition-colors hover:bg-[linear-gradient(145deg,rgba(255,255,255,0.92),rgba(240,248,253,0.98))] dark:border-sky-300/15 dark:bg-slate-950/36 dark:hover:bg-slate-950/54"
               aria-label={`${t("officialLink")} (avautuu uuteen välilehteen)`}
             >
-              <span>{t("officialLink")}</span>
-              <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+              <span className="pt-[1.125rem]">{t("officialLink")}</span>
+              <ExternalLink className="mt-3 h-3.5 w-3.5" aria-hidden="true" />
             </a>
           )}
         </div>

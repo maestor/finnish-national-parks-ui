@@ -13,7 +13,7 @@ export const Select = ({ className, wrapperClassName, children, ...props }: Sele
     <div className={cn("relative", wrapperClassName)}>
       <select
         className={cn(
-          "flex h-10 w-full appearance-none rounded-md border border-input bg-background px-3 py-2 pr-10 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+          "flex h-10 w-full appearance-none rounded-xl border border-white/45 bg-white/78 px-3 py-2 pr-10 text-sm ring-offset-background shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]",
           className,
         )}
         {...props}

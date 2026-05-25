@@ -14,7 +14,8 @@ export const Button = ({
 }: ButtonProps) => {
   const variants = {
     default: "bg-primary text-primary-foreground hover:bg-primary/90",
-    outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+    outline:
+      "border border-white/45 bg-white/78 text-foreground shadow-[0_10px_24px_rgba(148,163,184,0.18)] backdrop-blur-md hover:bg-white/92 dark:border-white/10 dark:bg-slate-950/58 dark:hover:bg-slate-950/74 dark:shadow-[0_16px_32px_rgba(2,6,23,0.28)]",
     ghost: "hover:bg-accent hover:text-accent-foreground",
     destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
   };
