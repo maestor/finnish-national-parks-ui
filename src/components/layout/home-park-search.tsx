@@ -11,7 +11,6 @@ import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useHomeMapControls } from "../providers/home-map-controls-provider";
 
-const MAX_DESKTOP_RESULTS = 8;
 const SEARCH_SURFACE_CLASS_NAME =
   "border border-white/45 bg-white/70 shadow-[0_10px_24px_rgba(148,163,184,0.18)] backdrop-blur-md transition-colors hover:bg-white/85 dark:border-white/10 dark:bg-slate-950/45 dark:hover:bg-slate-950/60";
 const SEARCH_ICON_CLASS_NAME =
@@ -102,7 +101,7 @@ export const HomeParkSearch = () => {
             );
           });
 
-    return filteredParks.slice(0, isMobileOpen ? filteredParks.length : MAX_DESKTOP_RESULTS);
+    return filteredParks;
   }, [isMobileOpen, parks, query]);
 
   const activatePark = (park: Park) => {
@@ -237,8 +236,7 @@ export const HomeParkSearch = () => {
           ) : (
             <ul
               className={cn(
-                "max-h-[calc(100dvh-9.5rem)] flex-1 overflow-y-auto overscroll-contain px-2 py-2 touch-pan-y [-webkit-overflow-scrolling:touch] md:max-h-80",
-                isMobileOpen && "bg-white/96 dark:bg-slate-950/96",
+                "max-h-[calc(100dvh-9.5rem)] flex-1 overflow-y-auto overscroll-contain bg-white/96 px-2 py-2 touch-pan-y [-webkit-overflow-scrolling:touch] dark:bg-slate-950/96 md:max-h-80",
               )}
             >
               {results.map((park, index) => (

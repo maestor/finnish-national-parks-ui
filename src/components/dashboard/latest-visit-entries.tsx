@@ -49,6 +49,7 @@ export const LatestVisitEntries = ({
             >
               <Link
                 href={`/park/${visit.parkSlug}`}
+                title={visit.parkName}
                 className="min-w-0 text-sm font-medium hover:underline sm:truncate sm:text-base"
               >
                 {visit.parkName}
