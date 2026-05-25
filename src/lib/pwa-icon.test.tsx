@@ -1,3 +1,4 @@
+import { render } from "@testing-library/react";
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { PwaIcon, createPwaIconResponse } from "./pwa-icon";
@@ -15,11 +16,11 @@ vi.mock("next/og", () => ({
 
 describe("pwa icon", () => {
   it("renders the integrated forest and water map pin artwork", () => {
-    const icon = PwaIcon() as ReactElement<{ children: unknown; viewBox: string }>;
+    const { container } = render(<PwaIcon />);
+    const icon = container.querySelector("svg");
 
-    expect(icon.type).toBe("svg");
-    expect(icon.props.viewBox).toBe("0 0 512 512");
-    expect(icon.props.children).toBeTruthy();
+    expect(icon).toHaveAttribute("viewBox", "0 0 512 512");
+    expect(icon?.querySelector("path")).toBeTruthy();
   });
 
   it("builds an image response at the requested size", () => {

@@ -38,9 +38,10 @@ const resolveMetadataBase = (): URL => {
 
 export const generateMetadata = async (): Promise<Metadata> => {
   const t = await getTranslations("metadata");
+  const metadataBase = resolveMetadataBase();
 
   return {
-    metadataBase: resolveMetadataBase(),
+    metadataBase,
     title: {
       default: t("title"),
       template: `%s | ${t("title")}`,
@@ -51,6 +52,7 @@ export const generateMetadata = async (): Promise<Metadata> => {
       title: t("title"),
       description: t("description"),
       siteName: t("title"),
+      url: metadataBase,
       type: "website",
       locale: "fi_FI",
     },

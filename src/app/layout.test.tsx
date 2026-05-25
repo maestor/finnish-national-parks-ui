@@ -155,6 +155,7 @@ describe("RootLayout", () => {
         title: "metadata.title",
         description: "metadata.description",
         siteName: "metadata.title",
+        url: new URL("https://reissuvihko.example.com"),
         type: "website",
         locale: "fi_FI",
       },

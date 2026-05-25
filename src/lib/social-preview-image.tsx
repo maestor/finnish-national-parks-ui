@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import type { ReactElement } from "react";
+import { AppIconArtwork } from "./app-icon-artwork";
 
 export type SocialPreviewVariant = "square" | "landscape";
 
@@ -16,8 +17,7 @@ type CreateSocialPreviewImageResponseOptions = SocialPreviewImageProps & {
 
 const BrandIllustration = ({ compact = false }: { compact?: boolean }): ReactElement => {
   const outerSize = compact ? 240 : 320;
-  const innerSize = compact ? 154 : 206;
-  const sceneSize = compact ? 98 : 132;
+  const iconSize = compact ? 184 : 244;
 
   return (
     <div
@@ -41,103 +41,22 @@ const BrandIllustration = ({ compact = false }: { compact?: boolean }): ReactEle
       />
       <div
         style={{
-          width: innerSize,
-          height: innerSize,
-          borderRadius: 999,
-          background: "#f8fafc",
+          width: iconSize,
+          height: iconSize,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          boxShadow: "0 24px 48px rgba(15, 23, 42, 0.18)",
+          boxShadow: "0 24px 48px rgba(15, 23, 42, 0.24)",
         }}
       >
-        <div
+        <AppIconArtwork
           style={{
-            width: sceneSize,
-            height: sceneSize,
-            borderRadius: 999,
-            overflow: "hidden",
-            position: "relative",
-            display: "flex",
-            background: "linear-gradient(180deg, #dcfce7 0%, #bfdbfe 100%)",
+            width: "100%",
+            height: "100%",
           }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              left: compact ? 8 : 10,
-              right: compact ? 8 : 10,
-              bottom: compact ? 12 : 18,
-              height: compact ? 18 : 24,
-              borderRadius: 999,
-              background: "#38bdf8",
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              bottom: compact ? 20 : 28,
-              display: "flex",
-              alignItems: "flex-end",
-              justifyContent: "center",
-              gap: compact ? 4 : 6,
-            }}
-          >
-            <div
-              style={{
-                width: 0,
-                height: 0,
-                borderLeft: compact ? "14px solid transparent" : "18px solid transparent",
-                borderRight: compact ? "14px solid transparent" : "18px solid transparent",
-                borderBottom: compact ? "24px solid #22c55e" : "30px solid #22c55e",
-              }}
-            />
-            <div
-              style={{
-                width: 0,
-                height: 0,
-                borderLeft: compact ? "12px solid transparent" : "16px solid transparent",
-                borderRight: compact ? "12px solid transparent" : "16px solid transparent",
-                borderBottom: compact ? "22px solid #16a34a" : "28px solid #16a34a",
-              }}
-            />
-            <div
-              style={{
-                width: 0,
-                height: 0,
-                borderLeft: compact ? "10px solid transparent" : "14px solid transparent",
-                borderRight: compact ? "10px solid transparent" : "14px solid transparent",
-                borderBottom: compact ? "18px solid #15803d" : "24px solid #15803d",
-              }}
-            />
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              left: compact ? 12 : 18,
-              right: compact ? 12 : 18,
-              bottom: compact ? 24 : 34,
-              height: compact ? 8 : 10,
-              borderRadius: 999,
-              background: "#86efac",
-            }}
-          />
-        </div>
+          testId="social-preview-icon"
+        />
       </div>
-      <div
-        style={{
-          width: compact ? 96 : 118,
-          height: compact ? 96 : 118,
-          position: "absolute",
-          bottom: compact ? 10 : 12,
-          borderRadius: compact ? 24 : 30,
-          transform: "rotate(45deg)",
-          background: "#f8fafc",
-          boxShadow: "0 20px 36px rgba(15, 23, 42, 0.16)",
-        }}
-      />
     </div>
   );
 };
