@@ -14,11 +14,11 @@ vi.mock("next/og", () => ({
 }));
 
 describe("pwa icon", () => {
-  it("renders the forest and water map pin artwork as a styled container", () => {
-    const icon = PwaIcon() as ReactElement<{ children: unknown; style: Record<string, string> }>;
+  it("renders the integrated forest and water map pin artwork", () => {
+    const icon = PwaIcon() as ReactElement<{ children: unknown; viewBox: string }>;
 
-    expect(icon.type).toBe("div");
-    expect(icon.props.style.background).toContain("linear-gradient");
+    expect(icon.type).toBe("svg");
+    expect(icon.props.viewBox).toBe("0 0 512 512");
     expect(icon.props.children).toBeTruthy();
   });
 
