@@ -21,6 +21,12 @@ interface SeasonPresentation {
   emoji: string;
 }
 
+interface VisitAuthorDetails {
+  createdAt: string;
+  showUpdatedAt: boolean;
+  updatedAt: string;
+}
+
 const hasExpandableContent = (visit: Visit) => {
   const hasImages = (visit.images?.length ?? 0) > 0;
   return !!visit.note || !!visit.author || hasImages;
@@ -53,6 +59,17 @@ const getSeasonPresentation = (dateStr: string): SeasonPresentation => {
     emoji: "❄️",
     borderClass: "border-l-sky-600 dark:border-l-cyan-400",
     badgeClass: "bg-sky-600/15 text-sky-800 dark:bg-cyan-400/15 dark:text-cyan-200",
+  };
+};
+
+const getVisitAuthorDetails = (visit: Visit): VisitAuthorDetails => {
+  const createdAt = formatFinnishDate(visit.createdAt);
+  const updatedAt = formatFinnishDate(visit.updatedAt);
+
+  return {
+    createdAt,
+    updatedAt,
+    showUpdatedAt: createdAt !== updatedAt,
   };
 };
 
@@ -91,6 +108,7 @@ export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionPro
         const isExpandable = hasExpandableContent(visit);
         const isOpen = openId === visit.id;
         const season = getSeasonPresentation(visit.visitedOn);
+        const authorDetails = visit.author ? getVisitAuthorDetails(visit) : null;
 
         if (!isExpandable) {
           return (
@@ -194,13 +212,21 @@ export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionPro
                       <VisitImageGallery images={visit.images} centerThumbnailsWhenStatic />
                     </>
                   )}
-                  {visit.author && (
+                  {visit.author && authorDetails && (
                     <>
                       <h3 className="flex items-center gap-2 text-base font-semibold border-b pb-2">
                         <User className="h-4 w-4 text-muted-foreground" />
                         {t("authorTitle")}
                       </h3>
-                      <p className="text-sm">{visit.author}</p>
+                      <p className="text-sm">
+                        {visit.author}, {authorDetails.createdAt}
+                        {authorDetails.showUpdatedAt ? (
+                          <span>
+                            {" "}
+                            ({t("updatedAtLabel")} {authorDetails.updatedAt})
+                          </span>
+                        ) : null}
+                      </p>
                     </>
                   )}
                 </div>
