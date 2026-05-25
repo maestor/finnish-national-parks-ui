@@ -40,7 +40,7 @@ export const MostVisitedParks = ({
               key={park.parkSlug}
               className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-border/70 bg-background/90 px-4 py-3 shadow-sm transition-colors hover:bg-background sm:flex-row sm:items-center dark:bg-background/70"
             >
-              <div className="flex min-w-0 items-start gap-3 sm:items-center">
+              <div className="flex min-w-0 items-center gap-3">
                 <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border/70 bg-muted text-sm font-semibold text-foreground">
                   {index + 1}
                 </span>

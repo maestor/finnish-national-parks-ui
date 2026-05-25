@@ -57,4 +57,17 @@ describe("MostVisitedParks", () => {
       screen.getByRole("link", { name: "Kuusijärven luonto- ja virkistysalue" }),
     ).not.toHaveClass("truncate");
   });
+
+  it("vertically centers the mobile rank and park name row", () => {
+    render(
+      <MostVisitedParks
+        title="Eniten käydyt puistot"
+        emptyMessage="Ei käyntejä"
+        visitCountLabel="käyntiä"
+        parks={[{ parkName: "Pallas", parkSlug: "pallas", visitCount: 4 }]}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "Pallas" }).parentElement).toHaveClass("items-center");
+  });
 });

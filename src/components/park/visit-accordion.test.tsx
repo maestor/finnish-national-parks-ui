@@ -43,7 +43,7 @@ describe("VisitAccordion", () => {
       author: "Pekka Puistossa",
       note: null,
       createdAt: "2024-08-15T00:00:00Z",
-      updatedAt: "2024-08-15T00:00:00Z",
+      updatedAt: "2024-08-16T00:00:00Z",
       images: [
         {
           id: 10,
@@ -65,8 +65,8 @@ describe("VisitAccordion", () => {
       route: null,
       author: "Vain kirjoittaja",
       note: null,
-      createdAt: "2024-09-01T00:00:00Z",
-      updatedAt: "2024-09-01T00:00:00Z",
+      createdAt: "2024-09-01T08:00:00Z",
+      updatedAt: "2024-09-01T18:00:00Z",
       images: [],
     },
   ];
@@ -160,10 +160,22 @@ describe("VisitAccordion", () => {
     expect(screen.getByText("Nuuksion reitti")).toBeInTheDocument();
   });
 
-  it("displays author in the expanded details section when present", () => {
+  it("displays author details with Finnish creation and update dates", () => {
     render(<VisitAccordion visits={visits} />);
 
-    expect(screen.getByText("Pekka Puistossa")).toBeInTheDocument();
+    const updatedAuthorVisit = getVisitCard("15.8.2024");
+    const sameDayAuthorVisit = getVisitCard("1.9.2024");
+
+    expect(
+      within(updatedAuthorVisit).getByText(/Pekka Puistossa, 15\.8\.2024/),
+    ).toBeInTheDocument();
+    expect(
+      within(updatedAuthorVisit).getByText(/park\.updatedAtLabel 16\.8\.2024/),
+    ).toBeInTheDocument();
+    expect(
+      within(sameDayAuthorVisit).getByText(/Vain kirjoittaja, 1\.9\.2024/),
+    ).toBeInTheDocument();
+    expect(within(sameDayAuthorVisit).queryByText(/park\.updatedAtLabel/)).not.toBeInTheDocument();
     expect(screen.getAllByText("park.authorTitle").length).toBeGreaterThanOrEqual(1);
   });
 

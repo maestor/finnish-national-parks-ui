@@ -85,6 +85,7 @@
     "noDetails": "Ei lisätietoja",
     "detailsTitle": "Lisätiedot",
     "authorTitle": "Käynnin kirjannut",
+    "updatedAtLabel": "Päivitetty:",
     "imagesTitle": "Kuvat",
     "imageCount": "{count} kuvaa",
     "visitNumber": "{number}. käynti",
