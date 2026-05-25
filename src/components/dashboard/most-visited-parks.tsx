@@ -30,7 +30,7 @@ export const MostVisitedParks = ({
       iconSurfaceClassName="bg-amber-500/12 dark:bg-amber-400/10"
     >
       {parks.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">
+        <p className="rounded-[1.45rem] border border-dashed border-white/45 bg-white/48 px-4 py-8 text-sm text-muted-foreground backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/42">
           {emptyMessage}
         </p>
       ) : (
@@ -38,10 +38,10 @@ export const MostVisitedParks = ({
           {parks.map((park, index) => (
             <li
               key={park.parkSlug}
-              className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-border/70 bg-background/90 px-4 py-3 shadow-sm transition-colors hover:bg-background sm:flex-row sm:items-center dark:bg-background/70"
+              className="flex flex-col items-start justify-between gap-4 rounded-[1.45rem] border border-white/45 bg-white/62 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)] backdrop-blur-sm transition-colors hover:bg-white/78 sm:flex-row sm:items-center dark:border-white/10 dark:bg-slate-950/48 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] dark:hover:bg-slate-950/62"
             >
               <div className="flex min-w-0 items-center gap-3">
-                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border/70 bg-muted text-sm font-semibold text-foreground">
+                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/50 bg-[linear-gradient(135deg,rgba(245,158,11,0.22),rgba(251,191,36,0.08))] text-sm font-semibold text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] dark:border-white/10 dark:bg-[linear-gradient(135deg,rgba(251,191,36,0.18),rgba(245,158,11,0.08))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
                   {index + 1}
                 </span>
                 <Link
@@ -51,7 +51,7 @@ export const MostVisitedParks = ({
                   {park.parkName}
                 </Link>
               </div>
-              <span className="rounded-full border border-border/70 bg-muted/80 px-3 py-1 text-xs font-medium text-muted-foreground sm:shrink-0 sm:text-sm">
+              <span className="rounded-full border border-white/45 bg-white/70 px-3 py-1 text-xs font-medium text-foreground/68 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] backdrop-blur-sm sm:shrink-0 sm:text-sm dark:border-white/10 dark:bg-slate-950/56 dark:text-sky-100/74 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                 {`${park.visitCount} ${visitCountLabel}`}
               </span>
             </li>

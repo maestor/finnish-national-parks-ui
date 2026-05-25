@@ -211,6 +211,20 @@ describe("HomeParkSearch", () => {
     expect(screen.getByTestId("focus-request")).toHaveTextContent("paijanne");
   });
 
+  it("renders all matching results in the desktop scroll panel", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({ parks: mobileScrollableParks });
+
+    renderSearch();
+
+    const input = screen.getByRole("combobox", { name: "layout.parkSearch.label" });
+    fireEvent.change(input, { target: { value: "Kansallispuisto" } });
+
+    const resultsList = await screen.findByRole("list");
+
+    expect(resultsList).toHaveClass("overflow-y-auto");
+    expect(screen.getByRole("button", { name: /Kansallispuisto 12/i })).toBeInTheDocument();
+  });
+
   it("opens a mobile search panel from the header button", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce({ parks });
 

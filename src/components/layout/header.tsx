@@ -1,6 +1,7 @@
 "use client";
 
 import { LoginLink } from "@/components/auth/login-link";
+import { HeaderBrandMark } from "@/components/layout/header-brand-mark";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/cn";
 import { House, LogIn, LogOut, MapPin, Menu, Settings, SlidersHorizontal, X } from "lucide-react";
@@ -14,10 +15,13 @@ import { ThemeToggle } from "./theme-toggle";
 
 const DESKTOP_NAV_LINK_CLASS =
   "inline-flex items-center rounded-full px-3 py-2 text-sm font-medium text-foreground/80 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+const DESKTOP_ACTIVE_NAV_LINK_CLASS = "bg-white/75 text-foreground shadow-sm dark:bg-slate-950/45";
 const DESKTOP_ICON_BUTTON_CLASS =
-  "inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background/90 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  "inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/45 bg-white/76 text-foreground shadow-[0_10px_24px_rgba(148,163,184,0.2)] backdrop-blur-md transition-colors hover:bg-white/92 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/44 dark:hover:bg-slate-950/64 dark:shadow-[0_16px_32px_rgba(2,6,23,0.34)]";
 const MOBILE_SHEET_ITEM_CLASS =
-  "flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  "flex w-full items-center gap-3 rounded-[1.35rem] border border-transparent px-3 py-3 text-left text-sm font-medium text-foreground transition-colors hover:border-white/45 hover:bg-white/58 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:border-white/10 dark:hover:bg-slate-900/70";
+const MOBILE_TOPBAR_ICON_BUTTON_CLASS =
+  "inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/45 bg-white/82 text-foreground shadow-[0_12px_28px_rgba(148,163,184,0.22)] backdrop-blur-md transition-colors hover:bg-white/94 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/56 dark:hover:bg-slate-950/76 dark:shadow-[0_16px_32px_rgba(2,6,23,0.38)]";
 const MOBILE_MENU_ANIMATION_MS = 180;
 
 export const Header = () => {
@@ -121,11 +125,22 @@ export const Header = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto flex h-14 items-center gap-2 px-4 md:gap-3">
-          <Link href="/parks" className="flex min-w-0 items-center gap-2">
-            <MapPin className="h-6 w-6 text-primary" aria-hidden="true" />
-            <span className="truncate font-bold">{t("siteTitle")}</span>
+      <header className="sticky top-0 z-50 w-full border-b border-border/70 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(118deg,rgba(22,101,52,0.16)_0%,rgba(15,118,110,0.12)_46%,rgba(37,99,235,0.18)_100%)] dark:bg-[linear-gradient(118deg,rgba(22,101,52,0.28)_0%,rgba(15,118,110,0.24)_46%,rgba(37,99,235,0.3)_100%)]"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.22),transparent_32%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.1),transparent_32%)]"
+        />
+        <div className="relative container mx-auto flex h-14 items-center gap-2 px-4 md:gap-3">
+          <Link
+            href="/parks"
+            className="flex min-w-0 items-center gap-3 rounded-full border border-white/35 bg-white/70 py-1 pl-2 pr-3 text-foreground shadow-sm backdrop-blur-sm transition-colors hover:bg-white/85 dark:border-white/10 dark:bg-slate-950/30 dark:hover:bg-slate-950/45"
+          >
+            <HeaderBrandMark testId="header-brand-mark" />
+            <span className="truncate font-bold tracking-tight">{t("siteTitle")}</span>
           </Link>
 
           <div className="hidden items-center gap-1 md:flex">
@@ -136,7 +151,7 @@ export const Header = () => {
                 aria-current={item.isCurrent ? "page" : undefined}
                 className={cn(
                   DESKTOP_NAV_LINK_CLASS,
-                  item.isCurrent && "bg-accent text-accent-foreground",
+                  item.isCurrent && DESKTOP_ACTIVE_NAV_LINK_CLASS,
                 )}
               >
                 {item.label}
@@ -152,7 +167,7 @@ export const Header = () => {
               <button
                 type="button"
                 onClick={toggleMobileFilters}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background/90 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden"
+                className={cn(MOBILE_TOPBAR_ICON_BUTTON_CLASS, "md:hidden")}
                 aria-label={t("nav.filters")}
                 aria-expanded={isMobileFiltersOpen}
                 aria-controls="park-map-filters-mobile"
@@ -167,12 +182,12 @@ export const Header = () => {
             <button
               type="button"
               onClick={openMobileMenu}
-              className={cn(DESKTOP_ICON_BUTTON_CLASS, "md:hidden")}
+              className={cn(MOBILE_TOPBAR_ICON_BUTTON_CLASS, "md:hidden")}
               aria-label={t("nav.menu")}
               aria-expanded={isMobileMenuVisible}
               aria-controls="mobile-header-menu"
             >
-              <Menu className="h-4 w-4" aria-hidden="true" />
+              <Menu className="h-[1.15rem] w-[1.15rem]" aria-hidden="true" />
             </button>
 
             <div className="hidden items-center gap-2 md:flex">
@@ -203,11 +218,11 @@ export const Header = () => {
       </header>
 
       {isMobileMenuMounted && (
-        <div className="fixed inset-0 z-50 flex justify-end md:hidden">
+        <div className="fixed inset-0 z-50 flex items-start justify-end p-2 md:hidden">
           <button
             type="button"
             className={cn(
-              "absolute inset-0 bg-black/45 transition-opacity duration-180 ease-out motion-reduce:transition-none",
+              "absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.26),rgba(15,23,42,0.5))] backdrop-blur-[2px] transition-opacity duration-180 ease-out motion-reduce:transition-none",
               isMobileMenuVisible ? "opacity-100" : "opacity-0",
             )}
             onClick={closeMobileMenu}
@@ -219,72 +234,84 @@ export const Header = () => {
             aria-modal="true"
             aria-labelledby="mobile-header-menu-title"
             className={cn(
-              "relative inset-auto m-0 h-full w-[min(20rem,calc(100vw-1rem))] max-w-none flex-col border-l border-border bg-background p-4 shadow-2xl transition-transform duration-180 ease-out motion-reduce:transition-none",
+              "relative inset-auto m-0 flex h-[calc(100dvh-1rem)] w-[min(22rem,calc(100vw-1rem))] max-w-none flex-col gap-4 overflow-hidden rounded-[2rem] border border-white/45 bg-white/82 p-4 shadow-[0_32px_72px_rgba(148,163,184,0.3)] backdrop-blur-2xl transition-transform duration-180 ease-out motion-reduce:transition-none dark:border-white/10 dark:bg-slate-950/82 dark:shadow-[0_36px_76px_rgba(2,6,23,0.48)]",
               isMobileMenuVisible ? "translate-x-0" : "translate-x-full",
             )}
           >
-            <div className="flex items-center justify-between">
-              <h2 id="mobile-header-menu-title" className="text-base font-semibold">
-                {t("nav.menu")}
-              </h2>
-              <button
-                type="button"
-                onClick={closeMobileMenu}
-                className={DESKTOP_ICON_BUTTON_CLASS}
-                aria-label={t("nav.closeMenu")}
-              >
-                <X className="h-4 w-4" aria-hidden="true" />
-              </button>
+            <div className="rounded-[1.6rem] border border-white/45 bg-[linear-gradient(118deg,rgba(22,101,52,0.14)_0%,rgba(15,118,110,0.1)_46%,rgba(37,99,235,0.16)_100%)] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] dark:border-white/10 dark:bg-[linear-gradient(118deg,rgba(22,101,52,0.22)_0%,rgba(15,118,110,0.18)_46%,rgba(37,99,235,0.24)_100%)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <HeaderBrandMark className="h-10 w-10" />
+                  <div className="min-w-0">
+                    <p id="mobile-header-menu-title" className="truncate text-base font-semibold">
+                      {t("nav.menu")}
+                    </p>
+                    <p className="truncate text-sm text-foreground/70 dark:text-sky-100/78">
+                      {t("siteTitle")}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeMobileMenu}
+                  className={MOBILE_TOPBAR_ICON_BUTTON_CLASS}
+                  aria-label={t("nav.closeMenu")}
+                >
+                  <X className="h-[1.15rem] w-[1.15rem]" aria-hidden="true" />
+                </button>
+              </div>
             </div>
 
-            <nav className="mt-4 flex flex-col gap-1">
-              <Link href="/" className={MOBILE_SHEET_ITEM_CLASS} onClick={closeMobileMenu}>
-                <House className="h-4 w-4 shrink-0" aria-hidden="true" />
-                <span>{t("nav.home")}</span>
-              </Link>
-              <Link href="/parks" className={MOBILE_SHEET_ITEM_CLASS} onClick={closeMobileMenu}>
-                <MapPin className="h-4 w-4 shrink-0" aria-hidden="true" />
-                <span>{t("nav.map")}</span>
-              </Link>
-              {auth.isAuthenticated && (
-                <Link
-                  href="/control-panel"
-                  className={MOBILE_SHEET_ITEM_CLASS}
-                  onClick={closeMobileMenu}
-                >
-                  <Settings className="h-4 w-4 shrink-0" aria-hidden="true" />
-                  <span>{t("nav.controlPanel")}</span>
+            <div className="rounded-[1.6rem] border border-white/40 bg-white/56 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.42)] dark:border-white/8 dark:bg-slate-950/44 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+              <nav className="flex flex-col gap-1">
+                <Link href="/" className={MOBILE_SHEET_ITEM_CLASS} onClick={closeMobileMenu}>
+                  <House className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span>{t("nav.home")}</span>
                 </Link>
-              )}
-            </nav>
-
-            <div className="my-4 border-t border-border" />
-
-            <div className="flex flex-col gap-1">
-              <ThemeToggle
-                showLabel
-                className={MOBILE_SHEET_ITEM_CLASS}
-                onToggle={closeMobileMenu}
-              />
-              {!auth.isLoading &&
-                (auth.isAuthenticated ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      closeMobileMenu();
-                      auth.logout();
-                    }}
+                <Link href="/parks" className={MOBILE_SHEET_ITEM_CLASS} onClick={closeMobileMenu}>
+                  <MapPin className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span>{t("nav.map")}</span>
+                </Link>
+                {auth.isAuthenticated && (
+                  <Link
+                    href="/control-panel"
                     className={MOBILE_SHEET_ITEM_CLASS}
+                    onClick={closeMobileMenu}
                   >
-                    <LogOut className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    <span>{t("nav.logout")}</span>
-                  </button>
-                ) : (
-                  <LoginLink className={MOBILE_SHEET_ITEM_CLASS} onClick={closeMobileMenu}>
-                    <LogIn className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    <span>{t("nav.login")}</span>
-                  </LoginLink>
-                ))}
+                    <Settings className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    <span>{t("nav.controlPanel")}</span>
+                  </Link>
+                )}
+              </nav>
+            </div>
+
+            <div className="rounded-[1.6rem] border border-white/40 bg-white/56 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.42)] dark:border-white/8 dark:bg-slate-950/44 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+              <div className="flex flex-col gap-1">
+                <ThemeToggle
+                  showLabel
+                  className={MOBILE_SHEET_ITEM_CLASS}
+                  onToggle={closeMobileMenu}
+                />
+                {!auth.isLoading &&
+                  (auth.isAuthenticated ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        closeMobileMenu();
+                        auth.logout();
+                      }}
+                      className={MOBILE_SHEET_ITEM_CLASS}
+                    >
+                      <LogOut className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      <span>{t("nav.logout")}</span>
+                    </button>
+                  ) : (
+                    <LoginLink className={MOBILE_SHEET_ITEM_CLASS} onClick={closeMobileMenu}>
+                      <LogIn className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      <span>{t("nav.login")}</span>
+                    </LoginLink>
+                  ))}
+              </div>
             </div>
           </dialog>
         </div>

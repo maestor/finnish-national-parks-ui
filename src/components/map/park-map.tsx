@@ -5,7 +5,10 @@ import { getVisitStatusColor } from "@/lib/parks";
 import maplibregl from "maplibre-gl";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { HomeParkFocusRequest } from "../providers/home-map-controls-provider";
+import {
+  type HomeParkFocusRequest,
+  useHomeMapControls,
+} from "../providers/home-map-controls-provider";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 interface ParkMapProps {
@@ -87,14 +90,14 @@ const createMarkerElement = (park: MapPark) => {
   const button = document.createElement("button");
   button.type = "button";
   button.className =
-    "group relative flex items-center justify-center w-8 h-8 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-full";
+    "group relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
   button.setAttribute("aria-label", `${park.name}, ${park.type.name}`);
   button.dataset.slug = park.slug;
 
   const color = getVisitStatusColor(park);
 
   button.innerHTML = `
-    <svg viewBox="0 0 24 24" fill="${color}" class="w-6 h-6 drop-shadow-md transition-transform group-hover:scale-110" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 24 24" fill="${color}" class="h-6 w-6 drop-shadow-md transition-transform group-hover:scale-110" xmlns="http://www.w3.org/2000/svg">
       <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
     </svg>
   `;
@@ -116,18 +119,18 @@ const createPopupNode = (
   canManageVisits: boolean,
 ): HTMLElement => {
   const container = document.createElement("div");
-  container.className = "p-3 max-w-[260px]";
+  container.className = "max-w-[280px] p-3 text-foreground";
 
   const color = getVisitStatusColor(park);
 
   const header = document.createElement("header");
-  header.className = "flex items-start gap-2";
+  header.className = "flex items-start gap-3";
 
   const pinIcon = document.createElement("span");
   pinIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}" class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>`;
 
   const title = document.createElement("h3");
-  title.className = "font-semibold text-sm leading-tight";
+  title.className = "text-sm leading-tight font-semibold";
   title.textContent = park.name;
 
   header.appendChild(pinIcon);
@@ -135,16 +138,18 @@ const createPopupNode = (
   container.appendChild(header);
 
   const details = document.createElement("div");
-  details.className = "mt-2 space-y-1 text-xs text-muted-foreground";
+  details.className = "mt-3 space-y-2 text-xs text-muted-foreground";
 
   const typeRow = document.createElement("p");
-  typeRow.className = "flex items-center gap-1.5";
+  typeRow.className =
+    "flex items-center gap-1.5 rounded-xl border border-sky-200/45 bg-[linear-gradient(145deg,rgba(255,255,255,0.84),rgba(237,245,249,0.92))] px-3 py-2 shadow-[0_10px_20px_rgba(148,163,184,0.1),inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-white/10 dark:bg-[linear-gradient(145deg,rgba(15,23,42,0.76),rgba(2,6,23,0.58))] dark:shadow-[0_14px_24px_rgba(2,6,23,0.22),inset_0_1px_0_rgba(255,255,255,0.06)]";
   typeRow.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 shrink-0" aria-hidden="true"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg><span>${park.type.name}</span>`;
   details.appendChild(typeRow);
 
   if (park.location) {
     const loc = document.createElement("p");
-    loc.className = "truncate";
+    loc.className =
+      "truncate rounded-xl border border-sky-200/45 bg-[linear-gradient(145deg,rgba(255,255,255,0.84),rgba(237,245,249,0.92))] px-3 py-2 shadow-[0_10px_20px_rgba(148,163,184,0.1),inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-white/10 dark:bg-[linear-gradient(145deg,rgba(15,23,42,0.76),rgba(2,6,23,0.58))] dark:shadow-[0_14px_24px_rgba(2,6,23,0.22),inset_0_1px_0_rgba(255,255,255,0.06)]";
     loc.textContent = park.location;
     loc.title = park.location;
     details.appendChild(loc);
@@ -152,12 +157,16 @@ const createPopupNode = (
 
   if (park.areaKm2 !== null) {
     const area = document.createElement("p");
+    area.className =
+      "rounded-xl border border-sky-200/45 bg-[linear-gradient(145deg,rgba(255,255,255,0.84),rgba(237,245,249,0.92))] px-3 py-2 shadow-[0_10px_20px_rgba(148,163,184,0.1),inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-white/10 dark:bg-[linear-gradient(145deg,rgba(15,23,42,0.76),rgba(2,6,23,0.58))] dark:shadow-[0_14px_24px_rgba(2,6,23,0.22),inset_0_1px_0_rgba(255,255,255,0.06)]";
     area.textContent = `${park.areaKm2} km²`;
     details.appendChild(area);
   }
 
   if (park.establishmentYear !== null) {
     const year = document.createElement("p");
+    year.className =
+      "rounded-xl border border-sky-200/45 bg-[linear-gradient(145deg,rgba(255,255,255,0.84),rgba(237,245,249,0.92))] px-3 py-2 shadow-[0_10px_20px_rgba(148,163,184,0.1),inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-white/10 dark:bg-[linear-gradient(145deg,rgba(15,23,42,0.76),rgba(2,6,23,0.58))] dark:shadow-[0_14px_24px_rgba(2,6,23,0.22),inset_0_1px_0_rgba(255,255,255,0.06)]";
     year.textContent = `${labels.established} ${park.establishmentYear}`;
     details.appendChild(year);
   }
@@ -168,7 +177,7 @@ const createPopupNode = (
     officialLink.target = "_blank";
     officialLink.rel = "noopener noreferrer";
     officialLink.className =
-      "inline-flex items-center gap-1 font-medium text-primary hover:underline";
+      "inline-flex items-center gap-1 self-start rounded-full border border-sky-200/70 bg-white/74 px-3 py-1.5 font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 dark:border-sky-300/15 dark:bg-slate-950/62 dark:hover:bg-slate-950/78";
     officialLink.innerHTML = `${labels.officialLink}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>`;
     officialLink.addEventListener("click", (e) => e.stopPropagation());
     details.appendChild(officialLink);
@@ -177,29 +186,33 @@ const createPopupNode = (
   container.appendChild(details);
 
   const summaryRow = document.createElement("div");
-  summaryRow.className = "mt-3 flex items-center gap-4 border-t border-border/60 pt-3 text-xs";
+  summaryRow.className =
+    "mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/35 pt-3 text-xs dark:border-white/10";
 
   const visitCount = park.visitedSummary.visitCount;
   const visitsCount = document.createElement("span");
-  visitsCount.className = "font-medium text-foreground";
+  visitsCount.className =
+    "inline-flex items-center rounded-full border border-white/45 bg-white/72 px-3 py-1 font-medium text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] dark:border-white/10 dark:bg-slate-950/56 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
   visitsCount.textContent = `${labels.visits} (${visitCount})`;
   summaryRow.appendChild(visitsCount);
 
   const parkLink = document.createElement("a");
   parkLink.href = `/park/${park.slug}`;
-  parkLink.className = "font-medium text-primary hover:underline";
+  parkLink.className =
+    "inline-flex items-center rounded-full border border-sky-200/70 bg-white/74 px-3 py-1.5 font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 dark:border-sky-300/15 dark:bg-slate-950/62 dark:hover:bg-slate-950/78";
   parkLink.textContent = labels.openParkPage;
   parkLink.addEventListener("click", (e) => e.stopPropagation());
   summaryRow.appendChild(parkLink);
   container.appendChild(summaryRow);
 
   const actionRow = document.createElement("div");
-  actionRow.className = "mt-3 flex items-center gap-4 text-xs";
+  actionRow.className = "mt-3 flex items-center gap-2 text-xs";
 
   if (canManageVisits) {
     const addLink = document.createElement("a");
     addLink.href = `/control-panel/visits/new?park=${park.slug}`;
-    addLink.className = "inline-flex items-center gap-1 font-medium text-primary hover:underline";
+    addLink.className =
+      "inline-flex items-center gap-1 rounded-full border border-emerald-200/70 bg-white/74 px-3 py-1.5 font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 dark:border-emerald-300/15 dark:bg-slate-950/62 dark:hover:bg-slate-950/78";
     addLink.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg><span>${labels.addVisit}</span>`;
     addLink.addEventListener("click", (e) => e.stopPropagation());
     actionRow.appendChild(addLink);
@@ -226,8 +239,11 @@ export const ParkMap = ({
   const shownPopupsRef = useRef<Set<string>>(new Set());
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeSlugRef = useRef<string | null>(null);
+  const hoveredSlugRef = useRef<string | null>(null);
+  const lastHandledHomeFocusRequestIdRef = useRef(0);
   const lastHandledResetViewRequestIdRef = useRef(0);
   const t = useTranslations("map");
+  const { clearHomeParkFocusRequest } = useHomeMapControls();
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [activeSlug, setActiveSlug] = useState<string | null>(null);
   const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
@@ -235,6 +251,10 @@ export const ParkMap = ({
   useEffect(() => {
     activeSlugRef.current = activeSlug;
   }, [activeSlug]);
+
+  useEffect(() => {
+    hoveredSlugRef.current = hoveredSlug;
+  }, [hoveredSlug]);
 
   useEffect(() => {
     const visibleSlugs = new Set(parks.map((park) => park.slug));
@@ -306,6 +326,30 @@ export const ParkMap = ({
     },
     [cancelClose],
   );
+
+  const syncPopupVisibility = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) {
+      return;
+    }
+
+    const currentActiveSlug = activeSlugRef.current;
+    const currentHoveredSlug = hoveredSlugRef.current;
+
+    for (const [slug, popup] of popupsRef.current) {
+      const shouldShow =
+        currentActiveSlug === slug || (currentActiveSlug === null && currentHoveredSlug === slug);
+      const isShown = shownPopupsRef.current.has(slug);
+
+      if (shouldShow && !isShown) {
+        popup.addTo(map);
+        shownPopupsRef.current.add(slug);
+      } else if (!shouldShow && isShown) {
+        popup.remove();
+        shownPopupsRef.current.delete(slug);
+      }
+    }
+  }, []);
 
   // Initialize map
   useEffect(() => {
@@ -448,6 +492,8 @@ export const ParkMap = ({
         closeActivePopupIfFocusLeftMapPopup(park.slug);
       });
     }
+
+    syncPopupVisibility();
   }, [
     parks,
     isMapLoaded,
@@ -457,10 +503,15 @@ export const ParkMap = ({
     canManageVisits,
     closeActivePopupIfFocusLeftMapPopup,
     focusPark,
+    syncPopupVisibility,
   ]);
 
   useEffect(() => {
     if (!isMapLoaded || !homeParkFocusRequest) {
+      return;
+    }
+
+    if (lastHandledHomeFocusRequestIdRef.current === homeParkFocusRequest.requestId) {
       return;
     }
 
@@ -469,8 +520,23 @@ export const ParkMap = ({
       return;
     }
 
+    lastHandledHomeFocusRequestIdRef.current = homeParkFocusRequest.requestId;
     focusPark(park);
   }, [focusPark, homeParkFocusRequest, isMapLoaded, parks]);
+
+  useEffect(() => {
+    if (!homeParkFocusRequest || activeSlug !== homeParkFocusRequest.slug) {
+      return;
+    }
+
+    const cleanupTimeoutId = window.setTimeout(() => {
+      clearHomeParkFocusRequest();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(cleanupTimeoutId);
+    };
+  }, [activeSlug, clearHomeParkFocusRequest, homeParkFocusRequest]);
 
   useEffect(() => {
     if (!isMapLoaded || resetViewRequestId <= 0) {
@@ -494,22 +560,8 @@ export const ParkMap = ({
 
   // Sync popup visibility with active/hovered state
   useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
-
-    for (const [slug, popup] of popupsRef.current) {
-      const shouldShow = activeSlug === slug || (activeSlug === null && hoveredSlug === slug);
-      const isShown = shownPopupsRef.current.has(slug);
-
-      if (shouldShow && !isShown) {
-        popup.addTo(map);
-        shownPopupsRef.current.add(slug);
-      } else if (!shouldShow && isShown) {
-        popup.remove();
-        shownPopupsRef.current.delete(slug);
-      }
-    }
-  }, [activeSlug, hoveredSlug]);
+    syncPopupVisibility();
+  }, [syncPopupVisibility]);
 
   // Click outside to close active popup
   useEffect(() => {

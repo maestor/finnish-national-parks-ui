@@ -17,6 +17,15 @@ import { ParkMap } from "./park-map";
 type ParkTypeFilter = ParkTypeSlug;
 type MapFilter = "all" | ParkTypeFilter | "visited" | "not-visited";
 
+const FILTER_PANEL_CLASS_NAME =
+  "pointer-events-auto flex flex-col gap-2 rounded-[2rem] border border-white/45 bg-white/60 p-3 shadow-[0_22px_48px_rgba(148,163,184,0.2)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/50 dark:shadow-[0_26px_56px_rgba(2,6,23,0.38)]";
+const FILTER_BUTTON_CLASS_NAME =
+  "w-full justify-center rounded-2xl border px-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] transition-all hover:-translate-y-px";
+const ACTIVE_FILTER_BUTTON_CLASS_NAME =
+  "border-transparent bg-[linear-gradient(145deg,#166534_0%,#0f766e_55%,#2563eb_100%)] text-primary-foreground shadow-[0_14px_28px_rgba(37,99,235,0.24)] hover:brightness-105";
+const INACTIVE_FILTER_BUTTON_CLASS_NAME =
+  "border-sky-200/70 bg-[linear-gradient(135deg,rgba(255,255,255,0.82),rgba(236,246,255,0.92))] text-cyan-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.72),0_10px_22px_rgba(148,163,184,0.14)] hover:border-sky-300/90 hover:bg-[linear-gradient(135deg,rgba(255,255,255,0.9),rgba(224,242,254,0.96))] dark:border-sky-300/15 dark:bg-[linear-gradient(135deg,rgba(15,23,42,0.84),rgba(15,32,59,0.76))] dark:text-sky-50 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_14px_28px_rgba(2,6,23,0.28)] dark:hover:border-cyan-300/30 dark:hover:bg-[linear-gradient(135deg,rgba(15,23,42,0.94),rgba(18,47,84,0.86))]";
+
 const isAreaPark = (park: MapPark) => park.type.slug !== "nature-trail";
 
 const getFallbackFilterForFocusedPark = (park: MapPark): MapFilter =>
@@ -91,7 +100,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
   }, [filteredParks, homeParkFocusRequest, parks]);
 
   const filterPanel = (
-    <div className="pointer-events-auto flex flex-col gap-2 rounded-3xl border border-border/70 bg-background/95 p-3 shadow-lg backdrop-blur">
+    <div className={FILTER_PANEL_CLASS_NAME}>
       {filterOptions.map((option) => (
         <Button
           key={option.id}
@@ -100,14 +109,16 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
           size="sm"
           onClick={() => selectFilter(option.id)}
           className={cn(
-            "w-full justify-center rounded-2xl px-3 text-left",
-            activeFilter !== option.id && "bg-background/70",
+            FILTER_BUTTON_CLASS_NAME,
+            activeFilter === option.id
+              ? ACTIVE_FILTER_BUTTON_CLASS_NAME
+              : INACTIVE_FILTER_BUTTON_CLASS_NAME,
           )}
         >
           {option.label}
         </Button>
       ))}
-      <span className="text-xs text-center text-muted-foreground">
+      <span className="pt-1 text-center text-xs font-medium text-foreground/70 dark:text-sky-100/82">
         {t("results", { count: filteredParks.length })}
       </span>
     </div>

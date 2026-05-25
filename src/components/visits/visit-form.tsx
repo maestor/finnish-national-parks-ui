@@ -121,7 +121,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
   };
 
   const inputClassName =
-    "flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+    "flex w-full rounded-xl border border-white/45 bg-white/78 px-3 py-2 text-sm ring-offset-background shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
 
   return (
     <form onSubmit={handleSubmit} className="mt-6 max-w-xl space-y-6">
@@ -130,7 +130,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
           {t("parkLabel")}
         </Label>
         {isEditing ? (
-          <div className={`${inputClassName} bg-muted`}>{visitToEdit?.park.name}</div>
+          <div className={inputClassName}>{visitToEdit?.park.name}</div>
         ) : (
           <Select
             id="park"
@@ -210,7 +210,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
           </div>
         </div>
         {isPreview ? (
-          <div className="prose prose-sm dark:prose-invert max-w-none min-h-[120px] rounded-md border border-input bg-background px-3 py-2">
+          <div className="prose prose-sm dark:prose-invert max-w-none min-h-[120px] rounded-xl border border-white/45 bg-white/78 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{note || "_"}</ReactMarkdown>
           </div>
         ) : (
@@ -229,7 +229,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
       {statusMessage && (
         <output
           aria-live="polite"
-          className="block rounded-lg border border-emerald-600/20 bg-emerald-600/10 px-4 py-3 text-sm text-emerald-900 dark:text-emerald-200"
+          className="block rounded-[1.3rem] border border-emerald-600/20 bg-[linear-gradient(118deg,rgba(22,101,52,0.14),rgba(15,118,110,0.08))] px-4 py-3 text-sm text-emerald-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.38)] dark:border-emerald-300/18 dark:text-emerald-200 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
         >
           <span>{statusMessage}</span>{" "}
           <Link

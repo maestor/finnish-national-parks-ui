@@ -58,10 +58,17 @@ describe("Header", () => {
 
   it("renders the site title link to the parks map", () => {
     render(<Header />);
-    expect(screen.getByRole("link", { name: "layout.siteTitle" })).toHaveAttribute(
-      "href",
-      "/parks",
-    );
+
+    const siteTitleLink = screen.getByRole("link", { name: "layout.siteTitle" });
+
+    expect(siteTitleLink).toHaveAttribute("href", "/parks");
+    expect(within(siteTitleLink).getByTestId("header-brand-mark")).toBeInTheDocument();
+  });
+
+  it("keeps the sticky header overflow visible for layered search and menus", () => {
+    const { container } = render(<Header />);
+
+    expect(container.querySelector("header")).not.toHaveClass("overflow-hidden");
   });
 
   it("renders theme toggle button", () => {

@@ -115,7 +115,7 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
 
   if (sortedParks.length === 0 && sortedRemovedParks.length === 0) {
     return (
-      <div className="mt-6 rounded-lg border border-dashed p-8 text-center">
+      <div className="mt-6 rounded-[1.5rem] border border-dashed border-white/45 bg-white/48 p-8 text-center backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/38">
         <p className="text-muted-foreground">{t("emptyAll")}</p>
       </div>
     );
@@ -124,7 +124,7 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
   return (
     <div className="mt-6 space-y-4">
       <div
-        className="inline-flex rounded-xl border border-border bg-muted/60 p-1"
+        className="inline-flex rounded-[1.2rem] border border-white/45 bg-white/56 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/42 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
         role="tablist"
         aria-label={t("tabs.ariaLabel")}
       >
@@ -135,8 +135,8 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
           onClick={() => setActiveTab("visible")}
           className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
             activeTab === "visible"
-              ? "bg-background text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
+              ? "bg-white/86 text-foreground shadow-[0_10px_20px_rgba(148,163,184,0.16)] dark:bg-slate-950/68"
+              : "text-muted-foreground hover:bg-white/62 hover:text-foreground dark:hover:bg-slate-950/56"
           }`}
         >
           {t("tabs.visible")}
@@ -148,15 +148,15 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
           onClick={() => setActiveTab("hidden")}
           className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
             activeTab === "hidden"
-              ? "bg-background text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
+              ? "bg-white/86 text-foreground shadow-[0_10px_20px_rgba(148,163,184,0.16)] dark:bg-slate-950/68"
+              : "text-muted-foreground hover:bg-white/62 hover:text-foreground dark:hover:bg-slate-950/56"
           }`}
         >
           {t("tabs.hidden")}
         </button>
       </div>
 
-      <p className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-950 dark:text-amber-100">
+      <p className="rounded-[1.3rem] border border-amber-500/25 bg-[linear-gradient(118deg,rgba(245,158,11,0.16),rgba(251,191,36,0.08))] px-4 py-3 text-sm text-amber-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] dark:border-amber-300/18 dark:bg-[linear-gradient(118deg,rgba(245,158,11,0.16),rgba(120,53,15,0.08))] dark:text-amber-100 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
         {notice}
       </p>
 
@@ -184,7 +184,7 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
 
       {actionError && (
         <p
-          className="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+          className="rounded-[1.3rem] border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
           role="alert"
         >
           {actionError}
@@ -192,19 +192,19 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
       )}
 
       {displayedParks.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-8 text-center">
+        <div className="rounded-[1.5rem] border border-dashed border-white/45 bg-white/48 p-8 text-center backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/38">
           <p className="text-muted-foreground">
             {activeTab === "visible" ? t("emptyVisible") : t("emptyHidden")}
           </p>
         </div>
       ) : filteredParks.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-8 text-center">
+        <div className="rounded-[1.5rem] border border-dashed border-white/45 bg-white/48 p-8 text-center backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/38">
           <p className="text-muted-foreground">{t("emptyFiltered")}</p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border">
+        <div className="overflow-hidden rounded-[1.6rem] border border-white/45 bg-white/56 shadow-[0_18px_36px_rgba(148,163,184,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/38 dark:shadow-[0_22px_40px_rgba(2,6,23,0.28)]">
           <table className="w-full text-sm">
-            <thead className="bg-muted">
+            <thead className="bg-white/74 dark:bg-slate-950/56">
               <tr>
                 <th className="px-4 py-3 text-left font-medium">{t("parkName")}</th>
                 <th className="px-4 py-3 text-left font-medium">{t("parkType")}</th>
@@ -212,13 +212,16 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
                 <th className="px-4 py-3 text-right font-medium" />
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-white/30 dark:divide-white/8">
               {filteredParks.map((park) => {
                 const isUpdating = pendingSlug === park.slug;
                 const isVisibleTab = activeTab === "visible";
 
                 return (
-                  <tr key={park.slug}>
+                  <tr
+                    key={park.slug}
+                    className="transition-colors hover:bg-white/56 dark:hover:bg-slate-950/42"
+                  >
                     <td className="px-4 py-3">
                       <Link href={`/park/${park.slug}`} className="font-medium hover:underline">
                         {park.name}

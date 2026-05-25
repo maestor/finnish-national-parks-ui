@@ -256,6 +256,35 @@ describe("ParkMap", () => {
     expect(document.body).toHaveTextContent("Hetta");
   });
 
+  it("keeps the focused popup visible when the marker layer refreshes", () => {
+    const { rerender } = render(
+      <ParkMap
+        parks={parks}
+        canManageVisits={false}
+        homeParkFocusRequest={{
+          requestId: 1,
+          slug: "hetta",
+        }}
+      />,
+    );
+    triggerMapLoad();
+
+    expect(document.body).toHaveTextContent("Hetta");
+
+    rerender(
+      <ParkMap
+        parks={parks}
+        canManageVisits
+        homeParkFocusRequest={{
+          requestId: 1,
+          slug: "hetta",
+        }}
+      />,
+    );
+
+    expect(document.body).toHaveTextContent("Hetta");
+  });
+
   it("fits the currently visible parks when the filter requests a map reset", () => {
     const { rerender } = render(<ParkMap parks={parks} />);
     triggerMapLoad();
