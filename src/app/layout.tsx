@@ -8,7 +8,7 @@ import { Header } from "@/components/layout/header";
 import { HomeMapControlsProvider } from "@/components/providers/home-map-controls-provider";
 import { SerwistProvider } from "@/components/providers/serwist-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
-import { env } from "@/lib/env";
+import { siteEnv } from "@/lib/env";
 import messages from "../../messages/fi.json";
 
 const geistSans = Geist({
@@ -31,7 +31,7 @@ const toMetadataBase = (value: string): URL => {
 
 const resolveMetadataBase = (): URL => {
   const configuredBase =
-    env.NEXT_PUBLIC_SITE_URL ?? env.VERCEL_PROJECT_PRODUCTION_URL ?? env.VERCEL_URL;
+    siteEnv.NEXT_PUBLIC_SITE_URL ?? siteEnv.VERCEL_PROJECT_PRODUCTION_URL ?? siteEnv.VERCEL_URL;
 
   return configuredBase ? toMetadataBase(configuredBase) : new URL("http://localhost:4300");
 };

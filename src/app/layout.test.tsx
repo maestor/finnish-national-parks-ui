@@ -80,6 +80,14 @@ vi.mock("@/components/providers/theme-provider", () => ({
   },
 }));
 
+vi.mock("@/lib/env", () => ({
+  siteEnv: {
+    NEXT_PUBLIC_SITE_URL: "https://reissuvihko.example.com",
+    VERCEL_PROJECT_PRODUCTION_URL: undefined,
+    VERCEL_URL: undefined,
+  },
+}));
+
 describe("RootLayout", () => {
   beforeEach(() => {
     vi.clearAllMocks();

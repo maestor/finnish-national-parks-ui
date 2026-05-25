@@ -32,8 +32,16 @@ const envSchema = z.object({
 });
 
 type Env = z.infer<typeof envSchema>;
+const siteEnvSchema = z.object({
+  NEXT_PUBLIC_SITE_URL: urlOrHostSchema.optional(),
+  VERCEL_PROJECT_PRODUCTION_URL: urlOrHostSchema.optional(),
+  VERCEL_URL: urlOrHostSchema.optional(),
+});
+
+type SiteEnv = z.infer<typeof siteEnvSchema>;
 
 let cachedEnv: Env | null = null;
+let cachedSiteEnv: SiteEnv | null = null;
 
 const validateEnv = (): Env => {
   if (cachedEnv) return cachedEnv;
@@ -59,8 +67,32 @@ const validateEnv = (): Env => {
   return cachedEnv;
 };
 
-export const env = new Proxy({} as Env, {
-  get(_, prop: string | symbol) {
-    return validateEnv()[prop as keyof Env];
-  },
-});
+const validateSiteEnv = (): SiteEnv => {
+  if (cachedSiteEnv) return cachedSiteEnv;
+
+  const parsed = siteEnvSchema.safeParse({
+    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+    VERCEL_PROJECT_PRODUCTION_URL: process.env.VERCEL_PROJECT_PRODUCTION_URL,
+    VERCEL_URL: process.env.VERCEL_URL,
+  });
+
+  if (!parsed.success) {
+    // eslint-disable-next-line no-console
+    console.error("Invalid site environment variables:", parsed.error.flatten().fieldErrors);
+    throw new Error("Invalid site environment variables");
+  }
+
+  cachedSiteEnv = parsed.data;
+  return cachedSiteEnv;
+};
+
+const createEnvProxy = <T extends object>(validate: () => T): T =>
+  new Proxy({} as T, {
+    get(_, prop: string | symbol) {
+      return validate()[prop as keyof T];
+    },
+  });
+
+export const env = createEnvProxy(validateEnv);
+
+export const siteEnv = createEnvProxy(validateSiteEnv);
