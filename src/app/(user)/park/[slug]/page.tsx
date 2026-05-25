@@ -67,7 +67,7 @@ const ParkDetailPage = async ({ params }: ParkDetailPageProps) => {
           {facts.map((fact) => (
             <div
               key={fact.label}
-              className="flex h-full min-h-[5.75rem] flex-col rounded-2xl border border-sky-200/45 bg-[linear-gradient(145deg,rgba(255,255,255,0.82),rgba(237,245,249,0.92))] px-4 py-3 shadow-[0_14px_28px_rgba(148,163,184,0.12),inset_0_1px_0_rgba(255,255,255,0.58)] dark:border-white/8 dark:bg-slate-950/36 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+              className="flex h-full min-h-[5.75rem] flex-col rounded-2xl border border-sky-200/45 bg-[linear-gradient(145deg,rgba(255,255,255,0.82),rgba(237,245,249,0.92))] px-4 py-3 shadow-[0_14px_28px_rgba(148,163,184,0.12),inset_0_1px_0_rgba(255,255,255,0.58)] dark:border-white/8 dark:bg-[linear-gradient(145deg,rgba(15,23,42,0.72),rgba(2,6,23,0.52))] dark:shadow-[0_18px_34px_rgba(2,6,23,0.2),inset_0_1px_0_rgba(255,255,255,0.06)]"
             >
               <p className="text-xs text-muted-foreground">{fact.label}</p>
               <p className="mt-3 text-sm font-medium">{fact.value}</p>
@@ -78,7 +78,7 @@ const ParkDetailPage = async ({ params }: ParkDetailPageProps) => {
               href={publicPark.luontoonUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex h-full min-h-[5.75rem] w-full items-start justify-between gap-3 rounded-2xl border border-sky-200/70 bg-[linear-gradient(145deg,rgba(255,255,255,0.84),rgba(236,245,251,0.94))] px-4 py-3 text-sm font-medium text-primary shadow-[0_14px_28px_rgba(148,163,184,0.12),inset_0_1px_0_rgba(255,255,255,0.6)] transition-colors hover:bg-[linear-gradient(145deg,rgba(255,255,255,0.92),rgba(240,248,253,0.98))] dark:border-sky-300/15 dark:bg-slate-950/36 dark:hover:bg-slate-950/54"
+              className="inline-flex h-full min-h-[5.75rem] w-full items-start justify-between gap-3 rounded-2xl border border-sky-200/70 bg-[linear-gradient(145deg,rgba(255,255,255,0.84),rgba(236,245,251,0.94))] px-4 py-3 text-sm font-medium text-primary shadow-[0_14px_28px_rgba(148,163,184,0.12),inset_0_1px_0_rgba(255,255,255,0.6)] transition-colors hover:bg-[linear-gradient(145deg,rgba(255,255,255,0.92),rgba(240,248,253,0.98))] dark:border-sky-300/15 dark:bg-[linear-gradient(145deg,rgba(15,23,42,0.74),rgba(2,6,23,0.54))] dark:shadow-[0_18px_34px_rgba(2,6,23,0.22),inset_0_1px_0_rgba(255,255,255,0.06)] dark:hover:bg-[linear-gradient(145deg,rgba(15,23,42,0.82),rgba(2,6,23,0.62))]"
               aria-label={`${t("officialLink")} (avautuu uuteen välilehteen)`}
             >
               <span className="pt-[1.125rem]">{t("officialLink")}</span>
