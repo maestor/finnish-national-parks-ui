@@ -17,7 +17,7 @@ const DESKTOP_NAV_LINK_CLASS =
   "inline-flex items-center rounded-full px-3 py-2 text-sm font-medium text-foreground/80 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 const DESKTOP_ACTIVE_NAV_LINK_CLASS = "bg-white/75 text-foreground shadow-sm dark:bg-slate-950/45";
 const DESKTOP_ICON_BUTTON_CLASS =
-  "inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background/90 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  "inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/45 bg-white/76 text-foreground shadow-[0_10px_24px_rgba(148,163,184,0.2)] backdrop-blur-md transition-colors hover:bg-white/92 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/44 dark:hover:bg-slate-950/64 dark:shadow-[0_16px_32px_rgba(2,6,23,0.34)]";
 const MOBILE_SHEET_ITEM_CLASS =
   "flex w-full items-center gap-3 rounded-[1.35rem] border border-transparent px-3 py-3 text-left text-sm font-medium text-foreground transition-colors hover:border-white/45 hover:bg-white/58 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:border-white/10 dark:hover:bg-slate-900/70";
 const MOBILE_TOPBAR_ICON_BUTTON_CLASS =

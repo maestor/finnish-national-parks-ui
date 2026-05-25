@@ -24,14 +24,14 @@ export const DashboardSectionCard = ({
     <section
       aria-labelledby={titleId}
       className={cn(
-        "rounded-3xl border border-border/80 bg-muted/35 p-5 shadow-sm dark:bg-card sm:p-6",
+        "rounded-[2rem] border border-white/55 bg-white/66 p-5 shadow-[0_24px_60px_rgba(148,163,184,0.18)] backdrop-blur-xl supports-[backdrop-filter]:bg-white/58 dark:border-white/10 dark:bg-slate-950/52 dark:shadow-[0_28px_64px_rgba(2,6,23,0.34)] sm:p-6",
         className,
       )}
     >
       <div className="flex items-center gap-3">
         <span
           className={cn(
-            "inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-border/70 bg-background text-foreground shadow-sm dark:bg-background/80",
+            "inline-flex h-11 w-11 items-center justify-center rounded-[1.1rem] border border-white/50 bg-white/72 text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]",
             iconSurfaceClassName,
           )}
         >
