@@ -80,6 +80,14 @@ vi.mock("@/components/providers/theme-provider", () => ({
   },
 }));
 
+vi.mock("@/lib/env", () => ({
+  siteEnv: {
+    NEXT_PUBLIC_SITE_URL: "https://reissuvihko.example.com",
+    VERCEL_PROJECT_PRODUCTION_URL: undefined,
+    VERCEL_URL: undefined,
+  },
+}));
+
 describe("RootLayout", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -142,6 +150,19 @@ describe("RootLayout", () => {
       },
       description: "metadata.description",
       applicationName: "metadata.title",
+      metadataBase: new URL("https://reissuvihko.example.com"),
+      openGraph: {
+        title: "metadata.title",
+        description: "metadata.description",
+        siteName: "metadata.title",
+        type: "website",
+        locale: "fi_FI",
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: "metadata.title",
+        description: "metadata.description",
+      },
       appleWebApp: {
         capable: true,
         statusBarStyle: "default",
