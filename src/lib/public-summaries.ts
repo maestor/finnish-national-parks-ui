@@ -1,5 +1,6 @@
 import { apiFetch, apiPublicFetch } from "./api";
 import type { paths } from "./api-types";
+import type { ParkTypeSlug } from "./park-type-filters";
 import { getParkTypeFilterSortIndex } from "./park-type-filters";
 import type { ParkDetail, ParkVisits, VisitWithPark } from "./parks";
 import { PUBLIC_HOME_SUMMARY_TAG, PUBLIC_MAP_SUMMARY_TAG, getPublicParkTag } from "./public-cache";
@@ -14,6 +15,7 @@ export interface HomeProgressItem {
   label: string;
   visited: number;
   total: number;
+  mapFilter?: ParkTypeSlug;
 }
 
 export interface HomeMostVisitedPark {
@@ -97,6 +99,7 @@ export const createHomeProgressItems = (
     ...summary.progressByType
       .map((item) => ({
         label: item.type.name,
+        mapFilter: item.type.slug,
         visited: item.visitedParks,
         total: item.totalParks,
         sortIndex: getParkTypeFilterSortIndex(item.type.slug),

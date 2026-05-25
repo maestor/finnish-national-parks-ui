@@ -109,6 +109,10 @@ describe("createHomeProgressItems", () => {
       "Virkistysalueet",
       "Luontopolut",
     ]);
+    expect(progressItems[0]).not.toHaveProperty("mapFilter");
+    expect(progressItems[1]?.mapFilter).toBe("national-park");
+    expect(progressItems[2]?.mapFilter).toBe("state-hiking-area");
+    expect(progressItems[6]?.mapFilter).toBe("nature-trail");
   });
 
   it("sorts latest visit entries from the public summary by newest creation time", () => {

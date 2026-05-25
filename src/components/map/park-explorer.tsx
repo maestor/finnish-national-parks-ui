@@ -10,7 +10,8 @@ import {
 } from "@/lib/park-type-filters";
 import type { MapPark } from "@/lib/parks";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHomeMapControls } from "../providers/home-map-controls-provider";
 import { ParkMap } from "./park-map";
 
@@ -31,6 +32,23 @@ const isAreaPark = (park: MapPark) => park.type.slug !== "nature-trail";
 const getFallbackFilterForFocusedPark = (park: MapPark): MapFilter =>
   isAreaPark(park) ? "all" : park.type.slug;
 
+const isMapFilter = (value: string | null): value is MapFilter => {
+  switch (value) {
+    case "all":
+    case "visited":
+    case "not-visited":
+    case "national-park":
+    case "state-hiking-area":
+    case "wilderness-area":
+    case "other-nature-reserve":
+    case "outdoor-recreation-area":
+    case "nature-trail":
+      return true;
+    default:
+      return false;
+  }
+};
+
 interface ParkExplorerProps {
   parks: MapPark[];
   error?: string | null;
@@ -39,9 +57,13 @@ interface ParkExplorerProps {
 export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
   const t = useTranslations("home.filters");
   const auth = useAuth();
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeFilter, setActiveFilter] = useState<MapFilter>("all");
   const [mapResetRequestId, setMapResetRequestId] = useState(0);
   const { isMobileFiltersOpen, closeMobileFilters, homeParkFocusRequest } = useHomeMapControls();
+  const lastHandledFilterParamRef = useRef<string | null>(null);
 
   const filterOptions = useMemo(() => {
     const parkTypeFilterOptions = (
@@ -77,11 +99,36 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
     }
   }, [activeFilter, parks]);
 
-  const selectFilter = (filter: MapFilter) => {
-    setActiveFilter(filter);
-    setMapResetRequestId((current) => current + 1);
-    closeMobileFilters();
-  };
+  const selectFilter = useCallback(
+    (filter: MapFilter) => {
+      setActiveFilter(filter);
+      setMapResetRequestId((current) => current + 1);
+      closeMobileFilters();
+    },
+    [closeMobileFilters],
+  );
+
+  useEffect(() => {
+    const filterParam = pathname === "/parks" ? searchParams.get("filter") : null;
+
+    if (!isMapFilter(filterParam)) {
+      lastHandledFilterParamRef.current = null;
+      return;
+    }
+
+    if (lastHandledFilterParamRef.current === filterParam) {
+      return;
+    }
+
+    lastHandledFilterParamRef.current = filterParam;
+    selectFilter(filterParam);
+
+    const nextSearchParams = new URLSearchParams(searchParams.toString());
+    nextSearchParams.delete("filter");
+    const nextSearch = nextSearchParams.toString();
+
+    router.replace(nextSearch ? `${pathname}?${nextSearch}` : pathname, { scroll: false });
+  }, [pathname, router, searchParams, selectFilter]);
 
   useEffect(() => {
     if (!homeParkFocusRequest) {

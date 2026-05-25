@@ -1,11 +1,17 @@
 import type { MapPark } from "@/lib/parks";
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   HomeMapControlsProvider,
   useHomeMapControls,
 } from "../providers/home-map-controls-provider";
 import { ParkExplorer } from "./park-explorer";
+
+const { pathnameState, searchParamsState, replaceMock } = vi.hoisted(() => ({
+  pathnameState: { value: "/" },
+  searchParamsState: { value: "" },
+  replaceMock: vi.fn(),
+}));
 
 const mockUseAuth = vi.fn(() => ({
   isAuthenticated: false,
@@ -17,9 +23,9 @@ vi.mock("@/hooks/use-auth", () => ({
 }));
 
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/",
-  useRouter: () => ({ replace: vi.fn() }),
-  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => pathnameState.value,
+  useRouter: () => ({ replace: replaceMock }),
+  useSearchParams: () => new URLSearchParams(searchParamsState.value),
 }));
 
 vi.mock("./park-map", () => ({
@@ -118,6 +124,26 @@ const MobileFilterToggleHarness = () => {
 };
 
 describe("ParkExplorer", () => {
+  beforeEach(() => {
+    pathnameState.value = "/";
+    searchParamsState.value = "";
+    replaceMock.mockReset();
+  });
+
+  it("activates a filter from the map query param and clears it from the url", () => {
+    pathnameState.value = "/parks";
+    searchParamsState.value = "filter=national-park";
+
+    render(<ParkExplorer parks={parks} />);
+
+    expect(screen.getByText("count:2")).toBeInTheDocument();
+    expect(screen.getByText("reset:1")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "home.filters.nationalParks" })).toHaveClass(
+      "text-primary-foreground",
+    );
+    expect(replaceMock).toHaveBeenCalledWith("/parks", { scroll: false });
+  });
+
   it("enables map admin quick actions for authenticated users", () => {
     mockUseAuth.mockReturnValueOnce({
       isAuthenticated: true,
