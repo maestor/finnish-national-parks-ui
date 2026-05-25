@@ -194,7 +194,7 @@ export const HomeParkSearch = () => {
       {isOpen && (
         <div
           id="home-park-search-results"
-          className="fixed left-4 right-4 top-16 z-50 flex min-h-0 max-h-[calc(100dvh-5rem)] flex-col overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-xl md:absolute md:left-0 md:right-0 md:top-[calc(100%+0.5rem)] md:max-h-none"
+          className="fixed left-2 right-2 top-16 z-50 flex min-h-0 max-h-[calc(100dvh-5rem)] flex-col overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-xl md:absolute md:left-0 md:right-0 md:top-[calc(100%+0.5rem)] md:max-h-none"
         >
           {isMobileOpen && (
             <div className="border-b border-border p-2 md:hidden">
