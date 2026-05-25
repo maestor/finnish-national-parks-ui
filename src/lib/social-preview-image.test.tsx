@@ -34,6 +34,7 @@ describe("social preview image", () => {
         "Tutki Suomen retkipaikkoja, seuraa käyntejäsi ja hallitse ulkoiluseikkailujasi.",
       ),
     ).toBeInTheDocument();
+    expect(screen.getByTestId("social-preview-icon")).toHaveAttribute("viewBox", "0 0 512 512");
   });
 
   it.each([
