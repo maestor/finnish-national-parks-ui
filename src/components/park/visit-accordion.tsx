@@ -27,6 +27,17 @@ interface VisitAuthorDetails {
   updatedAt: string;
 }
 
+const VISIT_CARD_CLASS_NAME =
+  "rounded-lg rounded-[1.75rem] border border-white/45 bg-white/68 shadow-[0_20px_44px_rgba(148,163,184,0.16)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/44 dark:shadow-[0_24px_52px_rgba(2,6,23,0.32)]";
+const VISIT_BADGE_CLASS_NAME =
+  "inline-flex items-center justify-center rounded-full bg-[linear-gradient(145deg,rgba(22,101,52,0.12),rgba(37,99,235,0.12))] px-2.5 py-1 text-sm leading-none font-bold text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:bg-[linear-gradient(145deg,rgba(22,101,52,0.22),rgba(37,99,235,0.18))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]";
+const DETAIL_SECTION_HEADING_CLASS_NAME =
+  "flex items-center gap-2 border-b border-white/35 pb-2 text-base font-semibold dark:border-white/10";
+const ROUTE_BADGE_CLASS_NAME =
+  "inline-flex items-center gap-1.5 rounded-full border border-emerald-200/70 bg-[linear-gradient(145deg,rgba(22,101,52,0.12),rgba(16,185,129,0.18))] px-2.5 py-1 text-sm leading-none font-semibold text-emerald-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-emerald-300/15 dark:bg-[linear-gradient(145deg,rgba(22,101,52,0.24),rgba(16,185,129,0.16))] dark:text-emerald-200 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]";
+const IMAGE_BADGE_CLASS_NAME =
+  "inline-flex items-center gap-1.5 rounded-full border border-sky-200/70 bg-[linear-gradient(145deg,rgba(22,101,52,0.08),rgba(37,99,235,0.12))] px-2.5 py-1 text-sm leading-none font-semibold text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-sky-300/15 dark:bg-[linear-gradient(145deg,rgba(22,101,52,0.18),rgba(37,99,235,0.16))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]";
+
 const hasExpandableContent = (visit: Visit) => {
   const hasImages = (visit.images?.length ?? 0) > 0;
   return !!visit.note || !!visit.author || hasImages;
@@ -114,7 +125,7 @@ export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionPro
           return (
             <div
               key={visit.id}
-              className={`flex items-center justify-between rounded-lg border bg-card shadow-sm ${season.borderClass} border-l-4 px-4 py-3`}
+              className={`flex items-center justify-between ${VISIT_CARD_CLASS_NAME} ${season.borderClass} border-l-4 px-4 py-3`}
             >
               <span className="flex flex-wrap items-center gap-2.5 text-sm font-medium">
                 <span
@@ -123,12 +134,12 @@ export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionPro
                 >
                   {season.emoji}
                 </span>
-                <span className="inline-flex items-center justify-center rounded-full bg-primary/10 px-2.5 py-1 text-sm leading-none font-bold text-primary">
+                <span className={VISIT_BADGE_CLASS_NAME}>
                   {t("visitNumber", { number })}
                 </span>
                 <span className="text-base">{formatFinnishDate(visit.visitedOn)}</span>
                 {visit.route && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-700 px-2.5 py-1 text-sm leading-none font-semibold text-white dark:bg-emerald-500/15 dark:text-emerald-400">
+                  <span className={ROUTE_BADGE_CLASS_NAME}>
                     <Route className="h-3.5 w-3.5" aria-hidden="true" />
                     {visit.route}
                   </span>
@@ -142,12 +153,12 @@ export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionPro
         return (
           <div
             key={visit.id}
-            className={`overflow-hidden rounded-lg border bg-card shadow-sm ${season.borderClass} border-l-4`}
+            className={`overflow-hidden ${VISIT_CARD_CLASS_NAME} ${season.borderClass} border-l-4`}
           >
             <button
               type="button"
               onClick={() => toggle(visit.id, isExpandable)}
-              className="flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-3 text-left"
+              className="flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-white/36 dark:hover:bg-slate-950/26"
               aria-expanded={isOpen}
               title={isOpen ? t("hideDetails") : t("showDetails")}
               aria-label={isOpen ? t("hideDetails") : t("showDetails")}
@@ -159,18 +170,18 @@ export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionPro
                 >
                   {season.emoji}
                 </span>
-                <span className="inline-flex items-center justify-center rounded-full bg-primary/10 px-2.5 py-1 text-sm leading-none font-bold text-primary">
+                <span className={VISIT_BADGE_CLASS_NAME}>
                   {t("visitNumber", { number })}
                 </span>
                 <span className="text-base">{formatFinnishDate(visit.visitedOn)}</span>
                 {visit.route && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-700 px-2.5 py-1 text-sm leading-none font-semibold text-white dark:bg-emerald-500/15 dark:text-emerald-400">
+                  <span className={ROUTE_BADGE_CLASS_NAME}>
                     <Route className="h-3.5 w-3.5" aria-hidden="true" />
                     {visit.route}
                   </span>
                 )}
                 {hasImages && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-sm leading-none font-semibold text-primary">
+                  <span className={IMAGE_BADGE_CLASS_NAME}>
                     <Images className="h-3.5 w-3.5" aria-hidden="true" />
                     {t("imageCount", { count: imageCount })}
                   </span>
@@ -191,10 +202,10 @@ export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionPro
               style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
             >
               <div className="overflow-hidden min-h-0">
-                <div className="border-t px-4 py-3 space-y-3">
+                <div className="space-y-3 border-t border-white/35 bg-white/30 px-4 py-3 dark:border-white/10 dark:bg-slate-950/22">
                   {visit.note && (
                     <>
-                      <h3 className="flex items-center gap-2 text-base font-semibold border-b pb-2">
+                      <h3 className={DETAIL_SECTION_HEADING_CLASS_NAME}>
                         <FileText className="h-4 w-4 text-muted-foreground" />
                         {t("detailsTitle")}
                       </h3>
@@ -205,7 +216,7 @@ export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionPro
                   )}
                   {hasImages && visit.images && (
                     <>
-                      <h3 className="flex items-center gap-2 text-base font-semibold border-b pb-2">
+                      <h3 className={DETAIL_SECTION_HEADING_CLASS_NAME}>
                         <Images className="h-4 w-4 text-muted-foreground" />
                         {t("imagesTitle")}
                       </h3>
@@ -214,7 +225,7 @@ export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionPro
                   )}
                   {visit.author && authorDetails && (
                     <>
-                      <h3 className="flex items-center gap-2 text-base font-semibold border-b pb-2">
+                      <h3 className={DETAIL_SECTION_HEADING_CLASS_NAME}>
                         <User className="h-4 w-4 text-muted-foreground" />
                         {t("authorTitle")}
                       </h3>

@@ -24,8 +24,8 @@ export const ParkVisitHistory = ({
   const auth = useAuth();
 
   return (
-    <div className="mt-8">
-      <div className="flex items-center justify-between">
+    <section className="mt-8 rounded-[2rem] border border-white/45 bg-white/60 p-5 shadow-[0_24px_48px_rgba(148,163,184,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/42 dark:shadow-[0_28px_56px_rgba(2,6,23,0.3)]">
+      <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <NotebookPen className="h-4 w-4 text-primary" aria-hidden="true" />
           <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
@@ -33,7 +33,7 @@ export const ParkVisitHistory = ({
         {auth.isAuthenticated ? (
           <Link
             href={`/control-panel/visits/new?park=${parkSlug}`}
-            className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex items-center gap-1 rounded-full bg-[linear-gradient(145deg,#166534_0%,#0f766e_55%,#2563eb_100%)] px-3 py-1.5 text-xs font-medium text-primary-foreground shadow-[0_14px_28px_rgba(37,99,235,0.24)] transition-[filter,transform] hover:brightness-105"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -59,8 +59,10 @@ export const ParkVisitHistory = ({
           <VisitAccordion visits={visits} isEditable={auth.isAuthenticated} />
         </div>
       ) : (
-        <p className="mt-4 text-muted-foreground">{noVisitsLabel}</p>
+        <p className="mt-4 rounded-2xl border border-white/35 bg-white/46 px-4 py-4 text-muted-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.42)] dark:border-white/8 dark:bg-slate-950/30 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+          {noVisitsLabel}
+        </p>
       )}
-    </div>
+    </section>
   );
 };
