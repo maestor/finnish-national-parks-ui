@@ -14,6 +14,7 @@ interface HomeMapControlsContextValue {
   toggleMobileFilters: () => void;
   closeMobileFilters: () => void;
   focusParkOnHome: (slug: string) => void;
+  clearHomeParkFocusRequest: () => void;
 }
 
 const HomeMapControlsContext = createContext<HomeMapControlsContextValue>({
@@ -22,6 +23,7 @@ const HomeMapControlsContext = createContext<HomeMapControlsContextValue>({
   toggleMobileFilters: () => {},
   closeMobileFilters: () => {},
   focusParkOnHome: () => {},
+  clearHomeParkFocusRequest: () => {},
 });
 
 export const HomeMapControlsProvider = ({
@@ -37,6 +39,7 @@ export const HomeMapControlsProvider = ({
     null,
   );
   const lastHandledParkParamRef = useRef<string | null>(null);
+  const pendingParkParamCleanupRef = useRef<string | null>(null);
 
   const toggleMobileFilters = () => {
     setIsMobileFiltersOpen((current) => !current);
@@ -53,11 +56,27 @@ export const HomeMapControlsProvider = ({
     }));
   }, []);
 
+  const clearHomeParkFocusRequest = useCallback(() => {
+    setHomeParkFocusRequest(null);
+
+    if (pathname !== "/parks" || !pendingParkParamCleanupRef.current) {
+      return;
+    }
+
+    const nextSearchParams = new URLSearchParams(searchParams.toString());
+    nextSearchParams.delete("park");
+    const nextSearch = nextSearchParams.toString();
+
+    pendingParkParamCleanupRef.current = null;
+    router.replace(nextSearch ? `${pathname}?${nextSearch}` : pathname, { scroll: false });
+  }, [pathname, router, searchParams]);
+
   useEffect(() => {
     const parkSlug = pathname === "/parks" ? searchParams.get("park") : null;
 
     if (!parkSlug) {
       lastHandledParkParamRef.current = null;
+      pendingParkParamCleanupRef.current = null;
       return;
     }
 
@@ -66,14 +85,9 @@ export const HomeMapControlsProvider = ({
     }
 
     lastHandledParkParamRef.current = parkSlug;
+    pendingParkParamCleanupRef.current = parkSlug;
     focusParkOnHome(parkSlug);
-
-    const nextSearchParams = new URLSearchParams(searchParams.toString());
-    nextSearchParams.delete("park");
-    const nextSearch = nextSearchParams.toString();
-
-    router.replace(nextSearch ? `${pathname}?${nextSearch}` : pathname, { scroll: false });
-  }, [focusParkOnHome, pathname, router, searchParams]);
+  }, [focusParkOnHome, pathname, searchParams]);
 
   return (
     <HomeMapControlsContext.Provider
@@ -83,6 +97,7 @@ export const HomeMapControlsProvider = ({
         toggleMobileFilters,
         closeMobileFilters,
         focusParkOnHome,
+        clearHomeParkFocusRequest,
       }}
     >
       {children}

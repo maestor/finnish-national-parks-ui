@@ -5,7 +5,10 @@ import { getVisitStatusColor } from "@/lib/parks";
 import maplibregl from "maplibre-gl";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { HomeParkFocusRequest } from "../providers/home-map-controls-provider";
+import {
+  type HomeParkFocusRequest,
+  useHomeMapControls,
+} from "../providers/home-map-controls-provider";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 interface ParkMapProps {
@@ -236,8 +239,11 @@ export const ParkMap = ({
   const shownPopupsRef = useRef<Set<string>>(new Set());
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeSlugRef = useRef<string | null>(null);
+  const hoveredSlugRef = useRef<string | null>(null);
+  const lastHandledHomeFocusRequestIdRef = useRef(0);
   const lastHandledResetViewRequestIdRef = useRef(0);
   const t = useTranslations("map");
+  const { clearHomeParkFocusRequest } = useHomeMapControls();
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [activeSlug, setActiveSlug] = useState<string | null>(null);
   const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
@@ -245,6 +251,10 @@ export const ParkMap = ({
   useEffect(() => {
     activeSlugRef.current = activeSlug;
   }, [activeSlug]);
+
+  useEffect(() => {
+    hoveredSlugRef.current = hoveredSlug;
+  }, [hoveredSlug]);
 
   useEffect(() => {
     const visibleSlugs = new Set(parks.map((park) => park.slug));
@@ -316,6 +326,30 @@ export const ParkMap = ({
     },
     [cancelClose],
   );
+
+  const syncPopupVisibility = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) {
+      return;
+    }
+
+    const currentActiveSlug = activeSlugRef.current;
+    const currentHoveredSlug = hoveredSlugRef.current;
+
+    for (const [slug, popup] of popupsRef.current) {
+      const shouldShow =
+        currentActiveSlug === slug || (currentActiveSlug === null && currentHoveredSlug === slug);
+      const isShown = shownPopupsRef.current.has(slug);
+
+      if (shouldShow && !isShown) {
+        popup.addTo(map);
+        shownPopupsRef.current.add(slug);
+      } else if (!shouldShow && isShown) {
+        popup.remove();
+        shownPopupsRef.current.delete(slug);
+      }
+    }
+  }, []);
 
   // Initialize map
   useEffect(() => {
@@ -458,6 +492,8 @@ export const ParkMap = ({
         closeActivePopupIfFocusLeftMapPopup(park.slug);
       });
     }
+
+    syncPopupVisibility();
   }, [
     parks,
     isMapLoaded,
@@ -467,10 +503,15 @@ export const ParkMap = ({
     canManageVisits,
     closeActivePopupIfFocusLeftMapPopup,
     focusPark,
+    syncPopupVisibility,
   ]);
 
   useEffect(() => {
     if (!isMapLoaded || !homeParkFocusRequest) {
+      return;
+    }
+
+    if (lastHandledHomeFocusRequestIdRef.current === homeParkFocusRequest.requestId) {
       return;
     }
 
@@ -479,8 +520,23 @@ export const ParkMap = ({
       return;
     }
 
+    lastHandledHomeFocusRequestIdRef.current = homeParkFocusRequest.requestId;
     focusPark(park);
   }, [focusPark, homeParkFocusRequest, isMapLoaded, parks]);
+
+  useEffect(() => {
+    if (!homeParkFocusRequest || activeSlug !== homeParkFocusRequest.slug) {
+      return;
+    }
+
+    const cleanupTimeoutId = window.setTimeout(() => {
+      clearHomeParkFocusRequest();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(cleanupTimeoutId);
+    };
+  }, [activeSlug, clearHomeParkFocusRequest, homeParkFocusRequest]);
 
   useEffect(() => {
     if (!isMapLoaded || resetViewRequestId <= 0) {
@@ -504,22 +560,8 @@ export const ParkMap = ({
 
   // Sync popup visibility with active/hovered state
   useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
-
-    for (const [slug, popup] of popupsRef.current) {
-      const shouldShow = activeSlug === slug || (activeSlug === null && hoveredSlug === slug);
-      const isShown = shownPopupsRef.current.has(slug);
-
-      if (shouldShow && !isShown) {
-        popup.addTo(map);
-        shownPopupsRef.current.add(slug);
-      } else if (!shouldShow && isShown) {
-        popup.remove();
-        shownPopupsRef.current.delete(slug);
-      }
-    }
-  }, [activeSlug, hoveredSlug]);
+    syncPopupVisibility();
+  }, [activeSlug, hoveredSlug, syncPopupVisibility]);
 
   // Click outside to close active popup
   useEffect(() => {
