@@ -229,6 +229,19 @@ describe("ParkMap", () => {
     );
   });
 
+  it("opens the popup when a marker is clicked without hovering first", () => {
+    render(<ParkMap parks={parks} />);
+    triggerMapLoad();
+
+    fireEvent.click(markerElements[0]);
+
+    expect(document.body).toHaveTextContent("Pallas-Yllästunturin kansallispuisto");
+    expect(screen.getByRole("link", { name: "map.openParkPage" })).toHaveAttribute(
+      "href",
+      "/park/pallas",
+    );
+  });
+
   it("activates a park from an external home search focus request", () => {
     const { rerender } = render(<ParkMap parks={parks} />);
     triggerMapLoad();

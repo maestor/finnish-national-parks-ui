@@ -327,14 +327,11 @@ export const ParkMap = ({
     [cancelClose],
   );
 
-  const syncPopupVisibility = useCallback(() => {
+  const syncPopupVisibility = useCallback((currentActiveSlug: string | null, currentHoveredSlug: string | null) => {
     const map = mapRef.current;
     if (!map) {
       return;
     }
-
-    const currentActiveSlug = activeSlugRef.current;
-    const currentHoveredSlug = hoveredSlugRef.current;
 
     for (const [slug, popup] of popupsRef.current) {
       const shouldShow =
@@ -493,7 +490,7 @@ export const ParkMap = ({
       });
     }
 
-    syncPopupVisibility();
+    syncPopupVisibility(activeSlugRef.current, hoveredSlugRef.current);
   }, [
     parks,
     isMapLoaded,
@@ -560,8 +557,8 @@ export const ParkMap = ({
 
   // Sync popup visibility with active/hovered state
   useEffect(() => {
-    syncPopupVisibility();
-  }, [syncPopupVisibility]);
+    syncPopupVisibility(activeSlug, hoveredSlug);
+  }, [activeSlug, hoveredSlug, syncPopupVisibility]);
 
   // Click outside to close active popup
   useEffect(() => {
