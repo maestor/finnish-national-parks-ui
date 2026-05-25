@@ -170,8 +170,11 @@ describe("RootLayout", () => {
         title: "metadata.title",
       },
       icons: {
-        icon: [{ url: "/favicon.svg", sizes: "any", type: "image/svg+xml" }],
-        shortcut: ["/favicon.svg"],
+        icon: [
+          { url: "/icons/icon-32x32.png", sizes: "32x32", type: "image/png" },
+          { url: "/favicon.svg", sizes: "any", type: "image/svg+xml" },
+        ],
+        shortcut: ["/icons/icon-32x32.png"],
         apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
       },
       formatDetection: {
