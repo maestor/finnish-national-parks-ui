@@ -4,26 +4,23 @@ type AppIconArtworkProps = {
   ariaHidden?: boolean;
   style?: CSSProperties;
   testId?: string;
-  title?: string;
 };
 
 export const AppIconArtwork = ({
   ariaHidden = true,
   style,
   testId,
-  title = "Reissuvihko app icon",
 }: AppIconArtworkProps = {}): ReactElement => {
   return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: this SVG is decorative and reused by next/og, where a <title> becomes visible text in generated images.
     <svg
       aria-hidden={ariaHidden}
       data-testid={testId}
       fill="none"
-      role="img"
       style={style}
       viewBox="0 0 512 512"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <title>{title}</title>
       <defs>
         <linearGradient id="bg" x1="96" y1="64" x2="416" y2="448" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor="#166534" />
