@@ -256,6 +256,71 @@ describe("ParkMap", () => {
     expect(document.body).toHaveTextContent("Hetta");
   });
 
+  it("fits the currently visible parks when the filter requests a map reset", () => {
+    const { rerender } = render(<ParkMap parks={parks} />);
+    triggerMapLoad();
+
+    fireEvent.click(markerElements[0]);
+    expect(document.body).toHaveTextContent("Pallas-Yllästunturin kansallispuisto");
+
+    rerender(<ParkMap parks={[parks[1], parks[0]].filter(Boolean)} resetViewRequestId={1} />);
+
+    expect(fitBoundsMock).toHaveBeenLastCalledWith(
+      [
+        [23, 67],
+        [24, 68],
+      ],
+      expect.objectContaining({
+        duration: 800,
+        maxZoom: 11,
+        padding: {
+          top: 104,
+          right: 48,
+          bottom: 48,
+          left: 48,
+        },
+      }),
+    );
+    expect(document.querySelector(".maplibregl-popup")).not.toBeInTheDocument();
+  });
+
+  it("falls back to the Finland overview when a reset is requested without visible parks", () => {
+    const { rerender } = render(<ParkMap parks={parks} />);
+    triggerMapLoad();
+
+    rerender(<ParkMap parks={[]} resetViewRequestId={1} />);
+
+    expect(fitBoundsMock).toHaveBeenLastCalledWith(
+      [
+        [19.0, 59.5],
+        [32.0, 70.5],
+      ],
+      expect.objectContaining({
+        duration: 800,
+        padding: 24,
+      }),
+    );
+  });
+
+  it("clears an active popup when the filtered park disappears", () => {
+    const { rerender } = render(<ParkMap parks={parks} />);
+    triggerMapLoad();
+    const [, remainingPark] = parks;
+
+    fireEvent.click(markerElements[0]);
+    expect(document.body).toHaveTextContent("Pallas-Yllästunturin kansallispuisto");
+
+    if (!remainingPark) {
+      throw new Error("Expected a remaining park for the filtered rerender test");
+    }
+
+    rerender(<ParkMap parks={[remainingPark]} />);
+    expect(document.querySelector(".maplibregl-popup")).not.toBeInTheDocument();
+
+    rerender(<ParkMap parks={parks} />);
+    expect(document.body).not.toHaveTextContent("Pallas-Yllästunturin kansallispuisto");
+  });
+
   it("shows an add visit link in the popup when visit management is enabled", () => {
     render(<ParkMap parks={parks} canManageVisits />);
     triggerMapLoad();

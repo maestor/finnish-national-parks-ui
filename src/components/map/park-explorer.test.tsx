@@ -26,15 +26,18 @@ vi.mock("./park-map", () => ({
     parks,
     canManageVisits,
     homeParkFocusRequest,
+    resetViewRequestId,
   }: {
     parks: MapPark[];
     canManageVisits?: boolean;
     homeParkFocusRequest?: { slug: string } | null;
+    resetViewRequestId?: number;
   }) => (
     <div>
       <p>count:{parks.length}</p>
       <p>admin:{String(canManageVisits)}</p>
       <p>focus:{homeParkFocusRequest?.slug ?? "none"}</p>
+      <p>reset:{resetViewRequestId ?? 0}</p>
       <ul>
         {parks.map((park) => (
           <li key={park.slug}>{park.name}</li>
@@ -186,6 +189,7 @@ describe("ParkExplorer", () => {
 
     expect(mobileFilters).toHaveClass("hidden");
     expect(screen.getByText("count:1")).toBeInTheDocument();
+    expect(screen.getByText("reset:1")).toBeInTheDocument();
   });
 
   it("resets filters so a focused park from the header search stays visible on the map", () => {
@@ -223,5 +227,22 @@ describe("ParkExplorer", () => {
     expect(screen.getByText("count:1")).toBeInTheDocument();
     expect(screen.getByText("focus:punkaharju")).toBeInTheDocument();
     expect(screen.getByText("Punkaharjun luontopolku")).toBeInTheDocument();
+    expect(screen.getByText("reset:1")).toBeInTheDocument();
+  });
+
+  it("does not trigger a map reset when search-driven focus changes the filter", () => {
+    render(
+      <HomeMapControlsProvider>
+        <MobileFilterToggleHarness />
+        <ParkExplorer parks={parks} />
+      </HomeMapControlsProvider>,
+    );
+
+    expect(screen.getByText("reset:0")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "focus-punkaharju" }));
+
+    expect(screen.getByText("count:1")).toBeInTheDocument();
+    expect(screen.getByText("reset:0")).toBeInTheDocument();
   });
 });

@@ -40,4 +40,22 @@ describe("ThemeToggle", () => {
 
     expect(setThemeMock).toHaveBeenCalledWith("light");
   });
+
+  it("shows the target mode label when rendered as a menu row", () => {
+    render(<ThemeToggle showLabel />);
+
+    expect(screen.getByRole("button", { name: "layout.themeToggle.darkMode" })).toBeInTheDocument();
+  });
+
+  it("exposes a hover title and pointer cursor in icon mode", () => {
+    render(<ThemeToggle />);
+
+    expect(screen.getByRole("button", { name: "layout.themeToggle.srLabel" })).toHaveAttribute(
+      "title",
+      "layout.themeToggle.dark",
+    );
+    expect(screen.getByRole("button", { name: "layout.themeToggle.srLabel" })).toHaveClass(
+      "cursor-pointer",
+    );
+  });
 });
