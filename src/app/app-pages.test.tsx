@@ -225,6 +225,7 @@ const publicPark = {
   areaKm2: 14,
   displayTypeName: "Maailmanperintökohde",
   location: "Lappi",
+  logo: null,
   luontoonUrl: "https://example.com/pallas",
   establishmentYear: 1938,
   boundingBox: { minLat: 67, minLon: 23, maxLat: 68, maxLon: 25 },
@@ -402,6 +403,54 @@ describe("App pages", () => {
     );
     expect(screen.getByTestId("park-boundary-map")).toHaveTextContent("Pallas-Yllästunturi");
     expect(screen.getByTestId("park-visit-history")).toHaveTextContent("slug:pallas|visits:1");
+  });
+
+  it("renders the park logo when present", async () => {
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({
+        ...publicPark,
+        logo: {
+          key: "pallas-logo.png",
+          updatedAt: "2024-01-01T00:00:00Z",
+          url: "https://example.com/pallas-logo.png",
+        },
+        boundaryGeoJson: null,
+      })
+      .mockResolvedValueOnce({
+        visitedSummary: {
+          visited: false,
+          visitCount: 0,
+          lastVisitedOn: null,
+        },
+        visits: [],
+      });
+
+    await renderPublicRoute(await ParkDetailPage({ params: Promise.resolve({ slug: "pallas" }) }));
+
+    const logo = screen.getByRole("img", { name: "Pallas-Yllästunturi" });
+    expect(logo).toBeInTheDocument();
+    expect(logo).toHaveAttribute("src", "https://example.com/pallas-logo.png");
+    expect(logo).toHaveClass("h-28", "w-auto");
+  });
+
+  it("does not render a logo when the park has no logo", async () => {
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({
+        ...publicPark,
+        boundaryGeoJson: null,
+      })
+      .mockResolvedValueOnce({
+        visitedSummary: {
+          visited: false,
+          visitCount: 0,
+          lastVisitedOn: null,
+        },
+        visits: [],
+      });
+
+    await renderPublicRoute(await ParkDetailPage({ params: Promise.resolve({ slug: "pallas" }) }));
+
+    expect(screen.queryByRole("img", { name: "Pallas-Yllästunturi" })).not.toBeInTheDocument();
   });
 
   it("renders a simple fallback when the park detail page cannot load the park", async () => {
