@@ -29,7 +29,7 @@ interface HomeVisitStatsProps {
 }
 
 const CARD_CLASS_NAME =
-  "w-full rounded-[1.6rem] border border-white/55 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)] backdrop-blur-sm dark:border-white/10 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]";
+  "w-full rounded-[1.6rem] border border-white/55 px-4 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)] backdrop-blur-sm dark:border-white/10 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]";
 
 const TOTAL_VISITS_CARD_CLASS_NAME = `${CARD_CLASS_NAME} bg-[linear-gradient(118deg,rgba(22,101,52,0.16)_0%,rgba(15,118,110,0.12)_46%,rgba(37,99,235,0.18)_100%)] dark:bg-[linear-gradient(118deg,rgba(22,101,52,0.24)_0%,rgba(15,118,110,0.2)_46%,rgba(37,99,235,0.26)_100%)]`;
 
@@ -105,14 +105,14 @@ export const HomeVisitStats = ({
               {sectionTitle}
             </h2>
           </div>
-          <div className="flex w-full flex-col gap-3">
+          <div className="flex flex-col gap-3">
             {hasSeasonalData ? (
               <div className="flex flex-col gap-3 md:flex-row md:max-w-lg">
                 <div className={`${TOTAL_VISITS_CARD_CLASS_NAME} flex-1`}>
                   <p className="text-sm text-foreground/70 dark:text-sky-100/78">
                     {totalVisitsLabel}
                   </p>
-                  <p className="mt-1 text-3xl font-semibold tracking-tight">{totalVisits}</p>
+                  <p className="mt-1 text-4xl font-semibold tracking-tight">{totalVisits}</p>
                 </div>
                 <div className={`${SEASONAL_CARD_CLASS_NAME} flex-1`}>
                   <p className="text-sm text-foreground/70 dark:text-sky-100/78">
