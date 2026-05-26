@@ -3,8 +3,9 @@
 import { Button } from "@/components/ui/button";
 import { VisitImageGallery } from "@/components/visits/visit-image-gallery";
 import { apiFetch } from "@/lib/api";
+import type { paths } from "@/lib/api-types";
 import { cn } from "@/lib/cn";
-import { prepareImageFileForUpload } from "@/lib/image-upload";
+import { isLocalImageUploadMode, prepareImageFileForUpload } from "@/lib/image-upload";
 import type { VisitImage } from "@/lib/parks";
 import { revalidatePublicCache } from "@/lib/public-cache";
 import { Images, Trash2, Upload, X } from "lucide-react";
@@ -38,6 +39,19 @@ interface ActiveDrag {
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const DRAG_START_DISTANCE = 6;
 
+type VisitImageUploadResponse =
+  paths["/api/visits/{id}/images"]["post"]["responses"][201]["content"]["application/json"];
+type VisitImageUploadPlanRequest = NonNullable<
+  paths["/api/visits/{id}/images/upload-url"]["post"]["requestBody"]
+>["content"]["application/json"];
+type VisitImageUploadPlanResponse =
+  paths["/api/visits/{id}/images/upload-url"]["post"]["responses"][201]["content"]["application/json"];
+type VisitImageUploadCompleteRequest = NonNullable<
+  paths["/api/visits/{id}/images/complete"]["post"]["requestBody"]
+>["content"]["application/json"];
+type VisitImageUploadCompleteResponse =
+  paths["/api/visits/{id}/images/complete"]["post"]["responses"][201]["content"]["application/json"];
+
 const getItemId = (item: { id: number | string }) => String(item.id);
 
 const reorderItems = <T extends { id: number | string }>(
@@ -70,6 +84,19 @@ const getDropTargetId = (
   const attribute = collection === "saved" ? "data-saved-image-id" : "data-pending-image-id";
   const target = document.elementFromPoint(clientX, clientY)?.closest(selector);
   return target?.getAttribute(attribute) ?? null;
+};
+
+const getPendingUploadError = (fileName: string, message: string) => `${fileName}: ${message}`;
+
+const getDirectUploadFailureMessage = async (response: Response, fallbackMessage: string) => {
+  const responseBody = await response.text().catch(() => "");
+  const trimmedResponseBody = responseBody.trim();
+
+  if (trimmedResponseBody) {
+    return trimmedResponseBody;
+  }
+
+  return response.status > 0 ? `${fallbackMessage} (${response.status})` : fallbackMessage;
 };
 
 export const VisitImageSection = ({
@@ -346,6 +373,136 @@ export const VisitImageSection = ({
     );
   };
 
+  const handleLocalUpload = async () => {
+    const formData = new FormData();
+    for (const pendingImage of pendingImages) {
+      formData.append("images", pendingImage.file);
+    }
+
+    const response = await apiFetch<VisitImageUploadResponse>(`/api/visits/${visitId}/images`, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response || !Array.isArray(response.images) || !Array.isArray(response.errors)) {
+      throw new Error(t("uploadFailed"));
+    }
+
+    for (const pendingImage of pendingImages) {
+      URL.revokeObjectURL(pendingImage.previewUrl);
+    }
+
+    pendingImagesRef.current = [];
+    setPendingImages([]);
+    setLocalImages((currentImages) => [...currentImages, ...response.images]);
+    setSavedImageOrder((currentOrder) => [
+      ...currentOrder,
+      ...response.images.map((image) => String(image.id)),
+    ]);
+
+    if (response.errors.length > 0) {
+      setUploadErrors(response.errors.map((error) => `${error.originalName}: ${error.reason}`));
+    }
+
+    if (response.images.length > 0) {
+      await revalidatePublicCache({ parkSlug });
+      setStatusMessage(t("uploadSuccess", { count: response.images.length }));
+      router.refresh();
+    }
+  };
+
+  const uploadImageDirectly = async (pendingImage: PendingImage): Promise<VisitImage> => {
+    const uploadPlanRequest = {
+      contentType: pendingImage.file.type as VisitImageUploadPlanRequest["contentType"],
+      fileSizeBytes: pendingImage.file.size,
+      originalName: pendingImage.file.name,
+    } satisfies VisitImageUploadPlanRequest;
+
+    const uploadPlan = await apiFetch<VisitImageUploadPlanResponse>(
+      `/api/visits/${visitId}/images/upload-url`,
+      {
+        method: "POST",
+        body: JSON.stringify(uploadPlanRequest),
+      },
+    );
+
+    if (!uploadPlan?.uploadUrl || !uploadPlan?.key) {
+      throw new Error(t("uploadFailed"));
+    }
+
+    const uploadResponse = await fetch(uploadPlan.uploadUrl, {
+      method: uploadPlan.method,
+      headers: uploadPlan.headers,
+      body: pendingImage.file,
+    });
+
+    if (!uploadResponse.ok) {
+      throw new Error(await getDirectUploadFailureMessage(uploadResponse, t("uploadFailed")));
+    }
+
+    const completeRequest = {
+      key: uploadPlan.key,
+      originalName: pendingImage.file.name,
+    } satisfies VisitImageUploadCompleteRequest;
+
+    const completedUpload = await apiFetch<VisitImageUploadCompleteResponse>(
+      `/api/visits/${visitId}/images/complete`,
+      {
+        method: "POST",
+        body: JSON.stringify(completeRequest),
+      },
+    );
+
+    if (!completedUpload?.image) {
+      throw new Error(t("uploadFailed"));
+    }
+
+    return completedUpload.image;
+  };
+
+  const handleDirectUpload = async () => {
+    const uploadedImages: VisitImage[] = [];
+    const nextUploadErrors: string[] = [];
+    const uploadedPendingImageIds = new Set<string>();
+
+    for (const pendingImage of pendingImages) {
+      try {
+        const uploadedImage = await uploadImageDirectly(pendingImage);
+        uploadedImages.push(uploadedImage);
+        uploadedPendingImageIds.add(pendingImage.id);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : t("uploadFailed");
+        nextUploadErrors.push(getPendingUploadError(pendingImage.file.name, message));
+      }
+    }
+
+    if (uploadedPendingImageIds.size > 0) {
+      for (const pendingImage of pendingImages) {
+        if (!uploadedPendingImageIds.has(pendingImage.id)) {
+          continue;
+        }
+
+        URL.revokeObjectURL(pendingImage.previewUrl);
+      }
+
+      setPendingImages((currentImages) =>
+        currentImages.filter((image) => !uploadedPendingImageIds.has(image.id)),
+      );
+      setLocalImages((currentImages) => [...currentImages, ...uploadedImages]);
+      setSavedImageOrder((currentOrder) => [
+        ...currentOrder,
+        ...uploadedImages.map((image) => String(image.id)),
+      ]);
+      await revalidatePublicCache({ parkSlug });
+      setStatusMessage(t("uploadSuccess", { count: uploadedImages.length }));
+      router.refresh();
+    }
+
+    if (nextUploadErrors.length > 0) {
+      setUploadErrors(nextUploadErrors);
+    }
+  };
+
   const handleUpload = async () => {
     if (pendingImages.length === 0 || isPreparingImages) {
       return;
@@ -357,42 +514,10 @@ export const VisitImageSection = ({
     setUploadErrors([]);
 
     try {
-      const formData = new FormData();
-      for (const pendingImage of pendingImages) {
-        formData.append("images", pendingImage.file);
-      }
-
-      const response = await apiFetch<{
-        images: VisitImage[];
-        errors: { originalName: string; reason: string }[];
-      }>(`/api/visits/${visitId}/images`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response || !Array.isArray(response.images) || !Array.isArray(response.errors)) {
-        throw new Error(t("uploadFailed"));
-      }
-
-      for (const pendingImage of pendingImages) {
-        URL.revokeObjectURL(pendingImage.previewUrl);
-      }
-      pendingImagesRef.current = [];
-      setPendingImages([]);
-      setLocalImages((currentImages) => [...currentImages, ...response.images]);
-      setSavedImageOrder((currentOrder) => [
-        ...currentOrder,
-        ...response.images.map((image) => String(image.id)),
-      ]);
-
-      if (response.errors.length > 0) {
-        setUploadErrors(response.errors.map((error) => `${error.originalName}: ${error.reason}`));
-      }
-
-      if (response.images.length > 0) {
-        await revalidatePublicCache({ parkSlug });
-        setStatusMessage(t("uploadSuccess", { count: response.images.length }));
-        router.refresh();
+      if (isLocalImageUploadMode()) {
+        await handleLocalUpload();
+      } else {
+        await handleDirectUpload();
       }
     } catch (error) {
       setUploadErrors([error instanceof Error ? error.message : t("uploadFailed")]);
