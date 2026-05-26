@@ -120,6 +120,10 @@ summary::-webkit-details-marker {
 }
 
 /* MapLibre popup theming */
+.maplibregl-popup {
+  z-index: 20;
+}
+
 .maplibregl-popup-content {
   background: rgb(255 255 255 / 0.92) !important;
   color: hsl(var(--card-foreground)) !important;
