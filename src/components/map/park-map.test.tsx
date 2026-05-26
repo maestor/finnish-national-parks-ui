@@ -29,6 +29,7 @@ const parks: MapPark[] = [
   {
     slug: "hetta",
     name: "Hetta",
+    displayTypeName: "Maailmanperintökohde",
     areaKm2: 10,
     location: "Lappi",
     luontoonUrl: null,
@@ -240,6 +241,18 @@ describe("ParkMap", () => {
       "href",
       "/park/pallas",
     );
+  });
+
+  it("uses the custom display type name in map labels when available", () => {
+    render(<ParkMap parks={parks} />);
+    triggerMapLoad();
+
+    expect(markerElements[1]).toHaveAttribute("aria-label", "Hetta, Maailmanperintökohde");
+
+    fireEvent.click(markerElements[1]);
+
+    expect(document.body).toHaveTextContent("Maailmanperintökohde");
+    expect(document.body).not.toHaveTextContent("Muu luonnonsuojelualue");
   });
 
   it("activates a park from an external home search focus request", () => {

@@ -3,7 +3,7 @@
 import { AdminTableFilters } from "@/components/admin/admin-table-filters";
 import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api";
-import type { Park } from "@/lib/parks";
+import { type Park, getParkTypeDisplayName } from "@/lib/parks";
 import { revalidatePublicCache } from "@/lib/public-cache";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -103,7 +103,7 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
   const normalizedQuery = query.trim().toLocaleLowerCase("fi-FI");
   const filteredParks = displayedParks.filter((park) => {
     const matchesType = selectedTypeSlug ? park.type.slug === selectedTypeSlug : true;
-    const haystack = [park.name, park.location, park.type.name]
+    const haystack = [park.name, park.location, getParkTypeDisplayName(park), park.type.name]
       .join(" ")
       .toLocaleLowerCase("fi-FI");
     const matchesQuery = normalizedQuery ? haystack.includes(normalizedQuery) : true;
@@ -227,7 +227,7 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
                         {park.name}
                       </Link>
                     </td>
-                    <td className="px-4 py-3">{park.type.name}</td>
+                    <td className="px-4 py-3">{getParkTypeDisplayName(park)}</td>
                     <td className="px-4 py-3">{park.location}</td>
                     <td className="px-4 py-3 text-right">
                       <Button

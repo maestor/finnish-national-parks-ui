@@ -37,6 +37,7 @@ const parks: Park[] = [
   {
     slug: "aulanko",
     name: "Aulangon luonnonsuojelualue",
+    displayTypeName: "Maailmanperintökohde",
     areaKm2: 12,
     location: "Hameenlinna",
     luontoonUrl: null,
@@ -83,6 +84,7 @@ describe("ParkList", () => {
       "href",
       "/park/teijo",
     );
+    expect(screen.getByText("Maailmanperintökohde")).toBeInTheDocument();
   });
 
   it("removes a park after confirmation and refreshes the route", async () => {
@@ -181,6 +183,20 @@ describe("ParkList", () => {
     await user.selectOptions(
       screen.getByLabelText("controlPanel.parks.filters.typeLabel"),
       "other-nature-reserve",
+    );
+
+    expect(screen.getByRole("link", { name: "Aulangon luonnonsuojelualue" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Teijon kansallispuisto" })).not.toBeInTheDocument();
+  });
+
+  it("matches a park by its custom display type name in the search filter", async () => {
+    const user = userEvent.setup();
+
+    render(<ParkList parks={parks} removedParks={removedParks} />);
+
+    await user.type(
+      screen.getByLabelText("controlPanel.parks.filters.searchLabel"),
+      "maailmanperintö",
     );
 
     expect(screen.getByRole("link", { name: "Aulangon luonnonsuojelualue" })).toBeInTheDocument();

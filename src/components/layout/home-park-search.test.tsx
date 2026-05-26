@@ -65,13 +65,14 @@ const parks: Park[] = [
   {
     slug: "teijo",
     name: "Teijon kansallispuisto",
+    displayTypeName: "Maailmanperintökohde",
     areaKm2: 11,
     location: "Varsinais-Suomi",
     luontoonUrl: null,
     establishmentYear: 2015,
     boundingBox: { minLat: 60, minLon: 22, maxLat: 61, maxLon: 23 },
     markerPoint: { lat: 60.5, lon: 22.5 },
-    type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },
+    type: { code: 4, id: 4, name: "Muu luonnonsuojelualue", slug: "other-nature-reserve" },
   },
 ];
 
@@ -309,18 +310,32 @@ describe("HomeParkSearch", () => {
     );
   });
 
-  it("shows only the park type in the result meta line", async () => {
+  it("shows the park display type override in the result meta line", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce({ parks });
 
     renderSearch();
 
     const input = screen.getByRole("combobox", { name: "layout.parkSearch.label" });
-    fireEvent.change(input, { target: { value: "päij" } });
+    fireEvent.change(input, { target: { value: "teij" } });
 
-    const result = await screen.findByRole("button", { name: /Päijänteen kansallispuisto/i });
+    const result = await screen.findByRole("button", { name: /Teijon kansallispuisto/i });
 
-    expect(result).toHaveTextContent("Kansallispuisto");
-    expect(result).not.toHaveTextContent("Päijät-Häme");
+    expect(result).toHaveTextContent("Maailmanperintökohde");
+    expect(result).not.toHaveTextContent("Muu luonnonsuojelualue");
+    expect(result).not.toHaveTextContent("Varsinais-Suomi");
+  });
+
+  it("matches parks by the custom display type name", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({ parks });
+
+    renderSearch();
+
+    const input = screen.getByRole("combobox", { name: "layout.parkSearch.label" });
+    fireEvent.change(input, { target: { value: "maailmanperintö" } });
+
+    expect(
+      await screen.findByRole("button", { name: /Teijon kansallispuisto/i }),
+    ).toBeInTheDocument();
   });
 
   it("offers a direct park-page link beside home map search results", async () => {

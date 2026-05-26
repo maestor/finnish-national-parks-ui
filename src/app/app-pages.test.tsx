@@ -223,6 +223,7 @@ const publicPark = {
   slug: "pallas",
   name: "Pallas-Yllästunturi",
   areaKm2: 14,
+  displayTypeName: "Maailmanperintökohde",
   location: "Lappi",
   luontoonUrl: "https://example.com/pallas",
   establishmentYear: 1938,
@@ -394,6 +395,7 @@ describe("App pages", () => {
     await renderPublicRoute(await ParkDetailPage({ params: Promise.resolve({ slug: "pallas" }) }));
 
     expect(screen.getByRole("heading", { name: "Pallas-Yllästunturi" })).toBeInTheDocument();
+    expect(screen.getByText("Maailmanperintökohde")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "park.showInFinlandsMap" })).toHaveAttribute(
       "href",
       "/parks?park=pallas",

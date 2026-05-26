@@ -288,6 +288,7 @@ export interface paths {
                                     minLat: number;
                                     minLon: number;
                                 };
+                                displayTypeName?: string | null;
                                 establishmentYear: number | null;
                                 location: string;
                                 luontoonUrl: string | null;
@@ -356,6 +357,7 @@ export interface paths {
                                     minLat: number;
                                     minLon: number;
                                 };
+                                displayTypeName?: string | null;
                                 establishmentYear: number | null;
                                 location: string;
                                 luontoonUrl: string | null;
@@ -425,6 +427,7 @@ export interface paths {
                                 minLat: number;
                                 minLon: number;
                             };
+                            displayTypeName?: string | null;
                             establishmentYear: number | null;
                             location: string;
                             luontoonUrl: string | null;
@@ -765,6 +768,7 @@ export interface paths {
                                     minLat: number;
                                     minLon: number;
                                 };
+                                displayTypeName?: string | null;
                                 establishmentYear: number | null;
                                 location: string;
                                 luontoonUrl: string | null;

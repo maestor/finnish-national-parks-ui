@@ -1,7 +1,7 @@
 "use client";
 
 import type { MapPark } from "@/lib/parks";
-import { getVisitStatusColor } from "@/lib/parks";
+import { getParkTypeDisplayName, getVisitStatusColor } from "@/lib/parks";
 import maplibregl from "maplibre-gl";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -88,10 +88,11 @@ const getMapStyle = () => {
 
 const createMarkerElement = (park: MapPark) => {
   const button = document.createElement("button");
+  const displayTypeName = getParkTypeDisplayName(park);
   button.type = "button";
   button.className =
     "group relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
-  button.setAttribute("aria-label", `${park.name}, ${park.type.name}`);
+  button.setAttribute("aria-label", `${park.name}, ${displayTypeName}`);
   button.dataset.slug = park.slug;
 
   const color = getVisitStatusColor(park);
@@ -119,6 +120,7 @@ const createPopupNode = (
   canManageVisits: boolean,
 ): HTMLElement => {
   const container = document.createElement("div");
+  const displayTypeName = getParkTypeDisplayName(park);
   container.className = "max-w-[280px] p-3 text-foreground";
 
   const color = getVisitStatusColor(park);
@@ -143,7 +145,7 @@ const createPopupNode = (
   const typeRow = document.createElement("p");
   typeRow.className =
     "flex items-center gap-1.5 rounded-xl border border-sky-200/45 bg-[linear-gradient(145deg,rgba(255,255,255,0.84),rgba(237,245,249,0.92))] px-3 py-2 shadow-[0_10px_20px_rgba(148,163,184,0.1),inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-white/10 dark:bg-[linear-gradient(145deg,rgba(15,23,42,0.76),rgba(2,6,23,0.58))] dark:shadow-[0_14px_24px_rgba(2,6,23,0.22),inset_0_1px_0_rgba(255,255,255,0.06)]";
-  typeRow.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 shrink-0" aria-hidden="true"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg><span>${park.type.name}</span>`;
+  typeRow.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 shrink-0" aria-hidden="true"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg><span>${displayTypeName}</span>`;
   details.appendChild(typeRow);
 
   if (park.location) {
