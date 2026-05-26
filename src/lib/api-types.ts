@@ -733,6 +733,12 @@ export interface paths {
                                     visited: boolean;
                                 };
                             }[];
+                            seasonalVisitCounts: {
+                                autumn: number;
+                                spring: number;
+                                summer: number;
+                                winter: number;
+                            };
                             totalVisits: number;
                             uniqueVisitedParks: number;
                         };
