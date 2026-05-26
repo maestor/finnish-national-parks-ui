@@ -4,6 +4,7 @@ const MAX_IMAGE_DIMENSION = 2560;
 const MAX_IMAGE_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 const TARGET_IMAGE_FILE_SIZE_BYTES = 4 * 1024 * 1024;
 const FALLBACK_QUALITY_STEPS = [0.82, 0.74, 0.66, 0.58];
+const LOCAL_UPLOAD_HOSTNAMES = new Set(["localhost", "127.0.0.1", "::1", "[::1]"]);
 
 type LoadedImageSource = ImageBitmap | HTMLImageElement;
 
@@ -182,6 +183,13 @@ const pickSmallestBlob = (currentSmallest: Blob | null, candidate: Blob) => {
   }
 
   return currentSmallest;
+};
+
+export const isLocalImageUploadMode = (hostname?: string) => {
+  const resolvedHostname =
+    hostname ?? (typeof window === "undefined" ? "localhost" : window.location.hostname);
+
+  return LOCAL_UPLOAD_HOSTNAMES.has(resolvedHostname);
 };
 
 export const prepareImageFileForUpload = async (file: File) => {

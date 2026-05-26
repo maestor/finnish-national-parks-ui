@@ -7,9 +7,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { VisitImageSection } from "./visit-image-section";
 
 const mockRefresh = vi.fn();
-const { mockRevalidatePublicCache } = vi.hoisted(() => ({
-  mockRevalidatePublicCache: vi.fn(async () => true),
-}));
+const { mockDirectUploadFetch, mockIsLocalImageUploadMode, mockRevalidatePublicCache } = vi.hoisted(
+  () => ({
+    mockDirectUploadFetch: vi.fn(),
+    mockIsLocalImageUploadMode: vi.fn(() => true),
+    mockRevalidatePublicCache: vi.fn(async () => true),
+  }),
+);
 
 vi.mock("@/lib/api", () => ({
   apiFetch: vi.fn(),
@@ -17,6 +21,7 @@ vi.mock("@/lib/api", () => ({
 
 vi.mock("@/lib/image-upload", () => ({
   prepareImageFileForUpload: vi.fn(async (file: File) => file),
+  isLocalImageUploadMode: mockIsLocalImageUploadMode,
 }));
 
 vi.mock("@/lib/public-cache", () => ({
@@ -87,6 +92,9 @@ const mockElementFromPoint = (element: Element | null) => {
 describe("VisitImageSection", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubGlobal("fetch", mockDirectUploadFetch);
+    vi.mocked(prepareImageFileForUpload).mockImplementation(async (file: File) => file);
+    mockIsLocalImageUploadMode.mockReturnValue(true);
     window.confirm = vi.fn(() => true);
   });
 
@@ -331,7 +339,7 @@ describe("VisitImageSection", () => {
     expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:mock-url");
   });
 
-  it("uploads files in the reordered preview order", async () => {
+  it("localhost uploads files in the reordered preview order via multipart form data", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce({
       images: [],
       errors: [],
@@ -388,6 +396,7 @@ describe("VisitImageSection", () => {
     const uploadedFileNames = formData.getAll("images").map((file) => (file as File).name);
 
     expect(uploadedFileNames).toEqual(["second.jpg", "first.jpg"]);
+    expect(mockDirectUploadFetch).not.toHaveBeenCalled();
   });
 
   it("uploads preprocessed files instead of the original files", async () => {
@@ -483,6 +492,226 @@ describe("VisitImageSection", () => {
     await waitFor(() => {
       expect(screen.getByRole("alert")).toHaveTextContent("big.jpg: File too large");
     });
+  });
+
+  it("uses upload-url, direct PUT, and complete in the reordered pending-file order outside localhost", async () => {
+    mockIsLocalImageUploadMode.mockReturnValue(false);
+    mockDirectUploadFetch
+      .mockResolvedValueOnce(new Response(null, { status: 200 }))
+      .mockResolvedValueOnce(new Response(null, { status: 200 }));
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({
+        uploadUrl: "https://uploads.example.com/second",
+        key: "visit/10/second",
+        method: "PUT",
+        headers: {
+          "content-type": "image/jpeg",
+        },
+        expiresAt: "2026-05-26T10:00:00.000Z",
+      })
+      .mockResolvedValueOnce({
+        image: {
+          id: 11,
+          fullUrl: "https://example.com/full-11.jpg",
+          thumbUrl: "https://example.com/thumb-11.jpg",
+          fullWidth: 1920,
+          fullHeight: 1080,
+          thumbWidth: 400,
+          thumbHeight: 225,
+          originalName: "second.jpg",
+          displayOrder: 0,
+          createdAt: "2024-06-15T10:00:00Z",
+        },
+      })
+      .mockResolvedValueOnce({
+        uploadUrl: "https://uploads.example.com/first",
+        key: "visit/10/first",
+        method: "PUT",
+        headers: {
+          "content-type": "image/jpeg",
+        },
+        expiresAt: "2026-05-26T10:00:01.000Z",
+      })
+      .mockResolvedValueOnce({
+        image: {
+          id: 12,
+          fullUrl: "https://example.com/full-12.jpg",
+          thumbUrl: "https://example.com/thumb-12.jpg",
+          fullWidth: 1920,
+          fullHeight: 1080,
+          thumbWidth: 400,
+          thumbHeight: 225,
+          originalName: "first.jpg",
+          displayOrder: 1,
+          createdAt: "2024-06-15T10:00:01Z",
+        },
+      });
+    const user = userEvent.setup();
+
+    const { container } = render(<VisitImageSection visitId={10} images={[]} parkSlug="pallas" />);
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const firstFile = new File(["dummy-1"], "first.jpg", { type: "image/jpeg" });
+    const secondFile = new File(["dummy-2"], "second.jpg", { type: "image/jpeg" });
+
+    fireEvent.change(fileInput, { target: { files: [firstFile, secondFile] } });
+    await waitFor(() => {
+      expect(screen.getByText("controlPanel.visits.images.selectedCount")).toBeInTheDocument();
+    });
+
+    const initialPendingOrder = getPendingImageOrder(container);
+    const secondPendingId = initialPendingOrder[1];
+    const firstPendingId = initialPendingOrder[0];
+    const firstPreview = container.querySelector(
+      `[data-pending-image-id="${firstPendingId}"]`,
+    ) as Element;
+    mockElementFromPoint(firstPreview);
+
+    const reorderButtons = screen.getAllByRole("button", {
+      name: "controlPanel.visits.images.reorderPendingImage",
+    });
+    await user.pointer([
+      { target: reorderButtons[1], keys: "[MouseLeft>]", coords: { x: 10, y: 10 } },
+      { target: reorderButtons[1], coords: { x: 20, y: 20 } },
+    ]);
+
+    await waitFor(() => {
+      expect(getPendingImageOrder(container)).toEqual([secondPendingId, firstPendingId]);
+    });
+
+    await user.pointer([{ target: reorderButtons[1], keys: "[/MouseLeft]" }]);
+    fireEvent.click(screen.getByRole("button", { name: "controlPanel.visits.images.upload" }));
+
+    await waitFor(() => {
+      expect(mockDirectUploadFetch).toHaveBeenCalledTimes(2);
+    });
+
+    expect(vi.mocked(apiFetch).mock.calls).toEqual([
+      [
+        "/api/visits/10/images/upload-url",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            contentType: "image/jpeg",
+            fileSizeBytes: secondFile.size,
+            originalName: "second.jpg",
+          }),
+        },
+      ],
+      [
+        "/api/visits/10/images/complete",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            key: "visit/10/second",
+            originalName: "second.jpg",
+          }),
+        },
+      ],
+      [
+        "/api/visits/10/images/upload-url",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            contentType: "image/jpeg",
+            fileSizeBytes: firstFile.size,
+            originalName: "first.jpg",
+          }),
+        },
+      ],
+      [
+        "/api/visits/10/images/complete",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            key: "visit/10/first",
+            originalName: "first.jpg",
+          }),
+        },
+      ],
+    ]);
+    expect(mockDirectUploadFetch).toHaveBeenNthCalledWith(1, "https://uploads.example.com/second", {
+      method: "PUT",
+      headers: {
+        "content-type": "image/jpeg",
+      },
+      body: secondFile,
+    });
+    expect(mockDirectUploadFetch).toHaveBeenNthCalledWith(2, "https://uploads.example.com/first", {
+      method: "PUT",
+      headers: {
+        "content-type": "image/jpeg",
+      },
+      body: firstFile,
+    });
+    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "pallas" });
+    expect(mockRefresh).toHaveBeenCalled();
+    expect(screen.getByText("controlPanel.visits.images.uploadSuccess")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "controlPanel.visits.images.upload" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("surfaces production upload failures and keeps failed files pending for retry", async () => {
+    mockIsLocalImageUploadMode.mockReturnValue(false);
+    mockDirectUploadFetch
+      .mockResolvedValueOnce(new Response(null, { status: 200 }))
+      .mockResolvedValueOnce(new Response("signature expired", { status: 403 }));
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({
+        uploadUrl: "https://uploads.example.com/first",
+        key: "visit/10/first",
+        method: "PUT",
+        headers: {
+          "content-type": "image/jpeg",
+        },
+        expiresAt: "2026-05-26T10:00:00.000Z",
+      })
+      .mockResolvedValueOnce({
+        image: {
+          id: 11,
+          fullUrl: "https://example.com/full-11.jpg",
+          thumbUrl: "https://example.com/thumb-11.jpg",
+          fullWidth: 1920,
+          fullHeight: 1080,
+          thumbWidth: 400,
+          thumbHeight: 225,
+          originalName: "first.jpg",
+          displayOrder: 0,
+          createdAt: "2024-06-15T10:00:00Z",
+        },
+      })
+      .mockResolvedValueOnce({
+        uploadUrl: "https://uploads.example.com/second",
+        key: "visit/10/second",
+        method: "PUT",
+        headers: {
+          "content-type": "image/jpeg",
+        },
+        expiresAt: "2026-05-26T10:00:01.000Z",
+      });
+
+    const { container } = render(<VisitImageSection visitId={10} images={[]} parkSlug="pallas" />);
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const firstFile = new File(["dummy-1"], "first.jpg", { type: "image/jpeg" });
+    const secondFile = new File(["dummy-2"], "second.jpg", { type: "image/jpeg" });
+
+    fireEvent.change(fileInput, { target: { files: [firstFile, secondFile] } });
+    await waitFor(() => {
+      expect(screen.getByText("controlPanel.visits.images.selectedCount")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "controlPanel.visits.images.upload" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent("second.jpg: signature expired");
+    });
+
+    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "pallas" });
+    expect(mockRefresh).toHaveBeenCalled();
+    expect(screen.getByText("controlPanel.visits.images.uploadSuccess")).toBeInTheDocument();
+    expect(screen.getByText("controlPanel.visits.images.selectedCount")).toBeInTheDocument();
+    expect(getPendingImageOrder(container)).toHaveLength(1);
+    expect(URL.revokeObjectURL).toHaveBeenCalledTimes(1);
   });
 
   it("shows an upload error when the upload request fails", async () => {

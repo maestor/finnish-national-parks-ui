@@ -12,8 +12,10 @@ import { PATCH as patchParkRemoved } from "./parks/[slug]/removed/route";
 import { POST as postParkVisit } from "./parks/[slug]/visits/route";
 import { GET as getParks } from "./parks/route";
 import { DELETE as deleteVisitImage } from "./visits/[id]/images/[imageId]/route";
+import { POST as postVisitImageComplete } from "./visits/[id]/images/complete/route";
 import { PATCH as patchVisitImageOrder } from "./visits/[id]/images/reorder/route";
 import { POST as postVisitImage } from "./visits/[id]/images/route";
+import { POST as postVisitImageUploadUrl } from "./visits/[id]/images/upload-url/route";
 import { DELETE as deleteVisit, PATCH as patchVisit } from "./visits/[id]/route";
 
 describe("api proxy routes", () => {
@@ -77,6 +79,32 @@ describe("api proxy routes", () => {
     await postVisitImage(request, { params: Promise.resolve({ id: "123" }) });
 
     expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/visits/123/images");
+  });
+
+  it("proxies visit image upload-url requests", async () => {
+    const request = new Request("https://frontend.example/api/visits/123/images/upload-url", {
+      method: "POST",
+    });
+
+    await postVisitImageUploadUrl(request, { params: Promise.resolve({ id: "123" }) });
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(
+      request,
+      "/api/visits/123/images/upload-url",
+    );
+  });
+
+  it("proxies visit image completion requests", async () => {
+    const request = new Request("https://frontend.example/api/visits/123/images/complete", {
+      method: "POST",
+    });
+
+    await postVisitImageComplete(request, { params: Promise.resolve({ id: "123" }) });
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(
+      request,
+      "/api/visits/123/images/complete",
+    );
   });
 
   it("proxies visit image deletion", async () => {

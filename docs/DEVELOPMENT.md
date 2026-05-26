@@ -138,6 +138,11 @@ The backend handles:
 - Visit management API (`/api/visits`, `/api/visits/{id}`, image routes under `/api/visits/{id}`)
 - Public summary API for cacheable landing and map data (`/api/public/home-summary`, `/api/public/map-summary`)
 
+Visit image upload runtime caveat:
+
+- On `localhost`, the control-panel visit image editor still uses the proxied multipart route `POST /api/visits/{id}/images`.
+- On non-localhost deployments, the control-panel first requests `POST /api/visits/{id}/images/upload-url`, uploads the prepared file directly to the returned presigned `PUT` URL, and then finalizes the image with `POST /api/visits/{id}/images/complete`.
+
 Route naming caveat:
 
 - In this project, **all `GET` endpoints are public-readable**, including `GET /api/visits` and `GET /api/parks/{slug}/visits`.
