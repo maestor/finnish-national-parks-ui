@@ -49,6 +49,12 @@ const HomePage = async () => {
         totalVisitsLabel={t("statistics.totalVisits")}
         totalVisits={summary.totalVisits}
         progressItems={progressItems}
+        seasonalVisitsLabel={t("statistics.seasonalVisits")}
+        seasonalVisits={summary.seasonalVisitCounts}
+        springLabel={t("statistics.seasons.spring")}
+        summerLabel={t("statistics.seasons.summer")}
+        autumnLabel={t("statistics.seasons.autumn")}
+        winterLabel={t("statistics.seasons.winter")}
       />
       <div className="mt-4 space-y-4">
         <MostVisitedParks

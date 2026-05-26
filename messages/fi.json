@@ -43,7 +43,14 @@
     "statistics": {
       "title": "Käynnit",
       "totalVisits": "Käyntejä yhteensä",
-      "allParks": "Kaikki paikat"
+      "seasonalVisits": "Käynnit kausittain",
+      "allParks": "Kaikki paikat",
+      "seasons": {
+        "spring": "Kevät",
+        "summer": "Kesä",
+        "autumn": "Syksy",
+        "winter": "Talvi"
+      }
     },
     "mostVisitedParks": {
       "title": "Eniten käydyt paikat",

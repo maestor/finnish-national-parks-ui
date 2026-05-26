@@ -17,6 +17,12 @@ vi.mock("./api", () => ({
 const buildSummary = (): PublicHomeSummary => ({
   totalVisits: 12,
   uniqueVisitedParks: 5,
+  seasonalVisitCounts: {
+    spring: 3,
+    summer: 4,
+    autumn: 3,
+    winter: 2,
+  },
   progressByType: [
     {
       type: {
