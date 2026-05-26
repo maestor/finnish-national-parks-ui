@@ -127,7 +127,7 @@ const createPopupNode = (
 
   if (park.logo?.url) {
     const logoWrapper = document.createElement("div");
-    logoWrapper.className = "mb-3 flex justify-center";
+    logoWrapper.className = "flex justify-center";
 
     const logoImg = document.createElement("img");
     logoImg.src = park.logo.url;
