@@ -57,11 +57,16 @@ const ParkDetailPage = async ({ params }: ParkDetailPageProps) => {
   return (
     <article className="mx-auto max-w-5xl px-4 py-8">
       <section className="rounded-[2rem] border border-white/45 bg-white/65 px-6 py-6 shadow-[0_24px_48px_rgba(148,163,184,0.16)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/45 dark:shadow-[0_28px_56px_rgba(2,6,23,0.34)]">
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-3xl font-bold tracking-tight">{publicPark.name}</h1>
-          <span className="inline-flex items-center rounded-full border border-emerald-200/60 bg-[linear-gradient(145deg,rgba(22,101,52,0.12),rgba(37,99,235,0.12))] px-2.5 py-1 text-sm leading-none font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-emerald-300/15 dark:bg-[linear-gradient(145deg,rgba(22,101,52,0.22),rgba(37,99,235,0.2))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-            {getParkTypeDisplayName(publicPark)}
-          </span>
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          {publicPark.logo?.url && (
+            <img src={publicPark.logo.url} alt={publicPark.name} className="h-28 w-auto" />
+          )}
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <h1 className="text-center text-3xl font-bold tracking-tight">{publicPark.name}</h1>
+            <span className="inline-flex items-center rounded-full border border-emerald-200/60 bg-[linear-gradient(145deg,rgba(22,101,52,0.12),rgba(37,99,235,0.12))] px-2.5 py-1 text-sm leading-none font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-emerald-300/15 dark:bg-[linear-gradient(145deg,rgba(22,101,52,0.22),rgba(37,99,235,0.2))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+              {getParkTypeDisplayName(publicPark)}
+            </span>
+          </div>
         </div>
 
         <div className="mt-6 grid grid-cols-2 items-stretch gap-4 sm:grid-cols-4">

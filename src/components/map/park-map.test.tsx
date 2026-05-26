@@ -19,6 +19,11 @@ const parks: MapPark[] = [
     name: "Pallas-Yllästunturin kansallispuisto",
     areaKm2: 1020,
     location: "Lappi",
+    logo: {
+      key: "pallas-logo.png",
+      updatedAt: "2024-01-01T00:00:00Z",
+      url: "https://example.com/pallas-logo.png",
+    },
     luontoonUrl: "https://example.com/pallas",
     establishmentYear: 1938,
     boundingBox: { minLat: 67, minLon: 23, maxLat: 68, maxLon: 24 },
@@ -32,6 +37,7 @@ const parks: MapPark[] = [
     displayTypeName: "Maailmanperintökohde",
     areaKm2: 10,
     location: "Lappi",
+    logo: null,
     luontoonUrl: null,
     establishmentYear: null,
     boundingBox: { minLat: 67.1, minLon: 23.1, maxLat: 67.2, maxLon: 23.2 },
@@ -179,6 +185,29 @@ describe("ParkMap", () => {
   it("does not show loading spinner when error is present", () => {
     render(<ParkMap parks={[]} error="API error" />);
     expect(screen.queryByText("map.loading")).not.toBeInTheDocument();
+  });
+
+  it("shows the park logo in the popup when a logo exists", () => {
+    render(<ParkMap parks={parks} />);
+    triggerMapLoad();
+
+    fireEvent.click(markerElements[0]);
+
+    const logo = document.querySelector('img[src="https://example.com/pallas-logo.png"]');
+    expect(logo).toBeInTheDocument();
+    expect(logo).toHaveClass("h-12", "w-auto");
+  });
+
+  it("does not show a logo in the popup when the park has no logo", () => {
+    render(<ParkMap parks={parks} />);
+    triggerMapLoad();
+
+    fireEvent.click(markerElements[1]);
+
+    expect(
+      document.querySelector('img[src="https://example.com/pallas-logo.png"]'),
+    ).not.toBeInTheDocument();
+    expect(document.body).toHaveTextContent("Hetta");
   });
 
   it("closes a hover preview after the leave delay", async () => {

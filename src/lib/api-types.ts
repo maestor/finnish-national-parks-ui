@@ -291,6 +291,13 @@ export interface paths {
                                 displayTypeName?: string | null;
                                 establishmentYear: number | null;
                                 location: string;
+                                logo: {
+                                    key: string;
+                                    /** Format: date-time */
+                                    updatedAt: string;
+                                    /** Format: uri */
+                                    url: string;
+                                } | null;
                                 luontoonUrl: string | null;
                                 markerPoint: {
                                     lat: number;
@@ -360,6 +367,13 @@ export interface paths {
                                 displayTypeName?: string | null;
                                 establishmentYear: number | null;
                                 location: string;
+                                logo: {
+                                    key: string;
+                                    /** Format: date-time */
+                                    updatedAt: string;
+                                    /** Format: uri */
+                                    url: string;
+                                } | null;
                                 luontoonUrl: string | null;
                                 markerPoint: {
                                     lat: number;
@@ -430,6 +444,13 @@ export interface paths {
                             displayTypeName?: string | null;
                             establishmentYear: number | null;
                             location: string;
+                            logo: {
+                                key: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                                /** Format: uri */
+                                url: string;
+                            } | null;
                             luontoonUrl: string | null;
                             markerPoint: {
                                 lat: number;
@@ -771,6 +792,13 @@ export interface paths {
                                 displayTypeName?: string | null;
                                 establishmentYear: number | null;
                                 location: string;
+                                logo: {
+                                    key: string;
+                                    /** Format: date-time */
+                                    updatedAt: string;
+                                    /** Format: uri */
+                                    url: string;
+                                } | null;
                                 luontoonUrl: string | null;
                                 markerPoint: {
                                     lat: number;

@@ -125,6 +125,19 @@ const createPopupNode = (
 
   const color = getVisitStatusColor(park);
 
+  if (park.logo?.url) {
+    const logoWrapper = document.createElement("div");
+    logoWrapper.className = "mb-3 flex justify-center";
+
+    const logoImg = document.createElement("img");
+    logoImg.src = park.logo.url;
+    logoImg.alt = park.name;
+    logoImg.className = "h-12 w-auto";
+
+    logoWrapper.appendChild(logoImg);
+    container.appendChild(logoWrapper);
+  }
+
   const header = document.createElement("header");
   header.className = "flex items-start gap-3";
 
