@@ -2,7 +2,7 @@
 
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/cn";
-import type { Park } from "@/lib/parks";
+import { type Park, getParkTypeDisplayName } from "@/lib/parks";
 import { MapPin, Search, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -95,7 +95,8 @@ export const HomeParkSearch = () => {
       trimmedQuery.length === 0
         ? parks
         : parks.filter((park) => {
-            const haystacks = [park.name, park.type.name, park.location];
+            const displayTypeName = getParkTypeDisplayName(park);
+            const haystacks = [park.name, displayTypeName, park.type.name, park.location];
             return haystacks.some((value) =>
               value.toLocaleLowerCase("fi-FI").includes(trimmedQuery),
             );
@@ -265,7 +266,7 @@ export const HomeParkSearch = () => {
                       <span className="min-w-0">
                         <span className="block truncate text-sm font-medium">{park.name}</span>
                         <span className="block truncate text-xs text-muted-foreground">
-                          {park.type.name}
+                          {getParkTypeDisplayName(park)}
                         </span>
                       </span>
                     </button>

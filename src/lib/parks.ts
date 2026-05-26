@@ -22,6 +22,8 @@ export type MapPark = Park & {
   visitedSummary: VisitedSummary;
 };
 
+type ParkTypeDisplayNameSource = Pick<Park, "displayTypeName" | "type">;
+
 export const createEmptyVisitedSummary = (): VisitedSummary => ({
   lastVisitedOn: null,
   visitCount: 0,
@@ -59,6 +61,9 @@ export const mergeParksWithVisitSummaries = (parks: Park[], visits: VisitWithPar
     visitedSummary: visitedSummaryByParkSlug.get(park.slug) ?? createEmptyVisitedSummary(),
   }));
 };
+
+export const getParkTypeDisplayName = (park: ParkTypeDisplayNameSource): string =>
+  park.displayTypeName ?? park.type.name;
 
 export const getVisitStatusColor = (park: MapPark): string => {
   if (park.visitedSummary.visited) {
