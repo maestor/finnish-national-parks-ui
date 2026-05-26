@@ -199,7 +199,6 @@ The browser does **not** need direct access to `API_KEY`. Next.js route handlers
 
 Use `apiPublicFetch<T>(path, options?)` for cacheable public server-side reads:
 
-- Does **not** send the API key header
 - Does **not** forward request cookies
 - Can be tagged with Next.js cache tags for explicit revalidation after writes
 

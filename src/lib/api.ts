@@ -145,7 +145,6 @@ export const apiAuthFetch = async <T>(path: string, options?: ApiFetchOptions): 
 export const apiPublicFetch = async <T>(path: string, options?: ApiFetchOptions): Promise<T> =>
   performApiFetch<T>(path, {
     ...options,
-    includeApiKey: false,
     includeBrowserCredentials: false,
     includeServerCookies: false,
   });
