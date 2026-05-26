@@ -59,7 +59,7 @@ describe("apiFetch", () => {
     }
   });
 
-  it("omits API auth and forwarded cookies for public server-side requests", async () => {
+  it("omits forwarded cookies for public server-side requests but still sends the API key", async () => {
     const originalWindow = globalThis.window;
     try {
       Object.defineProperty(globalThis, "window", {
@@ -79,7 +79,7 @@ describe("apiFetch", () => {
 
       const [, options] = vi.mocked(globalThis.fetch).mock.calls[0] ?? [];
       const headers = options?.headers as Headers;
-      expect(headers.get("authorization")).toBeNull();
+      expect(headers.get("authorization")).toBe("Bearer test-api-key");
       expect(headers.get("cookie")).toBeNull();
       expect(options?.credentials).toBeUndefined();
     } finally {

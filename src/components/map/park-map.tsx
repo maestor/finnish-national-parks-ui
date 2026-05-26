@@ -170,20 +170,24 @@ const createPopupNode = (
     details.appendChild(loc);
   }
 
-  if (park.areaKm2 !== null) {
-    const area = document.createElement("p");
-    area.className =
-      "rounded-xl border border-sky-200/45 bg-[linear-gradient(145deg,rgba(255,255,255,0.84),rgba(237,245,249,0.92))] px-3 py-2 shadow-[0_10px_20px_rgba(148,163,184,0.1),inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-white/10 dark:bg-[linear-gradient(145deg,rgba(15,23,42,0.76),rgba(2,6,23,0.58))] dark:shadow-[0_14px_24px_rgba(2,6,23,0.22),inset_0_1px_0_rgba(255,255,255,0.06)]";
-    area.textContent = `${park.areaKm2} km²`;
-    details.appendChild(area);
-  }
+  const hasArea = park.areaKm2 !== null;
+  const hasYear = park.establishmentYear !== null;
 
-  if (park.establishmentYear !== null) {
-    const year = document.createElement("p");
-    year.className =
+  if (hasArea || hasYear) {
+    const metaRow = document.createElement("p");
+    metaRow.className =
       "rounded-xl border border-sky-200/45 bg-[linear-gradient(145deg,rgba(255,255,255,0.84),rgba(237,245,249,0.92))] px-3 py-2 shadow-[0_10px_20px_rgba(148,163,184,0.1),inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-white/10 dark:bg-[linear-gradient(145deg,rgba(15,23,42,0.76),rgba(2,6,23,0.58))] dark:shadow-[0_14px_24px_rgba(2,6,23,0.22),inset_0_1px_0_rgba(255,255,255,0.06)]";
-    year.textContent = `${labels.established} ${park.establishmentYear}`;
-    details.appendChild(year);
+
+    const parts: string[] = [];
+    if (hasYear) {
+      parts.push(`${labels.established} ${park.establishmentYear}`);
+    }
+    if (hasArea) {
+      parts.push(`${park.areaKm2} km²`);
+    }
+
+    metaRow.textContent = parts.join(" • ");
+    details.appendChild(metaRow);
   }
 
   if (park.luontoonUrl) {
