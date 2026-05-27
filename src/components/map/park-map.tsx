@@ -193,7 +193,7 @@ const createPopupNode = (
 
   if (park.luontoonUrl || park.map?.url) {
     const linksRow = document.createElement("div");
-    linksRow.className = "flex flex-wrap items-center gap-2";
+    linksRow.className = "flex flex-wrap items-center justify-between gap-2";
 
     if (park.luontoonUrl) {
       const officialLink = document.createElement("a");
