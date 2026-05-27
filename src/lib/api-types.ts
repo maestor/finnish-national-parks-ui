@@ -299,6 +299,13 @@ export interface paths {
                                     url: string;
                                 } | null;
                                 luontoonUrl: string | null;
+                                map: {
+                                    key: string;
+                                    /** Format: date-time */
+                                    updatedAt: string;
+                                    /** Format: uri */
+                                    url: string;
+                                } | null;
                                 markerPoint: {
                                     lat: number;
                                     lon: number;
@@ -375,6 +382,13 @@ export interface paths {
                                     url: string;
                                 } | null;
                                 luontoonUrl: string | null;
+                                map: {
+                                    key: string;
+                                    /** Format: date-time */
+                                    updatedAt: string;
+                                    /** Format: uri */
+                                    url: string;
+                                } | null;
                                 markerPoint: {
                                     lat: number;
                                     lon: number;
@@ -452,6 +466,13 @@ export interface paths {
                                 url: string;
                             } | null;
                             luontoonUrl: string | null;
+                            map: {
+                                key: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                                /** Format: uri */
+                                url: string;
+                            } | null;
                             markerPoint: {
                                 lat: number;
                                 lon: number;
@@ -806,6 +827,13 @@ export interface paths {
                                     url: string;
                                 } | null;
                                 luontoonUrl: string | null;
+                                map: {
+                                    key: string;
+                                    /** Format: date-time */
+                                    updatedAt: string;
+                                    /** Format: uri */
+                                    url: string;
+                                } | null;
                                 markerPoint: {
                                     lat: number;
                                     lon: number;

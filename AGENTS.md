@@ -1,12 +1,44 @@
 # Agent Instructions
 
-## Start of Session
-1. Read `docs/DEVELOPMENT.md` for setup, architecture, scripts, and auth flow.
-2. Read `docs/TESTING.md` for testing strategy, TDD workflow, and project-specific patterns.
-3. Read `README.md` if you need human-oriented context.
-4. If the request is likely to change files or Git state, use `$git-pr-workflow` immediately after the doc read-through.
-5. Before any edits on a change task, check the current branch and switch off `main` to a repo-valid working branch.
-6. Then use this file for repo-specific conventions and overrides.
+## Start of Session — MANDATORY GATE
+
+**STOP. Do not write, read, search, or run any code until you have completed every step below in order.**
+
+These steps are not suggestions. They are a hard gate. If you skip any step, you will produce broken, inconsistent, or off-convention work.
+
+### Step 1 — Read project docs
+Read these files fully before any action:
+- `docs/DEVELOPMENT.md`
+- `docs/TESTING.md`
+- `README.md` (for human-oriented context)
+
+Do not proceed until all three are read.
+
+### Step 2 — Read relevant skills BEFORE acting
+If the task touches any of the areas below, you **must** read the matching `SKILL.md` **before** you investigate, plan, or edit:
+
+| Task area | Skill to read |
+|-----------|---------------|
+| UI components, accessibility, semantic HTML, focus handling | `.agents/skills/accessibility-first-ui/SKILL.md` |
+| API changes, OpenAPI, generated types, backend/frontend contract | `.agents/skills/api-contract-sync/SKILL.md` |
+| Browser screenshots, visual verification, dark/light mode check | `.agents/skills/browser-ui-verification/SKILL.md` |
+| Tests, TDD, behavior-first development, mocking decisions | `.agents/skills/intelligence-testing/SKILL.md` |
+| Local verification strategy, deciding what checks to run | `.agents/skills/local-first-verification/SKILL.md` |
+| Documentation changes (`README.md`, `docs/**`, contributor guides) | `.agents/skills/project-documentation/SKILL.md` |
+| Git branch, commit, push, PR workflow | `.agents/skills/git-pr-workflow/SKILL.md` |
+
+**Do not treat skill reading as optional.** The skills exist so you do not re-invent the workflow every time. If a skill matches the work, read it.
+
+### Step 3 — Activate Git workflow if files or Git state will change
+If the request is likely to change files or Git state, **immediately after** Steps 1–2, activate `$git-pr-workflow`:
+- Check the current branch.
+- If on `main`, create and switch to a repo-valid working branch **before** any edits.
+- Use repo naming convention: `feature/<name>`, `bugfix/<name>`, `chore/<name>`, `docs/<name>`, `refactor/<name>`, or `test/<name>`.
+
+### Step 4 — Only then proceed
+After Steps 1–3 are complete, use this file for repo-specific conventions and overrides.
+
+---
 
 ## Shared Skills
 - Use `$project-documentation` when updating `README.md`, `docs/**`, contributor guidance, or repository workflow docs.
@@ -20,6 +52,10 @@
 
 ## Project Context
 This is the Finnish National Parks UI, a Next.js 16 App Router application consuming a Hono backend API for a public map view and an admin control panel.
+
+## Communication Language
+- **All agent-to-user communication is in English.**
+- Finnish words appear only when they are UI copy, translation keys, or direct quotes from the codebase.
 
 ## Repo-Specific Workflow Overrides
 - Branches must follow the repo naming convention: `feature/<name>`, `bugfix/<name>`, `chore/<name>`, `docs/<name>`, `refactor/<name>`, or `test/<name>`.
