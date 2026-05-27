@@ -82,6 +82,8 @@
     "detailTitle": "Paikan tiedot",
     "visitHistory": "Käyntihistoria",
     "officialLink": "Luontoon.fi",
+    "aboutTitle": "Tietoja kohteesta",
+    "pdfBrochure": "PDF esite",
     "location": "Sijainti",
     "area": "Pinta-ala",
     "established": "Perustettu",
@@ -249,6 +251,7 @@
     "loadError": "Karttatietojen lataus epäonnistui",
     "established": "Perustettu",
     "officialLink": "Luontoon.fi",
+    "pdfBrochure": "PDF esite",
     "visits": "Vierailut",
     "openParkPage": "Avaa paikan sivu",
     "addVisit": "Lisää käynti"

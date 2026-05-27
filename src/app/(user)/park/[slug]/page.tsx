@@ -2,7 +2,7 @@ import { ParkBoundaryMap } from "@/components/map/park-boundary-map";
 import { ParkVisitHistory } from "@/components/park/park-visit-history";
 import { getParkTypeDisplayName } from "@/lib/parks";
 import { fetchPublicParkDetail, fetchPublicParkVisits } from "@/lib/public-summaries";
-import { ExternalLink, MapPin } from "lucide-react";
+import { ExternalLink, FileDown, MapPin } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 
@@ -79,17 +79,36 @@ const ParkDetailPage = async ({ params }: ParkDetailPageProps) => {
               <p className="mt-3 text-sm font-medium">{fact.value}</p>
             </div>
           ))}
-          {publicPark.luontoonUrl && (
-            <a
-              href={publicPark.luontoonUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex h-full min-h-[5.75rem] w-full items-start justify-between gap-3 rounded-2xl border border-sky-200/70 bg-[linear-gradient(145deg,rgba(255,255,255,0.84),rgba(236,245,251,0.94))] px-4 py-3 text-sm font-medium text-primary shadow-[0_14px_28px_rgba(148,163,184,0.12),inset_0_1px_0_rgba(255,255,255,0.6)] transition-colors hover:bg-[linear-gradient(145deg,rgba(255,255,255,0.92),rgba(240,248,253,0.98))] dark:border-sky-300/15 dark:bg-[linear-gradient(145deg,rgba(15,23,42,0.74),rgba(2,6,23,0.54))] dark:shadow-[0_18px_34px_rgba(2,6,23,0.22),inset_0_1px_0_rgba(255,255,255,0.06)] dark:hover:bg-[linear-gradient(145deg,rgba(15,23,42,0.82),rgba(2,6,23,0.62))]"
-              aria-label={`${t("officialLink")} (avautuu uuteen välilehteen)`}
-            >
-              <span className="pt-[1.125rem]">{t("officialLink")}</span>
-              <ExternalLink className="mt-3 h-3.5 w-3.5" aria-hidden="true" />
-            </a>
+          {(publicPark.luontoonUrl || publicPark.map?.url) && (
+            <div className="flex h-full min-h-[5.75rem] flex-col rounded-2xl border border-sky-200/45 bg-[linear-gradient(145deg,rgba(255,255,255,0.82),rgba(237,245,249,0.92))] px-4 py-3 shadow-[0_14px_28px_rgba(148,163,184,0.12),inset_0_1px_0_rgba(255,255,255,0.58)] dark:border-white/8 dark:bg-[linear-gradient(145deg,rgba(15,23,42,0.72),rgba(2,6,23,0.52))] dark:shadow-[0_18px_34px_rgba(2,6,23,0.2),inset_0_1px_0_rgba(255,255,255,0.06)]">
+              <p className="text-xs text-muted-foreground">{t("aboutTitle")}</p>
+              <div className="mt-2 flex flex-col gap-1">
+                {publicPark.luontoonUrl && (
+                  <a
+                    href={publicPark.luontoonUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-sm font-medium text-primary transition-colors hover:text-primary/80"
+                    aria-label={`${t("officialLink")} (avautuu uuteen välilehteen)`}
+                  >
+                    <span>{t("officialLink")}</span>
+                    <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  </a>
+                )}
+                {publicPark.map?.url && (
+                  <a
+                    href={publicPark.map.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-sm font-medium text-primary transition-colors hover:text-primary/80"
+                    aria-label={`${t("pdfBrochure")} (avautuu uuteen välilehteen)`}
+                  >
+                    <span>{t("pdfBrochure")}</span>
+                    <FileDown className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  </a>
+                )}
+              </div>
+            </div>
           )}
         </div>
       </section>

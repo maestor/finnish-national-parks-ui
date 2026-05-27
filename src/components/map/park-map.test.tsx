@@ -25,6 +25,11 @@ const parks: MapPark[] = [
       url: "https://example.com/pallas-logo.png",
     },
     luontoonUrl: "https://example.com/pallas",
+    map: {
+      key: "pallas-map.pdf",
+      updatedAt: "2024-01-01T00:00:00Z",
+      url: "https://example.com/pallas-map.pdf",
+    },
     establishmentYear: 1938,
     boundingBox: { minLat: 67, minLon: 23, maxLat: 68, maxLon: 24 },
     markerPoint: { lat: 67.5, lon: 23.5 },
@@ -39,6 +44,7 @@ const parks: MapPark[] = [
     location: "Lappi",
     logo: null,
     luontoonUrl: null,
+    map: null,
     establishmentYear: null,
     boundingBox: { minLat: 67.1, minLon: 23.1, maxLat: 67.2, maxLon: 23.2 },
     markerPoint: { lat: 67.15, lon: 23.15 },
@@ -403,6 +409,18 @@ describe("ParkMap", () => {
 
     rerender(<ParkMap parks={parks} />);
     expect(document.body).not.toHaveTextContent("Pallas-Yllästunturin kansallispuisto");
+  });
+
+  it("shows a PDF brochure link in the popup when a map is available", () => {
+    render(<ParkMap parks={parks} />);
+    triggerMapLoad();
+
+    fireEvent.mouseEnter(markerElements[0]);
+
+    expect(screen.getByRole("link", { name: "map.pdfBrochure" })).toHaveAttribute(
+      "href",
+      "https://example.com/pallas-map.pdf",
+    );
   });
 
   it("shows an add visit link in the popup when visit management is enabled", () => {

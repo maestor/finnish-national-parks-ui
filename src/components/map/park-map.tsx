@@ -109,6 +109,7 @@ const createMarkerElement = (park: MapPark) => {
 interface PopupLabels {
   established: string;
   officialLink: string;
+  pdfBrochure: string;
   visits: string;
   openParkPage: string;
   addVisit: string;
@@ -190,16 +191,35 @@ const createPopupNode = (
     details.appendChild(metaRow);
   }
 
-  if (park.luontoonUrl) {
-    const officialLink = document.createElement("a");
-    officialLink.href = park.luontoonUrl;
-    officialLink.target = "_blank";
-    officialLink.rel = "noopener noreferrer";
-    officialLink.className =
-      "inline-flex items-center gap-1 self-start rounded-full border border-sky-200/70 bg-white/74 px-3 py-1.5 font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 dark:border-sky-300/15 dark:bg-slate-950/62 dark:hover:bg-slate-950/78";
-    officialLink.innerHTML = `${labels.officialLink}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>`;
-    officialLink.addEventListener("click", (e) => e.stopPropagation());
-    details.appendChild(officialLink);
+  if (park.luontoonUrl || park.map?.url) {
+    const linksRow = document.createElement("div");
+    linksRow.className = "flex flex-wrap items-center gap-2";
+
+    if (park.luontoonUrl) {
+      const officialLink = document.createElement("a");
+      officialLink.href = park.luontoonUrl;
+      officialLink.target = "_blank";
+      officialLink.rel = "noopener noreferrer";
+      officialLink.className =
+        "inline-flex items-center gap-1 rounded-full border border-sky-200/70 bg-white/74 px-3 py-1.5 font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 dark:border-sky-300/15 dark:bg-slate-950/62 dark:hover:bg-slate-950/78";
+      officialLink.innerHTML = `${labels.officialLink}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>`;
+      officialLink.addEventListener("click", (e) => e.stopPropagation());
+      linksRow.appendChild(officialLink);
+    }
+
+    if (park.map?.url) {
+      const pdfLink = document.createElement("a");
+      pdfLink.href = park.map.url;
+      pdfLink.target = "_blank";
+      pdfLink.rel = "noopener noreferrer";
+      pdfLink.className =
+        "inline-flex items-center gap-1 rounded-full border border-sky-200/70 bg-white/74 px-3 py-1.5 font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 dark:border-sky-300/15 dark:bg-slate-950/62 dark:hover:bg-slate-950/78";
+      pdfLink.innerHTML = `${labels.pdfBrochure}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/></svg>`;
+      pdfLink.addEventListener("click", (e) => e.stopPropagation());
+      linksRow.appendChild(pdfLink);
+    }
+
+    details.appendChild(linksRow);
   }
 
   container.appendChild(details);
@@ -443,6 +463,7 @@ export const ParkMap = ({
     const labels: PopupLabels = {
       established: t("established"),
       officialLink: t("officialLink"),
+      pdfBrochure: t("pdfBrochure"),
       visits: t("visits"),
       openParkPage: t("openParkPage"),
       addVisit: t("addVisit"),
