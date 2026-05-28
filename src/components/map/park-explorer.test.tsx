@@ -68,9 +68,17 @@ const parks: MapPark[] = [
     name: "Päijänteen kansallispuisto",
     areaKm2: 14,
     location: "Päijät-Häme",
-    logo: null,
+    logo: {
+      key: "paijanne-logo",
+      updatedAt: "2024-01-01T00:00:00Z",
+      url: "https://example.com/paijanne-logo.png",
+    },
     luontoonUrl: null,
-    map: null,
+    map: {
+      key: "paijanne-map",
+      updatedAt: "2024-01-01T00:00:00Z",
+      url: "https://example.com/paijanne-map.pdf",
+    },
     establishmentYear: 1993,
     boundingBox: { minLat: 61, minLon: 25, maxLat: 62, maxLon: 26 },
     markerPoint: { lat: 61.5, lon: 25.5 },
@@ -82,7 +90,11 @@ const parks: MapPark[] = [
     name: "Teijon kansallispuisto",
     areaKm2: 11,
     location: "Varsinais-Suomi",
-    logo: null,
+    logo: {
+      key: "teijo-logo",
+      updatedAt: "2024-01-01T00:00:00Z",
+      url: "https://example.com/teijo-logo.png",
+    },
     luontoonUrl: null,
     map: null,
     establishmentYear: 2015,
@@ -98,7 +110,11 @@ const parks: MapPark[] = [
     location: "Pohjois-Pohjanmaa",
     logo: null,
     luontoonUrl: null,
-    map: null,
+    map: {
+      key: "syote-map",
+      updatedAt: "2024-01-01T00:00:00Z",
+      url: "https://example.com/syote-map.pdf",
+    },
     establishmentYear: null,
     boundingBox: { minLat: 65, minLon: 28, maxLat: 66, maxLon: 29 },
     markerPoint: { lat: 65.5, lon: 28.5 },
@@ -203,6 +219,20 @@ describe("ParkExplorer", () => {
     expect(screen.queryByText("Päijänteen kansallispuisto")).not.toBeInTheDocument();
   });
 
+  it("filters visible parks by logo and map availability", () => {
+    render(<ParkExplorer parks={parks} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "home.filters.hasLogo" }));
+    expect(screen.getByText("count:2")).toBeInTheDocument();
+    expect(screen.getByText("Päijänteen kansallispuisto")).toBeInTheDocument();
+    expect(screen.getByText("Teijon kansallispuisto")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "home.filters.hasMap" }));
+    expect(screen.getByText("count:2")).toBeInTheDocument();
+    expect(screen.getByText("Päijänteen kansallispuisto")).toBeInTheDocument();
+    expect(screen.getByText("Iso-Syötteen retkeilyalue")).toBeInTheDocument();
+  });
+
   it("renders desktop filters as a floating vertical overlay on the left", () => {
     const { container } = render(<ParkExplorer parks={parks} />);
 
@@ -213,10 +243,12 @@ describe("ParkExplorer", () => {
 
     const buttons = within(desktopSidebar as HTMLElement).getAllByRole("button");
 
-    expect(buttons).toHaveLength(9);
+    expect(buttons).toHaveLength(11);
     expect(buttons[0]).toHaveTextContent("home.filters.all");
     expect(buttons[1]).toHaveTextContent("home.filters.nationalParks");
     expect(buttons[6]).toHaveTextContent("home.filters.natureTrails");
+    expect(buttons[9]).toHaveTextContent("home.filters.hasLogo");
+    expect(buttons[10]).toHaveTextContent("home.filters.hasMap");
   });
 
   it("stops mousedown propagation inside the filter panel", () => {
