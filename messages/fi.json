@@ -44,7 +44,7 @@
       "title": "Käynnit",
       "totalVisits": "Käyntejä yhteensä",
       "seasonalVisits": "Käynnit kausittain",
-      "allParks": "Kaikki paikat",
+      "allParks": "Kaikki kohteet",
       "seasons": {
         "spring": "Kevät",
         "summer": "Kesä",
@@ -66,7 +66,7 @@
       "empty": "Ei vielä käyntikirjauksia."
     },
     "filters": {
-      "all": "Kaikki alueet",
+      "all": "Kaikki kohteet",
       "nationalParks": "Kansallispuistot",
       "hikingAreas": "Retkeilyalueet",
       "wildernessAreas": "Erämaa-alueet",

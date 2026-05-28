@@ -95,17 +95,21 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
       case "not-visited":
         return parks.filter((park) => !park.visitedSummary.visited);
       default:
-        return parks.filter(isAreaPark);
+        return parks;
     }
   }, [activeFilter, parks]);
+
+  const [activeSlug, setActiveSlug] = useState<string | null>(null);
 
   const selectFilter = useCallback(
     (filter: MapFilter) => {
       setActiveFilter(filter);
-      setMapResetRequestId((current) => current + 1);
+      if (activeSlug === null) {
+        setMapResetRequestId((current) => current + 1);
+      }
       closeMobileFilters();
     },
-    [closeMobileFilters],
+    [activeSlug, closeMobileFilters],
   );
 
   useEffect(() => {
@@ -147,7 +151,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
   }, [filteredParks, homeParkFocusRequest, parks]);
 
   const filterPanel = (
-    <div className={FILTER_PANEL_CLASS_NAME}>
+    <div className={FILTER_PANEL_CLASS_NAME} onMouseDown={(e) => e.stopPropagation()}>
       {filterOptions.map((option) => (
         <Button
           key={option.id}
@@ -189,6 +193,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
         canManageVisits={auth.isAuthenticated}
         homeParkFocusRequest={homeParkFocusRequest}
         resetViewRequestId={mapResetRequestId}
+        onActiveSlugChange={setActiveSlug}
       />
     </div>
   );
