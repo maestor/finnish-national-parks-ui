@@ -75,6 +75,8 @@
       "natureTrails": "Luontopolut",
       "visited": "Käydyt",
       "notVisited": "Käymättömät",
+      "hasLogo": "Tunnukset",
+      "hasMap": "Esitteet",
       "results": "{count} kohdetta"
     }
   },
