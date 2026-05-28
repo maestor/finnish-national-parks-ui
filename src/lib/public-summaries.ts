@@ -15,7 +15,7 @@ export interface HomeProgressItem {
   label: string;
   visited: number;
   total: number;
-  mapFilter?: ParkTypeSlug;
+  mapFilter?: ParkTypeSlug | "visited";
 }
 
 export interface HomeMostVisitedPark {
@@ -95,6 +95,7 @@ export const createHomeProgressItems = (
       label: allParksLabel,
       visited: summary.uniqueVisitedParks,
       total: totalParks,
+      mapFilter: "visited",
     },
     ...summary.progressByType
       .map((item) => ({

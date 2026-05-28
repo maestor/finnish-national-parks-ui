@@ -346,6 +346,18 @@ describe("ParkMap", () => {
     expect(document.body).toHaveTextContent("Hetta");
   });
 
+  it("keeps the active popup visible when parks change but the active slug is still present", () => {
+    const { rerender } = render(<ParkMap parks={parks} />);
+    triggerMapLoad();
+
+    fireEvent.click(markerElements[0]);
+    expect(document.body).toHaveTextContent("Pallas-Yllästunturin kansallispuisto");
+
+    rerender(<ParkMap parks={[parks[0]]} />);
+
+    expect(document.body).toHaveTextContent("Pallas-Yllästunturin kansallispuisto");
+  });
+
   it("fits the currently visible parks when the filter requests a map reset", () => {
     const { rerender } = render(<ParkMap parks={parks} />);
     triggerMapLoad();
@@ -439,7 +451,20 @@ describe("ParkMap", () => {
     );
   });
 
-  it("closes an active popup when clicking outside the map popup and markers", () => {
+  it("closes an active popup when clicking on the map canvas outside markers and popups", () => {
+    render(<ParkMap parks={parks} />);
+    triggerMapLoad();
+
+    fireEvent.click(markerElements[0]);
+    expect(document.body).toHaveTextContent("Pallas-Yllästunturin kansallispuisto");
+
+    const mapContainer = screen.getByRole("application", { name: "map.ariaLabel" });
+    fireEvent.mouseDown(mapContainer);
+
+    expect(document.querySelector(".maplibregl-popup")).not.toBeInTheDocument();
+  });
+
+  it("does not close an active popup when clicking outside the map container", () => {
     render(<ParkMap parks={parks} />);
     triggerMapLoad();
 
@@ -448,7 +473,7 @@ describe("ParkMap", () => {
 
     fireEvent.mouseDown(document.body);
 
-    expect(document.querySelector(".maplibregl-popup")).not.toBeInTheDocument();
+    expect(document.querySelector(".maplibregl-popup")).toBeInTheDocument();
   });
 
   it("closes an active popup when pressing escape", () => {
@@ -461,5 +486,17 @@ describe("ParkMap", () => {
     fireEvent.keyDown(document, { key: "Escape" });
 
     expect(document.querySelector(".maplibregl-popup")).not.toBeInTheDocument();
+  });
+
+  it("notifies parent when active slug changes via marker click", () => {
+    const onActiveSlugChange = vi.fn();
+    render(<ParkMap parks={parks} onActiveSlugChange={onActiveSlugChange} />);
+    triggerMapLoad();
+
+    fireEvent.click(markerElements[0]);
+    expect(onActiveSlugChange).toHaveBeenCalledWith("pallas");
+
+    fireEvent.click(markerElements[0]);
+    expect(onActiveSlugChange).toHaveBeenCalledWith(null);
   });
 });

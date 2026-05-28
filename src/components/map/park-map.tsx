@@ -17,6 +17,7 @@ interface ParkMapProps {
   canManageVisits?: boolean;
   homeParkFocusRequest?: HomeParkFocusRequest | null;
   resetViewRequestId?: number;
+  onActiveSlugChange?: (slug: string | null) => void;
 }
 
 const FINLAND_BOUNDS: maplibregl.LngLatBoundsLike = [
@@ -270,6 +271,7 @@ export const ParkMap = ({
   canManageVisits = false,
   homeParkFocusRequest = null,
   resetViewRequestId = 0,
+  onActiveSlugChange,
 }: ParkMapProps) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -289,7 +291,8 @@ export const ParkMap = ({
 
   useEffect(() => {
     activeSlugRef.current = activeSlug;
-  }, [activeSlug]);
+    onActiveSlugChange?.(activeSlug);
+  }, [activeSlug, onActiveSlugChange]);
 
   useEffect(() => {
     hoveredSlugRef.current = hoveredSlug;
@@ -609,8 +612,13 @@ export const ParkMap = ({
       const target = e.target as HTMLElement;
       const isInsideMarker = !!target.closest(".maplibregl-marker");
       const isInsidePopup = !!target.closest(".maplibregl-popup");
+      const mapContainer = mapContainerRef.current;
 
-      if (!isInsideMarker && !isInsidePopup) {
+      if (isInsideMarker || isInsidePopup) {
+        return;
+      }
+
+      if (mapContainer?.contains(target)) {
         setActiveSlug(null);
         setHoveredSlug(null);
       }

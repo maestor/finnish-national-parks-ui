@@ -34,17 +34,25 @@ vi.mock("./park-map", () => ({
     canManageVisits,
     homeParkFocusRequest,
     resetViewRequestId,
+    onActiveSlugChange,
   }: {
     parks: MapPark[];
     canManageVisits?: boolean;
     homeParkFocusRequest?: { slug: string } | null;
     resetViewRequestId?: number;
+    onActiveSlugChange?: (slug: string | null) => void;
   }) => (
     <div>
       <p>count:{parks.length}</p>
       <p>admin:{String(canManageVisits)}</p>
       <p>focus:{homeParkFocusRequest?.slug ?? "none"}</p>
       <p>reset:{resetViewRequestId ?? 0}</p>
+      <button type="button" onClick={() => onActiveSlugChange?.("paijanne")}>
+        mock-select-park
+      </button>
+      <button type="button" onClick={() => onActiveSlugChange?.(null)}>
+        mock-clear-park
+      </button>
       <ul>
         {parks.map((park) => (
           <li key={park.slug}>{park.name}</li>
@@ -163,12 +171,12 @@ describe("ParkExplorer", () => {
     expect(screen.getByText("admin:true")).toBeInTheDocument();
   });
 
-  it("filters the visible parks by selected type, including nature trails", async () => {
+  it("filters the visible parks by selected type, including nature trails in all", async () => {
     render(<ParkExplorer parks={parks} />);
 
-    expect(screen.getByText("count:3")).toBeInTheDocument();
+    expect(screen.getByText("count:4")).toBeInTheDocument();
     expect(screen.getByText("admin:false")).toBeInTheDocument();
-    expect(screen.queryByText("Punkaharjun luontopolku")).not.toBeInTheDocument();
+    expect(screen.getByText("Punkaharjun luontopolku")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "home.filters.natureTrails" }));
 
@@ -181,6 +189,18 @@ describe("ParkExplorer", () => {
 
     expect(screen.getByRole("button", { name: "home.filters.visited" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "home.filters.notVisited" })).toBeInTheDocument();
+  });
+
+  it("filters visible parks by visited and not-visited status", () => {
+    render(<ParkExplorer parks={parks} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "home.filters.visited" }));
+    expect(screen.getByText("count:1")).toBeInTheDocument();
+    expect(screen.getByText("Päijänteen kansallispuisto")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "home.filters.notVisited" }));
+    expect(screen.getByText("count:3")).toBeInTheDocument();
+    expect(screen.queryByText("Päijänteen kansallispuisto")).not.toBeInTheDocument();
   });
 
   it("renders desktop filters as a floating vertical overlay on the left", () => {
@@ -197,6 +217,22 @@ describe("ParkExplorer", () => {
     expect(buttons[0]).toHaveTextContent("home.filters.all");
     expect(buttons[1]).toHaveTextContent("home.filters.nationalParks");
     expect(buttons[6]).toHaveTextContent("home.filters.natureTrails");
+  });
+
+  it("stops mousedown propagation inside the filter panel", () => {
+    render(<ParkExplorer parks={parks} />);
+
+    const mousedownSpy = vi.fn();
+    document.addEventListener("mousedown", mousedownSpy);
+
+    const filterPanel = document.querySelector("#park-map-filters-mobile");
+    fireEvent.mouseDown(
+      within(filterPanel as HTMLElement).getByRole("button", { name: "home.filters.all" }),
+    );
+
+    expect(mousedownSpy).not.toHaveBeenCalled();
+
+    document.removeEventListener("mousedown", mousedownSpy);
   });
 
   it("keeps mobile filters collapsed until opened and closes after selection", async () => {
@@ -241,7 +277,7 @@ describe("ParkExplorer", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "focus-teijo" }));
 
-    expect(screen.getByText("count:3")).toBeInTheDocument();
+    expect(screen.getByText("count:4")).toBeInTheDocument();
     expect(screen.getByText("focus:teijo")).toBeInTheDocument();
   });
 
@@ -273,11 +309,45 @@ describe("ParkExplorer", () => {
       </HomeMapControlsProvider>,
     );
 
+    expect(screen.getByText("count:4")).toBeInTheDocument();
     expect(screen.getByText("reset:0")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "focus-punkaharju" }));
 
-    expect(screen.getByText("count:1")).toBeInTheDocument();
+    expect(screen.getByText("count:4")).toBeInTheDocument();
     expect(screen.getByText("reset:0")).toBeInTheDocument();
+  });
+
+  it("triggers a map reset when filter changes and no park is selected", () => {
+    render(<ParkExplorer parks={parks} />);
+
+    expect(screen.getByText("reset:0")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "home.filters.all" }));
+
+    expect(screen.getByText("reset:1")).toBeInTheDocument();
+  });
+
+  it("does not trigger a map reset when filter changes while a park is selected", () => {
+    render(<ParkExplorer parks={parks} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "mock-select-park" }));
+    fireEvent.click(screen.getByRole("button", { name: "home.filters.all" }));
+
+    expect(screen.getByText("reset:0")).toBeInTheDocument();
+  });
+
+  it("triggers a map reset once the selected park is cleared and filter changes again", () => {
+    render(<ParkExplorer parks={parks} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "mock-select-park" }));
+    fireEvent.click(screen.getByRole("button", { name: "home.filters.all" }));
+
+    expect(screen.getByText("reset:0")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "mock-clear-park" }));
+    fireEvent.click(screen.getByRole("button", { name: "home.filters.nationalParks" }));
+
+    expect(screen.getByText("reset:1")).toBeInTheDocument();
   });
 });
