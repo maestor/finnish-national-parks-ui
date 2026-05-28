@@ -32,7 +32,8 @@ If the task touches any of the areas below, you **must** read the matching `SKIL
 ### Step 3 — Activate Git workflow if files or Git state will change
 If the request is likely to change files or Git state, **immediately after** Steps 1–2, activate `$git-pr-workflow`:
 - Check the current branch.
-- If on `main`, create and switch to a repo-valid working branch **before** any edits.
+- If on an existing feature branch, verify whether it has already been merged into `origin/main`. If yes — or if the task is genuinely new work — switch to `main`, pull latest, and create a **new** repo-valid working branch **before** any edits.
+- Only continue on an existing branch if the user explicitly names it as the target.
 - Use repo naming convention: `feature/<name>`, `bugfix/<name>`, `chore/<name>`, `docs/<name>`, `refactor/<name>`, or `test/<name>`.
 
 ### Step 4 — Only then proceed
