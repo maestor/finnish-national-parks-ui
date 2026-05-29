@@ -178,11 +178,11 @@ describe("VisitForm", () => {
     });
     await waitFor(() => {
       expect(mockPush).not.toHaveBeenCalled();
-      expect(mockRefresh).not.toHaveBeenCalled();
       expect(screen.getByRole("status")).toHaveTextContent(
         "controlPanel.visits.form.updateSuccess",
       );
     });
+    expect(mockRefresh).toHaveBeenCalled();
     expect(mockRevalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "pallas" });
     expect(
       screen.getByRole("link", { name: "controlPanel.visits.form.viewAllVisits" }),
@@ -276,6 +276,34 @@ describe("VisitForm", () => {
     expect(await screen.findByText("delete failed")).toBeInTheDocument();
     expect(mockPush).not.toHaveBeenCalled();
     expect(mockRefresh).not.toHaveBeenCalled();
+  });
+
+  it("disables the save button immediately after a successful edit", async () => {
+    const { apiFetch } = await import("@/lib/api");
+    vi.mocked(apiFetch).mockResolvedValueOnce(undefined);
+
+    const { rerender } = render(<VisitForm parks={parks} visitToEdit={visitToEdit} />);
+
+    const routeField = screen.getByLabelText(/controlPanel.visits.form.routeLabel/i);
+    await userEvent.clear(routeField);
+    await userEvent.type(routeField, "Hetta");
+
+    const submitButton = screen.getByRole("button", { name: /controlPanel.visits.form.submit/i });
+    await userEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "controlPanel.visits.form.updateSuccess",
+      );
+    });
+
+    expect(submitButton).toBeDisabled();
+    expect(mockRefresh).toHaveBeenCalled();
+
+    const updatedVisit = { ...visitToEdit, route: "Hetta" };
+    rerender(<VisitForm parks={parks} visitToEdit={updatedVisit} />);
+
+    expect(submitButton).toBeDisabled();
   });
 
   it("goes back to the previous page from the back action", async () => {

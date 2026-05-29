@@ -34,12 +34,18 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [savedSnapshot, setSavedSnapshot] = useState({
+    visitedOn: visitToEdit?.visitedOn ?? "",
+    route: visitToEdit?.route ?? "",
+    author: visitToEdit?.author ?? "",
+    note: visitToEdit?.note ?? "",
+  });
   const isEditDirty =
     !visitToEdit ||
-    visitedOn !== visitToEdit.visitedOn ||
-    route !== (visitToEdit.route ?? "") ||
-    author !== (visitToEdit.author ?? "") ||
-    note !== (visitToEdit.note ?? "");
+    visitedOn !== savedSnapshot.visitedOn ||
+    route !== savedSnapshot.route ||
+    author !== savedSnapshot.author ||
+    note !== savedSnapshot.note;
   const isSubmitDisabled = isSubmitting || (isEditing && !isEditDirty);
 
   const handleBack = () => {
@@ -81,7 +87,14 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
           }),
         });
         await revalidatePublicCache({ parkSlug: visitToEdit.park.slug });
+        setSavedSnapshot({
+          visitedOn,
+          route: route || "",
+          author: author || "",
+          note: note || "",
+        });
         setStatusMessage(t("updateSuccess"));
+        router.refresh();
       } else {
         const createdVisit = await apiFetch<Visit>(`/api/parks/${parkSlug}/visits`, {
           method: "POST",
