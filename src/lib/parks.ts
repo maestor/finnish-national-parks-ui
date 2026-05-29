@@ -22,6 +22,31 @@ export type MapPark = Park & {
   visitedSummary: VisitedSummary;
 };
 
+export type AdminMapPark = MapPark & {
+  removed: boolean;
+};
+
+export const toAdminMapParks = (parks: Park[], removedParks: Park[]): AdminMapPark[] => {
+  const visible = parks.map((park) => ({
+    ...park,
+    visitedSummary: createEmptyVisitedSummary(),
+    removed: false,
+  }));
+  const removed = removedParks.map((park) => ({
+    ...park,
+    visitedSummary: createEmptyVisitedSummary(),
+    removed: true,
+  }));
+  return [...visible, ...removed];
+};
+
+export const getAdminMarkerColor = (park: AdminMapPark): string => {
+  if (park.removed) {
+    return "#ef4444";
+  }
+  return getVisitStatusColor(park);
+};
+
 type ParkTypeDisplayNameSource = Pick<Park, "displayTypeName" | "type">;
 
 export const createEmptyVisitedSummary = (): VisitedSummary => ({

@@ -499,4 +499,86 @@ describe("ParkMap", () => {
     fireEvent.click(markerElements[0]);
     expect(onActiveSlugChange).toHaveBeenCalledWith(null);
   });
+
+  it("renders removed park markers with red color in admin mode", () => {
+    render(
+      <ParkMap
+        parks={parks}
+        removedSlugs={new Set(["pallas"])}
+        onToggleRemoved={vi.fn()}
+        toggleLabels={{ hide: "Piilota sovelluksesta", show: "Näytä sovelluksessa" }}
+      />,
+    );
+    triggerMapLoad();
+
+    const svg = markerElements[0].querySelector("svg");
+    expect(svg).toHaveAttribute("fill", "#ef4444");
+  });
+
+  it("renders visible park markers with green color in admin mode", () => {
+    render(
+      <ParkMap
+        parks={parks}
+        removedSlugs={new Set()}
+        onToggleRemoved={vi.fn()}
+        toggleLabels={{ hide: "Piilota sovelluksesta", show: "Näytä sovelluksessa" }}
+      />,
+    );
+    triggerMapLoad();
+
+    const svg = markerElements[0].querySelector("svg");
+    expect(svg).toHaveAttribute("fill", "#16a34a");
+  });
+
+  it("shows a hide button in popup for visible parks when admin toggle is enabled", () => {
+    render(
+      <ParkMap
+        parks={parks}
+        removedSlugs={new Set()}
+        onToggleRemoved={vi.fn()}
+        toggleLabels={{ hide: "Piilota sovelluksesta", show: "Näytä sovelluksessa" }}
+      />,
+    );
+    triggerMapLoad();
+
+    fireEvent.click(markerElements[0]);
+
+    expect(screen.getByRole("button", { name: "Piilota sovelluksesta" })).toBeInTheDocument();
+  });
+
+  it("shows a show button in popup for removed parks when admin toggle is enabled", () => {
+    render(
+      <ParkMap
+        parks={parks}
+        removedSlugs={new Set(["pallas"])}
+        onToggleRemoved={vi.fn()}
+        toggleLabels={{ hide: "Piilota sovelluksesta", show: "Näytä sovelluksessa" }}
+      />,
+    );
+    triggerMapLoad();
+
+    fireEvent.click(markerElements[0]);
+
+    expect(screen.getByRole("button", { name: "Näytä sovelluksessa" })).toBeInTheDocument();
+  });
+
+  it("calls onToggleRemoved when the popup toggle button is clicked", () => {
+    const onToggleRemoved = vi.fn();
+    render(
+      <ParkMap
+        parks={parks}
+        removedSlugs={new Set()}
+        onToggleRemoved={onToggleRemoved}
+        toggleLabels={{ hide: "Piilota sovelluksesta", show: "Näytä sovelluksessa" }}
+      />,
+    );
+    triggerMapLoad();
+
+    fireEvent.click(markerElements[0]);
+
+    const toggleBtn = screen.getByRole("button", { name: "Piilota sovelluksesta" });
+    fireEvent.click(toggleBtn);
+
+    expect(onToggleRemoved).toHaveBeenCalledWith("pallas", true);
+  });
 });

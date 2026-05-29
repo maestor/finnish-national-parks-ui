@@ -136,6 +136,15 @@
       "restoring": "Palautetaan...",
       "confirmRemove": "Haluatko varmasti poistaa paikan \"{parkName}\" näkyvistä? Paikka katoaa kaikista rajapinnoista.",
       "confirmRestore": "Haluatko varmasti palauttaa paikan \"{parkName}\" näkyviin?",
+      "viewTabs": {
+        "ariaLabel": "Näkymä",
+        "list": "Lista",
+        "map": "Kartta"
+      },
+      "map": {
+        "hide": "Piilota sovelluksesta",
+        "show": "Näytä sovelluksessa"
+      },
       "emptyAll": "Ei hallittavia paikkoja.",
       "emptyVisible": "Ei näkyvissä olevia paikkoja.",
       "emptyHidden": "Ei piilotettuja paikkoja.",
