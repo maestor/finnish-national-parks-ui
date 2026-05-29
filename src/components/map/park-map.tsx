@@ -9,6 +9,7 @@ import {
   type HomeParkFocusRequest,
   useHomeMapControls,
 } from "../providers/home-map-controls-provider";
+import { ThreeDotPulse } from "../ui/three-dot-pulse";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 interface ParkMapProps {
@@ -661,7 +662,7 @@ export const ParkMap = ({
       {!isMapLoaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
           <div className="flex flex-col items-center gap-2">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            <ThreeDotPulse size="lg" />
             <span className="text-sm text-muted-foreground">{t("loading")}</span>
           </div>
         </div>

@@ -4,6 +4,7 @@ import type { ParkDetail } from "@/lib/parks";
 import maplibregl from "maplibre-gl";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
+import { ThreeDotPulse } from "../ui/three-dot-pulse";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 type BoundaryGeoJson = NonNullable<ParkDetail["boundaryGeoJson"]>;
@@ -187,7 +188,7 @@ export const ParkBoundaryMap = ({
       {!isMapLoaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
           <div className="flex flex-col items-center gap-2">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            <ThreeDotPulse size="lg" />
             <span className="text-sm text-muted-foreground">{t("loading")}</span>
           </div>
         </div>
