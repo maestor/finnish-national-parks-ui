@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import "./globals.css";
 import { Header } from "@/components/layout/header";
 import { HomeMapControlsProvider } from "@/components/providers/home-map-controls-provider";
+import { NavigationProgress } from "@/components/providers/navigation-progress";
 import { SerwistProvider } from "@/components/providers/serwist-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { siteEnv } from "@/lib/env";
@@ -113,6 +114,7 @@ const RootLayout = async ({
               <Suspense>
                 <HomeMapControlsProvider>
                   <div className="relative flex min-h-screen flex-col">
+                    <NavigationProgress />
                     <Header />
                     <main className="flex flex-1 flex-col">{children}</main>
                   </div>

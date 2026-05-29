@@ -21,6 +21,7 @@ export default defineConfig({
         "src/app/robots.ts",
         "src/app/sw.ts",
         "src/app/serwist/**",
+        "src/**/loading.tsx",
         "src/lib/api-types.ts",
         "src/test/**",
       ],
