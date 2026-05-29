@@ -28,6 +28,21 @@
   --radius-xl: calc(var(--radius) + 4px);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
+  --animate-dot-pulse-1: dot-pulse 1.2s ease-in-out 0ms infinite;
+  --animate-dot-pulse-2: dot-pulse 1.2s ease-in-out 150ms infinite;
+  --animate-dot-pulse-3: dot-pulse 1.2s ease-in-out 300ms infinite;
+}
+
+@keyframes dot-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(0.75);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 :root {
