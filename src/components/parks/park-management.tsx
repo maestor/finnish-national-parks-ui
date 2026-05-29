@@ -59,7 +59,7 @@ export const ParkManagement = ({ parks, removedParks }: ParkManagementProps) => 
         {activeView === "list" ? (
           <ParkList parks={parks} removedParks={removedParks} />
         ) : (
-          <div className="flex h-[600px] flex-col overflow-hidden rounded-[1.6rem] border border-white/45 bg-white/56 shadow-[0_18px_36px_rgba(148,163,184,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/38 dark:shadow-[0_22px_40px_rgba(2,6,23,0.28)]">
+          <div className="flex h-[875px] flex-col overflow-hidden rounded-[1.6rem] border border-white/45 bg-white/56 shadow-[0_18px_36px_rgba(148,163,184,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/38 dark:shadow-[0_22px_40px_rgba(2,6,23,0.28)]">
             <AdminParkMap parks={parks} removedParks={removedParks} />
           </div>
         )}

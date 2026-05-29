@@ -142,8 +142,8 @@
         "map": "Kartta"
       },
       "map": {
-        "hide": "Piilota",
-        "show": "Näytä"
+        "hide": "Piilota sovelluksesta",
+        "show": "Näytä sovelluksessa"
       },
       "emptyAll": "Ei hallittavia paikkoja.",
       "emptyVisible": "Ei näkyvissä olevia paikkoja.",

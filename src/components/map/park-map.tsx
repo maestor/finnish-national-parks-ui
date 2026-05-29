@@ -91,7 +91,7 @@ const getMapStyle = () => {
   } as maplibregl.StyleSpecification;
 };
 
-const createMarkerElement = (park: MapPark, isRemoved = false) => {
+const createMarkerElement = (park: MapPark, colorOverride?: string) => {
   const button = document.createElement("button");
   const displayTypeName = getParkTypeDisplayName(park);
   button.type = "button";
@@ -100,7 +100,7 @@ const createMarkerElement = (park: MapPark, isRemoved = false) => {
   button.setAttribute("aria-label", `${park.name}, ${displayTypeName}`);
   button.dataset.slug = park.slug;
 
-  const color = isRemoved ? "#ef4444" : getVisitStatusColor(park);
+  const color = colorOverride ?? getVisitStatusColor(park);
 
   button.innerHTML = `
     <svg viewBox="0 0 24 24" fill="${color}" class="h-6 w-6 drop-shadow-md transition-transform group-hover:scale-110" xmlns="http://www.w3.org/2000/svg">
@@ -232,30 +232,32 @@ const createPopupNode = (
 
   container.appendChild(details);
 
-  const summaryRow = document.createElement("div");
-  summaryRow.className =
-    "mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/35 pt-3 text-xs dark:border-white/10";
+  if (!onToggleRemoved) {
+    const summaryRow = document.createElement("div");
+    summaryRow.className =
+      "mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/35 pt-3 text-xs dark:border-white/10";
 
-  const visitCount = park.visitedSummary.visitCount;
-  const visitsCount = document.createElement("span");
-  visitsCount.className =
-    "inline-flex items-center rounded-full border border-white/45 bg-white/72 px-3 py-1 font-medium text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] dark:border-white/10 dark:bg-slate-950/56 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
-  visitsCount.textContent = `${labels.visits} (${visitCount})`;
-  summaryRow.appendChild(visitsCount);
+    const visitCount = park.visitedSummary.visitCount;
+    const visitsCount = document.createElement("span");
+    visitsCount.className =
+      "inline-flex items-center rounded-full border border-white/45 bg-white/72 px-3 py-1 font-medium text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] dark:border-white/10 dark:bg-slate-950/56 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
+    visitsCount.textContent = `${labels.visits} (${visitCount})`;
+    summaryRow.appendChild(visitsCount);
 
-  const parkLink = document.createElement("a");
-  parkLink.href = `/park/${park.slug}`;
-  parkLink.className =
-    "inline-flex items-center rounded-full border border-sky-200/70 bg-white/74 px-3 py-1.5 font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 dark:border-sky-300/15 dark:bg-slate-950/62 dark:hover:bg-slate-950/78";
-  parkLink.textContent = labels.openParkPage;
-  parkLink.addEventListener("click", (e) => e.stopPropagation());
-  summaryRow.appendChild(parkLink);
-  container.appendChild(summaryRow);
+    const parkLink = document.createElement("a");
+    parkLink.href = `/park/${park.slug}`;
+    parkLink.className =
+      "inline-flex items-center rounded-full border border-sky-200/70 bg-white/74 px-3 py-1.5 font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 dark:border-sky-300/15 dark:bg-slate-950/62 dark:hover:bg-slate-950/78";
+    parkLink.textContent = labels.openParkPage;
+    parkLink.addEventListener("click", (e) => e.stopPropagation());
+    summaryRow.appendChild(parkLink);
+    container.appendChild(summaryRow);
+  }
 
   const actionRow = document.createElement("div");
   actionRow.className = "mt-3 flex items-center gap-2 text-xs";
 
-  if (canManageVisits) {
+  if (canManageVisits && !onToggleRemoved) {
     const addLink = document.createElement("a");
     addLink.href = `/control-panel/visits/new?park=${park.slug}`;
     addLink.className =
@@ -265,14 +267,7 @@ const createPopupNode = (
     actionRow.appendChild(addLink);
   }
 
-  if (canManageVisits) {
-    container.appendChild(actionRow);
-  }
-
   if (onToggleRemoved && toggleLabels) {
-    const adminRow = document.createElement("div");
-    adminRow.className = "mt-3 flex items-center gap-2 text-xs";
-
     const toggleBtn = document.createElement("button");
     toggleBtn.type = "button";
     if (isRemoved) {
@@ -289,8 +284,11 @@ const createPopupNode = (
       onToggleRemoved(park.slug, !isRemoved);
     });
 
-    adminRow.appendChild(toggleBtn);
-    container.appendChild(adminRow);
+    actionRow.appendChild(toggleBtn);
+  }
+
+  if (canManageVisits || (onToggleRemoved && toggleLabels)) {
+    container.appendChild(actionRow);
   }
 
   return container;
@@ -508,7 +506,9 @@ export const ParkMap = ({
 
     for (const park of parks) {
       const isRemoved = removedSlugs?.has(park.slug) ?? false;
-      const el = createMarkerElement(park, isRemoved);
+      const isAdmin = onToggleRemoved !== undefined;
+      const colorOverride = isAdmin ? (isRemoved ? "#ef4444" : "#16a34a") : undefined;
+      const el = createMarkerElement(park, colorOverride);
 
       const popup = new maplibregl.Popup({
         closeButton: false,
