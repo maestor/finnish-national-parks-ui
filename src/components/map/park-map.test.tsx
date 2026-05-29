@@ -499,4 +499,72 @@ describe("ParkMap", () => {
     fireEvent.click(markerElements[0]);
     expect(onActiveSlugChange).toHaveBeenCalledWith(null);
   });
+
+  it("renders removed park markers with red color", () => {
+    render(<ParkMap parks={parks} removedSlugs={new Set(["pallas"])} />);
+    triggerMapLoad();
+
+    const svg = markerElements[0].querySelector("svg");
+    expect(svg).toHaveAttribute("fill", "#ef4444");
+  });
+
+  it("renders visible park markers with standard visit status color", () => {
+    render(<ParkMap parks={parks} removedSlugs={new Set()} />);
+    triggerMapLoad();
+
+    const svg = markerElements[0].querySelector("svg");
+    expect(svg).toHaveAttribute("fill", "#64748b");
+  });
+
+  it("shows a hide button in popup for visible parks when admin toggle is enabled", () => {
+    render(
+      <ParkMap
+        parks={parks}
+        removedSlugs={new Set()}
+        onToggleRemoved={vi.fn()}
+        toggleLabels={{ hide: "Piilota", show: "Näytä" }}
+      />,
+    );
+    triggerMapLoad();
+
+    fireEvent.click(markerElements[0]);
+
+    expect(screen.getByRole("button", { name: "Piilota" })).toBeInTheDocument();
+  });
+
+  it("shows a show button in popup for removed parks when admin toggle is enabled", () => {
+    render(
+      <ParkMap
+        parks={parks}
+        removedSlugs={new Set(["pallas"])}
+        onToggleRemoved={vi.fn()}
+        toggleLabels={{ hide: "Piilota", show: "Näytä" }}
+      />,
+    );
+    triggerMapLoad();
+
+    fireEvent.click(markerElements[0]);
+
+    expect(screen.getByRole("button", { name: "Näytä" })).toBeInTheDocument();
+  });
+
+  it("calls onToggleRemoved when the popup toggle button is clicked", () => {
+    const onToggleRemoved = vi.fn();
+    render(
+      <ParkMap
+        parks={parks}
+        removedSlugs={new Set()}
+        onToggleRemoved={onToggleRemoved}
+        toggleLabels={{ hide: "Piilota", show: "Näytä" }}
+      />,
+    );
+    triggerMapLoad();
+
+    fireEvent.click(markerElements[0]);
+
+    const toggleBtn = screen.getByRole("button", { name: "Piilota" });
+    fireEvent.click(toggleBtn);
+
+    expect(onToggleRemoved).toHaveBeenCalledWith("pallas", true);
+  });
 });

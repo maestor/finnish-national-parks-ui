@@ -19,6 +19,9 @@ interface ParkMapProps {
   homeParkFocusRequest?: HomeParkFocusRequest | null;
   resetViewRequestId?: number;
   onActiveSlugChange?: (slug: string | null) => void;
+  removedSlugs?: Set<string>;
+  onToggleRemoved?: (slug: string, removed: boolean) => void;
+  toggleLabels?: { hide: string; show: string };
 }
 
 const FINLAND_BOUNDS: maplibregl.LngLatBoundsLike = [
@@ -88,7 +91,7 @@ const getMapStyle = () => {
   } as maplibregl.StyleSpecification;
 };
 
-const createMarkerElement = (park: MapPark) => {
+const createMarkerElement = (park: MapPark, isRemoved = false) => {
   const button = document.createElement("button");
   const displayTypeName = getParkTypeDisplayName(park);
   button.type = "button";
@@ -97,7 +100,7 @@ const createMarkerElement = (park: MapPark) => {
   button.setAttribute("aria-label", `${park.name}, ${displayTypeName}`);
   button.dataset.slug = park.slug;
 
-  const color = getVisitStatusColor(park);
+  const color = isRemoved ? "#ef4444" : getVisitStatusColor(park);
 
   button.innerHTML = `
     <svg viewBox="0 0 24 24" fill="${color}" class="h-6 w-6 drop-shadow-md transition-transform group-hover:scale-110" xmlns="http://www.w3.org/2000/svg">
@@ -121,6 +124,9 @@ const createPopupNode = (
   park: MapPark,
   labels: PopupLabels,
   canManageVisits: boolean,
+  isRemoved = false,
+  onToggleRemoved?: (slug: string, removed: boolean) => void,
+  toggleLabels?: { hide: string; show: string },
 ): HTMLElement => {
   const container = document.createElement("div");
   const displayTypeName = getParkTypeDisplayName(park);
@@ -263,6 +269,30 @@ const createPopupNode = (
     container.appendChild(actionRow);
   }
 
+  if (onToggleRemoved && toggleLabels) {
+    const adminRow = document.createElement("div");
+    adminRow.className = "mt-3 flex items-center gap-2 text-xs";
+
+    const toggleBtn = document.createElement("button");
+    toggleBtn.type = "button";
+    if (isRemoved) {
+      toggleBtn.className =
+        "inline-flex items-center gap-1 rounded-full border border-emerald-200/70 bg-white/74 px-3 py-1.5 font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 dark:border-emerald-300/15 dark:bg-slate-950/62 dark:hover:bg-slate-950/78";
+      toggleBtn.textContent = toggleLabels.show;
+    } else {
+      toggleBtn.className =
+        "inline-flex items-center gap-1 rounded-full border border-red-200/70 bg-white/74 px-3 py-1.5 font-medium text-red-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 dark:border-red-300/15 dark:bg-slate-950/62 dark:hover:bg-slate-950/78 dark:text-red-400";
+      toggleBtn.textContent = toggleLabels.hide;
+    }
+    toggleBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      onToggleRemoved(park.slug, !isRemoved);
+    });
+
+    adminRow.appendChild(toggleBtn);
+    container.appendChild(adminRow);
+  }
+
   return container;
 };
 
@@ -273,6 +303,9 @@ export const ParkMap = ({
   homeParkFocusRequest = null,
   resetViewRequestId = 0,
   onActiveSlugChange,
+  removedSlugs,
+  onToggleRemoved,
+  toggleLabels,
 }: ParkMapProps) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -474,7 +507,8 @@ export const ParkMap = ({
     };
 
     for (const park of parks) {
-      const el = createMarkerElement(park);
+      const isRemoved = removedSlugs?.has(park.slug) ?? false;
+      const el = createMarkerElement(park, isRemoved);
 
       const popup = new maplibregl.Popup({
         closeButton: false,
@@ -493,7 +527,9 @@ export const ParkMap = ({
         },
       })
         .setLngLat([park.markerPoint.lon, park.markerPoint.lat])
-        .setDOMContent(createPopupNode(park, labels, canManageVisits));
+        .setDOMContent(
+          createPopupNode(park, labels, canManageVisits, isRemoved, onToggleRemoved, toggleLabels),
+        );
 
       popupsRef.current.set(park.slug, popup);
 
@@ -548,6 +584,9 @@ export const ParkMap = ({
     closeActivePopupIfFocusLeftMapPopup,
     focusPark,
     syncPopupVisibility,
+    removedSlugs,
+    onToggleRemoved,
+    toggleLabels,
   ]);
 
   useEffect(() => {

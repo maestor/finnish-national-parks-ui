@@ -191,6 +191,14 @@ vi.mock("@/components/parks/park-list", () => ({
   ),
 }));
 
+vi.mock("@/components/parks/park-management", () => ({
+  ParkManagement: ({ parks, removedParks }: { parks: Park[]; removedParks: Park[] }) => (
+    <div data-testid="park-management">
+      parks:{parks.length}|removed:{removedParks.length}
+    </div>
+  ),
+}));
+
 vi.mock("@/components/visits/visit-form", () => ({
   VisitForm: ({
     parks,
@@ -516,9 +524,8 @@ describe("App pages", () => {
 
     await renderControlPanelRoute(await ParksPage());
 
-    expect(screen.getByRole("heading", { name: "controlPanel.parks.title" })).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "controlPanel.title" })).toBeInTheDocument();
-    expect(screen.getByTestId("park-list")).toHaveTextContent("parks:1|removed:0");
+    expect(screen.getByTestId("park-management")).toHaveTextContent("parks:1|removed:0");
   });
 
   it("builds metadata for the parks list page", async () => {
