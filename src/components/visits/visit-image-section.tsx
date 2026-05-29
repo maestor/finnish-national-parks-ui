@@ -123,11 +123,49 @@ export const VisitImageSection = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pendingImageIdRef = useRef(0);
   const pendingImagesRef = useRef<PendingImage[]>([]);
+  const savedImageOrderRef = useRef(savedImageOrder);
+  const previousImagesRef = useRef<VisitImage[]>(images);
   const suppressSavedThumbnailOpenRef = useRef<string | null>(null);
 
   useEffect(() => {
-    setLocalImages(images);
-    setSavedImageOrder(images.map((image) => String(image.id)));
+    savedImageOrderRef.current = savedImageOrder;
+  }, [savedImageOrder]);
+
+  useEffect(() => {
+    const previousIds = previousImagesRef.current.map((image) => String(image.id));
+    const currentIds = images.map((image) => String(image.id));
+    const previousIdSet = new Set(previousIds);
+    const currentIdSet = new Set(currentIds);
+
+    const addedImages = images.filter((image) => !previousIdSet.has(String(image.id)));
+    const removedIds = previousIds.filter((id) => !currentIdSet.has(id));
+
+    if (addedImages.length > 0 || removedIds.length > 0) {
+      setLocalImages((currentLocalImages) => {
+        const localIds = new Set(currentLocalImages.map((image) => String(image.id)));
+        const actuallyAdded = addedImages.filter((image) => !localIds.has(String(image.id)));
+        const keptImages = currentLocalImages.filter(
+          (image) => !removedIds.includes(String(image.id)),
+        );
+        return [...keptImages, ...actuallyAdded];
+      });
+
+      setSavedImageOrder((currentOrder) => {
+        const actuallyAddedIds = addedImages
+          .map((image) => String(image.id))
+          .filter((id) => !currentOrder.includes(id));
+        const keptOrder = currentOrder.filter((id) => !removedIds.includes(id));
+        return [...keptOrder, ...actuallyAddedIds];
+      });
+    } else if (
+      !ordersMatch(previousIds, currentIds) &&
+      !ordersMatch(savedImageOrderRef.current, currentIds)
+    ) {
+      setLocalImages(images);
+      setSavedImageOrder(currentIds);
+    }
+
+    previousImagesRef.current = images;
   }, [images]);
 
   useEffect(() => {

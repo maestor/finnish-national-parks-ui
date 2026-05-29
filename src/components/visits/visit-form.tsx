@@ -82,6 +82,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
         });
         await revalidatePublicCache({ parkSlug: visitToEdit.park.slug });
         setStatusMessage(t("updateSuccess"));
+        router.refresh();
       } else {
         const createdVisit = await apiFetch<Visit>(`/api/parks/${parkSlug}/visits`, {
           method: "POST",

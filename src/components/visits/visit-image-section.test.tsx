@@ -734,4 +734,66 @@ describe("VisitImageSection", () => {
 
     expect(mockRefresh).not.toHaveBeenCalled();
   });
+
+  it("appends newly uploaded images at the end when the server returns them out of order", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      images: [
+        {
+          id: 3,
+          fullUrl: "https://example.com/full-3.jpg",
+          thumbUrl: "https://example.com/thumb-3.jpg",
+          fullWidth: 1920,
+          fullHeight: 1080,
+          thumbWidth: 400,
+          thumbHeight: 225,
+          originalName: "new.jpg",
+          displayOrder: 0,
+          createdAt: "2024-06-15T10:10:00Z",
+        },
+      ],
+      errors: [],
+    });
+
+    const { container, rerender } = render(
+      <VisitImageSection visitId={10} images={images} parkSlug="pallas" />,
+    );
+
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File(["dummy"], "new.jpg", { type: "image/jpeg" });
+
+    fireEvent.change(fileInput, { target: { files: [file] } });
+    await waitFor(() => {
+      expect(screen.getByText("controlPanel.visits.images.selectedCount")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "controlPanel.visits.images.upload" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("controlPanel.visits.images.uploadSuccess")).toBeInTheDocument();
+    });
+
+    expect(getSavedImageOrder(container)).toEqual(["1", "2", "3"]);
+
+    // Simulate router.refresh() returning the new image in 2nd position from server
+    const serverReorderedImages: VisitImage[] = [
+      images[0],
+      {
+        id: 3,
+        fullUrl: "https://example.com/full-3.jpg",
+        thumbUrl: "https://example.com/thumb-3.jpg",
+        fullWidth: 1920,
+        fullHeight: 1080,
+        thumbWidth: 400,
+        thumbHeight: 225,
+        originalName: "new.jpg",
+        displayOrder: 0,
+        createdAt: "2024-06-15T10:10:00Z",
+      },
+      images[1],
+    ];
+
+    rerender(<VisitImageSection visitId={10} images={serverReorderedImages} parkSlug="pallas" />);
+
+    expect(getSavedImageOrder(container)).toEqual(["1", "2", "3"]);
+  });
 });
