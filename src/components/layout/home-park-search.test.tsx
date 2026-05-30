@@ -76,7 +76,7 @@ const parks: Park[] = [
     establishmentYear: 2015,
     boundingBox: { minLat: 60, minLon: 22, maxLat: 61, maxLon: 23 },
     markerPoint: { lat: 60.5, lon: 22.5 },
-    type: { code: 4, id: 4, name: "Muu luonnonsuojelualue", slug: "other-nature-reserve" },
+    type: { code: 4, id: 4, name: "Muu luonnonsuojelualue", slug: "nature-reserve-area" },
   },
 ];
 

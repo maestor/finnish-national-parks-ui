@@ -118,7 +118,7 @@ const parks: MapPark[] = [
     establishmentYear: null,
     boundingBox: { minLat: 65, minLon: 28, maxLat: 66, maxLon: 29 },
     markerPoint: { lat: 65.5, lon: 28.5 },
-    type: { code: 2, id: 2, name: "Valtion retkeilyalue", slug: "state-hiking-area" },
+    type: { code: 2, id: 2, name: "Valtion retkeilyalue", slug: "hiking-area" },
     visitedSummary: { visited: false, visitCount: 0, lastVisitedOn: null },
   },
   {

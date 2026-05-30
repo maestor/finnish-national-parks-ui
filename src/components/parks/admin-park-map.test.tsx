@@ -49,7 +49,7 @@ const removedPark = {
   establishmentYear: 2000,
   boundingBox: { minLat: 60, minLon: 24, maxLat: 61, maxLon: 25 },
   markerPoint: { lat: 60.5, lon: 24.5 },
-  type: { code: 2, id: 2, name: "Retkeilyalue", slug: "state-hiking-area" as const },
+  type: { code: 2, id: 2, name: "Retkeilyalue", slug: "hiking-area" as const },
 };
 
 describe("AdminParkMap", () => {

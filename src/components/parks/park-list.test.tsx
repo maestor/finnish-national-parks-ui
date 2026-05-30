@@ -48,7 +48,7 @@ const parks: Park[] = [
     establishmentYear: null,
     boundingBox: { minLat: 61, minLon: 24, maxLat: 62, maxLon: 25 },
     markerPoint: { lat: 61.1, lon: 24.5 },
-    type: { code: 4, id: 4, name: "Muu luonnonsuojelualue", slug: "other-nature-reserve" },
+    type: { code: 4, id: 4, name: "Muu luonnonsuojelualue", slug: "nature-reserve-area" },
   },
 ];
 
@@ -188,7 +188,7 @@ describe("ParkList", () => {
     await user.clear(screen.getByLabelText("controlPanel.parks.filters.searchLabel"));
     await user.selectOptions(
       screen.getByLabelText("controlPanel.parks.filters.typeLabel"),
-      "other-nature-reserve",
+      "nature-reserve-area",
     );
 
     expect(screen.getByRole("link", { name: "Aulangon luonnonsuojelualue" })).toBeInTheDocument();
