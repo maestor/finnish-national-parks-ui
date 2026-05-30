@@ -44,7 +44,7 @@
       "title": "Käynnit",
       "totalVisits": "Käyntejä yhteensä",
       "seasonalVisits": "Käynnit kausittain",
-      "allParks": "Kaikki kohteet",
+      "allParks": "Kaikki alueet",
       "seasons": {
         "spring": "Kevät",
         "summer": "Kesä",
@@ -66,13 +66,13 @@
       "empty": "Ei vielä käyntikirjauksia."
     },
     "filters": {
-      "all": "Kaikki kohteet",
+      "all": "Kaikki alueet",
       "nationalParks": "Kansallispuistot",
       "hikingAreas": "Retkeilyalueet",
       "wildernessAreas": "Erämaa-alueet",
       "otherNatureReserves": "Muut LS-alueet",
       "outdoorRecreationAreas": "Virkistysalueet",
-      "natureTrails": "Luontopolut",
+      "natureTrails": "Polut/Reitit",
       "visited": "Käydyt",
       "notVisited": "Käymättömät",
       "hasLogo": "Tunnukset",

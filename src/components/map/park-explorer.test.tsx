@@ -135,6 +135,20 @@ const parks: MapPark[] = [
     type: { code: 6, id: 6, name: "Luontopolku", slug: "nature-trail" },
     visitedSummary: { visited: false, visitCount: 0, lastVisitedOn: null },
   },
+  {
+    slug: "nuuksio",
+    name: "Nuuksion vaellusreitti",
+    areaKm2: null,
+    location: "Espoo",
+    logo: null,
+    luontoonUrl: null,
+    map: null,
+    establishmentYear: null,
+    boundingBox: { minLat: 60, minLon: 24, maxLat: 61, maxLon: 25 },
+    markerPoint: { lat: 60.3, lon: 24.5 },
+    type: { code: 7, id: 7, name: "Vaellusreitti", slug: "hiking-trail" },
+    visitedSummary: { visited: true, visitCount: 2, lastVisitedOn: "2024-07-20" },
+  },
 ];
 
 const MobileFilterToggleHarness = () => {
@@ -187,17 +201,19 @@ describe("ParkExplorer", () => {
     expect(screen.getByText("admin:true")).toBeInTheDocument();
   });
 
-  it("filters the visible parks by selected type, including nature trails in all", async () => {
+  it("filters the visible parks by selected type, with all excluding trails", async () => {
     render(<ParkExplorer parks={parks} />);
 
-    expect(screen.getByText("count:4")).toBeInTheDocument();
+    expect(screen.getByText("count:3")).toBeInTheDocument();
     expect(screen.getByText("admin:false")).toBeInTheDocument();
-    expect(screen.getByText("Punkaharjun luontopolku")).toBeInTheDocument();
+    expect(screen.queryByText("Punkaharjun luontopolku")).not.toBeInTheDocument();
+    expect(screen.queryByText("Nuuksion vaellusreitti")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "home.filters.natureTrails" }));
 
-    expect(screen.getByText("count:1")).toBeInTheDocument();
+    expect(screen.getByText("count:2")).toBeInTheDocument();
     expect(screen.getByText("Punkaharjun luontopolku")).toBeInTheDocument();
+    expect(screen.getByText("Nuuksion vaellusreitti")).toBeInTheDocument();
   });
 
   it("shows visited filters for all users when visit history is public", () => {
@@ -211,12 +227,14 @@ describe("ParkExplorer", () => {
     render(<ParkExplorer parks={parks} />);
 
     fireEvent.click(screen.getByRole("button", { name: "home.filters.visited" }));
-    expect(screen.getByText("count:1")).toBeInTheDocument();
+    expect(screen.getByText("count:2")).toBeInTheDocument();
     expect(screen.getByText("Päijänteen kansallispuisto")).toBeInTheDocument();
+    expect(screen.getByText("Nuuksion vaellusreitti")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "home.filters.notVisited" }));
     expect(screen.getByText("count:3")).toBeInTheDocument();
     expect(screen.queryByText("Päijänteen kansallispuisto")).not.toBeInTheDocument();
+    expect(screen.queryByText("Nuuksion vaellusreitti")).not.toBeInTheDocument();
   });
 
   it("filters visible parks by logo and map availability", () => {
@@ -309,11 +327,11 @@ describe("ParkExplorer", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "focus-teijo" }));
 
-    expect(screen.getByText("count:4")).toBeInTheDocument();
+    expect(screen.getByText("count:3")).toBeInTheDocument();
     expect(screen.getByText("focus:teijo")).toBeInTheDocument();
   });
 
-  it("switches to the nature trail filter when header search focuses a trail", () => {
+  it("switches to the trails filter when header search focuses a trail", () => {
     render(
       <HomeMapControlsProvider>
         <MobileFilterToggleHarness />
@@ -327,7 +345,7 @@ describe("ParkExplorer", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "focus-punkaharju" }));
 
-    expect(screen.getByText("count:1")).toBeInTheDocument();
+    expect(screen.getByText("count:2")).toBeInTheDocument();
     expect(screen.getByText("focus:punkaharju")).toBeInTheDocument();
     expect(screen.getByText("Punkaharjun luontopolku")).toBeInTheDocument();
     expect(screen.getByText("reset:1")).toBeInTheDocument();
@@ -341,12 +359,12 @@ describe("ParkExplorer", () => {
       </HomeMapControlsProvider>,
     );
 
-    expect(screen.getByText("count:4")).toBeInTheDocument();
+    expect(screen.getByText("count:3")).toBeInTheDocument();
     expect(screen.getByText("reset:0")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "focus-punkaharju" }));
 
-    expect(screen.getByText("count:4")).toBeInTheDocument();
+    expect(screen.getByText("count:2")).toBeInTheDocument();
     expect(screen.getByText("reset:0")).toBeInTheDocument();
   });
 
