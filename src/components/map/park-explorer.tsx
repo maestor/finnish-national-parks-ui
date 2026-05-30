@@ -18,6 +18,7 @@ import { ParkMap } from "./park-map";
 
 type MapFilter =
   | "all"
+  | "areas"
   | "trails"
   | FilterableParkTypeSlug
   | "nature-trail"
@@ -39,11 +40,12 @@ const INACTIVE_FILTER_BUTTON_CLASS_NAME =
 const isAreaPark = (park: MapPark) => !TRAIL_TYPE_SLUGS.includes(park.type.slug);
 
 const getFallbackFilterForFocusedPark = (park: MapPark): MapFilter =>
-  isAreaPark(park) ? "all" : "trails";
+  isAreaPark(park) ? "areas" : "trails";
 
 const isMapFilter = (value: string | null): value is MapFilter => {
   switch (value) {
     case "all":
+    case "areas":
     case "visited":
     case "not-visited":
     case "has-logo":
@@ -73,7 +75,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [activeFilter, setActiveFilter] = useState<MapFilter>("all");
+  const [activeFilter, setActiveFilter] = useState<MapFilter>("areas");
   const [mapResetRequestId, setMapResetRequestId] = useState(0);
   const { isMobileFiltersOpen, closeMobileFilters, homeParkFocusRequest } = useHomeMapControls();
   const lastHandledFilterParamRef = useRef<string | null>(null);
@@ -92,6 +94,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
 
     return [
       { id: "all", label: t("all") },
+      { id: "areas", label: t("areas") },
       ...parkTypeFilterOptions,
       { id: "trails", label: t("natureTrails") },
       { id: "visited", label: t("visited") },
@@ -104,6 +107,8 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
   const filteredParks = useMemo(() => {
     switch (activeFilter) {
       case "all":
+        return parks;
+      case "areas":
         return parks.filter((park) => isAreaPark(park));
       case "trails":
         return parks.filter((park) => TRAIL_TYPE_SLUGS.includes(park.type.slug));

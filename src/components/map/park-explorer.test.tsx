@@ -201,13 +201,19 @@ describe("ParkExplorer", () => {
     expect(screen.getByText("admin:true")).toBeInTheDocument();
   });
 
-  it("filters the visible parks by selected type, with all excluding trails", async () => {
+  it("defaults to areas filter excluding trails and shows all parks when all is selected", async () => {
     render(<ParkExplorer parks={parks} />);
 
     expect(screen.getByText("count:3")).toBeInTheDocument();
     expect(screen.getByText("admin:false")).toBeInTheDocument();
     expect(screen.queryByText("Punkaharjun luontopolku")).not.toBeInTheDocument();
     expect(screen.queryByText("Nuuksion vaellusreitti")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "home.filters.all" }));
+
+    expect(screen.getByText("count:5")).toBeInTheDocument();
+    expect(screen.getByText("Punkaharjun luontopolku")).toBeInTheDocument();
+    expect(screen.getByText("Nuuksion vaellusreitti")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "home.filters.natureTrails" }));
 
@@ -261,12 +267,13 @@ describe("ParkExplorer", () => {
 
     const buttons = within(desktopSidebar as HTMLElement).getAllByRole("button");
 
-    expect(buttons).toHaveLength(11);
+    expect(buttons).toHaveLength(12);
     expect(buttons[0]).toHaveTextContent("home.filters.all");
-    expect(buttons[1]).toHaveTextContent("home.filters.nationalParks");
-    expect(buttons[6]).toHaveTextContent("home.filters.natureTrails");
-    expect(buttons[9]).toHaveTextContent("home.filters.hasLogo");
-    expect(buttons[10]).toHaveTextContent("home.filters.hasMap");
+    expect(buttons[1]).toHaveTextContent("home.filters.areas");
+    expect(buttons[2]).toHaveTextContent("home.filters.nationalParks");
+    expect(buttons[7]).toHaveTextContent("home.filters.natureTrails");
+    expect(buttons[10]).toHaveTextContent("home.filters.hasLogo");
+    expect(buttons[11]).toHaveTextContent("home.filters.hasMap");
   });
 
   it("stops mousedown propagation inside the filter panel", () => {
