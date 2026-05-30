@@ -52,9 +52,9 @@ const isMapFilter = (value: string | null): value is MapFilter => {
     case "has-map":
     case "trails":
     case "national-park":
-    case "state-hiking-area":
+    case "hiking-area":
     case "wilderness-area":
-    case "other-nature-reserve":
+    case "nature-reserve-area":
     case "outdoor-recreation-area":
     case "nature-trail":
     case "hiking-trail":
@@ -113,9 +113,9 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
       case "trails":
         return parks.filter((park) => TRAIL_TYPE_SLUGS.includes(park.type.slug));
       case "national-park":
-      case "state-hiking-area":
+      case "hiking-area":
       case "wilderness-area":
-      case "other-nature-reserve":
+      case "nature-reserve-area":
       case "outdoor-recreation-area":
       case "nature-trail":
       case "hiking-trail":

@@ -16,9 +16,9 @@ export const TRAIL_TYPE_SLUGS: ParkTypeSlug[] = ["nature-trail", "hiking-trail"]
 
 export const PARK_TYPE_FILTER_ORDER: ParkTypeSlug[] = [
   "national-park",
-  "state-hiking-area",
+  "hiking-area",
   "wilderness-area",
-  "other-nature-reserve",
+  "nature-reserve-area",
   "outdoor-recreation-area",
   "nature-trail",
   "hiking-trail",
@@ -26,9 +26,9 @@ export const PARK_TYPE_FILTER_ORDER: ParkTypeSlug[] = [
 
 export const PARK_TYPE_FILTER_LABEL_KEYS: Record<FilterableParkTypeSlug, ParkTypeFilterLabelKey> = {
   "national-park": "nationalParks",
-  "state-hiking-area": "hikingAreas",
+  "hiking-area": "hikingAreas",
   "wilderness-area": "wildernessAreas",
-  "other-nature-reserve": "otherNatureReserves",
+  "nature-reserve-area": "otherNatureReserves",
   "outdoor-recreation-area": "outdoorRecreationAreas",
   "nature-trail": "natureTrails",
 };

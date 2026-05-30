@@ -48,7 +48,7 @@ const parks: MapPark[] = [
     establishmentYear: null,
     boundingBox: { minLat: 67.1, minLon: 23.1, maxLat: 67.2, maxLon: 23.2 },
     markerPoint: { lat: 67.15, lon: 23.15 },
-    type: { code: 4, id: 4, name: "Muu luonnonsuojelualue", slug: "other-nature-reserve" },
+    type: { code: 4, id: 4, name: "Muu luonnonsuojelualue", slug: "nature-reserve-area" },
     visitedSummary: { visited: false, visitCount: 0, lastVisitedOn: null },
   },
 ];

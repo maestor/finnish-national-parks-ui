@@ -40,7 +40,7 @@ const buildSummary = (): PublicHomeSummary => ({
         code: 4,
         id: 4,
         name: "Muut LS-alueet",
-        slug: "other-nature-reserve",
+        slug: "nature-reserve-area",
       },
       visitedParks: 2,
       totalParks: 4,
@@ -84,7 +84,7 @@ const buildSummary = (): PublicHomeSummary => ({
         code: 2,
         id: 2,
         name: "Retkeilyalueet",
-        slug: "state-hiking-area",
+        slug: "hiking-area",
       },
       visitedParks: 1,
       totalParks: 3,
@@ -117,7 +117,7 @@ describe("createHomeProgressItems", () => {
     ]);
     expect(progressItems[0]?.mapFilter).toBe("visited");
     expect(progressItems[1]?.mapFilter).toBe("national-park");
-    expect(progressItems[2]?.mapFilter).toBe("state-hiking-area");
+    expect(progressItems[2]?.mapFilter).toBe("hiking-area");
     expect(progressItems[6]?.mapFilter).toBe("nature-trail");
   });
 
