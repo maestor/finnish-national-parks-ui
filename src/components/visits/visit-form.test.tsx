@@ -90,6 +90,42 @@ describe("VisitForm", () => {
     expect(mockRefresh).not.toHaveBeenCalled();
   });
 
+  it("keeps the create submit button pending until navigation leaves the page", async () => {
+    const { apiFetch } = await import("@/lib/api");
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      id: 42,
+      visitedOn: "2024-06-15",
+      route: null,
+      author: null,
+      note: null,
+      createdAt: "2024-06-15T00:00:00Z",
+      updatedAt: "2024-06-15T00:00:00Z",
+    });
+
+    render(<VisitForm parks={parks} />);
+
+    await userEvent.selectOptions(
+      screen.getByLabelText(/controlPanel.visits.form.parkLabel/i),
+      "pallas",
+    );
+    await userEvent.type(
+      screen.getByLabelText(/controlPanel.visits.form.dateLabel/i),
+      "2024-06-15",
+    );
+
+    const submitButton = screen.getByRole("button", {
+      name: /controlPanel.visits.form.submit/i,
+    });
+    await userEvent.click(submitButton);
+
+    expect(submitButton).toBeDisabled();
+    expect(submitButton).toHaveTextContent("...");
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith("/control-panel/visits/42/edit?created=1");
+    });
+    expect(submitButton).toBeDisabled();
+  });
+
   it("renders create form fields", () => {
     render(<VisitForm parks={parks} />);
 

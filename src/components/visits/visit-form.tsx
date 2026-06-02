@@ -74,6 +74,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
       return;
     }
 
+    let shouldResetSubmittingState = true;
     setIsSubmitting(true);
     try {
       if (isEditing && visitToEdit) {
@@ -106,12 +107,15 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
           }),
         });
         await revalidatePublicCache({ parkSlug });
+        shouldResetSubmittingState = false;
         router.push(`/control-panel/visits/${createdVisit.id}/edit?created=1`);
       }
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : String(error));
     } finally {
-      setIsSubmitting(false);
+      if (shouldResetSubmittingState) {
+        setIsSubmitting(false);
+      }
     }
   };
 
