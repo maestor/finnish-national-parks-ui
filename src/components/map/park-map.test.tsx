@@ -130,12 +130,19 @@ global.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
 
 vi.mock("maplibre-gl", () => ({
   default: {
-    Map: vi.fn((options?: Record<string, unknown>) => {
+    // biome-ignore lint: Vitest v4 constructor mocks must be constructible.
+    Map: vi.fn(function (options?: Record<string, unknown>) {
       mapOptions = options ?? null;
       return createMockMap();
     }),
-    Marker: vi.fn((options?: { element?: HTMLElement }) => createMockMarker(options)),
-    Popup: vi.fn(() => createMockPopup()),
+    // biome-ignore lint: Vitest v4 constructor mocks must be constructible.
+    Marker: vi.fn(function (options?: { element?: HTMLElement }) {
+      return createMockMarker(options);
+    }),
+    // biome-ignore lint: Vitest v4 constructor mocks must be constructible.
+    Popup: vi.fn(function () {
+      return createMockPopup();
+    }),
     NavigationControl: vi.fn(),
   },
 }));

@@ -8,10 +8,16 @@ import {
 } from "./social-preview-image";
 
 const { imageResponseMock } = vi.hoisted(() => ({
-  imageResponseMock: vi.fn((element: ReactElement, options: { width: number; height: number }) => ({
-    element,
-    options,
-  })),
+  // biome-ignore lint: Vitest v4 constructor mocks must be constructible.
+  imageResponseMock: vi.fn(function (
+    element: ReactElement,
+    options: { width: number; height: number },
+  ) {
+    return {
+      element,
+      options,
+    };
+  }),
 }));
 
 vi.mock("next/og", () => ({

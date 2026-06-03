@@ -7,6 +7,7 @@ export default defineConfig({
   test: {
     coverage: {
       excludeAfterRemap: true,
+      include: ["src/**/*.{ts,tsx}"],
       exclude: [
         "coverage/**",
         ".next/**",
@@ -21,6 +22,7 @@ export default defineConfig({
         "src/app/robots.ts",
         "src/app/sw.ts",
         "src/app/serwist/**",
+        "src/**/*.{test,spec}.{ts,tsx}",
         "src/**/loading.tsx",
         "src/lib/api-types.ts",
         "src/test/**",
