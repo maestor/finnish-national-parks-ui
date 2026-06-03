@@ -49,8 +49,14 @@ let mockMap = createMockMap();
 
 vi.mock("maplibre-gl", () => ({
   default: {
-    Map: vi.fn(() => mockMap),
-    Marker: vi.fn(() => createMockMarker()),
+    // biome-ignore lint: Vitest v4 constructor mocks must be constructible.
+    Map: vi.fn(function () {
+      return mockMap;
+    }),
+    // biome-ignore lint: Vitest v4 constructor mocks must be constructible.
+    Marker: vi.fn(function () {
+      return createMockMarker();
+    }),
     NavigationControl: vi.fn(),
   },
 }));

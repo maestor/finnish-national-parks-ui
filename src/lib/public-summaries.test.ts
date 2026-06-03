@@ -1,10 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { apiFetch } from "./api";
+import { apiFetch, apiPublicFetch } from "./api";
 import type { PublicHomeSummary } from "./public-summaries";
 import {
   createHomeLatestVisitEntriesFromSummary,
+  createHomeLatestVisitEntriesFromVisitList,
+  createHomeMostVisitedParks,
   createHomeProgressItems,
   createHomeRecentVisitsFromSummary,
+  createHomeRecentVisitsFromVisitList,
+  fetchPublicHomeSummary,
+  fetchPublicMapSummary,
   fetchPublicParkDetail,
   fetchPublicParkVisits,
 } from "./public-summaries";
@@ -121,6 +126,35 @@ describe("createHomeProgressItems", () => {
     expect(progressItems[6]?.mapFilter).toBe("nature-trail");
   });
 
+  it("returns no progress items when the summary has no park-type progress", () => {
+    const summary = buildSummary();
+    summary.progressByType = [];
+
+    expect(createHomeProgressItems(summary, "Kaikki paikat")).toEqual([]);
+  });
+
+  it("maps most-visited parks to home card items", () => {
+    const summary = buildSummary();
+    summary.mostVisitedParks = [
+      {
+        park: {
+          name: "Pallas",
+          slug: "pallas",
+        },
+        lastVisitedOn: "2024-06-16",
+        visitCount: 3,
+      },
+    ];
+
+    expect(createHomeMostVisitedParks(summary)).toEqual([
+      {
+        parkName: "Pallas",
+        parkSlug: "pallas",
+        visitCount: 3,
+      },
+    ]);
+  });
+
   it("sorts latest visit entries from the public summary by newest creation time", () => {
     const summary = buildSummary();
     summary.latestVisitEntries = [
@@ -207,6 +241,46 @@ describe("createHomeProgressItems", () => {
     ]);
   });
 
+  it("sorts recent visits from the visit list by newest visited date", () => {
+    expect(
+      createHomeRecentVisitsFromVisitList([
+        {
+          id: 2,
+          createdAt: "2024-06-15T10:00:00.000Z",
+          updatedAt: "2024-06-15T10:00:00.000Z",
+          visitedOn: "2024-06-15",
+          park: {
+            name: "Nuuksio",
+            slug: "nuuksio",
+          },
+        },
+        {
+          id: 1,
+          createdAt: "2024-06-14T10:00:00.000Z",
+          updatedAt: "2024-06-14T10:00:00.000Z",
+          visitedOn: "2024-06-16",
+          park: {
+            name: "Pallas",
+            slug: "pallas",
+          },
+        },
+      ] as never),
+    ).toEqual([
+      {
+        id: 1,
+        parkName: "Pallas",
+        parkSlug: "pallas",
+        visitedOn: "2024-06-16",
+      },
+      {
+        id: 2,
+        parkName: "Nuuksio",
+        parkSlug: "nuuksio",
+        visitedOn: "2024-06-15",
+      },
+    ]);
+  });
+
   it("fetches public park detail through the server-side API client", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce({ slug: "riisitunturi" });
 
@@ -229,6 +303,79 @@ describe("createHomeProgressItems", () => {
       cache: "force-cache",
       next: {
         tags: ["public-park:riisitunturi"],
+      },
+    });
+  });
+
+  it("sorts latest visit entries from the visit list by newest creation time", () => {
+    expect(
+      createHomeLatestVisitEntriesFromVisitList([
+        {
+          id: 2,
+          createdAt: "2024-06-15T10:00:00.000Z",
+          updatedAt: "2024-06-15T10:00:00.000Z",
+          visitedOn: "2024-06-15",
+          park: {
+            name: "Nuuksio",
+            slug: "nuuksio",
+          },
+        },
+        {
+          id: 1,
+          createdAt: "2024-06-16T10:00:00.000Z",
+          updatedAt: "2024-06-16T10:00:00.000Z",
+          visitedOn: "2024-06-14",
+          park: {
+            name: "Pallas",
+            slug: "pallas",
+          },
+        },
+      ] as never),
+    ).toEqual([
+      {
+        id: 1,
+        parkName: "Pallas",
+        parkSlug: "pallas",
+        createdAt: "2024-06-16T10:00:00.000Z",
+      },
+      {
+        id: 2,
+        parkName: "Nuuksio",
+        parkSlug: "nuuksio",
+        createdAt: "2024-06-15T10:00:00.000Z",
+      },
+    ]);
+  });
+
+  it("fetches the public home summary through the cacheable API client", async () => {
+    vi.mocked(apiPublicFetch).mockResolvedValueOnce(buildSummary());
+
+    await fetchPublicHomeSummary();
+
+    expect(apiPublicFetch).toHaveBeenCalledWith("/api/public/home-summary", {
+      cache: "force-cache",
+      next: {
+        tags: ["public-home-summary"],
+      },
+    });
+  });
+
+  it("fetches the public map summary through the cacheable API client", async () => {
+    vi.mocked(apiPublicFetch).mockResolvedValueOnce({
+      parks: [],
+      totalParks: 0,
+      visitedParks: 0,
+      removedParks: 0,
+      updatedAt: "2024-06-15T12:00:00.000Z",
+      version: 1,
+    });
+
+    await fetchPublicMapSummary();
+
+    expect(apiPublicFetch).toHaveBeenCalledWith("/api/public/map-summary", {
+      cache: "force-cache",
+      next: {
+        tags: ["public-map-summary"],
       },
     });
   });
