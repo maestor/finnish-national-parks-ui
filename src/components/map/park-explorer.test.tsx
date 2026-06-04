@@ -274,20 +274,6 @@ describe("ParkExplorer", () => {
     expect(screen.getByText("Verlan tehdaskylä")).toBeInTheDocument();
   });
 
-  it("filters visible parks by logo and map availability", () => {
-    render(<ParkExplorer parks={parks} />);
-
-    fireEvent.click(screen.getByRole("button", { name: "home.filters.hasLogo" }));
-    expect(screen.getByText("count:2")).toBeInTheDocument();
-    expect(screen.getByText("Päijänteen kansallispuisto")).toBeInTheDocument();
-    expect(screen.getByText("Teijon kansallispuisto")).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "home.filters.hasMap" }));
-    expect(screen.getByText("count:2")).toBeInTheDocument();
-    expect(screen.getByText("Päijänteen kansallispuisto")).toBeInTheDocument();
-    expect(screen.getByText("Iso-Syötteen retkeilyalue")).toBeInTheDocument();
-  });
-
   it("renders desktop filters as a floating vertical overlay on the left", () => {
     const { container } = render(<ParkExplorer parks={parks} />);
 
@@ -298,14 +284,12 @@ describe("ParkExplorer", () => {
 
     const buttons = within(desktopSidebar as HTMLElement).getAllByRole("button");
 
-    expect(buttons).toHaveLength(13);
+    expect(buttons).toHaveLength(11);
     expect(buttons[0]).toHaveTextContent("home.filters.all");
     expect(buttons[1]).toHaveTextContent("home.filters.areas");
     expect(buttons[2]).toHaveTextContent("home.filters.nationalParks");
     expect(buttons[7]).toHaveTextContent("home.filters.factoryVillages");
     expect(buttons[8]).toHaveTextContent("home.filters.natureTrails");
-    expect(buttons[11]).toHaveTextContent("home.filters.hasLogo");
-    expect(buttons[12]).toHaveTextContent("home.filters.hasMap");
   });
 
   it("stops mousedown propagation inside the filter panel", () => {

@@ -24,9 +24,7 @@ type MapFilter =
   | "nature-trail"
   | "hiking-trail"
   | "visited"
-  | "not-visited"
-  | "has-logo"
-  | "has-map";
+  | "not-visited";
 
 const FILTER_PANEL_CLASS_NAME =
   "pointer-events-auto flex flex-col gap-2 rounded-[2rem] border border-white/45 bg-white/60 p-3 shadow-[0_22px_48px_rgba(148,163,184,0.2)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/50 dark:shadow-[0_26px_56px_rgba(2,6,23,0.38)]";
@@ -48,8 +46,6 @@ const isMapFilter = (value: string | null): value is MapFilter => {
     case "areas":
     case "visited":
     case "not-visited":
-    case "has-logo":
-    case "has-map":
     case "trails":
     case "national-park":
     case "hiking-area":
@@ -100,8 +96,6 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
       { id: "trails", label: t("natureTrails") },
       { id: "visited", label: t("visited") },
       { id: "not-visited", label: t("notVisited") },
-      { id: "has-logo", label: t("hasLogo") },
-      { id: "has-map", label: t("hasMap") },
     ] satisfies Array<{ id: MapFilter; label: string }>;
   }, [t]);
 
@@ -126,10 +120,6 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
         return parks.filter((park) => park.visitedSummary.visited);
       case "not-visited":
         return parks.filter((park) => !park.visitedSummary.visited);
-      case "has-logo":
-        return parks.filter((park) => park.logo !== null);
-      case "has-map":
-        return parks.filter((park) => park.map !== null);
       default:
         return parks;
     }
