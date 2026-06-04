@@ -91,6 +91,7 @@ describe("PublicVisitsTimeline", () => {
     const monthLinks = within(monthNav).getAllByRole("link");
 
     expect(monthLinks).toHaveLength(13);
+    expect(monthLinks[1]).toHaveTextContent(/tammi/i);
     expect(
       within(monthNav).getByRole("link", { name: "visits.filters.allMonthsLabel" }),
     ).toHaveAttribute("href", "/visits?year=2024");
@@ -100,7 +101,7 @@ describe("PublicVisitsTimeline", () => {
     render(<PublicVisitsTimeline visits={visits} selectedYear={2024} selectedMonth={8} />);
 
     expect(screen.getByRole("heading", { name: "2024" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /elo/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /elokuu/i })).toBeInTheDocument();
     expect(screen.queryByText("Nuuksio")).not.toBeInTheDocument();
     expect(screen.queryByText("Kesainen paiva.")).not.toBeInTheDocument();
 
@@ -221,6 +222,33 @@ describe("PublicVisitsTimeline", () => {
     expect(imageBadge).toHaveTextContent("1");
     expect(screen.queryByText("visits.item.note")).not.toBeInTheDocument();
     expect(screen.getAllByText("visits.item.viewVisit")).toHaveLength(3);
+  });
+
+  it("uses centered mobile month headers and aligns the mobile spine with visit markers", () => {
+    render(<PublicVisitsTimeline visits={visits} selectedYear={null} selectedMonth={null} />);
+
+    const timelineWrapper = screen.getByRole("heading", { name: "2025" }).closest("div")
+      ?.parentElement?.parentElement;
+    const monthHeadingRow = screen.getByRole("heading", { name: /helmi/i }).parentElement;
+    const firstVisitItem = screen.getByText("Oulanka").closest("li");
+    const firstVisitMarker = firstVisitItem?.querySelector("div.pointer-events-none");
+
+    if (
+      !(timelineWrapper instanceof HTMLElement) ||
+      !(monthHeadingRow instanceof HTMLElement) ||
+      !(firstVisitItem instanceof HTMLElement) ||
+      !(firstVisitMarker instanceof HTMLElement)
+    ) {
+      throw new Error("Expected mobile timeline layout elements");
+    }
+
+    expect(timelineWrapper).toHaveClass("before:left-4");
+    expect(monthHeadingRow).toHaveClass("pl-12");
+    expect(monthHeadingRow).toHaveClass("pr-4");
+    expect(monthHeadingRow).toHaveClass("md:px-0");
+    expect(firstVisitItem).toHaveClass("pl-12");
+    expect(firstVisitMarker).toHaveClass("left-4");
+    expect(firstVisitMarker).toHaveClass("-translate-x-1/2");
   });
 
   it("shows an empty state when a selected year has no visits yet", () => {

@@ -299,10 +299,10 @@ const PublicVisitsTimeline = ({
       ) : null}
 
       {model.filteredVisits.length > 0 ? (
-        <div className="relative mt-6 space-y-8 before:absolute before:bottom-0 before:left-[0.15rem] before:top-0 before:w-px before:bg-[linear-gradient(180deg,rgba(22,101,52,0.42),rgba(37,99,235,0.18),rgba(22,101,52,0.42))] before:content-[''] md:before:left-1/2 md:before:-translate-x-1/2">
+        <div className="relative mt-6 space-y-8 before:absolute before:bottom-0 before:left-4 before:top-0 before:w-px before:-translate-x-1/2 before:bg-[linear-gradient(180deg,rgba(22,101,52,0.42),rgba(37,99,235,0.18),rgba(22,101,52,0.42))] before:content-[''] md:before:left-1/2 md:before:-translate-x-1/2">
           {model.sections.map((section) => (
             <section key={section.year} aria-labelledby={`visits-year-${section.year}`}>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 pl-12 pr-4 md:px-0">
                 <div className="h-px flex-1 bg-border/70" aria-hidden="true" />
                 <h2
                   id={`visits-year-${section.year}`}
@@ -326,13 +326,14 @@ const PublicVisitsTimeline = ({
                       <div className="md:grid md:grid-cols-[minmax(0,1fr)_2.5rem_minmax(0,1fr)] md:gap-4">
                         <div
                           className={cn(
-                            "flex items-center gap-3",
+                            "flex items-center gap-3 pl-12 pr-4 md:px-0",
                             isLeftMonth ? "md:col-start-1" : "md:col-start-3",
                           )}
                         >
+                          <div className="h-px flex-1 bg-border/60 md:hidden" aria-hidden="true" />
                           <h3
                             id={`visits-month-${section.year}-${monthSection.month}`}
-                            className="text-base font-semibold uppercase tracking-[0.2em] text-muted-foreground"
+                            className="text-center text-base font-semibold uppercase tracking-[0.2em] text-muted-foreground md:text-left"
                           >
                             {monthSection.label}
                           </h3>
@@ -340,7 +341,7 @@ const PublicVisitsTimeline = ({
                         </div>
                       </div>
 
-                      <ol className="relative mt-4 space-y-4 before:absolute before:bottom-0 before:left-[0.15rem] before:top-0 before:w-px before:bg-[linear-gradient(180deg,rgba(22,101,52,0.38),rgba(37,99,235,0.12))] before:content-[''] md:before:left-1/2 md:before:-translate-x-1/2">
+                      <ol className="relative mt-4 space-y-4 before:absolute before:bottom-0 before:left-4 before:top-0 before:w-px before:-translate-x-1/2 before:bg-[linear-gradient(180deg,rgba(22,101,52,0.38),rgba(37,99,235,0.12))] before:content-[''] md:before:left-1/2 md:before:-translate-x-1/2">
                         {monthSection.visits.map((visit) => {
                           const currentVisitFocusIndex = visitFocusIndex;
                           visitFocusIndex += 1;
@@ -350,7 +351,7 @@ const PublicVisitsTimeline = ({
                           return (
                             <li
                               key={visit.id}
-                              className="relative pl-6 md:grid md:grid-cols-[minmax(0,1fr)_2.5rem_minmax(0,1fr)] md:gap-4 md:pl-0"
+                              className="relative pl-12 md:grid md:grid-cols-[minmax(0,1fr)_2.5rem_minmax(0,1fr)] md:gap-4 md:pl-0"
                             >
                               <div
                                 className={cn(
@@ -423,7 +424,7 @@ const PublicVisitsTimeline = ({
                                 </Link>
                               </div>
 
-                              <div className="pointer-events-none absolute bottom-0 left-0 top-0 flex w-4 justify-center md:static md:col-start-2 md:row-start-1 md:w-auto">
+                              <div className="pointer-events-none absolute bottom-0 left-4 top-0 flex w-4 -translate-x-1/2 justify-center md:static md:col-start-2 md:row-start-1 md:w-auto md:translate-x-0">
                                 <span
                                   aria-hidden="true"
                                   className="relative top-5 h-3.5 w-3.5 rounded-full border-2 border-background bg-primary shadow-[0_0_0_4px_rgba(255,255,255,0.75)] dark:shadow-[0_0_0_4px_rgba(2,6,23,0.72)]"
