@@ -1,6 +1,7 @@
 import {
   PUBLIC_HOME_SUMMARY_TAG,
   PUBLIC_MAP_SUMMARY_TAG,
+  PUBLIC_VISITS_TAG,
   getPublicParkTag,
 } from "@/lib/public-cache";
 import { revalidatePath, revalidateTag } from "next/cache";
@@ -21,8 +22,10 @@ export const POST = async (request: Request) => {
 
   revalidateTag(PUBLIC_HOME_SUMMARY_TAG, "max");
   revalidateTag(PUBLIC_MAP_SUMMARY_TAG, "max");
+  revalidateTag(PUBLIC_VISITS_TAG, "max");
   revalidatePath("/", "page");
   revalidatePath("/parks", "page");
+  revalidatePath("/visits", "page");
 
   if (parkSlug) {
     revalidateTag(getPublicParkTag(parkSlug), "max");

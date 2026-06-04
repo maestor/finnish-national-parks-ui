@@ -115,6 +115,13 @@ describe("VisitAccordion", () => {
     expect(getVisitToggle("15.8.2024")).toHaveAttribute("aria-expanded", "false");
   });
 
+  it("opens the targeted visit when an initial open id is provided", () => {
+    render(<VisitAccordion visits={visits} initialOpenVisitId={4} />);
+
+    expect(getVisitToggle("15.8.2024")).toHaveAttribute("aria-expanded", "true");
+    expect(getVisitToggle("1.9.2024")).toHaveAttribute("aria-expanded", "false");
+  });
+
   it("lets the user switch between detailed visits and collapse the active one", async () => {
     const user = userEvent.setup();
 

@@ -11,6 +11,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 interface VisitAccordionProps {
+  initialOpenVisitId?: number | null;
   visits: Visit[];
   isEditable?: boolean;
 }
@@ -84,13 +85,25 @@ const getVisitAuthorDetails = (visit: Visit): VisitAuthorDetails => {
   };
 };
 
-export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionProps) => {
+export const VisitAccordion = ({
+  visits,
+  isEditable = false,
+  initialOpenVisitId = null,
+}: VisitAccordionProps) => {
   const t = useTranslations("park");
+  const firstExpandableVisitId =
+    [...visits]
+      .sort((a, b) => new Date(b.visitedOn).getTime() - new Date(a.visitedOn).getTime())
+      .find((visit) => hasExpandableContent(visit))?.id ?? null;
   const [openId, setOpenId] = useState<number | null>(() => {
-    const sorted = [...visits].sort(
-      (a, b) => new Date(b.visitedOn).getTime() - new Date(a.visitedOn).getTime(),
-    );
-    return sorted[0]?.id ?? null;
+    if (
+      initialOpenVisitId !== null &&
+      visits.some((visit) => visit.id === initialOpenVisitId && hasExpandableContent(visit))
+    ) {
+      return initialOpenVisitId;
+    }
+
+    return firstExpandableVisitId;
   });
 
   const sortedByDateAsc = [...visits].sort(
@@ -117,6 +130,7 @@ export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionPro
         const imageCount = visit.images?.length ?? 0;
         const hasImages = imageCount > 0;
         const isExpandable = hasExpandableContent(visit);
+        const isHighlighted = initialOpenVisitId === visit.id;
         const isOpen = openId === visit.id;
         const season = getSeasonPresentation(visit.visitedOn);
         const authorDetails = visit.author ? getVisitAuthorDetails(visit) : null;
@@ -125,7 +139,7 @@ export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionPro
           return (
             <div
               key={visit.id}
-              className={`flex items-center justify-between ${VISIT_CARD_CLASS_NAME} ${season.borderClass} border-l-4 px-4 py-3`}
+              className={`flex items-center justify-between ${VISIT_CARD_CLASS_NAME} ${season.borderClass} ${isHighlighted ? "ring-2 ring-primary/35 ring-offset-2 ring-offset-background dark:ring-offset-slate-950/44" : ""} border-l-4 px-4 py-3`}
             >
               <span className="flex flex-wrap items-center gap-2.5 text-sm font-medium">
                 <span
@@ -151,7 +165,7 @@ export const VisitAccordion = ({ visits, isEditable = false }: VisitAccordionPro
         return (
           <div
             key={visit.id}
-            className={`overflow-hidden ${VISIT_CARD_CLASS_NAME} ${season.borderClass} border-l-4`}
+            className={`overflow-hidden ${VISIT_CARD_CLASS_NAME} ${season.borderClass} ${isHighlighted ? "ring-2 ring-primary/35 ring-offset-2 ring-offset-background dark:ring-offset-slate-950/44" : ""} border-l-4`}
           >
             <button
               type="button"

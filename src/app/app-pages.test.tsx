@@ -8,6 +8,9 @@ import ParkDetailPage, {
   generateMetadata as generateParkDetailMetadata,
 } from "./(user)/park/[slug]/page";
 import ParksMapPage, { generateMetadata as generateParksMapMetadata } from "./(user)/parks/page";
+import PublicVisitsPage, {
+  generateMetadata as generatePublicVisitsMetadata,
+} from "./(user)/visits/page";
 import ControlPanelLayout from "./control-panel/layout";
 import ControlPanelPage, {
   generateMetadata as generateControlPanelMetadata,
@@ -81,12 +84,33 @@ vi.mock("@/components/park/park-visit-history", () => ({
   ParkVisitHistory: ({
     parkSlug,
     visits,
+    initialOpenVisitId,
   }: {
     parkSlug: string;
     visits: { id: number }[];
+    initialOpenVisitId?: number | null;
   }) => (
     <div data-testid="park-visit-history">
-      slug:{parkSlug}|visits:{visits.length}
+      slug:{parkSlug}|visits:{visits.length}|open:{initialOpenVisitId ?? "none"}
+    </div>
+  ),
+}));
+
+vi.mock("@/components/visits/public-visits-timeline", () => ({
+  PublicVisitsTimeline: ({
+    visits,
+    selectedYear,
+    selectedMonth,
+    error,
+  }: {
+    visits: VisitWithPark[];
+    selectedYear: number | null;
+    selectedMonth: number | null;
+    error?: string | null;
+  }) => (
+    <div data-testid="public-visits-timeline">
+      visits:{visits.length}|year:{selectedYear ?? "all"}|month:{selectedMonth ?? "all"}|error:
+      {error ?? "none"}
     </div>
   ),
 }));
@@ -283,7 +307,9 @@ const renderControlPanelRoute = async (page: React.ReactNode) => {
 
 describe("App pages", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.mocked(apiFetch).mockReset();
+    vi.mocked(apiPublicFetch).mockReset();
+    mockNotFound.mockReset();
     mockNotFound.mockImplementation(() => {
       throw new Error("NEXT_NOT_FOUND");
     });
@@ -401,7 +427,12 @@ describe("App pages", () => {
         visits: [personalVisit],
       });
 
-    await renderPublicRoute(await ParkDetailPage({ params: Promise.resolve({ slug: "pallas" }) }));
+    await renderPublicRoute(
+      await ParkDetailPage({
+        params: Promise.resolve({ slug: "pallas" }),
+        searchParams: Promise.resolve({}),
+      }),
+    );
 
     expect(screen.getByRole("heading", { name: "Pallas-Yllästunturi" })).toBeInTheDocument();
     expect(screen.getByText("Maailmanperintökohde")).toBeInTheDocument();
@@ -410,7 +441,36 @@ describe("App pages", () => {
       "/parks?park=pallas",
     );
     expect(screen.getByTestId("park-boundary-map")).toHaveTextContent("Pallas-Yllästunturi");
-    expect(screen.getByTestId("park-visit-history")).toHaveTextContent("slug:pallas|visits:1");
+    expect(screen.getByTestId("park-visit-history")).toHaveTextContent(
+      "slug:pallas|visits:1|open:none",
+    );
+  });
+
+  it("passes a targeted visit id to the park detail visit history", async () => {
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({
+        ...publicPark,
+        boundaryGeoJson: null,
+      })
+      .mockResolvedValueOnce({
+        visitedSummary: {
+          visited: true,
+          visitCount: 1,
+          lastVisitedOn: "2024-06-15",
+        },
+        visits: [personalVisit],
+      });
+
+    await renderPublicRoute(
+      await ParkDetailPage({
+        params: Promise.resolve({ slug: "pallas" }),
+        searchParams: Promise.resolve({ visit: "10" }),
+      }),
+    );
+
+    expect(screen.getByTestId("park-visit-history")).toHaveTextContent(
+      "slug:pallas|visits:1|open:10",
+    );
   });
 
   it("renders the park logo when present", async () => {
@@ -433,7 +493,12 @@ describe("App pages", () => {
         visits: [],
       });
 
-    await renderPublicRoute(await ParkDetailPage({ params: Promise.resolve({ slug: "pallas" }) }));
+    await renderPublicRoute(
+      await ParkDetailPage({
+        params: Promise.resolve({ slug: "pallas" }),
+        searchParams: Promise.resolve({}),
+      }),
+    );
 
     const logo = screen.getByRole("img", { name: "Pallas-Yllästunturi" });
     expect(logo).toBeInTheDocument();
@@ -456,7 +521,12 @@ describe("App pages", () => {
         visits: [],
       });
 
-    await renderPublicRoute(await ParkDetailPage({ params: Promise.resolve({ slug: "pallas" }) }));
+    await renderPublicRoute(
+      await ParkDetailPage({
+        params: Promise.resolve({ slug: "pallas" }),
+        searchParams: Promise.resolve({}),
+      }),
+    );
 
     expect(screen.queryByRole("img", { name: "Pallas-Yllästunturi" })).not.toBeInTheDocument();
   });
@@ -465,10 +535,33 @@ describe("App pages", () => {
     vi.mocked(apiFetch).mockResolvedValueOnce(null).mockResolvedValueOnce(null);
 
     await renderPublicRoute(
-      await ParkDetailPage({ params: Promise.resolve({ slug: "missing-park" }) }),
+      await ParkDetailPage({
+        params: Promise.resolve({ slug: "missing-park" }),
+        searchParams: Promise.resolve({}),
+      }),
     );
 
     expect(screen.getByText("park.detailTitle")).toBeInTheDocument();
+  });
+
+  it("renders the public visits page with selected year and month filters", async () => {
+    vi.mocked(apiPublicFetch).mockResolvedValueOnce({ visits: [visitWithPark] });
+
+    await renderPublicRoute(
+      await PublicVisitsPage({
+        searchParams: Promise.resolve({ year: "2024", month: "6" }),
+      }),
+    );
+
+    expect(screen.getByTestId("public-visits-timeline")).toHaveTextContent(
+      "visits:1|year:2024|month:6|error:none",
+    );
+  });
+
+  it("builds translated metadata for the public visits page", async () => {
+    await expect(generatePublicVisitsMetadata()).resolves.toEqual({
+      title: "visits.title",
+    });
   });
 
   it("builds park detail metadata from the fetched park name and falls back to the slug", async () => {

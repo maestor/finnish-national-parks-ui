@@ -22,6 +22,10 @@ describe("LatestVisitEntries", () => {
 
     expect(screen.getByRole("heading", { name: "Uusimmat käyntikirjaukset" })).toBeInTheDocument();
     expect(screen.getByText("16.6.2024")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Pallas" })).toHaveAttribute(
+      "href",
+      "/park/pallas?visit=1#visit-history",
+    );
     expect(screen.getByLabelText("controlPanel.visits.edit")).toBeInTheDocument();
   });
 
@@ -59,5 +63,7 @@ describe("LatestVisitEntries", () => {
 
     expect(screen.getByText("Pallas")).toBeInTheDocument();
     expect(screen.getByText("Nuuksio")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Pallas" })).toHaveAttribute("href", "/park/pallas");
+    expect(screen.getByRole("link", { name: "Nuuksio" })).toHaveAttribute("href", "/park/nuuksio");
   });
 });

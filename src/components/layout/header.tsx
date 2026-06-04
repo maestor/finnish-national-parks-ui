@@ -4,7 +4,17 @@ import { LoginLink } from "@/components/auth/login-link";
 import { HeaderBrandMark } from "@/components/layout/header-brand-mark";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/cn";
-import { House, LogIn, LogOut, MapPin, Menu, Settings, SlidersHorizontal, X } from "lucide-react";
+import {
+  Footprints,
+  House,
+  LogIn,
+  LogOut,
+  MapPin,
+  Menu,
+  Settings,
+  SlidersHorizontal,
+  X,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -30,6 +40,7 @@ export const Header = () => {
   const pathname = usePathname();
   const isControlPanel = pathname.startsWith("/control-panel");
   const isParksMapPage = pathname === "/parks";
+  const isPublicVisitsPage = pathname === "/visits";
   const { isMobileFiltersOpen, toggleMobileFilters } = useHomeMapControls();
   const [isMobileMenuMounted, setIsMobileMenuMounted] = useState(false);
   const [isMobileMenuVisible, setIsMobileMenuVisible] = useState(false);
@@ -110,6 +121,11 @@ export const Header = () => {
         label: t("nav.map"),
         isCurrent: pathname === "/parks",
       },
+      {
+        href: "/visits",
+        label: t("nav.visits"),
+        isCurrent: isPublicVisitsPage,
+      },
       ...(auth.isAuthenticated
         ? [
             {
@@ -120,7 +136,7 @@ export const Header = () => {
           ]
         : []),
     ],
-    [auth.isAuthenticated, isControlPanel, pathname, t],
+    [auth.isAuthenticated, isControlPanel, isPublicVisitsPage, pathname, t],
   );
 
   return (
@@ -271,6 +287,10 @@ export const Header = () => {
                 <Link href="/parks" className={MOBILE_SHEET_ITEM_CLASS} onClick={closeMobileMenu}>
                   <MapPin className="h-4 w-4 shrink-0" aria-hidden="true" />
                   <span>{t("nav.map")}</span>
+                </Link>
+                <Link href="/visits" className={MOBILE_SHEET_ITEM_CLASS} onClick={closeMobileMenu}>
+                  <Footprints className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span>{t("nav.visits")}</span>
                 </Link>
                 {auth.isAuthenticated && (
                   <Link
