@@ -265,7 +265,7 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    type?: "outdoor-recreation-area" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "nature-trail" | "hiking-trail";
+                    type?: "outdoor-recreation-area" | "factory-village" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "nature-trail" | "hiking-trail";
                 };
                 header?: never;
                 path?: never;
@@ -317,7 +317,7 @@ export interface paths {
                                     id: number;
                                     name: string;
                                     /** @enum {string} */
-                                    slug: "outdoor-recreation-area" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "nature-trail" | "hiking-trail";
+                                    slug: "outdoor-recreation-area" | "factory-village" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "nature-trail" | "hiking-trail";
                                 };
                             }[];
                         };
@@ -400,7 +400,7 @@ export interface paths {
                                     id: number;
                                     name: string;
                                     /** @enum {string} */
-                                    slug: "outdoor-recreation-area" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "nature-trail" | "hiking-trail";
+                                    slug: "outdoor-recreation-area" | "factory-village" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "nature-trail" | "hiking-trail";
                                 };
                                 /** @enum {string} */
                                 catalogStatus: "active" | "inactive";
@@ -484,7 +484,7 @@ export interface paths {
                                 id: number;
                                 name: string;
                                 /** @enum {string} */
-                                slug: "outdoor-recreation-area" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "nature-trail" | "hiking-trail";
+                                slug: "outdoor-recreation-area" | "factory-village" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "nature-trail" | "hiking-trail";
                             };
                             boundaryGeoJson?: {
                                 features: {
@@ -739,7 +739,7 @@ export interface paths {
                                     id: number;
                                     name: string;
                                     /** @enum {string} */
-                                    slug: "outdoor-recreation-area" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "nature-trail" | "hiking-trail";
+                                    slug: "outdoor-recreation-area" | "factory-village" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "nature-trail" | "hiking-trail";
                                 };
                                 visitedParks: number;
                             }[];
@@ -845,7 +845,7 @@ export interface paths {
                                     id: number;
                                     name: string;
                                     /** @enum {string} */
-                                    slug: "outdoor-recreation-area" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "nature-trail" | "hiking-trail";
+                                    slug: "outdoor-recreation-area" | "factory-village" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "nature-trail" | "hiking-trail";
                                 };
                                 visitedSummary: {
                                     lastVisitedOn: string | null;

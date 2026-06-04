@@ -1,15 +1,18 @@
 import { apiFetch, apiPublicFetch } from "./api";
 import type { paths } from "./api-types";
-import type { ParkTypeSlug } from "./park-type-filters";
 import { getParkTypeFilterSortIndex } from "./park-type-filters";
-import type { ParkDetail, ParkVisits, VisitWithPark } from "./parks";
+import type { MapPark, ParkDetail, ParkTypeSlug, ParkVisits, VisitWithPark } from "./parks";
 import { PUBLIC_HOME_SUMMARY_TAG, PUBLIC_MAP_SUMMARY_TAG, getPublicParkTag } from "./public-cache";
 
 export type PublicHomeSummary =
   paths["/api/public/home-summary"]["get"]["responses"][200]["content"]["application/json"];
 
-export type PublicMapSummary =
-  paths["/api/public/map-summary"]["get"]["responses"][200]["content"]["application/json"];
+export type PublicMapSummary = Omit<
+  paths["/api/public/map-summary"]["get"]["responses"][200]["content"]["application/json"],
+  "parks"
+> & {
+  parks: MapPark[];
+};
 
 export interface HomeProgressItem {
   label: string;

@@ -75,6 +75,17 @@ const buildSummary = (): PublicHomeSummary => ({
     },
     {
       type: {
+        code: 8,
+        id: 8,
+        name: "Tehdaskylät",
+        slug: "factory-village",
+      },
+      visitedParks: 1,
+      totalParks: 1,
+      totalVisits: 2,
+    },
+    {
+      type: {
         code: 3,
         id: 3,
         name: "Erämaa-alueet",
@@ -94,6 +105,17 @@ const buildSummary = (): PublicHomeSummary => ({
       visitedParks: 1,
       totalParks: 3,
       totalVisits: 1,
+    },
+    {
+      type: {
+        code: 7,
+        id: 7,
+        name: "Vaellusreitit",
+        slug: "hiking-trail",
+      },
+      visitedParks: 1,
+      totalParks: 5,
+      totalVisits: 2,
     },
   ],
   mostVisitedParks: [],
@@ -118,12 +140,16 @@ describe("createHomeProgressItems", () => {
       "Erämaa-alueet",
       "Muut LS-alueet",
       "Virkistysalueet",
+      "Tehdaskylät",
       "Luontopolut",
+      "Vaellusreitit",
     ]);
     expect(progressItems[0]?.mapFilter).toBe("visited");
     expect(progressItems[1]?.mapFilter).toBe("national-park");
     expect(progressItems[2]?.mapFilter).toBe("hiking-area");
-    expect(progressItems[6]?.mapFilter).toBe("nature-trail");
+    expect(progressItems[6]?.mapFilter).toBe("factory-village");
+    expect(progressItems[7]?.mapFilter).toBe("nature-trail");
+    expect(progressItems[8]?.mapFilter).toBe("hiking-trail");
   });
 
   it("returns no progress items when the summary has no park-type progress", () => {

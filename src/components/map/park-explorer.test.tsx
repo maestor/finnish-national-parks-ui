@@ -122,6 +122,20 @@ const parks: MapPark[] = [
     visitedSummary: { visited: false, visitCount: 0, lastVisitedOn: null },
   },
   {
+    slug: "verla",
+    name: "Verlan tehdaskylä",
+    areaKm2: 1,
+    location: "Kouvola",
+    logo: null,
+    luontoonUrl: null,
+    map: null,
+    establishmentYear: 1972,
+    boundingBox: { minLat: 61.1, minLon: 26.5, maxLat: 61.2, maxLon: 26.6 },
+    markerPoint: { lat: 61.15, lon: 26.55 },
+    type: { code: 8, id: 8, name: "Tehdaskylä", slug: "factory-village" },
+    visitedSummary: { visited: false, visitCount: 0, lastVisitedOn: null },
+  },
+  {
     slug: "punkaharju",
     name: "Punkaharjun luontopolku",
     areaKm2: null,
@@ -204,14 +218,16 @@ describe("ParkExplorer", () => {
   it("defaults to areas filter excluding trails and shows all parks when all is selected", async () => {
     render(<ParkExplorer parks={parks} />);
 
-    expect(screen.getByText("count:3")).toBeInTheDocument();
+    expect(screen.getByText("count:4")).toBeInTheDocument();
     expect(screen.getByText("admin:false")).toBeInTheDocument();
+    expect(screen.getByText("Verlan tehdaskylä")).toBeInTheDocument();
     expect(screen.queryByText("Punkaharjun luontopolku")).not.toBeInTheDocument();
     expect(screen.queryByText("Nuuksion vaellusreitti")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "home.filters.all" }));
 
-    expect(screen.getByText("count:5")).toBeInTheDocument();
+    expect(screen.getByText("count:6")).toBeInTheDocument();
+    expect(screen.getByText("Verlan tehdaskylä")).toBeInTheDocument();
     expect(screen.getByText("Punkaharjun luontopolku")).toBeInTheDocument();
     expect(screen.getByText("Nuuksion vaellusreitti")).toBeInTheDocument();
 
@@ -220,6 +236,20 @@ describe("ParkExplorer", () => {
     expect(screen.getByText("count:2")).toBeInTheDocument();
     expect(screen.getByText("Punkaharjun luontopolku")).toBeInTheDocument();
     expect(screen.getByText("Nuuksion vaellusreitti")).toBeInTheDocument();
+  });
+
+  it("shows factory villages in their own filter while keeping them in the areas group", () => {
+    render(<ParkExplorer parks={parks} />);
+
+    expect(screen.getByText("count:4")).toBeInTheDocument();
+    expect(screen.getByText("Verlan tehdaskylä")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "home.filters.factoryVillages" }));
+
+    expect(screen.getByText("count:1")).toBeInTheDocument();
+    expect(screen.getByText("Verlan tehdaskylä")).toBeInTheDocument();
+    expect(screen.queryByText("Päijänteen kansallispuisto")).not.toBeInTheDocument();
+    expect(screen.queryByText("Nuuksion vaellusreitti")).not.toBeInTheDocument();
   });
 
   it("shows visited filters for all users when visit history is public", () => {
@@ -238,9 +268,10 @@ describe("ParkExplorer", () => {
     expect(screen.getByText("Nuuksion vaellusreitti")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "home.filters.notVisited" }));
-    expect(screen.getByText("count:3")).toBeInTheDocument();
+    expect(screen.getByText("count:4")).toBeInTheDocument();
     expect(screen.queryByText("Päijänteen kansallispuisto")).not.toBeInTheDocument();
     expect(screen.queryByText("Nuuksion vaellusreitti")).not.toBeInTheDocument();
+    expect(screen.getByText("Verlan tehdaskylä")).toBeInTheDocument();
   });
 
   it("filters visible parks by logo and map availability", () => {
@@ -267,13 +298,14 @@ describe("ParkExplorer", () => {
 
     const buttons = within(desktopSidebar as HTMLElement).getAllByRole("button");
 
-    expect(buttons).toHaveLength(12);
+    expect(buttons).toHaveLength(13);
     expect(buttons[0]).toHaveTextContent("home.filters.all");
     expect(buttons[1]).toHaveTextContent("home.filters.areas");
     expect(buttons[2]).toHaveTextContent("home.filters.nationalParks");
-    expect(buttons[7]).toHaveTextContent("home.filters.natureTrails");
-    expect(buttons[10]).toHaveTextContent("home.filters.hasLogo");
-    expect(buttons[11]).toHaveTextContent("home.filters.hasMap");
+    expect(buttons[7]).toHaveTextContent("home.filters.factoryVillages");
+    expect(buttons[8]).toHaveTextContent("home.filters.natureTrails");
+    expect(buttons[11]).toHaveTextContent("home.filters.hasLogo");
+    expect(buttons[12]).toHaveTextContent("home.filters.hasMap");
   });
 
   it("stops mousedown propagation inside the filter panel", () => {
@@ -334,7 +366,7 @@ describe("ParkExplorer", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "focus-teijo" }));
 
-    expect(screen.getByText("count:3")).toBeInTheDocument();
+    expect(screen.getByText("count:4")).toBeInTheDocument();
     expect(screen.getByText("focus:teijo")).toBeInTheDocument();
   });
 
@@ -366,7 +398,7 @@ describe("ParkExplorer", () => {
       </HomeMapControlsProvider>,
     );
 
-    expect(screen.getByText("count:3")).toBeInTheDocument();
+    expect(screen.getByText("count:4")).toBeInTheDocument();
     expect(screen.getByText("reset:0")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "focus-punkaharju" }));
