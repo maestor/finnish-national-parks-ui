@@ -1,6 +1,4 @@
-import type { MapPark } from "./parks";
-
-export type ParkTypeSlug = MapPark["type"]["slug"];
+import type { ParkTypeSlug } from "./parks";
 
 export type FilterableParkTypeSlug = Exclude<ParkTypeSlug, "hiking-trail">;
 
@@ -10,6 +8,7 @@ export type ParkTypeFilterLabelKey =
   | "wildernessAreas"
   | "otherNatureReserves"
   | "outdoorRecreationAreas"
+  | "factoryVillages"
   | "natureTrails";
 
 export const TRAIL_TYPE_SLUGS: ParkTypeSlug[] = ["nature-trail", "hiking-trail"];
@@ -20,6 +19,7 @@ export const PARK_TYPE_FILTER_ORDER: ParkTypeSlug[] = [
   "wilderness-area",
   "nature-reserve-area",
   "outdoor-recreation-area",
+  "factory-village",
   "nature-trail",
   "hiking-trail",
 ];
@@ -30,6 +30,7 @@ export const PARK_TYPE_FILTER_LABEL_KEYS: Record<FilterableParkTypeSlug, ParkTyp
   "wilderness-area": "wildernessAreas",
   "nature-reserve-area": "otherNatureReserves",
   "outdoor-recreation-area": "outdoorRecreationAreas",
+  "factory-village": "factoryVillages",
   "nature-trail": "natureTrails",
 };
 

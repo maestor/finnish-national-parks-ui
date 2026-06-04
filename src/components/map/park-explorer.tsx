@@ -56,6 +56,7 @@ const isMapFilter = (value: string | null): value is MapFilter => {
     case "wilderness-area":
     case "nature-reserve-area":
     case "outdoor-recreation-area":
+    case "factory-village":
     case "nature-trail":
     case "hiking-trail":
       return true;
@@ -117,6 +118,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
       case "wilderness-area":
       case "nature-reserve-area":
       case "outdoor-recreation-area":
+      case "factory-village":
       case "nature-trail":
       case "hiking-trail":
         return parks.filter((park) => park.type.slug === activeFilter);
