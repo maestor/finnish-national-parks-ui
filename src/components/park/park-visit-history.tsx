@@ -8,6 +8,7 @@ import Link from "next/link";
 
 interface ParkVisitHistoryProps {
   addVisitLabel: string;
+  initialOpenVisitId?: number | null;
   noVisitsLabel: string;
   parkSlug: string;
   title: string;
@@ -16,6 +17,7 @@ interface ParkVisitHistoryProps {
 
 export const ParkVisitHistory = ({
   addVisitLabel,
+  initialOpenVisitId = null,
   noVisitsLabel,
   parkSlug,
   title,
@@ -24,7 +26,10 @@ export const ParkVisitHistory = ({
   const auth = useAuth();
 
   return (
-    <section className="mt-8 rounded-[2rem] border border-white/45 bg-white/60 p-5 shadow-[0_24px_48px_rgba(148,163,184,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/42 dark:shadow-[0_28px_56px_rgba(2,6,23,0.3)]">
+    <section
+      id="visit-history"
+      className="mt-8 scroll-mt-24 rounded-[2rem] border border-white/45 bg-white/60 p-5 shadow-[0_24px_48px_rgba(148,163,184,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/42 dark:shadow-[0_28px_56px_rgba(2,6,23,0.3)]"
+    >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <NotebookPen className="h-4 w-4 text-primary" aria-hidden="true" />
@@ -56,7 +61,11 @@ export const ParkVisitHistory = ({
 
       {visits.length > 0 ? (
         <div className="mt-4">
-          <VisitAccordion visits={visits} isEditable={auth.isAuthenticated} />
+          <VisitAccordion
+            visits={visits}
+            isEditable={auth.isAuthenticated}
+            initialOpenVisitId={initialOpenVisitId}
+          />
         </div>
       ) : (
         <p className="mt-4 rounded-2xl border border-white/35 bg-white/46 px-4 py-4 text-muted-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.42)] dark:border-white/8 dark:bg-slate-950/30 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">

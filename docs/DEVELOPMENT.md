@@ -90,6 +90,7 @@ src/app/
   (user)/           # Public routes (grouped, no layout effect)
     page.tsx        # Public landing page
     parks/page.tsx  # Map route
+    visits/page.tsx # Visit timeline route
     park/[slug]/    # Park detail pages
   control-panel/    # Admin routes (protected by proxy)
     layout.tsx      # Sidebar layout

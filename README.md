@@ -8,7 +8,7 @@ This is a Finnish-language, PWA-capable web application built with Next.js 16 Ap
 
 The app serves two audiences:
 
-- **Public view** — Visit-focused landing page at `/`, interactive map at `/parks`, persistent park search, and public visit history
+- **Public view** — Visit-focused landing page at `/`, interactive map at `/parks`, visit timeline browsing at `/visits`, persistent park search, and public visit history
 - **Admin view** — Adding and editing visits plus hiding parks from the catalog via `/control-panel`
 
 ## Tech Stack
@@ -35,6 +35,7 @@ The app serves two audiences:
 src/
 ├── app/                        # Next.js App Router
 │   ├── (user)/                 # Public landing, map, and park views
+│   │   ├── visits/page.tsx     # Public timeline view for browsing visits
 │   ├── control-panel/          # Admin routes
 │   ├── serwist/[path]/         # Service worker route (PWA)
 │   ├── layout.tsx              # Root layout with providers

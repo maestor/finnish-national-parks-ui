@@ -8,6 +8,7 @@
     "nav": {
       "home": "Etusivu",
       "map": "Paikat",
+      "visits": "Käynnit",
       "controlPanel": "Hallinta",
       "filters": "Suodata karttaa",
       "menu": "Valikko",
@@ -103,6 +104,32 @@
     "visitNumber": "{number}. käynti",
     "boundaryMapTitle": "Paikan kartta",
     "showInFinlandsMap": "Näytä Suomen kartalla"
+  },
+  "visits": {
+    "eyebrow": "Käyntien aikajana",
+    "title": "Käynnit",
+    "description": "Selaa kirjattuja käyntejä aikajärjestyksessä. Voit rajata näkymää vuoden mukaan ja tarkentaa tarvittaessa yksittäiseen kuukauteen.",
+    "errorTitle": "Käyntien lataus epäonnistui",
+    "filters": {
+      "title": "Rajaa aikajanalla",
+      "visibleCount": "käyntiä näkyvissä",
+      "yearsLabel": "Suodata käyntejä vuoden mukaan",
+      "monthsLabel": "Suodata käyntejä kuukauden mukaan",
+      "all": "Kaikki",
+      "allYearsLabel": "Kaikki vuodet",
+      "allMonthsLabel": "Kaikki kuukaudet",
+      "reset": "Tyhjennä rajaus"
+    },
+    "empty": {
+      "all": "Ei vielä kirjattuja käyntejä.",
+      "filtered": "Valitulla rajauksella ei löytynyt käyntejä."
+    },
+    "item": {
+      "note": "Muistiinpano",
+      "viewVisit": "Näytä käynti",
+      "openVisit": "Avaa käynti paikan sivulla",
+      "imageCount": "{count} kuvaa"
+    }
   },
   "controlPanel": {
     "title": "Hallinta",

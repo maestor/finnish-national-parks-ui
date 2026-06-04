@@ -128,6 +128,21 @@ describe("Header", () => {
 
     expect(screen.getByRole("link", { name: "layout.nav.home" })).toHaveAttribute("href", "/");
     expect(screen.getByRole("link", { name: "layout.nav.map" })).toHaveAttribute("href", "/parks");
+    expect(screen.getByRole("link", { name: "layout.nav.visits" })).toHaveAttribute(
+      "href",
+      "/visits",
+    );
+  });
+
+  it("marks the visits page link as current on the public visits route", () => {
+    pathnameState.value = "/visits";
+
+    render(<Header />);
+
+    expect(screen.getByRole("link", { name: "layout.nav.visits" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
   });
 
   it("shows a desktop logout icon and calls logout", async () => {
@@ -183,6 +198,10 @@ describe("Header", () => {
     expect(within(dialog).getByRole("link", { name: "layout.nav.map" })).toHaveAttribute(
       "href",
       "/parks",
+    );
+    expect(within(dialog).getByRole("link", { name: "layout.nav.visits" })).toHaveAttribute(
+      "href",
+      "/visits",
     );
     expect(within(dialog).getByRole("link", { name: "layout.nav.controlPanel" })).toHaveAttribute(
       "href",

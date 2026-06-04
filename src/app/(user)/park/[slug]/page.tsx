@@ -8,6 +8,9 @@ import Link from "next/link";
 
 interface ParkDetailPageProps {
   params: Promise<{ slug: string }>;
+  searchParams?: Promise<{
+    visit?: string | string[];
+  }>;
 }
 
 export const generateMetadata = async ({ params }: ParkDetailPageProps) => {
@@ -19,9 +22,21 @@ export const generateMetadata = async ({ params }: ParkDetailPageProps) => {
   };
 };
 
-const ParkDetailPage = async ({ params }: ParkDetailPageProps) => {
+const normalizeVisitSearchParam = (value?: string | string[]) => {
+  if (Array.isArray(value)) {
+    return value[0];
+  }
+
+  return value;
+};
+
+const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => {
   const { slug } = await params;
+  const { visit } = searchParams ? await searchParams : {};
   const t = await getTranslations("park");
+  const normalizedVisit = normalizeVisitSearchParam(visit);
+  const parsedVisitId = normalizedVisit ? Number.parseInt(normalizedVisit, 10) : Number.NaN;
+  const initialOpenVisitId = Number.isInteger(parsedVisitId) ? parsedVisitId : null;
 
   const publicPark = await fetchPublicParkDetail(slug, { includeBoundary: true }).catch(() => null);
 
@@ -142,6 +157,7 @@ const ParkDetailPage = async ({ params }: ParkDetailPageProps) => {
         addVisitLabel={t("addVisit")}
         noVisitsLabel={t("noVisits")}
         parkSlug={slug}
+        initialOpenVisitId={initialOpenVisitId}
         visits={visits}
       />
     </article>
