@@ -38,8 +38,13 @@ export interface PublicVisitsTimelineModel {
   selectedYear: number | null;
 }
 
-const MONTH_LABEL_FORMATTER = new Intl.DateTimeFormat("fi-FI", {
+const MONTH_FILTER_LABEL_FORMATTER = new Intl.DateTimeFormat("fi-FI", {
   month: "short",
+  timeZone: "Europe/Helsinki",
+});
+
+const MONTH_TIMELINE_LABEL_FORMATTER = new Intl.DateTimeFormat("fi-FI", {
+  month: "long",
   timeZone: "Europe/Helsinki",
 });
 
@@ -151,9 +156,12 @@ export const createPublicVisitMonthOptions = (): PublicVisitMonthOption[] =>
 
     return {
       value,
-      label: MONTH_LABEL_FORMATTER.format(new Date(Date.UTC(2024, index, 1, 12))),
+      label: MONTH_FILTER_LABEL_FORMATTER.format(new Date(Date.UTC(2024, index, 1, 12))),
     };
   });
+
+const createPublicVisitTimelineMonthLabel = (month: number) =>
+  MONTH_TIMELINE_LABEL_FORMATTER.format(new Date(Date.UTC(2024, month - 1, 1, 12)));
 
 export const resolvePublicVisitsFilters = (
   visits: VisitWithPark[],
@@ -235,7 +243,7 @@ export const buildPublicVisitsTimelineModel = (
         .sort((left, right) => right[0] - left[0])
         .map(([month, monthVisits]) => ({
           month,
-          label: monthOptions[month - 1]?.label ?? String(month),
+          label: createPublicVisitTimelineMonthLabel(month),
           visits: monthVisits,
         })),
     }));
