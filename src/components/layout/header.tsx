@@ -33,6 +33,8 @@ const MOBILE_SHEET_ITEM_CLASS =
 const MOBILE_TOPBAR_ICON_BUTTON_CLASS =
   "inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/45 bg-white/82 text-foreground shadow-[0_12px_28px_rgba(148,163,184,0.22)] backdrop-blur-md transition-colors hover:bg-white/94 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/56 dark:hover:bg-slate-950/76 dark:shadow-[0_16px_32px_rgba(2,6,23,0.38)]";
 const MOBILE_MENU_ANIMATION_MS = 180;
+const HEADER_HIDE_SCROLL_THRESHOLD_PX = 96;
+const HEADER_SCROLL_DELTA_THRESHOLD_PX = 12;
 
 export const Header = () => {
   const t = useTranslations("layout");
@@ -44,7 +46,9 @@ export const Header = () => {
   const { isMobileFiltersOpen, toggleMobileFilters } = useHomeMapControls();
   const [isMobileMenuMounted, setIsMobileMenuMounted] = useState(false);
   const [isMobileMenuVisible, setIsMobileMenuVisible] = useState(false);
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const openAnimationFrameRef = useRef<number | null>(null);
+  const lastScrollYRef = useRef(0);
 
   const openMobileMenu = () => {
     if (openAnimationFrameRef.current !== null) {
@@ -109,6 +113,40 @@ export const Header = () => {
     };
   }, []);
 
+  useEffect(() => {
+    void pathname;
+    setIsHeaderVisible(true);
+    lastScrollYRef.current = window.scrollY;
+  }, [pathname]);
+
+  useEffect(() => {
+    if (isMobileMenuVisible) {
+      setIsHeaderVisible(true);
+      return;
+    }
+
+    const handleScroll = () => {
+      const currentScrollY = Math.max(window.scrollY, 0);
+      const scrollDelta = currentScrollY - lastScrollYRef.current;
+
+      if (Math.abs(scrollDelta) < HEADER_SCROLL_DELTA_THRESHOLD_PX) {
+        return;
+      }
+
+      const shouldShowHeader = currentScrollY <= HEADER_HIDE_SCROLL_THRESHOLD_PX || scrollDelta < 0;
+
+      setIsHeaderVisible((current) => (current === shouldShowHeader ? current : shouldShowHeader));
+      lastScrollYRef.current = currentScrollY;
+    };
+
+    lastScrollYRef.current = window.scrollY;
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [isMobileMenuVisible]);
+
   const desktopNavItems = useMemo(
     () => [
       {
@@ -141,7 +179,12 @@ export const Header = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b border-border/70 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+      <header
+        className={cn(
+          "sticky top-0 z-50 w-full border-b border-border/70 bg-background/90 backdrop-blur transition-transform duration-300 ease-out motion-reduce:transition-none supports-[backdrop-filter]:bg-background/70",
+          isHeaderVisible ? "translate-y-0" : "-translate-y-full",
+        )}
+      >
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 bg-[linear-gradient(118deg,rgba(22,101,52,0.16)_0%,rgba(15,118,110,0.12)_46%,rgba(37,99,235,0.18)_100%)] dark:bg-[linear-gradient(118deg,rgba(22,101,52,0.28)_0%,rgba(15,118,110,0.24)_46%,rgba(37,99,235,0.3)_100%)]"
