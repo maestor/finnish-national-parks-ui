@@ -78,8 +78,6 @@
       "natureTrails": "Polut/Reitit",
       "visited": "Käydyt",
       "notVisited": "Käymättömät",
-      "hasLogo": "Tunnukset",
-      "hasMap": "Esitteet",
       "results": "{count} kohdetta"
     }
   },
