@@ -1,5 +1,5 @@
 import { HomeMapControlsProvider } from "@/components/providers/home-map-controls-provider";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Header } from "./header";
@@ -45,6 +45,14 @@ vi.mock("./home-park-search", () => ({
   HomeParkSearch: () => <div>home-park-search</div>,
 }));
 
+const setWindowScrollY = (value: number) => {
+  Object.defineProperty(window, "scrollY", {
+    configurable: true,
+    value,
+    writable: true,
+  });
+};
+
 describe("Header", () => {
   beforeEach(() => {
     authState.isAuthenticated = false;
@@ -54,6 +62,7 @@ describe("Header", () => {
     searchParamsState.value = "";
     themeState.value = "light";
     setThemeMock.mockReset();
+    setWindowScrollY(0);
   });
 
   it("renders the site title link to the parks map", () => {
@@ -69,6 +78,44 @@ describe("Header", () => {
     const { container } = render(<Header />);
 
     expect(container.querySelector("header")).not.toHaveClass("overflow-hidden");
+  });
+
+  it("slides the header away on downward scroll and reveals it on upward scroll", async () => {
+    const { container } = render(<Header />);
+    const header = container.querySelector("header");
+
+    expect(header).toHaveClass("translate-y-0");
+
+    setWindowScrollY(140);
+    fireEvent.scroll(window);
+
+    await waitFor(() => {
+      expect(header).toHaveClass("-translate-y-full");
+    });
+
+    setWindowScrollY(88);
+    fireEvent.scroll(window);
+
+    await waitFor(() => {
+      expect(header).toHaveClass("translate-y-0");
+    });
+  });
+
+  it("keeps the header visible while the mobile menu is open", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<Header />);
+    const header = container.querySelector("header");
+
+    await user.click(screen.getByRole("button", { name: "layout.nav.menu" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("dialog", { name: "layout.nav.menu" })).toHaveClass("translate-x-0");
+    });
+
+    setWindowScrollY(220);
+    fireEvent.scroll(window);
+
+    expect(header).toHaveClass("translate-y-0");
   });
 
   it("renders theme toggle button", () => {
