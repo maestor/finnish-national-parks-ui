@@ -225,6 +225,19 @@ describe("ParkExplorer", () => {
     expect(replaceMock).toHaveBeenCalledWith("/parks", { scroll: false });
   });
 
+  it("ignores legacy individual trail query params", () => {
+    pathnameState.value = "/parks";
+    searchParamsState.value = "filter=nature-trail";
+
+    render(<ParkExplorer parks={parks} />);
+
+    expect(screen.getByText("count:4")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "home.filters.areas" })).toHaveClass(
+      "text-primary-foreground",
+    );
+    expect(replaceMock).not.toHaveBeenCalled();
+  });
+
   it("enables map admin quick actions for authenticated users", () => {
     mockUseAuth.mockReturnValueOnce({
       isAuthenticated: true,

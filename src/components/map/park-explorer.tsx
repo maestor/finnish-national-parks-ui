@@ -21,9 +21,6 @@ type MapFilter =
   | "areas"
   | typeof TRAILS_AND_ROUTES_CATEGORY_SLUG
   | FilterableParkTypeSlug
-  | "walking-trail"
-  | "nature-trail"
-  | "hiking-trail"
   | "visited"
   | "not-visited";
 
@@ -56,9 +53,6 @@ const isMapFilter = (value: string | null): value is MapFilter => {
     case "nature-reserve-area":
     case "outdoor-recreation-area":
     case "factory-village":
-    case "walking-trail":
-    case "nature-trail":
-    case "hiking-trail":
       return true;
     default:
       return false;
@@ -108,9 +102,6 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
       case "areas":
         return parks.filter((park) => isAreaPark(park));
       case TRAILS_AND_ROUTES_CATEGORY_SLUG:
-      case "walking-trail":
-      case "nature-trail":
-      case "hiking-trail":
         return parks.filter((park) => isTrailPark(park));
       case "national-park":
       case "hiking-area":
