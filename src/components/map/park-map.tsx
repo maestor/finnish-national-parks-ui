@@ -2,6 +2,7 @@
 
 import type { MapPark } from "@/lib/parks";
 import { getParkTypeDisplayName, getVisitStatusColor } from "@/lib/parks";
+import { LoaderCircle, LocateFixed } from "lucide-react";
 import maplibregl from "maplibre-gl";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -9,6 +10,7 @@ import {
   type HomeParkFocusRequest,
   useHomeMapControls,
 } from "../providers/home-map-controls-provider";
+import { Button } from "../ui/button";
 import { ThreeDotPulse } from "../ui/three-dot-pulse";
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -36,6 +38,24 @@ const PARK_FOCUS_PADDING = {
   bottom: 48,
   left: 48,
 } as const;
+const LOCATION_FOCUS_DURATION = 900;
+const LOCATION_FOCUS_ZOOM = 9;
+const LOCATION_REQUEST_OPTIONS = {
+  enableHighAccuracy: true,
+  maximumAge: 300000,
+  timeout: 10000,
+} as const;
+const GEOLOCATION_PERMISSION_DENIED = 1;
+const GEOLOCATION_POSITION_UNAVAILABLE = 2;
+const GEOLOCATION_TIMEOUT = 3;
+
+type UserLocationStatus =
+  | "idle"
+  | "locating"
+  | "unsupported"
+  | "permissionDenied"
+  | "unavailable"
+  | "timeout";
 
 const getBoundsForVisibleParks = (parks: MapPark[]): maplibregl.LngLatBoundsLike => {
   if (parks.length === 0) {
@@ -109,6 +129,34 @@ const createMarkerElement = (park: MapPark, colorOverride?: string) => {
   `;
 
   return button;
+};
+
+const createUserLocationMarkerElement = () => {
+  const marker = document.createElement("div");
+  marker.className =
+    "flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-sky-500 shadow-[0_0_0_4px_rgba(14,165,233,0.24)]";
+  marker.setAttribute("aria-hidden", "true");
+
+  const centerDot = document.createElement("span");
+  centerDot.className = "h-2.5 w-2.5 rounded-full bg-white";
+  marker.appendChild(centerDot);
+
+  return marker;
+};
+
+const getUserLocationStatusFromError = (
+  error: GeolocationPositionError,
+): Exclude<UserLocationStatus, "idle" | "locating" | "unsupported"> => {
+  switch (error.code) {
+    case GEOLOCATION_PERMISSION_DENIED:
+      return "permissionDenied";
+    case GEOLOCATION_POSITION_UNAVAILABLE:
+      return "unavailable";
+    case GEOLOCATION_TIMEOUT:
+      return "timeout";
+    default:
+      return "unavailable";
+  }
 };
 
 interface PopupLabels {
@@ -308,6 +356,7 @@ export const ParkMap = ({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
+  const userLocationMarkerRef = useRef<maplibregl.Marker | null>(null);
   const popupsRef = useRef<Map<string, maplibregl.Popup>>(new Map());
   const shownPopupsRef = useRef<Set<string>>(new Set());
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -320,6 +369,7 @@ export const ParkMap = ({
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [activeSlug, setActiveSlug] = useState<string | null>(null);
   const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
+  const [userLocationStatus, setUserLocationStatus] = useState<UserLocationStatus>("idle");
 
   useEffect(() => {
     activeSlugRef.current = activeSlug;
@@ -401,6 +451,57 @@ export const ParkMap = ({
     [cancelClose],
   );
 
+  const focusUserLocation = useCallback((lat: number, lon: number) => {
+    const map = mapRef.current;
+    if (!map) {
+      return;
+    }
+
+    if (!userLocationMarkerRef.current) {
+      userLocationMarkerRef.current = new maplibregl.Marker({
+        element: createUserLocationMarkerElement(),
+      })
+        .setLngLat([lon, lat])
+        .addTo(map);
+    } else {
+      userLocationMarkerRef.current.setLngLat([lon, lat]);
+    }
+
+    map.easeTo({
+      center: [lon, lat],
+      duration: LOCATION_FOCUS_DURATION,
+      zoom: LOCATION_FOCUS_ZOOM,
+    });
+  }, []);
+
+  const handleLocateUser = useCallback(() => {
+    const geolocation = window.navigator.geolocation;
+
+    if (!geolocation) {
+      setUserLocationStatus("unsupported");
+      return;
+    }
+
+    if (!mapRef.current) {
+      return;
+    }
+
+    setUserLocationStatus("locating");
+    geolocation.getCurrentPosition(
+      (position) => {
+        cancelClose();
+        setActiveSlug(null);
+        setHoveredSlug(null);
+        setUserLocationStatus("idle");
+        focusUserLocation(position.coords.latitude, position.coords.longitude);
+      },
+      (error) => {
+        setUserLocationStatus(getUserLocationStatusFromError(error));
+      },
+      LOCATION_REQUEST_OPTIONS,
+    );
+  }, [cancelClose, focusUserLocation]);
+
   const syncPopupVisibility = useCallback(
     (currentActiveSlug: string | null, currentHoveredSlug: string | null) => {
       const map = mapRef.current;
@@ -471,6 +572,8 @@ export const ParkMap = ({
       }
       popupsRef.current.clear();
       shownPopupsRef.current.clear();
+      userLocationMarkerRef.current?.remove();
+      userLocationMarkerRef.current = null;
       map.remove();
       mapRef.current = null;
       setIsMapLoaded(false);
@@ -681,6 +784,19 @@ export const ParkMap = ({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  const locationStatusMessage =
+    userLocationStatus === "idle"
+      ? null
+      : userLocationStatus === "locating"
+        ? t("locating")
+        : userLocationStatus === "unsupported"
+          ? t("locationUnsupported")
+          : userLocationStatus === "permissionDenied"
+            ? t("locationPermissionDenied")
+            : userLocationStatus === "timeout"
+              ? t("locationTimeout")
+              : t("locationUnavailable");
+
   if (error) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center p-8 text-center">
@@ -698,6 +814,32 @@ export const ParkMap = ({
         role="application"
         aria-label={t("ariaLabel")}
       />
+      <div className="pointer-events-none absolute bottom-4 left-4 z-10 flex max-w-56 flex-col items-start gap-2">
+        {locationStatusMessage ? (
+          <output
+            className="rounded-2xl border border-white/55 bg-white/88 px-3 py-2 text-xs font-medium text-foreground shadow-[0_10px_24px_rgba(148,163,184,0.18)] backdrop-blur-md dark:border-white/10 dark:bg-slate-950/78 dark:shadow-[0_16px_32px_rgba(2,6,23,0.28)]"
+            aria-live="polite"
+          >
+            {locationStatusMessage}
+          </output>
+        ) : null}
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="pointer-events-auto h-11 w-11 rounded-full border-white/60 bg-white/88 text-foreground shadow-[0_14px_28px_rgba(148,163,184,0.2)] backdrop-blur-md dark:border-white/10 dark:bg-slate-950/70 dark:shadow-[0_18px_36px_rgba(2,6,23,0.32)]"
+          onClick={handleLocateUser}
+          aria-label={t("locateUser")}
+          title={t("locateUser")}
+          disabled={!isMapLoaded || userLocationStatus === "locating"}
+        >
+          {userLocationStatus === "locating" ? (
+            <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <LocateFixed className="h-4 w-4" aria-hidden="true" />
+          )}
+        </Button>
+      </div>
       {!isMapLoaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
           <div className="flex flex-col items-center gap-2">

@@ -12,6 +12,7 @@ const popupInstances: Array<{
 }> = [];
 let mapOptions: Record<string, unknown> | null = null;
 const fitBoundsMock = vi.fn();
+const easeToMock = vi.fn();
 
 const parks: MapPark[] = [
   {
@@ -117,6 +118,7 @@ const createMockMap = () => ({
   resize: vi.fn(),
   addControl: vi.fn(),
   fitBounds: fitBoundsMock,
+  easeTo: easeToMock,
 });
 
 class MockResizeObserver {
@@ -157,6 +159,13 @@ describe("ParkMap", () => {
     resizeObservers.length = 0;
     mapOptions = null;
     fitBoundsMock.mockReset();
+    easeToMock.mockReset();
+    Object.defineProperty(window.navigator, "geolocation", {
+      configurable: true,
+      value: {
+        getCurrentPosition: vi.fn(),
+      },
+    });
   });
 
   afterEach(() => {
@@ -200,6 +209,16 @@ describe("ParkMap", () => {
   it("does not show loading spinner when error is present", () => {
     render(<ParkMap parks={[]} error="API error" />);
     expect(screen.queryByText("map.loading")).not.toBeInTheDocument();
+  });
+
+  it("renders a current location button for the shared map", () => {
+    render(<ParkMap parks={[]} />);
+
+    expect(screen.getByRole("button", { name: "map.locateUser" })).toBeDisabled();
+
+    triggerMapLoad();
+
+    expect(screen.getByRole("button", { name: "map.locateUser" })).toBeEnabled();
   });
 
   it("shows the park logo in the popup when a logo exists", () => {
@@ -324,6 +343,265 @@ describe("ParkMap", () => {
       }),
     );
     expect(document.body).toHaveTextContent("Hetta");
+  });
+
+  it("requests the current position and centers the map on success", () => {
+    const getCurrentPositionMock = vi.fn(
+      (
+        onSuccess: PositionCallback,
+        _onError?: PositionErrorCallback | null,
+        _options?: PositionOptions,
+      ) => {
+        onSuccess({
+          coords: {
+            accuracy: 15,
+            altitude: null,
+            altitudeAccuracy: null,
+            heading: null,
+            latitude: 60.192059,
+            longitude: 24.945831,
+            speed: null,
+            toJSON: () => ({}),
+          },
+          timestamp: Date.now(),
+          toJSON: () => ({}),
+        });
+      },
+    );
+
+    Object.defineProperty(window.navigator, "geolocation", {
+      configurable: true,
+      value: {
+        getCurrentPosition: getCurrentPositionMock,
+      },
+    });
+
+    render(<ParkMap parks={parks} />);
+    triggerMapLoad();
+
+    fireEvent.click(screen.getByRole("button", { name: "map.locateUser" }));
+
+    expect(getCurrentPositionMock).toHaveBeenCalledWith(
+      expect.any(Function),
+      expect.any(Function),
+      expect.objectContaining({
+        enableHighAccuracy: true,
+        maximumAge: 300000,
+        timeout: 10000,
+      }),
+    );
+    expect(easeToMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        center: [24.945831, 60.192059],
+        duration: 900,
+        zoom: 9,
+      }),
+    );
+  });
+
+  it("reuses the existing user location marker on repeated location requests", () => {
+    const responses = [
+      { latitude: 60.192059, longitude: 24.945831 },
+      { latitude: 61.497753, longitude: 23.760954 },
+    ];
+
+    const getCurrentPositionMock = vi.fn(
+      (
+        onSuccess: PositionCallback,
+        _onError?: PositionErrorCallback | null,
+        _options?: PositionOptions,
+      ) => {
+        const next = responses.shift();
+        if (!next) {
+          throw new Error("Expected another mocked geolocation response");
+        }
+
+        onSuccess({
+          coords: {
+            accuracy: 15,
+            altitude: null,
+            altitudeAccuracy: null,
+            heading: null,
+            latitude: next.latitude,
+            longitude: next.longitude,
+            speed: null,
+            toJSON: () => ({}),
+          },
+          timestamp: Date.now(),
+          toJSON: () => ({}),
+        });
+      },
+    );
+
+    Object.defineProperty(window.navigator, "geolocation", {
+      configurable: true,
+      value: {
+        getCurrentPosition: getCurrentPositionMock,
+      },
+    });
+
+    render(<ParkMap parks={parks} />);
+    triggerMapLoad();
+
+    const locateButton = screen.getByRole("button", { name: "map.locateUser" });
+    fireEvent.click(locateButton);
+    fireEvent.click(locateButton);
+
+    expect(getCurrentPositionMock).toHaveBeenCalledTimes(2);
+    expect(easeToMock).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        center: [23.760954, 61.497753],
+      }),
+    );
+  });
+
+  it("shows a locating status and disables the button while waiting for geolocation", () => {
+    let successCallback: PositionCallback | null = null;
+
+    const getCurrentPositionMock = vi.fn(
+      (
+        onSuccess: PositionCallback,
+        _onError?: PositionErrorCallback | null,
+        _options?: PositionOptions,
+      ) => {
+        successCallback = onSuccess;
+      },
+    );
+
+    Object.defineProperty(window.navigator, "geolocation", {
+      configurable: true,
+      value: {
+        getCurrentPosition: getCurrentPositionMock,
+      },
+    });
+
+    render(<ParkMap parks={parks} />);
+    triggerMapLoad();
+
+    const locateButton = screen.getByRole("button", { name: "map.locateUser" });
+    fireEvent.click(locateButton);
+
+    expect(locateButton).toBeDisabled();
+    expect(screen.getByText("map.locating")).toBeInTheDocument();
+
+    act(() => {
+      successCallback?.({
+        coords: {
+          accuracy: 15,
+          altitude: null,
+          altitudeAccuracy: null,
+          heading: null,
+          latitude: 60.192059,
+          longitude: 24.945831,
+          speed: null,
+          toJSON: () => ({}),
+        },
+        timestamp: Date.now(),
+        toJSON: () => ({}),
+      });
+    });
+
+    expect(locateButton).toBeEnabled();
+    expect(screen.queryByText("map.locating")).not.toBeInTheDocument();
+  });
+
+  it("shows a permission error when location access is denied", () => {
+    const getCurrentPositionMock = vi.fn(
+      (_onSuccess: PositionCallback, onError?: PositionErrorCallback | null) => {
+        onError?.({
+          code: 1,
+          message: "permission denied",
+          PERMISSION_DENIED: 1,
+          POSITION_UNAVAILABLE: 2,
+          TIMEOUT: 3,
+        });
+      },
+    );
+
+    Object.defineProperty(window.navigator, "geolocation", {
+      configurable: true,
+      value: {
+        getCurrentPosition: getCurrentPositionMock,
+      },
+    });
+
+    render(<ParkMap parks={parks} />);
+    triggerMapLoad();
+
+    fireEvent.click(screen.getByRole("button", { name: "map.locateUser" }));
+
+    expect(screen.getByText("map.locationPermissionDenied")).toBeInTheDocument();
+  });
+
+  it("shows an unsupported message when the browser cannot provide geolocation", () => {
+    Object.defineProperty(window.navigator, "geolocation", {
+      configurable: true,
+      value: undefined,
+    });
+
+    render(<ParkMap parks={parks} />);
+    triggerMapLoad();
+
+    fireEvent.click(screen.getByRole("button", { name: "map.locateUser" }));
+
+    expect(screen.getByText("map.locationUnsupported")).toBeInTheDocument();
+  });
+
+  it("shows a timeout message when geolocation times out", () => {
+    const getCurrentPositionMock = vi.fn(
+      (_onSuccess: PositionCallback, onError?: PositionErrorCallback | null) => {
+        onError?.({
+          code: 3,
+          message: "timed out",
+          PERMISSION_DENIED: 1,
+          POSITION_UNAVAILABLE: 2,
+          TIMEOUT: 3,
+        });
+      },
+    );
+
+    Object.defineProperty(window.navigator, "geolocation", {
+      configurable: true,
+      value: {
+        getCurrentPosition: getCurrentPositionMock,
+      },
+    });
+
+    render(<ParkMap parks={parks} />);
+    triggerMapLoad();
+
+    fireEvent.click(screen.getByRole("button", { name: "map.locateUser" }));
+
+    expect(screen.getByText("map.locationTimeout")).toBeInTheDocument();
+  });
+
+  it("shows a generic unavailable message when geolocation fails without a specific status", () => {
+    const getCurrentPositionMock = vi.fn(
+      (_onSuccess: PositionCallback, onError?: PositionErrorCallback | null) => {
+        onError?.({
+          code: 999,
+          message: "unknown",
+          PERMISSION_DENIED: 1,
+          POSITION_UNAVAILABLE: 2,
+          TIMEOUT: 3,
+        });
+      },
+    );
+
+    Object.defineProperty(window.navigator, "geolocation", {
+      configurable: true,
+      value: {
+        getCurrentPosition: getCurrentPositionMock,
+      },
+    });
+
+    render(<ParkMap parks={parks} />);
+    triggerMapLoad();
+
+    fireEvent.click(screen.getByRole("button", { name: "map.locateUser" }));
+
+    expect(screen.getByText("map.locationUnavailable")).toBeInTheDocument();
   });
 
   it("keeps the focused popup visible when the marker layer refreshes", () => {
