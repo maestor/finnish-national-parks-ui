@@ -7,7 +7,7 @@ import {
   type FilterableParkTypeSlug,
   PARK_TYPE_FILTER_LABEL_KEYS,
   type ParkTypeFilterLabelKey,
-  TRAIL_TYPE_SLUGS,
+  TRAILS_AND_ROUTES_CATEGORY_SLUG,
 } from "@/lib/park-type-filters";
 import type { MapPark } from "@/lib/parks";
 import { useTranslations } from "next-intl";
@@ -19,10 +19,8 @@ import { ParkMap } from "./park-map";
 type MapFilter =
   | "all"
   | "areas"
-  | "trails"
+  | typeof TRAILS_AND_ROUTES_CATEGORY_SLUG
   | FilterableParkTypeSlug
-  | "nature-trail"
-  | "hiking-trail"
   | "visited"
   | "not-visited";
 
@@ -35,10 +33,12 @@ const ACTIVE_FILTER_BUTTON_CLASS_NAME =
 const INACTIVE_FILTER_BUTTON_CLASS_NAME =
   "border-sky-200/70 bg-[linear-gradient(135deg,rgba(255,255,255,0.82),rgba(236,246,255,0.92))] text-cyan-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.72),0_10px_22px_rgba(148,163,184,0.14)] hover:border-sky-300/90 hover:bg-[linear-gradient(135deg,rgba(255,255,255,0.9),rgba(224,242,254,0.96))] dark:border-sky-300/15 dark:bg-[linear-gradient(135deg,rgba(15,23,42,0.84),rgba(15,32,59,0.76))] dark:text-sky-50 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_14px_28px_rgba(2,6,23,0.28)] dark:hover:border-cyan-300/30 dark:hover:bg-[linear-gradient(135deg,rgba(15,23,42,0.94),rgba(18,47,84,0.86))]";
 
-const isAreaPark = (park: MapPark) => !TRAIL_TYPE_SLUGS.includes(park.type.slug);
+const isTrailPark = (park: MapPark) => park.category.slug === TRAILS_AND_ROUTES_CATEGORY_SLUG;
+
+const isAreaPark = (park: MapPark) => !isTrailPark(park);
 
 const getFallbackFilterForFocusedPark = (park: MapPark): MapFilter =>
-  isAreaPark(park) ? "areas" : "trails";
+  isAreaPark(park) ? "areas" : TRAILS_AND_ROUTES_CATEGORY_SLUG;
 
 const isMapFilter = (value: string | null): value is MapFilter => {
   switch (value) {
@@ -46,15 +46,13 @@ const isMapFilter = (value: string | null): value is MapFilter => {
     case "areas":
     case "visited":
     case "not-visited":
-    case "trails":
+    case TRAILS_AND_ROUTES_CATEGORY_SLUG:
     case "national-park":
     case "hiking-area":
     case "wilderness-area":
     case "nature-reserve-area":
     case "outdoor-recreation-area":
     case "factory-village":
-    case "nature-trail":
-    case "hiking-trail":
       return true;
     default:
       return false;
@@ -82,18 +80,16 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
       Object.entries(PARK_TYPE_FILTER_LABEL_KEYS) as Array<
         [FilterableParkTypeSlug, ParkTypeFilterLabelKey]
       >
-    )
-      .filter(([id]) => id !== "nature-trail")
-      .map(([id, labelKey]) => ({
-        id,
-        label: t(labelKey),
-      }));
+    ).map(([id, labelKey]) => ({
+      id,
+      label: t(labelKey),
+    }));
 
     return [
       { id: "all", label: t("all") },
       { id: "areas", label: t("areas") },
       ...parkTypeFilterOptions,
-      { id: "trails", label: t("natureTrails") },
+      { id: TRAILS_AND_ROUTES_CATEGORY_SLUG, label: t("natureTrails") },
       { id: "visited", label: t("visited") },
       { id: "not-visited", label: t("notVisited") },
     ] satisfies Array<{ id: MapFilter; label: string }>;
@@ -105,16 +101,14 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
         return parks;
       case "areas":
         return parks.filter((park) => isAreaPark(park));
-      case "trails":
-        return parks.filter((park) => TRAIL_TYPE_SLUGS.includes(park.type.slug));
+      case TRAILS_AND_ROUTES_CATEGORY_SLUG:
+        return parks.filter((park) => isTrailPark(park));
       case "national-park":
       case "hiking-area":
       case "wilderness-area":
       case "nature-reserve-area":
       case "outdoor-recreation-area":
       case "factory-village":
-      case "nature-trail":
-      case "hiking-trail":
         return parks.filter((park) => park.type.slug === activeFilter);
       case "visited":
         return parks.filter((park) => park.visitedSummary.visited);

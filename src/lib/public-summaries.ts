@@ -1,7 +1,14 @@
 import { apiFetch, apiPublicFetch } from "./api";
 import type { paths } from "./api-types";
-import { getParkTypeFilterSortIndex } from "./park-type-filters";
-import type { MapPark, ParkDetail, ParkTypeSlug, ParkVisits, VisitWithPark } from "./parks";
+import { TRAILS_AND_ROUTES_CATEGORY_SLUG, getParkTypeFilterSortIndex } from "./park-type-filters";
+import type {
+  MapPark,
+  ParkCategorySlug,
+  ParkDetail,
+  ParkTypeSlug,
+  ParkVisits,
+  VisitWithPark,
+} from "./parks";
 import { PUBLIC_HOME_SUMMARY_TAG, PUBLIC_MAP_SUMMARY_TAG, getPublicParkTag } from "./public-cache";
 
 export type PublicHomeSummary =
@@ -18,7 +25,7 @@ export interface HomeProgressItem {
   label: string;
   visited: number;
   total: number;
-  mapFilter?: ParkTypeSlug | "visited";
+  mapFilter?: ParkTypeSlug | ParkCategorySlug | "visited";
 }
 
 export interface HomeMostVisitedPark {
@@ -87,11 +94,43 @@ export const createHomeProgressItems = (
   summary: PublicHomeSummary,
   allParksLabel: string,
 ): HomeProgressItem[] => {
-  if (summary.progressByType.length === 0) {
+  const visibleTypeItems = summary.progressByType
+    .filter((item) => item.visible)
+    .map((item) => ({
+      label: item.type.name,
+      mapFilter: item.type.slug,
+      visited: item.visitedParks,
+      total: item.totalParks,
+      sortIndex: getParkTypeFilterSortIndex(item.type.slug),
+    }))
+    .sort((left, right) => {
+      if (left.sortIndex !== right.sortIndex) {
+        return left.sortIndex - right.sortIndex;
+      }
+
+      return left.label.localeCompare(right.label, "fi-FI");
+    })
+    .map(({ sortIndex: _sortIndex, ...item }) => item);
+
+  const trailCategoryItems = summary.progressByCategory
+    .filter((item) => item.category.slug === TRAILS_AND_ROUTES_CATEGORY_SLUG)
+    .map((item) => ({
+      label: item.category.name,
+      mapFilter: item.category.slug,
+      visited: item.visitedParks,
+      total: item.totalParks,
+    }));
+
+  const progressItems = [...visibleTypeItems, ...trailCategoryItems];
+
+  if (progressItems.length === 0) {
     return [];
   }
 
-  const totalParks = summary.progressByType.reduce((sum, item) => sum + item.totalParks, 0);
+  const totalParks =
+    summary.progressByCategory.length > 0
+      ? summary.progressByCategory.reduce((sum, item) => sum + item.totalParks, 0)
+      : summary.progressByType.reduce((sum, item) => sum + item.totalParks, 0);
 
   return [
     {
@@ -100,22 +139,7 @@ export const createHomeProgressItems = (
       total: totalParks,
       mapFilter: "visited",
     },
-    ...summary.progressByType
-      .map((item) => ({
-        label: item.type.name,
-        mapFilter: item.type.slug,
-        visited: item.visitedParks,
-        total: item.totalParks,
-        sortIndex: getParkTypeFilterSortIndex(item.type.slug),
-      }))
-      .sort((left, right) => {
-        if (left.sortIndex !== right.sortIndex) {
-          return left.sortIndex - right.sortIndex;
-        }
-
-        return left.label.localeCompare(right.label, "fi-FI");
-      })
-      .map(({ sortIndex: _sortIndex, ...item }) => item),
+    ...progressItems,
   ];
 };
 

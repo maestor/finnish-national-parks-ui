@@ -1,6 +1,11 @@
-import type { ParkTypeSlug } from "./parks";
+import type { ParkCategorySlug, ParkTypeSlug } from "./parks";
 
-export type FilterableParkTypeSlug = Exclude<ParkTypeSlug, "hiking-trail">;
+export type TrailTypeSlug = Extract<
+  ParkTypeSlug,
+  "walking-trail" | "nature-trail" | "hiking-trail"
+>;
+
+export type FilterableParkTypeSlug = Exclude<ParkTypeSlug, TrailTypeSlug>;
 
 export type ParkTypeFilterLabelKey =
   | "nationalParks"
@@ -8,10 +13,9 @@ export type ParkTypeFilterLabelKey =
   | "wildernessAreas"
   | "otherNatureReserves"
   | "outdoorRecreationAreas"
-  | "factoryVillages"
-  | "natureTrails";
+  | "factoryVillages";
 
-export const TRAIL_TYPE_SLUGS: ParkTypeSlug[] = ["nature-trail", "hiking-trail"];
+export const TRAILS_AND_ROUTES_CATEGORY_SLUG: ParkCategorySlug = "trails-and-routes";
 
 export const PARK_TYPE_FILTER_ORDER: ParkTypeSlug[] = [
   "national-park",
@@ -20,6 +24,7 @@ export const PARK_TYPE_FILTER_ORDER: ParkTypeSlug[] = [
   "nature-reserve-area",
   "outdoor-recreation-area",
   "factory-village",
+  "walking-trail",
   "nature-trail",
   "hiking-trail",
 ];
@@ -31,7 +36,6 @@ export const PARK_TYPE_FILTER_LABEL_KEYS: Record<FilterableParkTypeSlug, ParkTyp
   "nature-reserve-area": "otherNatureReserves",
   "outdoor-recreation-area": "outdoorRecreationAreas",
   "factory-village": "factoryVillages",
-  "nature-trail": "natureTrails",
 };
 
 export const getParkTypeFilterSortIndex = (slug: ParkTypeSlug) => {

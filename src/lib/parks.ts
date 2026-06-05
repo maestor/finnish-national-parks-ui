@@ -7,6 +7,7 @@ export type ParkDetail =
   paths["/api/parks/{slug}"]["get"]["responses"][200]["content"]["application/json"];
 
 export type ParkTypeSlug = Park["type"]["slug"];
+export type ParkCategorySlug = Park["category"]["slug"];
 
 export type ParkVisits =
   paths["/api/parks/{slug}/visits"]["get"]["responses"][200]["content"]["application/json"];

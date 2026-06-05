@@ -79,6 +79,7 @@ const parks: MapPark[] = [
       updatedAt: "2024-01-01T00:00:00Z",
       url: "https://example.com/paijanne-map.pdf",
     },
+    category: { name: "Kansallispuistot", slug: "national-park" },
     establishmentYear: 1993,
     boundingBox: { minLat: 61, minLon: 25, maxLat: 62, maxLon: 26 },
     markerPoint: { lat: 61.5, lon: 25.5 },
@@ -97,6 +98,7 @@ const parks: MapPark[] = [
     },
     luontoonUrl: null,
     map: null,
+    category: { name: "Kansallispuistot", slug: "national-park" },
     establishmentYear: 2015,
     boundingBox: { minLat: 60, minLon: 22, maxLat: 61, maxLon: 23 },
     markerPoint: { lat: 60.5, lon: 22.5 },
@@ -115,6 +117,7 @@ const parks: MapPark[] = [
       updatedAt: "2024-01-01T00:00:00Z",
       url: "https://example.com/syote-map.pdf",
     },
+    category: { name: "Retkeilyalueet", slug: "hiking-area" },
     establishmentYear: null,
     boundingBox: { minLat: 65, minLon: 28, maxLat: 66, maxLon: 29 },
     markerPoint: { lat: 65.5, lon: 28.5 },
@@ -129,6 +132,7 @@ const parks: MapPark[] = [
     logo: null,
     luontoonUrl: null,
     map: null,
+    category: { name: "Tehdaskylät", slug: "factory-village" },
     establishmentYear: 1972,
     boundingBox: { minLat: 61.1, minLon: 26.5, maxLat: 61.2, maxLon: 26.6 },
     markerPoint: { lat: 61.15, lon: 26.55 },
@@ -143,6 +147,7 @@ const parks: MapPark[] = [
     logo: null,
     luontoonUrl: null,
     map: null,
+    category: { name: "Polut ja reitit", slug: "trails-and-routes" },
     establishmentYear: null,
     boundingBox: { minLat: 61, minLon: 29, maxLat: 62, maxLon: 30 },
     markerPoint: { lat: 61.8, lon: 29.3 },
@@ -157,11 +162,27 @@ const parks: MapPark[] = [
     logo: null,
     luontoonUrl: null,
     map: null,
+    category: { name: "Polut ja reitit", slug: "trails-and-routes" },
     establishmentYear: null,
     boundingBox: { minLat: 60, minLon: 24, maxLat: 61, maxLon: 25 },
     markerPoint: { lat: 60.3, lon: 24.5 },
     type: { code: 7, id: 7, name: "Vaellusreitti", slug: "hiking-trail" },
     visitedSummary: { visited: true, visitCount: 2, lastVisitedOn: "2024-07-20" },
+  },
+  {
+    slug: "pyha",
+    name: "Pyhän kävelyreitti",
+    areaKm2: null,
+    location: "Sodankylä",
+    logo: null,
+    luontoonUrl: null,
+    map: null,
+    category: { name: "Polut ja reitit", slug: "trails-and-routes" },
+    establishmentYear: null,
+    boundingBox: { minLat: 67, minLon: 27, maxLat: 67.2, maxLon: 27.2 },
+    markerPoint: { lat: 67.1, lon: 27.1 },
+    type: { code: 9, id: 9, name: "Kävelyreitti", slug: "walking-trail" },
+    visitedSummary: { visited: false, visitCount: 0, lastVisitedOn: null },
   },
 ];
 
@@ -204,6 +225,19 @@ describe("ParkExplorer", () => {
     expect(replaceMock).toHaveBeenCalledWith("/parks", { scroll: false });
   });
 
+  it("ignores legacy individual trail query params", () => {
+    pathnameState.value = "/parks";
+    searchParamsState.value = "filter=nature-trail";
+
+    render(<ParkExplorer parks={parks} />);
+
+    expect(screen.getByText("count:4")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "home.filters.areas" })).toHaveClass(
+      "text-primary-foreground",
+    );
+    expect(replaceMock).not.toHaveBeenCalled();
+  });
+
   it("enables map admin quick actions for authenticated users", () => {
     mockUseAuth.mockReturnValueOnce({
       isAuthenticated: true,
@@ -223,19 +257,22 @@ describe("ParkExplorer", () => {
     expect(screen.getByText("Verlan tehdaskylä")).toBeInTheDocument();
     expect(screen.queryByText("Punkaharjun luontopolku")).not.toBeInTheDocument();
     expect(screen.queryByText("Nuuksion vaellusreitti")).not.toBeInTheDocument();
+    expect(screen.queryByText("Pyhän kävelyreitti")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "home.filters.all" }));
 
-    expect(screen.getByText("count:6")).toBeInTheDocument();
+    expect(screen.getByText("count:7")).toBeInTheDocument();
     expect(screen.getByText("Verlan tehdaskylä")).toBeInTheDocument();
     expect(screen.getByText("Punkaharjun luontopolku")).toBeInTheDocument();
     expect(screen.getByText("Nuuksion vaellusreitti")).toBeInTheDocument();
+    expect(screen.getByText("Pyhän kävelyreitti")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "home.filters.natureTrails" }));
 
-    expect(screen.getByText("count:2")).toBeInTheDocument();
+    expect(screen.getByText("count:3")).toBeInTheDocument();
     expect(screen.getByText("Punkaharjun luontopolku")).toBeInTheDocument();
     expect(screen.getByText("Nuuksion vaellusreitti")).toBeInTheDocument();
+    expect(screen.getByText("Pyhän kävelyreitti")).toBeInTheDocument();
   });
 
   it("shows factory villages in their own filter while keeping them in the areas group", () => {
@@ -268,10 +305,11 @@ describe("ParkExplorer", () => {
     expect(screen.getByText("Nuuksion vaellusreitti")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "home.filters.notVisited" }));
-    expect(screen.getByText("count:4")).toBeInTheDocument();
+    expect(screen.getByText("count:5")).toBeInTheDocument();
     expect(screen.queryByText("Päijänteen kansallispuisto")).not.toBeInTheDocument();
     expect(screen.queryByText("Nuuksion vaellusreitti")).not.toBeInTheDocument();
     expect(screen.getByText("Verlan tehdaskylä")).toBeInTheDocument();
+    expect(screen.getByText("Pyhän kävelyreitti")).toBeInTheDocument();
   });
 
   it("renders desktop filters as a floating vertical overlay on the left", () => {
@@ -368,7 +406,7 @@ describe("ParkExplorer", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "focus-punkaharju" }));
 
-    expect(screen.getByText("count:2")).toBeInTheDocument();
+    expect(screen.getByText("count:3")).toBeInTheDocument();
     expect(screen.getByText("focus:punkaharju")).toBeInTheDocument();
     expect(screen.getByText("Punkaharjun luontopolku")).toBeInTheDocument();
     expect(screen.getByText("reset:1")).toBeInTheDocument();
@@ -387,7 +425,7 @@ describe("ParkExplorer", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "focus-punkaharju" }));
 
-    expect(screen.getByText("count:2")).toBeInTheDocument();
+    expect(screen.getByText("count:3")).toBeInTheDocument();
     expect(screen.getByText("reset:0")).toBeInTheDocument();
   });
 

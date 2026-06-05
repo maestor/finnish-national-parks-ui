@@ -259,9 +259,11 @@ const publicPark = {
   location: "Lappi",
   logo: null,
   luontoonUrl: "https://example.com/pallas",
+  map: null,
   establishmentYear: 1938,
   boundingBox: { minLat: 67, minLon: 23, maxLat: 68, maxLon: 25 },
   markerPoint: { lat: 67.5, lon: 24 },
+  category: { name: "Kansallispuistot", slug: "national-park" },
   type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },
 } as Park;
 
@@ -324,6 +326,15 @@ describe("App pages", () => {
           totalParks: 1,
           totalVisits: 1,
           type: publicPark.type,
+          visible: true,
+          visitedParks: 1,
+        },
+      ],
+      progressByCategory: [
+        {
+          category: publicPark.category,
+          totalParks: 1,
+          totalVisits: 1,
           visitedParks: 1,
         },
       ],
