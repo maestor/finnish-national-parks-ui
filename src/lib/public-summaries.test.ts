@@ -138,21 +138,12 @@ const buildSummary = (): PublicHomeSummary => ({
     },
     {
       category: {
-        name: "Retkeilyalueet",
-        slug: "hiking-area",
+        name: "Erämaa-/retkeilyalue",
+        slug: "hiking-and-wilderness-areas",
       },
-      visitedParks: 1,
-      totalParks: 3,
-      totalVisits: 1,
-    },
-    {
-      category: {
-        name: "Erämaa-alueet",
-        slug: "wilderness-area",
-      },
-      visitedParks: 1,
-      totalParks: 6,
-      totalVisits: 1,
+      visitedParks: 2,
+      totalParks: 9,
+      totalVisits: 2,
     },
     {
       category: {
@@ -203,27 +194,26 @@ describe("createHomeProgressItems", () => {
     vi.clearAllMocks();
   });
 
-  it("shows only visible progress types and appends the combined trail category", () => {
+  it("shows the combined hiking and wilderness category on the home page", () => {
     const progressItems = createHomeProgressItems(buildSummary(), "Kaikki paikat");
 
     expect(progressItems.map((item) => item.label)).toEqual([
       "Kaikki paikat",
       "Kansallispuistot",
-      "Retkeilyalueet",
-      "Erämaa-alueet",
+      "Erämaa-/retkeilyalue",
       "Virkistysalueet",
       "Tehdaskylät",
       "Polut ja reitit",
     ]);
     expect(progressItems[0]?.mapFilter).toBe("visited");
     expect(progressItems[1]?.mapFilter).toBe("national-park");
-    expect(progressItems[2]?.mapFilter).toBe("hiking-area");
-    expect(progressItems[5]?.mapFilter).toBe("factory-village");
-    expect(progressItems[6]?.mapFilter).toBe("trails-and-routes");
+    expect(progressItems[2]?.mapFilter).toBe("hiking-and-wilderness-areas");
+    expect(progressItems[4]?.mapFilter).toBe("factory-village");
+    expect(progressItems[5]?.mapFilter).toBe("trails-and-routes");
     expect(progressItems[0]?.total).toBe(36);
   });
 
-  it("still returns the combined trail category when typed progress is empty", () => {
+  it("still returns the combined categories when typed progress is empty", () => {
     const summary = buildSummary();
     summary.progressByType = [];
 
@@ -235,12 +225,40 @@ describe("createHomeProgressItems", () => {
         mapFilter: "visited",
       },
       {
+        label: "Erämaa-/retkeilyalue",
+        visited: 2,
+        total: 9,
+        mapFilter: "hiking-and-wilderness-areas",
+      },
+      {
         label: "Polut ja reitit",
         visited: 2,
         total: 12,
         mapFilter: "trails-and-routes",
       },
     ]);
+  });
+
+  it("returns an empty list when neither typed nor category progress is available", () => {
+    const summary = buildSummary();
+    summary.progressByType = [];
+    summary.progressByCategory = [];
+
+    expect(createHomeProgressItems(summary, "Kaikki paikat")).toEqual([]);
+  });
+
+  it("falls back to type totals when category progress is missing", () => {
+    const summary = buildSummary();
+    summary.progressByCategory = [];
+
+    const progressItems = createHomeProgressItems(summary, "Kaikki paikat");
+
+    expect(progressItems[0]).toEqual({
+      label: "Kaikki paikat",
+      visited: 5,
+      total: 36,
+      mapFilter: "visited",
+    });
   });
 
   it("maps most-visited parks to home card items", () => {

@@ -5,9 +5,11 @@ import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/cn";
 import {
   type FilterableParkTypeSlug,
+  HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG,
   PARK_TYPE_FILTER_LABEL_KEYS,
   type ParkTypeFilterLabelKey,
   TRAILS_AND_ROUTES_CATEGORY_SLUG,
+  isHikingAndWildernessAreaTypeSlug,
 } from "@/lib/park-type-filters";
 import type { MapPark } from "@/lib/parks";
 import { useTranslations } from "next-intl";
@@ -19,6 +21,7 @@ import { ParkMap } from "./park-map";
 type MapFilter =
   | "all"
   | "areas"
+  | typeof HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG
   | typeof TRAILS_AND_ROUTES_CATEGORY_SLUG
   | FilterableParkTypeSlug
   | "visited"
@@ -34,18 +37,29 @@ const INACTIVE_FILTER_BUTTON_CLASS_NAME =
   "border-sky-200/70 bg-[linear-gradient(135deg,rgba(255,255,255,0.82),rgba(236,246,255,0.92))] text-cyan-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.72),0_10px_22px_rgba(148,163,184,0.14)] hover:border-sky-300/90 hover:bg-[linear-gradient(135deg,rgba(255,255,255,0.9),rgba(224,242,254,0.96))] dark:border-sky-300/15 dark:bg-[linear-gradient(135deg,rgba(15,23,42,0.84),rgba(15,32,59,0.76))] dark:text-sky-50 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_14px_28px_rgba(2,6,23,0.28)] dark:hover:border-cyan-300/30 dark:hover:bg-[linear-gradient(135deg,rgba(15,23,42,0.94),rgba(18,47,84,0.86))]";
 
 const isTrailPark = (park: MapPark) => park.category.slug === TRAILS_AND_ROUTES_CATEGORY_SLUG;
+const isHikingAndWildernessPark = (park: MapPark) =>
+  park.category.slug === HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG;
 
 const isAreaPark = (park: MapPark) => !isTrailPark(park);
 
 const getFallbackFilterForFocusedPark = (park: MapPark): MapFilter =>
-  isAreaPark(park) ? "areas" : TRAILS_AND_ROUTES_CATEGORY_SLUG;
+  isTrailPark(park)
+    ? TRAILS_AND_ROUTES_CATEGORY_SLUG
+    : isHikingAndWildernessPark(park)
+      ? HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG
+      : "areas";
 
-const isMapFilter = (value: string | null): value is MapFilter => {
+type LegacyMapFilter = Extract<MapPark["type"]["slug"], "hiking-area" | "wilderness-area">;
+
+type AcceptedMapFilter = MapFilter | LegacyMapFilter;
+
+const isMapFilter = (value: string | null): value is AcceptedMapFilter => {
   switch (value) {
     case "all":
     case "areas":
     case "visited":
     case "not-visited":
+    case HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG:
     case TRAILS_AND_ROUTES_CATEGORY_SLUG:
     case "national-park":
     case "hiking-area":
@@ -58,6 +72,9 @@ const isMapFilter = (value: string | null): value is MapFilter => {
       return false;
   }
 };
+
+const normalizeMapFilter = (filter: AcceptedMapFilter): MapFilter =>
+  isHikingAndWildernessAreaTypeSlug(filter) ? HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG : filter;
 
 interface ParkExplorerProps {
   parks: MapPark[];
@@ -76,19 +93,37 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
   const lastHandledFilterParamRef = useRef<string | null>(null);
 
   const filterOptions = useMemo(() => {
-    const parkTypeFilterOptions = (
+    const parkTypeFilterOptionsById = new Map(
       Object.entries(PARK_TYPE_FILTER_LABEL_KEYS) as Array<
         [FilterableParkTypeSlug, ParkTypeFilterLabelKey]
-      >
-    ).map(([id, labelKey]) => ({
-      id,
-      label: t(labelKey),
-    }));
+      >,
+    );
 
     return [
       { id: "all", label: t("all") },
       { id: "areas", label: t("areas") },
-      ...parkTypeFilterOptions,
+      {
+        id: "national-park",
+        label: t(parkTypeFilterOptionsById.get("national-park") ?? "nationalParks"),
+      },
+      {
+        id: HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG,
+        label: t("hikingAndWildernessAreas"),
+      },
+      {
+        id: "nature-reserve-area",
+        label: t(parkTypeFilterOptionsById.get("nature-reserve-area") ?? "otherNatureReserves"),
+      },
+      {
+        id: "outdoor-recreation-area",
+        label: t(
+          parkTypeFilterOptionsById.get("outdoor-recreation-area") ?? "outdoorRecreationAreas",
+        ),
+      },
+      {
+        id: "factory-village",
+        label: t(parkTypeFilterOptionsById.get("factory-village") ?? "factoryVillages"),
+      },
       { id: TRAILS_AND_ROUTES_CATEGORY_SLUG, label: t("natureTrails") },
       { id: "visited", label: t("visited") },
       { id: "not-visited", label: t("notVisited") },
@@ -101,11 +136,11 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
         return parks;
       case "areas":
         return parks.filter((park) => isAreaPark(park));
+      case HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG:
+        return parks.filter((park) => isHikingAndWildernessPark(park));
       case TRAILS_AND_ROUTES_CATEGORY_SLUG:
         return parks.filter((park) => isTrailPark(park));
       case "national-park":
-      case "hiking-area":
-      case "wilderness-area":
       case "nature-reserve-area":
       case "outdoor-recreation-area":
       case "factory-village":
@@ -145,7 +180,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
     }
 
     lastHandledFilterParamRef.current = filterParam;
-    selectFilter(filterParam);
+    selectFilter(normalizeMapFilter(filterParam));
 
     const nextSearchParams = new URLSearchParams(searchParams.toString());
     nextSearchParams.delete("filter");

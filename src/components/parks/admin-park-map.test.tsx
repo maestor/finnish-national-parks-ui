@@ -47,7 +47,7 @@ const removedPark = {
   logo: null,
   luontoonUrl: null,
   map: null,
-  category: { name: "Retkeilyalueet", slug: "hiking-area" as const },
+  category: { name: "Erämaa- ja retkeilyalueet", slug: "hiking-and-wilderness-areas" as const },
   establishmentYear: 2000,
   boundingBox: { minLat: 60, minLon: 24, maxLat: 61, maxLon: 25 },
   markerPoint: { lat: 60.5, lon: 24.5 },
