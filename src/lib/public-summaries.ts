@@ -1,6 +1,11 @@
 import { apiFetch, apiPublicFetch } from "./api";
 import type { paths } from "./api-types";
-import { TRAILS_AND_ROUTES_CATEGORY_SLUG, getParkTypeFilterSortIndex } from "./park-type-filters";
+import {
+  HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG,
+  TRAILS_AND_ROUTES_CATEGORY_SLUG,
+  getParkFilterSortIndex,
+  isHikingAndWildernessAreaTypeSlug,
+} from "./park-type-filters";
 import type {
   MapPark,
   ParkCategorySlug,
@@ -95,22 +100,22 @@ export const createHomeProgressItems = (
   allParksLabel: string,
 ): HomeProgressItem[] => {
   const visibleTypeItems = summary.progressByType
-    .filter((item) => item.visible)
+    .filter((item) => item.visible && !isHikingAndWildernessAreaTypeSlug(item.type.slug))
     .map((item) => ({
       label: item.type.name,
       mapFilter: item.type.slug,
       visited: item.visitedParks,
       total: item.totalParks,
-      sortIndex: getParkTypeFilterSortIndex(item.type.slug),
-    }))
-    .sort((left, right) => {
-      if (left.sortIndex !== right.sortIndex) {
-        return left.sortIndex - right.sortIndex;
-      }
+    }));
 
-      return left.label.localeCompare(right.label, "fi-FI");
-    })
-    .map(({ sortIndex: _sortIndex, ...item }) => item);
+  const hikingAndWildernessCategoryItems = summary.progressByCategory
+    .filter((item) => item.category.slug === HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG)
+    .map((item) => ({
+      label: item.category.name,
+      mapFilter: item.category.slug,
+      visited: item.visitedParks,
+      total: item.totalParks,
+    }));
 
   const trailCategoryItems = summary.progressByCategory
     .filter((item) => item.category.slug === TRAILS_AND_ROUTES_CATEGORY_SLUG)
@@ -121,7 +126,23 @@ export const createHomeProgressItems = (
       total: item.totalParks,
     }));
 
-  const progressItems = [...visibleTypeItems, ...trailCategoryItems];
+  const progressItems = [
+    ...visibleTypeItems,
+    ...hikingAndWildernessCategoryItems,
+    ...trailCategoryItems,
+  ]
+    .map((item) => ({
+      ...item,
+      sortIndex: getParkFilterSortIndex(item.mapFilter ?? ""),
+    }))
+    .sort((left, right) => {
+      if (left.sortIndex !== right.sortIndex) {
+        return left.sortIndex - right.sortIndex;
+      }
+
+      return left.label.localeCompare(right.label, "fi-FI");
+    })
+    .map(({ sortIndex: _sortIndex, ...item }) => item);
 
   if (progressItems.length === 0) {
     return [];

@@ -5,41 +5,50 @@ export type TrailTypeSlug = Extract<
   "walking-trail" | "nature-trail" | "hiking-trail"
 >;
 
-export type FilterableParkTypeSlug = Exclude<ParkTypeSlug, TrailTypeSlug>;
+export type HikingAndWildernessAreaTypeSlug = Extract<
+  ParkTypeSlug,
+  "hiking-area" | "wilderness-area"
+>;
+
+type GroupedParkTypeSlug = TrailTypeSlug | HikingAndWildernessAreaTypeSlug;
+
+export type FilterableParkTypeSlug = Exclude<ParkTypeSlug, GroupedParkTypeSlug>;
 
 export type ParkTypeFilterLabelKey =
   | "nationalParks"
-  | "hikingAreas"
-  | "wildernessAreas"
   | "otherNatureReserves"
   | "outdoorRecreationAreas"
   | "factoryVillages";
 
 export const TRAILS_AND_ROUTES_CATEGORY_SLUG: ParkCategorySlug = "trails-and-routes";
+export const HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG: ParkCategorySlug =
+  "hiking-and-wilderness-areas";
 
-export const PARK_TYPE_FILTER_ORDER: ParkTypeSlug[] = [
+const HIKING_AND_WILDERNESS_AREA_TYPE_SLUGS = ["hiking-area", "wilderness-area"] as const;
+
+export const PARK_FILTER_ORDER = [
   "national-park",
-  "hiking-area",
-  "wilderness-area",
+  HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG,
   "nature-reserve-area",
   "outdoor-recreation-area",
   "factory-village",
-  "walking-trail",
-  "nature-trail",
-  "hiking-trail",
-];
+  TRAILS_AND_ROUTES_CATEGORY_SLUG,
+] as const satisfies readonly string[];
 
 export const PARK_TYPE_FILTER_LABEL_KEYS: Record<FilterableParkTypeSlug, ParkTypeFilterLabelKey> = {
   "national-park": "nationalParks",
-  "hiking-area": "hikingAreas",
-  "wilderness-area": "wildernessAreas",
   "nature-reserve-area": "otherNatureReserves",
   "outdoor-recreation-area": "outdoorRecreationAreas",
   "factory-village": "factoryVillages",
 };
 
-export const getParkTypeFilterSortIndex = (slug: ParkTypeSlug) => {
-  const sortIndex = PARK_TYPE_FILTER_ORDER.indexOf(slug);
+export const isHikingAndWildernessAreaTypeSlug = (
+  slug: string,
+): slug is HikingAndWildernessAreaTypeSlug =>
+  HIKING_AND_WILDERNESS_AREA_TYPE_SLUGS.some((typeSlug) => typeSlug === slug);
 
-  return sortIndex === -1 ? PARK_TYPE_FILTER_ORDER.length : sortIndex;
+export const getParkFilterSortIndex = (slug: string) => {
+  const sortIndex = (PARK_FILTER_ORDER as readonly string[]).indexOf(slug);
+
+  return sortIndex === -1 ? PARK_FILTER_ORDER.length : sortIndex;
 };

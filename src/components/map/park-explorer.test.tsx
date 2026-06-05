@@ -117,7 +117,7 @@ const parks: MapPark[] = [
       updatedAt: "2024-01-01T00:00:00Z",
       url: "https://example.com/syote-map.pdf",
     },
-    category: { name: "Retkeilyalueet", slug: "hiking-area" },
+    category: { name: "Erämaa- ja retkeilyalueet", slug: "hiking-and-wilderness-areas" },
     establishmentYear: null,
     boundingBox: { minLat: 65, minLon: 28, maxLat: 66, maxLon: 29 },
     markerPoint: { lat: 65.5, lon: 28.5 },
@@ -225,6 +225,19 @@ describe("ParkExplorer", () => {
     expect(replaceMock).toHaveBeenCalledWith("/parks", { scroll: false });
   });
 
+  it("maps legacy hiking area query params to the combined category filter", () => {
+    pathnameState.value = "/parks";
+    searchParamsState.value = "filter=hiking-area";
+
+    render(<ParkExplorer parks={parks} />);
+
+    expect(screen.getByText("count:1")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "home.filters.hikingAndWildernessAreas" }),
+    ).toHaveClass("text-primary-foreground");
+    expect(replaceMock).toHaveBeenCalledWith("/parks", { scroll: false });
+  });
+
   it("ignores legacy individual trail query params", () => {
     pathnameState.value = "/parks";
     searchParamsState.value = "filter=nature-trail";
@@ -322,12 +335,13 @@ describe("ParkExplorer", () => {
 
     const buttons = within(desktopSidebar as HTMLElement).getAllByRole("button");
 
-    expect(buttons).toHaveLength(11);
+    expect(buttons).toHaveLength(10);
     expect(buttons[0]).toHaveTextContent("home.filters.all");
     expect(buttons[1]).toHaveTextContent("home.filters.areas");
     expect(buttons[2]).toHaveTextContent("home.filters.nationalParks");
-    expect(buttons[7]).toHaveTextContent("home.filters.factoryVillages");
-    expect(buttons[8]).toHaveTextContent("home.filters.natureTrails");
+    expect(buttons[3]).toHaveTextContent("home.filters.hikingAndWildernessAreas");
+    expect(buttons[6]).toHaveTextContent("home.filters.factoryVillages");
+    expect(buttons[7]).toHaveTextContent("home.filters.natureTrails");
   });
 
   it("stops mousedown propagation inside the filter panel", () => {
@@ -365,7 +379,7 @@ describe("ParkExplorer", () => {
 
     fireEvent.click(
       within(mobileFilters as HTMLElement).getByRole("button", {
-        name: "home.filters.hikingAreas",
+        name: "home.filters.hikingAndWildernessAreas",
       }),
     );
 
@@ -382,7 +396,7 @@ describe("ParkExplorer", () => {
       </HomeMapControlsProvider>,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "home.filters.hikingAreas" }));
+    fireEvent.click(screen.getByRole("button", { name: "home.filters.hikingAndWildernessAreas" }));
 
     expect(screen.getByText("count:1")).toBeInTheDocument();
 
@@ -400,7 +414,7 @@ describe("ParkExplorer", () => {
       </HomeMapControlsProvider>,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "home.filters.hikingAreas" }));
+    fireEvent.click(screen.getByRole("button", { name: "home.filters.hikingAndWildernessAreas" }));
 
     expect(screen.getByText("count:1")).toBeInTheDocument();
 
