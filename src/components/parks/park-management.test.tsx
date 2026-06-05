@@ -19,6 +19,7 @@ const basePark = {
   logo: null,
   luontoonUrl: null,
   map: null,
+  category: { name: "Kansallispuistot", slug: "national-park" as const },
   establishmentYear: 1938,
   boundingBox: { minLat: 67, minLon: 23, maxLat: 68, maxLon: 24 },
   markerPoint: { lat: 67.5, lon: 23.5 },
