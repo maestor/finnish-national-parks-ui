@@ -288,6 +288,7 @@
     "loading": "Ladataan karttaa...",
     "loadError": "Karttatietojen lataus epäonnistui",
     "locateUser": "Näytä nykyinen sijaintini",
+    "showFilteredParks": "Palaa suodatettuihin kohteisiin",
     "locating": "Paikannetaan nykyistä sijaintiasi...",
     "locationUnsupported": "Selaimesi ei tue nykyisen sijainnin hakemista.",
     "locationPermissionDenied": "Nykyisen sijainnin käyttöä ei sallittu.",

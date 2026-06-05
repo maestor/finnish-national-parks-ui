@@ -369,6 +369,7 @@ export const ParkMap = ({
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [activeSlug, setActiveSlug] = useState<string | null>(null);
   const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
+  const [isUserLocationActive, setIsUserLocationActive] = useState(false);
   const [userLocationStatus, setUserLocationStatus] = useState<UserLocationStatus>("idle");
 
   useEffect(() => {
@@ -430,6 +431,10 @@ export const ParkMap = ({
       cancelClose();
       setHoveredSlug(null);
       setActiveSlug(park.slug);
+      userLocationMarkerRef.current?.remove();
+      userLocationMarkerRef.current = null;
+      setIsUserLocationActive(false);
+      setUserLocationStatus("idle");
 
       const map = mapRef.current;
       if (!map) {
@@ -450,6 +455,14 @@ export const ParkMap = ({
     },
     [cancelClose],
   );
+
+  const fitVisibleParks = useCallback(() => {
+    mapRef.current?.fitBounds(getBoundsForVisibleParks(parks), {
+      duration: 800,
+      maxZoom: parks.length > 0 ? 11 : undefined,
+      padding: parks.length > 0 ? PARK_FOCUS_PADDING : MAP_PADDING,
+    });
+  }, [parks]);
 
   const focusUserLocation = useCallback((lat: number, lon: number) => {
     const map = mapRef.current;
@@ -474,7 +487,26 @@ export const ParkMap = ({
     });
   }, []);
 
+  const clearUserLocationMode = useCallback(
+    ({ fitToVisibleParks = false }: { fitToVisibleParks?: boolean } = {}) => {
+      userLocationMarkerRef.current?.remove();
+      userLocationMarkerRef.current = null;
+      setIsUserLocationActive(false);
+      setUserLocationStatus("idle");
+
+      if (fitToVisibleParks) {
+        fitVisibleParks();
+      }
+    },
+    [fitVisibleParks],
+  );
+
   const handleLocateUser = useCallback(() => {
+    if (isUserLocationActive) {
+      clearUserLocationMode({ fitToVisibleParks: true });
+      return;
+    }
+
     const geolocation = window.navigator.geolocation;
 
     if (!geolocation) {
@@ -492,15 +524,17 @@ export const ParkMap = ({
         cancelClose();
         setActiveSlug(null);
         setHoveredSlug(null);
+        setIsUserLocationActive(true);
         setUserLocationStatus("idle");
         focusUserLocation(position.coords.latitude, position.coords.longitude);
       },
       (error) => {
+        setIsUserLocationActive(false);
         setUserLocationStatus(getUserLocationStatusFromError(error));
       },
       LOCATION_REQUEST_OPTIONS,
     );
-  }, [cancelClose, focusUserLocation]);
+  }, [cancelClose, clearUserLocationMode, focusUserLocation, isUserLocationActive]);
 
   const syncPopupVisibility = useCallback(
     (currentActiveSlug: string | null, currentHoveredSlug: string | null) => {
@@ -576,6 +610,7 @@ export const ParkMap = ({
       userLocationMarkerRef.current = null;
       map.remove();
       mapRef.current = null;
+      setIsUserLocationActive(false);
       setIsMapLoaded(false);
     };
   }, [cancelClose]);
@@ -734,15 +769,15 @@ export const ParkMap = ({
     }
 
     lastHandledResetViewRequestIdRef.current = resetViewRequestId;
+    if (isUserLocationActive) {
+      return;
+    }
+
     setActiveSlug(null);
     setHoveredSlug(null);
     cancelClose();
-    mapRef.current?.fitBounds(getBoundsForVisibleParks(parks), {
-      duration: 800,
-      maxZoom: parks.length > 0 ? 11 : undefined,
-      padding: parks.length > 0 ? PARK_FOCUS_PADDING : MAP_PADDING,
-    });
-  }, [cancelClose, isMapLoaded, parks, resetViewRequestId]);
+    fitVisibleParks();
+  }, [cancelClose, fitVisibleParks, isMapLoaded, isUserLocationActive, resetViewRequestId]);
 
   // Sync popup visibility with active/hovered state
   useEffect(() => {
@@ -796,6 +831,7 @@ export const ParkMap = ({
             : userLocationStatus === "timeout"
               ? t("locationTimeout")
               : t("locationUnavailable");
+  const locationButtonLabel = isUserLocationActive ? t("showFilteredParks") : t("locateUser");
 
   if (error) {
     return (
@@ -829,8 +865,9 @@ export const ParkMap = ({
           size="icon"
           className="pointer-events-auto h-11 w-11 rounded-full border-white/60 bg-white/88 text-foreground shadow-[0_14px_28px_rgba(148,163,184,0.2)] backdrop-blur-md dark:border-white/10 dark:bg-slate-950/70 dark:shadow-[0_18px_36px_rgba(2,6,23,0.32)]"
           onClick={handleLocateUser}
-          aria-label={t("locateUser")}
-          title={t("locateUser")}
+          aria-label={locationButtonLabel}
+          aria-pressed={isUserLocationActive}
+          title={locationButtonLabel}
           disabled={!isMapLoaded || userLocationStatus === "locating"}
         >
           {userLocationStatus === "locating" ? (

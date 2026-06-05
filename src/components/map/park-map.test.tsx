@@ -397,33 +397,28 @@ describe("ParkMap", () => {
         zoom: 9,
       }),
     );
+    expect(
+      screen.getByRole("button", {
+        name: "map.showFilteredParks",
+      }),
+    ).toHaveAttribute("aria-pressed", "true");
   });
 
-  it("reuses the existing user location marker on repeated location requests", () => {
-    const responses = [
-      { latitude: 60.192059, longitude: 24.945831 },
-      { latitude: 61.497753, longitude: 23.760954 },
-    ];
-
+  it("turns off location mode instead of requesting geolocation again on a second click", () => {
     const getCurrentPositionMock = vi.fn(
       (
         onSuccess: PositionCallback,
         _onError?: PositionErrorCallback | null,
         _options?: PositionOptions,
       ) => {
-        const next = responses.shift();
-        if (!next) {
-          throw new Error("Expected another mocked geolocation response");
-        }
-
         onSuccess({
           coords: {
             accuracy: 15,
             altitude: null,
             altitudeAccuracy: null,
             heading: null,
-            latitude: next.latitude,
-            longitude: next.longitude,
+            latitude: 60.192059,
+            longitude: 24.945831,
             speed: null,
             toJSON: () => ({}),
           },
@@ -445,14 +440,113 @@ describe("ParkMap", () => {
 
     const locateButton = screen.getByRole("button", { name: "map.locateUser" });
     fireEvent.click(locateButton);
-    fireEvent.click(locateButton);
+    fireEvent.click(screen.getByRole("button", { name: "map.showFilteredParks" }));
 
-    expect(getCurrentPositionMock).toHaveBeenCalledTimes(2);
-    expect(easeToMock).toHaveBeenNthCalledWith(
-      2,
+    expect(getCurrentPositionMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not reset the map view while location mode is active", () => {
+    const getCurrentPositionMock = vi.fn(
+      (
+        onSuccess: PositionCallback,
+        _onError?: PositionErrorCallback | null,
+        _options?: PositionOptions,
+      ) => {
+        onSuccess({
+          coords: {
+            accuracy: 15,
+            altitude: null,
+            altitudeAccuracy: null,
+            heading: null,
+            latitude: 60.192059,
+            longitude: 24.945831,
+            speed: null,
+            toJSON: () => ({}),
+          },
+          timestamp: Date.now(),
+          toJSON: () => ({}),
+        });
+      },
+    );
+
+    Object.defineProperty(window.navigator, "geolocation", {
+      configurable: true,
+      value: {
+        getCurrentPosition: getCurrentPositionMock,
+      },
+    });
+
+    const { rerender } = render(<ParkMap parks={parks} />);
+    triggerMapLoad();
+
+    fireEvent.click(screen.getByRole("button", { name: "map.locateUser" }));
+
+    rerender(<ParkMap parks={[parks[1]]} resetViewRequestId={1} />);
+
+    expect(fitBoundsMock).not.toHaveBeenCalled();
+    expect(easeToMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns to the current filtered park bounds when location mode is turned off", () => {
+    const getCurrentPositionMock = vi.fn(
+      (
+        onSuccess: PositionCallback,
+        _onError?: PositionErrorCallback | null,
+        _options?: PositionOptions,
+      ) => {
+        onSuccess({
+          coords: {
+            accuracy: 15,
+            altitude: null,
+            altitudeAccuracy: null,
+            heading: null,
+            latitude: 60.192059,
+            longitude: 24.945831,
+            speed: null,
+            toJSON: () => ({}),
+          },
+          timestamp: Date.now(),
+          toJSON: () => ({}),
+        });
+      },
+    );
+
+    Object.defineProperty(window.navigator, "geolocation", {
+      configurable: true,
+      value: {
+        getCurrentPosition: getCurrentPositionMock,
+      },
+    });
+
+    const { rerender } = render(<ParkMap parks={parks} />);
+    triggerMapLoad();
+
+    fireEvent.click(screen.getByRole("button", { name: "map.locateUser" }));
+
+    rerender(<ParkMap parks={[parks[1]]} resetViewRequestId={1} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "map.showFilteredParks" }));
+
+    expect(getCurrentPositionMock).toHaveBeenCalledTimes(1);
+    expect(fitBoundsMock).toHaveBeenCalledWith(
+      [
+        [23.1, 67.1],
+        [23.2, 67.2],
+      ],
       expect.objectContaining({
-        center: [23.760954, 61.497753],
+        duration: 800,
+        maxZoom: 11,
+        padding: {
+          top: 104,
+          right: 48,
+          bottom: 48,
+          left: 48,
+        },
       }),
+    );
+    expect(screen.getByRole("button", { name: "map.locateUser" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
     );
   });
 
