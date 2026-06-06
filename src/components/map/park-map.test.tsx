@@ -345,7 +345,7 @@ describe("ParkMap", () => {
     expect(document.body).toHaveTextContent("Hetta");
   });
 
-  it("requests the current position and centers the map on success", () => {
+  it("requests a fast current position suitable for map centering and focuses on success", () => {
     const getCurrentPositionMock = vi.fn(
       (
         onSuccess: PositionCallback,
@@ -385,7 +385,7 @@ describe("ParkMap", () => {
       expect.any(Function),
       expect.any(Function),
       expect.objectContaining({
-        enableHighAccuracy: true,
+        enableHighAccuracy: false,
         maximumAge: 300000,
         timeout: 10000,
       }),
