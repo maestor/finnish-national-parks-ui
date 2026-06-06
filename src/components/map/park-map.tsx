@@ -41,7 +41,10 @@ const PARK_FOCUS_PADDING = {
 const LOCATION_FOCUS_DURATION = 900;
 const LOCATION_FOCUS_ZOOM = 9;
 const LOCATION_REQUEST_OPTIONS = {
-  enableHighAccuracy: true,
+  // The map only needs a good-enough position to center nearby parks.
+  // Asking for coarse/cached results avoids frequent timeout errors from
+  // waiting on a high-accuracy fix that many devices cannot provide quickly.
+  enableHighAccuracy: false,
   maximumAge: 300000,
   timeout: 10000,
 } as const;
@@ -56,6 +59,13 @@ type UserLocationStatus =
   | "permissionDenied"
   | "unavailable"
   | "timeout";
+
+type UserLocationStatusMessageKey =
+  | "locating"
+  | "locationUnsupported"
+  | "locationPermissionDenied"
+  | "locationTimeout"
+  | "locationUnavailable";
 
 const getBoundsForVisibleParks = (parks: MapPark[]): maplibregl.LngLatBoundsLike => {
   if (parks.length === 0) {
@@ -156,6 +166,26 @@ const getUserLocationStatusFromError = (
       return "timeout";
     default:
       return "unavailable";
+  }
+};
+
+const getLocationStatusMessage = (
+  status: UserLocationStatus,
+  t: (key: UserLocationStatusMessageKey) => string,
+) => {
+  switch (status) {
+    case "idle":
+      return null;
+    case "locating":
+      return t("locating");
+    case "unsupported":
+      return t("locationUnsupported");
+    case "permissionDenied":
+      return t("locationPermissionDenied");
+    case "timeout":
+      return t("locationTimeout");
+    case "unavailable":
+      return t("locationUnavailable");
   }
 };
 
@@ -819,18 +849,7 @@ export const ParkMap = ({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const locationStatusMessage =
-    userLocationStatus === "idle"
-      ? null
-      : userLocationStatus === "locating"
-        ? t("locating")
-        : userLocationStatus === "unsupported"
-          ? t("locationUnsupported")
-          : userLocationStatus === "permissionDenied"
-            ? t("locationPermissionDenied")
-            : userLocationStatus === "timeout"
-              ? t("locationTimeout")
-              : t("locationUnavailable");
+  const locationStatusMessage = getLocationStatusMessage(userLocationStatus, t);
   const locationButtonLabel = isUserLocationActive ? t("showFilteredParks") : t("locateUser");
 
   if (error) {
