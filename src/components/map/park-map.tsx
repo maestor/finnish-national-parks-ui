@@ -257,8 +257,8 @@ const createPopupNode = (
     details.appendChild(loc);
   }
 
-  const hasArea = park.areaKm2 !== null;
-  const hasYear = park.establishmentYear !== null;
+  const hasArea = park.areaKm2 != null;
+  const hasYear = park.establishmentYear != null;
 
   if (hasArea || hasYear) {
     const metaRow = document.createElement("p");

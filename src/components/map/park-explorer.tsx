@@ -11,7 +11,7 @@ import {
   TRAILS_AND_ROUTES_CATEGORY_SLUG,
   isHikingAndWildernessAreaTypeSlug,
 } from "@/lib/park-type-filters";
-import type { MapPark } from "@/lib/parks";
+import type { FilterableMapPark } from "@/lib/parks";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -36,20 +36,24 @@ const ACTIVE_FILTER_BUTTON_CLASS_NAME =
 const INACTIVE_FILTER_BUTTON_CLASS_NAME =
   "border-sky-200/70 bg-[linear-gradient(135deg,rgba(255,255,255,0.82),rgba(236,246,255,0.92))] text-cyan-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.72),0_10px_22px_rgba(148,163,184,0.14)] hover:border-sky-300/90 hover:bg-[linear-gradient(135deg,rgba(255,255,255,0.9),rgba(224,242,254,0.96))] dark:border-sky-300/15 dark:bg-[linear-gradient(135deg,rgba(15,23,42,0.84),rgba(15,32,59,0.76))] dark:text-sky-50 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_14px_28px_rgba(2,6,23,0.28)] dark:hover:border-cyan-300/30 dark:hover:bg-[linear-gradient(135deg,rgba(15,23,42,0.94),rgba(18,47,84,0.86))]";
 
-const isTrailPark = (park: MapPark) => park.category.slug === TRAILS_AND_ROUTES_CATEGORY_SLUG;
-const isHikingAndWildernessPark = (park: MapPark) =>
+const isTrailPark = (park: FilterableMapPark) =>
+  park.category.slug === TRAILS_AND_ROUTES_CATEGORY_SLUG;
+const isHikingAndWildernessPark = (park: FilterableMapPark) =>
   park.category.slug === HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG;
 
-const isAreaPark = (park: MapPark) => !isTrailPark(park);
+const isAreaPark = (park: FilterableMapPark) => !isTrailPark(park);
 
-const getFallbackFilterForFocusedPark = (park: MapPark): MapFilter =>
+const getFallbackFilterForFocusedPark = (park: FilterableMapPark): MapFilter =>
   isTrailPark(park)
     ? TRAILS_AND_ROUTES_CATEGORY_SLUG
     : isHikingAndWildernessPark(park)
       ? HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG
       : "areas";
 
-type LegacyMapFilter = Extract<MapPark["type"]["slug"], "hiking-area" | "wilderness-area">;
+type LegacyMapFilter = Extract<
+  FilterableMapPark["type"]["slug"],
+  "hiking-area" | "wilderness-area"
+>;
 
 type AcceptedMapFilter = MapFilter | LegacyMapFilter;
 
@@ -77,7 +81,7 @@ const normalizeMapFilter = (filter: AcceptedMapFilter): MapFilter =>
   isHikingAndWildernessAreaTypeSlug(filter) ? HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG : filter;
 
 interface ParkExplorerProps {
-  parks: MapPark[];
+  parks: FilterableMapPark[];
   error?: string | null;
 }
 

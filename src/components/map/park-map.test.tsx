@@ -1,4 +1,4 @@
-import type { MapPark } from "@/lib/parks";
+import type { FilterableMapPark } from "@/lib/parks";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ParkMap } from "./park-map";
@@ -14,7 +14,7 @@ let mapOptions: Record<string, unknown> | null = null;
 const fitBoundsMock = vi.fn();
 const easeToMock = vi.fn();
 
-const parks: MapPark[] = [
+const parks: FilterableMapPark[] = [
   {
     slug: "pallas",
     name: "Pallas-Yllästunturin kansallispuisto",

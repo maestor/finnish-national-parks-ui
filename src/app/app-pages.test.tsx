@@ -1,5 +1,5 @@
 import { apiFetch, apiPublicFetch } from "@/lib/api";
-import type { Park, Visit, VisitWithPark } from "@/lib/parks";
+import type { AdminVisibilityPark, Park, Visit, VisitWithPark } from "@/lib/parks";
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import UserLayout from "./(user)/layout";
@@ -208,7 +208,13 @@ vi.mock("@/components/visits/visit-list", () => ({
 }));
 
 vi.mock("@/components/parks/park-list", () => ({
-  ParkList: ({ parks, removedParks }: { parks: Park[]; removedParks: Park[] }) => (
+  ParkList: ({
+    parks,
+    removedParks,
+  }: {
+    parks: AdminVisibilityPark[];
+    removedParks: AdminVisibilityPark[];
+  }) => (
     <div data-testid="park-list">
       parks:{parks.length}|removed:{removedParks.length}
     </div>
@@ -216,7 +222,13 @@ vi.mock("@/components/parks/park-list", () => ({
 }));
 
 vi.mock("@/components/parks/park-management", () => ({
-  ParkManagement: ({ parks, removedParks }: { parks: Park[]; removedParks: Park[] }) => (
+  ParkManagement: ({
+    parks,
+    removedParks,
+  }: {
+    parks: AdminVisibilityPark[];
+    removedParks: AdminVisibilityPark[];
+  }) => (
     <div data-testid="park-management">
       parks:{parks.length}|removed:{removedParks.length}
     </div>
@@ -266,6 +278,16 @@ const publicPark = {
   category: { name: "Kansallispuistot", slug: "national-park" },
   type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },
 } as Park;
+
+const adminVisibilityPark = {
+  slug: "pallas",
+  name: "Pallas-Yllästunturi",
+  displayTypeName: "Maailmanperintökohde",
+  location: "Lappi",
+  boundingBox: { minLat: 67, minLon: 23, maxLat: 68, maxLon: 25 },
+  markerPoint: { lat: 67.5, lon: 24 },
+  type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },
+} as AdminVisibilityPark;
 
 const personalVisit = {
   id: 10,
@@ -622,22 +644,17 @@ describe("App pages", () => {
   });
 
   it("renders the parks list page", async () => {
-    vi.mocked(apiFetch)
-      .mockResolvedValueOnce({ parks: [publicPark] })
-      .mockResolvedValueOnce({ parks: [] });
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      visibleParks: [adminVisibilityPark],
+      removedParks: [],
+    });
 
     await renderControlPanelRoute(await ParksPage());
 
-    expect(apiFetch).toHaveBeenNthCalledWith(1, "/api/parks", {
+    expect(apiFetch).toHaveBeenNthCalledWith(1, "/api/admin/parks/visibility", {
       cache: "force-cache",
       next: {
-        tags: ["admin-visible-parks"],
-      },
-    });
-    expect(apiFetch).toHaveBeenNthCalledWith(2, "/api/parks/removed", {
-      cache: "force-cache",
-      next: {
-        tags: ["admin-removed-parks"],
+        tags: ["admin-park-visibility"],
       },
     });
     expect(screen.getByRole("navigation", { name: "controlPanel.title" })).toBeInTheDocument();

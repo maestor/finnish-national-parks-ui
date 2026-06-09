@@ -3,7 +3,7 @@ import {
   useHomeMapControls,
 } from "@/components/providers/home-map-controls-provider";
 import { apiFetch } from "@/lib/api";
-import type { Park } from "@/lib/parks";
+import type { ParkSearchResult } from "@/lib/parks";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { AnchorHTMLAttributes } from "react";
@@ -50,50 +50,26 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(searchParamsState.value),
 }));
 
-const parks: Park[] = [
+const parks: ParkSearchResult[] = [
   {
     slug: "paijanne",
     name: "Päijänteen kansallispuisto",
-    areaKm2: 14,
     location: "Päijät-Häme",
-    logo: null,
-    luontoonUrl: null,
-    map: null,
-    category: { name: "Kansallispuistot", slug: "national-park" },
-    establishmentYear: 1993,
-    boundingBox: { minLat: 61, minLon: 25, maxLat: 62, maxLon: 26 },
-    markerPoint: { lat: 61.5, lon: 25.5 },
     type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },
   },
   {
     slug: "teijo",
     name: "Teijon kansallispuisto",
     displayTypeName: "Maailmanperintökohde",
-    areaKm2: 11,
     location: "Varsinais-Suomi",
-    logo: null,
-    luontoonUrl: null,
-    map: null,
-    category: { name: "Muut LS-alueet", slug: "nature-reserve-area" },
-    establishmentYear: 2015,
-    boundingBox: { minLat: 60, minLon: 22, maxLat: 61, maxLon: 23 },
-    markerPoint: { lat: 60.5, lon: 22.5 },
     type: { code: 4, id: 4, name: "Muu luonnonsuojelualue", slug: "nature-reserve-area" },
   },
 ];
 
-const mobileScrollableParks: Park[] = Array.from({ length: 12 }, (_, index) => ({
+const mobileScrollableParks: ParkSearchResult[] = Array.from({ length: 12 }, (_, index) => ({
   slug: `park-${index + 1}`,
   name: `Kansallispuisto ${index + 1}`,
-  areaKm2: index + 1,
   location: `Alue ${index + 1}`,
-  logo: null,
-  luontoonUrl: null,
-  map: null,
-  category: { name: "Kansallispuistot", slug: "national-park" },
-  establishmentYear: 2000 + index,
-  boundingBox: { minLat: 60 + index, minLon: 24, maxLat: 60.5 + index, maxLon: 24.5 },
-  markerPoint: { lat: 60.25 + index, lon: 24.25 },
   type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },
 }));
 
@@ -131,6 +107,8 @@ describe("HomeParkSearch", () => {
         screen.getByRole("button", { name: /Päijänteen kansallispuisto/i }),
       ).toBeInTheDocument();
     });
+
+    expect(apiFetch).toHaveBeenCalledWith("/api/parks/search");
 
     fireEvent.click(screen.getByRole("button", { name: /Päijänteen kansallispuisto/i }));
 
