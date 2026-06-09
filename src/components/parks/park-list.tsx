@@ -7,7 +7,6 @@ import { type Park, getParkTypeDisplayName } from "@/lib/parks";
 import { revalidatePublicCache } from "@/lib/public-cache";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 interface ParkListProps {
@@ -19,7 +18,6 @@ type ParkTab = "visible" | "hidden";
 
 export const ParkList = ({ parks, removedParks }: ParkListProps) => {
   const t = useTranslations("controlPanel.parks");
-  const router = useRouter();
   const [localParks, setLocalParks] = useState(parks);
   const [localRemovedParks, setLocalRemovedParks] = useState(removedParks);
   const [activeTab, setActiveTab] = useState<ParkTab>("visible");
@@ -91,7 +89,6 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
         );
         setLocalParks((current) => [...current, park]);
       }
-      router.refresh();
     } catch (error) {
       setActionError(error instanceof Error ? error.message : String(error));
     } finally {

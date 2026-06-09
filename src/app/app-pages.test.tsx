@@ -628,6 +628,18 @@ describe("App pages", () => {
 
     await renderControlPanelRoute(await ParksPage());
 
+    expect(apiFetch).toHaveBeenNthCalledWith(1, "/api/parks", {
+      cache: "force-cache",
+      next: {
+        tags: ["admin-visible-parks"],
+      },
+    });
+    expect(apiFetch).toHaveBeenNthCalledWith(2, "/api/parks/removed", {
+      cache: "force-cache",
+      next: {
+        tags: ["admin-removed-parks"],
+      },
+    });
     expect(screen.getByRole("navigation", { name: "controlPanel.title" })).toBeInTheDocument();
     expect(screen.getByTestId("park-management")).toHaveTextContent("parks:1|removed:0");
   });

@@ -5,8 +5,7 @@ import { apiFetch } from "@/lib/api";
 import { type AdminMapPark, type Park, toAdminMapParks } from "@/lib/parks";
 import { revalidatePublicCache } from "@/lib/public-cache";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 interface AdminParkMapProps {
   parks: Park[];
@@ -15,9 +14,16 @@ interface AdminParkMapProps {
 
 export const AdminParkMap = ({ parks, removedParks }: AdminParkMapProps) => {
   const t = useTranslations("controlPanel.parks");
-  const router = useRouter();
   const [localParks, setLocalParks] = useState(parks);
   const [localRemovedParks, setLocalRemovedParks] = useState(removedParks);
+
+  useEffect(() => {
+    setLocalParks(parks);
+  }, [parks]);
+
+  useEffect(() => {
+    setLocalRemovedParks(removedParks);
+  }, [removedParks]);
 
   const allParks: AdminMapPark[] = useMemo(
     () => toAdminMapParks(localParks, localRemovedParks),
@@ -58,10 +64,9 @@ export const AdminParkMap = ({ parks, removedParks }: AdminParkMapProps) => {
             );
             setLocalParks((current) => [...current, park]);
           }
-          router.refresh();
         });
     },
-    [localParks, localRemovedParks, router, t],
+    [localParks, localRemovedParks, t],
   );
 
   return (
