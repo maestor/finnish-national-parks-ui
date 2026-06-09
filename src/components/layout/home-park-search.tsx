@@ -2,7 +2,7 @@
 
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/cn";
-import { type Park, getParkTypeDisplayName } from "@/lib/parks";
+import { type ParkSearchResult, getParkTypeDisplayName } from "@/lib/parks";
 import { MapPin, Search, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -29,7 +29,7 @@ export const HomeParkSearch = () => {
   const { closeMobileFilters, focusParkOnHome } = useHomeMapControls();
   const containerRef = useRef<HTMLDivElement>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
-  const [parks, setParks] = useState<Park[]>([]);
+  const [parks, setParks] = useState<ParkSearchResult[]>([]);
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -40,7 +40,7 @@ export const HomeParkSearch = () => {
   useEffect(() => {
     let mounted = true;
 
-    apiFetch<{ parks: Park[] }>("/api/parks")
+    apiFetch<{ parks: ParkSearchResult[] }>("/api/parks/search")
       .then((data) => {
         if (!mounted) {
           return;
@@ -105,7 +105,7 @@ export const HomeParkSearch = () => {
     return filteredParks;
   }, [parks, query]);
 
-  const activatePark = (park: Park) => {
+  const activatePark = (park: ParkSearchResult) => {
     setQuery("");
     setIsOpen(false);
     setIsMobileOpen(false);

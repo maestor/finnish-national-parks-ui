@@ -30,8 +30,7 @@ describe("revalidate public cache route", () => {
     expect(revalidateTagMock).toHaveBeenCalledWith("public-home-summary", "max");
     expect(revalidateTagMock).toHaveBeenCalledWith("public-map-summary", "max");
     expect(revalidateTagMock).toHaveBeenCalledWith("public-visits", "max");
-    expect(revalidateTagMock).toHaveBeenCalledWith("admin-visible-parks", "max");
-    expect(revalidateTagMock).toHaveBeenCalledWith("admin-removed-parks", "max");
+    expect(revalidateTagMock).toHaveBeenCalledWith("admin-park-visibility", "max");
     expect(revalidateTagMock).toHaveBeenCalledWith("public-park:pallas", "max");
     expect(revalidatePathMock).toHaveBeenCalledWith("/", "page");
     expect(revalidatePathMock).toHaveBeenCalledWith("/parks", "page");
@@ -55,8 +54,7 @@ describe("revalidate public cache route", () => {
     expect(revalidateTagMock).toHaveBeenCalledWith("public-home-summary", "max");
     expect(revalidateTagMock).toHaveBeenCalledWith("public-map-summary", "max");
     expect(revalidateTagMock).toHaveBeenCalledWith("public-visits", "max");
-    expect(revalidateTagMock).toHaveBeenCalledWith("admin-visible-parks", "max");
-    expect(revalidateTagMock).toHaveBeenCalledWith("admin-removed-parks", "max");
+    expect(revalidateTagMock).toHaveBeenCalledWith("admin-park-visibility", "max");
     expect(revalidateTagMock).not.toHaveBeenCalledWith(
       expect.stringMatching(/^public-park:/),
       "max",

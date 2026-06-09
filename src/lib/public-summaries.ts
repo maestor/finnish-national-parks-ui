@@ -7,7 +7,7 @@ import {
   isHikingAndWildernessAreaTypeSlug,
 } from "./park-type-filters";
 import type {
-  MapPark,
+  FilterableMapPark,
   ParkCategorySlug,
   ParkDetail,
   ParkTypeSlug,
@@ -23,7 +23,7 @@ export type PublicMapSummary = Omit<
   paths["/api/public/map-summary"]["get"]["responses"][200]["content"]["application/json"],
   "parks"
 > & {
-  parks: MapPark[];
+  parks: FilterableMapPark[];
 };
 
 export interface HomeProgressItem {

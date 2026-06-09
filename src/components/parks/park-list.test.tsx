@@ -1,5 +1,5 @@
 import { apiFetch } from "@/lib/api";
-import type { Park } from "@/lib/parks";
+import type { AdminVisibilityPark } from "@/lib/parks";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -17,17 +17,11 @@ vi.mock("@/lib/public-cache", () => ({
   revalidatePublicCache: mockRevalidatePublicCache,
 }));
 
-const parks: Park[] = [
+const parks: AdminVisibilityPark[] = [
   {
     slug: "teijo",
     name: "Teijon kansallispuisto",
-    areaKm2: 50,
     location: "Salo",
-    logo: null,
-    luontoonUrl: null,
-    map: null,
-    category: { name: "Kansallispuistot", slug: "national-park" },
-    establishmentYear: 2015,
     boundingBox: { minLat: 60, minLon: 22, maxLat: 61, maxLon: 23 },
     markerPoint: { lat: 60.2, lon: 22.9 },
     type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },
@@ -36,30 +30,18 @@ const parks: Park[] = [
     slug: "aulanko",
     name: "Aulangon luonnonsuojelualue",
     displayTypeName: "Maailmanperintökohde",
-    areaKm2: 12,
     location: "Hameenlinna",
-    logo: null,
-    luontoonUrl: null,
-    map: null,
-    category: { name: "Muut LS-alueet", slug: "nature-reserve-area" },
-    establishmentYear: null,
     boundingBox: { minLat: 61, minLon: 24, maxLat: 62, maxLon: 25 },
     markerPoint: { lat: 61.1, lon: 24.5 },
     type: { code: 4, id: 4, name: "Muu luonnonsuojelualue", slug: "nature-reserve-area" },
   },
 ];
 
-const removedParks: Park[] = [
+const removedParks: AdminVisibilityPark[] = [
   {
     slug: "repovesi",
     name: "Repoveden kansallispuisto",
-    areaKm2: 15,
     location: "Kouvola",
-    logo: null,
-    luontoonUrl: null,
-    map: null,
-    category: { name: "Kansallispuistot", slug: "national-park" },
-    establishmentYear: 2003,
     boundingBox: { minLat: 61, minLon: 26, maxLat: 62, maxLon: 27 },
     markerPoint: { lat: 61.3, lon: 26.5 },
     type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },

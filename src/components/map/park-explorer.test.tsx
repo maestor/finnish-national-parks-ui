@@ -1,4 +1,4 @@
-import type { MapPark } from "@/lib/parks";
+import type { FilterableMapPark } from "@/lib/parks";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -36,7 +36,7 @@ vi.mock("./park-map", () => ({
     resetViewRequestId,
     onActiveSlugChange,
   }: {
-    parks: MapPark[];
+    parks: FilterableMapPark[];
     canManageVisits?: boolean;
     homeParkFocusRequest?: { slug: string } | null;
     resetViewRequestId?: number;
@@ -62,7 +62,7 @@ vi.mock("./park-map", () => ({
   ),
 }));
 
-const parks: MapPark[] = [
+const parks: FilterableMapPark[] = [
   {
     slug: "paijanne",
     name: "Päijänteen kansallispuisto",

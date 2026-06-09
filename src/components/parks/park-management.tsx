@@ -1,6 +1,6 @@
 "use client";
 
-import type { Park } from "@/lib/parks";
+import type { AdminVisibilityPark } from "@/lib/parks";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { AdminParkMap } from "./admin-park-map";
@@ -9,8 +9,8 @@ import { ParkList } from "./park-list";
 type ViewTab = "list" | "map";
 
 interface ParkManagementProps {
-  parks: Park[];
-  removedParks: Park[];
+  parks: AdminVisibilityPark[];
+  removedParks: AdminVisibilityPark[];
 }
 
 export const ParkManagement = ({ parks, removedParks }: ParkManagementProps) => {

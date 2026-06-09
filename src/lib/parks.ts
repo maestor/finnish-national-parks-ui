@@ -3,6 +3,14 @@ import type { paths } from "./api-types";
 export type Park =
   paths["/api/parks"]["get"]["responses"][200]["content"]["application/json"]["parks"][number];
 
+export type ParkSearchResult =
+  paths["/api/parks/search"]["get"]["responses"][200]["content"]["application/json"]["parks"][number];
+
+export type AdminParkVisibilityResponse =
+  paths["/api/admin/parks/visibility"]["get"]["responses"][200]["content"]["application/json"];
+
+export type AdminVisibilityPark = AdminParkVisibilityResponse["visibleParks"][number];
+
 export type ParkDetail =
   paths["/api/parks/{slug}"]["get"]["responses"][200]["content"]["application/json"];
 
@@ -21,15 +29,33 @@ export type VisitWithPark =
 
 export type VisitImage = Visit["images"][number];
 
-export type MapPark = Park & {
-  visitedSummary: VisitedSummary;
-};
+type ParkMapRequiredFields = Pick<
+  Park,
+  "slug" | "name" | "location" | "type" | "displayTypeName" | "markerPoint" | "boundingBox"
+>;
 
-export type AdminMapPark = MapPark & {
-  removed: boolean;
-};
+type OptionalParkMapFields = Pick<
+  Park,
+  "areaKm2" | "establishmentYear" | "logo" | "luontoonUrl" | "map"
+>;
 
-export const toAdminMapParks = (parks: Park[], removedParks: Park[]): AdminMapPark[] => {
+export type MapPark = ParkMapRequiredFields &
+  Partial<OptionalParkMapFields> & {
+    visitedSummary: VisitedSummary;
+  };
+
+export type FilterableMapPark = MapPark & Pick<Park, "category">;
+
+export type AdminMapPark = AdminVisibilityPark &
+  Partial<OptionalParkMapFields> & {
+    removed: boolean;
+    visitedSummary: VisitedSummary;
+  };
+
+export const toAdminMapParks = (
+  parks: AdminVisibilityPark[],
+  removedParks: AdminVisibilityPark[],
+): AdminMapPark[] => {
   const visible = parks.map((park) => ({
     ...park,
     visitedSummary: createEmptyVisitedSummary(),
@@ -50,7 +76,10 @@ export const getAdminMarkerColor = (park: AdminMapPark): string => {
   return getVisitStatusColor(park);
 };
 
-type ParkTypeDisplayNameSource = Pick<Park, "displayTypeName" | "type">;
+type ParkTypeDisplayNameSource = {
+  displayTypeName?: string | null;
+  type: Park["type"];
+};
 
 export const createEmptyVisitedSummary = (): VisitedSummary => ({
   lastVisitedOn: null,

@@ -3,15 +3,15 @@
 import { AdminTableFilters } from "@/components/admin/admin-table-filters";
 import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api";
-import { type Park, getParkTypeDisplayName } from "@/lib/parks";
+import { type AdminVisibilityPark, getParkTypeDisplayName } from "@/lib/parks";
 import { revalidatePublicCache } from "@/lib/public-cache";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 interface ParkListProps {
-  parks: Park[];
-  removedParks: Park[];
+  parks: AdminVisibilityPark[];
+  removedParks: AdminVisibilityPark[];
 }
 
 type ParkTab = "visible" | "hidden";
@@ -59,7 +59,7 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
     ];
   }, [localParks, localRemovedParks, t]);
 
-  const updateParkVisibility = async (park: Park, removed: boolean) => {
+  const updateParkVisibility = async (park: AdminVisibilityPark, removed: boolean) => {
     const confirmed = window.confirm(
       t(removed ? "confirmRemove" : "confirmRestore", {
         parkName: park.name,
