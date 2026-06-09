@@ -5,7 +5,6 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ParkList } from "./park-list";
 
-const mockRefresh = vi.fn();
 const { mockRevalidatePublicCache } = vi.hoisted(() => ({
   mockRevalidatePublicCache: vi.fn(async () => true),
 }));
@@ -16,10 +15,6 @@ vi.mock("@/lib/api", () => ({
 
 vi.mock("@/lib/public-cache", () => ({
   revalidatePublicCache: mockRevalidatePublicCache,
-}));
-
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: mockRefresh }),
 }));
 
 const parks: Park[] = [
@@ -96,7 +91,7 @@ describe("ParkList", () => {
     expect(screen.getByText("Maailmanperintökohde")).toBeInTheDocument();
   });
 
-  it("removes a park after confirmation and refreshes the route", async () => {
+  it("removes a park after confirmation without waiting for a route refresh", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce(undefined);
 
     render(<ParkList parks={parks} removedParks={removedParks} />);
@@ -113,7 +108,6 @@ describe("ParkList", () => {
     });
 
     expect(mockRevalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "aulanko" });
-    expect(mockRefresh).toHaveBeenCalled();
     await waitFor(() => {
       expect(
         screen.queryByRole("link", { name: "Aulangon luonnonsuojelualue" }),
@@ -132,7 +126,6 @@ describe("ParkList", () => {
     fireEvent.click(screen.getAllByRole("button", { name: "controlPanel.parks.removeAction" })[0]);
 
     expect(apiFetch).not.toHaveBeenCalled();
-    expect(mockRefresh).not.toHaveBeenCalled();
   });
 
   it("shows an error when park removal fails", async () => {
@@ -146,7 +139,6 @@ describe("ParkList", () => {
       expect(screen.getByRole("alert")).toHaveTextContent("remove failed");
     });
 
-    expect(mockRefresh).not.toHaveBeenCalled();
     expect(screen.getByRole("link", { name: "Aulangon luonnonsuojelualue" })).toBeInTheDocument();
   });
 
@@ -168,7 +160,6 @@ describe("ParkList", () => {
     });
 
     expect(mockRevalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "repovesi" });
-    expect(mockRefresh).toHaveBeenCalled();
     await waitFor(() => {
       expect(
         screen.queryByRole("link", { name: "Repoveden kansallispuisto" }),

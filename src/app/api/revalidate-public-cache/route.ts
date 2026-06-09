@@ -1,3 +1,4 @@
+import { ADMIN_REMOVED_PARKS_TAG, ADMIN_VISIBLE_PARKS_TAG } from "@/lib/admin-cache";
 import {
   PUBLIC_HOME_SUMMARY_TAG,
   PUBLIC_MAP_SUMMARY_TAG,
@@ -23,9 +24,12 @@ export const POST = async (request: Request) => {
   revalidateTag(PUBLIC_HOME_SUMMARY_TAG, "max");
   revalidateTag(PUBLIC_MAP_SUMMARY_TAG, "max");
   revalidateTag(PUBLIC_VISITS_TAG, "max");
+  revalidateTag(ADMIN_VISIBLE_PARKS_TAG, "max");
+  revalidateTag(ADMIN_REMOVED_PARKS_TAG, "max");
   revalidatePath("/", "page");
   revalidatePath("/parks", "page");
   revalidatePath("/visits", "page");
+  revalidatePath("/control-panel/parks", "page");
 
   if (parkSlug) {
     revalidateTag(getPublicParkTag(parkSlug), "max");

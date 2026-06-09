@@ -71,6 +71,16 @@ describe("AdminParkMap", () => {
     expect(lastCall.canManageVisits).toBe(true);
   });
 
+  it("syncs local map state when parent props change", () => {
+    const { rerender } = render(<AdminParkMap parks={[basePark]} removedParks={[]} />);
+
+    rerender(<AdminParkMap parks={[]} removedParks={[removedPark]} />);
+
+    const lastCall = mockParkMap.mock.calls[mockParkMap.mock.calls.length - 1]?.[0];
+    expect(lastCall.parks).toHaveLength(1);
+    expect(lastCall.removedSlugs).toEqual(new Set(["removed-park"]));
+  });
+
   it("calls API and optimistically moves park to removed list when toggle hide is triggered", async () => {
     window.confirm = vi.fn(() => true);
 

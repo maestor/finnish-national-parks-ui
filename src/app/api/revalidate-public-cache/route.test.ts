@@ -30,10 +30,13 @@ describe("revalidate public cache route", () => {
     expect(revalidateTagMock).toHaveBeenCalledWith("public-home-summary", "max");
     expect(revalidateTagMock).toHaveBeenCalledWith("public-map-summary", "max");
     expect(revalidateTagMock).toHaveBeenCalledWith("public-visits", "max");
+    expect(revalidateTagMock).toHaveBeenCalledWith("admin-visible-parks", "max");
+    expect(revalidateTagMock).toHaveBeenCalledWith("admin-removed-parks", "max");
     expect(revalidateTagMock).toHaveBeenCalledWith("public-park:pallas", "max");
     expect(revalidatePathMock).toHaveBeenCalledWith("/", "page");
     expect(revalidatePathMock).toHaveBeenCalledWith("/parks", "page");
     expect(revalidatePathMock).toHaveBeenCalledWith("/visits", "page");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/control-panel/parks", "page");
     expect(revalidatePathMock).toHaveBeenCalledWith("/park/pallas", "page");
     await expect(response.json()).resolves.toEqual({
       ok: true,
@@ -52,6 +55,8 @@ describe("revalidate public cache route", () => {
     expect(revalidateTagMock).toHaveBeenCalledWith("public-home-summary", "max");
     expect(revalidateTagMock).toHaveBeenCalledWith("public-map-summary", "max");
     expect(revalidateTagMock).toHaveBeenCalledWith("public-visits", "max");
+    expect(revalidateTagMock).toHaveBeenCalledWith("admin-visible-parks", "max");
+    expect(revalidateTagMock).toHaveBeenCalledWith("admin-removed-parks", "max");
     expect(revalidateTagMock).not.toHaveBeenCalledWith(
       expect.stringMatching(/^public-park:/),
       "max",
@@ -59,6 +64,7 @@ describe("revalidate public cache route", () => {
     expect(revalidatePathMock).toHaveBeenCalledWith("/", "page");
     expect(revalidatePathMock).toHaveBeenCalledWith("/parks", "page");
     expect(revalidatePathMock).toHaveBeenCalledWith("/visits", "page");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/control-panel/parks", "page");
     expect(revalidatePathMock).not.toHaveBeenCalledWith(expect.stringMatching(/^\/park\//), "page");
     await expect(response.json()).resolves.toEqual({
       ok: true,
