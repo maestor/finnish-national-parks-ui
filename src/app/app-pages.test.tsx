@@ -1,4 +1,4 @@
-import { apiFetch, apiPublicFetch } from "@/lib/api";
+import { apiAuthFetch, apiFetch, apiPublicFetch } from "@/lib/api";
 import type { AdminVisibilityPark, Park, Visit, VisitWithPark } from "@/lib/parks";
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -15,6 +15,9 @@ import ControlPanelLayout from "./control-panel/layout";
 import ControlPanelPage, {
   generateMetadata as generateControlPanelMetadata,
 } from "./control-panel/page";
+import EditParkPage, {
+  generateMetadata as generateEditParkMetadata,
+} from "./control-panel/parks/[slug]/edit/page";
 import ParksPage, { generateMetadata as generateParksMetadata } from "./control-panel/parks/page";
 import EditVisitPage, {
   generateMetadata as generateEditVisitMetadata,
@@ -36,6 +39,7 @@ const { mockNotFound } = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/api", () => ({
+  apiAuthFetch: vi.fn(),
   apiFetch: vi.fn(),
   apiPublicFetch: vi.fn(),
 }));
@@ -94,6 +98,12 @@ vi.mock("@/components/park/park-visit-history", () => ({
       slug:{parkSlug}|visits:{visits.length}|open:{initialOpenVisitId ?? "none"}
     </div>
   ),
+}));
+
+vi.mock("@/components/park/park-admin-controls", () => ({
+  ParkAdminControlsProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  ParkVisibilityBadge: () => null,
+  ParkAdminSection: () => null,
 }));
 
 vi.mock("@/components/visits/public-visits-timeline", () => ({
@@ -235,6 +245,14 @@ vi.mock("@/components/parks/park-management", () => ({
   ),
 }));
 
+vi.mock("@/components/parks/park-form", () => ({
+  ParkForm: ({ park }: { park: { slug: string; name: string } }) => (
+    <div data-testid="park-form">
+      slug:{park.slug}|name:{park.name}
+    </div>
+  ),
+}));
+
 vi.mock("@/components/visits/visit-form", () => ({
   VisitForm: ({
     parks,
@@ -331,6 +349,7 @@ const renderControlPanelRoute = async (page: React.ReactNode) => {
 
 describe("App pages", () => {
   beforeEach(() => {
+    vi.mocked(apiAuthFetch).mockReset();
     vi.mocked(apiFetch).mockReset();
     vi.mocked(apiPublicFetch).mockReset();
     mockNotFound.mockReset();
@@ -577,6 +596,34 @@ describe("App pages", () => {
     expect(screen.getByText("park.detailTitle")).toBeInTheDocument();
   });
 
+  it("falls back to an authenticated park fetch when a removed park is hidden from the public API", async () => {
+    vi.mocked(apiFetch).mockRejectedValueOnce(Object.assign(new Error("hidden"), { status: 404 }));
+    vi.mocked(apiAuthFetch).mockResolvedValueOnce({
+      ...publicPark,
+      boundaryGeoJson: null,
+    });
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      visitedSummary: {
+        visited: false,
+        visitCount: 0,
+        lastVisitedOn: null,
+      },
+      visits: [],
+    });
+
+    await renderPublicRoute(
+      await ParkDetailPage({
+        params: Promise.resolve({ slug: "pallas" }),
+        searchParams: Promise.resolve({}),
+      }),
+    );
+
+    expect(apiAuthFetch).toHaveBeenCalledWith("/api/parks/pallas?includeBoundary=true", {
+      cache: "no-store",
+    });
+    expect(screen.getByRole("heading", { name: "Pallas-Yllästunturi" })).toBeInTheDocument();
+  });
+
   it("renders the public visits page with selected year and month filters", async () => {
     vi.mocked(apiPublicFetch).mockResolvedValueOnce({ visits: [visitWithPark] });
 
@@ -664,6 +711,37 @@ describe("App pages", () => {
   it("builds metadata for the parks list page", async () => {
     await expect(generateParksMetadata()).resolves.toEqual({
       title: "controlPanel.parks.title",
+    });
+  });
+
+  it("renders the park edit page with navigation helpers", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce(publicPark);
+
+    await renderControlPanelRoute(
+      await EditParkPage({
+        params: Promise.resolve({ slug: "pallas" }),
+        searchParams: Promise.resolve({ updated: "1" }),
+      }),
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "controlPanel.parks.edit.title" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "controlPanel.parks.edit.backToList" }),
+    ).toHaveAttribute("href", "/control-panel/parks");
+    expect(
+      screen.getByRole("link", { name: "controlPanel.parks.edit.viewParkPage" }),
+    ).toHaveAttribute("href", "/park/pallas");
+    expect(screen.getByText("controlPanel.parks.edit.updatedNotice")).toBeInTheDocument();
+    expect(screen.getByTestId("park-form")).toHaveTextContent(
+      "slug:pallas|name:Pallas-Yllästunturi",
+    );
+  });
+
+  it("builds metadata for the park edit page", async () => {
+    await expect(generateEditParkMetadata()).resolves.toEqual({
+      title: "controlPanel.parks.edit.title",
     });
   });
 

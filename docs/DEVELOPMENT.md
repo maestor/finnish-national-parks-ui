@@ -95,7 +95,7 @@ src/app/
   control-panel/    # Admin routes (protected by proxy)
     layout.tsx      # Sidebar layout
     page.tsx        # Admin landing page
-    parks/          # Park visibility management
+    parks/          # Park visibility management + park detail editing
     visits/         # Visit management
   login/            # OAuth login page
   proxy.ts          # Route protection (Next.js 16 proxy convention)
@@ -135,6 +135,7 @@ The backend handles:
 - Google OAuth flow (`/auth/google`, `/auth/google/callback`)
 - Session cookie (`__session` JWT)
 - Park catalog API (`/api/parks`, `/api/parks/{slug}`)
+- Park detail admin updates (`PATCH /api/parks/{slug}`)
 - Park visit history API (`/api/parks/{slug}/visits`)
 - Visit management API (`/api/visits`, `/api/visits/{id}`, image routes under `/api/visits/{id}`)
 - Public summary API for cacheable landing and map data (`/api/public/home-summary`, `/api/public/map-summary`)
@@ -153,7 +154,7 @@ Route naming caveat:
 
 - The public home page (`/`) reads `GET /api/public/home-summary`.
 - The public map page (`/parks`) reads `GET /api/public/map-summary`.
-- Public park detail pages still read `GET /api/parks/{slug}` and `GET /api/parks/{slug}/visits`, but those reads now use cacheable public fetches instead of request-bound cookie forwarding.
+- Public park detail pages still read `GET /api/parks/{slug}` and `GET /api/parks/{slug}/visits`, but those reads now use cacheable public fetches by default and fall back to an authenticated request when the backend requires an admin session for a hidden park.
 - Admin-only quick links on public pages are resolved client-side with `useAuth`, so the page HTML can stay cache-friendly while signed-in users still see edit and add-visit affordances after hydration.
 - Visit and public park mutations call the local Next.js route `POST /api/revalidate-public-cache` so the frontend can invalidate cached public pages immediately after a successful write.
 

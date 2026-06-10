@@ -220,7 +220,14 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
                     className="transition-colors hover:bg-white/56 dark:hover:bg-slate-950/42"
                   >
                     <td className="px-4 py-3">
-                      <Link href={`/park/${park.slug}`} className="font-medium hover:underline">
+                      <Link
+                        href={
+                          isVisibleTab
+                            ? `/control-panel/parks/${park.slug}/edit`
+                            : `/park/${park.slug}`
+                        }
+                        className="font-medium hover:underline"
+                      >
                         {park.name}
                       </Link>
                     </td>

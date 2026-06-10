@@ -101,7 +101,17 @@
     "imageCount": "{count} kuvaa",
     "visitNumber": "{number}. käynti",
     "boundaryMapTitle": "Paikan kartta",
-    "showInFinlandsMap": "Näytä Suomen kartalla"
+    "showInFinlandsMap": "Näytä Suomen kartalla",
+    "admin": {
+      "title": "Hallintatoimet",
+      "description": "Voit muuttaa paikan näkyvyyttä sovelluksessa tai siirtyä muokkaamaan sen tietoja.",
+      "visibleBadge": "Näkyvissä sovelluksessa",
+      "hiddenBadge": "Piilotettu sovelluksesta",
+      "hideAction": "Piilota sovelluksesta",
+      "showAction": "Näytä sovelluksessa",
+      "editAction": "Muokkaa paikan tietoja",
+      "updating": "Päivitetään..."
+    }
   },
   "visits": {
     "eyebrow": "Käyntien aikajana",
@@ -137,7 +147,7 @@
     },
     "parks": {
       "title": "Paikat",
-      "description": "Hallitse paikkojen näkyvyyttä julkisissa näkymissä. Voit piilottaa paikan näkyvistä tai palauttaa piilotetun paikan takaisin.",
+      "description": "Hallitse paikkojen näkyvyyttä julkisissa näkymissä ja muokkaa paikan perustietoja.",
       "tabs": {
         "ariaLabel": "Paikkojen näkyvyysvälilehdet",
         "visible": "Näkyvissä",
@@ -156,6 +166,7 @@
       "parkName": "Paikka",
       "parkType": "Tyyppi",
       "location": "Sijainti",
+      "editAction": "Muokkaa tietoja",
       "removeAction": "Poista näkyvistä",
       "removing": "Poistetaan...",
       "restoreAction": "Palauta näkyviin",
@@ -170,6 +181,35 @@
       "map": {
         "hide": "Piilota sovelluksesta",
         "show": "Näytä sovelluksessa"
+      },
+      "edit": {
+        "title": "Muokkaa paikan tietoja",
+        "description": "Päivitä paikan julkiset perustiedot ja hallinnan kannalta olennaiset lisätiedot.",
+        "backToList": "Palaa paikkalistaan",
+        "viewParkPage": "Siirry paikan sivulle",
+        "updatedNotice": "Paikan tiedot päivitettiin onnistuneesti.",
+        "form": {
+          "nameLabel": "Nimi",
+          "slugLabel": "Slug",
+          "locationLabel": "Sijaintinimi",
+          "displayTypeNameLabel": "Näytettävä tyyppinimi",
+          "displayTypeNamePlaceholder": "Jätä tyhjäksi käyttääksesi oletustyyppiä",
+          "luontoonUrlLabel": "Luontoon.fi osoite",
+          "areaLabel": "Pinta-ala (km²)",
+          "establishedLabel": "Perustamisvuosi",
+          "postalCodeLabel": "Postinumero",
+          "postalCodePlaceholder": "Esim. 00100",
+          "postalOfficeLabel": "Postitoimipaikka",
+          "submit": "Tallenna muutokset",
+          "back": "Palaa takaisin",
+          "validation": {
+            "nameRequired": "Anna paikan nimi",
+            "slugRequired": "Anna paikan slug",
+            "locationRequired": "Anna paikan sijaintinimi",
+            "areaInvalid": "Anna kelvollinen pinta-ala",
+            "establishedInvalid": "Anna kelvollinen perustamisvuosi"
+          }
+        }
       },
       "emptyAll": "Ei hallittavia paikkoja.",
       "emptyVisible": "Ei näkyvissä olevia paikkoja.",

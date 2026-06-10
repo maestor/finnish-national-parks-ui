@@ -8,7 +8,9 @@ vi.mock("@/lib/backend-proxy", () => ({
   proxyBackendRequest: proxyBackendRequestMock,
 }));
 
+import { GET as getAdminParkVisibility } from "./admin/parks/visibility/route";
 import { PATCH as patchParkRemoved } from "./parks/[slug]/removed/route";
+import { PATCH as patchPark } from "./parks/[slug]/route";
 import { POST as postParkVisit } from "./parks/[slug]/visits/route";
 import { GET as getParks } from "./parks/route";
 import { GET as getParkSearch } from "./parks/search/route";
@@ -32,6 +34,24 @@ describe("api proxy routes", () => {
     await patchParkRemoved(request, { params: Promise.resolve({ slug: "pallas" }) });
 
     expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/parks/pallas/removed");
+  });
+
+  it("proxies park detail updates", async () => {
+    const request = new Request("https://frontend.example/api/parks/pallas", {
+      method: "PATCH",
+    });
+
+    await patchPark(request, { params: Promise.resolve({ slug: "pallas" }) });
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/parks/pallas");
+  });
+
+  it("proxies admin park visibility reads", async () => {
+    const request = new Request("https://frontend.example/api/admin/parks/visibility");
+
+    await getAdminParkVisibility(request);
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/admin/parks/visibility");
   });
 
   it("proxies public park listing reads", async () => {
