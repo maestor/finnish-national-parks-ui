@@ -79,11 +79,13 @@ describe("Park admin controls", () => {
 
     expect(await screen.findAllByText("park.admin.visibleBadge")).toHaveLength(2);
     expect(screen.getByRole("heading", { name: "park.admin.title" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "park.admin.hideAction" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "park.admin.editAction" })).toHaveAttribute(
-      "href",
-      "/control-panel/parks/pallas/edit",
-    );
+    const editLink = screen.getByRole("link", { name: "park.admin.editAction" });
+    const hideButton = screen.getByRole("button", { name: "park.admin.hideAction" });
+
+    expect(editLink).toHaveAttribute("href", "/control-panel/parks/pallas/edit");
+    expect(editLink).toHaveClass("bg-primary", "text-primary-foreground");
+    expect(editLink.parentElement?.firstElementChild).toBe(editLink);
+    expect(editLink.parentElement?.children[1]).toBe(hideButton);
   });
 
   it("toggles park visibility from the admin section", async () => {

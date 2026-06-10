@@ -7,7 +7,7 @@ import type { ParkDetail, ParkUpdateRequest, ParkUpdateResponse } from "@/lib/pa
 import { revalidatePublicCache } from "@/lib/public-cache";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 
 interface ParkFormProps {
   park: ParkDetail;
@@ -65,6 +65,8 @@ export const ParkForm = ({ park }: ParkFormProps) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isNavigationPending, startTransition] = useTransition();
+  const isPending = isSubmitting || isNavigationPending;
 
   const isDirty = Object.entries(formState).some(([key, value]) => {
     const initialValue = initialState[key as keyof ParkFormState];
@@ -164,8 +166,10 @@ export const ParkForm = ({ park }: ParkFormProps) => {
           : Promise.resolve(true),
       ]);
 
-      router.replace(`/control-panel/parks/${updatedPark.slug}/edit?updated=1`);
-      router.refresh();
+      startTransition(() => {
+        router.replace(`/control-panel/parks/${updatedPark.slug}/edit?updated=1`);
+        router.refresh();
+      });
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : String(error));
     } finally {
@@ -302,8 +306,8 @@ export const ParkForm = ({ park }: ParkFormProps) => {
       {submitError && <p className="text-sm text-destructive">{submitError}</p>}
 
       <div className="flex flex-wrap items-center gap-4">
-        <Button type="submit" disabled={isSubmitting || !isDirty}>
-          {isSubmitting ? "..." : t("submit")}
+        <Button type="submit" disabled={isPending || !isDirty}>
+          {isPending ? "..." : t("submit")}
         </Button>
         <button
           type="button"
