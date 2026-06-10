@@ -310,27 +310,27 @@ const createPopupNode = (
 
   container.appendChild(details);
 
-  if (!onToggleRemoved) {
-    const summaryRow = document.createElement("div");
-    summaryRow.className =
-      "mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/35 pt-3 text-xs dark:border-white/10";
+  const summaryRow = document.createElement("div");
+  summaryRow.className =
+    "mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/35 pt-3 text-xs dark:border-white/10";
 
+  if (!onToggleRemoved) {
     const visitCount = park.visitedSummary.visitCount;
     const visitsCount = document.createElement("span");
     visitsCount.className =
       "inline-flex items-center rounded-full border border-white/45 bg-white/72 px-3 py-1 font-medium text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] dark:border-white/10 dark:bg-slate-950/56 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
     visitsCount.textContent = `${labels.visits} (${visitCount})`;
     summaryRow.appendChild(visitsCount);
-
-    const parkLink = document.createElement("a");
-    parkLink.href = `/park/${park.slug}`;
-    parkLink.className =
-      "inline-flex items-center rounded-full border border-sky-200/70 bg-white/74 px-3 py-1.5 font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 dark:border-sky-300/15 dark:bg-slate-950/62 dark:hover:bg-slate-950/78";
-    parkLink.textContent = labels.openParkPage;
-    parkLink.addEventListener("click", (e) => e.stopPropagation());
-    summaryRow.appendChild(parkLink);
-    container.appendChild(summaryRow);
   }
+
+  const parkLink = document.createElement("a");
+  parkLink.href = `/park/${park.slug}`;
+  parkLink.className =
+    "inline-flex items-center rounded-full border border-sky-200/70 bg-white/74 px-3 py-1.5 font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 dark:border-sky-300/15 dark:bg-slate-950/62 dark:hover:bg-slate-950/78";
+  parkLink.textContent = labels.openParkPage;
+  parkLink.addEventListener("click", (e) => e.stopPropagation());
+  summaryRow.appendChild(parkLink);
+  container.appendChild(summaryRow);
 
   const actionRow = document.createElement("div");
   actionRow.className = "mt-3 flex items-center gap-2 text-xs";

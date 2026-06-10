@@ -697,7 +697,159 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    slug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        areaKm2?: number | null;
+                        displayTypeName?: string | null;
+                        establishmentYear?: number | null;
+                        locationLabel?: string;
+                        luontoonUrl?: string | null;
+                        name?: string;
+                        postalCode?: string | null;
+                        postalOffice?: string | null;
+                        slug?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Updated park detail */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            areaKm2: number | null;
+                            boundingBox: {
+                                maxLat: number;
+                                maxLon: number;
+                                minLat: number;
+                                minLon: number;
+                            };
+                            category: {
+                                name: string;
+                                /** @enum {string} */
+                                slug: "outdoor-recreation-area" | "factory-village" | "hiking-and-wilderness-areas" | "national-park" | "nature-reserve-area" | "trails-and-routes";
+                            };
+                            displayTypeName?: string | null;
+                            establishmentYear: number | null;
+                            location: string;
+                            logo: {
+                                key: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                                /** Format: uri */
+                                url: string;
+                            } | null;
+                            luontoonUrl: string | null;
+                            map: {
+                                key: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                                /** Format: uri */
+                                url: string;
+                            } | null;
+                            markerPoint: {
+                                lat: number;
+                                lon: number;
+                            };
+                            name: string;
+                            slug: string;
+                            type: {
+                                code: number;
+                                id: number;
+                                name: string;
+                                /** @enum {string} */
+                                slug: "outdoor-recreation-area" | "factory-village" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
+                            };
+                            boundaryGeoJson?: {
+                                features: {
+                                    geometry: {
+                                        coordinates: number[][][];
+                                        /** @enum {string} */
+                                        type: "Polygon";
+                                    } | {
+                                        coordinates: number[][];
+                                        /** @enum {string} */
+                                        type: "LineString";
+                                    };
+                                    /** @enum {string} */
+                                    type: "Feature";
+                                }[];
+                                /** @enum {string} */
+                                type: "FeatureCollection";
+                            };
+                            /** @enum {string} */
+                            catalogStatus: "active" | "inactive";
+                            lipasId: number;
+                            municipalityCode: number | null;
+                            postalOffice: string | null;
+                            /** Format: date-time */
+                            sourceEventDate: string | null;
+                            updatedAt: string;
+                        };
+                    };
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Park was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Requested park slug is already in use */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Invalid park update payload */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
         trace?: never;
     };
     "/api/parks/{slug}/visits": {

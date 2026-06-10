@@ -14,6 +14,13 @@ export type AdminVisibilityPark = AdminParkVisibilityResponse["visibleParks"][nu
 export type ParkDetail =
   paths["/api/parks/{slug}"]["get"]["responses"][200]["content"]["application/json"];
 
+export type ParkUpdateRequest = NonNullable<
+  paths["/api/parks/{slug}"]["patch"]["requestBody"]
+>["content"]["application/json"];
+
+export type ParkUpdateResponse =
+  paths["/api/parks/{slug}"]["patch"]["responses"][200]["content"]["application/json"];
+
 export type ParkTypeSlug = Park["type"]["slug"];
 export type ParkCategorySlug = Park["category"]["slug"];
 

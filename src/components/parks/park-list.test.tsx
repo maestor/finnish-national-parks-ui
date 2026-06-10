@@ -57,20 +57,31 @@ describe("ParkList", () => {
     );
   });
 
-  it("renders parks sorted by name with links to the public park pages", () => {
+  it("renders parks sorted by name with edit links in the name column", () => {
     render(<ParkList parks={parks} removedParks={removedParks} />);
 
     const rows = screen.getAllByRole("row");
     expect(rows).toHaveLength(3);
     expect(screen.getByRole("link", { name: "Aulangon luonnonsuojelualue" })).toHaveAttribute(
       "href",
-      "/park/aulanko",
+      "/control-panel/parks/aulanko/edit",
     );
     expect(screen.getByRole("link", { name: "Teijon kansallispuisto" })).toHaveAttribute(
       "href",
-      "/park/teijo",
+      "/control-panel/parks/teijo/edit",
     );
     expect(screen.getByText("Maailmanperintökohde")).toBeInTheDocument();
+  });
+
+  it("uses the park page link for removed parks on the hidden tab", () => {
+    render(<ParkList parks={parks} removedParks={removedParks} />);
+
+    fireEvent.click(screen.getByRole("tab", { name: "controlPanel.parks.tabs.hidden" }));
+
+    expect(screen.getByRole("link", { name: "Repoveden kansallispuisto" })).toHaveAttribute(
+      "href",
+      "/park/repovesi",
+    );
   });
 
   it("removes a park after confirmation without waiting for a route refresh", async () => {

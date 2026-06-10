@@ -943,6 +943,25 @@ describe("ParkMap", () => {
     expect(screen.getByRole("button", { name: "Näytä sovelluksessa" })).toBeInTheDocument();
   });
 
+  it("keeps the park page link available in the admin popup", () => {
+    render(
+      <ParkMap
+        parks={parks}
+        removedSlugs={new Set(["pallas"])}
+        onToggleRemoved={vi.fn()}
+        toggleLabels={{ hide: "Piilota sovelluksesta", show: "Näytä sovelluksessa" }}
+      />,
+    );
+    triggerMapLoad();
+
+    fireEvent.click(markerElements[0]);
+
+    expect(screen.getByRole("link", { name: "map.openParkPage" })).toHaveAttribute(
+      "href",
+      "/park/pallas",
+    );
+  });
+
   it("calls onToggleRemoved when the popup toggle button is clicked", () => {
     const onToggleRemoved = vi.fn();
     render(
