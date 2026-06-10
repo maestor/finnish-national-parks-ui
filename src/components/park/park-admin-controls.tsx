@@ -219,6 +219,12 @@ export const ParkAdminSection = () => {
       )}
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
+        <Link
+          href={`/control-panel/parks/${parkSlug}/edit`}
+          className="inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
+          {t("editAction")}
+        </Link>
         <Button
           type="button"
           variant={isVisible ? "destructive" : "outline"}
@@ -227,12 +233,6 @@ export const ParkAdminSection = () => {
         >
           {isPending ? t("updating") : isVisible ? t("hideAction") : t("showAction")}
         </Button>
-        <Link
-          href={`/control-panel/parks/${parkSlug}/edit`}
-          className="inline-flex h-10 items-center justify-center rounded-md border border-white/45 bg-white/78 px-4 py-2 text-sm font-medium text-foreground shadow-[0_10px_24px_rgba(148,163,184,0.18)] backdrop-blur-md transition-colors hover:bg-white/92 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/58 dark:hover:bg-slate-950/74 dark:shadow-[0_16px_32px_rgba(2,6,23,0.28)]"
-        >
-          {t("editAction")}
-        </Link>
       </div>
     </section>
   );
