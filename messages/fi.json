@@ -191,7 +191,7 @@
         "form": {
           "nameLabel": "Nimi",
           "slugLabel": "Slug",
-          "locationLabel": "Sijaintinimi",
+          "locationLabel": "Osoite",
           "displayTypeNameLabel": "Näytettävä tyyppinimi",
           "displayTypeNamePlaceholder": "Jätä tyhjäksi käyttääksesi oletustyyppiä",
           "luontoonUrlLabel": "Luontoon.fi osoite",
@@ -205,7 +205,7 @@
           "validation": {
             "nameRequired": "Anna paikan nimi",
             "slugRequired": "Anna paikan slug",
-            "locationRequired": "Anna paikan sijaintinimi",
+            "locationRequired": "Anna paikan osoite",
             "areaInvalid": "Anna kelvollinen pinta-ala",
             "establishedInvalid": "Anna kelvollinen perustamisvuosi"
           }
