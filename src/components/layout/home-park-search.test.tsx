@@ -54,14 +54,20 @@ const parks: ParkSearchResult[] = [
   {
     slug: "paijanne",
     name: "Päijänteen kansallispuisto",
-    location: "Päijät-Häme",
+    address: "Päijänteentie 1, 17200 Päijät-Häme",
+    locationLabel: "Päijänteentie 1",
+    postalCode: "17200",
+    postalOffice: "Päijät-Häme",
     type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },
   },
   {
     slug: "teijo",
     name: "Teijon kansallispuisto",
     displayTypeName: "Maailmanperintökohde",
-    location: "Varsinais-Suomi",
+    address: "Matildanjärventie 84, 25570 Salo",
+    locationLabel: "Matildanjärventie 84",
+    postalCode: "25570",
+    postalOffice: "Salo",
     type: { code: 4, id: 4, name: "Muu luonnonsuojelualue", slug: "nature-reserve-area" },
   },
 ];
@@ -69,7 +75,10 @@ const parks: ParkSearchResult[] = [
 const mobileScrollableParks: ParkSearchResult[] = Array.from({ length: 12 }, (_, index) => ({
   slug: `park-${index + 1}`,
   name: `Kansallispuisto ${index + 1}`,
-  location: `Alue ${index + 1}`,
+  address: `Katu ${index + 1}, 0010${index} Alue ${index + 1}`,
+  locationLabel: `Katu ${index + 1}`,
+  postalCode: `0010${index}`,
+  postalOffice: `Alue ${index + 1}`,
   type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },
 }));
 
@@ -146,6 +155,19 @@ describe("HomeParkSearch", () => {
 
     await waitFor(() => {
       expect(screen.getByText("layout.parkSearch.empty")).toBeInTheDocument();
+    });
+  });
+
+  it("matches a park by its address", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({ parks });
+
+    renderSearch();
+
+    const input = screen.getByRole("combobox", { name: "layout.parkSearch.label" });
+    fireEvent.change(input, { target: { value: "25570" } });
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /Teijon kansallispuisto/i })).toBeInTheDocument();
     });
   });
 

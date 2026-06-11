@@ -28,9 +28,10 @@ vi.mock("next/navigation", () => ({
 const park = {
   slug: "pallas",
   name: "Pallas-Yllästunturi",
+  address: "Pallasjärventie 14, 99300 Muonio",
   areaKm2: 14,
   displayTypeName: "Maailmanperintökohde",
-  location: "Lappi",
+  locationLabel: "Pallasjärventie 14",
   logo: null,
   luontoonUrl: "https://example.com/pallas",
   map: null,
@@ -42,6 +43,7 @@ const park = {
   catalogStatus: "active",
   lipasId: 123,
   municipalityCode: 12,
+  postalCode: "99300",
   postalOffice: "Muonio",
   sourceEventDate: null,
   updatedAt: "2024-01-01T00:00:00.000Z",
@@ -140,6 +142,7 @@ describe("ParkForm", () => {
     await user.clear(screen.getByLabelText(/controlPanel\.parks\.edit\.form\.areaLabel/));
     await user.clear(screen.getByLabelText(/controlPanel\.parks\.edit\.form\.establishedLabel/));
     await user.clear(screen.getByLabelText(/controlPanel\.parks\.edit\.form\.postalOfficeLabel/));
+    await user.clear(screen.getByLabelText(/controlPanel\.parks\.edit\.form\.postalCodeLabel/));
     await user.type(
       screen.getByLabelText(/controlPanel\.parks\.edit\.form\.postalCodeLabel/),
       "48100",
@@ -201,12 +204,27 @@ describe("ParkForm", () => {
     expect(postalCodeField?.nextElementSibling).toBe(postalOfficeField);
   });
 
+  it("prefills editable address fields from the raw API fields", () => {
+    render(<ParkForm park={park} />);
+
+    expect(screen.getByLabelText(/controlPanel\.parks\.edit\.form\.locationLabel/)).toHaveValue(
+      "Pallasjärventie 14",
+    );
+    expect(screen.getByLabelText(/controlPanel\.parks\.edit\.form\.postalCodeLabel/)).toHaveValue(
+      "99300",
+    );
+    expect(screen.getByLabelText(/controlPanel\.parks\.edit\.form\.postalOfficeLabel/)).toHaveValue(
+      "Muonio",
+    );
+  });
+
   it("sends a changed location label in the update payload", async () => {
     const user = userEvent.setup();
 
     vi.mocked(apiFetch).mockResolvedValueOnce({
       ...park,
-      location: "Kittila",
+      address: "Kittiläntie 1, 99100 Kittilä",
+      locationLabel: "Kittiläntie 1",
     });
 
     render(<ParkForm park={park} />);
@@ -214,7 +232,7 @@ describe("ParkForm", () => {
     await user.clear(screen.getByLabelText(/controlPanel\.parks\.edit\.form\.locationLabel/));
     await user.type(
       screen.getByLabelText(/controlPanel\.parks\.edit\.form\.locationLabel/),
-      " Kittila ",
+      " Kittiläntie 1 ",
     );
     await user.click(screen.getByRole("button", { name: "controlPanel.parks.edit.form.submit" }));
 
@@ -222,9 +240,49 @@ describe("ParkForm", () => {
       expect(apiFetch).toHaveBeenCalledWith("/api/parks/pallas", {
         method: "PATCH",
         body: JSON.stringify({
-          locationLabel: "Kittila",
+          locationLabel: "Kittiläntie 1",
         }),
       });
+    });
+  });
+
+  it("round-trips postal fields independently without rebuilding the location label", async () => {
+    const user = userEvent.setup();
+
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ...park,
+      address: "Pallasjärventie 14, 99100 Kittilä",
+      postalCode: "99100",
+      postalOffice: "Kittilä",
+    });
+
+    render(<ParkForm park={park} />);
+
+    await user.clear(screen.getByLabelText(/controlPanel\.parks\.edit\.form\.postalCodeLabel/));
+    await user.type(
+      screen.getByLabelText(/controlPanel\.parks\.edit\.form\.postalCodeLabel/),
+      "99100",
+    );
+    await user.clear(screen.getByLabelText(/controlPanel\.parks\.edit\.form\.postalOfficeLabel/));
+    await user.type(
+      screen.getByLabelText(/controlPanel\.parks\.edit\.form\.postalOfficeLabel/),
+      "Kittilä",
+    );
+    await user.click(screen.getByRole("button", { name: "controlPanel.parks.edit.form.submit" }));
+
+    await waitFor(() => {
+      expect(apiFetch).toHaveBeenCalledWith(
+        "/api/parks/pallas",
+        expect.objectContaining({
+          method: "PATCH",
+        }),
+      );
+    });
+
+    const [, requestOptions] = vi.mocked(apiFetch).mock.calls[0] ?? [];
+    expect(JSON.parse(String(requestOptions?.body))).toEqual({
+      postalCode: "99100",
+      postalOffice: "Kittilä",
     });
   });
 

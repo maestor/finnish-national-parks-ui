@@ -32,10 +32,10 @@ const createInitialState = (park: ParkDetail): ParkFormState => ({
   areaKm2: park.areaKm2 === null ? "" : String(park.areaKm2),
   displayTypeName: park.displayTypeName ?? "",
   establishmentYear: park.establishmentYear === null ? "" : String(park.establishmentYear),
-  locationLabel: park.location,
+  locationLabel: park.locationLabel,
   luontoonUrl: park.luontoonUrl ?? "",
   name: park.name,
-  postalCode: "",
+  postalCode: park.postalCode ?? "",
   postalOffice: park.postalOffice ?? "",
   slug: park.slug,
 });

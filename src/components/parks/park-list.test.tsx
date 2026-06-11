@@ -21,18 +21,24 @@ const parks: AdminVisibilityPark[] = [
   {
     slug: "teijo",
     name: "Teijon kansallispuisto",
-    location: "Salo",
+    address: "Matildanjärventie 84, 25570 Salo",
+    locationLabel: "Matildanjärventie 84",
     boundingBox: { minLat: 60, minLon: 22, maxLat: 61, maxLon: 23 },
     markerPoint: { lat: 60.2, lon: 22.9 },
+    postalCode: "25570",
+    postalOffice: "Salo",
     type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },
   },
   {
     slug: "aulanko",
     name: "Aulangon luonnonsuojelualue",
     displayTypeName: "Maailmanperintökohde",
-    location: "Hameenlinna",
+    address: "Aulangontie 93, 13220 Hämeenlinna",
+    locationLabel: "Aulangontie 93",
     boundingBox: { minLat: 61, minLon: 24, maxLat: 62, maxLon: 25 },
     markerPoint: { lat: 61.1, lon: 24.5 },
+    postalCode: "13220",
+    postalOffice: "Hämeenlinna",
     type: { code: 4, id: 4, name: "Muu luonnonsuojelualue", slug: "nature-reserve-area" },
   },
 ];
@@ -41,9 +47,12 @@ const removedParks: AdminVisibilityPark[] = [
   {
     slug: "repovesi",
     name: "Repoveden kansallispuisto",
-    location: "Kouvola",
+    address: "Lapinsalmentie 170, 47910 Kouvola",
+    locationLabel: "Lapinsalmentie 170",
     boundingBox: { minLat: 61, minLon: 26, maxLat: 62, maxLon: 27 },
     markerPoint: { lat: 61.3, lon: 26.5 },
+    postalCode: "47910",
+    postalOffice: "Kouvola",
     type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },
   },
 ];
@@ -71,6 +80,7 @@ describe("ParkList", () => {
       "/control-panel/parks/teijo/edit",
     );
     expect(screen.getByText("Maailmanperintökohde")).toBeInTheDocument();
+    expect(screen.getByText("Aulangontie 93, 13220 Hämeenlinna")).toBeInTheDocument();
   });
 
   it("uses the park page link for removed parks on the hidden tab", () => {
@@ -191,6 +201,17 @@ describe("ParkList", () => {
       screen.getByLabelText("controlPanel.parks.filters.searchLabel"),
       "maailmanperintö",
     );
+
+    expect(screen.getByRole("link", { name: "Aulangon luonnonsuojelualue" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Teijon kansallispuisto" })).not.toBeInTheDocument();
+  });
+
+  it("matches a park by its address in the search filter", async () => {
+    const user = userEvent.setup();
+
+    render(<ParkList parks={parks} removedParks={removedParks} />);
+
+    await user.type(screen.getByLabelText("controlPanel.parks.filters.searchLabel"), "13220");
 
     expect(screen.getByRole("link", { name: "Aulangon luonnonsuojelualue" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Teijon kansallispuisto" })).not.toBeInTheDocument();

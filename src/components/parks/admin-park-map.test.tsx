@@ -27,8 +27,9 @@ vi.mock("@/lib/public-cache", () => ({
 const basePark = {
   slug: "pallas",
   name: "Pallas-Yllästunturin kansallispuisto",
+  address: "Pallasjärventie 14, 99300 Muonio",
   areaKm2: 1020,
-  location: "Lappi",
+  locationLabel: "Pallasjärventie 14",
   logo: null,
   luontoonUrl: null,
   map: null,
@@ -36,14 +37,17 @@ const basePark = {
   establishmentYear: 1938,
   boundingBox: { minLat: 67, minLon: 23, maxLat: 68, maxLon: 24 },
   markerPoint: { lat: 67.5, lon: 23.5 },
+  postalCode: "99300",
+  postalOffice: "Muonio",
   type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" as const },
 };
 
 const removedPark = {
   slug: "removed-park",
   name: "Removed Park",
+  address: "Poistotie 1, 00100 Helsinki",
   areaKm2: 100,
-  location: "Etelä-Suomi",
+  locationLabel: "Poistotie 1",
   logo: null,
   luontoonUrl: null,
   map: null,
@@ -51,6 +55,8 @@ const removedPark = {
   establishmentYear: 2000,
   boundingBox: { minLat: 60, minLon: 24, maxLat: 61, maxLon: 25 },
   markerPoint: { lat: 60.5, lon: 24.5 },
+  postalCode: "00100",
+  postalOffice: "Helsinki",
   type: { code: 2, id: 2, name: "Retkeilyalue", slug: "hiking-area" as const },
 };
 

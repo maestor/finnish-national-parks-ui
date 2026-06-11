@@ -38,7 +38,16 @@ export type VisitImage = Visit["images"][number];
 
 type ParkMapRequiredFields = Pick<
   Park,
-  "slug" | "name" | "location" | "type" | "displayTypeName" | "markerPoint" | "boundingBox"
+  | "slug"
+  | "name"
+  | "address"
+  | "locationLabel"
+  | "postalCode"
+  | "postalOffice"
+  | "type"
+  | "displayTypeName"
+  | "markerPoint"
+  | "boundingBox"
 >;
 
 type OptionalParkMapFields = Pick<

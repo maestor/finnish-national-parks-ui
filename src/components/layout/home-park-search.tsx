@@ -96,7 +96,7 @@ export const HomeParkSearch = () => {
         ? parks
         : parks.filter((park) => {
             const displayTypeName = getParkTypeDisplayName(park);
-            const haystacks = [park.name, displayTypeName, park.type.name, park.location];
+            const haystacks = [park.name, displayTypeName, park.type.name, park.address];
             return haystacks.some((value) =>
               value.toLocaleLowerCase("fi-FI").includes(trimmedQuery),
             );

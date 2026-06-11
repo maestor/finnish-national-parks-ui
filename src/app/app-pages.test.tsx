@@ -284,9 +284,10 @@ vi.mock("@/components/auth/post-login-return-redirector", () => ({
 const publicPark = {
   slug: "pallas",
   name: "Pallas-Yllästunturi",
+  address: "Pallasjärventie 14, 99300 Muonio",
   areaKm2: 14,
   displayTypeName: "Maailmanperintökohde",
-  location: "Lappi",
+  locationLabel: "Pallasjärventie 14",
   logo: null,
   luontoonUrl: "https://example.com/pallas",
   map: null,
@@ -294,6 +295,8 @@ const publicPark = {
   boundingBox: { minLat: 67, minLon: 23, maxLat: 68, maxLon: 25 },
   markerPoint: { lat: 67.5, lon: 24 },
   category: { name: "Kansallispuistot", slug: "national-park" },
+  postalCode: "99300",
+  postalOffice: "Muonio",
   type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },
 } as Park;
 
@@ -301,9 +304,12 @@ const adminVisibilityPark = {
   slug: "pallas",
   name: "Pallas-Yllästunturi",
   displayTypeName: "Maailmanperintökohde",
-  location: "Lappi",
+  address: "Pallasjärventie 14, 99300 Muonio",
+  locationLabel: "Pallasjärventie 14",
   boundingBox: { minLat: 67, minLon: 23, maxLat: 68, maxLon: 25 },
   markerPoint: { lat: 67.5, lon: 24 },
+  postalCode: "99300",
+  postalOffice: "Muonio",
   type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },
 } as AdminVisibilityPark;
 
