@@ -32,9 +32,12 @@ const renderControls = (children: ReactNode) =>
 const createVisibilityPark = () => ({
   slug: "pallas",
   name: "Pallas",
-  location: "Lappi",
+  address: "Pallasjärventie 14, 99300 Muonio",
+  locationLabel: "Pallasjärventie 14",
   boundingBox: { minLat: 67, minLon: 23, maxLat: 68, maxLon: 24 },
   markerPoint: { lat: 67.5, lon: 23.5 },
+  postalCode: "99300",
+  postalOffice: "Muonio",
   type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },
 });
 

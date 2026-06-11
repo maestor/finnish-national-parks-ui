@@ -116,7 +116,7 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
   }
 
   const facts = [
-    { label: t("location"), value: publicPark.location },
+    { label: t("location"), value: publicPark.address },
     ...(publicPark.areaKm2 !== null
       ? [{ label: t("area"), value: `${publicPark.areaKm2} km²` }]
       : []),

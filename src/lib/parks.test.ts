@@ -15,9 +15,10 @@ const buildPark = (overrides: Partial<Park> = {}): Park =>
   ({
     slug: "pallas",
     name: "Pallas-Yllastunturin kansallispuisto",
+    address: "Pallasjärventie 14, 99300 Muonio",
     displayTypeName: null,
     areaKm2: 1020,
-    location: "Lappi",
+    locationLabel: "Pallasjärventie 14",
     logo: null,
     luontoonUrl: null,
     map: null,
@@ -25,6 +26,8 @@ const buildPark = (overrides: Partial<Park> = {}): Park =>
     establishmentYear: 1938,
     boundingBox: { minLat: 67, minLon: 23, maxLat: 68, maxLon: 24 },
     markerPoint: { lat: 67.5, lon: 23.5 },
+    postalCode: "99300",
+    postalOffice: "Muonio",
     type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },
     ...overrides,
   }) as Park;

@@ -282,6 +282,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             parks: {
+                                address: string;
                                 areaKm2: number | null;
                                 boundingBox: {
                                     maxLat: number;
@@ -296,7 +297,7 @@ export interface paths {
                                 };
                                 displayTypeName?: string | null;
                                 establishmentYear: number | null;
-                                location: string;
+                                locationLabel: string;
                                 logo: {
                                     key: string;
                                     /** Format: date-time */
@@ -317,6 +318,8 @@ export interface paths {
                                     lon: number;
                                 };
                                 name: string;
+                                postalCode: string | null;
+                                postalOffice: string | null;
                                 slug: string;
                                 type: {
                                     code: number;
@@ -373,9 +376,12 @@ export interface paths {
                     content: {
                         "application/json": {
                             parks: {
+                                address: string;
                                 displayTypeName?: string | null;
-                                location: string;
+                                locationLabel: string;
                                 name: string;
+                                postalCode: string | null;
+                                postalOffice: string | null;
                                 slug: string;
                                 type: {
                                     code: number;
@@ -429,6 +435,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             parks: {
+                                address: string;
                                 areaKm2: number | null;
                                 boundingBox: {
                                     maxLat: number;
@@ -443,7 +450,7 @@ export interface paths {
                                 };
                                 displayTypeName?: string | null;
                                 establishmentYear: number | null;
-                                location: string;
+                                locationLabel: string;
                                 logo: {
                                     key: string;
                                     /** Format: date-time */
@@ -464,6 +471,8 @@ export interface paths {
                                     lon: number;
                                 };
                                 name: string;
+                                postalCode: string | null;
+                                postalOffice: string | null;
                                 slug: string;
                                 type: {
                                     code: number;
@@ -515,9 +524,12 @@ export interface paths {
                     content: {
                         "application/json": {
                             removedParks: {
+                                address: string;
                                 displayTypeName?: string | null;
-                                location: string;
+                                locationLabel: string;
                                 name: string;
+                                postalCode: string | null;
+                                postalOffice: string | null;
                                 slug: string;
                                 type: {
                                     code: number;
@@ -538,9 +550,12 @@ export interface paths {
                                 };
                             }[];
                             visibleParks: {
+                                address: string;
                                 displayTypeName?: string | null;
-                                location: string;
+                                locationLabel: string;
                                 name: string;
+                                postalCode: string | null;
+                                postalOffice: string | null;
                                 slug: string;
                                 type: {
                                     code: number;
@@ -600,6 +615,7 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
+                            address: string;
                             areaKm2: number | null;
                             boundingBox: {
                                 maxLat: number;
@@ -614,7 +630,7 @@ export interface paths {
                             };
                             displayTypeName?: string | null;
                             establishmentYear: number | null;
-                            location: string;
+                            locationLabel: string;
                             logo: {
                                 key: string;
                                 /** Format: date-time */
@@ -635,6 +651,8 @@ export interface paths {
                                 lon: number;
                             };
                             name: string;
+                            postalCode: string | null;
+                            postalOffice: string | null;
                             slug: string;
                             type: {
                                 code: number;
@@ -664,7 +682,6 @@ export interface paths {
                             catalogStatus: "active" | "inactive";
                             lipasId: number;
                             municipalityCode: number | null;
-                            postalOffice: string | null;
                             /** Format: date-time */
                             sourceEventDate: string | null;
                             updatedAt: string;
@@ -729,6 +746,7 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
+                            address: string;
                             areaKm2: number | null;
                             boundingBox: {
                                 maxLat: number;
@@ -743,7 +761,7 @@ export interface paths {
                             };
                             displayTypeName?: string | null;
                             establishmentYear: number | null;
-                            location: string;
+                            locationLabel: string;
                             logo: {
                                 key: string;
                                 /** Format: date-time */
@@ -764,6 +782,8 @@ export interface paths {
                                 lon: number;
                             };
                             name: string;
+                            postalCode: string | null;
+                            postalOffice: string | null;
                             slug: string;
                             type: {
                                 code: number;
@@ -793,7 +813,6 @@ export interface paths {
                             catalogStatus: "active" | "inactive";
                             lipasId: number;
                             municipalityCode: number | null;
-                            postalOffice: string | null;
                             /** Format: date-time */
                             sourceEventDate: string | null;
                             updatedAt: string;
@@ -1129,6 +1148,7 @@ export interface paths {
                             updatedAt: string | null;
                             version: number;
                             parks: {
+                                address: string;
                                 areaKm2: number | null;
                                 boundingBox: {
                                     maxLat: number;
@@ -1143,7 +1163,7 @@ export interface paths {
                                 };
                                 displayTypeName?: string | null;
                                 establishmentYear: number | null;
-                                location: string;
+                                locationLabel: string;
                                 logo: {
                                     key: string;
                                     /** Format: date-time */
@@ -1164,6 +1184,8 @@ export interface paths {
                                     lon: number;
                                 };
                                 name: string;
+                                postalCode: string | null;
+                                postalOffice: string | null;
                                 slug: string;
                                 type: {
                                     code: number;
