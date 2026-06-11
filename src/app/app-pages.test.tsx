@@ -103,7 +103,7 @@ vi.mock("@/components/park/park-visit-history", () => ({
 vi.mock("@/components/park/park-admin-controls", () => ({
   ParkAdminControlsProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   ParkVisibilityBadge: () => null,
-  ParkAdminSection: () => null,
+  ParkAdminSection: () => <div data-testid="park-admin-section" />,
 }));
 
 vi.mock("@/components/visits/public-visits-timeline", () => ({
@@ -496,6 +496,7 @@ describe("App pages", () => {
     expect(screen.getByTestId("park-visit-history")).toHaveTextContent(
       "slug:pallas|visits:1|open:none",
     );
+    expect(screen.getByTestId("park-admin-section")).toBeInTheDocument();
   });
 
   it("passes a targeted visit id to the park detail visit history", async () => {
