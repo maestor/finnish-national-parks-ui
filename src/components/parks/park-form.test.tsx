@@ -182,6 +182,25 @@ describe("ParkForm", () => {
     expect(refreshMock).not.toHaveBeenCalled();
   });
 
+  it("renders the address field immediately before the postal fields", () => {
+    render(<ParkForm park={park} />);
+
+    const addressInput = screen.getByLabelText(/controlPanel\.parks\.edit\.form\.locationLabel/);
+    const postalCodeInput = screen.getByLabelText(
+      /controlPanel\.parks\.edit\.form\.postalCodeLabel/,
+    );
+    const postalOfficeInput = screen.getByLabelText(
+      /controlPanel\.parks\.edit\.form\.postalOfficeLabel/,
+    );
+
+    const addressField = addressInput.parentElement;
+    const postalCodeField = postalCodeInput.parentElement;
+    const postalOfficeField = postalOfficeInput.parentElement;
+
+    expect(addressField?.nextElementSibling).toBe(postalCodeField);
+    expect(postalCodeField?.nextElementSibling).toBe(postalOfficeField);
+  });
+
   it("sends a changed location label in the update payload", async () => {
     const user = userEvent.setup();
 

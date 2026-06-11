@@ -208,22 +208,6 @@ export const ParkForm = ({ park }: ParkFormProps) => {
           {errors.slug && <p className="text-sm text-destructive">{errors.slug}</p>}
         </div>
 
-        <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="park-location" required>
-            {t("locationLabel")}
-          </Label>
-          <input
-            id="park-location"
-            type="text"
-            value={formState.locationLabel}
-            onChange={(event) => setFieldValue("locationLabel", event.target.value)}
-            className={`${INPUT_CLASS_NAME} h-10`}
-          />
-          {errors.locationLabel && (
-            <p className="text-sm text-destructive">{errors.locationLabel}</p>
-          )}
-        </div>
-
         <div className="space-y-2">
           <Label htmlFor="park-display-type">{t("displayTypeNameLabel")}</Label>
           <input
@@ -275,6 +259,22 @@ export const ParkForm = ({ park }: ParkFormProps) => {
           />
           {errors.establishmentYear && (
             <p className="text-sm text-destructive">{errors.establishmentYear}</p>
+          )}
+        </div>
+
+        <div className="space-y-2 md:col-span-2">
+          <Label htmlFor="park-location" required>
+            {t("locationLabel")}
+          </Label>
+          <input
+            id="park-location"
+            type="text"
+            value={formState.locationLabel}
+            onChange={(event) => setFieldValue("locationLabel", event.target.value)}
+            className={`${INPUT_CLASS_NAME} h-10`}
+          />
+          {errors.locationLabel && (
+            <p className="text-sm text-destructive">{errors.locationLabel}</p>
           )}
         </div>
 
