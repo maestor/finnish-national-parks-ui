@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ButtonHTMLAttributes, HTMLAttributes, MouseEvent, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 interface VisitImageGalleryProps {
   images: VisitImage[];
@@ -99,6 +100,19 @@ export const VisitImageGallery = ({
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [activeIndex, hasMultipleImages, images.length]);
+
+  useEffect(() => {
+    if (activeIndex === null) {
+      return;
+    }
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [activeIndex]);
 
   useEffect(() => {
     if (!usesCarouselLayout) {
@@ -204,6 +218,105 @@ export const VisitImageGallery = ({
     showPreviousImage();
   };
 
+  const lightbox =
+    activeImage && typeof document !== "undefined"
+      ? createPortal(
+          <dialog
+            open
+            aria-label={dialogLabel ?? t("dialogLabel")}
+            aria-modal="true"
+            className="fixed inset-0 z-50 m-0 h-full w-full max-h-none max-w-none overflow-hidden border-none bg-transparent p-0"
+          >
+            <button
+              type="button"
+              className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.18),transparent_32%),linear-gradient(180deg,rgba(2,6,23,0.92),rgba(2,6,23,0.98))] backdrop-blur-md"
+              onClick={() => setActiveIndex(null)}
+              aria-label={t("closeBackdrop")}
+            />
+            <div className="relative flex h-full w-full flex-col overflow-hidden">
+              <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between gap-3 px-3 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] sm:px-6 sm:pt-6">
+                <p className="hidden rounded-full border border-white/15 bg-white/10 px-3 py-1 text-center text-sm text-white/88 shadow-[0_18px_38px_rgba(15,23,42,0.28)] backdrop-blur-md sm:inline-flex">
+                  {t("position", { current: activeImage.index + 1, total: images.length })}
+                </p>
+                <div className="flex-1 sm:hidden" />
+                <button
+                  type="button"
+                  ref={closeButtonRef}
+                  onClick={() => setActiveIndex(null)}
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-[0_18px_38px_rgba(15,23,42,0.28)] backdrop-blur-md transition-colors hover:bg-white/16 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  aria-label={t("close")}
+                >
+                  <X className="h-5 w-5" aria-hidden="true" />
+                </button>
+              </div>
+
+              <div className="relative flex min-h-0 flex-1 items-center justify-center px-0 pt-[calc(env(safe-area-inset-top)+4.5rem)] sm:px-6 sm:py-24">
+                {hasMultipleImages && (
+                  <button
+                    type="button"
+                    onClick={showPreviousImage}
+                    className="absolute left-6 top-1/2 z-10 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-[0_20px_40px_rgba(15,23,42,0.34)] backdrop-blur-md transition-colors hover:bg-white/16 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:inline-flex"
+                    aria-label={t("previous")}
+                  >
+                    <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+                  </button>
+                )}
+
+                <div className="flex h-full w-full items-center justify-center overflow-hidden sm:mx-auto sm:max-h-[calc(100dvh-8rem)] sm:max-w-6xl sm:rounded-[2rem] sm:border sm:border-white/10 sm:bg-white/[0.06] sm:p-4 sm:shadow-[0_32px_70px_rgba(2,6,23,0.4)] sm:backdrop-blur-xl">
+                  <img
+                    src={activeImage.image.fullUrl}
+                    alt={t("activeImage", { index: activeImage.index + 1 })}
+                    className="max-h-[calc(100dvh-7rem)] w-auto max-w-full object-contain select-none sm:max-h-[calc(100dvh-11rem)] sm:rounded-[1.4rem]"
+                    onTouchStart={handleLightboxTouchStart}
+                    onTouchEnd={handleLightboxTouchEnd}
+                  />
+                </div>
+              </div>
+
+              {hasMultipleImages && (
+                <button
+                  type="button"
+                  onClick={showNextImage}
+                  className="absolute right-6 top-1/2 z-10 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-[0_20px_40px_rgba(15,23,42,0.34)] backdrop-blur-md transition-colors hover:bg-white/16 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:inline-flex"
+                  aria-label={t("next")}
+                >
+                  <ChevronRight className="h-5 w-5" aria-hidden="true" />
+                </button>
+              )}
+
+              <div className="absolute inset-x-0 bottom-0 z-20 flex items-center justify-center gap-3 px-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 sm:hidden">
+                {hasMultipleImages && (
+                  <button
+                    type="button"
+                    onClick={showPreviousImage}
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-[0_18px_38px_rgba(15,23,42,0.28)] backdrop-blur-md transition-colors hover:bg-white/16 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label={t("previous")}
+                  >
+                    <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+                  </button>
+                )}
+
+                <p className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-center text-sm text-white/88 shadow-[0_18px_38px_rgba(15,23,42,0.28)] backdrop-blur-md">
+                  {t("position", { current: activeImage.index + 1, total: images.length })}
+                </p>
+
+                {hasMultipleImages && (
+                  <button
+                    type="button"
+                    onClick={showNextImage}
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-[0_18px_38px_rgba(15,23,42,0.28)] backdrop-blur-md transition-colors hover:bg-white/16 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label={t("next")}
+                  >
+                    <ChevronRight className="h-5 w-5" aria-hidden="true" />
+                  </button>
+                )}
+              </div>
+            </div>
+          </dialog>,
+          document.body,
+        )
+      : null;
+
   return (
     <>
       <div className={cn("space-y-3", className)}>
@@ -301,68 +414,7 @@ export const VisitImageGallery = ({
         </div>
       </div>
 
-      {activeImage && (
-        <dialog
-          open
-          className="fixed inset-0 z-50 m-0 h-full w-full max-h-none max-w-none overflow-hidden border-none bg-transparent p-0"
-          aria-label={dialogLabel ?? t("dialogLabel")}
-        >
-          <button
-            type="button"
-            className="absolute inset-0 bg-[linear-gradient(180deg,rgba(236,245,248,0.94),rgba(223,236,245,0.97))] backdrop-blur-md dark:bg-[linear-gradient(180deg,rgba(9,17,29,0.94),rgba(17,24,39,0.97))]"
-            onClick={() => setActiveIndex(null)}
-            aria-label={t("closeBackdrop")}
-          />
-          <div className="relative flex h-full w-full items-center justify-center p-4 sm:p-8">
-            {hasMultipleImages && (
-              <button
-                type="button"
-                onClick={showPreviousImage}
-                className="absolute left-4 top-1/2 z-10 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/45 bg-white/82 text-foreground shadow-[0_18px_38px_rgba(148,163,184,0.26)] backdrop-blur-md transition-colors hover:bg-white/94 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/62 dark:hover:bg-slate-950/78 dark:shadow-[0_20px_40px_rgba(2,6,23,0.42)]"
-                aria-label={t("previous")}
-              >
-                <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-              </button>
-            )}
-
-            <div className="relative flex max-h-full w-full max-w-6xl flex-col items-center gap-4">
-              <div className="relative flex max-h-[82vh] w-full items-center justify-center rounded-[1.75rem] border border-white/50 bg-white/68 p-3 shadow-[0_28px_64px_rgba(148,163,184,0.22)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[0_32px_72px_rgba(2,6,23,0.44)] sm:p-4">
-                <img
-                  src={activeImage.image.fullUrl}
-                  alt={t("activeImage", { index: activeImage.index + 1 })}
-                  className="max-h-[74vh] w-auto max-w-full rounded-xl object-contain"
-                  onTouchStart={handleLightboxTouchStart}
-                  onTouchEnd={handleLightboxTouchEnd}
-                />
-                <button
-                  type="button"
-                  ref={closeButtonRef}
-                  onClick={() => setActiveIndex(null)}
-                  className="absolute right-3 top-3 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/45 bg-white/86 text-foreground shadow-[0_16px_32px_rgba(148,163,184,0.24)] backdrop-blur-md transition-colors hover:bg-white/96 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/66 dark:hover:bg-slate-950/82 dark:shadow-[0_18px_36px_rgba(2,6,23,0.42)]"
-                  aria-label={t("close")}
-                >
-                  <X className="h-5 w-5" aria-hidden="true" />
-                </button>
-              </div>
-
-              <p className="rounded-full border border-white/50 bg-white/76 px-3 py-1 text-center text-sm text-foreground/78 shadow-[0_14px_28px_rgba(148,163,184,0.18)] backdrop-blur-md dark:border-white/10 dark:bg-slate-950/62 dark:text-sky-100/78 dark:shadow-[0_18px_32px_rgba(2,6,23,0.36)]">
-                {t("position", { current: activeImage.index + 1, total: images.length })}
-              </p>
-            </div>
-
-            {hasMultipleImages && (
-              <button
-                type="button"
-                onClick={showNextImage}
-                className="absolute right-4 top-1/2 z-10 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/45 bg-white/82 text-foreground shadow-[0_18px_38px_rgba(148,163,184,0.26)] backdrop-blur-md transition-colors hover:bg-white/94 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/62 dark:hover:bg-slate-950/78 dark:shadow-[0_20px_40px_rgba(2,6,23,0.42)]"
-                aria-label={t("next")}
-              >
-                <ChevronRight className="h-5 w-5" aria-hidden="true" />
-              </button>
-            )}
-          </div>
-        </dialog>
-      )}
+      {lightbox}
     </>
   );
 };
