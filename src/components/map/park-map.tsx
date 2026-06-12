@@ -781,7 +781,7 @@ export const ParkMap = ({
     }
 
     const cleanupTimeoutId = window.setTimeout(() => {
-      clearHomeParkFocusRequest();
+      clearHomeParkFocusRequest(homeParkFocusRequest.requestId);
     }, 0);
 
     return () => {
