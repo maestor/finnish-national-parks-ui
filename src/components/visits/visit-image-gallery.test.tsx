@@ -34,6 +34,7 @@ const images: VisitImage[] = [
 
 describe("VisitImageGallery", () => {
   beforeEach(() => {
+    document.body.style.overflow = "";
     Object.defineProperty(HTMLElement.prototype, "clientWidth", {
       configurable: true,
       get: () => 200,
@@ -50,6 +51,7 @@ describe("VisitImageGallery", () => {
   });
 
   afterEach(() => {
+    document.body.style.overflow = "";
     Object.defineProperty(HTMLElement.prototype, "clientWidth", {
       configurable: true,
       get: () => 0,
@@ -78,6 +80,21 @@ describe("VisitImageGallery", () => {
     expect(screen.getByRole("button", { name: "imageGallery.close" })).toHaveFocus();
   });
 
+  it("uses an immersive fullscreen lightbox layout with restrained desktop sizing", () => {
+    render(<VisitImageGallery images={images} />);
+
+    const [firstThumbnail] = screen.getAllByRole("button", { name: /imageGallery.open/i });
+    fireEvent.click(firstThumbnail);
+
+    const dialog = screen.getByRole("dialog", { name: "imageGallery.dialogLabel" });
+    const activeImage = screen.getByRole("img", { name: "imageGallery.activeImage" });
+
+    expect(dialog).toHaveAttribute("aria-modal", "true");
+    expect(activeImage).toHaveClass("max-h-[calc(100dvh-7rem)]");
+    expect(activeImage).toHaveClass("sm:max-h-[calc(100dvh-11rem)]");
+    expect(activeImage.parentElement).toHaveClass("sm:max-w-6xl");
+  });
+
   it("disables native browser dragging for thumbnail images", () => {
     render(<VisitImageGallery images={images} />);
 
@@ -97,6 +114,20 @@ describe("VisitImageGallery", () => {
       screen.queryByRole("dialog", { name: "imageGallery.dialogLabel" }),
     ).not.toBeInTheDocument();
     expect(firstThumbnail).toHaveFocus();
+  });
+
+  it("locks page scroll while the lightbox is open and restores it on close", () => {
+    document.body.style.overflow = "auto";
+    render(<VisitImageGallery images={images} />);
+
+    const [firstThumbnail] = screen.getAllByRole("button", { name: /imageGallery.open/i });
+    fireEvent.click(firstThumbnail);
+
+    expect(document.body.style.overflow).toBe("hidden");
+
+    fireEvent.click(screen.getByRole("button", { name: "imageGallery.close" }));
+
+    expect(document.body.style.overflow).toBe("auto");
   });
 
   it("hides rail controls when thumbnails do not overflow", () => {
@@ -192,20 +223,20 @@ describe("VisitImageGallery", () => {
     const [firstThumbnail] = screen.getAllByRole("button", { name: /imageGallery.open/i });
     fireEvent.click(firstThumbnail);
 
-    expect(screen.getByText("imageGallery.position")).toHaveTextContent("imageGallery.position");
+    expect(screen.getAllByText("imageGallery.position")).toHaveLength(2);
     expect(screen.getByRole("img", { name: "imageGallery.activeImage" })).toHaveAttribute(
       "src",
       "https://example.com/full-1.jpg",
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "imageGallery.next" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "imageGallery.next" })[0]);
 
     expect(screen.getByRole("img", { name: "imageGallery.activeImage" })).toHaveAttribute(
       "src",
       "https://example.com/full-2.jpg",
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "imageGallery.previous" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "imageGallery.previous" })[0]);
 
     expect(screen.getByRole("img", { name: "imageGallery.activeImage" })).toHaveAttribute(
       "src",
