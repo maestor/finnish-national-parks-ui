@@ -30,6 +30,8 @@ const FINLAND_BOUNDS: maplibregl.LngLatBoundsLike = [
   [19.0, 59.5],
   [32.0, 70.5],
 ];
+const FINLAND_OVERVIEW_CENTER: [number, number] = [25.5, 65];
+const FINLAND_OVERVIEW_ZOOM = 4;
 const MAP_PADDING = 24;
 const HOVER_CLOSE_DELAY = 300;
 const PARK_FOCUS_PADDING = {
@@ -68,10 +70,6 @@ type UserLocationStatusMessageKey =
   | "locationUnavailable";
 
 const getBoundsForVisibleParks = (parks: MapPark[]): maplibregl.LngLatBoundsLike => {
-  if (parks.length === 0) {
-    return FINLAND_BOUNDS;
-  }
-
   const combinedBounds = parks.reduce(
     (currentBounds, park) => ({
       minLon: Math.min(currentBounds.minLon, park.boundingBox.minLon),
@@ -486,13 +484,28 @@ export const ParkMap = ({
     [cancelClose],
   );
 
+  const focusFinlandOverview = useCallback(() => {
+    mapRef.current?.easeTo({
+      center: FINLAND_OVERVIEW_CENTER,
+      duration: 800,
+      zoom: FINLAND_OVERVIEW_ZOOM,
+    });
+  }, []);
+
   const fitVisibleParks = useCallback(() => {
+    if (parks.length === 0) {
+      // MapLibre can throw from fitBounds when an empty filter state leaves no
+      // park bounds to frame, so the zero-result case uses an explicit overview.
+      focusFinlandOverview();
+      return;
+    }
+
     mapRef.current?.fitBounds(getBoundsForVisibleParks(parks), {
       duration: 800,
-      maxZoom: parks.length > 0 ? 11 : undefined,
-      padding: parks.length > 0 ? PARK_FOCUS_PADDING : MAP_PADDING,
+      maxZoom: 11,
+      padding: PARK_FOCUS_PADDING,
     });
-  }, [parks]);
+  }, [focusFinlandOverview, parks]);
 
   const focusUserLocation = useCallback((lat: number, lon: number) => {
     const map = mapRef.current;
