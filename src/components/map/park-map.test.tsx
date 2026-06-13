@@ -206,6 +206,26 @@ describe("ParkMap", () => {
     expect(resizeObservers[0]?.observe).toHaveBeenCalledTimes(1);
   });
 
+  it("initializes the map against the current filtered park bounds on first load", () => {
+    render(<ParkMap parks={[parks[0], parks[1]].filter(Boolean)} />);
+
+    expect(mapOptions).toMatchObject({
+      bounds: [
+        [23, 67],
+        [24, 68],
+      ],
+      fitBoundsOptions: {
+        duration: 0,
+        padding: {
+          top: 104,
+          right: 48,
+          bottom: 48,
+          left: 48,
+        },
+      },
+    });
+  });
+
   it("displays error message when error prop is provided", () => {
     render(<ParkMap parks={[]} error="API error" />);
     expect(screen.getByText("map.loadError")).toBeInTheDocument();

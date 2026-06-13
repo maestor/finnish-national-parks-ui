@@ -266,8 +266,8 @@ describe("ParkExplorer", () => {
 
     render(<ParkExplorer parks={parks} />);
 
-    expect(screen.getByText("count:3")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "home.filters.areas" })).toHaveClass(
+    expect(screen.getByText("count:5")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "home.filters.all" })).toHaveClass(
       "text-primary-foreground",
     );
     expect(screen.getByRole("button", { name: "home.filters.notVisited" })).toBeInTheDocument();
@@ -280,8 +280,8 @@ describe("ParkExplorer", () => {
 
     render(<ParkExplorer parks={parks} />);
 
-    expect(screen.getByText("count:1")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "home.filters.areas" })).toHaveClass(
+    expect(screen.getByText("count:2")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "home.filters.all" })).toHaveClass(
       "text-primary-foreground",
     );
     expect(replaceMock).not.toHaveBeenCalled();
@@ -298,20 +298,20 @@ describe("ParkExplorer", () => {
     expect(screen.getByText("admin:true")).toBeInTheDocument();
   });
 
-  it("defaults to visited areas and keeps the visit-status toggle active while switching park filters", () => {
+  it("defaults to all visited parks and keeps the visit-status toggle active while switching park filters", () => {
     render(<ParkExplorer parks={parks} />);
 
-    expect(screen.getByText("count:1")).toBeInTheDocument();
+    expect(screen.getByText("count:2")).toBeInTheDocument();
     expect(screen.getByText("admin:false")).toBeInTheDocument();
     expect(screen.getByText("Päijänteen kansallispuisto")).toBeInTheDocument();
-    expect(screen.queryByText("Verlan tehdaskylä")).not.toBeInTheDocument();
-    expect(screen.queryByText("Nuuksion vaellusreitti")).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "home.filters.all" }));
-
-    expect(screen.getByText("count:2")).toBeInTheDocument();
-    expect(screen.getByText("Päijänteen kansallispuisto")).toBeInTheDocument();
     expect(screen.getByText("Nuuksion vaellusreitti")).toBeInTheDocument();
+    expect(screen.queryByText("Verlan tehdaskylä")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "home.filters.areas" }));
+
+    expect(screen.getByText("count:1")).toBeInTheDocument();
+    expect(screen.getByText("Päijänteen kansallispuisto")).toBeInTheDocument();
+    expect(screen.queryByText("Nuuksion vaellusreitti")).not.toBeInTheDocument();
     expect(screen.queryByText("Verlan tehdaskylä")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "home.filters.natureTrails" }));
@@ -356,19 +356,21 @@ describe("ParkExplorer", () => {
   it("opens the visit-status selector and filters areas by the chosen status", () => {
     render(<ParkExplorer parks={parks} />);
 
-    expect(screen.getByText("count:1")).toBeInTheDocument();
+    expect(screen.getByText("count:2")).toBeInTheDocument();
     expect(screen.getByText("Päijänteen kansallispuisto")).toBeInTheDocument();
+    expect(screen.getByText("Nuuksion vaellusreitti")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "home.filters.visited" }));
     expect(screen.getByRole("button", { name: "home.filters.notVisited" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "home.filters.visitStatusAll" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "home.filters.notVisited" }));
-    expect(screen.getByText("count:3")).toBeInTheDocument();
+    expect(screen.getByText("count:5")).toBeInTheDocument();
     expect(screen.queryByText("Päijänteen kansallispuisto")).not.toBeInTheDocument();
     expect(screen.getByText("Teijon kansallispuisto")).toBeInTheDocument();
     expect(screen.getByText("Iso-Syötteen retkeilyalue")).toBeInTheDocument();
     expect(screen.getByText("Verlan tehdaskylä")).toBeInTheDocument();
+    expect(screen.getByText("Pyhän kävelyreitti")).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "home.filters.visitStatusAll" }),
     ).not.toBeInTheDocument();
@@ -380,11 +382,14 @@ describe("ParkExplorer", () => {
     fireEvent.click(screen.getByRole("button", { name: "home.filters.visited" }));
     fireEvent.click(screen.getByRole("button", { name: "home.filters.visitStatusAll" }));
 
-    expect(screen.getByText("count:4")).toBeInTheDocument();
+    expect(screen.getByText("count:7")).toBeInTheDocument();
     expect(screen.getByText("Päijänteen kansallispuisto")).toBeInTheDocument();
     expect(screen.getByText("Teijon kansallispuisto")).toBeInTheDocument();
     expect(screen.getByText("Iso-Syötteen retkeilyalue")).toBeInTheDocument();
     expect(screen.getByText("Verlan tehdaskylä")).toBeInTheDocument();
+    expect(screen.getByText("Nuuksion vaellusreitti")).toBeInTheDocument();
+    expect(screen.getByText("Punkaharjun luontopolku")).toBeInTheDocument();
+    expect(screen.getByText("Pyhän kävelyreitti")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "home.filters.visitStatusAll" })).toHaveAttribute(
       "aria-expanded",
       "false",
@@ -456,7 +461,7 @@ describe("ParkExplorer", () => {
     );
 
     expect(mobileFilters).toHaveClass("hidden");
-    expect(screen.getByText("count:3")).toBeInTheDocument();
+    expect(screen.getByText("count:5")).toBeInTheDocument();
     expect(screen.getByText("reset:1")).toBeInTheDocument();
   });
 
@@ -506,7 +511,7 @@ describe("ParkExplorer", () => {
       </HomeMapControlsProvider>,
     );
 
-    expect(screen.getByText("count:1")).toBeInTheDocument();
+    expect(screen.getByText("count:2")).toBeInTheDocument();
     expect(screen.getByText("reset:0")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "focus-punkaharju" }));
@@ -520,7 +525,7 @@ describe("ParkExplorer", () => {
 
     expect(screen.getByText("reset:0")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "home.filters.all" }));
+    fireEvent.click(screen.getByRole("button", { name: "home.filters.areas" }));
 
     expect(screen.getByText("reset:1")).toBeInTheDocument();
   });
@@ -540,7 +545,7 @@ describe("ParkExplorer", () => {
     render(<ParkExplorer parks={parks} />);
 
     fireEvent.click(screen.getByRole("button", { name: "mock-select-park" }));
-    fireEvent.click(screen.getByRole("button", { name: "home.filters.all" }));
+    fireEvent.click(screen.getByRole("button", { name: "home.filters.areas" }));
 
     expect(screen.getByText("reset:0")).toBeInTheDocument();
   });
@@ -549,7 +554,7 @@ describe("ParkExplorer", () => {
     render(<ParkExplorer parks={parks} />);
 
     fireEvent.click(screen.getByRole("button", { name: "mock-select-park" }));
-    fireEvent.click(screen.getByRole("button", { name: "home.filters.all" }));
+    fireEvent.click(screen.getByRole("button", { name: "home.filters.areas" }));
 
     expect(screen.getByText("reset:0")).toBeInTheDocument();
 

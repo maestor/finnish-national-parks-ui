@@ -95,7 +95,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [activeFilter, setActiveFilter] = useState<ParkTypeMapFilter>("areas");
+  const [activeFilter, setActiveFilter] = useState<ParkTypeMapFilter>("all");
   const [activeVisitStatus, setActiveVisitStatus] = useState<VisitStatusFilter>("visited");
   const [isVisitStatusSelectorOpen, setIsVisitStatusSelectorOpen] = useState(false);
   const [mapResetRequestId, setMapResetRequestId] = useState(0);
