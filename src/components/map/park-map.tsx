@@ -381,6 +381,10 @@ export const ParkMap = ({
   onToggleRemoved,
   toggleLabels,
 }: ParkMapProps) => {
+  const initialBoundsRef = useRef<maplibregl.LngLatBoundsLike>(
+    parks.length > 0 ? getBoundsForVisibleParks(parks) : FINLAND_BOUNDS,
+  );
+  const initialPaddingRef = useRef(parks.length > 0 ? PARK_FOCUS_PADDING : MAP_PADDING);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
@@ -611,10 +615,10 @@ export const ParkMap = ({
     const map = new maplibregl.Map({
       container,
       style: getMapStyle(),
-      bounds: FINLAND_BOUNDS,
+      bounds: initialBoundsRef.current,
       fitBoundsOptions: {
         duration: 0,
-        padding: MAP_PADDING,
+        padding: initialPaddingRef.current,
       },
       minZoom: 3,
       maxZoom: 16,
