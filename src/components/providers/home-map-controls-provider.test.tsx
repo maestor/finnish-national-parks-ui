@@ -92,7 +92,7 @@ describe("HomeMapControlsProvider", () => {
 
   it("preserves other search params when clearing the park query after consume", async () => {
     pathnameState.value = "/parks";
-    searchParamsState.value = "park=hossa&filter=visited";
+    searchParamsState.value = "park=hossa&visitStatus=visited";
     replaceMock.mockReset();
 
     render(
@@ -104,7 +104,7 @@ describe("HomeMapControlsProvider", () => {
     expect(screen.getByTestId("seen-request")).toHaveTextContent("hossa");
 
     await waitFor(() => {
-      expect(replaceMock).toHaveBeenCalledWith("/parks?filter=visited", { scroll: false });
+      expect(replaceMock).toHaveBeenCalledWith("/parks?visitStatus=visited", { scroll: false });
     });
 
     expect(screen.getByTestId("focus-request")).toHaveTextContent("none");

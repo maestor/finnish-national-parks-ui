@@ -205,8 +205,10 @@ describe("createHomeProgressItems", () => {
       "Tehdaskylät",
       "Polut ja reitit",
     ]);
-    expect(progressItems[0]?.mapFilter).toBe("visited");
+    expect(progressItems[0]?.mapFilter).toBe("all");
+    expect(progressItems[0]?.mapVisitStatus).toBe("visited");
     expect(progressItems[1]?.mapFilter).toBe("national-park");
+    expect(progressItems[1]?.mapVisitStatus).toBe("visited");
     expect(progressItems[2]?.mapFilter).toBe("hiking-and-wilderness-areas");
     expect(progressItems[4]?.mapFilter).toBe("factory-village");
     expect(progressItems[5]?.mapFilter).toBe("trails-and-routes");
@@ -222,19 +224,22 @@ describe("createHomeProgressItems", () => {
         label: "Kaikki paikat",
         visited: 5,
         total: 36,
-        mapFilter: "visited",
+        mapFilter: "all",
+        mapVisitStatus: "visited",
       },
       {
         label: "Erämaa-/retkeilyalue",
         visited: 2,
         total: 9,
         mapFilter: "hiking-and-wilderness-areas",
+        mapVisitStatus: "visited",
       },
       {
         label: "Polut ja reitit",
         visited: 2,
         total: 12,
         mapFilter: "trails-and-routes",
+        mapVisitStatus: "visited",
       },
     ]);
   });
@@ -257,7 +262,8 @@ describe("createHomeProgressItems", () => {
       label: "Kaikki paikat",
       visited: 5,
       total: 36,
-      mapFilter: "visited",
+      mapFilter: "all",
+      mapVisitStatus: "visited",
     });
   });
 

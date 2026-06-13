@@ -6,6 +6,7 @@ interface ProgressItem {
   visited: number;
   total: number;
   mapFilter?: string;
+  mapVisitStatus?: "visited" | "not-visited";
 }
 
 interface SeasonalVisitCounts {
@@ -50,6 +51,22 @@ export const HomeVisitStats = ({
   if (progressItems.length === 0) {
     return null;
   }
+
+  const getMapHref = (item: ProgressItem) => {
+    const searchParams = new URLSearchParams();
+
+    if (item.mapFilter) {
+      searchParams.set("filter", item.mapFilter);
+    }
+
+    if (item.mapVisitStatus) {
+      searchParams.set("visitStatus", item.mapVisitStatus);
+    }
+
+    const search = searchParams.toString();
+
+    return search ? `/parks?${search}` : "/parks";
+  };
 
   const hasSeasonalData =
     seasonalVisits !== undefined &&
@@ -172,7 +189,7 @@ export const HomeVisitStats = ({
             const itemClassName =
               "block rounded-[1.45rem] border border-white/45 bg-white/62 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)] backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/48 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
 
-            if (!item.mapFilter) {
+            if (!item.mapFilter && !item.mapVisitStatus) {
               return (
                 <div key={item.label} className={itemClassName}>
                   {itemContent}
@@ -183,7 +200,7 @@ export const HomeVisitStats = ({
             return (
               <Link
                 key={item.label}
-                href={`/parks?filter=${item.mapFilter}`}
+                href={getMapHref(item)}
                 className={`${itemClassName} transition-[transform,border-color,box-shadow] hover:-translate-y-px hover:border-sky-300/80 hover:shadow-[0_14px_28px_rgba(148,163,184,0.16),inset_0_1px_0_rgba(255,255,255,0.58)] dark:hover:border-sky-300/24 dark:hover:shadow-[0_18px_34px_rgba(2,6,23,0.28),inset_0_1px_0_rgba(255,255,255,0.08)]`}
               >
                 {itemContent}

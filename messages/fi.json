@@ -75,6 +75,8 @@
       "outdoorRecreationAreas": "Virkistysalueet",
       "factoryVillages": "Tehdaskylät",
       "natureTrails": "Polut/Reitit",
+      "visitStatusLabel": "Näytetään",
+      "visitStatusAll": "Kaikki",
       "visited": "Käydyt",
       "notVisited": "Käymättömät",
       "results": "{count} kohdetta"

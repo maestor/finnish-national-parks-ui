@@ -10,8 +10,20 @@ describe("HomeVisitStats", () => {
         totalVisitsLabel="Käyntejä yhteensä"
         totalVisits={12}
         progressItems={[
-          { label: "Kaikki puistot", visited: 5, total: 10 },
-          { label: "Kansallispuistot", visited: 3, total: 8, mapFilter: "national-park" },
+          {
+            label: "Kaikki puistot",
+            visited: 5,
+            total: 10,
+            mapFilter: "all",
+            mapVisitStatus: "visited",
+          },
+          {
+            label: "Kansallispuistot",
+            visited: 3,
+            total: 8,
+            mapFilter: "national-park",
+            mapVisitStatus: "visited",
+          },
         ]}
       />,
     );
@@ -19,11 +31,14 @@ describe("HomeVisitStats", () => {
     expect(screen.getByRole("heading", { name: "Käynnit" })).toBeInTheDocument();
     expect(screen.getByText("Käyntejä yhteensä")).toBeInTheDocument();
     expect(screen.getByText("12")).toBeInTheDocument();
-    expect(screen.getByText("Kaikki puistot")).toBeInTheDocument();
     expect(screen.getByText("5 / 10")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Kaikki puistot/i })).toHaveAttribute(
+      "href",
+      "/parks?filter=all&visitStatus=visited",
+    );
     expect(screen.getByRole("link", { name: /Kansallispuistot/i })).toHaveAttribute(
       "href",
-      "/parks?filter=national-park",
+      "/parks?filter=national-park&visitStatus=visited",
     );
     expect(screen.queryByText("Käynnit tyypeittäin")).not.toBeInTheDocument();
   });

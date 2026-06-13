@@ -30,7 +30,8 @@ export interface HomeProgressItem {
   label: string;
   visited: number;
   total: number;
-  mapFilter?: ParkTypeSlug | ParkCategorySlug | "visited";
+  mapFilter?: "all" | ParkTypeSlug | ParkCategorySlug;
+  mapVisitStatus?: "visited" | "not-visited";
 }
 
 export interface HomeMostVisitedPark {
@@ -158,9 +159,13 @@ export const createHomeProgressItems = (
       label: allParksLabel,
       visited: summary.uniqueVisitedParks,
       total: totalParks,
-      mapFilter: "visited",
+      mapFilter: "all",
+      mapVisitStatus: "visited",
     },
-    ...progressItems,
+    ...progressItems.map((item) => ({
+      ...item,
+      mapVisitStatus: "visited" as const,
+    })),
   ];
 };
 

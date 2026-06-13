@@ -18,14 +18,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHomeMapControls } from "../providers/home-map-controls-provider";
 import { ParkMap } from "./park-map";
 
-type MapFilter =
+type VisitStatusFilter = "all" | "visited" | "not-visited";
+
+type ParkTypeMapFilter =
   | "all"
   | "areas"
   | typeof HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG
   | typeof TRAILS_AND_ROUTES_CATEGORY_SLUG
-  | FilterableParkTypeSlug
-  | "visited"
-  | "not-visited";
+  | FilterableParkTypeSlug;
 
 const FILTER_PANEL_CLASS_NAME =
   "pointer-events-auto flex flex-col gap-2 rounded-[2rem] border border-white/45 bg-white/60 p-3 shadow-[0_22px_48px_rgba(148,163,184,0.2)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/50 dark:shadow-[0_26px_56px_rgba(2,6,23,0.38)]";
@@ -43,26 +43,27 @@ const isHikingAndWildernessPark = (park: FilterableMapPark) =>
 
 const isAreaPark = (park: FilterableMapPark) => !isTrailPark(park);
 
-const getFallbackFilterForFocusedPark = (park: FilterableMapPark): MapFilter =>
+const getFallbackFilterForFocusedPark = (park: FilterableMapPark): ParkTypeMapFilter =>
   isTrailPark(park)
     ? TRAILS_AND_ROUTES_CATEGORY_SLUG
     : isHikingAndWildernessPark(park)
       ? HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG
       : "areas";
 
+const getVisitStatusFilterForPark = (park: FilterableMapPark): VisitStatusFilter =>
+  park.visitedSummary.visited ? "visited" : "not-visited";
+
 type LegacyMapFilter = Extract<
   FilterableMapPark["type"]["slug"],
   "hiking-area" | "wilderness-area"
 >;
 
-type AcceptedMapFilter = MapFilter | LegacyMapFilter;
+type AcceptedMapFilter = ParkTypeMapFilter | LegacyMapFilter;
 
 const isMapFilter = (value: string | null): value is AcceptedMapFilter => {
   switch (value) {
     case "all":
     case "areas":
-    case "visited":
-    case "not-visited":
     case HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG:
     case TRAILS_AND_ROUTES_CATEGORY_SLUG:
     case "national-park":
@@ -77,7 +78,10 @@ const isMapFilter = (value: string | null): value is AcceptedMapFilter => {
   }
 };
 
-const normalizeMapFilter = (filter: AcceptedMapFilter): MapFilter =>
+const isVisitStatusFilter = (value: string | null): value is VisitStatusFilter =>
+  value === "all" || value === "visited" || value === "not-visited";
+
+const normalizeMapFilter = (filter: AcceptedMapFilter): ParkTypeMapFilter =>
   isHikingAndWildernessAreaTypeSlug(filter) ? HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG : filter;
 
 interface ParkExplorerProps {
@@ -91,10 +95,12 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [activeFilter, setActiveFilter] = useState<MapFilter>("areas");
+  const [activeFilter, setActiveFilter] = useState<ParkTypeMapFilter>("areas");
+  const [activeVisitStatus, setActiveVisitStatus] = useState<VisitStatusFilter>("visited");
+  const [isVisitStatusSelectorOpen, setIsVisitStatusSelectorOpen] = useState(false);
   const [mapResetRequestId, setMapResetRequestId] = useState(0);
   const { isMobileFiltersOpen, closeMobileFilters, homeParkFocusRequest } = useHomeMapControls();
-  const lastHandledFilterParamRef = useRef<string | null>(null);
+  const lastHandledMapParamsRef = useRef<string | null>(null);
 
   const filterOptions = useMemo(() => {
     const parkTypeFilterOptionsById = new Map(
@@ -129,69 +135,125 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
         label: t(parkTypeFilterOptionsById.get("factory-village") ?? "factoryVillages"),
       },
       { id: TRAILS_AND_ROUTES_CATEGORY_SLUG, label: t("natureTrails") },
-      { id: "visited", label: t("visited") },
-      { id: "not-visited", label: t("notVisited") },
-    ] satisfies Array<{ id: MapFilter; label: string }>;
+    ] satisfies Array<{ id: ParkTypeMapFilter; label: string }>;
   }, [t]);
 
   const filteredParks = useMemo(() => {
+    const parksWithSelectedVisitStatus =
+      activeVisitStatus === "all"
+        ? parks
+        : parks.filter((park) =>
+            activeVisitStatus === "visited"
+              ? park.visitedSummary.visited
+              : !park.visitedSummary.visited,
+          );
+
     switch (activeFilter) {
       case "all":
-        return parks;
+        return parksWithSelectedVisitStatus;
       case "areas":
-        return parks.filter((park) => isAreaPark(park));
+        return parksWithSelectedVisitStatus.filter((park) => isAreaPark(park));
       case HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG:
-        return parks.filter((park) => isHikingAndWildernessPark(park));
+        return parksWithSelectedVisitStatus.filter((park) => isHikingAndWildernessPark(park));
       case TRAILS_AND_ROUTES_CATEGORY_SLUG:
-        return parks.filter((park) => isTrailPark(park));
+        return parksWithSelectedVisitStatus.filter((park) => isTrailPark(park));
       case "national-park":
       case "nature-reserve-area":
       case "outdoor-recreation-area":
       case "factory-village":
-        return parks.filter((park) => park.type.slug === activeFilter);
-      case "visited":
-        return parks.filter((park) => park.visitedSummary.visited);
-      case "not-visited":
-        return parks.filter((park) => !park.visitedSummary.visited);
+        return parksWithSelectedVisitStatus.filter((park) => park.type.slug === activeFilter);
       default:
-        return parks;
+        return parksWithSelectedVisitStatus;
     }
-  }, [activeFilter, parks]);
+  }, [activeFilter, activeVisitStatus, parks]);
 
   const [activeSlug, setActiveSlug] = useState<string | null>(null);
 
-  const selectFilter = useCallback(
-    (filter: MapFilter) => {
-      setActiveFilter(filter);
+  const applyFilters = useCallback(
+    ({
+      nextFilter = activeFilter,
+      nextVisitStatus = activeVisitStatus,
+    }: {
+      nextFilter?: ParkTypeMapFilter;
+      nextVisitStatus?: VisitStatusFilter;
+    }) => {
+      const hasChanged = nextFilter !== activeFilter || nextVisitStatus !== activeVisitStatus;
+
+      if (!hasChanged) {
+        closeMobileFilters();
+        return;
+      }
+
+      setActiveFilter(nextFilter);
+      setActiveVisitStatus(nextVisitStatus);
+
       if (activeSlug === null) {
         setMapResetRequestId((current) => current + 1);
       }
+
       closeMobileFilters();
     },
-    [activeSlug, closeMobileFilters],
+    [activeFilter, activeSlug, activeVisitStatus, closeMobileFilters],
+  );
+
+  const selectFilter = useCallback(
+    (filter: ParkTypeMapFilter) => {
+      setIsVisitStatusSelectorOpen(false);
+      applyFilters({ nextFilter: filter });
+    },
+    [applyFilters],
+  );
+
+  const selectVisitStatus = useCallback(
+    (visitStatus: VisitStatusFilter) => {
+      setIsVisitStatusSelectorOpen(false);
+      applyFilters({ nextVisitStatus: visitStatus });
+    },
+    [applyFilters],
   );
 
   useEffect(() => {
     const filterParam = pathname === "/parks" ? searchParams.get("filter") : null;
+    const visitStatusParam = pathname === "/parks" ? searchParams.get("visitStatus") : null;
+    const normalizedFilter = isMapFilter(filterParam) ? normalizeMapFilter(filterParam) : null;
+    const normalizedVisitStatus = isVisitStatusFilter(visitStatusParam)
+      ? visitStatusParam
+      : isVisitStatusFilter(filterParam)
+        ? filterParam
+        : null;
 
-    if (!isMapFilter(filterParam)) {
-      lastHandledFilterParamRef.current = null;
+    if (normalizedFilter === null && normalizedVisitStatus === null) {
+      lastHandledMapParamsRef.current = null;
       return;
     }
 
-    if (lastHandledFilterParamRef.current === filterParam) {
+    const handledParamsKey = `${filterParam ?? ""}|${visitStatusParam ?? ""}`;
+
+    if (lastHandledMapParamsRef.current === handledParamsKey) {
       return;
     }
 
-    lastHandledFilterParamRef.current = filterParam;
-    selectFilter(normalizeMapFilter(filterParam));
+    lastHandledMapParamsRef.current = handledParamsKey;
+
+    applyFilters({
+      nextFilter: normalizedFilter ?? activeFilter,
+      nextVisitStatus: normalizedVisitStatus ?? activeVisitStatus,
+    });
 
     const nextSearchParams = new URLSearchParams(searchParams.toString());
-    nextSearchParams.delete("filter");
+
+    if (normalizedFilter !== null || isVisitStatusFilter(filterParam)) {
+      nextSearchParams.delete("filter");
+    }
+
+    if (isVisitStatusFilter(visitStatusParam)) {
+      nextSearchParams.delete("visitStatus");
+    }
+
     const nextSearch = nextSearchParams.toString();
 
     router.replace(nextSearch ? `${pathname}?${nextSearch}` : pathname, { scroll: false });
-  }, [pathname, router, searchParams, selectFilter]);
+  }, [activeFilter, activeVisitStatus, applyFilters, pathname, router, searchParams]);
 
   useEffect(() => {
     if (!homeParkFocusRequest) {
@@ -206,8 +268,24 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
       const focusedPark = parks.find((park) => park.slug === homeParkFocusRequest.slug);
 
       setActiveFilter(focusedPark ? getFallbackFilterForFocusedPark(focusedPark) : "all");
+      setActiveVisitStatus(focusedPark ? getVisitStatusFilterForPark(focusedPark) : "visited");
     }
   }, [filteredParks, homeParkFocusRequest, parks]);
+
+  const visitStatusOptions = useMemo(
+    () =>
+      [
+        { id: "visited", label: t("visited") },
+        { id: "not-visited", label: t("notVisited") },
+        { id: "all", label: t("visitStatusAll") },
+      ] as const satisfies Array<{ id: VisitStatusFilter; label: string }>,
+    [t],
+  );
+
+  const activeVisitStatusOption =
+    visitStatusOptions.find((option) => option.id === activeVisitStatus) ?? visitStatusOptions[0];
+
+  const visitStatusListId = "park-map-visit-status-options";
 
   const filterPanel = (
     <div className={FILTER_PANEL_CLASS_NAME} onMouseDown={(e) => e.stopPropagation()}>
@@ -228,6 +306,49 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
           {option.label}
         </Button>
       ))}
+      <fieldset className="mt-1 rounded-[1.5rem] border border-white/45 bg-white/56 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] dark:border-white/10 dark:bg-slate-950/42 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+        <legend className="mx-auto rounded-full border border-white/60 bg-white/88 px-3 py-1 text-center text-[0.7rem] font-semibold tracking-[0.18em] text-slate-700 uppercase shadow-[0_10px_20px_rgba(148,163,184,0.14)] dark:border-white/12 dark:bg-slate-900/88 dark:text-sky-100 dark:shadow-[0_14px_24px_rgba(2,6,23,0.24)]">
+          {t("visitStatusLabel")}
+        </legend>
+        <Button
+          type="button"
+          variant="default"
+          size="sm"
+          aria-expanded={isVisitStatusSelectorOpen}
+          aria-controls={visitStatusListId}
+          onClick={() => setIsVisitStatusSelectorOpen((current) => !current)}
+          className={cn(
+            FILTER_BUTTON_CLASS_NAME,
+            ACTIVE_FILTER_BUTTON_CLASS_NAME,
+            "mt-1 min-h-11 rounded-[1.25rem] px-4 text-left",
+          )}
+        >
+          <span className="block w-full text-center">{activeVisitStatusOption.label}</span>
+        </Button>
+        {isVisitStatusSelectorOpen ? (
+          <div id={visitStatusListId} className="mt-2 space-y-1" aria-label={t("visitStatusLabel")}>
+            {visitStatusOptions.map((option) => (
+              <Button
+                key={option.id}
+                type="button"
+                variant={activeVisitStatus === option.id ? "default" : "outline"}
+                size="sm"
+                aria-pressed={activeVisitStatus === option.id}
+                onClick={() => selectVisitStatus(option.id)}
+                className={cn(
+                  FILTER_BUTTON_CLASS_NAME,
+                  "min-h-10 rounded-[1.2rem]",
+                  activeVisitStatus === option.id
+                    ? ACTIVE_FILTER_BUTTON_CLASS_NAME
+                    : INACTIVE_FILTER_BUTTON_CLASS_NAME,
+                )}
+              >
+                {option.label}
+              </Button>
+            ))}
+          </div>
+        ) : null}
+      </fieldset>
       <span className="pt-1 text-center text-xs font-medium text-foreground/70 dark:text-sky-100/82">
         {t("results", { count: filteredParks.length })}
       </span>
