@@ -779,14 +779,66 @@ describe("ParkMap", () => {
 
     rerender(<ParkMap parks={[]} resetViewRequestId={1} />);
 
-    expect(fitBoundsMock).toHaveBeenLastCalledWith(
+    expect(easeToMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        center: [25.5, 65],
+        duration: 800,
+        zoom: 4,
+      }),
+    );
+    expect(fitBoundsMock).not.toHaveBeenCalledWith(
       [
         [19.0, 59.5],
         [32.0, 70.5],
       ],
+      expect.anything(),
+    );
+  });
+
+  it("returns to the Finland overview when location mode is turned off without visible parks", () => {
+    const getCurrentPositionMock = vi.fn(
+      (
+        onSuccess: PositionCallback,
+        _onError?: PositionErrorCallback | null,
+        _options?: PositionOptions,
+      ) => {
+        onSuccess({
+          coords: {
+            accuracy: 15,
+            altitude: null,
+            altitudeAccuracy: null,
+            heading: null,
+            latitude: 60.192059,
+            longitude: 24.945831,
+            speed: null,
+            toJSON: () => ({}),
+          },
+          timestamp: Date.now(),
+          toJSON: () => ({}),
+        });
+      },
+    );
+
+    Object.defineProperty(window.navigator, "geolocation", {
+      configurable: true,
+      value: {
+        getCurrentPosition: getCurrentPositionMock,
+      },
+    });
+
+    const { rerender } = render(<ParkMap parks={parks} />);
+    triggerMapLoad();
+
+    fireEvent.click(screen.getByRole("button", { name: "map.locateUser" }));
+    rerender(<ParkMap parks={[]} resetViewRequestId={1} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "map.showFilteredParks" }));
+
+    expect(easeToMock).toHaveBeenLastCalledWith(
       expect.objectContaining({
+        center: [25.5, 65],
         duration: 800,
-        padding: 24,
+        zoom: 4,
       }),
     );
   });
