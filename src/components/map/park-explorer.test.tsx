@@ -141,14 +141,14 @@ const parks: FilterableMapPark[] = [
     logo: null,
     luontoonUrl: null,
     map: null,
-    category: { name: "Tehdaskylät", slug: "factory-village" },
+    category: { name: "Historia-alue", slug: "cultural-history-area" },
     establishmentYear: 1972,
     locationLabel: "Verlantie 295",
     boundingBox: { minLat: 61.1, minLon: 26.5, maxLat: 61.2, maxLon: 26.6 },
     markerPoint: { lat: 61.15, lon: 26.55 },
     postalCode: "47850",
     postalOffice: "Verla",
-    type: { code: 8, id: 8, name: "Tehdaskylä", slug: "factory-village" },
+    type: { code: 9001, id: 9001, name: "Historia-alue", slug: "cultural-history-area" },
     visitedSummary: { visited: false, visitCount: 0, lastVisitedOn: null },
   },
   {
@@ -274,6 +274,19 @@ describe("ParkExplorer", () => {
     expect(replaceMock).toHaveBeenCalledWith("/parks", { scroll: false });
   });
 
+  it("maps legacy factory-village query params to the renamed cultural history filter", () => {
+    pathnameState.value = "/parks";
+    searchParamsState.value = "filter=factory-village";
+
+    render(<ParkExplorer parks={parks} />);
+
+    expect(screen.getByText("count:0")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "home.filters.culturalHistoryAreas" })).toHaveClass(
+      "text-primary-foreground",
+    );
+    expect(replaceMock).toHaveBeenCalledWith("/parks", { scroll: false });
+  });
+
   it("ignores legacy individual trail query params", () => {
     pathnameState.value = "/parks";
     searchParamsState.value = "filter=nature-trail";
@@ -324,7 +337,7 @@ describe("ParkExplorer", () => {
   it("combines the park-type filter with the visit-status toggle", () => {
     render(<ParkExplorer parks={parks} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "home.filters.factoryVillages" }));
+    fireEvent.click(screen.getByRole("button", { name: "home.filters.culturalHistoryAreas" }));
 
     expect(screen.getByText("count:0")).toBeInTheDocument();
     expect(screen.queryByText("Verlan tehdaskylä")).not.toBeInTheDocument();
@@ -411,7 +424,7 @@ describe("ParkExplorer", () => {
     expect(buttons[1]).toHaveTextContent("home.filters.areas");
     expect(buttons[2]).toHaveTextContent("home.filters.nationalParks");
     expect(buttons[3]).toHaveTextContent("home.filters.hikingAndWildernessAreas");
-    expect(buttons[6]).toHaveTextContent("home.filters.factoryVillages");
+    expect(buttons[6]).toHaveTextContent("home.filters.culturalHistoryAreas");
     expect(buttons[7]).toHaveTextContent("home.filters.natureTrails");
     expect(buttons[8]).toHaveTextContent("home.filters.visited");
   });

@@ -265,8 +265,8 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    category?: "outdoor-recreation-area" | "factory-village" | "hiking-and-wilderness-areas" | "national-park" | "nature-reserve-area" | "trails-and-routes";
-                    type?: "outdoor-recreation-area" | "factory-village" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
+                    category?: "outdoor-recreation-area" | "cultural-history-area" | "hiking-and-wilderness-areas" | "national-park" | "nature-reserve-area" | "trails-and-routes";
+                    type?: "outdoor-recreation-area" | "cultural-history-area" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
                 };
                 header?: never;
                 path?: never;
@@ -293,7 +293,7 @@ export interface paths {
                                 category: {
                                     name: string;
                                     /** @enum {string} */
-                                    slug: "outdoor-recreation-area" | "factory-village" | "hiking-and-wilderness-areas" | "national-park" | "nature-reserve-area" | "trails-and-routes";
+                                    slug: "outdoor-recreation-area" | "cultural-history-area" | "hiking-and-wilderness-areas" | "national-park" | "nature-reserve-area" | "trails-and-routes";
                                 };
                                 displayTypeName?: string | null;
                                 establishmentYear: number | null;
@@ -326,7 +326,7 @@ export interface paths {
                                     id: number;
                                     name: string;
                                     /** @enum {string} */
-                                    slug: "outdoor-recreation-area" | "factory-village" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
+                                    slug: "outdoor-recreation-area" | "cultural-history-area" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
                                 };
                             }[];
                         };
@@ -359,8 +359,8 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    category?: "outdoor-recreation-area" | "factory-village" | "hiking-and-wilderness-areas" | "national-park" | "nature-reserve-area" | "trails-and-routes";
-                    type?: "outdoor-recreation-area" | "factory-village" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
+                    category?: "outdoor-recreation-area" | "cultural-history-area" | "hiking-and-wilderness-areas" | "national-park" | "nature-reserve-area" | "trails-and-routes";
+                    type?: "outdoor-recreation-area" | "cultural-history-area" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
                 };
                 header?: never;
                 path?: never;
@@ -388,7 +388,7 @@ export interface paths {
                                     id: number;
                                     name: string;
                                     /** @enum {string} */
-                                    slug: "outdoor-recreation-area" | "factory-village" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
+                                    slug: "outdoor-recreation-area" | "cultural-history-area" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
                                 };
                             }[];
                         };
@@ -446,7 +446,7 @@ export interface paths {
                                 category: {
                                     name: string;
                                     /** @enum {string} */
-                                    slug: "outdoor-recreation-area" | "factory-village" | "hiking-and-wilderness-areas" | "national-park" | "nature-reserve-area" | "trails-and-routes";
+                                    slug: "outdoor-recreation-area" | "cultural-history-area" | "hiking-and-wilderness-areas" | "national-park" | "nature-reserve-area" | "trails-and-routes";
                                 };
                                 displayTypeName?: string | null;
                                 establishmentYear: number | null;
@@ -479,7 +479,7 @@ export interface paths {
                                     id: number;
                                     name: string;
                                     /** @enum {string} */
-                                    slug: "outdoor-recreation-area" | "factory-village" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
+                                    slug: "outdoor-recreation-area" | "cultural-history-area" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
                                 };
                                 /** @enum {string} */
                                 catalogStatus: "active" | "inactive";
@@ -536,7 +536,7 @@ export interface paths {
                                     id: number;
                                     name: string;
                                     /** @enum {string} */
-                                    slug: "outdoor-recreation-area" | "factory-village" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
+                                    slug: "outdoor-recreation-area" | "cultural-history-area" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
                                 };
                                 boundingBox: {
                                     maxLat: number;
@@ -562,7 +562,7 @@ export interface paths {
                                     id: number;
                                     name: string;
                                     /** @enum {string} */
-                                    slug: "outdoor-recreation-area" | "factory-village" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
+                                    slug: "outdoor-recreation-area" | "cultural-history-area" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
                                 };
                                 boundingBox: {
                                     maxLat: number;
@@ -626,7 +626,7 @@ export interface paths {
                             category: {
                                 name: string;
                                 /** @enum {string} */
-                                slug: "outdoor-recreation-area" | "factory-village" | "hiking-and-wilderness-areas" | "national-park" | "nature-reserve-area" | "trails-and-routes";
+                                slug: "outdoor-recreation-area" | "cultural-history-area" | "hiking-and-wilderness-areas" | "national-park" | "nature-reserve-area" | "trails-and-routes";
                             };
                             displayTypeName?: string | null;
                             establishmentYear: number | null;
@@ -659,7 +659,7 @@ export interface paths {
                                 id: number;
                                 name: string;
                                 /** @enum {string} */
-                                slug: "outdoor-recreation-area" | "factory-village" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
+                                slug: "outdoor-recreation-area" | "cultural-history-area" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
                             };
                             boundaryGeoJson?: {
                                 features: {
@@ -757,7 +757,7 @@ export interface paths {
                             category: {
                                 name: string;
                                 /** @enum {string} */
-                                slug: "outdoor-recreation-area" | "factory-village" | "hiking-and-wilderness-areas" | "national-park" | "nature-reserve-area" | "trails-and-routes";
+                                slug: "outdoor-recreation-area" | "cultural-history-area" | "hiking-and-wilderness-areas" | "national-park" | "nature-reserve-area" | "trails-and-routes";
                             };
                             displayTypeName?: string | null;
                             establishmentYear: number | null;
@@ -790,7 +790,7 @@ export interface paths {
                                 id: number;
                                 name: string;
                                 /** @enum {string} */
-                                slug: "outdoor-recreation-area" | "factory-village" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
+                                slug: "outdoor-recreation-area" | "cultural-history-area" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
                             };
                             boundaryGeoJson?: {
                                 features: {
@@ -1043,7 +1043,7 @@ export interface paths {
                                 category: {
                                     name: string;
                                     /** @enum {string} */
-                                    slug: "outdoor-recreation-area" | "factory-village" | "hiking-and-wilderness-areas" | "national-park" | "nature-reserve-area" | "trails-and-routes";
+                                    slug: "outdoor-recreation-area" | "cultural-history-area" | "hiking-and-wilderness-areas" | "national-park" | "nature-reserve-area" | "trails-and-routes";
                                 };
                                 totalParks: number;
                                 totalVisits: number;
@@ -1077,7 +1077,7 @@ export interface paths {
                                     id: number;
                                     name: string;
                                     /** @enum {string} */
-                                    slug: "outdoor-recreation-area" | "factory-village" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
+                                    slug: "outdoor-recreation-area" | "cultural-history-area" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
                                 };
                                 visible: boolean;
                                 visitedParks: number;
@@ -1159,7 +1159,7 @@ export interface paths {
                                 category: {
                                     name: string;
                                     /** @enum {string} */
-                                    slug: "outdoor-recreation-area" | "factory-village" | "hiking-and-wilderness-areas" | "national-park" | "nature-reserve-area" | "trails-and-routes";
+                                    slug: "outdoor-recreation-area" | "cultural-history-area" | "hiking-and-wilderness-areas" | "national-park" | "nature-reserve-area" | "trails-and-routes";
                                 };
                                 displayTypeName?: string | null;
                                 establishmentYear: number | null;
@@ -1192,7 +1192,7 @@ export interface paths {
                                     id: number;
                                     name: string;
                                     /** @enum {string} */
-                                    slug: "outdoor-recreation-area" | "factory-village" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
+                                    slug: "outdoor-recreation-area" | "cultural-history-area" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
                                 };
                                 visitedSummary: {
                                     lastVisitedOn: string | null;
