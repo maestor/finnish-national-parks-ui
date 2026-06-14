@@ -79,10 +79,10 @@ const buildSummary = (): PublicHomeSummary => ({
     },
     {
       type: {
-        code: 8,
-        id: 8,
-        name: "Tehdaskylät",
-        slug: "factory-village",
+        code: 9001,
+        id: 9001,
+        name: "Historia-alue",
+        slug: "cultural-history-area",
       },
       visible: true,
       visitedParks: 1,
@@ -165,8 +165,8 @@ const buildSummary = (): PublicHomeSummary => ({
     },
     {
       category: {
-        name: "Tehdaskylät",
-        slug: "factory-village",
+        name: "Historia-alue",
+        slug: "cultural-history-area",
       },
       visitedParks: 1,
       totalParks: 1,
@@ -202,7 +202,7 @@ describe("createHomeProgressItems", () => {
       "Kansallispuistot",
       "Erämaa-/retkeilyalue",
       "Virkistysalueet",
-      "Tehdaskylät",
+      "Historia-alue",
       "Polut ja reitit",
     ]);
     expect(progressItems[0]?.mapFilter).toBe("all");
@@ -210,7 +210,7 @@ describe("createHomeProgressItems", () => {
     expect(progressItems[1]?.mapFilter).toBe("national-park");
     expect(progressItems[1]?.mapVisitStatus).toBe("visited");
     expect(progressItems[2]?.mapFilter).toBe("hiking-and-wilderness-areas");
-    expect(progressItems[4]?.mapFilter).toBe("factory-village");
+    expect(progressItems[4]?.mapFilter).toBe("cultural-history-area");
     expect(progressItems[5]?.mapFilter).toBe("trails-and-routes");
     expect(progressItems[0]?.total).toBe(36);
   });

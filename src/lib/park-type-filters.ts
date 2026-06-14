@@ -18,7 +18,7 @@ export type ParkTypeFilterLabelKey =
   | "nationalParks"
   | "otherNatureReserves"
   | "outdoorRecreationAreas"
-  | "factoryVillages";
+  | "culturalHistoryAreas";
 
 export const TRAILS_AND_ROUTES_CATEGORY_SLUG: ParkCategorySlug = "trails-and-routes";
 export const HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG: ParkCategorySlug =
@@ -31,7 +31,7 @@ export const PARK_FILTER_ORDER = [
   HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG,
   "nature-reserve-area",
   "outdoor-recreation-area",
-  "factory-village",
+  "cultural-history-area",
   TRAILS_AND_ROUTES_CATEGORY_SLUG,
 ] as const satisfies readonly string[];
 
@@ -39,7 +39,7 @@ export const PARK_TYPE_FILTER_LABEL_KEYS: Record<FilterableParkTypeSlug, ParkTyp
   "national-park": "nationalParks",
   "nature-reserve-area": "otherNatureReserves",
   "outdoor-recreation-area": "outdoorRecreationAreas",
-  "factory-village": "factoryVillages",
+  "cultural-history-area": "culturalHistoryAreas",
 };
 
 export const isHikingAndWildernessAreaTypeSlug = (

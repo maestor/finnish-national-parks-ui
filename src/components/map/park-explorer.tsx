@@ -53,10 +53,9 @@ const getFallbackFilterForFocusedPark = (park: FilterableMapPark): ParkTypeMapFi
 const getVisitStatusFilterForPark = (park: FilterableMapPark): VisitStatusFilter =>
   park.visitedSummary.visited ? "visited" : "not-visited";
 
-type LegacyMapFilter = Extract<
-  FilterableMapPark["type"]["slug"],
-  "hiking-area" | "wilderness-area"
->;
+type LegacyMapFilter =
+  | Extract<FilterableMapPark["type"]["slug"], "hiking-area" | "wilderness-area">
+  | "factory-village";
 
 type AcceptedMapFilter = ParkTypeMapFilter | LegacyMapFilter;
 
@@ -71,6 +70,7 @@ const isMapFilter = (value: string | null): value is AcceptedMapFilter => {
     case "wilderness-area":
     case "nature-reserve-area":
     case "outdoor-recreation-area":
+    case "cultural-history-area":
     case "factory-village":
       return true;
     default:
@@ -81,8 +81,15 @@ const isMapFilter = (value: string | null): value is AcceptedMapFilter => {
 const isVisitStatusFilter = (value: string | null): value is VisitStatusFilter =>
   value === "all" || value === "visited" || value === "not-visited";
 
-const normalizeMapFilter = (filter: AcceptedMapFilter): ParkTypeMapFilter =>
-  isHikingAndWildernessAreaTypeSlug(filter) ? HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG : filter;
+const normalizeMapFilter = (filter: AcceptedMapFilter): ParkTypeMapFilter => {
+  if (filter === "factory-village") {
+    return "cultural-history-area";
+  }
+
+  return isHikingAndWildernessAreaTypeSlug(filter)
+    ? HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG
+    : filter;
+};
 
 interface ParkExplorerProps {
   parks: FilterableMapPark[];
@@ -131,8 +138,8 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
         ),
       },
       {
-        id: "factory-village",
-        label: t(parkTypeFilterOptionsById.get("factory-village") ?? "factoryVillages"),
+        id: "cultural-history-area",
+        label: t(parkTypeFilterOptionsById.get("cultural-history-area") ?? "culturalHistoryAreas"),
       },
       { id: TRAILS_AND_ROUTES_CATEGORY_SLUG, label: t("natureTrails") },
     ] satisfies Array<{ id: ParkTypeMapFilter; label: string }>;
@@ -160,7 +167,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
       case "national-park":
       case "nature-reserve-area":
       case "outdoor-recreation-area":
-      case "factory-village":
+      case "cultural-history-area":
         return parksWithSelectedVisitStatus.filter((park) => park.type.slug === activeFilter);
       default:
         return parksWithSelectedVisitStatus;
