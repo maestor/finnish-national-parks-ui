@@ -67,6 +67,7 @@
       "empty": "Ei vielä käyntikirjauksia."
     },
     "filters": {
+      "panelLabel": "Karttasuodattimet",
       "all": "Kaikki kohteet",
       "areas": "Kaikki alueet",
       "nationalParks": "Kansallispuistot",

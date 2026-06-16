@@ -106,7 +106,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
   const [activeVisitStatus, setActiveVisitStatus] = useState<VisitStatusFilter>("visited");
   const [isVisitStatusSelectorOpen, setIsVisitStatusSelectorOpen] = useState(false);
   const [mapResetRequestId, setMapResetRequestId] = useState(0);
-  const { isMobileFiltersOpen, closeMobileFilters, homeParkFocusRequest } = useHomeMapControls();
+  const { isMobileFiltersOpen, homeParkFocusRequest } = useHomeMapControls();
   const lastHandledMapParamsRef = useRef<string | null>(null);
 
   const filterOptions = useMemo(() => {
@@ -191,7 +191,6 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
       const hasChanged = nextFilter !== activeFilter || nextVisitStatus !== activeVisitStatus;
 
       if (!hasChanged) {
-        closeMobileFilters();
         return;
       }
 
@@ -201,10 +200,8 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
       if (resetViewOnChange) {
         requestMapReset();
       }
-
-      closeMobileFilters();
     },
-    [activeFilter, activeVisitStatus, closeMobileFilters, requestMapReset],
+    [activeFilter, activeVisitStatus, requestMapReset],
   );
 
   const selectFilter = useCallback(
@@ -212,13 +209,12 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
       setIsVisitStatusSelectorOpen(false);
       if (filter === activeFilter) {
         requestMapReset();
-        closeMobileFilters();
         return;
       }
 
       applyFilters({ nextFilter: filter });
     },
-    [activeFilter, applyFilters, closeMobileFilters, requestMapReset],
+    [activeFilter, applyFilters, requestMapReset],
   );
 
   const selectVisitStatus = useCallback(
@@ -377,6 +373,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
     <div className="relative flex flex-1 min-h-0">
       <aside
         id="park-map-filters-mobile"
+        aria-label={t("panelLabel")}
         className={cn(
           "pointer-events-none absolute left-4 z-10 w-40 md:top-4 md:block",
           isMobileFiltersOpen ? "top-2 block" : "hidden top-2",
