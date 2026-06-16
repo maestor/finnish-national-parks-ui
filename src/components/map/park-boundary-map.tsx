@@ -115,7 +115,7 @@ export const ParkBoundaryMap = ({
     if (!map.getSource(SOURCE_ID)) {
       map.addSource(SOURCE_ID, {
         type: "geojson",
-        data: boundaryGeoJson as unknown as GeoJSON.GeoJSON,
+        data: boundaryGeoJson,
       });
 
       map.addLayer({
@@ -139,7 +139,7 @@ export const ParkBoundaryMap = ({
       });
     } else {
       const source = map.getSource(SOURCE_ID) as maplibregl.GeoJSONSource;
-      source.setData(boundaryGeoJson as unknown as GeoJSON.GeoJSON);
+      source.setData(boundaryGeoJson);
     }
 
     // Fit to bounding box with padding
