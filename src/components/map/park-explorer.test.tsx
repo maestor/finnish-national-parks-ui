@@ -1,5 +1,6 @@
 import type { FilterableMapPark } from "@/lib/parks";
 import { fireEvent, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   HomeMapControlsProvider,
@@ -200,11 +201,16 @@ const parks: FilterableMapPark[] = [
 ];
 
 const MobileFilterToggleHarness = () => {
-  const { toggleMobileFilters, focusParkOnHome } = useHomeMapControls();
+  const { isMobileFiltersOpen, toggleMobileFilters, focusParkOnHome } = useHomeMapControls();
 
   return (
     <>
-      <button type="button" onClick={toggleMobileFilters}>
+      <button
+        type="button"
+        onClick={toggleMobileFilters}
+        aria-controls="park-map-filters-mobile"
+        aria-expanded={isMobileFiltersOpen}
+      >
         toggle-mobile-filters
       </button>
       <button type="button" onClick={() => focusParkOnHome("teijo")}>
@@ -437,7 +443,9 @@ describe("ParkExplorer", () => {
     document.removeEventListener("mousedown", mousedownSpy);
   });
 
-  it("keeps mobile filters collapsed until opened and closes after selection", async () => {
+  it("keeps mobile filters open across selections until the close control is pressed", async () => {
+    const user = userEvent.setup();
+
     render(
       <HomeMapControlsProvider>
         <MobileFilterToggleHarness />
@@ -445,29 +453,36 @@ describe("ParkExplorer", () => {
       </HomeMapControlsProvider>,
     );
 
-    const mobileFilters = document.querySelector("#park-map-filters-mobile");
+    const toggle = screen.getByRole("button", { name: "toggle-mobile-filters" });
+    const mobileFilters = screen.getByRole("complementary", {
+      name: "home.filters.panelLabel",
+    });
 
-    expect(mobileFilters).toBeInTheDocument();
-    expect(mobileFilters).toHaveClass("hidden");
+    expect(toggle).toHaveAttribute("aria-controls", mobileFilters.id);
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
 
-    fireEvent.click(screen.getByRole("button", { name: "toggle-mobile-filters" }));
+    await user.click(toggle);
 
-    expect(mobileFilters).toHaveClass("block");
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
 
-    fireEvent.click(
-      within(mobileFilters as HTMLElement).getByRole("button", {
+    await user.click(
+      within(mobileFilters).getByRole("button", {
         name: "home.filters.visited",
       }),
     );
-    fireEvent.click(
-      within(mobileFilters as HTMLElement).getByRole("button", {
+    await user.click(
+      within(mobileFilters).getByRole("button", {
         name: "home.filters.notVisited",
       }),
     );
 
-    expect(mobileFilters).toHaveClass("hidden");
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
     expect(screen.getByText("count:5")).toBeInTheDocument();
     expect(screen.getByText("reset:0")).toBeInTheDocument();
+
+    await user.click(toggle);
+
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
   });
 
   it("resets filters so a focused park from the header search stays visible on the map", () => {
