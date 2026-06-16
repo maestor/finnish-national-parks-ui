@@ -29,7 +29,7 @@
       "source": "maestor/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/intelligence-testing/SKILL.md",
-      "computedHash": "a82c5d9827487b84c319e624d5c30632c8e1e1d3129248400a418d229eb49d3d"
+      "computedHash": "e00a3e6efa923d8bff983646494759832bb84ad86d9d96598371d6a28118017c"
     },
     "local-first-verification": {
       "source": "maestor/agent-skills",
