@@ -72,6 +72,7 @@ This is the Finnish National Parks UI, a Next.js 16 App Router application consu
 
 ## Cleanup and Documentation Hygiene
 - **Never leave unused code behind.** Before finishing any task, remove dead code: orphaned imports, unused variables or parameters, unused translation keys, unreachable components, and stale comments. A passing `npm run verify` is not sufficient proof — grep for removed references explicitly.
+- **Refactor clearly off-pattern code when you touch it.** If the requested change brings you into code that obviously conflicts with this repo's current conventions or quality bar, fix that nearby implementation as part of the same task instead of preserving it. Keep the cleanup scoped to the touched area and directly related behavior; do not use this rule to justify broad opportunistic rewrites.
 - **Documentation must stay in sync.** Any change that affects behavior, architecture, environment variables, API usage, or feature status must update the relevant docs (`README.md`, `AGENTS.md`, `docs/**`, roadmaps, etc.) in the same PR. Do not treat docs as an afterthought.
 
 ## Coding Conventions
