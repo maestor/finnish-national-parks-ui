@@ -34,25 +34,17 @@ vi.mock("./park-map", () => ({
     canManageVisits,
     homeParkFocusRequest,
     resetViewRequestId,
-    onActiveSlugChange,
   }: {
     parks: FilterableMapPark[];
     canManageVisits?: boolean;
     homeParkFocusRequest?: { slug: string } | null;
     resetViewRequestId?: number;
-    onActiveSlugChange?: (slug: string | null) => void;
   }) => (
     <div>
       <p>count:{parks.length}</p>
       <p>admin:{String(canManageVisits)}</p>
       <p>focus:{homeParkFocusRequest?.slug ?? "none"}</p>
       <p>reset:{resetViewRequestId ?? 0}</p>
-      <button type="button" onClick={() => onActiveSlugChange?.("paijanne")}>
-        mock-select-park
-      </button>
-      <button type="button" onClick={() => onActiveSlugChange?.(null)}>
-        mock-clear-park
-      </button>
       <ul>
         {parks.map((park) => (
           <li key={park.slug}>{park.name}</li>
@@ -475,7 +467,7 @@ describe("ParkExplorer", () => {
 
     expect(mobileFilters).toHaveClass("hidden");
     expect(screen.getByText("count:5")).toBeInTheDocument();
-    expect(screen.getByText("reset:1")).toBeInTheDocument();
+    expect(screen.getByText("reset:0")).toBeInTheDocument();
   });
 
   it("resets filters so a focused park from the header search stays visible on the map", () => {
@@ -513,7 +505,7 @@ describe("ParkExplorer", () => {
     expect(screen.getByText("count:2")).toBeInTheDocument();
     expect(screen.getByText("focus:punkaharju")).toBeInTheDocument();
     expect(screen.getByText("Punkaharjun luontopolku")).toBeInTheDocument();
-    expect(screen.getByText("reset:1")).toBeInTheDocument();
+    expect(screen.getByText("reset:0")).toBeInTheDocument();
   });
 
   it("does not trigger a map reset when search-driven focus changes the filter", () => {
@@ -533,17 +525,27 @@ describe("ParkExplorer", () => {
     expect(screen.getByText("reset:0")).toBeInTheDocument();
   });
 
-  it("triggers a map reset when filter changes and no park is selected", () => {
+  it("does not trigger a map reset when switching filters and no park is selected", () => {
     render(<ParkExplorer parks={parks} />);
 
     expect(screen.getByText("reset:0")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "home.filters.areas" }));
 
+    expect(screen.getByText("reset:0")).toBeInTheDocument();
+  });
+
+  it("triggers a map reset when the active filter is clicked again", () => {
+    render(<ParkExplorer parks={parks} />);
+
+    expect(screen.getByText("reset:0")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "home.filters.all" }));
+
     expect(screen.getByText("reset:1")).toBeInTheDocument();
   });
 
-  it("triggers a map reset when visit status changes and no park is selected", () => {
+  it("does not trigger a map reset when visit status changes and no park is selected", () => {
     render(<ParkExplorer parks={parks} />);
 
     expect(screen.getByText("reset:0")).toBeInTheDocument();
@@ -551,29 +553,6 @@ describe("ParkExplorer", () => {
     fireEvent.click(screen.getByRole("button", { name: "home.filters.visited" }));
     fireEvent.click(screen.getByRole("button", { name: "home.filters.visitStatusAll" }));
 
-    expect(screen.getByText("reset:1")).toBeInTheDocument();
-  });
-
-  it("does not trigger a map reset when filter changes while a park is selected", () => {
-    render(<ParkExplorer parks={parks} />);
-
-    fireEvent.click(screen.getByRole("button", { name: "mock-select-park" }));
-    fireEvent.click(screen.getByRole("button", { name: "home.filters.areas" }));
-
     expect(screen.getByText("reset:0")).toBeInTheDocument();
-  });
-
-  it("triggers a map reset once the selected park is cleared and filter changes again", () => {
-    render(<ParkExplorer parks={parks} />);
-
-    fireEvent.click(screen.getByRole("button", { name: "mock-select-park" }));
-    fireEvent.click(screen.getByRole("button", { name: "home.filters.areas" }));
-
-    expect(screen.getByText("reset:0")).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "mock-clear-park" }));
-    fireEvent.click(screen.getByRole("button", { name: "home.filters.nationalParks" }));
-
-    expect(screen.getByText("reset:1")).toBeInTheDocument();
   });
 });

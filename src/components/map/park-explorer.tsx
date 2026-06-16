@@ -174,15 +174,19 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
     }
   }, [activeFilter, activeVisitStatus, parks]);
 
-  const [activeSlug, setActiveSlug] = useState<string | null>(null);
+  const requestMapReset = useCallback(() => {
+    setMapResetRequestId((current) => current + 1);
+  }, []);
 
   const applyFilters = useCallback(
     ({
       nextFilter = activeFilter,
       nextVisitStatus = activeVisitStatus,
+      resetViewOnChange = false,
     }: {
       nextFilter?: ParkTypeMapFilter;
       nextVisitStatus?: VisitStatusFilter;
+      resetViewOnChange?: boolean;
     }) => {
       const hasChanged = nextFilter !== activeFilter || nextVisitStatus !== activeVisitStatus;
 
@@ -194,21 +198,27 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
       setActiveFilter(nextFilter);
       setActiveVisitStatus(nextVisitStatus);
 
-      if (activeSlug === null) {
-        setMapResetRequestId((current) => current + 1);
+      if (resetViewOnChange) {
+        requestMapReset();
       }
 
       closeMobileFilters();
     },
-    [activeFilter, activeSlug, activeVisitStatus, closeMobileFilters],
+    [activeFilter, activeVisitStatus, closeMobileFilters, requestMapReset],
   );
 
   const selectFilter = useCallback(
     (filter: ParkTypeMapFilter) => {
       setIsVisitStatusSelectorOpen(false);
+      if (filter === activeFilter) {
+        requestMapReset();
+        closeMobileFilters();
+        return;
+      }
+
       applyFilters({ nextFilter: filter });
     },
-    [applyFilters],
+    [activeFilter, applyFilters, closeMobileFilters, requestMapReset],
   );
 
   const selectVisitStatus = useCallback(
@@ -245,6 +255,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
     applyFilters({
       nextFilter: normalizedFilter ?? activeFilter,
       nextVisitStatus: normalizedVisitStatus ?? activeVisitStatus,
+      resetViewOnChange: true,
     });
 
     const nextSearchParams = new URLSearchParams(searchParams.toString());
@@ -380,7 +391,6 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
         canManageVisits={auth.isAuthenticated}
         homeParkFocusRequest={homeParkFocusRequest}
         resetViewRequestId={mapResetRequestId}
-        onActiveSlugChange={setActiveSlug}
       />
     </div>
   );
