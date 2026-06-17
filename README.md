@@ -132,7 +132,7 @@ Vercel deployment notes live in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## PWA
 
-The app includes Progressive Web App infrastructure using `@serwist/turbopack`, which is compatible with Next.js 16's default Turbopack bundler. Production builds register the service worker, while development and Vercel preview deployments keep registration disabled to avoid cache interference during local iteration and preview-auth failures.
+The app includes Progressive Web App infrastructure using `@serwist/turbopack`, which is compatible with Next.js 16's default Turbopack bundler. Production builds register the service worker, while development keeps registration disabled to avoid cache interference during local iteration.
 
 Current PWA support includes:
 
