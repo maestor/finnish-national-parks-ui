@@ -14,15 +14,11 @@ vi.mock("next-intl/plugin", () => ({
 }));
 
 describe("next config", () => {
-  it("includes the Serwist wasm runtime files in the route trace", async () => {
+  it("wraps the app config without a custom Serwist trace include", async () => {
     const configModule = await import("./next.config");
 
     expect(withNextIntlPluginMock).toHaveBeenCalledWith("./src/i18n/request.ts");
     expect(withSerwistMock).toHaveBeenCalledTimes(1);
-    expect(configModule.default).toEqual({
-      outputFileTracingIncludes: {
-        "/serwist/*": ["./node_modules/esbuild-wasm/**/*"],
-      },
-    });
+    expect(configModule.default).toEqual({});
   });
 });
