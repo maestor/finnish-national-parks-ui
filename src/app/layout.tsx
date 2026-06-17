@@ -22,6 +22,8 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const shouldDisableSerwist = process.env.NODE_ENV === "development";
+
 const toMetadataBase = (value: string): URL => {
   if (value.startsWith("http://") || value.startsWith("https://")) {
     return new URL(value);
@@ -91,7 +93,6 @@ export const viewport: Viewport = {
 };
 
 const locale = "fi";
-const shouldDisableSerwistInProduction = process.env.NODE_ENV === "production";
 
 const RootLayout = async ({
   children,
@@ -104,7 +105,7 @@ const RootLayout = async ({
         className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-background font-sans antialiased`}
       >
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <SerwistProvider swUrl="/serwist/sw.js" disable={shouldDisableSerwistInProduction}>
+          <SerwistProvider swUrl="/serwist/sw.js" disable={shouldDisableSerwist}>
             <ThemeProvider
               attribute="class"
               defaultTheme="system"

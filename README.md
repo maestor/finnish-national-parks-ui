@@ -132,7 +132,7 @@ Vercel deployment notes live in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## PWA
 
-The app includes Progressive Web App infrastructure using `@serwist/turbopack`, which is compatible with Next.js 16's default Turbopack bundler. The worker route, manifest, icons, and offline page exist in the repo, but production service-worker registration is currently held back until the caching strategy is tightened and verified.
+The app includes Progressive Web App infrastructure using `@serwist/turbopack`, which is compatible with Next.js 16's default Turbopack bundler. Production builds register the service worker, while development keeps registration disabled to avoid cache interference during local iteration.
 
 Current PWA support includes:
 
@@ -140,16 +140,6 @@ Current PWA support includes:
 - Serwist-powered service worker and offline document fallback at `src/app/~offline/page.tsx`
 - Route-served install icons under `src/app/icons/`
 - Dedicated favicon and Apple touch icon metadata
-
-### PWA Roadmap
-
-Issue:
-- The repo advertises PWA/offline assets, but the production app is not yet registering the service worker. That makes the current PWA story easy to misunderstand and easy to regress.
-
-Solution:
-- Re-enable production registration only after the final caching policy is agreed.
-- Verify install, offline fallback, update, and cache-invalidation behavior against a deployed production-like environment.
-- Once that verification is in place, promote the PWA section from roadmap language back to active production capability language.
 
 ## Conventions
 
