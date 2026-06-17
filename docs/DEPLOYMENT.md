@@ -28,6 +28,8 @@ NEXT_PUBLIC_MAP_STYLE_URL=https://demotiles.maplibre.org/style.json
 
 Production builds register the Serwist service worker. Development and Vercel preview deployments keep registration disabled so local iteration does not get polluted by stale caches and preview protection does not break service worker registration with `401` responses.
 
+The route-served worker build at `/serwist/sw.js` depends on `esbuild-wasm` at runtime. Keep that package as a direct production dependency so Vercel can resolve it inside the deployed function bundle.
+
 When validating a deployment, include one real browser pass for:
 
 - successful service worker registration

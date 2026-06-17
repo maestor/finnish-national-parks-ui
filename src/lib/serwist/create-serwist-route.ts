@@ -108,12 +108,9 @@ type ResolvedRouteOptions = Omit<InjectManifestOptions, "nextConfig" | "swSrc"> 
   useNativeEsbuild: boolean;
 };
 
-let esbuildWasm: Promise<EsbuildModule> | null = null;
-let esbuildNative: Promise<EsbuildModule> | null = null;
+let esbuildWasm: Promise<unknown> | null = null;
 
 const isDev = process.env.NODE_ENV === "development";
-const nativeEsbuildModule = "esbuild";
-const wasmEsbuildModule = "esbuild-wasm";
 
 const contentTypeMap: Record<string, string> = {
   ".js": "application/javascript",
@@ -197,21 +194,15 @@ const loadBundleMap = async (
       ? "undefined"
       : JSON.stringify(buildResult.manifestEntries, null, 2);
   const injectionPoint = config.injectionPoint || "";
-  let esbuild: EsbuildModule;
-
   if (config.useNativeEsbuild) {
-    if (!esbuildNative) {
-      esbuildNative = import(/* webpackIgnore: true */ nativeEsbuildModule);
-    }
-
-    esbuild = await esbuildNative;
-  } else {
-    if (!esbuildWasm) {
-      esbuildWasm = import(/* webpackIgnore: true */ wasmEsbuildModule);
-    }
-
-    esbuild = await esbuildWasm;
+    throw new Error("Native esbuild is not supported by this Serwist route.");
   }
+
+  if (!esbuildWasm) {
+    esbuildWasm = import(/* webpackIgnore: true */ "esbuild-wasm");
+  }
+
+  const esbuild = (await esbuildWasm) as EsbuildModule;
 
   const esbuildOptions = config.esbuildOptions as Record<string, unknown>;
   const define =

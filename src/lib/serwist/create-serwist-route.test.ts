@@ -118,4 +118,22 @@ describe("createSerwistRoute", () => {
       warnings: [],
     });
   });
+
+  it("fails fast if native esbuild is requested", async () => {
+    getFileManifestEntriesMock.mockResolvedValue({
+      count: 0,
+      manifestEntries: [],
+      size: 0,
+      warnings: [],
+    });
+
+    const { generateStaticParams } = createSerwistRoute({
+      swSrc: "src/app/sw.ts",
+      useNativeEsbuild: true,
+    });
+
+    await expect(generateStaticParams()).rejects.toThrow(
+      "Native esbuild is not supported by this Serwist route.",
+    );
+  });
 });
