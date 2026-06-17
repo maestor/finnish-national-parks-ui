@@ -364,10 +364,6 @@ const PublicVisitsTimeline = ({
                                     parkSlug: visit.park.slug,
                                     visitId: visit.id,
                                   })}
-                                  aria-label={t("item.openVisit", {
-                                    parkName: visit.park.name,
-                                    visitedOn: formatFinnishDate(visit.visitedOn),
-                                  })}
                                   className="group relative block rounded-[1.8rem] border border-white/45 bg-white/68 p-5 shadow-[0_20px_44px_rgba(148,163,184,0.16)] backdrop-blur-xl transition-colors hover:bg-white/82 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/44 dark:shadow-[0_24px_52px_rgba(2,6,23,0.32)] dark:hover:bg-slate-950/58"
                                   ref={(element) => {
                                     visitRefs.current[currentVisitFocusIndex] = element;
