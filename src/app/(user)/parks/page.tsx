@@ -24,9 +24,9 @@ const ParksMapPage = async () => {
   }
 
   return (
-    <main className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       <ParkExplorer parks={parks} error={error} />
-    </main>
+    </div>
   );
 };
 

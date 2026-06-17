@@ -19,6 +19,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useHomeMapControls } from "../providers/home-map-controls-provider";
 import { HomeParkSearch } from "./home-park-search";
 import { ThemeToggle } from "./theme-toggle";
@@ -95,6 +96,9 @@ export const Header = () => {
       return;
     }
 
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         closeMobileMenu();
@@ -102,7 +106,10 @@ export const Header = () => {
     };
 
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, [closeMobileMenu, isMobileMenuVisible]);
 
   useEffect(() => {
@@ -176,6 +183,118 @@ export const Header = () => {
     ],
     [auth.isAuthenticated, isControlPanel, isPublicVisitsPage, pathname, t],
   );
+
+  const mobileMenu =
+    isMobileMenuMounted && typeof document !== "undefined"
+      ? createPortal(
+          <div className="fixed inset-0 z-50 flex items-start justify-end p-2 md:hidden">
+            <button
+              type="button"
+              className={cn(
+                "absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.26),rgba(15,23,42,0.5))] backdrop-blur-[2px] transition-opacity duration-180 ease-out motion-reduce:transition-none",
+                isMobileMenuVisible ? "opacity-100" : "opacity-0",
+              )}
+              onClick={closeMobileMenu}
+              aria-label={t("nav.closeMenu")}
+            />
+            <dialog
+              open
+              id="mobile-header-menu"
+              aria-modal="true"
+              aria-labelledby="mobile-header-menu-title"
+              className={cn(
+                "relative inset-auto m-0 flex h-[calc(100dvh-1rem)] w-[min(22rem,calc(100vw-1rem))] max-w-none flex-col gap-4 overflow-hidden rounded-[2rem] border border-white/45 bg-white/82 p-4 shadow-[0_32px_72px_rgba(148,163,184,0.3)] backdrop-blur-2xl transition-transform duration-180 ease-out motion-reduce:transition-none dark:border-white/10 dark:bg-slate-950/82 dark:shadow-[0_36px_76px_rgba(2,6,23,0.48)]",
+                isMobileMenuVisible ? "translate-x-0" : "translate-x-full",
+              )}
+            >
+              <div className="rounded-[1.6rem] border border-white/45 bg-[linear-gradient(118deg,rgba(22,101,52,0.14)_0%,rgba(15,118,110,0.1)_46%,rgba(37,99,235,0.16)_100%)] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] dark:border-white/10 dark:bg-[linear-gradient(118deg,rgba(22,101,52,0.22)_0%,rgba(15,118,110,0.18)_46%,rgba(37,99,235,0.24)_100%)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <HeaderBrandMark className="h-10 w-10" />
+                    <div className="min-w-0">
+                      <p id="mobile-header-menu-title" className="truncate text-base font-semibold">
+                        {t("nav.menu")}
+                      </p>
+                      <p className="truncate text-sm text-foreground/70 dark:text-sky-100/78">
+                        {t("siteTitle")}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={closeMobileMenu}
+                    className={MOBILE_TOPBAR_ICON_BUTTON_CLASS}
+                    aria-label={t("nav.closeMenu")}
+                  >
+                    <X className="h-[1.15rem] w-[1.15rem]" aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="rounded-[1.6rem] border border-white/40 bg-white/56 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.42)] dark:border-white/8 dark:bg-slate-950/44 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                <nav className="flex flex-col gap-1">
+                  <Link href="/" className={MOBILE_SHEET_ITEM_CLASS} onClick={closeMobileMenu}>
+                    <House className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    <span>{t("nav.home")}</span>
+                  </Link>
+                  <Link href="/parks" className={MOBILE_SHEET_ITEM_CLASS} onClick={closeMobileMenu}>
+                    <MapPin className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    <span>{t("nav.map")}</span>
+                  </Link>
+                  <Link
+                    href="/visits"
+                    className={MOBILE_SHEET_ITEM_CLASS}
+                    onClick={closeMobileMenu}
+                  >
+                    <Footprints className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    <span>{t("nav.visits")}</span>
+                  </Link>
+                  {auth.isAuthenticated && (
+                    <Link
+                      href="/control-panel"
+                      className={MOBILE_SHEET_ITEM_CLASS}
+                      onClick={closeMobileMenu}
+                    >
+                      <Settings className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      <span>{t("nav.controlPanel")}</span>
+                    </Link>
+                  )}
+                </nav>
+              </div>
+
+              <div className="rounded-[1.6rem] border border-white/40 bg-white/56 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.42)] dark:border-white/8 dark:bg-slate-950/44 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                <div className="flex flex-col gap-1">
+                  <ThemeToggle
+                    showLabel
+                    className={MOBILE_SHEET_ITEM_CLASS}
+                    onToggle={closeMobileMenu}
+                  />
+                  {!auth.isLoading &&
+                    (auth.isAuthenticated ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          closeMobileMenu();
+                          auth.logout();
+                        }}
+                        className={MOBILE_SHEET_ITEM_CLASS}
+                      >
+                        <LogOut className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        <span>{t("nav.logout")}</span>
+                      </button>
+                    ) : (
+                      <LoginLink className={MOBILE_SHEET_ITEM_CLASS} onClick={closeMobileMenu}>
+                        <LogIn className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        <span>{t("nav.login")}</span>
+                      </LoginLink>
+                    ))}
+                </div>
+              </div>
+            </dialog>
+          </div>,
+          document.body,
+        )
+      : null;
 
   return (
     <>
@@ -276,109 +395,7 @@ export const Header = () => {
         </div>
       </header>
 
-      {isMobileMenuMounted && (
-        <div className="fixed inset-0 z-50 flex items-start justify-end p-2 md:hidden">
-          <button
-            type="button"
-            className={cn(
-              "absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.26),rgba(15,23,42,0.5))] backdrop-blur-[2px] transition-opacity duration-180 ease-out motion-reduce:transition-none",
-              isMobileMenuVisible ? "opacity-100" : "opacity-0",
-            )}
-            onClick={closeMobileMenu}
-            aria-label={t("nav.closeMenu")}
-          />
-          <dialog
-            open
-            id="mobile-header-menu"
-            aria-modal="true"
-            aria-labelledby="mobile-header-menu-title"
-            className={cn(
-              "relative inset-auto m-0 flex h-[calc(100dvh-1rem)] w-[min(22rem,calc(100vw-1rem))] max-w-none flex-col gap-4 overflow-hidden rounded-[2rem] border border-white/45 bg-white/82 p-4 shadow-[0_32px_72px_rgba(148,163,184,0.3)] backdrop-blur-2xl transition-transform duration-180 ease-out motion-reduce:transition-none dark:border-white/10 dark:bg-slate-950/82 dark:shadow-[0_36px_76px_rgba(2,6,23,0.48)]",
-              isMobileMenuVisible ? "translate-x-0" : "translate-x-full",
-            )}
-          >
-            <div className="rounded-[1.6rem] border border-white/45 bg-[linear-gradient(118deg,rgba(22,101,52,0.14)_0%,rgba(15,118,110,0.1)_46%,rgba(37,99,235,0.16)_100%)] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] dark:border-white/10 dark:bg-[linear-gradient(118deg,rgba(22,101,52,0.22)_0%,rgba(15,118,110,0.18)_46%,rgba(37,99,235,0.24)_100%)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex min-w-0 items-center gap-3">
-                  <HeaderBrandMark className="h-10 w-10" />
-                  <div className="min-w-0">
-                    <p id="mobile-header-menu-title" className="truncate text-base font-semibold">
-                      {t("nav.menu")}
-                    </p>
-                    <p className="truncate text-sm text-foreground/70 dark:text-sky-100/78">
-                      {t("siteTitle")}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={closeMobileMenu}
-                  className={MOBILE_TOPBAR_ICON_BUTTON_CLASS}
-                  aria-label={t("nav.closeMenu")}
-                >
-                  <X className="h-[1.15rem] w-[1.15rem]" aria-hidden="true" />
-                </button>
-              </div>
-            </div>
-
-            <div className="rounded-[1.6rem] border border-white/40 bg-white/56 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.42)] dark:border-white/8 dark:bg-slate-950/44 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-              <nav className="flex flex-col gap-1">
-                <Link href="/" className={MOBILE_SHEET_ITEM_CLASS} onClick={closeMobileMenu}>
-                  <House className="h-4 w-4 shrink-0" aria-hidden="true" />
-                  <span>{t("nav.home")}</span>
-                </Link>
-                <Link href="/parks" className={MOBILE_SHEET_ITEM_CLASS} onClick={closeMobileMenu}>
-                  <MapPin className="h-4 w-4 shrink-0" aria-hidden="true" />
-                  <span>{t("nav.map")}</span>
-                </Link>
-                <Link href="/visits" className={MOBILE_SHEET_ITEM_CLASS} onClick={closeMobileMenu}>
-                  <Footprints className="h-4 w-4 shrink-0" aria-hidden="true" />
-                  <span>{t("nav.visits")}</span>
-                </Link>
-                {auth.isAuthenticated && (
-                  <Link
-                    href="/control-panel"
-                    className={MOBILE_SHEET_ITEM_CLASS}
-                    onClick={closeMobileMenu}
-                  >
-                    <Settings className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    <span>{t("nav.controlPanel")}</span>
-                  </Link>
-                )}
-              </nav>
-            </div>
-
-            <div className="rounded-[1.6rem] border border-white/40 bg-white/56 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.42)] dark:border-white/8 dark:bg-slate-950/44 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-              <div className="flex flex-col gap-1">
-                <ThemeToggle
-                  showLabel
-                  className={MOBILE_SHEET_ITEM_CLASS}
-                  onToggle={closeMobileMenu}
-                />
-                {!auth.isLoading &&
-                  (auth.isAuthenticated ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        closeMobileMenu();
-                        auth.logout();
-                      }}
-                      className={MOBILE_SHEET_ITEM_CLASS}
-                    >
-                      <LogOut className="h-4 w-4 shrink-0" aria-hidden="true" />
-                      <span>{t("nav.logout")}</span>
-                    </button>
-                  ) : (
-                    <LoginLink className={MOBILE_SHEET_ITEM_CLASS} onClick={closeMobileMenu}>
-                      <LogIn className="h-4 w-4 shrink-0" aria-hidden="true" />
-                      <span>{t("nav.login")}</span>
-                    </LoginLink>
-                  ))}
-              </div>
-            </div>
-          </dialog>
-        </div>
-      )}
+      {mobileMenu}
     </>
   );
 };

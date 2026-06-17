@@ -464,6 +464,7 @@ describe("ParkExplorer", () => {
     await user.click(toggle);
 
     expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(mobileFilters).toHaveClass("z-30");
 
     await user.click(
       within(mobileFilters).getByRole("button", {
@@ -483,6 +484,7 @@ describe("ParkExplorer", () => {
     await user.click(toggle);
 
     expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(mobileFilters).toHaveClass("z-10");
   });
 
   it("resets filters so a focused park from the header search stays visible on the map", () => {

@@ -375,8 +375,8 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
         id="park-map-filters-mobile"
         aria-label={t("panelLabel")}
         className={cn(
-          "pointer-events-none absolute left-4 z-10 w-40 md:top-4 md:block",
-          isMobileFiltersOpen ? "top-2 block" : "hidden top-2",
+          "pointer-events-none absolute left-4 w-40 md:top-4 md:block",
+          isMobileFiltersOpen ? "top-2 z-30 block md:z-10" : "hidden top-2 z-10",
         )}
       >
         {filterPanel}

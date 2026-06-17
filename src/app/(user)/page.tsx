@@ -34,7 +34,7 @@ const HomePage = async () => {
     .filter(Boolean);
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 py-8">
+    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 py-8">
       <HomeIntro
         title={t("title")}
         summary={t("summary")}
@@ -72,7 +72,7 @@ const HomePage = async () => {
           fallbackLatestVisitEntries={latestVisitEntries}
         />
       </div>
-    </main>
+    </div>
   );
 };
 

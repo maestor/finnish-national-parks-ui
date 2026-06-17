@@ -12,9 +12,14 @@ const LoginPage = async ({
   const hasError = error === "access_denied" || error === "auth_failed";
 
   return (
-    <main className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center px-4 py-8">
+    <section
+      aria-labelledby="login-page-title"
+      className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center px-4 py-8"
+    >
       <div className="w-full max-w-sm space-y-6 text-center">
-        <h1 className="text-2xl font-bold">{t("login")}</h1>
+        <h1 id="login-page-title" className="text-2xl font-bold">
+          {t("login")}
+        </h1>
         {hasError && (
           <p className="text-sm text-red-500" role="alert">
             {t("accessDenied")}
@@ -24,7 +29,7 @@ const LoginPage = async ({
           {t("loginToControlPanel")}
         </LoginLink>
       </div>
-    </main>
+    </section>
   );
 };
 

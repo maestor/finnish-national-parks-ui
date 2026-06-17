@@ -258,5 +258,6 @@ describe("Header", () => {
       within(dialog).getByRole("button", { name: "layout.themeToggle.darkMode" }),
     ).toBeInTheDocument();
     expect(within(dialog).getByRole("button", { name: "layout.nav.logout" })).toBeInTheDocument();
+    expect(dialog.parentElement?.parentElement).toBe(document.body);
   });
 });
