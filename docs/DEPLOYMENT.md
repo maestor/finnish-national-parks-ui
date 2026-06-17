@@ -26,7 +26,7 @@ NEXT_PUBLIC_MAP_STYLE_URL=https://demotiles.maplibre.org/style.json
 
 ## Current PWA note
 
-Production builds register the Serwist service worker. Development keeps registration disabled so local iteration does not get polluted by stale caches.
+Production builds register the Serwist service worker. Development and Vercel preview deployments keep registration disabled so local iteration does not get polluted by stale caches and preview protection does not break service worker registration with `401` responses.
 
 When validating a deployment, include one real browser pass for:
 

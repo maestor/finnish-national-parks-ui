@@ -22,7 +22,8 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const shouldDisableSerwist = process.env.NODE_ENV === "development";
+const shouldDisableSerwist =
+  process.env.NODE_ENV !== "production" || siteEnv.VERCEL_ENV === "preview";
 
 const toMetadataBase = (value: string): URL => {
   if (value.startsWith("http://") || value.startsWith("https://")) {

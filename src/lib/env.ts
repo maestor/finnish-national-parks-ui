@@ -27,6 +27,7 @@ const envSchema = z.object({
   NEXT_PUBLIC_MAP_STYLE_URL: z.string().url().optional(),
   AUTH_JWT_SECRET: z.string().min(1).optional(),
   AUTH_COOKIE_NAME: z.string().min(1).default("__session"),
+  VERCEL_ENV: z.enum(["production", "preview", "development"]).optional(),
   VERCEL_PROJECT_PRODUCTION_URL: urlOrHostSchema.optional(),
   VERCEL_URL: urlOrHostSchema.optional(),
 });
@@ -34,6 +35,7 @@ const envSchema = z.object({
 type Env = z.infer<typeof envSchema>;
 const siteEnvSchema = z.object({
   NEXT_PUBLIC_SITE_URL: urlOrHostSchema.optional(),
+  VERCEL_ENV: z.enum(["production", "preview", "development"]).optional(),
   VERCEL_PROJECT_PRODUCTION_URL: urlOrHostSchema.optional(),
   VERCEL_URL: urlOrHostSchema.optional(),
 });
@@ -53,6 +55,7 @@ const validateEnv = (): Env => {
     NEXT_PUBLIC_MAP_STYLE_URL: process.env.NEXT_PUBLIC_MAP_STYLE_URL,
     AUTH_JWT_SECRET: process.env.AUTH_JWT_SECRET,
     AUTH_COOKIE_NAME: process.env.AUTH_COOKIE_NAME,
+    VERCEL_ENV: process.env.VERCEL_ENV,
     VERCEL_PROJECT_PRODUCTION_URL: process.env.VERCEL_PROJECT_PRODUCTION_URL,
     VERCEL_URL: process.env.VERCEL_URL,
   });
@@ -72,6 +75,7 @@ const validateSiteEnv = (): SiteEnv => {
 
   const parsed = siteEnvSchema.safeParse({
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+    VERCEL_ENV: process.env.VERCEL_ENV,
     VERCEL_PROJECT_PRODUCTION_URL: process.env.VERCEL_PROJECT_PRODUCTION_URL,
     VERCEL_URL: process.env.VERCEL_URL,
   });
