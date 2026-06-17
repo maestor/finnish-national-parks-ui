@@ -64,6 +64,7 @@ This is the Finnish National Parks UI, a Next.js 16 App Router application consu
 - `npm run verify` must pass before any task or PR is considered ready, except for pure documentation or repo-configuration changes that cannot affect code, tests, or generated types.
 - For docs-only skips, note the exception in the PR description.
 - User review and explicit acceptance are required before merge.
+- After the agent reports final verification results, a user reply such as `done` counts as explicit acceptance to continue the remaining workflow automatically on the current branch: commit, push, and PR handoff without another pause.
 - Keep documentation-only changes separate from implementation changes when practical.
 - Do not revert user changes.
 - Do not hand-edit generated files once generation exists.

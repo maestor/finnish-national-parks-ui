@@ -79,6 +79,10 @@ The `AUTH_JWT_SECRET` must match the backend's `AUTH_JWT_SECRET` exactly.
 
 **Always run `npm run verify` before asking for review.** Pull requests targeting `main` also run the same `npm run verify` gate in GitHub Actions.
 
+Workflow shorthand:
+
+- After the verify-phase results have been reported, a user reply such as `done` means the batch is accepted and the remaining workflow should continue automatically on the current branch: commit, push, and PR handoff without another stop for confirmation.
+
 ---
 
 ## Architecture
