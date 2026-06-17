@@ -5,7 +5,7 @@ import { HomeIntro } from "./home-intro";
 
 describe("HomeIntro", () => {
   it("renders the title and both action controls", () => {
-    render(
+    const { container } = render(
       <HomeIntro
         title="Reissuvihko"
         summary="Lyhyt kuvaus."
@@ -23,7 +23,12 @@ describe("HomeIntro", () => {
       "aria-expanded",
       "false",
     );
+    expect(screen.getByRole("button", { name: "Mista on kyse?" })).toHaveClass("cursor-pointer");
     expect(screen.getByText("Ensimmainen kappale.")).toBeInTheDocument();
+    expect(container.querySelector("section")).toHaveAttribute(
+      "aria-labelledby",
+      "home-intro-title",
+    );
   });
 
   it("toggles the intro description open and closed", async () => {

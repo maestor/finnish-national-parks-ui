@@ -411,95 +411,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/parks/removed": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Removed parks for admin visibility management */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            parks: {
-                                address: string;
-                                areaKm2: number | null;
-                                boundingBox: {
-                                    maxLat: number;
-                                    maxLon: number;
-                                    minLat: number;
-                                    minLon: number;
-                                };
-                                category: {
-                                    name: string;
-                                    /** @enum {string} */
-                                    slug: "outdoor-recreation-area" | "cultural-history-area" | "hiking-and-wilderness-areas" | "national-park" | "nature-reserve-area" | "trails-and-routes";
-                                };
-                                displayTypeName?: string | null;
-                                establishmentYear: number | null;
-                                locationLabel: string;
-                                logo: {
-                                    key: string;
-                                    /** Format: date-time */
-                                    updatedAt: string;
-                                    /** Format: uri */
-                                    url: string;
-                                } | null;
-                                luontoonUrl: string | null;
-                                map: {
-                                    key: string;
-                                    /** Format: date-time */
-                                    updatedAt: string;
-                                    /** Format: uri */
-                                    url: string;
-                                } | null;
-                                markerPoint: {
-                                    lat: number;
-                                    lon: number;
-                                };
-                                name: string;
-                                postalCode: string | null;
-                                postalOffice: string | null;
-                                slug: string;
-                                type: {
-                                    code: number;
-                                    id: number;
-                                    name: string;
-                                    /** @enum {string} */
-                                    slug: "outdoor-recreation-area" | "cultural-history-area" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
-                                };
-                                /** @enum {string} */
-                                catalogStatus: "active" | "inactive";
-                                /** @enum {boolean} */
-                                removed: true;
-                                updatedAt: string;
-                            }[];
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/admin/parks/visibility": {
         parameters: {
             query?: never;
@@ -575,6 +486,30 @@ export interface paths {
                                     lon: number;
                                 };
                             }[];
+                        };
+                    };
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
                         };
                     };
                 };
@@ -867,6 +802,18 @@ export interface paths {
                         };
                     };
                 };
+                /** @description OAuth not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
             };
         };
         trace?: never;
@@ -993,8 +940,32 @@ export interface paths {
                         };
                     };
                 };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
                 /** @description Park was not found */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -1370,8 +1341,32 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
                 /** @description Visit was not found */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -1437,8 +1432,32 @@ export interface paths {
                         };
                     };
                 };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
                 /** @description Visit was not found */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -1490,8 +1509,32 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
                 /** @description Park was not found */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -1555,6 +1598,18 @@ export interface paths {
                         };
                     };
                 };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
                 /** @description Visit was not found */
                 404: {
                     headers: {
@@ -1581,6 +1636,18 @@ export interface paths {
                 };
                 /** @description Invalid upload request */
                 422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -1652,6 +1719,18 @@ export interface paths {
                         };
                     };
                 };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
                 /** @description Visit was not found */
                 404: {
                     headers: {
@@ -1666,6 +1745,18 @@ export interface paths {
                 };
                 /** @description Upload is missing or invalid */
                 422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -1751,6 +1842,18 @@ export interface paths {
                         };
                     };
                 };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
                 /** @description Visit was not found */
                 404: {
                     headers: {
@@ -1799,6 +1902,18 @@ export interface paths {
                         };
                     };
                 };
+                /** @description OAuth not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
             };
         };
         delete?: never;
@@ -1836,8 +1951,32 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
                 /** @description Image or visit was not found */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -1892,6 +2031,18 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
                 /** @description Visit was not found */
                 404: {
                     headers: {
@@ -1906,6 +2057,18 @@ export interface paths {
                 };
                 /** @description Invalid image order */
                 422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
                     headers: {
                         [name: string]: unknown;
                     };

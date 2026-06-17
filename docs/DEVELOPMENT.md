@@ -79,6 +79,10 @@ The `AUTH_JWT_SECRET` must match the backend's `AUTH_JWT_SECRET` exactly.
 
 **Always run `npm run verify` before asking for review.** Pull requests targeting `main` also run the same `npm run verify` gate in GitHub Actions.
 
+Workflow shorthand:
+
+- After the verify-phase results have been reported, a user reply such as `done` means the batch is accepted and the remaining workflow should continue automatically on the current branch: commit, push, and PR handoff without another stop for confirmation.
+
 ---
 
 ## Architecture
@@ -229,6 +233,20 @@ This fetches `http://localhost:3004/openapi.json` and overwrites `src/lib/api-ty
 
 ---
 
+## Security And Sustainability Guardrails
+
+These are contributor defaults, not optional polish:
+
+- **Protect every mutation boundary** — New non-`GET` routes, cache revalidation endpoints, upload flows, and admin helpers must require explicit auth or a signed/shared-secret check. Public reads are fine; anonymous writes are not.
+- **Keep secrets and trust boundaries server-side** — `API_KEY`, JWT secrets, cookies, and presigned upload credentials must stay out of client bundles, logs, URLs, and browser storage. If a route depends on trusted headers or cookies, document that boundary in the same change.
+- **Avoid HTML string injection** — Prefer React nodes, `textContent`, and DOM APIs over `innerHTML` or `dangerouslySetInnerHTML`, especially for API, translation, or user-derived content. If raw HTML is unavoidable, sanitize it and document why the source is trusted.
+- **Allowlist external origins narrowly** — Remote image hosts, map tiles, upload targets, embeds, and other third-party origins should be added one by one with a concrete reason. Avoid wildcard host patterns unless the team has explicitly accepted the risk.
+- **Prefer efficient reads over duplicated work** — Bias toward cacheable server reads, explicit cache tags, and small client islands instead of repeated client fetches or unnecessary hydration. When changing caching, revalidation, or offline behavior, document how freshness and invalidation are supposed to work.
+- **Optimize media before network transfer** — Keep image and asset payloads constrained before upload or render. Large media features should justify their size, optimization path, and fallback behavior.
+- **Treat dependencies as ongoing maintenance cost** — Before adding a package, check whether existing repo tools already solve the problem. Prefer well-maintained packages with a clear purpose, and run `npm audit` after dependency changes so accepted residual risk is explicit.
+
+---
+
 ## Coding Conventions
 
 See `AGENTS.md` for the full convention list. Key rules:
@@ -248,6 +266,7 @@ See `AGENTS.md` for the full convention list. Key rules:
 - The service worker route is exposed from `src/app/serwist/[path]/route.ts`
 - App install icons are served from `src/app/icons/`
 - The shared icon artwork and image responses live in `src/lib/pwa-icon.tsx`
+- Changes to offline, caching, or service-worker registration behavior must be verified against the intended production experience and documented in the same PR.
 
 ---
 

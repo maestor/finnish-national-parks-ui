@@ -344,6 +344,25 @@ describe("ParkMap", () => {
     expect(document.body).not.toHaveTextContent("Muu luonnonsuojelualue");
   });
 
+  it("renders custom display type names as text instead of executable markup", () => {
+    const hostileParks: FilterableMapPark[] = [
+      {
+        ...parks[1],
+        displayTypeName: '<script data-testid="injected-script">bad()</script>Turvallinen nimi',
+      },
+    ];
+
+    render(<ParkMap parks={hostileParks} />);
+    triggerMapLoad();
+
+    fireEvent.click(markerElements[0]);
+
+    expect(document.querySelector('[data-testid="injected-script"]')).not.toBeInTheDocument();
+    expect(document.body).toHaveTextContent(
+      '<script data-testid="injected-script">bad()</script>Turvallinen nimi',
+    );
+  });
+
   it("activates a park from an external home search focus request", () => {
     const { rerender } = render(<ParkMap parks={parks} />);
     triggerMapLoad();

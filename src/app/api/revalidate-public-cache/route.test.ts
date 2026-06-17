@@ -1,9 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "./route";
 
-const { revalidatePathMock, revalidateTagMock } = vi.hoisted(() => ({
+const { jwtVerifyMock, revalidatePathMock, revalidateTagMock } = vi.hoisted(() => ({
+  jwtVerifyMock: vi.fn(),
   revalidatePathMock: vi.fn(),
   revalidateTagMock: vi.fn(),
+}));
+
+vi.mock("jose", () => ({
+  jwtVerify: jwtVerifyMock,
 }));
 
 vi.mock("next/cache", () => ({
@@ -14,9 +19,11 @@ vi.mock("next/cache", () => ({
 describe("revalidate public cache route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    process.env.AUTH_COOKIE_NAME = "__session";
+    process.env.AUTH_JWT_SECRET = "test-jwt-secret";
   });
 
-  it("revalidates public summary tags and the specific park page", async () => {
+  it("rejects unauthenticated revalidation requests", async () => {
     const request = new Request("http://localhost:4300/api/revalidate-public-cache", {
       method: "POST",
       headers: {
@@ -27,6 +34,38 @@ describe("revalidate public cache route", () => {
 
     const response = await POST(request);
 
+    expect(response.status).toBe(401);
+    expect(jwtVerifyMock).not.toHaveBeenCalled();
+    expect(revalidateTagMock).not.toHaveBeenCalled();
+    expect(revalidatePathMock).not.toHaveBeenCalled();
+    await expect(response.json()).resolves.toEqual({
+      error: "Unauthorized",
+      ok: false,
+    });
+  });
+
+  it("revalidates public summary tags and the specific park page for an authenticated admin session", async () => {
+    jwtVerifyMock.mockResolvedValueOnce({} as never);
+
+    const request = new Request("http://localhost:4300/api/revalidate-public-cache", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        cookie: "__session=test-session",
+      },
+      body: JSON.stringify({ parkSlug: "pallas" }),
+    });
+
+    const response = await POST(request);
+
+    expect(jwtVerifyMock).toHaveBeenCalledTimes(1);
+    expect(jwtVerifyMock.mock.calls[0]?.[0]).toBe("test-session");
+    expect(Array.from(jwtVerifyMock.mock.calls[0]?.[1] ?? [])).toEqual(
+      Array.from(new TextEncoder().encode("test-jwt-secret")),
+    );
+    expect(jwtVerifyMock.mock.calls[0]?.[2]).toEqual({
+      algorithms: ["HS256"],
+    });
     expect(revalidateTagMock).toHaveBeenCalledWith("public-home-summary", "max");
     expect(revalidateTagMock).toHaveBeenCalledWith("public-map-summary", "max");
     expect(revalidateTagMock).toHaveBeenCalledWith("public-visits", "max");
@@ -43,9 +82,14 @@ describe("revalidate public cache route", () => {
     });
   });
 
-  it("still revalidates shared pages when the request body is missing or invalid", async () => {
+  it("still revalidates shared pages when an authenticated request body is missing or invalid", async () => {
+    jwtVerifyMock.mockResolvedValueOnce({} as never);
+
     const request = new Request("http://localhost:4300/api/revalidate-public-cache", {
       method: "POST",
+      headers: {
+        cookie: "__session=test-session",
+      },
       body: "not-json",
     });
 

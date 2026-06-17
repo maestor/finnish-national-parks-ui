@@ -26,9 +26,14 @@ NEXT_PUBLIC_MAP_STYLE_URL=https://demotiles.maplibre.org/style.json
 
 ## Current PWA note
 
-Service worker registration is currently disabled in production builds.
+Production builds register the Serwist service worker. Development keeps registration disabled so local iteration does not get polluted by stale caches.
 
-This is intentional for now because the deployed Serwist worker route was returning `500` on Vercel. The rest of the frontend remains deployable and functional without the service worker while public pages and auth are stabilized.
+When validating a deployment, include one real browser pass for:
+
+- successful service worker registration
+- offline document fallback at `/~offline`
+- refresh behavior after a new deployment
+- public-page freshness after admin mutations trigger cache revalidation
 
 ## Important domain rule
 

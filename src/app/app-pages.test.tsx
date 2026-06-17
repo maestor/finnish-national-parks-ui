@@ -346,11 +346,11 @@ const visitWithPark = {
 } satisfies VisitWithPark;
 
 const renderPublicRoute = async (page: React.ReactNode) => {
-  render(UserLayout({ children: page }));
+  return render(UserLayout({ children: page }));
 };
 
 const renderControlPanelRoute = async (page: React.ReactNode) => {
-  render(await ControlPanelLayout({ children: page }));
+  return render(await ControlPanelLayout({ children: page }));
 };
 
 describe("App pages", () => {
@@ -468,6 +468,49 @@ describe("App pages", () => {
     await expect(generateParksMapMetadata()).resolves.toEqual({
       title: "home.mapTitle",
     });
+  });
+
+  it("keeps public page modules free of nested main landmarks", async () => {
+    vi.mocked(apiPublicFetch)
+      .mockResolvedValueOnce({
+        totalVisits: 0,
+        uniqueVisitedParks: 0,
+        progressByType: [],
+        progressByCategory: [],
+        mostVisitedParks: [],
+        recentVisits: [],
+        latestVisitEntries: [],
+        updatedAt: visitWithPark.updatedAt,
+        version: 3,
+      })
+      .mockResolvedValueOnce({
+        parks: [],
+        updatedAt: visitWithPark.updatedAt,
+        version: 4,
+      })
+      .mockResolvedValueOnce({
+        visits: [],
+      });
+
+    const home = await renderPublicRoute(await HomePage());
+    expect(home.container.querySelector("main")).toBeNull();
+
+    const parks = await renderPublicRoute(await ParksMapPage());
+    expect(parks.container.querySelector("main")).toBeNull();
+
+    const visits = await renderPublicRoute(
+      await PublicVisitsPage({
+        searchParams: Promise.resolve({}),
+      }),
+    );
+    expect(visits.container.querySelector("main")).toBeNull();
+
+    const login = render(
+      await LoginPage({
+        searchParams: Promise.resolve({}),
+      }),
+    );
+    expect(login.container.querySelector("main")).toBeNull();
   });
 
   it("renders the park detail page with main content and visit history", async () => {

@@ -37,14 +37,14 @@ const PublicVisitsPage = async ({ searchParams }: PublicVisitsPageProps) => {
   });
 
   return (
-    <main className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       <PublicVisitsTimeline
         visits={visits}
         selectedYear={selectedYear}
         selectedMonth={selectedMonth}
         error={error}
       />
-    </main>
+    </div>
   );
 };
 

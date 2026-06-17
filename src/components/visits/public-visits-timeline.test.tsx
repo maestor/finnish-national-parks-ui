@@ -106,9 +106,12 @@ describe("PublicVisitsTimeline", () => {
     expect(screen.queryByText("Kesainen paiva.")).not.toBeInTheDocument();
 
     const visitLink = screen.getByRole("link", {
-      name: "visits.item.openVisit",
+      name: /Pallas-Yllastunturi/,
     });
     expect(visitLink).toHaveAttribute("href", "/park/pallas-yllastunturi?visit=2#visit-history");
+    expect(visitLink).toHaveAccessibleName(/10\.8\.2024/);
+    expect(visitLink).toHaveAccessibleName(/Pallas-Yllastunturi/);
+    expect(visitLink).toHaveAccessibleName(/visits\.item\.viewVisit/);
   });
 
   it("shows the visible visit count inline with the filter title", () => {
@@ -153,7 +156,9 @@ describe("PublicVisitsTimeline", () => {
     const monthLinks = within(
       screen.getByRole("navigation", { name: "visits.filters.monthsLabel" }),
     ).getAllByRole("link");
-    const visitLinks = screen.getAllByRole("link", { name: "visits.item.openVisit" });
+    const visitLinks = screen
+      .getAllByRole("link")
+      .filter((link) => link.getAttribute("href")?.includes("#visit-history"));
 
     yearLinks[3]?.focus();
     expect(yearLinks[3]).toHaveFocus();

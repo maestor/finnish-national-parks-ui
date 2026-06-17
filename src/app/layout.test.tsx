@@ -194,4 +194,29 @@ describe("RootLayout", () => {
       initialScale: 1,
     });
   });
+
+  it("keeps service worker registration enabled in production builds", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.resetModules();
+
+    try {
+      const layoutModule = await import("./layout");
+      const productionLayout = (await layoutModule.default({
+        children: <div data-testid="page-content">page</div>,
+      })) as ReactElement<{
+        children: ReactElement<{
+          children: ReactNode;
+        }>;
+      }>;
+
+      render(productionLayout.props.children.props.children);
+
+      expect(serwistProviderPropsMock).toHaveBeenCalledWith({
+        swUrl: "/serwist/sw.js",
+        disable: false,
+      });
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
 });

@@ -123,9 +123,16 @@ The backend exposes its spec at `http://localhost:3004/openapi.json`.
 
 Vercel deployment notes live in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
+## Contributor Docs
+
+- [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for local workflow, architecture, and contributor guardrails
+- [docs/TESTING.md](docs/TESTING.md) for behavior-first testing and verification expectations
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for production and Vercel setup
+- [AGENTS.md](AGENTS.md) for repo-specific AI and contributor workflow rules
+
 ## PWA
 
-The app is configured as a Progressive Web App using `@serwist/turbopack`, which is compatible with Next.js 16's default Turbopack bundler. The service worker is disabled in development and built automatically in production.
+The app includes Progressive Web App infrastructure using `@serwist/turbopack`, which is compatible with Next.js 16's default Turbopack bundler. Production builds register the service worker, while development keeps registration disabled to avoid cache interference during local iteration.
 
 Current PWA support includes:
 
@@ -140,3 +147,4 @@ Current PWA support includes:
 - **Finnish UI copy** — All user-facing text is in Finnish via `next-intl`
 - **Accessibility first** — Semantic HTML, ARIA labels, keyboard navigation, `prefers-reduced-motion` support
 - **Backend boundary is sacred** — No direct DB access; all data flows through the Hono API
+- **Security and sustainability are defaults** — Guard mutation routes, keep secrets server-only, allowlist external origins narrowly, and document cache or offline behavior changes in the same PR

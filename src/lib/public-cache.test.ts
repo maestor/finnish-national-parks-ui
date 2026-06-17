@@ -27,6 +27,7 @@ describe("public cache helpers", () => {
     await expect(revalidatePublicCache({ parkSlug: "pallas" })).resolves.toBe(true);
 
     expect(globalThis.fetch).toHaveBeenCalledWith("/api/revalidate-public-cache", {
+      credentials: "include",
       method: "POST",
       headers: {
         "Content-Type": "application/json",

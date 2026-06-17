@@ -24,7 +24,7 @@ export const HomeIntro = ({
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const infoButtonLabel = isInfoOpen ? infoOpenLabel : infoClosedLabel;
   const actionClassName =
-    "inline-flex items-center gap-2 rounded-full border border-white/55 bg-[linear-gradient(118deg,rgba(22,101,52,0.18)_0%,rgba(15,118,110,0.14)_46%,rgba(37,99,235,0.2)_100%)] px-4 py-2 text-sm font-medium text-foreground shadow-[0_12px_28px_rgba(148,163,184,0.2)] backdrop-blur-md transition-colors hover:brightness-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-[linear-gradient(118deg,rgba(22,101,52,0.24)_0%,rgba(15,118,110,0.22)_46%,rgba(37,99,235,0.28)_100%)] dark:shadow-[0_18px_34px_rgba(2,6,23,0.34)]";
+    "inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/55 bg-[linear-gradient(118deg,rgba(22,101,52,0.18)_0%,rgba(15,118,110,0.14)_46%,rgba(37,99,235,0.2)_100%)] px-4 py-2 text-sm font-medium text-foreground shadow-[0_12px_28px_rgba(148,163,184,0.2)] backdrop-blur-md transition-colors hover:brightness-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-[linear-gradient(118deg,rgba(22,101,52,0.24)_0%,rgba(15,118,110,0.22)_46%,rgba(37,99,235,0.28)_100%)] dark:shadow-[0_18px_34px_rgba(2,6,23,0.34)]";
 
   return (
     <section className="w-full" aria-labelledby="home-intro-title">
