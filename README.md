@@ -123,9 +123,16 @@ The backend exposes its spec at `http://localhost:3004/openapi.json`.
 
 Vercel deployment notes live in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
+## Contributor Docs
+
+- [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for local workflow, architecture, and contributor guardrails
+- [docs/TESTING.md](docs/TESTING.md) for behavior-first testing and verification expectations
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for production and Vercel setup
+- [AGENTS.md](AGENTS.md) for repo-specific AI and contributor workflow rules
+
 ## PWA
 
-The app is configured as a Progressive Web App using `@serwist/turbopack`, which is compatible with Next.js 16's default Turbopack bundler. The service worker is disabled in development and built automatically in production.
+The app includes Progressive Web App infrastructure using `@serwist/turbopack`, which is compatible with Next.js 16's default Turbopack bundler. The worker route, manifest, icons, and offline page exist in the repo, but production service-worker registration is currently held back until the caching strategy is tightened and verified.
 
 Current PWA support includes:
 
@@ -134,9 +141,20 @@ Current PWA support includes:
 - Route-served install icons under `src/app/icons/`
 - Dedicated favicon and Apple touch icon metadata
 
+### PWA Roadmap
+
+Issue:
+- The repo advertises PWA/offline assets, but the production app is not yet registering the service worker. That makes the current PWA story easy to misunderstand and easy to regress.
+
+Solution:
+- Re-enable production registration only after the final caching policy is agreed.
+- Verify install, offline fallback, update, and cache-invalidation behavior against a deployed production-like environment.
+- Once that verification is in place, promote the PWA section from roadmap language back to active production capability language.
+
 ## Conventions
 
 - **Arrow functions only** — Enforced via Biome (`useArrowFunction: error`)
 - **Finnish UI copy** — All user-facing text is in Finnish via `next-intl`
 - **Accessibility first** — Semantic HTML, ARIA labels, keyboard navigation, `prefers-reduced-motion` support
 - **Backend boundary is sacred** — No direct DB access; all data flows through the Hono API
+- **Security and sustainability are defaults** — Guard mutation routes, keep secrets server-only, allowlist external origins narrowly, and document cache or offline behavior changes in the same PR

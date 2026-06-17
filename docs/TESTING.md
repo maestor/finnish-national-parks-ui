@@ -204,6 +204,18 @@ vi.mock("@/hooks/use-auth", () => ({
 
 ---
 
+## Security And Sustainability Verification
+
+When a change touches security, resilience, or resource usage, add the cheapest test that can fail for the real reason:
+
+- **Auth, proxy, and admin boundaries** — Cover unauthenticated redirects, trusted-cookie handling, header rewriting, and the expected allow or deny behavior for mutation routes.
+- **Cache invalidation and public freshness** — Test that revalidation only happens through the intended trusted path and that the right tags or routes are refreshed.
+- **External origins and uploads** — Verify that remote asset and upload flows only use the documented allowlist or trusted target set, especially when changing image, map, or presigned-upload behavior.
+- **Secrets and client safety** — Prefer tests that prove server-only secrets stay server-only and that client code uses redirects, cookies, and public routes instead of raw privileged credentials.
+- **Offline and media-heavy features** — When changing service worker, caching, or image optimization behavior, add focused verification for the user-visible fallback and the expected network-saving path.
+
+---
+
 ## Anti-Patterns to Avoid
 
 - **Testing component methods** instead of user-visible behavior
@@ -224,3 +236,5 @@ npm run verify
 This runs: typecheck → lint → coverage-tested Vitest suite → build.
 
 If any step fails, fix before review. If environment limits block verification (e.g., backend not running), report the specific gap clearly.
+
+For security-sensitive or resource-sensitive changes, also report the focused checks you ran beyond the broad gate so future reviewers know the critical boundary was exercised on purpose.

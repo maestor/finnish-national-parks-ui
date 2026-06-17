@@ -98,6 +98,15 @@ This is the Finnish National Parks UI, a Next.js 16 App Router application consu
 - The API client is in `src/lib/api.ts` and uses Bearer auth.
 - Backend is assumed to be running at `http://localhost:3004`.
 
+## Security And Sustainability
+- Treat auth, proxying, cache invalidation, uploads, and service worker behavior as security-sensitive boundaries.
+- Any new non-`GET` route or cache revalidation endpoint must require explicit auth or a signed/shared-secret check. Do not add anonymous mutation endpoints.
+- Keep secrets server-only. Never expose `API_KEY`, JWT secrets, auth tokens, or presigned upload credentials in client code, logs, URLs, or browser storage.
+- Prefer DOM APIs or React nodes over `innerHTML` or `dangerouslySetInnerHTML`. If HTML injection is unavoidable, sanitize it and document the trust boundary.
+- External origins must be allowlisted narrowly. Do not widen image hosts, upload targets, map tiles, or remote embeds with wildcards without documenting the reason and verifying the behavior.
+- Prefer cacheable server reads, explicit cache tags, and optimized media over duplicate client fetches or unnecessary hydration. Document cache invalidation expectations when changing PWA, offline, or revalidation behavior.
+- New dependencies need an explicit purpose, a maintenance check, and a cheapest-existing-alternative check. After dependency changes, run `npm audit` and call out any accepted residual risk.
+
 ## Localization
 - Default locale is Finnish (`fi`) and all UI copy is in Finnish.
 - Translation keys live in `messages/fi.json`.
@@ -109,6 +118,8 @@ This is the Finnish National Parks UI, a Next.js 16 App Router application consu
 - For UI interactions, prefer `@testing-library/user-event` over `fireEvent` unless you need a lower-level browser event.
 - For Next.js App Router pages, prefer integration-style tests that render page modules through the real segment layout when practical.
 - When route metadata is part of the user-visible contract, cover `generateMetadata` in tests alongside route rendering.
+- Security-sensitive changes should add focused tests around auth redirects, proxy behavior, cache invalidation authorization, secret handling, and external-origin constraints.
+- Performance or resilience-sensitive changes should verify the affected cache, media, or offline behavior at the cheapest level that can fail honestly.
 - Coverage exclusions should stay limited to non-product noise such as tool config, generated files, test helpers, and framework-only entrypoints. Do not exclude real runtime app code just to improve the report.
 
 ## Environment Assumptions

@@ -13,6 +13,7 @@ export const revalidatePublicCache = async ({
 }: RevalidatePublicCacheOptions = {}): Promise<boolean> => {
   try {
     const response = await fetch("/api/revalidate-public-cache", {
+      credentials: "include",
       method: "POST",
       headers: {
         "Content-Type": "application/json",

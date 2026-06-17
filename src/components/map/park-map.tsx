@@ -42,6 +42,7 @@ const PARK_FOCUS_PADDING = {
 } as const;
 const LOCATION_FOCUS_DURATION = 900;
 const LOCATION_FOCUS_ZOOM = 9;
+const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 const LOCATION_REQUEST_OPTIONS = {
   // The map only needs a good-enough position to center nearby parks.
   // Asking for coarse/cached results avoids frequent timeout errors from
@@ -68,6 +69,66 @@ type UserLocationStatusMessageKey =
   | "locationPermissionDenied"
   | "locationTimeout"
   | "locationUnavailable";
+
+interface SvgPathDefinition {
+  d: string;
+}
+
+interface SvgIconOptions {
+  className: string;
+  fill?: string;
+  paths: SvgPathDefinition[];
+  stroke?: string;
+  strokeLinecap?: "round" | "butt" | "square";
+  strokeLinejoin?: "round" | "miter" | "bevel";
+  strokeWidth?: number;
+  viewBox?: string;
+}
+
+const createSvgIcon = ({
+  className,
+  fill = "none",
+  paths,
+  stroke,
+  strokeLinecap,
+  strokeLinejoin,
+  strokeWidth,
+  viewBox = "0 0 24 24",
+}: SvgIconOptions): SVGSVGElement => {
+  const svg = document.createElementNS(SVG_NAMESPACE, "svg");
+  svg.setAttribute("viewBox", viewBox);
+  svg.setAttribute("fill", fill);
+  svg.setAttribute("class", className);
+  svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("xmlns", SVG_NAMESPACE);
+
+  if (stroke) {
+    svg.setAttribute("stroke", stroke);
+  }
+  if (strokeWidth) {
+    svg.setAttribute("stroke-width", String(strokeWidth));
+  }
+  if (strokeLinecap) {
+    svg.setAttribute("stroke-linecap", strokeLinecap);
+  }
+  if (strokeLinejoin) {
+    svg.setAttribute("stroke-linejoin", strokeLinejoin);
+  }
+
+  for (const pathDefinition of paths) {
+    const path = document.createElementNS(SVG_NAMESPACE, "path");
+    path.setAttribute("d", pathDefinition.d);
+    svg.appendChild(path);
+  }
+
+  return svg;
+};
+
+const createTextSpan = (text: string): HTMLSpanElement => {
+  const span = document.createElement("span");
+  span.textContent = text;
+  return span;
+};
 
 const getBoundsForVisibleParks = (parks: MapPark[]): maplibregl.LngLatBoundsLike => {
   const combinedBounds = parks.reduce(
@@ -130,11 +191,17 @@ const createMarkerElement = (park: MapPark, colorOverride?: string) => {
 
   const color = colorOverride ?? getVisitStatusColor(park);
 
-  button.innerHTML = `
-    <svg viewBox="0 0 24 24" fill="${color}" class="h-6 w-6 drop-shadow-md transition-transform group-hover:scale-110" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-    </svg>
-  `;
+  button.appendChild(
+    createSvgIcon({
+      className: "h-6 w-6 drop-shadow-md transition-transform group-hover:scale-110",
+      fill: color,
+      paths: [
+        {
+          d: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z",
+        },
+      ],
+    }),
+  );
 
   return button;
 };
@@ -227,7 +294,17 @@ const createPopupNode = (
   header.className = "flex items-start gap-3";
 
   const pinIcon = document.createElement("span");
-  pinIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}" class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>`;
+  pinIcon.appendChild(
+    createSvgIcon({
+      className: "mt-0.5 h-4 w-4 shrink-0",
+      fill: color,
+      paths: [
+        {
+          d: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z",
+        },
+      ],
+    }),
+  );
 
   const title = document.createElement("h3");
   title.className = "text-sm leading-tight font-semibold";
@@ -243,7 +320,17 @@ const createPopupNode = (
   const typeRow = document.createElement("p");
   typeRow.className =
     "flex items-center gap-1.5 rounded-xl border border-sky-200/45 bg-[linear-gradient(145deg,rgba(255,255,255,0.84),rgba(237,245,249,0.92))] px-3 py-2 shadow-[0_10px_20px_rgba(148,163,184,0.1),inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-white/10 dark:bg-[linear-gradient(145deg,rgba(15,23,42,0.76),rgba(2,6,23,0.58))] dark:shadow-[0_14px_24px_rgba(2,6,23,0.22),inset_0_1px_0_rgba(255,255,255,0.06)]";
-  typeRow.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5 shrink-0" aria-hidden="true"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg><span>${displayTypeName}</span>`;
+  typeRow.appendChild(
+    createSvgIcon({
+      className: "h-3.5 w-3.5 shrink-0",
+      paths: [{ d: "m8 3 4 8 5-5 5 15H2L8 3z" }],
+      stroke: "currentColor",
+      strokeLinecap: "round",
+      strokeLinejoin: "round",
+      strokeWidth: 2,
+    }),
+  );
+  typeRow.appendChild(createTextSpan(displayTypeName));
   details.appendChild(typeRow);
 
   if (park.address) {
@@ -286,7 +373,21 @@ const createPopupNode = (
       officialLink.rel = "noopener noreferrer";
       officialLink.className =
         "inline-flex items-center gap-1 rounded-full border border-sky-200/70 bg-white/74 px-3 py-1.5 font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 dark:border-sky-300/15 dark:bg-slate-950/62 dark:hover:bg-slate-950/78";
-      officialLink.innerHTML = `${labels.officialLink}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>`;
+      officialLink.appendChild(document.createTextNode(labels.officialLink));
+      officialLink.appendChild(
+        createSvgIcon({
+          className: "h-3 w-3",
+          paths: [
+            { d: "M15 3h6v6" },
+            { d: "M10 14 21 3" },
+            { d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" },
+          ],
+          stroke: "currentColor",
+          strokeLinecap: "round",
+          strokeLinejoin: "round",
+          strokeWidth: 2,
+        }),
+      );
       officialLink.addEventListener("click", (e) => e.stopPropagation());
       linksRow.appendChild(officialLink);
     }
@@ -298,7 +399,22 @@ const createPopupNode = (
       pdfLink.rel = "noopener noreferrer";
       pdfLink.className =
         "inline-flex items-center gap-1 rounded-full border border-sky-200/70 bg-white/74 px-3 py-1.5 font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 dark:border-sky-300/15 dark:bg-slate-950/62 dark:hover:bg-slate-950/78";
-      pdfLink.innerHTML = `${labels.pdfBrochure}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/></svg>`;
+      pdfLink.appendChild(document.createTextNode(labels.pdfBrochure));
+      pdfLink.appendChild(
+        createSvgIcon({
+          className: "h-3 w-3",
+          paths: [
+            { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" },
+            { d: "M14 2v4a2 2 0 0 0 2 2h4" },
+            { d: "M12 18v-6" },
+            { d: "m9 15 3 3 3-3" },
+          ],
+          stroke: "currentColor",
+          strokeLinecap: "round",
+          strokeLinejoin: "round",
+          strokeWidth: 2,
+        }),
+      );
       pdfLink.addEventListener("click", (e) => e.stopPropagation());
       linksRow.appendChild(pdfLink);
     }
@@ -338,7 +454,17 @@ const createPopupNode = (
     addLink.href = `/control-panel/visits/new?park=${park.slug}`;
     addLink.className =
       "inline-flex items-center gap-1 rounded-full border border-emerald-200/70 bg-white/74 px-3 py-1.5 font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 dark:border-emerald-300/15 dark:bg-slate-950/62 dark:hover:bg-slate-950/78";
-    addLink.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3.5 w-3.5" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg><span>${labels.addVisit}</span>`;
+    addLink.appendChild(
+      createSvgIcon({
+        className: "h-3.5 w-3.5",
+        paths: [{ d: "M5 12h14" }, { d: "M12 5v14" }],
+        stroke: "currentColor",
+        strokeLinecap: "round",
+        strokeLinejoin: "round",
+        strokeWidth: 2,
+      }),
+    );
+    addLink.appendChild(createTextSpan(labels.addVisit));
     addLink.addEventListener("click", (e) => e.stopPropagation());
     actionRow.appendChild(addLink);
   }
