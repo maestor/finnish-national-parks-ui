@@ -6,7 +6,7 @@ const { createSerwistRouteMock } = vi.hoisted(() => ({
   })),
 }));
 
-vi.mock("@/lib/serwist/create-serwist-route", () => ({
+vi.mock("@serwist/turbopack", () => ({
   createSerwistRoute: createSerwistRouteMock,
 }));
 
@@ -15,15 +15,10 @@ describe("serwist route", () => {
     createSerwistRouteMock.mockClear();
   });
 
-  it("uses the local Serwist route helper with the repo Next config defaults", async () => {
+  it("uses the service worker source without forcing native esbuild", async () => {
     await import("./route");
 
     expect(createSerwistRouteMock).toHaveBeenCalledWith({
-      nextConfig: {
-        assetPrefix: "",
-        basePath: "/",
-        distDir: ".next",
-      },
       swSrc: "src/app/sw.ts",
       useNativeEsbuild: false,
     });
