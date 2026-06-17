@@ -83,6 +83,7 @@ vi.mock("@/components/providers/theme-provider", () => ({
 vi.mock("@/lib/env", () => ({
   siteEnv: {
     NEXT_PUBLIC_SITE_URL: "https://reissuvihko.example.com",
+    VERCEL_ENV: undefined,
     VERCEL_PROJECT_PRODUCTION_URL: undefined,
     VERCEL_URL: undefined,
   },
@@ -130,7 +131,7 @@ describe("RootLayout", () => {
     );
     expect(serwistProviderPropsMock).toHaveBeenCalledWith({
       swUrl: "/serwist/sw.js",
-      disable: false,
+      disable: true,
     });
     expect(themeProviderPropsMock).toHaveBeenCalledWith({
       attribute: "class",
@@ -217,6 +218,49 @@ describe("RootLayout", () => {
       });
     } finally {
       vi.unstubAllEnvs();
+    }
+  });
+
+  it("disables service worker registration on vercel preview deployments", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+
+    vi.doMock("@/lib/env", () => ({
+      siteEnv: {
+        NEXT_PUBLIC_SITE_URL: "https://reissuvihko.example.com",
+        VERCEL_ENV: "preview",
+        VERCEL_PROJECT_PRODUCTION_URL: undefined,
+        VERCEL_URL: undefined,
+      },
+    }));
+    vi.resetModules();
+
+    try {
+      const layoutModule = await import("./layout");
+      const previewLayout = (await layoutModule.default({
+        children: <div data-testid="page-content">page</div>,
+      })) as ReactElement<{
+        children: ReactElement<{
+          children: ReactNode;
+        }>;
+      }>;
+
+      render(previewLayout.props.children.props.children);
+
+      expect(serwistProviderPropsMock).toHaveBeenCalledWith({
+        swUrl: "/serwist/sw.js",
+        disable: true,
+      });
+    } finally {
+      vi.unstubAllEnvs();
+      vi.resetModules();
+      vi.doMock("@/lib/env", () => ({
+        siteEnv: {
+          NEXT_PUBLIC_SITE_URL: "https://reissuvihko.example.com",
+          VERCEL_ENV: undefined,
+          VERCEL_PROJECT_PRODUCTION_URL: undefined,
+          VERCEL_URL: undefined,
+        },
+      }));
     }
   });
 });
