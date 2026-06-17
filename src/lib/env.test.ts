@@ -19,13 +19,11 @@ describe("env", () => {
         NEXT_PUBLIC_SITE_URL: "https://reissuvihko.example.com",
         API_KEY: "test-api-key",
         NEXT_PUBLIC_MAP_STYLE_URL: undefined,
-        VERCEL_ENV: undefined,
         VERCEL_PROJECT_PRODUCTION_URL: undefined,
         VERCEL_URL: undefined,
       },
       siteEnv: {
         NEXT_PUBLIC_SITE_URL: "https://reissuvihko.example.com",
-        VERCEL_ENV: undefined,
         VERCEL_PROJECT_PRODUCTION_URL: undefined,
         VERCEL_URL: undefined,
       },
@@ -51,15 +49,6 @@ describe("env", () => {
 
     expect(env.NEXT_PUBLIC_SITE_URL).toBe("reissuvihko.example.com");
     expect(env.AUTH_COOKIE_NAME).toBe("__session");
-  });
-
-  it("accepts vercel preview environment when site metadata is read", async () => {
-    process.env.NEXT_PUBLIC_SITE_URL = "https://reissuvihko.example.com";
-    process.env.VERCEL_ENV = "preview";
-
-    const { siteEnv } = await importEnvModule();
-
-    expect(siteEnv.VERCEL_ENV).toBe("preview");
   });
 
   it("throws when required environment variables are invalid", async () => {
