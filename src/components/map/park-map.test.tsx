@@ -25,7 +25,7 @@ const parks: FilterableMapPark[] = [
       updatedAt: "2024-01-01T00:00:00Z",
       url: "https://example.com/pallas-logo.png",
     },
-    luontoonUrl: "https://example.com/pallas",
+    parkUrl: "https://example.com/pallas",
     map: {
       key: "pallas-map.pdf",
       updatedAt: "2024-01-01T00:00:00Z",
@@ -48,7 +48,7 @@ const parks: FilterableMapPark[] = [
     areaKm2: 10,
     address: "Hettantie 1, 99400 Enontekiö",
     logo: null,
-    luontoonUrl: null,
+    parkUrl: null,
     map: null,
     category: { name: "Muut LS-alueet", slug: "nature-reserve-area" },
     establishmentYear: null,

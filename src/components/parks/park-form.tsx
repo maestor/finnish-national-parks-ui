@@ -18,7 +18,7 @@ interface ParkFormState {
   displayTypeName: string;
   establishmentYear: string;
   locationLabel: string;
-  luontoonUrl: string;
+  parkUrl: string;
   name: string;
   postalCode: string;
   postalOffice: string;
@@ -33,7 +33,7 @@ const createInitialState = (park: ParkDetail): ParkFormState => ({
   displayTypeName: park.displayTypeName ?? "",
   establishmentYear: park.establishmentYear === null ? "" : String(park.establishmentYear),
   locationLabel: park.locationLabel,
-  luontoonUrl: park.luontoonUrl ?? "",
+  parkUrl: park.parkUrl ?? "",
   name: park.name,
   postalCode: park.postalCode ?? "",
   postalOffice: park.postalOffice ?? "",
@@ -135,8 +135,8 @@ export const ParkForm = ({ park }: ParkFormProps) => {
     if (formState.displayTypeName !== initialState.displayTypeName) {
       payload.displayTypeName = trimToNull(formState.displayTypeName);
     }
-    if (formState.luontoonUrl !== initialState.luontoonUrl) {
-      payload.luontoonUrl = trimToNull(formState.luontoonUrl);
+    if (formState.parkUrl !== initialState.parkUrl) {
+      payload.parkUrl = trimToNull(formState.parkUrl);
     }
     if (formState.postalOffice !== initialState.postalOffice) {
       payload.postalOffice = trimToNull(formState.postalOffice);
@@ -221,12 +221,12 @@ export const ParkForm = ({ park }: ParkFormProps) => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="park-luontoon-url">{t("luontoonUrlLabel")}</Label>
+          <Label htmlFor="park-url">{t("parkUrlLabel")}</Label>
           <input
-            id="park-luontoon-url"
+            id="park-url"
             type="url"
-            value={formState.luontoonUrl}
-            onChange={(event) => setFieldValue("luontoonUrl", event.target.value)}
+            value={formState.parkUrl}
+            onChange={(event) => setFieldValue("parkUrl", event.target.value)}
             className={`${INPUT_CLASS_NAME} h-10`}
             placeholder="https://"
           />

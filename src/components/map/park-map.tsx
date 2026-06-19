@@ -362,13 +362,13 @@ const createPopupNode = (
     details.appendChild(metaRow);
   }
 
-  if (park.luontoonUrl || park.map?.url) {
+  if (park.parkUrl || park.map?.url) {
     const linksRow = document.createElement("div");
     linksRow.className = "flex flex-wrap items-center justify-between gap-2";
 
-    if (park.luontoonUrl) {
+    if (park.parkUrl) {
       const officialLink = document.createElement("a");
-      officialLink.href = park.luontoonUrl;
+      officialLink.href = park.parkUrl;
       officialLink.target = "_blank";
       officialLink.rel = "noopener noreferrer";
       officialLink.className =

@@ -33,7 +33,7 @@ const park = {
   displayTypeName: "Maailmanperintökohde",
   locationLabel: "Pallasjärventie 14",
   logo: null,
-  luontoonUrl: "https://example.com/pallas",
+  parkUrl: "https://example.com/pallas",
   map: null,
   establishmentYear: 1938,
   boundingBox: { minLat: 67, minLon: 23, maxLat: 68, maxLon: 25 },
@@ -127,7 +127,7 @@ describe("ParkForm", () => {
     vi.mocked(apiFetch).mockResolvedValueOnce({
       ...park,
       displayTypeName: null,
-      luontoonUrl: null,
+      parkUrl: null,
       areaKm2: null,
       establishmentYear: null,
       postalOffice: null,
@@ -138,7 +138,7 @@ describe("ParkForm", () => {
     await user.clear(
       screen.getByLabelText(/controlPanel\.parks\.edit\.form\.displayTypeNameLabel/),
     );
-    await user.clear(screen.getByLabelText(/controlPanel\.parks\.edit\.form\.luontoonUrlLabel/));
+    await user.clear(screen.getByLabelText(/controlPanel\.parks\.edit\.form\.parkUrlLabel/));
     await user.clear(screen.getByLabelText(/controlPanel\.parks\.edit\.form\.areaLabel/));
     await user.clear(screen.getByLabelText(/controlPanel\.parks\.edit\.form\.establishedLabel/));
     await user.clear(screen.getByLabelText(/controlPanel\.parks\.edit\.form\.postalOfficeLabel/));
@@ -164,7 +164,7 @@ describe("ParkForm", () => {
       areaKm2: null,
       displayTypeName: null,
       establishmentYear: null,
-      luontoonUrl: null,
+      parkUrl: null,
       postalCode: "48100",
       postalOffice: null,
     });

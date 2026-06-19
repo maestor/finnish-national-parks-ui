@@ -305,7 +305,7 @@ export interface paths {
                                     /** Format: uri */
                                     url: string;
                                 } | null;
-                                luontoonUrl: string | null;
+                                parkUrl: string | null;
                                 map: {
                                     key: string;
                                     /** Format: date-time */
@@ -573,7 +573,7 @@ export interface paths {
                                 /** Format: uri */
                                 url: string;
                             } | null;
-                            luontoonUrl: string | null;
+                            parkUrl: string | null;
                             map: {
                                 key: string;
                                 /** Format: date-time */
@@ -665,7 +665,7 @@ export interface paths {
                         displayTypeName?: string | null;
                         establishmentYear?: number | null;
                         locationLabel?: string;
-                        luontoonUrl?: string | null;
+                        parkUrl?: string | null;
                         name?: string;
                         postalCode?: string | null;
                         postalOffice?: string | null;
@@ -704,7 +704,7 @@ export interface paths {
                                 /** Format: uri */
                                 url: string;
                             } | null;
-                            luontoonUrl: string | null;
+                            parkUrl: string | null;
                             map: {
                                 key: string;
                                 /** Format: date-time */
@@ -1142,7 +1142,7 @@ export interface paths {
                                     /** Format: uri */
                                     url: string;
                                 } | null;
-                                luontoonUrl: string | null;
+                                parkUrl: string | null;
                                 map: {
                                     key: string;
                                     /** Format: date-time */
