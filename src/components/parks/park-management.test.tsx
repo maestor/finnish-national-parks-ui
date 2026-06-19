@@ -18,7 +18,7 @@ const basePark = {
   areaKm2: 1020,
   locationLabel: "Pallasjärventie 14",
   logo: null,
-  luontoonUrl: null,
+  parkUrl: null,
   map: null,
   category: { name: "Kansallispuistot", slug: "national-park" as const },
   establishmentYear: 1938,

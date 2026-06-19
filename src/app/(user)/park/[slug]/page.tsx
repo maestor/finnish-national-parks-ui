@@ -158,13 +158,13 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
                 <p className="mt-3 text-sm font-medium">{fact.value}</p>
               </div>
             ))}
-            {(publicPark.luontoonUrl || publicPark.map?.url) && (
+            {(publicPark.parkUrl || publicPark.map?.url) && (
               <div className="flex h-full min-h-[5.75rem] flex-col rounded-2xl border border-sky-200/45 bg-[linear-gradient(145deg,rgba(255,255,255,0.82),rgba(237,245,249,0.92))] px-4 py-3 shadow-[0_14px_28px_rgba(148,163,184,0.12),inset_0_1px_0_rgba(255,255,255,0.58)] dark:border-white/8 dark:bg-[linear-gradient(145deg,rgba(15,23,42,0.72),rgba(2,6,23,0.52))] dark:shadow-[0_18px_34px_rgba(2,6,23,0.2),inset_0_1px_0_rgba(255,255,255,0.06)]">
                 <p className="text-xs text-muted-foreground">{t("aboutTitle")}</p>
                 <div className="mt-2 flex flex-col gap-1">
-                  {publicPark.luontoonUrl && (
+                  {publicPark.parkUrl && (
                     <a
-                      href={publicPark.luontoonUrl}
+                      href={publicPark.parkUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 text-sm font-medium text-primary transition-colors hover:text-primary/80"

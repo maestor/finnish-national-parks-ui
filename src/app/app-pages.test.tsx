@@ -289,7 +289,7 @@ const publicPark = {
   displayTypeName: "Maailmanperintökohde",
   locationLabel: "Pallasjärventie 14",
   logo: null,
-  luontoonUrl: "https://example.com/pallas",
+  parkUrl: "https://example.com/pallas",
   map: null,
   establishmentYear: 1938,
   boundingBox: { minLat: 67, minLon: 23, maxLat: 68, maxLon: 25 },

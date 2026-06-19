@@ -197,7 +197,7 @@
           "locationLabel": "Osoite",
           "displayTypeNameLabel": "Näytettävä tyyppinimi",
           "displayTypeNamePlaceholder": "Jätä tyhjäksi käyttääksesi oletustyyppiä",
-          "luontoonUrlLabel": "Osoite lisätietoihin",
+          "parkUrlLabel": "URL-osoite lisätietoihin",
           "areaLabel": "Pinta-ala (km²)",
           "establishedLabel": "Perustamisvuosi",
           "postalCodeLabel": "Postinumero",
