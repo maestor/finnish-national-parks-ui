@@ -1,4 +1,5 @@
 import { PublicVisitsTimeline } from "@/components/visits/public-visits-timeline";
+import { buildPageMetadata } from "@/lib/page-metadata";
 import type { VisitWithPark } from "@/lib/parks";
 import { fetchPublicVisits, resolvePublicVisitsFilters } from "@/lib/public-visits";
 import { getTranslations } from "next-intl/server";
@@ -11,11 +12,12 @@ interface PublicVisitsPageProps {
 }
 
 export const generateMetadata = async () => {
-  const t = await getTranslations("visits");
+  const [t, metadataT] = await Promise.all([
+    getTranslations("visits"),
+    getTranslations("metadata"),
+  ]);
 
-  return {
-    title: t("title"),
-  };
+  return buildPageMetadata(t("title"), metadataT("title"));
 };
 
 const PublicVisitsPage = async ({ searchParams }: PublicVisitsPageProps) => {

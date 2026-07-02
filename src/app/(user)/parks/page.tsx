@@ -1,14 +1,13 @@
 import { ParkExplorer } from "@/components/map/park-explorer";
+import { buildPageMetadata } from "@/lib/page-metadata";
 import { type PublicMapSummary, fetchPublicMapSummary } from "@/lib/public-summaries";
 import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 
 export const generateMetadata = async () => {
-  const t = await getTranslations("home");
-  return {
-    title: t("mapTitle"),
-  };
+  const [t, metadataT] = await Promise.all([getTranslations("home"), getTranslations("metadata")]);
+  return buildPageMetadata(t("mapTitle"), metadataT("title"));
 };
 
 const ParksMapPage = async () => {

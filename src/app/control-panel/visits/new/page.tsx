@@ -1,13 +1,15 @@
 import { VisitForm } from "@/components/visits/visit-form";
 import { apiFetch } from "@/lib/api";
+import { buildPageMetadata } from "@/lib/page-metadata";
 import type { Park } from "@/lib/parks";
 import { getTranslations } from "next-intl/server";
 
 export const generateMetadata = async () => {
-  const t = await getTranslations("controlPanel");
-  return {
-    title: t("visits.newVisit.title"),
-  };
+  const [t, metadataT] = await Promise.all([
+    getTranslations("controlPanel"),
+    getTranslations("metadata"),
+  ]);
+  return buildPageMetadata(t("visits.newVisit.title"), metadataT("title"));
 };
 
 interface NewVisitPageProps {

@@ -2,6 +2,7 @@ import { ParkBoundaryMap } from "@/components/map/park-boundary-map";
 import { ParkAdminControlsProvider, ParkAdminSection } from "@/components/park/park-admin-controls";
 import { ParkVisitHistory } from "@/components/park/park-visit-history";
 import { apiAuthFetch } from "@/lib/api";
+import { buildPageMetadata } from "@/lib/page-metadata";
 import { type ParkDetail, type ParkVisits, getParkTypeDisplayName } from "@/lib/parks";
 import { fetchPublicParkDetail, fetchPublicParkVisits } from "@/lib/public-summaries";
 import { ExternalLink, FileDown, MapPin } from "lucide-react";
@@ -25,8 +26,6 @@ const buildParkDetailPath = (slug: string, includeBoundary: boolean) =>
   `/api/parks/${slug}${includeBoundary ? "?includeBoundary=true" : ""}`;
 
 const formatParkMetadataTitle = (slug: string) => slug.replace(/-/g, " ");
-
-const buildShareTitle = (pageTitle: string, siteTitle: string) => `${pageTitle} | ${siteTitle}`;
 
 const fetchParkDetailForRequest = async (
   slug: string,
@@ -78,21 +77,11 @@ export const generateMetadata = async ({ params }: ParkDetailPageProps) => {
   const parkTitle = await fetchParkDetailForRequest(slug)
     .then((result) => result.park.name)
     .catch(() => formatParkMetadataTitle(slug));
-  const shareTitle = buildShareTitle(parkTitle, t("title"));
   const shareDescription = t("parkDescription", { park: parkTitle });
 
-  return {
-    title: parkTitle,
+  return buildPageMetadata(parkTitle, t("title"), {
     description: shareDescription,
-    openGraph: {
-      title: shareTitle,
-      description: shareDescription,
-    },
-    twitter: {
-      title: shareTitle,
-      description: shareDescription,
-    },
-  };
+  });
 };
 
 const normalizeVisitSearchParam = (value?: string | string[]) => {

@@ -1,13 +1,15 @@
 import { PostLoginReturnRedirector } from "@/components/auth/post-login-return-redirector";
+import { buildPageMetadata } from "@/lib/page-metadata";
 import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 
 export const generateMetadata = async () => {
-  const t = await getTranslations("controlPanel");
-  return {
-    title: t("title"),
-  };
+  const [t, metadataT] = await Promise.all([
+    getTranslations("controlPanel"),
+    getTranslations("metadata"),
+  ]);
+  return buildPageMetadata(t("title"), metadataT("title"));
 };
 
 const ControlPanelPage = async () => {
