@@ -24,6 +24,10 @@ const hasStatusCode = (error: unknown, statuses: number[]): error is Error & { s
 const buildParkDetailPath = (slug: string, includeBoundary: boolean) =>
   `/api/parks/${slug}${includeBoundary ? "?includeBoundary=true" : ""}`;
 
+const formatParkMetadataTitle = (slug: string) => slug.replace(/-/g, " ");
+
+const buildShareTitle = (pageTitle: string, siteTitle: string) => `${pageTitle} | ${siteTitle}`;
+
 const fetchParkDetailForRequest = async (
   slug: string,
   options?: {
@@ -70,13 +74,24 @@ const fetchParkVisitsForRequest = async (
 };
 
 export const generateMetadata = async ({ params }: ParkDetailPageProps) => {
-  const { slug } = await params;
-  const park = await fetchParkDetailForRequest(slug)
-    .then((result) => result.park)
-    .catch(() => null);
+  const [{ slug }, t] = await Promise.all([params, getTranslations("metadata")]);
+  const parkTitle = await fetchParkDetailForRequest(slug)
+    .then((result) => result.park.name)
+    .catch(() => formatParkMetadataTitle(slug));
+  const shareTitle = buildShareTitle(parkTitle, t("title"));
+  const shareDescription = t("parkDescription", { park: parkTitle });
 
   return {
-    title: park?.name ?? slug.replace(/-/g, " "),
+    title: parkTitle,
+    description: shareDescription,
+    openGraph: {
+      title: shareTitle,
+      description: shareDescription,
+    },
+    twitter: {
+      title: shareTitle,
+      description: shareDescription,
+    },
   };
 };
 

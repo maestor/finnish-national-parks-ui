@@ -46,7 +46,13 @@ vi.mock("@/lib/api", () => ({
 
 vi.mock("next-intl/server", () => ({
   getTranslations: vi.fn(async (namespace?: string) => {
-    return (key: string) => (namespace ? `${namespace}.${key}` : key);
+    return (key: string, values?: Record<string, string>) => {
+      if (namespace === "metadata" && key === "parkDescription" && values?.park) {
+        return `Tarkastele paikan ${values.park} tietoja ja vierailuja Reissuvihkossa.`;
+      }
+
+      return namespace ? `${namespace}.${key}` : key;
+    };
   }),
 }));
 
@@ -694,7 +700,7 @@ describe("App pages", () => {
     });
   });
 
-  it("builds park detail metadata from the fetched park name and falls back to the slug", async () => {
+  it("builds park detail metadata, titles, and descriptions from the fetched park name and falls back to the slug", async () => {
     vi.mocked(apiFetch)
       .mockResolvedValueOnce({ name: "Pallas-Yllästunturi" })
       .mockRejectedValueOnce(new Error("missing"));
@@ -703,12 +709,33 @@ describe("App pages", () => {
       generateParkDetailMetadata({ params: Promise.resolve({ slug: "pallas-yllastunturi" }) }),
     ).resolves.toEqual({
       title: "Pallas-Yllästunturi",
+      description: "Tarkastele paikan Pallas-Yllästunturi tietoja ja vierailuja Reissuvihkossa.",
+      openGraph: {
+        title: "Pallas-Yllästunturi | metadata.title",
+        description: "Tarkastele paikan Pallas-Yllästunturi tietoja ja vierailuja Reissuvihkossa.",
+      },
+      twitter: {
+        title: "Pallas-Yllästunturi | metadata.title",
+        description: "Tarkastele paikan Pallas-Yllästunturi tietoja ja vierailuja Reissuvihkossa.",
+      },
     });
 
     await expect(
       generateParkDetailMetadata({ params: Promise.resolve({ slug: "repovesi-kansallispuisto" }) }),
     ).resolves.toEqual({
       title: "repovesi kansallispuisto",
+      description:
+        "Tarkastele paikan repovesi kansallispuisto tietoja ja vierailuja Reissuvihkossa.",
+      openGraph: {
+        title: "repovesi kansallispuisto | metadata.title",
+        description:
+          "Tarkastele paikan repovesi kansallispuisto tietoja ja vierailuja Reissuvihkossa.",
+      },
+      twitter: {
+        title: "repovesi kansallispuisto | metadata.title",
+        description:
+          "Tarkastele paikan repovesi kansallispuisto tietoja ja vierailuja Reissuvihkossa.",
+      },
     });
   });
 
