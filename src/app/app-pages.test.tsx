@@ -46,7 +46,13 @@ vi.mock("@/lib/api", () => ({
 
 vi.mock("next-intl/server", () => ({
   getTranslations: vi.fn(async (namespace?: string) => {
-    return (key: string) => (namespace ? `${namespace}.${key}` : key);
+    return (key: string, values?: Record<string, string>) => {
+      if (namespace === "metadata" && key === "parkDescription" && values?.park) {
+        return `Tarkastele paikan ${values.park} tietoja ja vierailuja Reissuvihkossa.`;
+      }
+
+      return namespace ? `${namespace}.${key}` : key;
+    };
   }),
 }));
 
@@ -353,6 +359,24 @@ const renderControlPanelRoute = async (page: React.ReactNode) => {
   return render(await ControlPanelLayout({ children: page }));
 };
 
+const createExpectedShareMetadata = (
+  pageTitle: string,
+  options?: {
+    description?: string;
+  },
+) => ({
+  title: pageTitle,
+  ...(options?.description ? { description: options.description } : {}),
+  openGraph: {
+    title: `${pageTitle} | metadata.title`,
+    ...(options?.description ? { description: options.description } : {}),
+  },
+  twitter: {
+    title: `${pageTitle} | metadata.title`,
+    ...(options?.description ? { description: options.description } : {}),
+  },
+});
+
 describe("App pages", () => {
   beforeEach(() => {
     vi.mocked(apiAuthFetch).mockReset();
@@ -465,9 +489,9 @@ describe("App pages", () => {
   });
 
   it("builds translated metadata for the parks map page", async () => {
-    await expect(generateParksMapMetadata()).resolves.toEqual({
-      title: "home.mapTitle",
-    });
+    await expect(generateParksMapMetadata()).resolves.toEqual(
+      createExpectedShareMetadata("home.mapTitle"),
+    );
   });
 
   it("keeps public page modules free of nested main landmarks", async () => {
@@ -689,27 +713,32 @@ describe("App pages", () => {
   });
 
   it("builds translated metadata for the public visits page", async () => {
-    await expect(generatePublicVisitsMetadata()).resolves.toEqual({
-      title: "visits.title",
-    });
+    await expect(generatePublicVisitsMetadata()).resolves.toEqual(
+      createExpectedShareMetadata("visits.title"),
+    );
   });
 
-  it("builds park detail metadata from the fetched park name and falls back to the slug", async () => {
+  it("builds park detail metadata, titles, and descriptions from the fetched park name and falls back to the slug", async () => {
     vi.mocked(apiFetch)
       .mockResolvedValueOnce({ name: "Pallas-Yllästunturi" })
       .mockRejectedValueOnce(new Error("missing"));
 
     await expect(
       generateParkDetailMetadata({ params: Promise.resolve({ slug: "pallas-yllastunturi" }) }),
-    ).resolves.toEqual({
-      title: "Pallas-Yllästunturi",
-    });
+    ).resolves.toEqual(
+      createExpectedShareMetadata("Pallas-Yllästunturi", {
+        description: "Tarkastele paikan Pallas-Yllästunturi tietoja ja vierailuja Reissuvihkossa.",
+      }),
+    );
 
     await expect(
       generateParkDetailMetadata({ params: Promise.resolve({ slug: "repovesi-kansallispuisto" }) }),
-    ).resolves.toEqual({
-      title: "repovesi kansallispuisto",
-    });
+    ).resolves.toEqual(
+      createExpectedShareMetadata("repovesi kansallispuisto", {
+        description:
+          "Tarkastele paikan repovesi kansallispuisto tietoja ja vierailuja Reissuvihkossa.",
+      }),
+    );
   });
 
   it("renders the control panel overview page", async () => {
@@ -735,9 +764,9 @@ describe("App pages", () => {
   });
 
   it("builds metadata for the control panel dashboard", async () => {
-    await expect(generateControlPanelMetadata()).resolves.toEqual({
-      title: "controlPanel.title",
-    });
+    await expect(generateControlPanelMetadata()).resolves.toEqual(
+      createExpectedShareMetadata("controlPanel.title"),
+    );
   });
 
   it("renders the parks list page", async () => {
@@ -759,9 +788,9 @@ describe("App pages", () => {
   });
 
   it("builds metadata for the parks list page", async () => {
-    await expect(generateParksMetadata()).resolves.toEqual({
-      title: "controlPanel.parks.title",
-    });
+    await expect(generateParksMetadata()).resolves.toEqual(
+      createExpectedShareMetadata("controlPanel.parks.title"),
+    );
   });
 
   it("renders the park edit page with navigation helpers", async () => {
@@ -790,9 +819,9 @@ describe("App pages", () => {
   });
 
   it("builds metadata for the park edit page", async () => {
-    await expect(generateEditParkMetadata()).resolves.toEqual({
-      title: "controlPanel.parks.edit.title",
-    });
+    await expect(generateEditParkMetadata()).resolves.toEqual(
+      createExpectedShareMetadata("controlPanel.parks.edit.title"),
+    );
   });
 
   it("renders the visits list page", async () => {
@@ -810,9 +839,9 @@ describe("App pages", () => {
   });
 
   it("builds metadata for the visits list page", async () => {
-    await expect(generateVisitsMetadata()).resolves.toEqual({
-      title: "controlPanel.visits.title",
-    });
+    await expect(generateVisitsMetadata()).resolves.toEqual(
+      createExpectedShareMetadata("controlPanel.visits.title"),
+    );
   });
 
   it("renders the new visit page with the selected park preset", async () => {
@@ -831,9 +860,9 @@ describe("App pages", () => {
   });
 
   it("builds metadata for the new visit page", async () => {
-    await expect(generateNewVisitMetadata()).resolves.toEqual({
-      title: "controlPanel.visits.newVisit.title",
-    });
+    await expect(generateNewVisitMetadata()).resolves.toEqual(
+      createExpectedShareMetadata("controlPanel.visits.newVisit.title"),
+    );
   });
 
   it("renders the edit visit page with the created notice and edit helpers", async () => {
@@ -860,9 +889,9 @@ describe("App pages", () => {
   });
 
   it("builds metadata for the edit visit page", async () => {
-    await expect(generateEditVisitMetadata()).resolves.toEqual({
-      title: "controlPanel.visits.editVisit.title",
-    });
+    await expect(generateEditVisitMetadata()).resolves.toEqual(
+      createExpectedShareMetadata("controlPanel.visits.editVisit.title"),
+    );
   });
 
   it("calls notFound when the edit visit page cannot find the requested visit", async () => {

@@ -1,7 +1,8 @@
 {
   "metadata": {
     "title": "Reissuvihko",
-    "description": "Reissuvihko kokoaa tekijöidensä käynnit Suomen retkeilypaikoissa, tarinat kuvineen muistoina retkistä sekä etenemisen samoihin kuoriin."
+    "description": "Reissuvihko kokoaa tekijöidensä käynnit Suomen retkeilypaikoissa, tarinat kuvineen muistoina retkistä sekä etenemisen samoihin kuoriin.",
+    "parkDescription": "Tarkastele paikan {park} tietoja ja vierailuja Reissuvihkossa."
   },
   "layout": {
     "siteTitle": "Reissuvihko",

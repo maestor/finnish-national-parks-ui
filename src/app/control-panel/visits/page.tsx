@@ -1,5 +1,6 @@
 import { VisitList } from "@/components/visits/visit-list";
 import { apiFetch } from "@/lib/api";
+import { buildPageMetadata } from "@/lib/page-metadata";
 import type { VisitWithPark } from "@/lib/parks";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
@@ -7,10 +8,11 @@ import Link from "next/link";
 export const dynamic = "force-dynamic";
 
 export const generateMetadata = async () => {
-  const t = await getTranslations("controlPanel");
-  return {
-    title: t("visits.title"),
-  };
+  const [t, metadataT] = await Promise.all([
+    getTranslations("controlPanel"),
+    getTranslations("metadata"),
+  ]);
+  return buildPageMetadata(t("visits.title"), metadataT("title"));
 };
 
 const VisitsPage = async () => {

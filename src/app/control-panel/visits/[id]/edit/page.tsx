@@ -1,6 +1,7 @@
 import { VisitForm } from "@/components/visits/visit-form";
 import { VisitImageSection } from "@/components/visits/visit-image-section";
 import { apiFetch } from "@/lib/api";
+import { buildPageMetadata } from "@/lib/page-metadata";
 import type { Park, VisitWithPark } from "@/lib/parks";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
@@ -14,10 +15,11 @@ interface EditVisitPageProps {
 }
 
 export const generateMetadata = async () => {
-  const t = await getTranslations("controlPanel");
-  return {
-    title: t("visits.editVisit.title"),
-  };
+  const [t, metadataT] = await Promise.all([
+    getTranslations("controlPanel"),
+    getTranslations("metadata"),
+  ]);
+  return buildPageMetadata(t("visits.editVisit.title"), metadataT("title"));
 };
 
 const EditVisitPage = async ({ params, searchParams }: EditVisitPageProps) => {

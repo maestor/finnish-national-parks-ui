@@ -1,5 +1,6 @@
 import { ParkForm } from "@/components/parks/park-form";
 import { apiFetch } from "@/lib/api";
+import { buildPageMetadata } from "@/lib/page-metadata";
 import type { ParkDetail } from "@/lib/parks";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
@@ -13,10 +14,11 @@ interface EditParkPageProps {
 }
 
 export const generateMetadata = async () => {
-  const t = await getTranslations("controlPanel.parks.edit");
-  return {
-    title: t("title"),
-  };
+  const [t, metadataT] = await Promise.all([
+    getTranslations("controlPanel.parks.edit"),
+    getTranslations("metadata"),
+  ]);
+  return buildPageMetadata(t("title"), metadataT("title"));
 };
 
 const EditParkPage = async ({ params, searchParams }: EditParkPageProps) => {
