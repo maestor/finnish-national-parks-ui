@@ -770,14 +770,14 @@ describe("App pages", () => {
   });
 
   it("renders the parks list page", async () => {
-    vi.mocked(apiFetch).mockResolvedValueOnce({
+    vi.mocked(apiAuthFetch).mockResolvedValueOnce({
       visibleParks: [adminVisibilityPark],
       removedParks: [],
     });
 
     await renderControlPanelRoute(await ParksPage());
 
-    expect(apiFetch).toHaveBeenNthCalledWith(1, "/api/admin/parks/visibility", {
+    expect(apiAuthFetch).toHaveBeenNthCalledWith(1, "/api/admin/parks/visibility", {
       cache: "force-cache",
       next: {
         tags: ["admin-park-visibility"],
@@ -794,7 +794,7 @@ describe("App pages", () => {
   });
 
   it("renders the park edit page with navigation helpers", async () => {
-    vi.mocked(apiFetch).mockResolvedValueOnce(publicPark);
+    vi.mocked(apiAuthFetch).mockResolvedValueOnce(publicPark);
 
     await renderControlPanelRoute(
       await EditParkPage({
@@ -813,6 +813,7 @@ describe("App pages", () => {
       screen.getByRole("link", { name: "controlPanel.parks.edit.viewParkPage" }),
     ).toHaveAttribute("href", "/park/pallas");
     expect(screen.getByText("controlPanel.parks.edit.updatedNotice")).toBeInTheDocument();
+    expect(apiAuthFetch).toHaveBeenNthCalledWith(1, "/api/parks/pallas");
     expect(screen.getByTestId("park-form")).toHaveTextContent(
       "slug:pallas|name:Pallas-Yllästunturi",
     );

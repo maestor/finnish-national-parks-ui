@@ -1,5 +1,5 @@
 import { ParkForm } from "@/components/parks/park-form";
-import { apiFetch } from "@/lib/api";
+import { apiAuthFetch } from "@/lib/api";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import type { ParkDetail } from "@/lib/parks";
 import { getTranslations } from "next-intl/server";
@@ -25,7 +25,7 @@ const EditParkPage = async ({ params, searchParams }: EditParkPageProps) => {
   const t = await getTranslations("controlPanel.parks.edit");
   const { slug } = await params;
   const { updated } = await searchParams;
-  const park = await apiFetch<ParkDetail>(`/api/parks/${slug}`).catch(() => null);
+  const park = await apiAuthFetch<ParkDetail>(`/api/parks/${slug}`).catch(() => null);
 
   if (park === null) {
     notFound();
