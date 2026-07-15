@@ -11,6 +11,7 @@ import {
   LogOut,
   MapPin,
   Menu,
+  Route,
   Settings,
   SlidersHorizontal,
   X,
@@ -171,6 +172,11 @@ export const Header = () => {
         label: t("nav.visits"),
         isCurrent: isPublicVisitsPage,
       },
+      {
+        href: "/trip-planner",
+        label: t("nav.tripPlanner"),
+        isCurrent: pathname === "/trip-planner",
+      },
       ...(auth.isAuthenticated
         ? [
             {
@@ -248,6 +254,14 @@ export const Header = () => {
                   >
                     <Footprints className="h-4 w-4 shrink-0" aria-hidden="true" />
                     <span>{t("nav.visits")}</span>
+                  </Link>
+                  <Link
+                    href="/trip-planner"
+                    className={MOBILE_SHEET_ITEM_CLASS}
+                    onClick={closeMobileMenu}
+                  >
+                    <Route className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    <span>{t("nav.tripPlanner")}</span>
                   </Link>
                   {auth.isAuthenticated && (
                     <Link

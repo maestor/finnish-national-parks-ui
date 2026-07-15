@@ -179,6 +179,10 @@ describe("Header", () => {
       "href",
       "/visits",
     );
+    expect(screen.getByRole("link", { name: "layout.nav.tripPlanner" })).toHaveAttribute(
+      "href",
+      "/trip-planner",
+    );
   });
 
   it("marks the visits page link as current on the public visits route", () => {
@@ -187,6 +191,17 @@ describe("Header", () => {
     render(<Header />);
 
     expect(screen.getByRole("link", { name: "layout.nav.visits" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+  });
+
+  it("marks the trip planner link as current on the trip planner route", () => {
+    pathnameState.value = "/trip-planner";
+
+    render(<Header />);
+
+    expect(screen.getByRole("link", { name: "layout.nav.tripPlanner" })).toHaveAttribute(
       "aria-current",
       "page",
     );

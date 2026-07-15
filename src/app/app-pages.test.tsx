@@ -8,6 +8,9 @@ import ParkDetailPage, {
   generateMetadata as generateParkDetailMetadata,
 } from "./(user)/park/[slug]/page";
 import ParksMapPage, { generateMetadata as generateParksMapMetadata } from "./(user)/parks/page";
+import TripPlannerRoutePage, {
+  generateMetadata as generateTripPlannerMetadata,
+} from "./(user)/trip-planner/page";
 import PublicVisitsPage, {
   generateMetadata as generatePublicVisitsMetadata,
 } from "./(user)/visits/page";
@@ -129,6 +132,10 @@ vi.mock("@/components/visits/public-visits-timeline", () => ({
       {error ?? "none"}
     </div>
   ),
+}));
+
+vi.mock("@/components/trip-planner/trip-planner-page", () => ({
+  TripPlannerPage: () => <div data-testid="trip-planner-page">trip-planner</div>,
 }));
 
 vi.mock("@/components/dashboard/home-visit-stats", () => ({
@@ -474,6 +481,12 @@ describe("App pages", () => {
     expect(screen.getByTestId("park-explorer")).toHaveTextContent("parks:1|error:none");
   });
 
+  it("renders the public trip planner page", async () => {
+    await renderPublicRoute(<TripPlannerRoutePage />);
+
+    expect(screen.getByTestId("trip-planner-page")).toHaveTextContent("trip-planner");
+  });
+
   it("shows the fallback error message when the public map summary request fails", async () => {
     vi.mocked(apiPublicFetch).mockRejectedValueOnce(new Error("backend offline"));
 
@@ -491,6 +504,14 @@ describe("App pages", () => {
   it("builds translated metadata for the parks map page", async () => {
     await expect(generateParksMapMetadata()).resolves.toEqual(
       createExpectedShareMetadata("home.mapTitle"),
+    );
+  });
+
+  it("builds translated metadata for the trip planner page", async () => {
+    await expect(generateTripPlannerMetadata()).resolves.toEqual(
+      createExpectedShareMetadata("tripPlanner.title", {
+        description: "tripPlanner.description",
+      }),
     );
   });
 

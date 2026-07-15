@@ -1191,6 +1191,143 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/trip-planner/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        destinationQuery: string;
+                        maxDistanceKm?: number;
+                        /** @enum {string} */
+                        mode: "drive";
+                        originQuery: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Trip planner search results near the routed path */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            destination: {
+                                coordinate: {
+                                    lat: number;
+                                    lon: number;
+                                };
+                                label: string;
+                            };
+                            origin: {
+                                coordinate: {
+                                    lat: number;
+                                    lon: number;
+                                };
+                                label: string;
+                            };
+                            parks: {
+                                address: string;
+                                category: {
+                                    name: string;
+                                    /** @enum {string} */
+                                    slug: "outdoor-recreation-area" | "cultural-history-area" | "hiking-and-wilderness-areas" | "national-park" | "nature-reserve-area" | "trails-and-routes";
+                                };
+                                displayTypeName?: string | null;
+                                distanceFromRouteKm: number;
+                                locationLabel: string;
+                                markerPoint: {
+                                    lat: number;
+                                    lon: number;
+                                };
+                                name: string;
+                                postalCode: string | null;
+                                postalOffice: string | null;
+                                slug: string;
+                                type: {
+                                    code: number;
+                                    id: number;
+                                    name: string;
+                                    /** @enum {string} */
+                                    slug: "outdoor-recreation-area" | "cultural-history-area" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
+                                };
+                                visitedSummary: {
+                                    lastVisitedOn: string | null;
+                                    visitCount: number;
+                                    visited: boolean;
+                                };
+                            }[];
+                            route: {
+                                distanceMeters: number;
+                                durationSeconds: number;
+                                /** @enum {string} */
+                                mode: "drive";
+                            };
+                        };
+                    };
+                };
+                /** @description Bearer token required outside localhost */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Origin, destination, or route could not be resolved */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                            /** @enum {string} */
+                            errorCode: "destination_not_found" | "origin_not_found" | "provider_unavailable" | "route_not_found" | "trip_planner_not_configured";
+                        };
+                    };
+                };
+                /** @description Trip planner provider is unavailable or not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                            /** @enum {string} */
+                            errorCode: "destination_not_found" | "origin_not_found" | "provider_unavailable" | "route_not_found" | "trip_planner_not_configured";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/visits": {
         parameters: {
             query?: never;

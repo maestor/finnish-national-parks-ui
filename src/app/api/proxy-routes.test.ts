@@ -14,6 +14,7 @@ import { PATCH as patchPark } from "./parks/[slug]/route";
 import { POST as postParkVisit } from "./parks/[slug]/visits/route";
 import { GET as getParks } from "./parks/route";
 import { GET as getParkSearch } from "./parks/search/route";
+import { POST as postTripPlannerSearch } from "./trip-planner/search/route";
 import { DELETE as deleteVisitImage } from "./visits/[id]/images/[imageId]/route";
 import { POST as postVisitImageComplete } from "./visits/[id]/images/complete/route";
 import { PATCH as patchVisitImageOrder } from "./visits/[id]/images/reorder/route";
@@ -68,6 +69,16 @@ describe("api proxy routes", () => {
     await getParkSearch(request);
 
     expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/parks/search");
+  });
+
+  it("proxies trip planner search requests", async () => {
+    const request = new Request("https://frontend.example/api/trip-planner/search", {
+      method: "POST",
+    });
+
+    await postTripPlannerSearch(request);
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/trip-planner/search");
   });
 
   it("proxies visit creation for a park", async () => {
