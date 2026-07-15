@@ -10,6 +10,7 @@
       "home": "Etusivu",
       "map": "Paikat",
       "visits": "Käynnit",
+      "tripPlanner": "Roadtrip",
       "controlPanel": "Hallinta",
       "filters": "Suodata karttaa",
       "menu": "Valikko",
@@ -141,6 +142,36 @@
       "viewVisit": "Näytä käynti",
       "openVisit": "Avaa käynti paikan sivulla",
       "imageCount": "{count} kuvaa"
+    }
+  },
+  "tripPlanner": {
+    "eyebrow": "Matkan varrelta",
+    "title": "Roadtrip",
+    "description": "Reissun päälle lähdössä? Voit katsella mitä kohteita Reissuvihko sisältää matkasi varrella antamalla lähtö- ja määränpääosoitteet.",
+    "originLabel": "Lähtöpiste",
+    "originPlaceholder": "Esim. Helsinki",
+    "destinationLabel": "Määränpää",
+    "destinationPlaceholder": "Esim. Tampere",
+    "submit": "Hae kohteet",
+    "loading": "Haetaan...",
+    "resultsTitle": "Reitin läheltä löytyvät kohteet",
+    "resultsCount": "{count} kohdetta",
+    "originResolvedLabel": "Lähtöpiste",
+    "destinationResolvedLabel": "Määränpää",
+    "routeSummaryTitle": "Ajoreitti",
+    "routeDistance": "Pituus:",
+    "routeDuration": "Kesto:",
+    "visited": "Käyty",
+    "notVisited": "Käymätön",
+    "visitCount": "Käyntejä:",
+    "distanceFromRoute": "Etäisyys reitiltä",
+    "noResults": "Reitin läheltä ei löytynyt kohteita valitulla 25 kilometrin rajauksella.",
+    "sections": {
+      "notVisited": "Käymättömät kohteet",
+      "visited": "Käydyt kohteet"
+    },
+    "errors": {
+      "generic": "Roadtrip-haun suorittaminen epäonnistui."
     }
   },
   "controlPanel": {
