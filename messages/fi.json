@@ -147,28 +147,37 @@
   "tripPlanner": {
     "eyebrow": "Matkan varrelta",
     "title": "Roadtrip",
-    "description": "Reissun päälle lähdössä? Voit katsella mitä kohteita Reissuvihko sisältää matkasi varrella antamalla lähtö- ja määränpääosoitteet.",
+    "description": "Reissun päälle lähdössä? Voit katsella mitä paikkoja Reissuvihko sisältää matkasi varrella antamalla lähtö- ja määränpääosoitteet.",
     "originLabel": "Lähtöpiste",
     "originPlaceholder": "Esim. Helsinki",
     "destinationLabel": "Määränpää",
     "destinationPlaceholder": "Esim. Tampere",
-    "submit": "Hae kohteet",
+    "submit": "Hae paikat",
+    "expandSearch": "Muokkaa hakua",
+    "collapseSearch": "Piilota haku",
     "loading": "Haetaan...",
-    "resultsTitle": "Reitin läheltä löytyvät kohteet",
-    "resultsCount": "{count} kohdetta",
+    "resultsTitle": "Paikat reitin varrella",
+    "filteredResultsCount": "{shown} / {total} paikkaa näkyvissä",
     "originResolvedLabel": "Lähtöpiste",
     "destinationResolvedLabel": "Määränpää",
     "routeSummaryTitle": "Ajoreitti",
     "routeDistance": "Pituus:",
     "routeDuration": "Kesto:",
     "visited": "Käyty",
-    "notVisited": "Käymätön",
+    "notVisited": "Käymättä",
     "visitCount": "Käyntejä:",
     "distanceFromRoute": "Etäisyys reitiltä",
-    "noResults": "Reitin läheltä ei löytynyt kohteita valitulla 25 kilometrin rajauksella.",
+    "noResults": "Reitin läheltä ei löytynyt paikkoja valitulla 25 kilometrin rajauksella.",
+    "filteredEmpty": "Valituilla suodattimilla ei löytynyt näkyviä paikkoja. Laajenna rajausta tai näytä kaikki tulokset uudelleen.",
+    "filters": {
+      "parkTypeLabel": "Paikkatyyppi",
+      "visitStatusLabel": "Näytetään",
+      "distanceLabel": "Enimmäisetäisyys",
+      "reset": "Näytä kaikki"
+    },
     "sections": {
-      "notVisited": "Käymättömät kohteet",
-      "visited": "Käydyt kohteet"
+      "notVisited": "Käymättömät paikat",
+      "visited": "Käydyt paikat"
     },
     "errors": {
       "generic": "Roadtrip-haun suorittaminen epäonnistui."
