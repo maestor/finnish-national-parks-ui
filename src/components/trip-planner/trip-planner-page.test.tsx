@@ -4,6 +4,12 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TripPlannerPage } from "./trip-planner-page";
 
+vi.mock("./trip-planner-map", () => ({
+  TripPlannerMap: ({ parks }: { parks: Array<{ slug: string }> }) => (
+    <div data-testid="trip-planner-map">map:{parks.map((park) => park.slug).join(",")}</div>
+  ),
+}));
+
 vi.mock("@/lib/api", async () => {
   const actual = await vi.importActual<typeof import("@/lib/api")>("@/lib/api");
 
@@ -26,6 +32,7 @@ describe("TripPlannerPage", () => {
     parks: [
       {
         address: "Nuuksiontie 83, 02820 Espoo",
+        boundingBox: { minLat: 60.26, minLon: 24.48, maxLat: 60.35, maxLon: 24.58 },
         category: { name: "Kansallispuistot", slug: "national-park" as const },
         distanceFromRouteKm: 4.2,
         locationLabel: "Nuuksiontie 83",
@@ -39,6 +46,7 @@ describe("TripPlannerPage", () => {
       },
       {
         address: "Hossantie 278A, 89920 Suomussalmi",
+        boundingBox: { minLat: 65.15, minLon: 29.05, maxLat: 65.25, maxLon: 29.15 },
         category: { name: "Polut ja reitit", slug: "trails-and-routes" as const },
         distanceFromRouteKm: 22.3,
         locationLabel: "Hossantie 278A",
@@ -52,6 +60,7 @@ describe("TripPlannerPage", () => {
       },
       {
         address: "Seurasaari, 00250 Helsinki",
+        boundingBox: { minLat: 60.15, minLon: 24.84, maxLat: 60.21, maxLon: 24.92 },
         category: { name: "Historia-alueet", slug: "cultural-history-area" as const },
         distanceFromRouteKm: 8.1,
         locationLabel: "Seurasaari",
@@ -70,8 +79,22 @@ describe("TripPlannerPage", () => {
       },
     ],
     route: {
+      boundingBox: {
+        minLat: 60.17,
+        minLon: 23.7,
+        maxLat: 61.5,
+        maxLon: 24.94,
+      },
       distanceMeters: 180_000,
       durationSeconds: 9_000,
+      geometry: {
+        coordinates: [
+          [24.94, 60.17],
+          [24.3, 60.55],
+          [23.7, 61.5],
+        ],
+        type: "LineString" as const,
+      },
       mode: "drive" as const,
     },
   });
@@ -82,6 +105,12 @@ describe("TripPlannerPage", () => {
       ...createSearchResponse().parks,
       ...Array.from({ length: 19 }, (_, index) => ({
         address: `Lisatie ${index + 1}, 0010${index} Helsinki`,
+        boundingBox: {
+          minLat: 60.18 + index * 0.01,
+          minLon: 24.78 + index * 0.01,
+          maxLat: 60.22 + index * 0.01,
+          maxLon: 24.82 + index * 0.01,
+        },
         category: {
           name: index % 2 === 0 ? "Kansallispuistot" : "Historia-alueet",
           slug: index % 2 === 0 ? ("national-park" as const) : ("cultural-history-area" as const),
@@ -168,6 +197,16 @@ describe("TripPlannerPage", () => {
     expect(
       screen.getByRole("slider", { name: "tripPlanner.filters.distanceLabel" }),
     ).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "tripPlanner.viewTabs.map" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByTestId("trip-planner-map")).toHaveTextContent(
+      "map:nuuksio,hossan-polku,seurasaari",
+    );
+
+    await user.click(screen.getByRole("tab", { name: "tripPlanner.viewTabs.list" }));
+
     expect(screen.getByText("tripPlanner.sections.notVisited")).toBeInTheDocument();
     expect(screen.getByText("tripPlanner.sections.visited")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Nuuksion kansallispuisto" })).toHaveAttribute(
@@ -197,10 +236,10 @@ describe("TripPlannerPage", () => {
       "trails-and-routes",
     );
 
+    expect(screen.getByRole("link", { name: "Hossan polku" })).toBeInTheDocument();
     expect(
       screen.queryByRole("link", { name: "Nuuksion kansallispuisto" }),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Hossan polku" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Seurasaari" })).not.toBeInTheDocument();
     expect(apiFetch).toHaveBeenCalledTimes(1);
   });
@@ -217,8 +256,22 @@ describe("TripPlannerPage", () => {
       },
       parks: [],
       route: {
+        boundingBox: {
+          minLat: 60.17,
+          minLon: 23.7,
+          maxLat: 61.5,
+          maxLon: 24.94,
+        },
         distanceMeters: 180_000,
         durationSeconds: 9_000,
+        geometry: {
+          coordinates: [
+            [24.94, 60.17],
+            [24.3, 60.55],
+            [23.7, 61.5],
+          ],
+          type: "LineString" as const,
+        },
         mode: "drive" as const,
       },
     });
@@ -254,7 +307,7 @@ describe("TripPlannerPage", () => {
     );
     await user.click(screen.getByRole("button", { name: "tripPlanner.submit" }));
 
-    await screen.findByRole("link", { name: "Nuuksion kansallispuisto" });
+    await screen.findByTestId("trip-planner-map");
 
     expect(
       screen.queryByRole("textbox", { name: "tripPlanner.originLabel" }),
@@ -271,6 +324,47 @@ describe("TripPlannerPage", () => {
     expect(screen.queryByText("tripPlanner.destinationResolvedLabel")).not.toBeInTheDocument();
   });
 
+  it("switches from the default map subview to the list with the currently visible parks", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce(createLargeSearchResponse());
+
+    const user = userEvent.setup();
+
+    render(<TripPlannerPage />);
+
+    await user.type(screen.getByRole("textbox", { name: "tripPlanner.originLabel" }), "Helsinki");
+    await user.type(
+      screen.getByRole("textbox", { name: "tripPlanner.destinationLabel" }),
+      "Tampere",
+    );
+    await user.click(screen.getByRole("button", { name: "tripPlanner.submit" }));
+
+    await screen.findByTestId("trip-planner-map");
+
+    expect(screen.getByRole("tab", { name: "tripPlanner.viewTabs.map" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByTestId("trip-planner-map")).toHaveTextContent(
+      "map:nuuksio,hossan-polku,seurasaari",
+    );
+
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "tripPlanner.filters.visitStatusLabel" }),
+      "visited",
+    );
+
+    await user.click(screen.getByRole("tab", { name: "tripPlanner.viewTabs.list" }));
+
+    expect(screen.getByRole("tab", { name: "tripPlanner.viewTabs.list" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(
+      screen.queryByRole("link", { name: "Nuuksion kansallispuisto" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Seurasaari" })).toBeInTheDocument();
+  });
+
   it("hides filters when the result set has 20 places or fewer", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce(createSearchResponse());
 
@@ -285,7 +379,7 @@ describe("TripPlannerPage", () => {
     );
     await user.click(screen.getByRole("button", { name: "tripPlanner.submit" }));
 
-    await screen.findByRole("link", { name: "Nuuksion kansallispuisto" });
+    await screen.findByTestId("trip-planner-map");
 
     expect(
       screen.queryByRole("combobox", { name: "tripPlanner.filters.parkTypeLabel" }),
@@ -312,7 +406,7 @@ describe("TripPlannerPage", () => {
     );
     await user.click(screen.getByRole("button", { name: "tripPlanner.submit" }));
 
-    await screen.findByRole("link", { name: "Nuuksion kansallispuisto" });
+    await screen.findByTestId("trip-planner-map");
 
     await user.selectOptions(
       screen.getByRole("combobox", { name: "tripPlanner.filters.parkTypeLabel" }),
@@ -322,14 +416,14 @@ describe("TripPlannerPage", () => {
       target: { value: "1" },
     });
 
-    expect(screen.queryByRole("link", { name: "Hossan polku" })).not.toBeInTheDocument();
+    expect(screen.getByTestId("trip-planner-map")).toHaveTextContent("map:");
     expect(screen.getByText("tripPlanner.filteredEmpty")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "tripPlanner.filters.reset" }));
 
-    expect(screen.getByRole("link", { name: "Nuuksion kansallispuisto" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Hossan polku" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Seurasaari" })).toBeInTheDocument();
+    expect(screen.getByTestId("trip-planner-map")).toHaveTextContent(
+      "map:nuuksio,hossan-polku,seurasaari",
+    );
   });
 
   it("resets local filters when a new trip search succeeds", async () => {
@@ -354,17 +448,14 @@ describe("TripPlannerPage", () => {
     await user.type(destinationInput, "Tampere");
     await user.click(screen.getByRole("button", { name: "tripPlanner.submit" }));
 
-    await screen.findByRole("link", { name: "Nuuksion kansallispuisto" });
+    await screen.findByTestId("trip-planner-map");
 
     await user.selectOptions(
       screen.getByRole("combobox", { name: "tripPlanner.filters.visitStatusLabel" }),
       "visited",
     );
 
-    expect(
-      screen.queryByRole("link", { name: "Nuuksion kansallispuisto" }),
-    ).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Seurasaari" })).toBeInTheDocument();
+    expect(screen.getByTestId("trip-planner-map")).toHaveTextContent("map:seurasaari");
 
     await user.click(screen.getByRole("button", { name: "tripPlanner.expandSearch" }));
 
@@ -380,9 +471,9 @@ describe("TripPlannerPage", () => {
       expect(apiFetch).toHaveBeenCalledTimes(2);
     });
 
-    expect(screen.getByRole("link", { name: "Nuuksion kansallispuisto" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Hossan polku" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Seurasaari" })).toBeInTheDocument();
+    expect(screen.getByTestId("trip-planner-map")).toHaveTextContent(
+      "map:nuuksio,hossan-polku,seurasaari",
+    );
     expect(
       screen.getByRole("combobox", { name: "tripPlanner.filters.visitStatusLabel" }),
     ).toHaveValue("all");

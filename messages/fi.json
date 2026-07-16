@@ -147,7 +147,7 @@
   "tripPlanner": {
     "eyebrow": "Matkan varrelta",
     "title": "Roadtrip",
-    "description": "Reissun päälle lähdössä? Voit katsella mitä paikkoja Reissuvihko sisältää matkasi varrella antamalla lähtö- ja määränpääosoitteet.",
+    "description": "Reissuun lähdössä? Voit katsella mitä paikkoja Reissuvihko sisältää matkasi varrella antamalla lähtö- ja määränpääosoitteet.",
     "originLabel": "Lähtöpiste",
     "originPlaceholder": "Esim. Helsinki",
     "destinationLabel": "Määränpää",
@@ -174,6 +174,15 @@
       "visitStatusLabel": "Näytetään",
       "distanceLabel": "Enimmäisetäisyys",
       "reset": "Näytä kaikki"
+    },
+    "viewTabs": {
+      "ariaLabel": "Roadtrip-tulosten näkymä",
+      "list": "Lista",
+      "map": "Kartta"
+    },
+    "map": {
+      "ariaLabel": "Roadtrip-reitin kartta",
+      "loading": "Ladataan reittikarttaa..."
     },
     "sections": {
       "notVisited": "Käymättömät paikat",

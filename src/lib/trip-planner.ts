@@ -9,6 +9,8 @@ export type TripPlannerSearchResponse =
   paths["/api/trip-planner/search"]["post"]["responses"][200]["content"]["application/json"];
 
 export type TripPlannerParkResult = TripPlannerSearchResponse["parks"][number];
+export type TripPlannerRouteResult = TripPlannerSearchResponse["route"];
+export type TripPlannerResolvedLocation = TripPlannerSearchResponse["origin"];
 
 export const searchTripPlanner = async (
   request: Omit<TripPlannerSearchRequest, "mode">,
