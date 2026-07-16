@@ -1242,6 +1242,12 @@ export interface paths {
                             };
                             parks: {
                                 address: string;
+                                boundingBox: {
+                                    maxLat: number;
+                                    maxLon: number;
+                                    minLat: number;
+                                    minLon: number;
+                                };
                                 category: {
                                     name: string;
                                     /** @enum {string} */
@@ -1272,8 +1278,19 @@ export interface paths {
                                 };
                             }[];
                             route: {
+                                boundingBox: {
+                                    maxLat: number;
+                                    maxLon: number;
+                                    minLat: number;
+                                    minLon: number;
+                                };
                                 distanceMeters: number;
                                 durationSeconds: number;
+                                geometry: {
+                                    coordinates: number[][];
+                                    /** @enum {string} */
+                                    type: "LineString";
+                                };
                                 /** @enum {string} */
                                 mode: "drive";
                             };

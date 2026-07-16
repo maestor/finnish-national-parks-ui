@@ -16,9 +16,10 @@ import { ChevronDown, ChevronUp, Loader2, Route } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { type FormEvent, useMemo, useState } from "react";
+import { TripPlannerMap } from "./trip-planner-map";
 
 const INPUT_CLASS_NAME =
-  "flex h-11 w-full rounded-xl border border-white/45 bg-white/78 px-3 py-2 text-sm text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
+  "flex h-11 w-full rounded-xl border border-white/45 bg-white/78 px-3 py-2 text-sm text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] placeholder:text-muted-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
 const PANEL_CLASS_NAME =
   "rounded-[1.75rem] border border-white/45 bg-white/72 p-5 shadow-[0_20px_44px_rgba(148,163,184,0.18)] backdrop-blur-md dark:border-white/10 dark:bg-slate-950/52 dark:shadow-[0_28px_56px_rgba(2,6,23,0.3)]";
 const INLINE_SELECT_CLASS_NAME = cn(
@@ -43,6 +44,7 @@ const DURATION_FORMATTER = new Intl.NumberFormat("fi-FI", {
 
 type SearchState = "idle" | "loading" | "success" | "error";
 type VisitStatusFilter = "all" | "visited" | "not-visited";
+type ViewTab = "list" | "map";
 type TripPlannerParkTypeFilter =
   | "all"
   | "areas"
@@ -100,6 +102,7 @@ export const TripPlannerPage = () => {
   const [activeParkFilter, setActiveParkFilter] = useState<TripPlannerParkTypeFilter>("all");
   const [activeVisitStatus, setActiveVisitStatus] = useState<VisitStatusFilter>("all");
   const [activeDistanceKm, setActiveDistanceKm] = useState(DEFAULT_DISTANCE_FILTER_KM);
+  const [activeView, setActiveView] = useState<ViewTab>("map");
   const [isSearchPanelExpanded, setIsSearchPanelExpanded] = useState(true);
 
   const parkTypeOptions = useMemo(() => {
@@ -202,6 +205,7 @@ export const TripPlannerPage = () => {
 
       setResult(response);
       resetLocalFilters();
+      setActiveView("map");
       setIsSearchPanelExpanded(false);
       setSearchState("success");
     } catch (failure) {
@@ -217,27 +221,7 @@ export const TripPlannerPage = () => {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-2">
             <p className="text-sm font-medium text-primary">{t("eyebrow")}</p>
-            <div className="space-y-3">
-              <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-                {t("title")}
-              </h1>
-              {isSearchPanelExpanded ? (
-                <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-                  {t("description")}
-                </p>
-              ) : result ? (
-                <dl className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
-                  <div>
-                    <dt className="font-medium text-foreground">{t("originResolvedLabel")}</dt>
-                    <dd>{result.origin.label}</dd>
-                  </div>
-                  <div>
-                    <dt className="font-medium text-foreground">{t("destinationResolvedLabel")}</dt>
-                    <dd>{result.destination.label}</dd>
-                  </div>
-                </dl>
-              ) : null}
-            </div>
+            <h1 className="text-3xl font-semibold tracking-tight text-foreground">{t("title")}</h1>
           </div>
 
           {result ? (
@@ -262,10 +246,27 @@ export const TripPlannerPage = () => {
           ) : null}
         </div>
 
+        {isSearchPanelExpanded ? (
+          <p className="text-sm leading-6 text-muted-foreground">{t("description")}</p>
+        ) : result ? (
+          <dl className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
+            <div>
+              <dt className="font-medium text-foreground">{t("originResolvedLabel")}</dt>
+              <dd>{result.origin.label}</dd>
+            </div>
+            <div>
+              <dt className="font-medium text-foreground">{t("destinationResolvedLabel")}</dt>
+              <dd>{result.destination.label}</dd>
+            </div>
+          </dl>
+        ) : null}
+
         <div
           className={cn(
-            "grid overflow-hidden transition-all duration-300 ease-out",
-            isSearchPanelExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
+            "grid transition-all duration-300 ease-out",
+            isSearchPanelExpanded
+              ? "grid-rows-[1fr] overflow-visible opacity-100"
+              : "grid-rows-[0fr] overflow-hidden opacity-0",
           )}
           aria-hidden={!isSearchPanelExpanded}
         >
@@ -333,14 +334,55 @@ export const TripPlannerPage = () => {
         <section className={cn(PANEL_CLASS_NAME, "space-y-5")} aria-live="polite">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <h2 className="text-xl font-semibold text-foreground">{t("resultsTitle")}</h2>
-                <p className="text-sm text-muted-foreground">
-                  {t("filteredResultsCount", {
-                    shown: String(filteredParkCount),
-                    total: String(totalParkCount),
-                  })}
-                </p>
+                <div className="flex flex-wrap items-center gap-3">
+                  <p className="text-sm text-muted-foreground">
+                    {t("filteredResultsCount", {
+                      shown: String(filteredParkCount),
+                      total: String(totalParkCount),
+                    })}
+                  </p>
+
+                  <div
+                    className="inline-flex rounded-[1.1rem] border border-white/45 bg-white/60 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/42 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                    role="tablist"
+                    aria-label={t("viewTabs.ariaLabel")}
+                  >
+                    <button
+                      type="button"
+                      role="tab"
+                      id="trip-planner-view-map"
+                      aria-controls="trip-planner-panel-map"
+                      aria-selected={activeView === "map"}
+                      onClick={() => setActiveView("map")}
+                      className={cn(
+                        "rounded-xl px-3 py-1.5 text-sm font-medium transition-colors",
+                        activeView === "map"
+                          ? "bg-white/86 text-foreground shadow-[0_8px_18px_rgba(148,163,184,0.16)] dark:bg-slate-950/68"
+                          : "text-muted-foreground hover:bg-white/62 hover:text-foreground dark:hover:bg-slate-950/56",
+                      )}
+                    >
+                      {t("viewTabs.map")}
+                    </button>
+                    <button
+                      type="button"
+                      role="tab"
+                      id="trip-planner-view-list"
+                      aria-controls="trip-planner-panel-list"
+                      aria-selected={activeView === "list"}
+                      onClick={() => setActiveView("list")}
+                      className={cn(
+                        "rounded-xl px-3 py-1.5 text-sm font-medium transition-colors",
+                        activeView === "list"
+                          ? "bg-white/86 text-foreground shadow-[0_8px_18px_rgba(148,163,184,0.16)] dark:bg-slate-950/68"
+                          : "text-muted-foreground hover:bg-white/62 hover:text-foreground dark:hover:bg-slate-950/56",
+                      )}
+                    >
+                      {t("viewTabs.list")}
+                    </button>
+                  </div>
+                </div>
               </div>
 
               {shouldShowFilters ? (
@@ -433,34 +475,74 @@ export const TripPlannerPage = () => {
             </div>
           </div>
 
-          {totalParkCount === 0 ? (
-            <p className="rounded-xl border border-dashed border-white/45 bg-white/50 px-4 py-6 text-sm text-muted-foreground dark:border-white/10 dark:bg-slate-950/38">
-              {t("noResults")}
-            </p>
-          ) : !hasFilteredResults ? (
-            <div className="rounded-xl border border-dashed border-white/45 bg-white/50 px-4 py-6 dark:border-white/10 dark:bg-slate-950/38">
-              <p className="text-sm text-muted-foreground">{t("filteredEmpty")}</p>
-              <Button
-                className="mt-4 rounded-xl"
-                type="button"
-                variant="outline"
-                onClick={resetLocalFilters}
-              >
-                {t("filters.reset")}
-              </Button>
+          {activeView === "list" ? (
+            <div
+              id="trip-planner-panel-list"
+              role="tabpanel"
+              aria-labelledby="trip-planner-view-list"
+            >
+              {totalParkCount === 0 ? (
+                <p className="rounded-xl border border-dashed border-white/45 bg-white/50 px-4 py-6 text-sm text-muted-foreground dark:border-white/10 dark:bg-slate-950/38">
+                  {t("noResults")}
+                </p>
+              ) : !hasFilteredResults ? (
+                <div className="rounded-xl border border-dashed border-white/45 bg-white/50 px-4 py-6 dark:border-white/10 dark:bg-slate-950/38">
+                  <p className="text-sm text-muted-foreground">{t("filteredEmpty")}</p>
+                  <Button
+                    className="mt-4 rounded-xl"
+                    type="button"
+                    variant="outline"
+                    onClick={resetLocalFilters}
+                  >
+                    {t("filters.reset")}
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <TripPlannerResultsSection
+                    title={t("sections.notVisited")}
+                    parks={groupedResults.notVisited}
+                    statusLabel={t("notVisited")}
+                  />
+                  <TripPlannerResultsSection
+                    title={t("sections.visited")}
+                    parks={groupedResults.visited}
+                    statusLabel={t("visited")}
+                  />
+                </div>
+              )}
             </div>
           ) : (
-            <div className="space-y-6">
-              <TripPlannerResultsSection
-                title={t("sections.notVisited")}
-                parks={groupedResults.notVisited}
-                statusLabel={t("notVisited")}
+            <div
+              id="trip-planner-panel-map"
+              role="tabpanel"
+              aria-labelledby="trip-planner-view-map"
+              className="space-y-4"
+            >
+              <TripPlannerMap
+                destination={result.destination}
+                origin={result.origin}
+                parks={filteredParks}
+                route={result.route}
               />
-              <TripPlannerResultsSection
-                title={t("sections.visited")}
-                parks={groupedResults.visited}
-                statusLabel={t("visited")}
-              />
+
+              {totalParkCount === 0 ? (
+                <p className="rounded-xl border border-dashed border-white/45 bg-white/50 px-4 py-6 text-sm text-muted-foreground dark:border-white/10 dark:bg-slate-950/38">
+                  {t("noResults")}
+                </p>
+              ) : !hasFilteredResults ? (
+                <div className="rounded-xl border border-dashed border-white/45 bg-white/50 px-4 py-6 dark:border-white/10 dark:bg-slate-950/38">
+                  <p className="text-sm text-muted-foreground">{t("filteredEmpty")}</p>
+                  <Button
+                    className="mt-4 rounded-xl"
+                    type="button"
+                    variant="outline"
+                    onClick={resetLocalFilters}
+                  >
+                    {t("filters.reset")}
+                  </Button>
+                </div>
+              ) : null}
             </div>
           )}
         </section>
