@@ -22,7 +22,7 @@ import {
   searchTripPlanner,
   searchTripPlannerNearby,
 } from "@/lib/trip-planner";
-import { ChevronDown, ChevronUp, Route } from "lucide-react";
+import { ChevronDown, ChevronUp, LoaderCircle, LocateFixed, Route } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import {
@@ -54,6 +54,11 @@ const MIN_DISTANCE_FILTER_KM = 1;
 const FILTER_VISIBILITY_THRESHOLD = 20;
 const MIN_SUGGESTION_QUERY_LENGTH = 2;
 const SUGGESTION_DEBOUNCE_MS = 250;
+const LOCATION_REQUEST_OPTIONS = {
+  enableHighAccuracy: false,
+  maximumAge: 300000,
+  timeout: 10000,
+} as const;
 const SUGGESTION_LIST_CLASS_NAME =
   "absolute left-0 right-0 top-[calc(100%+0.5rem)] z-20 overflow-hidden rounded-[1.35rem] border border-white/55 bg-white/96 shadow-[0_20px_40px_rgba(148,163,184,0.24)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/94 dark:shadow-[0_24px_48px_rgba(2,6,23,0.42)]";
 const SUGGESTION_OPTION_CLASS_NAME =
@@ -75,6 +80,19 @@ const DURATION_FORMATTER = new Intl.NumberFormat("fi-FI", {
 type SearchState = "idle" | "loading" | "success" | "error";
 type TripPlannerMode = TripPlannerUiResult["mode"];
 type VisitStatusFilter = "all" | "visited" | "not-visited";
+type UserLocationStatus =
+  | "idle"
+  | "locating"
+  | "unsupported"
+  | "permissionDenied"
+  | "unavailable"
+  | "timeout";
+type UserLocationStatusMessageKey =
+  | "locationLocating"
+  | "locationUnsupported"
+  | "locationPermissionDenied"
+  | "locationTimeout"
+  | "locationUnavailable";
 type ViewTab = "list" | "map";
 type TripPlannerParkTypeFilter =
   | "all"
@@ -161,6 +179,44 @@ const normalizeSuggestionQuery = (query: string) => query.trim().replaceAll(/\s+
 const getSuggestionQueryKey = (query: string) =>
   normalizeSuggestionQuery(query).toLocaleLowerCase("fi-FI");
 
+const getUserLocationStatusFromError = (
+  error: GeolocationPositionError,
+): Exclude<UserLocationStatus, "idle" | "locating" | "unsupported"> => {
+  switch (error.code) {
+    case error.PERMISSION_DENIED:
+      return "permissionDenied";
+    case error.POSITION_UNAVAILABLE:
+      return "unavailable";
+    case error.TIMEOUT:
+      return "timeout";
+    default:
+      return "unavailable";
+  }
+};
+
+const getUserLocationStatusMessage = (
+  status: UserLocationStatus,
+  t: (key: UserLocationStatusMessageKey) => string,
+) => {
+  switch (status) {
+    case "idle":
+      return null;
+    case "locating":
+      return t("locationLocating");
+    case "unsupported":
+      return t("locationUnsupported");
+    case "permissionDenied":
+      return t("locationPermissionDenied");
+    case "timeout":
+      return t("locationTimeout");
+    case "unavailable":
+      return t("locationUnavailable");
+  }
+};
+
+const formatCoordinateQuery = (coordinate: { lat: number; lon: number }) =>
+  `${coordinate.lat.toFixed(6)},${coordinate.lon.toFixed(6)}`;
+
 const renderMultilineText = (text: string) => {
   let offset = 0;
 
@@ -179,11 +235,16 @@ const renderMultilineText = (text: string) => {
 };
 
 type TripPlannerSuggestionInputProps = {
+  assistiveMessage?: string;
+  assistiveMessageTone?: "default" | "error";
   errorMessage?: string;
   id: string;
   label: ReactNode;
   name: string;
+  onLocate?: () => void;
   placeholder: string;
+  locateButtonLabel?: string;
+  isLocating?: boolean;
   required: boolean;
   selectedLocation: TripPlannerResolvedLocation | null;
   value: string;
@@ -192,10 +253,15 @@ type TripPlannerSuggestionInputProps = {
 };
 
 const TripPlannerSuggestionInput = ({
+  assistiveMessage,
+  assistiveMessageTone = "default",
   errorMessage,
   id,
+  isLocating = false,
   label,
+  locateButtonLabel,
   name,
+  onLocate,
   placeholder,
   required,
   selectedLocation,
@@ -204,6 +270,7 @@ const TripPlannerSuggestionInput = ({
   onValueChange,
 }: TripPlannerSuggestionInputProps) => {
   const errorId = useId();
+  const assistiveMessageId = useId();
   const listboxId = useId();
   const isFocusedRef = useRef(false);
   const debounceTimeoutRef = useRef<number | null>(null);
@@ -224,6 +291,12 @@ const TripPlannerSuggestionInput = ({
   const activeSuggestionId =
     highlightedIndex >= 0 ? `${listboxId}-option-${highlightedIndex}` : undefined;
   const showRequiredError = required && hasBeenTouched && normalizedValue.length === 0;
+  const describedBy = [
+    showRequiredError ? errorId : null,
+    assistiveMessage ? assistiveMessageId : null,
+  ]
+    .filter((id) => id !== null)
+    .join(" ");
 
   useEffect(() => {
     if (debounceTimeoutRef.current !== null) {
@@ -399,35 +472,68 @@ const TripPlannerSuggestionInput = ({
   return (
     <div className="relative space-y-2">
       <Label htmlFor={id}>{label}</Label>
-      <input
-        id={id}
-        name={name}
-        className={cn(
-          INPUT_CLASS_NAME,
-          showRequiredError &&
-            "border-destructive/70 focus-visible:border-destructive focus-visible:ring-destructive/40",
-        )}
-        autoComplete="off"
-        value={value}
-        onBlur={handleBlur}
-        onChange={handleChange}
-        onFocus={handleFocus}
-        onKeyDown={handleKeyDown}
-        placeholder={placeholder}
-        aria-describedby={showRequiredError ? errorId : undefined}
-        aria-invalid={showRequiredError || undefined}
-        aria-required={required}
-        required={required}
-        role="combobox"
-        aria-autocomplete="list"
-        aria-controls={isOpen ? listboxId : undefined}
-        aria-activedescendant={isOpen ? activeSuggestionId : undefined}
-        aria-expanded={isOpen}
-      />
+      <div className="relative">
+        <input
+          id={id}
+          name={name}
+          className={cn(
+            INPUT_CLASS_NAME,
+            onLocate ? "pr-14" : null,
+            showRequiredError &&
+              "border-destructive/70 focus-visible:border-destructive focus-visible:ring-destructive/40",
+          )}
+          autoComplete="off"
+          value={value}
+          onBlur={handleBlur}
+          onChange={handleChange}
+          onFocus={handleFocus}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          aria-describedby={describedBy || undefined}
+          aria-invalid={showRequiredError || undefined}
+          aria-required={required}
+          required={required}
+          role="combobox"
+          aria-autocomplete="list"
+          aria-controls={isOpen ? listboxId : undefined}
+          aria-activedescendant={isOpen ? activeSuggestionId : undefined}
+          aria-expanded={isOpen}
+        />
+
+        {onLocate && locateButtonLabel ? (
+          <button
+            type="button"
+            className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white/72 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-60 dark:hover:bg-slate-900/72"
+            aria-label={locateButtonLabel}
+            title={locateButtonLabel}
+            onClick={onLocate}
+            disabled={isLocating}
+          >
+            {isLocating ? (
+              <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <LocateFixed className="h-4 w-4" aria-hidden="true" />
+            )}
+          </button>
+        ) : null}
+      </div>
 
       {showRequiredError && errorMessage ? (
         <p id={errorId} className="text-sm text-destructive" aria-live="polite">
           {errorMessage}
+        </p>
+      ) : null}
+
+      {assistiveMessage ? (
+        <p
+          id={assistiveMessageId}
+          className={cn(
+            "text-sm",
+            assistiveMessageTone === "error" ? "text-destructive" : "text-muted-foreground",
+          )}
+          aria-live="polite"
+        >
+          {assistiveMessage}
         </p>
       ) : null}
 
@@ -469,6 +575,7 @@ export const TripPlannerPage = () => {
   const [originLocation, setOriginLocation] = useState<TripPlannerResolvedLocation | null>(null);
   const [destinationLocation, setDestinationLocation] =
     useState<TripPlannerResolvedLocation | null>(null);
+  const [originLocationStatus, setOriginLocationStatus] = useState<UserLocationStatus>("idle");
   const [searchState, setSearchState] = useState<SearchState>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [result, setResult] = useState<TripPlannerUiResult | null>(null);
@@ -564,6 +671,7 @@ export const TripPlannerPage = () => {
   const filteredParkCount = filteredParks.length;
   const hasFilteredResults = filteredParkCount > 0;
   const shouldShowFilters = totalParkCount > FILTER_VISIBILITY_THRESHOLD;
+  const originLocationStatusMessage = getUserLocationStatusMessage(originLocationStatus, t);
 
   const resetLocalFilters = () => {
     setActiveParkFilter("all");
@@ -582,6 +690,60 @@ export const TripPlannerPage = () => {
 
   const getNoResultsLabel = (mode: TripPlannerMode) =>
     mode === "route" ? t("noResults") : t("noResultsNearby");
+
+  const handleOriginValueChange = (value: string) => {
+    if (originLocationStatus !== "locating") {
+      setOriginLocationStatus("idle");
+    }
+
+    setOriginQuery(value);
+  };
+
+  const handleLocateOrigin = () => {
+    const geolocation = window.navigator.geolocation;
+
+    if (!geolocation) {
+      setOriginLocationStatus("unsupported");
+      return;
+    }
+
+    setErrorMessage(null);
+    setOriginLocationStatus("locating");
+
+    geolocation.getCurrentPosition(
+      async (position) => {
+        const fallbackLocation = {
+          coordinate: {
+            lat: position.coords.latitude,
+            lon: position.coords.longitude,
+          },
+          label: formatCoordinateQuery({
+            lat: position.coords.latitude,
+            lon: position.coords.longitude,
+          }),
+        } satisfies TripPlannerResolvedLocation;
+
+        try {
+          const response = await fetchTripPlannerSuggestions({
+            query: fallbackLocation.label,
+          });
+          const resolvedLocation = response.suggestions[0] ?? fallbackLocation;
+
+          setOriginQuery(resolvedLocation.label);
+          setOriginLocation(resolvedLocation);
+        } catch {
+          setOriginQuery(fallbackLocation.label);
+          setOriginLocation(fallbackLocation);
+        } finally {
+          setOriginLocationStatus("idle");
+        }
+      },
+      (error) => {
+        setOriginLocationStatus(getUserLocationStatusFromError(error));
+      },
+      LOCATION_REQUEST_OPTIONS,
+    );
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -623,7 +785,13 @@ export const TripPlannerPage = () => {
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
-      <section className={cn(PANEL_CLASS_NAME, "space-y-4")}>
+      <section
+        className={cn(
+          PANEL_CLASS_NAME,
+          "relative space-y-4",
+          isSearchPanelExpanded ? "z-20" : "z-10",
+        )}
+      >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-2">
             <p className="text-sm font-medium text-primary">{t("eyebrow")}</p>
@@ -688,8 +856,15 @@ export const TripPlannerPage = () => {
           <div className="min-h-0">
             <form className="grid gap-4 md:grid-cols-[1fr_1fr_auto]" onSubmit={handleSubmit}>
               <TripPlannerSuggestionInput
+                assistiveMessage={originLocationStatusMessage ?? undefined}
+                assistiveMessageTone={
+                  originLocationStatus !== "idle" && originLocationStatus !== "locating"
+                    ? "error"
+                    : "default"
+                }
                 errorMessage={t("errors.originRequired")}
                 id="trip-planner-origin"
+                isLocating={originLocationStatus === "locating"}
                 label={
                   <>
                     <span>{t("originLabel")}</span>
@@ -699,8 +874,10 @@ export const TripPlannerPage = () => {
                   </>
                 }
                 name="originQuery"
+                locateButtonLabel={t("originLocate")}
+                onLocate={handleLocateOrigin}
                 onSelectedLocationChange={setOriginLocation}
-                onValueChange={setOriginQuery}
+                onValueChange={handleOriginValueChange}
                 placeholder={t("originPlaceholder")}
                 required
                 selectedLocation={originLocation}
@@ -743,7 +920,7 @@ export const TripPlannerPage = () => {
       </section>
 
       {result || isResultsLoading ? (
-        <section className={cn(PANEL_CLASS_NAME, "space-y-5")} aria-live="polite">
+        <section className={cn(PANEL_CLASS_NAME, "relative z-0 space-y-5")} aria-live="polite">
           <h2 className="text-xl font-semibold text-foreground">{getResultsTitle(activeMode)}</h2>
 
           {isResultsLoading ? (
