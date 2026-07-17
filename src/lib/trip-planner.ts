@@ -1,6 +1,13 @@
 import { apiFetch } from "./api";
 import type { paths } from "./api-types";
 
+export type TripPlannerSuggestionsRequest = NonNullable<
+  paths["/api/trip-planner/suggestions"]["post"]["requestBody"]
+>["content"]["application/json"];
+
+export type TripPlannerSuggestionsResponse =
+  paths["/api/trip-planner/suggestions"]["post"]["responses"][200]["content"]["application/json"];
+
 export type TripPlannerSearchRequest = NonNullable<
   paths["/api/trip-planner/search"]["post"]["requestBody"]
 >["content"]["application/json"];
@@ -11,6 +18,17 @@ export type TripPlannerSearchResponse =
 export type TripPlannerParkResult = TripPlannerSearchResponse["parks"][number];
 export type TripPlannerRouteResult = TripPlannerSearchResponse["route"];
 export type TripPlannerResolvedLocation = TripPlannerSearchResponse["origin"];
+export type TripPlannerSuggestion = TripPlannerSuggestionsResponse["suggestions"][number];
+
+export const fetchTripPlannerSuggestions = async (
+  request: TripPlannerSuggestionsRequest,
+  signal?: AbortSignal,
+): Promise<TripPlannerSuggestionsResponse> =>
+  apiFetch<TripPlannerSuggestionsResponse>("/api/trip-planner/suggestions", {
+    method: "POST",
+    body: JSON.stringify(request),
+    signal,
+  });
 
 export const searchTripPlanner = async (
   request: Omit<TripPlannerSearchRequest, "mode">,
