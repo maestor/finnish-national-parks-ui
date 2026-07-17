@@ -11,11 +11,26 @@ import {
   TRAILS_AND_ROUTES_CATEGORY_SLUG,
 } from "@/lib/park-type-filters";
 import { getParkTypeDisplayName } from "@/lib/parks";
-import { type TripPlannerParkResult, searchTripPlanner } from "@/lib/trip-planner";
+import {
+  type TripPlannerParkResult,
+  type TripPlannerResolvedLocation,
+  type TripPlannerSuggestion,
+  fetchTripPlannerSuggestions,
+  searchTripPlanner,
+} from "@/lib/trip-planner";
 import { ChevronDown, ChevronUp, Loader2, Route } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { type FormEvent, useMemo, useState } from "react";
+import {
+  type ChangeEvent,
+  type FormEvent,
+  type KeyboardEvent,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { TripPlannerMap } from "./trip-planner-map";
 
 const INPUT_CLASS_NAME =
@@ -32,6 +47,12 @@ const FILTER_GROUP_CLASS_NAME = "flex min-w-0 flex-col gap-1";
 const DEFAULT_DISTANCE_FILTER_KM = 25;
 const MIN_DISTANCE_FILTER_KM = 1;
 const FILTER_VISIBILITY_THRESHOLD = 20;
+const MIN_SUGGESTION_QUERY_LENGTH = 2;
+const SUGGESTION_DEBOUNCE_MS = 250;
+const SUGGESTION_LIST_CLASS_NAME =
+  "absolute left-0 right-0 top-[calc(100%+0.5rem)] z-20 overflow-hidden rounded-[1.35rem] border border-white/55 bg-white/96 shadow-[0_20px_40px_rgba(148,163,184,0.24)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/94 dark:shadow-[0_24px_48px_rgba(2,6,23,0.42)]";
+const SUGGESTION_OPTION_CLASS_NAME =
+  "cursor-pointer px-3 py-2 text-sm text-foreground transition-colors hover:bg-white/82 dark:hover:bg-slate-900/82";
 
 const DISTANCE_FORMATTER = new Intl.NumberFormat("fi-FI", {
   maximumFractionDigits: 1,
@@ -91,11 +112,279 @@ const splitTripPlannerResults = (parks: TripPlannerParkResult[]) => {
   );
 };
 
+const normalizeSuggestionQuery = (query: string) => query.trim().replaceAll(/\s+/g, " ");
+
+const getSuggestionQueryKey = (query: string) =>
+  normalizeSuggestionQuery(query).toLocaleLowerCase("fi-FI");
+
+type TripPlannerSuggestionInputProps = {
+  id: string;
+  label: string;
+  name: string;
+  placeholder: string;
+  selectedLocation: TripPlannerResolvedLocation | null;
+  value: string;
+  onSelectedLocationChange: (location: TripPlannerResolvedLocation | null) => void;
+  onValueChange: (value: string) => void;
+};
+
+const TripPlannerSuggestionInput = ({
+  id,
+  label,
+  name,
+  placeholder,
+  selectedLocation,
+  value,
+  onSelectedLocationChange,
+  onValueChange,
+}: TripPlannerSuggestionInputProps) => {
+  const listboxId = useId();
+  const isFocusedRef = useRef(false);
+  const debounceTimeoutRef = useRef<number | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const latestRequestIdRef = useRef(0);
+  const suggestionCacheRef = useRef(new Map<string, TripPlannerSuggestion[]>());
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [isOpen, setIsOpen] = useState(false);
+  const [suggestions, setSuggestions] = useState<TripPlannerSuggestion[]>([]);
+
+  const normalizedValue = normalizeSuggestionQuery(value);
+  const queryKey = getSuggestionQueryKey(value);
+  const selectedLocationKey = selectedLocation
+    ? getSuggestionQueryKey(selectedLocation.label)
+    : null;
+  const hasSuggestionQuery = normalizedValue.length >= MIN_SUGGESTION_QUERY_LENGTH;
+  const activeSuggestionId =
+    highlightedIndex >= 0 ? `${listboxId}-option-${highlightedIndex}` : undefined;
+
+  useEffect(() => {
+    if (debounceTimeoutRef.current !== null) {
+      window.clearTimeout(debounceTimeoutRef.current);
+      debounceTimeoutRef.current = null;
+    }
+
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+
+    if (!hasSuggestionQuery || selectedLocationKey === queryKey) {
+      setSuggestions([]);
+      setHighlightedIndex(-1);
+      setIsOpen(false);
+      return;
+    }
+
+    const cachedSuggestions = suggestionCacheRef.current.get(queryKey);
+    if (cachedSuggestions) {
+      setSuggestions(cachedSuggestions);
+      setHighlightedIndex(-1);
+
+      if (isFocusedRef.current && cachedSuggestions.length > 0) {
+        setIsOpen(true);
+      }
+
+      return;
+    }
+
+    debounceTimeoutRef.current = window.setTimeout(async () => {
+      const controller = new AbortController();
+      const requestId = latestRequestIdRef.current + 1;
+      latestRequestIdRef.current = requestId;
+      abortControllerRef.current = controller;
+
+      try {
+        const response = await fetchTripPlannerSuggestions(
+          { query: normalizedValue },
+          controller.signal,
+        );
+
+        if (latestRequestIdRef.current !== requestId) {
+          return;
+        }
+
+        suggestionCacheRef.current.set(queryKey, response.suggestions);
+        setSuggestions(response.suggestions);
+        setHighlightedIndex(-1);
+        setIsOpen(isFocusedRef.current && response.suggestions.length > 0);
+      } catch (error) {
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        if (latestRequestIdRef.current !== requestId) {
+          return;
+        }
+
+        if (error instanceof Error && error.name === "AbortError") {
+          return;
+        }
+
+        setSuggestions([]);
+        setHighlightedIndex(-1);
+        setIsOpen(false);
+      } finally {
+        if (abortControllerRef.current === controller) {
+          abortControllerRef.current = null;
+        }
+      }
+    }, SUGGESTION_DEBOUNCE_MS);
+
+    return () => {
+      if (debounceTimeoutRef.current !== null) {
+        window.clearTimeout(debounceTimeoutRef.current);
+        debounceTimeoutRef.current = null;
+      }
+
+      abortControllerRef.current?.abort();
+      abortControllerRef.current = null;
+    };
+  }, [hasSuggestionQuery, normalizedValue, queryKey, selectedLocationKey]);
+
+  const closeSuggestions = () => {
+    setHighlightedIndex(-1);
+    setIsOpen(false);
+  };
+
+  const applySuggestion = (suggestion: TripPlannerSuggestion) => {
+    suggestionCacheRef.current.set(getSuggestionQueryKey(suggestion.label), [suggestion]);
+    onValueChange(suggestion.label);
+    onSelectedLocationChange(suggestion);
+    setSuggestions([]);
+    closeSuggestions();
+  };
+
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const nextValue = event.target.value;
+    const nextQueryKey = getSuggestionQueryKey(nextValue);
+    const nextNormalizedValue = normalizeSuggestionQuery(nextValue);
+
+    onValueChange(nextValue);
+
+    if (selectedLocationKey !== nextQueryKey) {
+      onSelectedLocationChange(null);
+    }
+
+    setHighlightedIndex(-1);
+
+    if (nextNormalizedValue.length < MIN_SUGGESTION_QUERY_LENGTH) {
+      setSuggestions([]);
+      setIsOpen(false);
+      return;
+    }
+
+    const cachedSuggestions = suggestionCacheRef.current.get(nextQueryKey) ?? [];
+    setSuggestions(cachedSuggestions);
+    setIsOpen(cachedSuggestions.length > 0);
+  };
+
+  const handleFocus = () => {
+    isFocusedRef.current = true;
+
+    if (!hasSuggestionQuery || selectedLocationKey === queryKey) {
+      return;
+    }
+
+    const cachedSuggestions = suggestionCacheRef.current.get(queryKey);
+    if (cachedSuggestions && cachedSuggestions.length > 0) {
+      setSuggestions(cachedSuggestions);
+      setIsOpen(true);
+    }
+  };
+
+  const handleBlur = () => {
+    isFocusedRef.current = false;
+    closeSuggestions();
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Escape") {
+      closeSuggestions();
+      return;
+    }
+
+    if (suggestions.length === 0) {
+      return;
+    }
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setIsOpen(true);
+      setHighlightedIndex((current) => (current + 1) % suggestions.length);
+      return;
+    }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setIsOpen(true);
+      setHighlightedIndex((current) => (current <= 0 ? suggestions.length - 1 : current - 1));
+      return;
+    }
+
+    if (event.key === "Enter" && isOpen && highlightedIndex >= 0) {
+      event.preventDefault();
+      applySuggestion(suggestions[highlightedIndex]);
+    }
+  };
+
+  return (
+    <div className="relative space-y-2">
+      <Label htmlFor={id}>{label}</Label>
+      <input
+        id={id}
+        name={name}
+        className={INPUT_CLASS_NAME}
+        autoComplete="off"
+        value={value}
+        onBlur={handleBlur}
+        onChange={handleChange}
+        onFocus={handleFocus}
+        onKeyDown={handleKeyDown}
+        placeholder={placeholder}
+        required
+        role="combobox"
+        aria-autocomplete="list"
+        aria-controls={isOpen ? listboxId : undefined}
+        aria-activedescendant={isOpen ? activeSuggestionId : undefined}
+        aria-expanded={isOpen}
+      />
+
+      {isOpen ? (
+        // biome-ignore lint/a11y/useSemanticElements: ARIA combobox popups intentionally use a listbox while focus stays on the text input.
+        <div id={listboxId} role="listbox" tabIndex={-1} className={SUGGESTION_LIST_CLASS_NAME}>
+          {suggestions.map((suggestion, index) => (
+            <div
+              key={`${suggestion.label}-${index}`}
+              id={`${listboxId}-option-${index}`}
+              // biome-ignore lint/a11y/useSemanticElements: ARIA combobox popups intentionally expose each suggestion as an option instead of moving focus off the input.
+              role="option"
+              tabIndex={-1}
+              aria-selected={highlightedIndex === index}
+              className={cn(
+                SUGGESTION_OPTION_CLASS_NAME,
+                highlightedIndex === index && "bg-white/82 text-foreground dark:bg-slate-900/86",
+              )}
+              onMouseEnter={() => setHighlightedIndex(index)}
+              onPointerDown={(event) => {
+                event.preventDefault();
+                applySuggestion(suggestion);
+              }}
+            >
+              {suggestion.label}
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
 export const TripPlannerPage = () => {
   const t = useTranslations("tripPlanner");
   const homeFilterT = useTranslations("home.filters");
   const [originQuery, setOriginQuery] = useState("");
   const [destinationQuery, setDestinationQuery] = useState("");
+  const [originLocation, setOriginLocation] = useState<TripPlannerResolvedLocation | null>(null);
+  const [destinationLocation, setDestinationLocation] =
+    useState<TripPlannerResolvedLocation | null>(null);
   const [searchState, setSearchState] = useState<SearchState>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [result, setResult] = useState<Awaited<ReturnType<typeof searchTripPlanner>> | null>(null);
@@ -272,33 +561,27 @@ export const TripPlannerPage = () => {
         >
           <div className="min-h-0">
             <form className="grid gap-4 md:grid-cols-[1fr_1fr_auto]" onSubmit={handleSubmit}>
-              <div className="space-y-2">
-                <Label htmlFor="trip-planner-origin">{t("originLabel")}</Label>
-                <input
-                  id="trip-planner-origin"
-                  name="originQuery"
-                  className={INPUT_CLASS_NAME}
-                  autoComplete="street-address"
-                  value={originQuery}
-                  onChange={(event) => setOriginQuery(event.target.value)}
-                  placeholder={t("originPlaceholder")}
-                  required
-                />
-              </div>
+              <TripPlannerSuggestionInput
+                id="trip-planner-origin"
+                label={t("originLabel")}
+                name="originQuery"
+                onSelectedLocationChange={setOriginLocation}
+                onValueChange={setOriginQuery}
+                placeholder={t("originPlaceholder")}
+                selectedLocation={originLocation}
+                value={originQuery}
+              />
 
-              <div className="space-y-2">
-                <Label htmlFor="trip-planner-destination">{t("destinationLabel")}</Label>
-                <input
-                  id="trip-planner-destination"
-                  name="destinationQuery"
-                  className={INPUT_CLASS_NAME}
-                  autoComplete="street-address"
-                  value={destinationQuery}
-                  onChange={(event) => setDestinationQuery(event.target.value)}
-                  placeholder={t("destinationPlaceholder")}
-                  required
-                />
-              </div>
+              <TripPlannerSuggestionInput
+                id="trip-planner-destination"
+                label={t("destinationLabel")}
+                name="destinationQuery"
+                onSelectedLocationChange={setDestinationLocation}
+                onValueChange={setDestinationQuery}
+                placeholder={t("destinationPlaceholder")}
+                selectedLocation={destinationLocation}
+                value={destinationQuery}
+              />
 
               <div className="flex items-end">
                 <Button

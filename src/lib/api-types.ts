@@ -1191,6 +1191,81 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/trip-planner/suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        query: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Trip planner place suggestions */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            suggestions: {
+                                coordinate: {
+                                    lat: number;
+                                    lon: number;
+                                };
+                                label: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Bearer token required outside localhost */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Trip planner provider is unavailable or not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                            /** @enum {string} */
+                            errorCode: "destination_not_found" | "origin_not_found" | "provider_unavailable" | "route_not_found" | "trip_planner_not_configured";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/trip-planner/search": {
         parameters: {
             query?: never;

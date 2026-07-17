@@ -1,5 +1,6 @@
 import { ApiError, apiFetch } from "@/lib/api";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import type { TripPlannerSearchResponse, TripPlannerSuggestionsResponse } from "@/lib/trip-planner";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TripPlannerPage } from "./trip-planner-page";
@@ -20,7 +21,10 @@ vi.mock("@/lib/api", async () => {
 });
 
 describe("TripPlannerPage", () => {
-  const createSearchResponse = () => ({
+  type SearchResponse = TripPlannerSearchResponse;
+  type SuggestionResponse = TripPlannerSuggestionsResponse;
+
+  const createSearchResponse = (): SearchResponse => ({
     destination: {
       coordinate: { lat: 61.5, lon: 23.7 },
       label: "Tampere",
@@ -99,7 +103,7 @@ describe("TripPlannerPage", () => {
     },
   });
 
-  const createLargeSearchResponse = () => ({
+  const createLargeSearchResponse = (): SearchResponse => ({
     ...createSearchResponse(),
     parks: [
       ...createSearchResponse().parks,
@@ -145,43 +149,365 @@ describe("TripPlannerPage", () => {
     ],
   });
 
+  const createSuggestionResponse = (query: string): SuggestionResponse => ({
+    suggestions: Array.from({ length: 3 }, (_, index) => ({
+      coordinate: {
+        lat: 60.17 + index * 0.01,
+        lon: 24.94 + index * 0.01,
+      },
+      label: `${query} suggestion ${index + 1}`,
+    })),
+  });
+
+  const createAbortError = () => {
+    const error = new Error("The operation was aborted.");
+    error.name = "AbortError";
+    return error;
+  };
+
+  const getApiCallsForPath = (path: string) =>
+    vi.mocked(apiFetch).mock.calls.filter(([calledPath]) => calledPath === path);
+
+  const getSearchRequestBodies = () =>
+    getApiCallsForPath("/api/trip-planner/search").map(([, options]) =>
+      JSON.parse(String(options?.body ?? "{}")),
+    );
+
+  const mockTripPlannerApi = ({
+    searchResponses = [createSearchResponse()],
+    suggestionHandler = async (query: string) => createSuggestionResponse(query),
+  }: {
+    searchResponses?: Array<SearchResponse | Error>;
+    suggestionHandler?: (query: string, signal?: AbortSignal) => Promise<SuggestionResponse>;
+  } = {}) => {
+    const queuedSearchResponses = [...searchResponses];
+
+    vi.mocked(apiFetch).mockImplementation(async (path, options) => {
+      if (path === "/api/trip-planner/suggestions") {
+        const body = JSON.parse(String(options?.body ?? "{}")) as { query: string };
+        return suggestionHandler(body.query, options?.signal as AbortSignal | undefined) as never;
+      }
+
+      if (path === "/api/trip-planner/search") {
+        const nextResponse = queuedSearchResponses.shift();
+
+        if (nextResponse instanceof Error) {
+          throw nextResponse;
+        }
+
+        if (!nextResponse) {
+          throw new Error("No trip planner search response queued");
+        }
+
+        return nextResponse as never;
+      }
+
+      throw new Error(`Unexpected apiFetch path: ${path}`);
+    });
+  };
+
   beforeEach(() => {
     vi.resetAllMocks();
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     cleanup();
   });
 
+  it("renders backend suggestions after a debounce and applies a clicked suggestion", async () => {
+    vi.useFakeTimers();
+    mockTripPlannerApi({
+      searchResponses: [createSearchResponse()],
+      suggestionHandler: async (query) => ({
+        suggestions: [
+          {
+            coordinate: { lat: 60.17, lon: 24.94 },
+            label: `${query}, Suomi`,
+          },
+          {
+            coordinate: { lat: 60.18, lon: 24.95 },
+            label: `${query} keskusta`,
+          },
+        ],
+      }),
+    });
+
+    render(<TripPlannerPage />);
+
+    const originInput = screen.getByRole("combobox", { name: "tripPlanner.originLabel" });
+    fireEvent.focus(originInput);
+    fireEvent.change(originInput, { target: { value: "Helsinki" } });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+      await Promise.resolve();
+    });
+
+    expect(screen.getByRole("option", { name: "Helsinki, Suomi" })).toBeInTheDocument();
+    fireEvent.pointerDown(screen.getByRole("option", { name: "Helsinki, Suomi" }));
+
+    expect(originInput).toHaveValue("Helsinki, Suomi");
+    expect(screen.queryByRole("option", { name: "Helsinki keskusta" })).not.toBeInTheDocument();
+    expect(getApiCallsForPath("/api/trip-planner/search")).toHaveLength(0);
+  });
+
+  it("keeps suggestion fetches separate from submit-driven route search", async () => {
+    vi.useFakeTimers();
+    mockTripPlannerApi({ searchResponses: [createSearchResponse()] });
+
+    render(<TripPlannerPage />);
+
+    const originInput = screen.getByRole("combobox", { name: "tripPlanner.originLabel" });
+    fireEvent.focus(originInput);
+    fireEvent.change(originInput, { target: { value: "Helsinki" } });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+      await Promise.resolve();
+    });
+
+    expect(getApiCallsForPath("/api/trip-planner/suggestions")).toHaveLength(1);
+    expect(getApiCallsForPath("/api/trip-planner/search")).toHaveLength(0);
+
+    fireEvent.change(screen.getByRole("combobox", { name: "tripPlanner.destinationLabel" }), {
+      target: { value: "Tampere" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "tripPlanner.submit" }));
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(screen.getByTestId("trip-planner-map")).toBeInTheDocument();
+    expect(getApiCallsForPath("/api/trip-planner/search")).toHaveLength(1);
+  });
+
+  it("ignores stale suggestion results after the query changes", async () => {
+    vi.useFakeTimers();
+
+    let resolveFirstQuery: ((value: SuggestionResponse) => void) | undefined;
+
+    mockTripPlannerApi({
+      searchResponses: [createSearchResponse()],
+      suggestionHandler: (query, signal) => {
+        if (query === "Hel") {
+          return new Promise<SuggestionResponse>((resolve, reject) => {
+            resolveFirstQuery = resolve;
+            signal?.addEventListener("abort", () => reject(createAbortError()));
+          });
+        }
+
+        return Promise.resolve({
+          suggestions: [
+            {
+              coordinate: { lat: 60.2, lon: 24.9 },
+              label: "Helsinki newer",
+            },
+          ],
+        });
+      },
+    });
+
+    render(<TripPlannerPage />);
+
+    const originInput = screen.getByRole("combobox", { name: "tripPlanner.originLabel" });
+
+    fireEvent.focus(originInput);
+    fireEvent.change(originInput, { target: { value: "Hel" } });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+      await Promise.resolve();
+    });
+
+    fireEvent.change(originInput, { target: { value: "Helsinki" } });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+      await Promise.resolve();
+    });
+
+    expect(screen.getByRole("option", { name: "Helsinki newer" })).toBeInTheDocument();
+
+    if (resolveFirstQuery) {
+      resolveFirstQuery({
+        suggestions: [
+          {
+            coordinate: { lat: 60.17, lon: 24.94 },
+            label: "Hel stale",
+          },
+        ],
+      });
+    }
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(screen.queryByRole("option", { name: "Hel stale" })).not.toBeInTheDocument();
+  });
+
+  it("degrades quietly when suggestions fail and still allows manual submit", async () => {
+    vi.useFakeTimers();
+    mockTripPlannerApi({
+      searchResponses: [createSearchResponse()],
+      suggestionHandler: async () => {
+        throw new ApiError(503, "API error 503: provider down");
+      },
+    });
+
+    render(<TripPlannerPage />);
+
+    const originInput = screen.getByRole("combobox", { name: "tripPlanner.originLabel" });
+    fireEvent.focus(originInput);
+    fireEvent.change(originInput, { target: { value: "Helsinki" } });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+      await Promise.resolve();
+    });
+
+    expect(screen.queryByRole("option")).not.toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(getApiCallsForPath("/api/trip-planner/search")).toHaveLength(0);
+
+    fireEvent.change(screen.getByRole("combobox", { name: "tripPlanner.destinationLabel" }), {
+      target: { value: "Tampere" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "tripPlanner.submit" }));
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(screen.getByTestId("trip-planner-map")).toBeInTheDocument();
+    expect(getApiCallsForPath("/api/trip-planner/search")).toHaveLength(1);
+  });
+
+  it("does not request suggestions below the minimum query length and closes an open suggestion list", async () => {
+    vi.useFakeTimers();
+    mockTripPlannerApi();
+
+    render(<TripPlannerPage />);
+
+    const originInput = screen.getByRole("combobox", { name: "tripPlanner.originLabel" });
+    fireEvent.focus(originInput);
+    fireEvent.change(originInput, { target: { value: "Helsinki" } });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+      await Promise.resolve();
+    });
+
+    expect(screen.getByRole("option", { name: "Helsinki suggestion 1" })).toBeInTheDocument();
+    expect(getApiCallsForPath("/api/trip-planner/suggestions")).toHaveLength(1);
+
+    fireEvent.change(originInput, { target: { value: "H" } });
+
+    expect(screen.queryByRole("option", { name: "Helsinki suggestion 1" })).not.toBeInTheDocument();
+    expect(getApiCallsForPath("/api/trip-planner/suggestions")).toHaveLength(1);
+  });
+
+  it("reopens cached suggestions on refocus and supports keyboard navigation plus escape", async () => {
+    vi.useFakeTimers();
+    mockTripPlannerApi({
+      suggestionHandler: async () => ({
+        suggestions: [
+          { coordinate: { lat: 60.17, lon: 24.94 }, label: "Helsinki 1" },
+          { coordinate: { lat: 60.18, lon: 24.95 }, label: "Helsinki 2" },
+        ],
+      }),
+    });
+
+    render(<TripPlannerPage />);
+
+    const originInput = screen.getByRole("combobox", { name: "tripPlanner.originLabel" });
+    fireEvent.focus(originInput);
+    fireEvent.change(originInput, { target: { value: "Helsinki" } });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+      await Promise.resolve();
+    });
+
+    expect(screen.getByRole("option", { name: "Helsinki 1" })).toBeInTheDocument();
+
+    fireEvent.blur(originInput);
+    expect(screen.queryByRole("option", { name: "Helsinki 1" })).not.toBeInTheDocument();
+
+    fireEvent.focus(originInput);
+    expect(screen.getByRole("option", { name: "Helsinki 1" })).toBeInTheDocument();
+    expect(getApiCallsForPath("/api/trip-planner/suggestions")).toHaveLength(1);
+
+    fireEvent.keyDown(originInput, { key: "ArrowDown" });
+    fireEvent.keyDown(originInput, { key: "ArrowDown" });
+    fireEvent.keyDown(originInput, { key: "ArrowUp" });
+    fireEvent.keyDown(originInput, { key: "Enter" });
+
+    expect(originInput).toHaveValue("Helsinki 1");
+
+    fireEvent.focus(originInput);
+    fireEvent.change(originInput, { target: { value: "Helsinki" } });
+    expect(screen.getByRole("option", { name: "Helsinki 1" })).toBeInTheDocument();
+    fireEvent.keyDown(originInput, { key: "Escape" });
+    expect(screen.queryByRole("option", { name: "Helsinki 1" })).not.toBeInTheDocument();
+  });
+
+  it("does not refetch suggestions when the selected suggestion label stays unchanged", async () => {
+    vi.useFakeTimers();
+    mockTripPlannerApi({
+      suggestionHandler: async () => ({
+        suggestions: [{ coordinate: { lat: 60.17, lon: 24.94 }, label: "Helsinki, Suomi" }],
+      }),
+    });
+
+    render(<TripPlannerPage />);
+
+    const originInput = screen.getByRole("combobox", { name: "tripPlanner.originLabel" });
+    fireEvent.focus(originInput);
+    fireEvent.change(originInput, { target: { value: "Helsinki" } });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+      await Promise.resolve();
+    });
+
+    fireEvent.pointerDown(screen.getByRole("option", { name: "Helsinki, Suomi" }));
+    expect(originInput).toHaveValue("Helsinki, Suomi");
+    expect(getApiCallsForPath("/api/trip-planner/suggestions")).toHaveLength(1);
+
+    fireEvent.focus(originInput);
+    fireEvent.change(originInput, { target: { value: "Helsinki, Suomi" } });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+      await Promise.resolve();
+    });
+
+    expect(screen.queryByRole("option", { name: "Helsinki, Suomi" })).not.toBeInTheDocument();
+    expect(getApiCallsForPath("/api/trip-planner/suggestions")).toHaveLength(1);
+  });
+
   it("filters the returned result set locally without making a new request", async () => {
-    vi.mocked(apiFetch).mockResolvedValueOnce(createLargeSearchResponse());
+    mockTripPlannerApi({ searchResponses: [createLargeSearchResponse()] });
 
     const user = userEvent.setup();
 
     render(<TripPlannerPage />);
 
-    await user.type(screen.getByRole("textbox", { name: "tripPlanner.originLabel" }), "Helsinki");
+    await user.type(screen.getByRole("combobox", { name: "tripPlanner.originLabel" }), "Helsinki");
     await user.type(
-      screen.getByRole("textbox", { name: "tripPlanner.destinationLabel" }),
+      screen.getByRole("combobox", { name: "tripPlanner.destinationLabel" }),
       "Tampere",
     );
     await user.click(screen.getByRole("button", { name: "tripPlanner.submit" }));
 
     await waitFor(() => {
-      expect(apiFetch).toHaveBeenCalledWith("/api/trip-planner/search", {
-        body: expect.any(String),
-        method: "POST",
-      });
+      expect(getApiCallsForPath("/api/trip-planner/search")).toHaveLength(1);
     });
 
-    expect(JSON.parse(vi.mocked(apiFetch).mock.calls[0]?.[1]?.body as string)).toEqual({
+    expect(getSearchRequestBodies()[0]).toEqual({
       destinationQuery: "Tampere",
       mode: "drive",
       originQuery: "Helsinki",
     });
 
     expect(
-      screen.queryByRole("textbox", { name: "tripPlanner.originLabel" }),
+      screen.queryByRole("combobox", { name: "tripPlanner.originLabel" }),
     ).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "tripPlanner.expandSearch" })).toBeInTheDocument();
     expect(screen.getByText("tripPlanner.originResolvedLabel")).toBeInTheDocument();
@@ -229,7 +555,7 @@ describe("TripPlannerPage", () => {
     expect(screen.getByRole("link", { name: "Nuuksion kansallispuisto" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Hossan polku" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Seurasaari" })).not.toBeInTheDocument();
-    expect(apiFetch).toHaveBeenCalledTimes(1);
+    expect(getApiCallsForPath("/api/trip-planner/search")).toHaveLength(1);
 
     await user.selectOptions(
       screen.getByRole("combobox", { name: "tripPlanner.filters.parkTypeLabel" }),
@@ -241,48 +567,26 @@ describe("TripPlannerPage", () => {
       screen.queryByRole("link", { name: "Nuuksion kansallispuisto" }),
     ).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Seurasaari" })).not.toBeInTheDocument();
-    expect(apiFetch).toHaveBeenCalledTimes(1);
+    expect(getApiCallsForPath("/api/trip-planner/search")).toHaveLength(1);
   });
 
   it("shows an empty state when no parks are near the route", async () => {
-    vi.mocked(apiFetch).mockResolvedValueOnce({
-      destination: {
-        coordinate: { lat: 61.5, lon: 23.7 },
-        label: "Tampere",
-      },
-      origin: {
-        coordinate: { lat: 60.17, lon: 24.94 },
-        label: "Helsinki",
-      },
-      parks: [],
-      route: {
-        boundingBox: {
-          minLat: 60.17,
-          minLon: 23.7,
-          maxLat: 61.5,
-          maxLon: 24.94,
+    mockTripPlannerApi({
+      searchResponses: [
+        {
+          ...createSearchResponse(),
+          parks: [],
         },
-        distanceMeters: 180_000,
-        durationSeconds: 9_000,
-        geometry: {
-          coordinates: [
-            [24.94, 60.17],
-            [24.3, 60.55],
-            [23.7, 61.5],
-          ],
-          type: "LineString" as const,
-        },
-        mode: "drive" as const,
-      },
+      ],
     });
 
     const user = userEvent.setup();
 
     render(<TripPlannerPage />);
 
-    await user.type(screen.getByRole("textbox", { name: "tripPlanner.originLabel" }), "Helsinki");
+    await user.type(screen.getByRole("combobox", { name: "tripPlanner.originLabel" }), "Helsinki");
     await user.type(
-      screen.getByRole("textbox", { name: "tripPlanner.destinationLabel" }),
+      screen.getByRole("combobox", { name: "tripPlanner.destinationLabel" }),
       "Tampere",
     );
     await user.click(screen.getByRole("button", { name: "tripPlanner.submit" }));
@@ -294,15 +598,15 @@ describe("TripPlannerPage", () => {
   });
 
   it("collapses the search form after a successful search and allows reopening it", async () => {
-    vi.mocked(apiFetch).mockResolvedValueOnce(createLargeSearchResponse());
+    mockTripPlannerApi({ searchResponses: [createLargeSearchResponse()] });
 
     const user = userEvent.setup();
 
     render(<TripPlannerPage />);
 
-    await user.type(screen.getByRole("textbox", { name: "tripPlanner.originLabel" }), "Helsinki");
+    await user.type(screen.getByRole("combobox", { name: "tripPlanner.originLabel" }), "Helsinki");
     await user.type(
-      screen.getByRole("textbox", { name: "tripPlanner.destinationLabel" }),
+      screen.getByRole("combobox", { name: "tripPlanner.destinationLabel" }),
       "Tampere",
     );
     await user.click(screen.getByRole("button", { name: "tripPlanner.submit" }));
@@ -310,14 +614,14 @@ describe("TripPlannerPage", () => {
     await screen.findByTestId("trip-planner-map");
 
     expect(
-      screen.queryByRole("textbox", { name: "tripPlanner.originLabel" }),
+      screen.queryByRole("combobox", { name: "tripPlanner.originLabel" }),
     ).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "tripPlanner.expandSearch" }));
 
-    expect(screen.getByRole("textbox", { name: "tripPlanner.originLabel" })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "tripPlanner.originLabel" })).toBeInTheDocument();
     expect(
-      screen.getByRole("textbox", { name: "tripPlanner.destinationLabel" }),
+      screen.getByRole("combobox", { name: "tripPlanner.destinationLabel" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "tripPlanner.collapseSearch" })).toBeInTheDocument();
     expect(screen.queryByText("tripPlanner.originResolvedLabel")).not.toBeInTheDocument();
@@ -325,15 +629,15 @@ describe("TripPlannerPage", () => {
   });
 
   it("switches from the default map subview to the list with the currently visible parks", async () => {
-    vi.mocked(apiFetch).mockResolvedValueOnce(createLargeSearchResponse());
+    mockTripPlannerApi({ searchResponses: [createLargeSearchResponse()] });
 
     const user = userEvent.setup();
 
     render(<TripPlannerPage />);
 
-    await user.type(screen.getByRole("textbox", { name: "tripPlanner.originLabel" }), "Helsinki");
+    await user.type(screen.getByRole("combobox", { name: "tripPlanner.originLabel" }), "Helsinki");
     await user.type(
-      screen.getByRole("textbox", { name: "tripPlanner.destinationLabel" }),
+      screen.getByRole("combobox", { name: "tripPlanner.destinationLabel" }),
       "Tampere",
     );
     await user.click(screen.getByRole("button", { name: "tripPlanner.submit" }));
@@ -363,18 +667,26 @@ describe("TripPlannerPage", () => {
       screen.queryByRole("link", { name: "Nuuksion kansallispuisto" }),
     ).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Seurasaari" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "tripPlanner.viewTabs.map" }));
+
+    expect(screen.getByRole("tab", { name: "tripPlanner.viewTabs.map" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByTestId("trip-planner-map")).toHaveTextContent("map:seurasaari");
   });
 
   it("hides filters when the result set has 20 places or fewer", async () => {
-    vi.mocked(apiFetch).mockResolvedValueOnce(createSearchResponse());
+    mockTripPlannerApi({ searchResponses: [createSearchResponse()] });
 
     const user = userEvent.setup();
 
     render(<TripPlannerPage />);
 
-    await user.type(screen.getByRole("textbox", { name: "tripPlanner.originLabel" }), "Helsinki");
+    await user.type(screen.getByRole("combobox", { name: "tripPlanner.originLabel" }), "Helsinki");
     await user.type(
-      screen.getByRole("textbox", { name: "tripPlanner.destinationLabel" }),
+      screen.getByRole("combobox", { name: "tripPlanner.destinationLabel" }),
       "Tampere",
     );
     await user.click(screen.getByRole("button", { name: "tripPlanner.submit" }));
@@ -393,15 +705,15 @@ describe("TripPlannerPage", () => {
   });
 
   it("shows a filtered empty state when local filters hide all returned parks", async () => {
-    vi.mocked(apiFetch).mockResolvedValueOnce(createLargeSearchResponse());
+    mockTripPlannerApi({ searchResponses: [createLargeSearchResponse()] });
 
     const user = userEvent.setup();
 
     render(<TripPlannerPage />);
 
-    await user.type(screen.getByRole("textbox", { name: "tripPlanner.originLabel" }), "Helsinki");
+    await user.type(screen.getByRole("combobox", { name: "tripPlanner.originLabel" }), "Helsinki");
     await user.type(
-      screen.getByRole("textbox", { name: "tripPlanner.destinationLabel" }),
+      screen.getByRole("combobox", { name: "tripPlanner.destinationLabel" }),
       "Tampere",
     );
     await user.click(screen.getByRole("button", { name: "tripPlanner.submit" }));
@@ -426,23 +738,52 @@ describe("TripPlannerPage", () => {
     );
   });
 
-  it("resets local filters when a new trip search succeeds", async () => {
-    vi.mocked(apiFetch)
-      .mockResolvedValueOnce(createLargeSearchResponse())
-      .mockResolvedValueOnce({
-        ...createLargeSearchResponse(),
-        destination: {
-          coordinate: { lat: 61.49, lon: 23.76 },
-          label: "Jyväskylä",
-        },
-      });
+  it("falls back to showing all returned park types if the filter value is unexpected", async () => {
+    mockTripPlannerApi({ searchResponses: [createLargeSearchResponse()] });
 
     const user = userEvent.setup();
 
     render(<TripPlannerPage />);
 
-    const originInput = screen.getByRole("textbox", { name: "tripPlanner.originLabel" });
-    const destinationInput = screen.getByRole("textbox", { name: "tripPlanner.destinationLabel" });
+    await user.type(screen.getByRole("combobox", { name: "tripPlanner.originLabel" }), "Helsinki");
+    await user.type(
+      screen.getByRole("combobox", { name: "tripPlanner.destinationLabel" }),
+      "Tampere",
+    );
+    await user.click(screen.getByRole("button", { name: "tripPlanner.submit" }));
+
+    await screen.findByTestId("trip-planner-map");
+    await user.click(screen.getByRole("tab", { name: "tripPlanner.viewTabs.list" }));
+
+    fireEvent.change(screen.getByRole("combobox", { name: "tripPlanner.filters.parkTypeLabel" }), {
+      target: { value: "unexpected-filter-value" },
+    });
+
+    expect(screen.getByRole("link", { name: "Nuuksion kansallispuisto" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Hossan polku" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Seurasaari" })).toBeInTheDocument();
+  });
+
+  it("resets local filters when a new trip search succeeds", async () => {
+    mockTripPlannerApi({
+      searchResponses: [
+        createLargeSearchResponse(),
+        {
+          ...createLargeSearchResponse(),
+          destination: {
+            coordinate: { lat: 61.49, lon: 23.76 },
+            label: "Jyväskylä",
+          },
+        },
+      ],
+    });
+
+    const user = userEvent.setup();
+
+    render(<TripPlannerPage />);
+
+    const originInput = screen.getByRole("combobox", { name: "tripPlanner.originLabel" });
+    const destinationInput = screen.getByRole("combobox", { name: "tripPlanner.destinationLabel" });
 
     await user.type(originInput, "Helsinki");
     await user.type(destinationInput, "Tampere");
@@ -459,7 +800,7 @@ describe("TripPlannerPage", () => {
 
     await user.click(screen.getByRole("button", { name: "tripPlanner.expandSearch" }));
 
-    const reopenedDestinationInput = screen.getByRole("textbox", {
+    const reopenedDestinationInput = screen.getByRole("combobox", {
       name: "tripPlanner.destinationLabel",
     });
 
@@ -468,7 +809,7 @@ describe("TripPlannerPage", () => {
     await user.click(screen.getByRole("button", { name: "tripPlanner.submit" }));
 
     await waitFor(() => {
-      expect(apiFetch).toHaveBeenCalledTimes(2);
+      expect(getApiCallsForPath("/api/trip-planner/search")).toHaveLength(2);
     });
 
     expect(screen.getByTestId("trip-planner-map")).toHaveTextContent(
@@ -480,15 +821,17 @@ describe("TripPlannerPage", () => {
   });
 
   it("shows a request error", async () => {
-    vi.mocked(apiFetch).mockRejectedValueOnce(new ApiError(503, "API error 503: provider down"));
+    mockTripPlannerApi({
+      searchResponses: [new ApiError(503, "API error 503: provider down")],
+    });
 
     const user = userEvent.setup();
 
     render(<TripPlannerPage />);
 
-    await user.type(screen.getByRole("textbox", { name: "tripPlanner.originLabel" }), "Helsinki");
+    await user.type(screen.getByRole("combobox", { name: "tripPlanner.originLabel" }), "Helsinki");
     await user.type(
-      screen.getByRole("textbox", { name: "tripPlanner.destinationLabel" }),
+      screen.getByRole("combobox", { name: "tripPlanner.destinationLabel" }),
       "Tampere",
     );
     await user.click(screen.getByRole("button", { name: "tripPlanner.submit" }));
