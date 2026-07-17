@@ -1,5 +1,13 @@
 "use client";
 
+import {
+  PUBLIC_EYEBROW_BADGE_CLASS_NAME,
+  PUBLIC_HERO_DESCRIPTION_CLASS_NAME,
+  PUBLIC_HERO_HEADING_STACK_CLASS_NAME,
+  PUBLIC_HERO_TITLE_CLASS_NAME,
+  PUBLIC_PAGE_SHELL_CLASS_NAME,
+  PUBLIC_PANEL_CLASS_NAME,
+} from "@/components/layout/public-page-styles";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/cn";
@@ -47,8 +55,6 @@ import { TripPlannerMap } from "./trip-planner-map";
 
 const INPUT_CLASS_NAME =
   "flex h-11 w-full rounded-xl border border-white/45 bg-white/78 px-3 py-2 text-sm text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] placeholder:text-muted-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
-const PANEL_CLASS_NAME =
-  "rounded-[1.75rem] border border-white/45 bg-white/72 p-5 shadow-[0_20px_44px_rgba(148,163,184,0.18)] backdrop-blur-md dark:border-white/10 dark:bg-slate-950/52 dark:shadow-[0_28px_56px_rgba(2,6,23,0.3)]";
 const INLINE_SELECT_CLASS_NAME = cn(
   INPUT_CLASS_NAME,
   "h-10 rounded-lg px-3 py-2 pr-11 text-sm appearance-none md:min-w-44",
@@ -858,18 +864,21 @@ export const TripPlannerPage = () => {
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
+    <div className={PUBLIC_PAGE_SHELL_CLASS_NAME}>
       <section
         className={cn(
-          PANEL_CLASS_NAME,
+          PUBLIC_PANEL_CLASS_NAME,
           "relative space-y-4",
           isSearchPanelExpanded ? "z-20" : "z-10",
         )}
       >
         <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1 space-y-2">
-            <p className="text-sm font-medium text-primary">{t("eyebrow")}</p>
-            <h1 className="text-3xl font-semibold tracking-tight text-foreground">{t("title")}</h1>
+          <div className={cn("min-w-0 flex-1", PUBLIC_HERO_HEADING_STACK_CLASS_NAME)}>
+            <div className={PUBLIC_EYEBROW_BADGE_CLASS_NAME}>
+              <Route className="h-4 w-4" aria-hidden="true" />
+              <span>{t("eyebrow")}</span>
+            </div>
+            <h1 className={PUBLIC_HERO_TITLE_CLASS_NAME}>{t("title")}</h1>
           </div>
 
           {result ? (
@@ -895,7 +904,7 @@ export const TripPlannerPage = () => {
         </div>
 
         {isSearchPanelExpanded ? (
-          <p className="text-sm leading-6 text-muted-foreground">
+          <p className={PUBLIC_HERO_DESCRIPTION_CLASS_NAME}>
             {renderMultilineText(t("description"))}
           </p>
         ) : result ? (
@@ -998,7 +1007,10 @@ export const TripPlannerPage = () => {
       </section>
 
       {result || isResultsLoading ? (
-        <section className={cn(PANEL_CLASS_NAME, "relative z-0 space-y-5")} aria-live="polite">
+        <section
+          className={cn(PUBLIC_PANEL_CLASS_NAME, "relative z-0 space-y-5")}
+          aria-live="polite"
+        >
           <div className="flex items-start justify-between gap-3">
             <h2 className="text-xl font-semibold text-foreground">{getResultsTitle(activeMode)}</h2>
 
@@ -1102,7 +1114,7 @@ export const TripPlannerPage = () => {
                         isMobileResultsLayout &&
                           shouldShowFilters &&
                           !isResultsFiltersVisible &&
-                          "mt-4",
+                          "mt-0",
                       )}
                     >
                       {isMobileResultsLayout ? (

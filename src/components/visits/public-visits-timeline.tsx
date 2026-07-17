@@ -1,5 +1,14 @@
 "use client";
 
+import {
+  PUBLIC_EMPTY_STATE_PANEL_CLASS_NAME,
+  PUBLIC_EYEBROW_BADGE_CLASS_NAME,
+  PUBLIC_HERO_DESCRIPTION_CLASS_NAME,
+  PUBLIC_HERO_HEADING_STACK_CLASS_NAME,
+  PUBLIC_HERO_TITLE_CLASS_NAME,
+  PUBLIC_PAGE_SHELL_CLASS_NAME,
+  PUBLIC_PANEL_CLASS_NAME,
+} from "@/components/layout/public-page-styles";
 import { cn } from "@/lib/cn";
 import { formatFinnishDate } from "@/lib/fi-date";
 import type { VisitWithPark } from "@/lib/parks";
@@ -164,25 +173,23 @@ const PublicVisitsTimeline = ({
   let visitFocusIndex = 0;
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 py-8">
-      <section className="rounded-[2rem] border border-white/55 bg-white/66 p-6 shadow-[0_24px_60px_rgba(148,163,184,0.18)] backdrop-blur-xl supports-[backdrop-filter]:bg-white/58 dark:border-white/10 dark:bg-slate-950/52 dark:shadow-[0_28px_64px_rgba(2,6,23,0.34)]">
+    <div className={PUBLIC_PAGE_SHELL_CLASS_NAME}>
+      <section className={PUBLIC_PANEL_CLASS_NAME}>
         <div className="flex flex-col gap-4">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200/60 bg-[linear-gradient(145deg,rgba(22,101,52,0.12),rgba(37,99,235,0.12))] px-3 py-1 text-sm font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-emerald-300/15 dark:bg-[linear-gradient(145deg,rgba(22,101,52,0.22),rgba(37,99,235,0.2))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+          <div className={cn("max-w-3xl", PUBLIC_HERO_HEADING_STACK_CLASS_NAME)}>
+            <div className={PUBLIC_EYEBROW_BADGE_CLASS_NAME}>
               <Footprints className="h-4 w-4" aria-hidden="true" />
               <span>{t("eyebrow")}</span>
             </div>
-            <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">{t("title")}</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-              {t("description")}
-            </p>
+            <h1 className={PUBLIC_HERO_TITLE_CLASS_NAME}>{t("title")}</h1>
+            <p className={`mt-3 ${PUBLIC_HERO_DESCRIPTION_CLASS_NAME}`}>{t("description")}</p>
           </div>
         </div>
       </section>
 
       {error ? (
         <section
-          className="mt-6 rounded-[2rem] border border-destructive/20 bg-destructive/8 p-5 text-destructive shadow-[0_16px_36px_rgba(190,24,93,0.08)] dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-200"
+          className="rounded-[2rem] border border-destructive/20 bg-destructive/8 p-5 text-destructive shadow-[0_16px_36px_rgba(190,24,93,0.08)] dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-200"
           role="alert"
         >
           <h2 className="text-lg font-semibold tracking-tight">{t("errorTitle")}</h2>
@@ -190,7 +197,7 @@ const PublicVisitsTimeline = ({
         </section>
       ) : null}
 
-      <section className="mt-6 rounded-[2rem] border border-white/55 bg-white/66 p-5 shadow-[0_24px_60px_rgba(148,163,184,0.18)] backdrop-blur-xl supports-[backdrop-filter]:bg-white/58 dark:border-white/10 dark:bg-slate-950/52 dark:shadow-[0_28px_64px_rgba(2,6,23,0.34)]">
+      <section className={PUBLIC_PANEL_CLASS_NAME}>
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-2">
           <CalendarRange className="h-4 w-4 text-primary" aria-hidden="true" />
           <h2 className="text-lg font-semibold tracking-tight">{t("filters.title")}</h2>
@@ -281,13 +288,13 @@ const PublicVisitsTimeline = ({
       </section>
 
       {visits.length === 0 && !error ? (
-        <section className="mt-6 rounded-[2rem] border border-dashed border-white/45 bg-white/54 p-8 text-center backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/40">
+        <section className={PUBLIC_EMPTY_STATE_PANEL_CLASS_NAME}>
           <p className="text-muted-foreground">{t("empty.all")}</p>
         </section>
       ) : null}
 
       {visits.length > 0 && model.filteredVisits.length === 0 ? (
-        <section className="mt-6 rounded-[2rem] border border-dashed border-white/45 bg-white/54 p-8 text-center backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/40">
+        <section className={PUBLIC_EMPTY_STATE_PANEL_CLASS_NAME}>
           <p className="text-muted-foreground">{t("empty.filtered")}</p>
           <Link
             href="/visits"
@@ -299,7 +306,7 @@ const PublicVisitsTimeline = ({
       ) : null}
 
       {model.filteredVisits.length > 0 ? (
-        <div className="relative mt-6 space-y-8 before:absolute before:bottom-0 before:left-4 before:top-0 before:w-px before:-translate-x-1/2 before:bg-[linear-gradient(180deg,rgba(22,101,52,0.42),rgba(37,99,235,0.18),rgba(22,101,52,0.42))] before:content-[''] md:before:left-1/2 md:before:-translate-x-1/2">
+        <div className="relative space-y-8 before:absolute before:bottom-0 before:left-4 before:top-0 before:w-px before:-translate-x-1/2 before:bg-[linear-gradient(180deg,rgba(22,101,52,0.42),rgba(37,99,235,0.18),rgba(22,101,52,0.42))] before:content-[''] md:before:left-1/2 md:before:-translate-x-1/2">
           {model.sections.map((section) => (
             <section key={section.year} aria-labelledby={`visits-year-${section.year}`}>
               <div className="flex items-center gap-3 pl-12 pr-4 md:px-0">
