@@ -10,7 +10,7 @@
       "home": "Etusivu",
       "map": "Paikat",
       "visits": "Käynnit",
-      "tripPlanner": "Roadtrip",
+      "tripPlanner": "Reitit",
       "controlPanel": "Hallinta",
       "filters": "Suodata karttaa",
       "menu": "Valikko",
@@ -146,7 +146,7 @@
   },
   "tripPlanner": {
     "eyebrow": "Matkan varrelta",
-    "title": "Roadtrip",
+    "title": "Reitit",
     "description": "Reissun päälle lähdössä? Suunnittele tästä matkasi!\nAnna lähtöpiste, ja näet paikat sen lähellä. Mikäli annat myös määränpään, näät reitin ja paikat matkan varrella.",
     "originLabel": "Lähtöpiste",
     "originPlaceholder": "Esim. Helsinki",
@@ -154,8 +154,8 @@
     "destinationLabel": "Määränpää",
     "destinationPlaceholder": "Esim. Tampere",
     "submit": "Hae paikat",
-    "expandSearch": "Muokkaa hakua",
-    "collapseSearch": "Piilota haku",
+    "expandSearch": "Uusi haku",
+    "collapseSearch": "Sulje haku",
     "loading": "Haetaan...",
     "resultsTitle": "Paikat reitin varrella",
     "resultsTitleNearby": "Paikat lähellä",
@@ -188,22 +188,22 @@
       "reset": "Näytä kaikki"
     },
     "viewTabs": {
-      "ariaLabel": "Roadtrip-tulosten näkymä",
+      "ariaLabel": "Reitit-tulosten näkymä",
       "list": "Lista",
       "map": "Kartta"
     },
     "map": {
-      "ariaLabel": "Roadtrip-reitin kartta",
-      "ariaLabelNearby": "Roadtrip-tulosten kartta",
+      "ariaLabel": "Reitit-reitin kartta",
+      "ariaLabelNearby": "Reitit-tulosten kartta",
       "loading": "Ladataan reittikarttaa...",
-      "loadingNearby": "Ladataan Roadtrip-karttaa..."
+      "loadingNearby": "Ladataan Reitit-karttaa..."
     },
     "sections": {
       "notVisited": "Käymättömät paikat",
       "visited": "Käydyt paikat"
     },
     "errors": {
-      "generic": "Roadtrip-haun suorittaminen epäonnistui.",
+      "generic": "Reitit-haun suorittaminen epäonnistui.",
       "originRequired": "Lähtöpiste on pakollinen."
     }
   },
