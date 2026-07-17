@@ -1,13 +1,31 @@
 import { ApiError, apiFetch } from "@/lib/api";
-import type { TripPlannerSearchResponse, TripPlannerSuggestionsResponse } from "@/lib/trip-planner";
+import type {
+  TripPlannerNearbyResponse,
+  TripPlannerSearchResponse,
+  TripPlannerSuggestionsResponse,
+} from "@/lib/trip-planner";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TripPlannerPage } from "./trip-planner-page";
 
 vi.mock("./trip-planner-map", () => ({
-  TripPlannerMap: ({ parks }: { parks: Array<{ slug: string }> }) => (
-    <div data-testid="trip-planner-map">map:{parks.map((park) => park.slug).join(",")}</div>
+  TripPlannerMap: ({
+    destination,
+    mode,
+    parks,
+  }: {
+    destination?: { label: string } | null;
+    mode: "nearby" | "route";
+    parks: Array<{ slug: string }>;
+  }) => (
+    <div
+      data-testid="trip-planner-map"
+      data-destination={destination?.label ?? ""}
+      data-mode={mode}
+    >
+      map:{parks.map((park) => park.slug).join(",")}
+    </div>
   ),
 }));
 
@@ -22,6 +40,7 @@ vi.mock("@/lib/api", async () => {
 
 describe("TripPlannerPage", () => {
   type SearchResponse = TripPlannerSearchResponse;
+  type NearbyResponse = TripPlannerNearbyResponse;
   type SuggestionResponse = TripPlannerSuggestionsResponse;
 
   const createSearchResponse = (): SearchResponse => ({
@@ -149,6 +168,28 @@ describe("TripPlannerPage", () => {
     ],
   });
 
+  const createNearbyResponse = (): NearbyResponse => {
+    const routeResponse = createSearchResponse();
+
+    return {
+      origin: routeResponse.origin,
+      parks: routeResponse.parks.map(({ distanceFromRouteKm, ...park }) => ({
+        ...park,
+        distanceFromOriginKm: distanceFromRouteKm,
+      })),
+      searchArea: {
+        boundingBox: {
+          minLat: 59.95,
+          minLon: 24.69,
+          maxLat: 60.39,
+          maxLon: 25.19,
+        },
+        center: routeResponse.origin.coordinate,
+        maxDistanceKm: 25,
+      },
+    };
+  };
+
   const createSuggestionResponse = (query: string): SuggestionResponse => ({
     suggestions: Array.from({ length: 3 }, (_, index) => ({
       coordinate: {
@@ -185,19 +226,41 @@ describe("TripPlannerPage", () => {
       JSON.parse(String(options?.body ?? "{}")),
     );
 
+  const getNearbyRequestBodies = () =>
+    getApiCallsForPath("/api/trip-planner/nearby").map(([, options]) =>
+      JSON.parse(String(options?.body ?? "{}")),
+    );
+
   const mockTripPlannerApi = ({
+    nearbyResponses = [createNearbyResponse()],
     searchResponses = [createSearchResponse()],
     suggestionHandler = async (query: string) => createSuggestionResponse(query),
   }: {
+    nearbyResponses?: Array<NearbyResponse | Error>;
     searchResponses?: Array<SearchResponse | Error>;
     suggestionHandler?: (query: string, signal?: AbortSignal) => Promise<SuggestionResponse>;
   } = {}) => {
+    const queuedNearbyResponses = [...nearbyResponses];
     const queuedSearchResponses = [...searchResponses];
 
     vi.mocked(apiFetch).mockImplementation(async (path, options) => {
       if (path === "/api/trip-planner/suggestions") {
         const body = JSON.parse(String(options?.body ?? "{}")) as { query: string };
         return suggestionHandler(body.query, options?.signal as AbortSignal | undefined) as never;
+      }
+
+      if (path === "/api/trip-planner/nearby") {
+        const nextResponse = queuedNearbyResponses.shift();
+
+        if (nextResponse instanceof Error) {
+          throw nextResponse;
+        }
+
+        if (!nextResponse) {
+          throw new Error("No trip planner nearby response queued");
+        }
+
+        return nextResponse as never;
       }
 
       if (path === "/api/trip-planner/search") {
@@ -262,6 +325,101 @@ describe("TripPlannerPage", () => {
     expect(originInput).toHaveValue("Helsinki, Suomi");
     expect(screen.queryByRole("option", { name: "Helsinki keskusta" })).not.toBeInTheDocument();
     expect(getApiCallsForPath("/api/trip-planner/search")).toHaveLength(0);
+  });
+
+  it("requires only the origin before enabling submit", async () => {
+    mockTripPlannerApi();
+
+    const user = userEvent.setup();
+
+    render(<TripPlannerPage />);
+
+    const submitButton = screen.getByRole("button", { name: "tripPlanner.submit" });
+
+    expect(submitButton).toBeDisabled();
+
+    await user.type(
+      screen.getByRole("combobox", { name: "tripPlanner.destinationLabel" }),
+      "Tampere",
+    );
+    expect(submitButton).toBeDisabled();
+
+    await user.type(screen.getByRole("combobox", { name: "tripPlanner.originLabel" }), "Helsinki");
+    expect(submitButton).toBeEnabled();
+  });
+
+  it("shows an origin-required validation message after blur when the field is left empty", async () => {
+    mockTripPlannerApi();
+
+    const user = userEvent.setup();
+
+    render(<TripPlannerPage />);
+
+    const originInput = screen.getByRole("combobox", { name: "tripPlanner.originLabel" });
+
+    expect(screen.queryByText("tripPlanner.errors.originRequired")).not.toBeInTheDocument();
+    expect(originInput).not.toHaveAttribute("aria-invalid", "true");
+
+    await user.click(originInput);
+    await user.tab();
+
+    expect(screen.getByText("tripPlanner.errors.originRequired")).toBeInTheDocument();
+    expect(originInput).toHaveAttribute("aria-invalid", "true");
+  });
+
+  it("shows and clears the origin-required validation when the user clears the field", async () => {
+    mockTripPlannerApi();
+
+    const user = userEvent.setup();
+
+    render(<TripPlannerPage />);
+
+    const originInput = screen.getByRole("combobox", { name: "tripPlanner.originLabel" });
+
+    await user.type(originInput, "Helsinki");
+
+    expect(screen.queryByText("tripPlanner.errors.originRequired")).not.toBeInTheDocument();
+    expect(originInput).not.toHaveAttribute("aria-invalid", "true");
+
+    await user.clear(originInput);
+
+    expect(screen.getByText("tripPlanner.errors.originRequired")).toBeInTheDocument();
+    expect(originInput).toHaveAttribute("aria-invalid", "true");
+
+    await user.type(originInput, "Espoo");
+
+    expect(screen.queryByText("tripPlanner.errors.originRequired")).not.toBeInTheDocument();
+    expect(originInput).not.toHaveAttribute("aria-invalid", "true");
+  });
+
+  it("uses the nearby endpoint when only an origin is submitted", async () => {
+    mockTripPlannerApi({ nearbyResponses: [createNearbyResponse()] });
+
+    const user = userEvent.setup();
+
+    render(<TripPlannerPage />);
+
+    await user.type(screen.getByRole("combobox", { name: "tripPlanner.originLabel" }), "Helsinki");
+    await user.click(screen.getByRole("button", { name: "tripPlanner.submit" }));
+
+    await waitFor(() => {
+      expect(getApiCallsForPath("/api/trip-planner/nearby")).toHaveLength(1);
+    });
+
+    expect(getNearbyRequestBodies()[0]).toEqual({
+      maxDistanceKm: 25,
+      originQuery: "Helsinki",
+    });
+    expect(getApiCallsForPath("/api/trip-planner/search")).toHaveLength(0);
+    expect(screen.getByText("tripPlanner.resultsTitleNearby")).toBeInTheDocument();
+    expect(screen.queryByText("tripPlanner.routeSummaryTitle")).not.toBeInTheDocument();
+    expect(screen.queryByText("tripPlanner.destinationResolvedLabel")).not.toBeInTheDocument();
+    expect(screen.getByTestId("trip-planner-map")).toHaveAttribute("data-mode", "nearby");
+    expect(screen.getByTestId("trip-planner-map")).toHaveAttribute("data-destination", "");
+
+    await user.click(screen.getByRole("tab", { name: "tripPlanner.viewTabs.list" }));
+
+    expect(screen.getAllByText("tripPlanner.distanceFromOrigin").length).toBeGreaterThan(0);
   });
 
   it("keeps suggestion fetches separate from submit-driven route search", async () => {

@@ -1,4 +1,4 @@
-import type { TripPlannerParkResult, TripPlannerRouteResult } from "@/lib/trip-planner";
+import type { TripPlannerRouteResult, TripPlannerUiParkResult } from "@/lib/trip-planner";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TripPlannerMap } from "./trip-planner-map";
@@ -139,12 +139,12 @@ const route: TripPlannerRouteResult = {
   mode: "drive",
 };
 
-const parks: TripPlannerParkResult[] = [
+const parks: TripPlannerUiParkResult[] = [
   {
     address: "Nuuksiontie 83, 02820 Espoo",
     boundingBox: { minLat: 60.26, minLon: 24.48, maxLat: 60.35, maxLon: 24.58 },
     category: { name: "Kansallispuistot", slug: "national-park" },
-    distanceFromRouteKm: 4.2,
+    distanceKm: 4.2,
     locationLabel: "Nuuksiontie 83",
     markerPoint: { lat: 60.31, lon: 24.53 },
     name: "Nuuksion kansallispuisto",
@@ -158,7 +158,7 @@ const parks: TripPlannerParkResult[] = [
     address: "Hossantie 278A, 89920 Suomussalmi",
     boundingBox: { minLat: 60.02, minLon: 23.92, maxLat: 60.68, maxLon: 25.02 },
     category: { name: "Polut ja reitit", slug: "trails-and-routes" },
-    distanceFromRouteKm: 22.3,
+    distanceKm: 22.3,
     locationLabel: "Hossantie 278A",
     markerPoint: { lat: 60.62, lon: 24.96 },
     name: "Hossan polku",
@@ -169,6 +169,16 @@ const parks: TripPlannerParkResult[] = [
     visitedSummary: { lastVisitedOn: "2025-07-10", visitCount: 1, visited: true },
   },
 ];
+
+const routeModeProps = {
+  destination: { coordinate: { lat: 60.6, lon: 24.9 }, label: "Tampere" },
+  distanceLabel: "tripPlanner.distanceFromRoute",
+  mode: "route" as const,
+  origin: { coordinate: { lat: 60.1, lon: 24.0 }, label: "Helsinki" },
+  parks,
+  route,
+  searchArea: null,
+};
 
 describe("TripPlannerMap", () => {
   beforeEach(() => {
@@ -182,14 +192,7 @@ describe("TripPlannerMap", () => {
   });
 
   it("renders an accessible map container", () => {
-    render(
-      <TripPlannerMap
-        destination={{ coordinate: { lat: 60.6, lon: 24.9 }, label: "Tampere" }}
-        origin={{ coordinate: { lat: 60.1, lon: 24.0 }, label: "Helsinki" }}
-        parks={parks}
-        route={route}
-      />,
-    );
+    render(<TripPlannerMap {...routeModeProps} />);
 
     expect(
       screen.getByRole("application", { name: "tripPlanner.map.ariaLabel" }),
@@ -197,14 +200,7 @@ describe("TripPlannerMap", () => {
   });
 
   it("renders route geometry, fits visible bounds, and places endpoint and park markers", () => {
-    render(
-      <TripPlannerMap
-        destination={{ coordinate: { lat: 60.6, lon: 24.9 }, label: "Tampere" }}
-        origin={{ coordinate: { lat: 60.1, lon: 24.0 }, label: "Helsinki" }}
-        parks={parks}
-        route={route}
-      />,
-    );
+    render(<TripPlannerMap {...routeModeProps} />);
 
     expect(mockMap.addSource).toHaveBeenCalledWith(
       "trip-planner-route",
@@ -236,15 +232,35 @@ describe("TripPlannerMap", () => {
     expect(markerInstances).toHaveLength(4);
   });
 
-  it("opens a park popup with a park page link when a park pin is clicked", () => {
+  it("renders nearby results without adding route geometry", () => {
     render(
       <TripPlannerMap
-        destination={{ coordinate: { lat: 60.6, lon: 24.9 }, label: "Tampere" }}
+        destination={null}
+        distanceLabel="tripPlanner.distanceFromOrigin"
+        mode="nearby"
         origin={{ coordinate: { lat: 60.1, lon: 24.0 }, label: "Helsinki" }}
         parks={parks}
-        route={route}
+        route={null}
+        searchArea={{
+          boundingBox: {
+            minLat: 59.95,
+            minLon: 23.75,
+            maxLat: 60.35,
+            maxLon: 24.75,
+          },
+          center: { lat: 60.1, lon: 24.0 },
+          maxDistanceKm: 25,
+        }}
       />,
     );
+
+    expect(mockMap.addSource).not.toHaveBeenCalled();
+    expect(mockMap.addLayer).not.toHaveBeenCalled();
+    expect(markerInstances).toHaveLength(3);
+  });
+
+  it("opens a park popup with a park page link when a park pin is clicked", () => {
+    render(<TripPlannerMap {...routeModeProps} />);
 
     fireEvent.click(markerInstances[2].element);
 
@@ -261,19 +277,14 @@ describe("TripPlannerMap", () => {
   it("shows a loading overlay until the map load event fires", async () => {
     mockMap = createMockMap({ autoLoad: false });
 
-    render(
-      <TripPlannerMap
-        destination={{ coordinate: { lat: 60.6, lon: 24.9 }, label: "Tampere" }}
-        origin={{ coordinate: { lat: 60.1, lon: 24.0 }, label: "Helsinki" }}
-        parks={parks}
-        route={route}
-      />,
-    );
+    render(<TripPlannerMap {...routeModeProps} />);
 
     expect(screen.getByText("tripPlanner.map.loading")).toBeInTheDocument();
     expect(mockMap.addSource).not.toHaveBeenCalled();
 
-    mockMap.trigger("load");
+    await act(async () => {
+      mockMap.trigger("load");
+    });
 
     await waitFor(() => {
       expect(screen.queryByText("tripPlanner.map.loading")).not.toBeInTheDocument();
@@ -284,14 +295,7 @@ describe("TripPlannerMap", () => {
   it("opens a popup on hover and closes it after hover leaves", async () => {
     vi.useFakeTimers();
 
-    render(
-      <TripPlannerMap
-        destination={{ coordinate: { lat: 60.6, lon: 24.9 }, label: "Tampere" }}
-        origin={{ coordinate: { lat: 60.1, lon: 24.0 }, label: "Helsinki" }}
-        parks={parks}
-        route={route}
-      />,
-    );
+    render(<TripPlannerMap {...routeModeProps} />);
 
     fireEvent.mouseEnter(markerInstances[2].element);
     expect(screen.getByRole("link", { name: "Nuuksion kansallispuisto" })).toBeInTheDocument();
@@ -307,14 +311,7 @@ describe("TripPlannerMap", () => {
   });
 
   it("closes an open popup when escape is pressed", async () => {
-    render(
-      <TripPlannerMap
-        destination={{ coordinate: { lat: 60.6, lon: 24.9 }, label: "Tampere" }}
-        origin={{ coordinate: { lat: 60.1, lon: 24.0 }, label: "Helsinki" }}
-        parks={parks}
-        route={route}
-      />,
-    );
+    render(<TripPlannerMap {...routeModeProps} />);
 
     fireEvent.mouseEnter(markerInstances[2].element);
     expect(screen.getByRole("link", { name: "Nuuksion kansallispuisto" })).toBeInTheDocument();
@@ -329,14 +326,7 @@ describe("TripPlannerMap", () => {
   });
 
   it("keeps the popup open for popup clicks but closes it when the user clicks the map background", async () => {
-    render(
-      <TripPlannerMap
-        destination={{ coordinate: { lat: 60.6, lon: 24.9 }, label: "Tampere" }}
-        origin={{ coordinate: { lat: 60.1, lon: 24.0 }, label: "Helsinki" }}
-        parks={parks}
-        route={route}
-      />,
-    );
+    render(<TripPlannerMap {...routeModeProps} />);
 
     fireEvent.click(markerInstances[2].element);
 
@@ -355,26 +345,12 @@ describe("TripPlannerMap", () => {
   });
 
   it("clears an active popup when the matching park disappears from the result set", async () => {
-    const { rerender } = render(
-      <TripPlannerMap
-        destination={{ coordinate: { lat: 60.6, lon: 24.9 }, label: "Tampere" }}
-        origin={{ coordinate: { lat: 60.1, lon: 24.0 }, label: "Helsinki" }}
-        parks={parks}
-        route={route}
-      />,
-    );
+    const { rerender } = render(<TripPlannerMap {...routeModeProps} />);
 
     fireEvent.click(markerInstances[2].element);
     expect(screen.getByRole("link", { name: "Nuuksion kansallispuisto" })).toBeInTheDocument();
 
-    rerender(
-      <TripPlannerMap
-        destination={{ coordinate: { lat: 60.6, lon: 24.9 }, label: "Tampere" }}
-        origin={{ coordinate: { lat: 60.1, lon: 24.0 }, label: "Helsinki" }}
-        parks={parks.slice(1)}
-        route={route}
-      />,
-    );
+    rerender(<TripPlannerMap {...routeModeProps} parks={parks.slice(1)} />);
 
     await waitFor(() => {
       expect(
@@ -393,14 +369,7 @@ describe("TripPlannerMap", () => {
     });
     (mockMap.getSource as ReturnType<typeof vi.fn>).mockReturnValue(existingSource);
 
-    render(
-      <TripPlannerMap
-        destination={{ coordinate: { lat: 60.6, lon: 24.9 }, label: "Tampere" }}
-        origin={{ coordinate: { lat: 60.1, lon: 24.0 }, label: "Helsinki" }}
-        parks={parks}
-        route={route}
-      />,
-    );
+    render(<TripPlannerMap {...routeModeProps} />);
 
     expect(existingSource.setData).toHaveBeenCalledWith({
       type: "Feature",

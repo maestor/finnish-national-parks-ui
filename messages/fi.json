@@ -147,7 +147,7 @@
   "tripPlanner": {
     "eyebrow": "Matkan varrelta",
     "title": "Roadtrip",
-    "description": "Reissuun lähdössä? Voit katsella mitä paikkoja Reissuvihko sisältää matkasi varrella antamalla lähtö- ja määränpääosoitteet.",
+    "description": "Reissun päälle lähdössä? Suunnittele tästä matkasi!\nAnna lähtöpiste, ja näet paikat sen lähellä. Mikäli annat myös määränpään, näät reitin ja paikat matkan varrella.",
     "originLabel": "Lähtöpiste",
     "originPlaceholder": "Esim. Helsinki",
     "destinationLabel": "Määränpää",
@@ -157,6 +157,7 @@
     "collapseSearch": "Piilota haku",
     "loading": "Haetaan...",
     "resultsTitle": "Paikat reitin varrella",
+    "resultsTitleNearby": "Paikat lähellä",
     "filteredResultsCount": "{shown} / {total} paikkaa näkyvissä",
     "originResolvedLabel": "Lähtöpiste",
     "destinationResolvedLabel": "Määränpää",
@@ -167,12 +168,15 @@
     "notVisited": "Käymättä",
     "visitCount": "Käyntejä:",
     "distanceFromRoute": "Etäisyys reitiltä",
+    "distanceFromOrigin": "Etäisyys lähtöpisteestä",
     "noResults": "Reitin läheltä ei löytynyt paikkoja valitulla 25 kilometrin rajauksella.",
+    "noResultsNearby": "Lähtöpisteen läheltä ei löytynyt paikkoja valitulla 25 kilometrin rajauksella.",
     "filteredEmpty": "Valituilla suodattimilla ei löytynyt näkyviä paikkoja. Laajenna rajausta tai näytä kaikki tulokset uudelleen.",
     "filters": {
       "parkTypeLabel": "Paikkatyyppi",
       "visitStatusLabel": "Näytetään",
       "distanceLabel": "Enimmäisetäisyys",
+      "distanceFromOriginLabel": "Enimmäisetäisyys lähtöpisteestä",
       "reset": "Näytä kaikki"
     },
     "viewTabs": {
@@ -182,14 +186,17 @@
     },
     "map": {
       "ariaLabel": "Roadtrip-reitin kartta",
-      "loading": "Ladataan reittikarttaa..."
+      "ariaLabelNearby": "Roadtrip-tulosten kartta",
+      "loading": "Ladataan reittikarttaa...",
+      "loadingNearby": "Ladataan Roadtrip-karttaa..."
     },
     "sections": {
       "notVisited": "Käymättömät paikat",
       "visited": "Käydyt paikat"
     },
     "errors": {
-      "generic": "Roadtrip-haun suorittaminen epäonnistui."
+      "generic": "Roadtrip-haun suorittaminen epäonnistui.",
+      "originRequired": "Lähtöpiste on pakollinen."
     }
   },
   "controlPanel": {

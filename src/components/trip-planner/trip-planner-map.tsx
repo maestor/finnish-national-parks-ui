@@ -2,9 +2,10 @@
 
 import { getParkTypeDisplayName } from "@/lib/parks";
 import type {
-  TripPlannerParkResult,
   TripPlannerResolvedLocation,
   TripPlannerRouteResult,
+  TripPlannerSearchAreaResult,
+  TripPlannerUiParkResult,
 } from "@/lib/trip-planner";
 import maplibregl from "maplibre-gl";
 import { useTranslations } from "next-intl";
@@ -13,14 +14,17 @@ import { ThreeDotPulse } from "../ui/three-dot-pulse";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 interface TripPlannerMapProps {
-  destination: TripPlannerResolvedLocation;
+  destination: TripPlannerResolvedLocation | null;
+  distanceLabel: string;
+  mode: "nearby" | "route";
   origin: TripPlannerResolvedLocation;
-  parks: TripPlannerParkResult[];
-  route: TripPlannerRouteResult;
+  parks: TripPlannerUiParkResult[];
+  route: TripPlannerRouteResult | null;
+  searchArea: TripPlannerSearchAreaResult | null;
 }
 
 interface PopupLabels {
-  distanceFromRoute: string;
+  distance: string;
   openParkPage: string;
 }
 
@@ -66,8 +70,10 @@ const getMapStyle = () => {
 };
 
 const getVisibleBounds = (
-  route: TripPlannerRouteResult,
-  parks: TripPlannerParkResult[],
+  baseBoundingBox:
+    | TripPlannerRouteResult["boundingBox"]
+    | TripPlannerSearchAreaResult["boundingBox"],
+  parks: TripPlannerUiParkResult[],
 ): maplibregl.LngLatBoundsLike => {
   const combinedBounds = parks.reduce(
     (currentBounds, park) => ({
@@ -77,10 +83,10 @@ const getVisibleBounds = (
       maxLat: Math.max(currentBounds.maxLat, park.boundingBox.maxLat),
     }),
     {
-      minLon: route.boundingBox.minLon,
-      minLat: route.boundingBox.minLat,
-      maxLon: route.boundingBox.maxLon,
-      maxLat: route.boundingBox.maxLat,
+      minLon: baseBoundingBox.minLon,
+      minLat: baseBoundingBox.minLat,
+      maxLon: baseBoundingBox.maxLon,
+      maxLat: baseBoundingBox.maxLat,
     },
   );
 
@@ -137,7 +143,7 @@ const createEndpointMarkerElement = (label: string, toneClassName: string) => {
   return marker;
 };
 
-const createParkMarkerElement = (park: TripPlannerParkResult) => {
+const createParkMarkerElement = (park: TripPlannerUiParkResult) => {
   const button = document.createElement("button");
   button.type = "button";
   button.className =
@@ -147,7 +153,7 @@ const createParkMarkerElement = (park: TripPlannerParkResult) => {
   return button;
 };
 
-const createPopupNode = (park: TripPlannerParkResult, labels: PopupLabels) => {
+const createPopupNode = (park: TripPlannerUiParkResult, labels: PopupLabels) => {
   const container = document.createElement("div");
   container.className = "max-w-[280px] p-3 text-foreground";
 
@@ -191,7 +197,7 @@ const createPopupNode = (park: TripPlannerParkResult, labels: PopupLabels) => {
 
   const distanceRow = document.createElement("p");
   distanceRow.className = POPUP_DETAIL_ROW_CLASS_NAME;
-  distanceRow.textContent = `${labels.distanceFromRoute} ${DISTANCE_FORMATTER.format(park.distanceFromRouteKm)} km`;
+  distanceRow.textContent = `${labels.distance} ${DISTANCE_FORMATTER.format(park.distanceKm)} km`;
   details.appendChild(distanceRow);
 
   container.appendChild(details);
@@ -210,7 +216,15 @@ const createPopupNode = (park: TripPlannerParkResult, labels: PopupLabels) => {
   return container;
 };
 
-export const TripPlannerMap = ({ destination, origin, parks, route }: TripPlannerMapProps) => {
+export const TripPlannerMap = ({
+  destination,
+  distanceLabel,
+  mode,
+  origin,
+  parks,
+  route,
+  searchArea,
+}: TripPlannerMapProps) => {
   const t = useTranslations("tripPlanner");
   const mapT = useTranslations("map");
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -360,37 +374,47 @@ export const TripPlannerMap = ({ destination, origin, parks, route }: TripPlanne
       return;
     }
 
-    const routeFeature = {
-      type: "Feature" as const,
-      properties: {},
-      geometry: route.geometry,
-    };
+    if (route) {
+      const routeFeature = {
+        type: "Feature" as const,
+        properties: {},
+        geometry: route.geometry,
+      };
 
-    const existingSource = map.getSource(ROUTE_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
-    if (existingSource) {
-      existingSource.setData(routeFeature);
+      const existingSource = map.getSource(ROUTE_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
+      if (existingSource) {
+        existingSource.setData(routeFeature);
+      } else {
+        map.addSource(ROUTE_SOURCE_ID, {
+          type: "geojson",
+          data: routeFeature,
+        });
+      }
+
+      if (!map.getLayer(ROUTE_LINE_LAYER_ID)) {
+        map.addLayer({
+          id: ROUTE_LINE_LAYER_ID,
+          type: "line",
+          source: ROUTE_SOURCE_ID,
+          paint: {
+            "line-color": "hsl(142 76% 36%)",
+            "line-opacity": 0.9,
+            "line-width": 5,
+          },
+          layout: {
+            "line-cap": "round",
+            "line-join": "round",
+          },
+        });
+      }
     } else {
-      map.addSource(ROUTE_SOURCE_ID, {
-        type: "geojson",
-        data: routeFeature,
-      });
-    }
+      if (map.getLayer(ROUTE_LINE_LAYER_ID)) {
+        map.removeLayer(ROUTE_LINE_LAYER_ID);
+      }
 
-    if (!map.getLayer(ROUTE_LINE_LAYER_ID)) {
-      map.addLayer({
-        id: ROUTE_LINE_LAYER_ID,
-        type: "line",
-        source: ROUTE_SOURCE_ID,
-        paint: {
-          "line-color": "hsl(142 76% 36%)",
-          "line-opacity": 0.9,
-          "line-width": 5,
-        },
-        layout: {
-          "line-cap": "round",
-          "line-join": "round",
-        },
-      });
+      if (map.getSource(ROUTE_SOURCE_ID)) {
+        map.removeSource(ROUTE_SOURCE_ID);
+      }
     }
 
     return () => {
@@ -430,14 +454,19 @@ export const TripPlannerMap = ({ destination, origin, parks, route }: TripPlanne
         element: createEndpointMarkerElement(origin.label, "bg-sky-500"),
         anchor: "center",
       }).setLngLat([origin.coordinate.lon, origin.coordinate.lat]),
-      new maplibregl.Marker({
-        element: createEndpointMarkerElement(destination.label, "bg-emerald-600"),
-        anchor: "center",
-      }).setLngLat([destination.coordinate.lon, destination.coordinate.lat]),
     ];
 
+    if (destination) {
+      nextMarkers.push(
+        new maplibregl.Marker({
+          element: createEndpointMarkerElement(destination.label, "bg-emerald-600"),
+          anchor: "center",
+        }).setLngLat([destination.coordinate.lon, destination.coordinate.lat]),
+      );
+    }
+
     const popupLabels: PopupLabels = {
-      distanceFromRoute: t("distanceFromRoute"),
+      distance: distanceLabel,
       openParkPage: mapT("openParkPage"),
     };
 
@@ -512,23 +541,36 @@ export const TripPlannerMap = ({ destination, origin, parks, route }: TripPlanne
     }
 
     markerRefs.current = nextMarkers;
-    map.fitBounds(getVisibleBounds(route, parks), {
-      padding: MAP_PADDING,
-      duration: 0,
-    });
+    map.fitBounds(
+      getVisibleBounds(
+        route?.boundingBox ??
+          searchArea?.boundingBox ?? {
+            minLat: origin.coordinate.lat,
+            minLon: origin.coordinate.lon,
+            maxLat: origin.coordinate.lat,
+            maxLon: origin.coordinate.lon,
+          },
+        parks,
+      ),
+      {
+        padding: MAP_PADDING,
+        duration: 0,
+      },
+    );
     syncPopupVisibility(activeSlugRef.current, hoveredSlugRef.current);
   }, [
     cancelClose,
     closeActivePopupIfFocusLeftMapPopup,
     destination,
+    distanceLabel,
     isMapLoaded,
     mapT,
     origin,
     parks,
     route,
+    searchArea,
     scheduleClose,
     syncPopupVisibility,
-    t,
   ]);
 
   useEffect(() => {
@@ -577,14 +619,16 @@ export const TripPlannerMap = ({ destination, origin, parks, route }: TripPlanne
         ref={mapContainerRef}
         className="h-full w-full"
         role="application"
-        aria-label={t("map.ariaLabel")}
+        aria-label={mode === "route" ? t("map.ariaLabel") : t("map.ariaLabelNearby")}
       />
 
       {!isMapLoaded ? (
         <div className="absolute inset-0 flex items-center justify-center bg-background/65 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-2">
             <ThreeDotPulse size="lg" />
-            <span className="text-sm text-muted-foreground">{t("map.loading")}</span>
+            <span className="text-sm text-muted-foreground">
+              {mode === "route" ? t("map.loading") : t("map.loadingNearby")}
+            </span>
           </div>
         </div>
       ) : null}

@@ -12,11 +12,15 @@ import {
 } from "@/lib/park-type-filters";
 import { getParkTypeDisplayName } from "@/lib/parks";
 import {
-  type TripPlannerParkResult,
   type TripPlannerResolvedLocation,
   type TripPlannerSuggestion,
+  type TripPlannerUiParkResult,
+  type TripPlannerUiResult,
   fetchTripPlannerSuggestions,
+  normalizeTripPlannerNearbyResponse,
+  normalizeTripPlannerSearchResponse,
   searchTripPlanner,
+  searchTripPlannerNearby,
 } from "@/lib/trip-planner";
 import { ChevronDown, ChevronUp, Route } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -25,6 +29,7 @@ import {
   type ChangeEvent,
   type FormEvent,
   type KeyboardEvent,
+  type ReactNode,
   useEffect,
   useId,
   useMemo,
@@ -68,6 +73,7 @@ const DURATION_FORMATTER = new Intl.NumberFormat("fi-FI", {
 });
 
 type SearchState = "idle" | "loading" | "success" | "error";
+type TripPlannerMode = TripPlannerUiResult["mode"];
 type VisitStatusFilter = "all" | "visited" | "not-visited";
 type ViewTab = "list" | "map";
 type TripPlannerParkTypeFilter =
@@ -77,16 +83,15 @@ type TripPlannerParkTypeFilter =
   | typeof TRAILS_AND_ROUTES_CATEGORY_SLUG
   | FilterableParkTypeSlug;
 
-const isTrailPark = (park: TripPlannerParkResult) =>
+const isTrailPark = (park: TripPlannerUiParkResult) =>
   park.category.slug === TRAILS_AND_ROUTES_CATEGORY_SLUG;
 
-const isHikingAndWildernessPark = (park: TripPlannerParkResult) =>
+const isHikingAndWildernessPark = (park: TripPlannerUiParkResult) =>
   park.category.slug === HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG;
 
-const isAreaPark = (park: TripPlannerParkResult) => !isTrailPark(park);
+const isAreaPark = (park: TripPlannerUiParkResult) => !isTrailPark(park);
 
-const formatDistanceFromRoute = (distanceFromRouteKm: number) =>
-  `${DISTANCE_FORMATTER.format(distanceFromRouteKm)} km`;
+const formatDistance = (distanceKm: number) => `${DISTANCE_FORMATTER.format(distanceKm)} km`;
 
 const formatRouteDistance = (distanceMeters: number) => `${Math.round(distanceMeters / 1000)} km`;
 
@@ -101,7 +106,7 @@ const formatRouteDuration = (durationSeconds: number) => {
   return `${DURATION_FORMATTER.format(minutes)} min`;
 };
 
-const splitTripPlannerResults = (parks: TripPlannerParkResult[]) => {
+const splitTripPlannerResults = (parks: TripPlannerUiParkResult[]) => {
   return parks.reduce(
     (groups, park) => {
       if (park.visitedSummary.visited) {
@@ -112,7 +117,7 @@ const splitTripPlannerResults = (parks: TripPlannerParkResult[]) => {
 
       return groups;
     },
-    { visited: [] as TripPlannerParkResult[], notVisited: [] as TripPlannerParkResult[] },
+    { visited: [] as TripPlannerUiParkResult[], notVisited: [] as TripPlannerUiParkResult[] },
   );
 };
 
@@ -156,11 +161,30 @@ const normalizeSuggestionQuery = (query: string) => query.trim().replaceAll(/\s+
 const getSuggestionQueryKey = (query: string) =>
   normalizeSuggestionQuery(query).toLocaleLowerCase("fi-FI");
 
+const renderMultilineText = (text: string) => {
+  let offset = 0;
+
+  return text.split("\n").map((line) => {
+    const key = `${offset}-${line}`;
+    const shouldInsertBreak = offset > 0;
+    offset += line.length + 1;
+
+    return (
+      <span key={key}>
+        {shouldInsertBreak ? <br /> : null}
+        {line}
+      </span>
+    );
+  });
+};
+
 type TripPlannerSuggestionInputProps = {
+  errorMessage?: string;
   id: string;
-  label: string;
+  label: ReactNode;
   name: string;
   placeholder: string;
+  required: boolean;
   selectedLocation: TripPlannerResolvedLocation | null;
   value: string;
   onSelectedLocationChange: (location: TripPlannerResolvedLocation | null) => void;
@@ -168,21 +192,25 @@ type TripPlannerSuggestionInputProps = {
 };
 
 const TripPlannerSuggestionInput = ({
+  errorMessage,
   id,
   label,
   name,
   placeholder,
+  required,
   selectedLocation,
   value,
   onSelectedLocationChange,
   onValueChange,
 }: TripPlannerSuggestionInputProps) => {
+  const errorId = useId();
   const listboxId = useId();
   const isFocusedRef = useRef(false);
   const debounceTimeoutRef = useRef<number | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const latestRequestIdRef = useRef(0);
   const suggestionCacheRef = useRef(new Map<string, TripPlannerSuggestion[]>());
+  const [hasBeenTouched, setHasBeenTouched] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [isOpen, setIsOpen] = useState(false);
   const [suggestions, setSuggestions] = useState<TripPlannerSuggestion[]>([]);
@@ -195,6 +223,7 @@ const TripPlannerSuggestionInput = ({
   const hasSuggestionQuery = normalizedValue.length >= MIN_SUGGESTION_QUERY_LENGTH;
   const activeSuggestionId =
     highlightedIndex >= 0 ? `${listboxId}-option-${highlightedIndex}` : undefined;
+  const showRequiredError = required && hasBeenTouched && normalizedValue.length === 0;
 
   useEffect(() => {
     if (debounceTimeoutRef.current !== null) {
@@ -285,6 +314,7 @@ const TripPlannerSuggestionInput = ({
 
   const applySuggestion = (suggestion: TripPlannerSuggestion) => {
     suggestionCacheRef.current.set(getSuggestionQueryKey(suggestion.label), [suggestion]);
+    setHasBeenTouched(true);
     onValueChange(suggestion.label);
     onSelectedLocationChange(suggestion);
     setSuggestions([]);
@@ -296,6 +326,7 @@ const TripPlannerSuggestionInput = ({
     const nextQueryKey = getSuggestionQueryKey(nextValue);
     const nextNormalizedValue = normalizeSuggestionQuery(nextValue);
 
+    setHasBeenTouched(true);
     onValueChange(nextValue);
 
     if (selectedLocationKey !== nextQueryKey) {
@@ -331,6 +362,7 @@ const TripPlannerSuggestionInput = ({
 
   const handleBlur = () => {
     isFocusedRef.current = false;
+    setHasBeenTouched(true);
     closeSuggestions();
   };
 
@@ -370,7 +402,11 @@ const TripPlannerSuggestionInput = ({
       <input
         id={id}
         name={name}
-        className={INPUT_CLASS_NAME}
+        className={cn(
+          INPUT_CLASS_NAME,
+          showRequiredError &&
+            "border-destructive/70 focus-visible:border-destructive focus-visible:ring-destructive/40",
+        )}
         autoComplete="off"
         value={value}
         onBlur={handleBlur}
@@ -378,13 +414,22 @@ const TripPlannerSuggestionInput = ({
         onFocus={handleFocus}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
-        required
+        aria-describedby={showRequiredError ? errorId : undefined}
+        aria-invalid={showRequiredError || undefined}
+        aria-required={required}
+        required={required}
         role="combobox"
         aria-autocomplete="list"
         aria-controls={isOpen ? listboxId : undefined}
         aria-activedescendant={isOpen ? activeSuggestionId : undefined}
         aria-expanded={isOpen}
       />
+
+      {showRequiredError && errorMessage ? (
+        <p id={errorId} className="text-sm text-destructive" aria-live="polite">
+          {errorMessage}
+        </p>
+      ) : null}
 
       {isOpen ? (
         // biome-ignore lint/a11y/useSemanticElements: ARIA combobox popups intentionally use a listbox while focus stays on the text input.
@@ -426,13 +471,18 @@ export const TripPlannerPage = () => {
     useState<TripPlannerResolvedLocation | null>(null);
   const [searchState, setSearchState] = useState<SearchState>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [result, setResult] = useState<Awaited<ReturnType<typeof searchTripPlanner>> | null>(null);
+  const [result, setResult] = useState<TripPlannerUiResult | null>(null);
   const [activeParkFilter, setActiveParkFilter] = useState<TripPlannerParkTypeFilter>("all");
   const [activeVisitStatus, setActiveVisitStatus] = useState<VisitStatusFilter>("all");
   const [activeDistanceKm, setActiveDistanceKm] = useState(DEFAULT_DISTANCE_FILTER_KM);
   const [activeView, setActiveView] = useState<ViewTab>("map");
   const [isSearchPanelExpanded, setIsSearchPanelExpanded] = useState(true);
   const isResultsLoading = searchState === "loading";
+  const normalizedOriginQuery = normalizeSuggestionQuery(originQuery);
+  const normalizedDestinationQuery = normalizeSuggestionQuery(destinationQuery);
+  const hasOriginQuery = normalizedOriginQuery.length > 0;
+  const activeMode: TripPlannerMode =
+    result?.mode ?? (normalizedDestinationQuery.length > 0 ? "route" : "nearby");
 
   const parkTypeOptions = useMemo(() => {
     const parkTypeFilterOptionsById = new Map(
@@ -505,7 +555,7 @@ export const TripPlannerPage = () => {
         }
       })();
 
-      return matchesVisitStatus && matchesParkType && park.distanceFromRouteKm <= activeDistanceKm;
+      return matchesVisitStatus && matchesParkType && park.distanceKm <= activeDistanceKm;
     });
   }, [activeDistanceKm, activeParkFilter, activeVisitStatus, result]);
 
@@ -521,16 +571,43 @@ export const TripPlannerPage = () => {
     setActiveDistanceKm(DEFAULT_DISTANCE_FILTER_KM);
   };
 
+  const getResultsTitle = (mode: TripPlannerMode) =>
+    mode === "route" ? t("resultsTitle") : t("resultsTitleNearby");
+
+  const getDistanceLabel = (mode: TripPlannerMode) =>
+    mode === "route" ? t("distanceFromRoute") : t("distanceFromOrigin");
+
+  const getDistanceFilterLabel = (mode: TripPlannerMode) =>
+    mode === "route" ? t("filters.distanceLabel") : t("filters.distanceFromOriginLabel");
+
+  const getNoResultsLabel = (mode: TripPlannerMode) =>
+    mode === "route" ? t("noResults") : t("noResultsNearby");
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (!hasOriginQuery) {
+      return;
+    }
+
     setSearchState("loading");
     setErrorMessage(null);
 
     try {
-      const response = await searchTripPlanner({
-        destinationQuery: destinationQuery.trim(),
-        originQuery: originQuery.trim(),
-      });
+      const response =
+        normalizedDestinationQuery.length > 0
+          ? normalizeTripPlannerSearchResponse(
+              await searchTripPlanner({
+                destinationQuery: normalizedDestinationQuery,
+                originQuery: normalizedOriginQuery,
+              }),
+            )
+          : normalizeTripPlannerNearbyResponse(
+              await searchTripPlannerNearby({
+                maxDistanceKm: DEFAULT_DISTANCE_FILTER_KM,
+                originQuery: normalizedOriginQuery,
+              }),
+            );
 
       setResult(response);
       resetLocalFilters();
@@ -576,17 +653,26 @@ export const TripPlannerPage = () => {
         </div>
 
         {isSearchPanelExpanded ? (
-          <p className="text-sm leading-6 text-muted-foreground">{t("description")}</p>
+          <p className="text-sm leading-6 text-muted-foreground">
+            {renderMultilineText(t("description"))}
+          </p>
         ) : result ? (
-          <dl className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
+          <dl
+            className={cn(
+              "grid gap-2 text-sm text-muted-foreground",
+              result.mode === "route" ? "sm:grid-cols-2" : "sm:grid-cols-1",
+            )}
+          >
             <div>
               <dt className="font-medium text-foreground">{t("originResolvedLabel")}</dt>
               <dd>{result.origin.label}</dd>
             </div>
-            <div>
-              <dt className="font-medium text-foreground">{t("destinationResolvedLabel")}</dt>
-              <dd>{result.destination.label}</dd>
-            </div>
+            {result.destination ? (
+              <div>
+                <dt className="font-medium text-foreground">{t("destinationResolvedLabel")}</dt>
+                <dd>{result.destination.label}</dd>
+              </div>
+            ) : null}
           </dl>
         ) : null}
 
@@ -602,12 +688,21 @@ export const TripPlannerPage = () => {
           <div className="min-h-0">
             <form className="grid gap-4 md:grid-cols-[1fr_1fr_auto]" onSubmit={handleSubmit}>
               <TripPlannerSuggestionInput
+                errorMessage={t("errors.originRequired")}
                 id="trip-planner-origin"
-                label={t("originLabel")}
+                label={
+                  <>
+                    <span>{t("originLabel")}</span>
+                    <span className="text-primary" aria-hidden="true">
+                      {" *"}
+                    </span>
+                  </>
+                }
                 name="originQuery"
                 onSelectedLocationChange={setOriginLocation}
                 onValueChange={setOriginQuery}
                 placeholder={t("originPlaceholder")}
+                required
                 selectedLocation={originLocation}
                 value={originQuery}
               />
@@ -619,14 +714,15 @@ export const TripPlannerPage = () => {
                 onSelectedLocationChange={setDestinationLocation}
                 onValueChange={setDestinationQuery}
                 placeholder={t("destinationPlaceholder")}
+                required={false}
                 selectedLocation={destinationLocation}
                 value={destinationQuery}
               />
 
-              <div className="flex items-end">
+              <div className="flex items-end md:items-start md:pt-[26px]">
                 <Button
                   className="w-full rounded-xl md:w-auto"
-                  disabled={isResultsLoading}
+                  disabled={!hasOriginQuery || isResultsLoading}
                   type="submit"
                 >
                   {t("submit")}
@@ -648,7 +744,7 @@ export const TripPlannerPage = () => {
 
       {result || isResultsLoading ? (
         <section className={cn(PANEL_CLASS_NAME, "space-y-5")} aria-live="polite">
-          <h2 className="text-xl font-semibold text-foreground">{t("resultsTitle")}</h2>
+          <h2 className="text-xl font-semibold text-foreground">{getResultsTitle(activeMode)}</h2>
 
           {isResultsLoading ? (
             <TripPlannerResultsLoadingState loadingLabel={t("loading")} />
@@ -761,7 +857,7 @@ export const TripPlannerPage = () => {
                       <div className={FILTER_GROUP_CLASS_NAME}>
                         <div className="flex items-center justify-between gap-3">
                           <Label htmlFor="trip-planner-distance-filter">
-                            {t("filters.distanceLabel")}
+                            {getDistanceFilterLabel(result.mode)}
                           </Label>
                           <span className="text-sm font-medium text-foreground">
                             {activeDistanceKm} km
@@ -784,18 +880,20 @@ export const TripPlannerPage = () => {
                   ) : null}
                 </div>
 
-                <div className="rounded-2xl border border-white/45 bg-white/74 px-4 py-3 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] dark:border-white/10 dark:bg-slate-950/46 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                  <div className="flex items-center gap-2 font-medium text-foreground">
-                    <Route className="h-4 w-4" aria-hidden="true" />
-                    <span>{t("routeSummaryTitle")}</span>
+                {result.route ? (
+                  <div className="rounded-2xl border border-white/45 bg-white/74 px-4 py-3 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] dark:border-white/10 dark:bg-slate-950/46 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                    <div className="flex items-center gap-2 font-medium text-foreground">
+                      <Route className="h-4 w-4" aria-hidden="true" />
+                      <span>{t("routeSummaryTitle")}</span>
+                    </div>
+                    <p className="mt-2 text-muted-foreground">
+                      {t("routeDistance")} {formatRouteDistance(result.route.distanceMeters)}
+                    </p>
+                    <p className="text-muted-foreground">
+                      {t("routeDuration")} {formatRouteDuration(result.route.durationSeconds)}
+                    </p>
                   </div>
-                  <p className="mt-2 text-muted-foreground">
-                    {t("routeDistance")} {formatRouteDistance(result.route.distanceMeters)}
-                  </p>
-                  <p className="text-muted-foreground">
-                    {t("routeDuration")} {formatRouteDuration(result.route.durationSeconds)}
-                  </p>
-                </div>
+                ) : null}
               </div>
 
               {activeView === "list" ? (
@@ -806,7 +904,7 @@ export const TripPlannerPage = () => {
                 >
                   {totalParkCount === 0 ? (
                     <p className="rounded-xl border border-dashed border-white/45 bg-white/50 px-4 py-6 text-sm text-muted-foreground dark:border-white/10 dark:bg-slate-950/38">
-                      {t("noResults")}
+                      {getNoResultsLabel(result.mode)}
                     </p>
                   ) : !hasFilteredResults ? (
                     <div className="rounded-xl border border-dashed border-white/45 bg-white/50 px-4 py-6 dark:border-white/10 dark:bg-slate-950/38">
@@ -824,11 +922,13 @@ export const TripPlannerPage = () => {
                     <div className="space-y-6">
                       <TripPlannerResultsSection
                         title={t("sections.notVisited")}
+                        distanceLabel={getDistanceLabel(result.mode)}
                         parks={groupedResults.notVisited}
                         statusLabel={t("notVisited")}
                       />
                       <TripPlannerResultsSection
                         title={t("sections.visited")}
+                        distanceLabel={getDistanceLabel(result.mode)}
                         parks={groupedResults.visited}
                         statusLabel={t("visited")}
                       />
@@ -844,14 +944,17 @@ export const TripPlannerPage = () => {
                 >
                   <TripPlannerMap
                     destination={result.destination}
+                    distanceLabel={getDistanceLabel(result.mode)}
+                    mode={result.mode}
                     origin={result.origin}
                     parks={filteredParks}
                     route={result.route}
+                    searchArea={result.searchArea}
                   />
 
                   {totalParkCount === 0 ? (
                     <p className="rounded-xl border border-dashed border-white/45 bg-white/50 px-4 py-6 text-sm text-muted-foreground dark:border-white/10 dark:bg-slate-950/38">
-                      {t("noResults")}
+                      {getNoResultsLabel(result.mode)}
                     </p>
                   ) : !hasFilteredResults ? (
                     <div className="rounded-xl border border-dashed border-white/45 bg-white/50 px-4 py-6 dark:border-white/10 dark:bg-slate-950/38">
@@ -877,12 +980,14 @@ export const TripPlannerPage = () => {
 };
 
 interface TripPlannerResultsSectionProps {
-  parks: TripPlannerParkResult[];
+  distanceLabel: string;
+  parks: TripPlannerUiParkResult[];
   statusLabel: string;
   title: string;
 }
 
 const TripPlannerResultsSection = ({
+  distanceLabel,
   parks,
   statusLabel,
   title,
@@ -938,8 +1043,8 @@ const TripPlannerResultsSection = ({
 
                 <div className="space-y-1 text-sm text-muted-foreground sm:text-right">
                   <p>
-                    <span className="font-medium text-foreground">{t("distanceFromRoute")}</span>{" "}
-                    {formatDistanceFromRoute(park.distanceFromRouteKm)}
+                    <span className="font-medium text-foreground">{distanceLabel}</span>{" "}
+                    {formatDistance(park.distanceKm)}
                   </p>
                   {park.visitedSummary.visited ? (
                     <p>

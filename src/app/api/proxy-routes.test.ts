@@ -14,6 +14,7 @@ import { PATCH as patchPark } from "./parks/[slug]/route";
 import { POST as postParkVisit } from "./parks/[slug]/visits/route";
 import { GET as getParks } from "./parks/route";
 import { GET as getParkSearch } from "./parks/search/route";
+import { POST as postTripPlannerNearby } from "./trip-planner/nearby/route";
 import { POST as postTripPlannerSearch } from "./trip-planner/search/route";
 import { POST as postTripPlannerSuggestions } from "./trip-planner/suggestions/route";
 import { DELETE as deleteVisitImage } from "./visits/[id]/images/[imageId]/route";
@@ -80,6 +81,16 @@ describe("api proxy routes", () => {
     await postTripPlannerSearch(request);
 
     expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/trip-planner/search");
+  });
+
+  it("proxies trip planner nearby requests", async () => {
+    const request = new Request("https://frontend.example/api/trip-planner/nearby", {
+      method: "POST",
+    });
+
+    await postTripPlannerNearby(request);
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/trip-planner/nearby");
   });
 
   it("proxies trip planner suggestion requests", async () => {
