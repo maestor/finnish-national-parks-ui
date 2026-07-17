@@ -218,6 +218,32 @@ describe("TripPlannerPage", () => {
     return { promise, reject, resolve };
   };
 
+  const currentLocationCoordinateQuery = "60.192059,24.945831";
+  const currentLocationSuggestion = {
+    coordinate: {
+      lat: 60.192033,
+      lon: 24.9455609,
+    },
+    label: "Aleksis Kiven katu 52-54, 00510 Helsinki, Suomi",
+  } satisfies SuggestionResponse["suggestions"][number];
+
+  const mockCurrentLocation = (
+    implementation: (
+      onSuccess: PositionCallback,
+      onError?: PositionErrorCallback | null,
+      options?: PositionOptions,
+    ) => void,
+  ) => {
+    Object.defineProperty(window.navigator, "geolocation", {
+      configurable: true,
+      value: {
+        getCurrentPosition: vi.fn(implementation),
+      },
+    });
+
+    return vi.mocked(window.navigator.geolocation.getCurrentPosition);
+  };
+
   const getApiCallsForPath = (path: string) =>
     vi.mocked(apiFetch).mock.calls.filter(([calledPath]) => calledPath === path);
 
@@ -758,6 +784,125 @@ describe("TripPlannerPage", () => {
     expect(getApiCallsForPath("/api/trip-planner/suggestions")).toHaveLength(1);
   });
 
+  it("fills the origin with the current location address after geolocation succeeds", async () => {
+    const reverseLookup = createDeferred<SuggestionResponse>();
+
+    mockTripPlannerApi({
+      suggestionHandler: async (query) => {
+        if (query === currentLocationCoordinateQuery) {
+          return reverseLookup.promise;
+        }
+
+        return createSuggestionResponse(query);
+      },
+    });
+
+    const getCurrentPositionMock = mockCurrentLocation((onSuccess) => {
+      onSuccess({
+        coords: {
+          accuracy: 15,
+          altitude: null,
+          altitudeAccuracy: null,
+          heading: null,
+          latitude: 60.192059,
+          longitude: 24.945831,
+          speed: null,
+          toJSON: () => ({}),
+        },
+        timestamp: Date.now(),
+        toJSON: () => ({}),
+      });
+    });
+
+    const user = userEvent.setup();
+
+    render(<TripPlannerPage />);
+
+    const locateButton = screen.getByRole("button", { name: "tripPlanner.originLocate" });
+    await user.click(locateButton);
+
+    expect(getCurrentPositionMock).toHaveBeenCalledWith(
+      expect.any(Function),
+      expect.any(Function),
+      expect.objectContaining({
+        enableHighAccuracy: false,
+        maximumAge: 300000,
+        timeout: 10000,
+      }),
+    );
+    expect(locateButton).toBeDisabled();
+    expect(screen.getByText("tripPlanner.locationLocating")).toBeInTheDocument();
+    expect(getApiCallsForPath("/api/trip-planner/suggestions")).toHaveLength(1);
+    expect(
+      JSON.parse(String(getApiCallsForPath("/api/trip-planner/suggestions")[0]?.[1]?.body ?? "{}")),
+    ).toEqual({
+      query: currentLocationCoordinateQuery,
+    });
+
+    reverseLookup.resolve({
+      suggestions: [currentLocationSuggestion],
+    });
+
+    expect(await screen.findByDisplayValue(currentLocationSuggestion.label)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "tripPlanner.submit" })).toBeEnabled();
+    expect(screen.queryByText("tripPlanner.locationLocating")).not.toBeInTheDocument();
+    expect(locateButton).toBeEnabled();
+  });
+
+  it("falls back to the coordinate query when reverse lookup fails after geolocation succeeds", async () => {
+    mockTripPlannerApi({
+      suggestionHandler: async (query) => {
+        if (query === currentLocationCoordinateQuery) {
+          throw new ApiError(503, "API error 503: provider down");
+        }
+
+        return createSuggestionResponse(query);
+      },
+    });
+
+    mockCurrentLocation((onSuccess) => {
+      onSuccess({
+        coords: {
+          accuracy: 15,
+          altitude: null,
+          altitudeAccuracy: null,
+          heading: null,
+          latitude: 60.192059,
+          longitude: 24.945831,
+          speed: null,
+          toJSON: () => ({}),
+        },
+        timestamp: Date.now(),
+        toJSON: () => ({}),
+      });
+    });
+
+    const user = userEvent.setup();
+
+    render(<TripPlannerPage />);
+
+    await user.click(screen.getByRole("button", { name: "tripPlanner.originLocate" }));
+
+    expect(await screen.findByDisplayValue(currentLocationCoordinateQuery)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "tripPlanner.submit" })).toBeEnabled();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("shows a location error message when the browser cannot provide geolocation", async () => {
+    Object.defineProperty(window.navigator, "geolocation", {
+      configurable: true,
+      value: undefined,
+    });
+
+    const user = userEvent.setup();
+
+    render(<TripPlannerPage />);
+
+    await user.click(screen.getByRole("button", { name: "tripPlanner.originLocate" }));
+
+    expect(screen.getByText("tripPlanner.locationUnsupported")).toBeInTheDocument();
+  });
+
   it("filters the returned result set locally without making a new request", async () => {
     mockTripPlannerApi({ searchResponses: [createLargeSearchResponse()] });
 
@@ -899,9 +1044,13 @@ describe("TripPlannerPage", () => {
     expect(
       screen.getByRole("combobox", { name: "tripPlanner.destinationLabel" }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("combobox", { name: "tripPlanner.destinationLabel" }).closest("section"),
+    ).toHaveClass("z-20");
     expect(screen.getByRole("button", { name: "tripPlanner.collapseSearch" })).toBeInTheDocument();
     expect(screen.queryByText("tripPlanner.originResolvedLabel")).not.toBeInTheDocument();
     expect(screen.queryByText("tripPlanner.destinationResolvedLabel")).not.toBeInTheDocument();
+    expect(screen.getByText("tripPlanner.resultsTitle").closest("section")).toHaveClass("z-0");
   });
 
   it("switches from the default map subview to the list with the currently visible parks", async () => {
