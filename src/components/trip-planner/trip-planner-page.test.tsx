@@ -38,6 +38,23 @@ vi.mock("@/lib/api", async () => {
   };
 });
 
+const setTripPlannerResultsViewport = (isMobileResultsLayout: boolean) => {
+  Object.defineProperty(window, "matchMedia", {
+    configurable: true,
+    writable: true,
+    value: vi.fn().mockImplementation((query: string) => ({
+      matches: query === "(max-width: 767px)" ? isMobileResultsLayout : false,
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  });
+};
+
 describe("TripPlannerPage", () => {
   type SearchResponse = TripPlannerSearchResponse;
   type NearbyResponse = TripPlannerNearbyResponse;
@@ -309,6 +326,7 @@ describe("TripPlannerPage", () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
+    setTripPlannerResultsViewport(false);
   });
 
   afterEach(() => {
@@ -346,11 +364,52 @@ describe("TripPlannerPage", () => {
     });
 
     expect(screen.getByRole("option", { name: "Helsinki, Suomi" })).toBeInTheDocument();
-    fireEvent.pointerDown(screen.getByRole("option", { name: "Helsinki, Suomi" }));
+    fireEvent.click(screen.getByRole("option", { name: "Helsinki, Suomi" }));
 
     expect(originInput).toHaveValue("Helsinki, Suomi");
     expect(screen.queryByRole("option", { name: "Helsinki keskusta" })).not.toBeInTheDocument();
     expect(getApiCallsForPath("/api/trip-planner/search")).toHaveLength(0);
+  });
+
+  it("does not submit the form when clicking a destination suggestion", async () => {
+    vi.useFakeTimers();
+    mockTripPlannerApi({
+      searchResponses: [createSearchResponse()],
+      suggestionHandler: async (query) => ({
+        suggestions: [
+          {
+            coordinate: { lat: 61.5, lon: 23.76 },
+            label: `${query}, Suomi`,
+          },
+        ],
+      }),
+    });
+
+    render(<TripPlannerPage />);
+
+    const originInput = screen.getByRole("combobox", { name: "tripPlanner.originLabel" });
+    const destinationInput = screen.getByRole("combobox", {
+      name: "tripPlanner.destinationLabel",
+    });
+
+    fireEvent.change(originInput, { target: { value: "Helsinki" } });
+    fireEvent.focus(destinationInput);
+    fireEvent.change(destinationInput, { target: { value: "Tampere" } });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+      await Promise.resolve();
+    });
+
+    expect(screen.getByRole("button", { name: "tripPlanner.submit" })).toBeEnabled();
+    expect(screen.getByRole("option", { name: "Tampere, Suomi" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("option", { name: "Tampere, Suomi" }));
+
+    expect(destinationInput).toHaveValue("Tampere, Suomi");
+    expect(screen.queryByRole("option", { name: "Tampere, Suomi" })).not.toBeInTheDocument();
+    expect(getApiCallsForPath("/api/trip-planner/search")).toHaveLength(0);
+    expect(screen.queryByTestId("trip-planner-map")).not.toBeInTheDocument();
   });
 
   it("requires only the origin before enabling submit", async () => {
@@ -768,7 +827,7 @@ describe("TripPlannerPage", () => {
       await Promise.resolve();
     });
 
-    fireEvent.pointerDown(screen.getByRole("option", { name: "Helsinki, Suomi" }));
+    fireEvent.click(screen.getByRole("option", { name: "Helsinki, Suomi" }));
     expect(originInput).toHaveValue("Helsinki, Suomi");
     expect(getApiCallsForPath("/api/trip-planner/suggestions")).toHaveLength(1);
 
@@ -1126,6 +1185,62 @@ describe("TripPlannerPage", () => {
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("slider", { name: "tripPlanner.filters.distanceLabel" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("toggles stacked mobile filters from the results title button", async () => {
+    setTripPlannerResultsViewport(true);
+    mockTripPlannerApi({ searchResponses: [createLargeSearchResponse()] });
+
+    const user = userEvent.setup();
+
+    render(<TripPlannerPage />);
+
+    await user.type(screen.getByRole("combobox", { name: "tripPlanner.originLabel" }), "Helsinki");
+    await user.type(
+      screen.getByRole("combobox", { name: "tripPlanner.destinationLabel" }),
+      "Tampere",
+    );
+    await user.click(screen.getByRole("button", { name: "tripPlanner.submit" }));
+
+    await screen.findByTestId("trip-planner-map");
+
+    const closedToggle = await screen.findByRole("button", {
+      name: "tripPlanner.filters.showMobile",
+    });
+
+    expect(closedToggle).toHaveAttribute("aria-expanded", "false");
+    expect(
+      screen.queryByRole("combobox", { name: "tripPlanner.filters.parkTypeLabel" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("combobox", { name: "tripPlanner.filters.visitStatusLabel" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("slider", { name: "tripPlanner.filters.distanceLabel" }),
+    ).not.toBeInTheDocument();
+
+    await user.click(closedToggle);
+
+    const openToggle = screen.getByRole("button", { name: "tripPlanner.filters.hideMobile" });
+
+    expect(openToggle).toHaveAttribute("aria-expanded", "true");
+
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "tripPlanner.filters.visitStatusLabel" }),
+      "visited",
+    );
+
+    expect(screen.getByTestId("trip-planner-map")).toHaveTextContent("map:seurasaari");
+    expect(screen.getByRole("button", { name: "tripPlanner.filters.hideMobile" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+
+    await user.click(openToggle);
+
+    expect(
+      screen.queryByRole("combobox", { name: "tripPlanner.filters.parkTypeLabel" }),
     ).not.toBeInTheDocument();
   });
 

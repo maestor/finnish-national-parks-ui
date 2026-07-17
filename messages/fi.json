@@ -183,6 +183,8 @@
       "visitStatusLabel": "Näytetään",
       "distanceLabel": "Enimmäisetäisyys",
       "distanceFromOriginLabel": "Enimmäisetäisyys lähtöpisteestä",
+      "showMobile": "Näytä suodattimet",
+      "hideMobile": "Piilota suodattimet",
       "reset": "Näytä kaikki"
     },
     "viewTabs": {
