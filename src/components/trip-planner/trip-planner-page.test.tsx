@@ -1093,9 +1093,45 @@ describe("TripPlannerPage", () => {
 
     await screen.findByTestId("trip-planner-map");
 
+    const titleRow = screen
+      .getByRole("heading", { name: "tripPlanner.title" })
+      .closest("div")?.parentElement;
+
+    expect(titleRow).toHaveClass("flex", "items-start", "justify-between");
+    expect(titleRow).not.toHaveClass("flex-col");
     expect(
       screen.queryByRole("combobox", { name: "tripPlanner.originLabel" }),
     ).not.toBeInTheDocument();
+    expect(screen.getByText("tripPlanner.originResolvedLabel").parentElement).toHaveTextContent(
+      "tripPlanner.originResolvedLabel",
+    );
+    expect(screen.getByText("tripPlanner.originResolvedLabel").parentElement).toHaveTextContent(
+      "→",
+    );
+    expect(screen.getByText("tripPlanner.originResolvedLabel").parentElement).toHaveTextContent(
+      "Helsinki",
+    );
+    expect(
+      screen.getByText("tripPlanner.destinationResolvedLabel").parentElement,
+    ).toHaveTextContent("tripPlanner.destinationResolvedLabel");
+    expect(
+      screen.getByText("tripPlanner.destinationResolvedLabel").parentElement,
+    ).toHaveTextContent("→");
+    expect(
+      screen.getByText("tripPlanner.destinationResolvedLabel").parentElement,
+    ).toHaveTextContent("Tampere");
+
+    const desktopRouteSummary = screen
+      .getByText("tripPlanner.routeSummaryTitle")
+      .closest("div")?.parentElement;
+
+    expect(desktopRouteSummary).toHaveTextContent("180 km");
+    expect(desktopRouteSummary).toHaveTextContent("•");
+    expect(desktopRouteSummary).toHaveTextContent("2 h 30 min");
+    expect(desktopRouteSummary).not.toHaveTextContent("tripPlanner.routeDistance");
+    expect(desktopRouteSummary).not.toHaveTextContent("tripPlanner.routeDuration");
+    expect(screen.getByTitle("tripPlanner.routeDistance")).toHaveTextContent("180 km");
+    expect(screen.getByTitle("tripPlanner.routeDuration")).toHaveTextContent("2 h 30 min");
 
     await user.click(screen.getByRole("button", { name: "tripPlanner.expandSearch" }));
 
@@ -1210,6 +1246,14 @@ describe("TripPlannerPage", () => {
     });
 
     expect(closedToggle).toHaveAttribute("aria-expanded", "false");
+    const mobileRouteSummary = screen.getByText("tripPlanner.routeSummaryTitle").parentElement;
+
+    expect(mobileRouteSummary).toHaveTextContent("180 km");
+    expect(mobileRouteSummary).toHaveTextContent("→");
+    expect(mobileRouteSummary).toHaveTextContent("•");
+    expect(mobileRouteSummary).toHaveTextContent("2 h 30 min");
+    expect(mobileRouteSummary).not.toHaveTextContent("tripPlanner.routeDistance");
+    expect(mobileRouteSummary).not.toHaveTextContent("tripPlanner.routeDuration");
     expect(
       screen.queryByRole("combobox", { name: "tripPlanner.filters.parkTypeLabel" }),
     ).not.toBeInTheDocument();
