@@ -18,7 +18,7 @@ import {
   fetchTripPlannerSuggestions,
   searchTripPlanner,
 } from "@/lib/trip-planner";
-import { ChevronDown, ChevronUp, Loader2, Route } from "lucide-react";
+import { ChevronDown, ChevronUp, Route } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import {
@@ -53,6 +53,10 @@ const SUGGESTION_LIST_CLASS_NAME =
   "absolute left-0 right-0 top-[calc(100%+0.5rem)] z-20 overflow-hidden rounded-[1.35rem] border border-white/55 bg-white/96 shadow-[0_20px_40px_rgba(148,163,184,0.24)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/94 dark:shadow-[0_24px_48px_rgba(2,6,23,0.42)]";
 const SUGGESTION_OPTION_CLASS_NAME =
   "cursor-pointer px-3 py-2 text-sm text-foreground transition-colors hover:bg-white/82 dark:hover:bg-slate-900/82";
+const RESULTS_LOADING_PLACEHOLDER_CLASS_NAME =
+  "overflow-hidden rounded-2xl border border-white/45 bg-white/68 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] dark:border-white/10 dark:bg-slate-950/44 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
+const RESULTS_LOADING_BAR_CLASS_NAME =
+  "rounded-full bg-white/78 motion-safe:animate-pulse dark:bg-slate-800/88";
 
 const DISTANCE_FORMATTER = new Intl.NumberFormat("fi-FI", {
   maximumFractionDigits: 1,
@@ -109,6 +113,41 @@ const splitTripPlannerResults = (parks: TripPlannerParkResult[]) => {
       return groups;
     },
     { visited: [] as TripPlannerParkResult[], notVisited: [] as TripPlannerParkResult[] },
+  );
+};
+
+const TripPlannerResultsLoadingState = ({ loadingLabel }: { loadingLabel: string }) => {
+  return (
+    <div className="space-y-5" aria-live="polite" aria-busy="true">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div className="space-y-4">
+          <div className="space-y-3">
+            <div className={cn(RESULTS_LOADING_BAR_CLASS_NAME, "h-4 w-40 max-w-full")} />
+            <div className={cn(RESULTS_LOADING_BAR_CLASS_NAME, "h-4 w-32 max-w-full")} />
+          </div>
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className={cn(RESULTS_LOADING_BAR_CLASS_NAME, "h-10 w-full")} />
+            <div className={cn(RESULTS_LOADING_BAR_CLASS_NAME, "h-10 w-full")} />
+            <div className={cn(RESULTS_LOADING_BAR_CLASS_NAME, "h-10 w-full")} />
+          </div>
+        </div>
+
+        <div className={cn(RESULTS_LOADING_PLACEHOLDER_CLASS_NAME, "w-full max-w-xs space-y-3")}>
+          <div className={cn(RESULTS_LOADING_BAR_CLASS_NAME, "h-4 w-28")} />
+          <div className={cn(RESULTS_LOADING_BAR_CLASS_NAME, "h-4 w-32")} />
+          <div className={cn(RESULTS_LOADING_BAR_CLASS_NAME, "h-4 w-24")} />
+        </div>
+      </div>
+
+      <div className={cn(RESULTS_LOADING_PLACEHOLDER_CLASS_NAME, "space-y-4")}>
+        <p className="text-sm font-medium text-foreground">{loadingLabel}</p>
+        <div className={cn(RESULTS_LOADING_BAR_CLASS_NAME, "h-48 w-full rounded-[1.5rem]")} />
+        <div className="grid gap-3 md:grid-cols-2">
+          <div className={cn(RESULTS_LOADING_BAR_CLASS_NAME, "h-20 w-full rounded-[1.25rem]")} />
+          <div className={cn(RESULTS_LOADING_BAR_CLASS_NAME, "h-20 w-full rounded-[1.25rem]")} />
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -393,6 +432,7 @@ export const TripPlannerPage = () => {
   const [activeDistanceKm, setActiveDistanceKm] = useState(DEFAULT_DISTANCE_FILTER_KM);
   const [activeView, setActiveView] = useState<ViewTab>("map");
   const [isSearchPanelExpanded, setIsSearchPanelExpanded] = useState(true);
+  const isResultsLoading = searchState === "loading";
 
   const parkTypeOptions = useMemo(() => {
     const parkTypeFilterOptionsById = new Map(
@@ -586,17 +626,10 @@ export const TripPlannerPage = () => {
               <div className="flex items-end">
                 <Button
                   className="w-full rounded-xl md:w-auto"
-                  disabled={searchState === "loading"}
+                  disabled={isResultsLoading}
                   type="submit"
                 >
-                  {searchState === "loading" ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                      <span>{t("loading")}</span>
-                    </>
-                  ) : (
-                    t("submit")
-                  )}
+                  {t("submit")}
                 </Button>
               </div>
             </form>
@@ -613,221 +646,230 @@ export const TripPlannerPage = () => {
         ) : null}
       </section>
 
-      {result ? (
+      {result || isResultsLoading ? (
         <section className={cn(PANEL_CLASS_NAME, "space-y-5")} aria-live="polite">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-            <div className="space-y-4">
-              <div className="space-y-3">
-                <h2 className="text-xl font-semibold text-foreground">{t("resultsTitle")}</h2>
-                <div className="flex flex-wrap items-center gap-3">
-                  <p className="text-sm text-muted-foreground">
-                    {t("filteredResultsCount", {
-                      shown: String(filteredParkCount),
-                      total: String(totalParkCount),
-                    })}
+          <h2 className="text-xl font-semibold text-foreground">{t("resultsTitle")}</h2>
+
+          {isResultsLoading ? (
+            <TripPlannerResultsLoadingState loadingLabel={t("loading")} />
+          ) : result ? (
+            <>
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                <div className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <p className="text-sm text-muted-foreground">
+                        {t("filteredResultsCount", {
+                          shown: String(filteredParkCount),
+                          total: String(totalParkCount),
+                        })}
+                      </p>
+
+                      <div
+                        className="inline-flex rounded-[1.1rem] border border-white/45 bg-white/60 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/42 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                        role="tablist"
+                        aria-label={t("viewTabs.ariaLabel")}
+                      >
+                        <button
+                          type="button"
+                          role="tab"
+                          id="trip-planner-view-map"
+                          aria-controls="trip-planner-panel-map"
+                          aria-selected={activeView === "map"}
+                          onClick={() => setActiveView("map")}
+                          className={cn(
+                            "rounded-xl px-3 py-1.5 text-sm font-medium transition-colors",
+                            activeView === "map"
+                              ? "bg-white/86 text-foreground shadow-[0_8px_18px_rgba(148,163,184,0.16)] dark:bg-slate-950/68"
+                              : "text-muted-foreground hover:bg-white/62 hover:text-foreground dark:hover:bg-slate-950/56",
+                          )}
+                        >
+                          {t("viewTabs.map")}
+                        </button>
+                        <button
+                          type="button"
+                          role="tab"
+                          id="trip-planner-view-list"
+                          aria-controls="trip-planner-panel-list"
+                          aria-selected={activeView === "list"}
+                          onClick={() => setActiveView("list")}
+                          className={cn(
+                            "rounded-xl px-3 py-1.5 text-sm font-medium transition-colors",
+                            activeView === "list"
+                              ? "bg-white/86 text-foreground shadow-[0_8px_18px_rgba(148,163,184,0.16)] dark:bg-slate-950/68"
+                              : "text-muted-foreground hover:bg-white/62 hover:text-foreground dark:hover:bg-slate-950/56",
+                          )}
+                        >
+                          {t("viewTabs.list")}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {shouldShowFilters ? (
+                    <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.2fr)]">
+                      <div className={FILTER_GROUP_CLASS_NAME}>
+                        <Label htmlFor="trip-planner-park-filter">
+                          {t("filters.parkTypeLabel")}
+                        </Label>
+                        <div className="relative">
+                          <select
+                            id="trip-planner-park-filter"
+                            className={INLINE_SELECT_CLASS_NAME}
+                            value={activeParkFilter}
+                            onChange={(event) =>
+                              setActiveParkFilter(event.target.value as TripPlannerParkTypeFilter)
+                            }
+                          >
+                            {parkTypeOptions.map((option) => (
+                              <option key={option.id} value={option.id}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown
+                            className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                            aria-hidden="true"
+                          />
+                        </div>
+                      </div>
+
+                      <div className={FILTER_GROUP_CLASS_NAME}>
+                        <Label htmlFor="trip-planner-visit-status-filter">
+                          {t("filters.visitStatusLabel")}
+                        </Label>
+                        <div className="relative">
+                          <select
+                            id="trip-planner-visit-status-filter"
+                            className={INLINE_SELECT_CLASS_NAME}
+                            value={activeVisitStatus}
+                            onChange={(event) =>
+                              setActiveVisitStatus(event.target.value as VisitStatusFilter)
+                            }
+                          >
+                            <option value="all">{homeFilterT("visitStatusAll")}</option>
+                            <option value="visited">{homeFilterT("visited")}</option>
+                            <option value="not-visited">{homeFilterT("notVisited")}</option>
+                          </select>
+                          <ChevronDown
+                            className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                            aria-hidden="true"
+                          />
+                        </div>
+                      </div>
+
+                      <div className={FILTER_GROUP_CLASS_NAME}>
+                        <div className="flex items-center justify-between gap-3">
+                          <Label htmlFor="trip-planner-distance-filter">
+                            {t("filters.distanceLabel")}
+                          </Label>
+                          <span className="text-sm font-medium text-foreground">
+                            {activeDistanceKm} km
+                          </span>
+                        </div>
+                        <div className="flex h-10 items-center">
+                          <input
+                            id="trip-planner-distance-filter"
+                            className={INLINE_SLIDER_CLASS_NAME}
+                            type="range"
+                            min={MIN_DISTANCE_FILTER_KM}
+                            max={DEFAULT_DISTANCE_FILTER_KM}
+                            step={1}
+                            value={activeDistanceKm}
+                            onChange={(event) => setActiveDistanceKm(Number(event.target.value))}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="rounded-2xl border border-white/45 bg-white/74 px-4 py-3 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] dark:border-white/10 dark:bg-slate-950/46 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                  <div className="flex items-center gap-2 font-medium text-foreground">
+                    <Route className="h-4 w-4" aria-hidden="true" />
+                    <span>{t("routeSummaryTitle")}</span>
+                  </div>
+                  <p className="mt-2 text-muted-foreground">
+                    {t("routeDistance")} {formatRouteDistance(result.route.distanceMeters)}
                   </p>
-
-                  <div
-                    className="inline-flex rounded-[1.1rem] border border-white/45 bg-white/60 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/42 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
-                    role="tablist"
-                    aria-label={t("viewTabs.ariaLabel")}
-                  >
-                    <button
-                      type="button"
-                      role="tab"
-                      id="trip-planner-view-map"
-                      aria-controls="trip-planner-panel-map"
-                      aria-selected={activeView === "map"}
-                      onClick={() => setActiveView("map")}
-                      className={cn(
-                        "rounded-xl px-3 py-1.5 text-sm font-medium transition-colors",
-                        activeView === "map"
-                          ? "bg-white/86 text-foreground shadow-[0_8px_18px_rgba(148,163,184,0.16)] dark:bg-slate-950/68"
-                          : "text-muted-foreground hover:bg-white/62 hover:text-foreground dark:hover:bg-slate-950/56",
-                      )}
-                    >
-                      {t("viewTabs.map")}
-                    </button>
-                    <button
-                      type="button"
-                      role="tab"
-                      id="trip-planner-view-list"
-                      aria-controls="trip-planner-panel-list"
-                      aria-selected={activeView === "list"}
-                      onClick={() => setActiveView("list")}
-                      className={cn(
-                        "rounded-xl px-3 py-1.5 text-sm font-medium transition-colors",
-                        activeView === "list"
-                          ? "bg-white/86 text-foreground shadow-[0_8px_18px_rgba(148,163,184,0.16)] dark:bg-slate-950/68"
-                          : "text-muted-foreground hover:bg-white/62 hover:text-foreground dark:hover:bg-slate-950/56",
-                      )}
-                    >
-                      {t("viewTabs.list")}
-                    </button>
-                  </div>
+                  <p className="text-muted-foreground">
+                    {t("routeDuration")} {formatRouteDuration(result.route.durationSeconds)}
+                  </p>
                 </div>
               </div>
 
-              {shouldShowFilters ? (
-                <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.2fr)]">
-                  <div className={FILTER_GROUP_CLASS_NAME}>
-                    <Label htmlFor="trip-planner-park-filter">{t("filters.parkTypeLabel")}</Label>
-                    <div className="relative">
-                      <select
-                        id="trip-planner-park-filter"
-                        className={INLINE_SELECT_CLASS_NAME}
-                        value={activeParkFilter}
-                        onChange={(event) =>
-                          setActiveParkFilter(event.target.value as TripPlannerParkTypeFilter)
-                        }
+              {activeView === "list" ? (
+                <div
+                  id="trip-planner-panel-list"
+                  role="tabpanel"
+                  aria-labelledby="trip-planner-view-list"
+                >
+                  {totalParkCount === 0 ? (
+                    <p className="rounded-xl border border-dashed border-white/45 bg-white/50 px-4 py-6 text-sm text-muted-foreground dark:border-white/10 dark:bg-slate-950/38">
+                      {t("noResults")}
+                    </p>
+                  ) : !hasFilteredResults ? (
+                    <div className="rounded-xl border border-dashed border-white/45 bg-white/50 px-4 py-6 dark:border-white/10 dark:bg-slate-950/38">
+                      <p className="text-sm text-muted-foreground">{t("filteredEmpty")}</p>
+                      <Button
+                        className="mt-4 rounded-xl"
+                        type="button"
+                        variant="outline"
+                        onClick={resetLocalFilters}
                       >
-                        {parkTypeOptions.map((option) => (
-                          <option key={option.id} value={option.id}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown
-                        className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                        aria-hidden="true"
+                        {t("filters.reset")}
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      <TripPlannerResultsSection
+                        title={t("sections.notVisited")}
+                        parks={groupedResults.notVisited}
+                        statusLabel={t("notVisited")}
+                      />
+                      <TripPlannerResultsSection
+                        title={t("sections.visited")}
+                        parks={groupedResults.visited}
+                        statusLabel={t("visited")}
                       />
                     </div>
-                  </div>
-
-                  <div className={FILTER_GROUP_CLASS_NAME}>
-                    <Label htmlFor="trip-planner-visit-status-filter">
-                      {t("filters.visitStatusLabel")}
-                    </Label>
-                    <div className="relative">
-                      <select
-                        id="trip-planner-visit-status-filter"
-                        className={INLINE_SELECT_CLASS_NAME}
-                        value={activeVisitStatus}
-                        onChange={(event) =>
-                          setActiveVisitStatus(event.target.value as VisitStatusFilter)
-                        }
-                      >
-                        <option value="all">{homeFilterT("visitStatusAll")}</option>
-                        <option value="visited">{homeFilterT("visited")}</option>
-                        <option value="not-visited">{homeFilterT("notVisited")}</option>
-                      </select>
-                      <ChevronDown
-                        className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                        aria-hidden="true"
-                      />
-                    </div>
-                  </div>
-
-                  <div className={FILTER_GROUP_CLASS_NAME}>
-                    <div className="flex items-center justify-between gap-3">
-                      <Label htmlFor="trip-planner-distance-filter">
-                        {t("filters.distanceLabel")}
-                      </Label>
-                      <span className="text-sm font-medium text-foreground">
-                        {activeDistanceKm} km
-                      </span>
-                    </div>
-                    <div className="flex h-10 items-center">
-                      <input
-                        id="trip-planner-distance-filter"
-                        className={INLINE_SLIDER_CLASS_NAME}
-                        type="range"
-                        min={MIN_DISTANCE_FILTER_KM}
-                        max={DEFAULT_DISTANCE_FILTER_KM}
-                        step={1}
-                        value={activeDistanceKm}
-                        onChange={(event) => setActiveDistanceKm(Number(event.target.value))}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-            </div>
-
-            <div className="rounded-2xl border border-white/45 bg-white/74 px-4 py-3 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] dark:border-white/10 dark:bg-slate-950/46 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-              <div className="flex items-center gap-2 font-medium text-foreground">
-                <Route className="h-4 w-4" aria-hidden="true" />
-                <span>{t("routeSummaryTitle")}</span>
-              </div>
-              <p className="mt-2 text-muted-foreground">
-                {t("routeDistance")} {formatRouteDistance(result.route.distanceMeters)}
-              </p>
-              <p className="text-muted-foreground">
-                {t("routeDuration")} {formatRouteDuration(result.route.durationSeconds)}
-              </p>
-            </div>
-          </div>
-
-          {activeView === "list" ? (
-            <div
-              id="trip-planner-panel-list"
-              role="tabpanel"
-              aria-labelledby="trip-planner-view-list"
-            >
-              {totalParkCount === 0 ? (
-                <p className="rounded-xl border border-dashed border-white/45 bg-white/50 px-4 py-6 text-sm text-muted-foreground dark:border-white/10 dark:bg-slate-950/38">
-                  {t("noResults")}
-                </p>
-              ) : !hasFilteredResults ? (
-                <div className="rounded-xl border border-dashed border-white/45 bg-white/50 px-4 py-6 dark:border-white/10 dark:bg-slate-950/38">
-                  <p className="text-sm text-muted-foreground">{t("filteredEmpty")}</p>
-                  <Button
-                    className="mt-4 rounded-xl"
-                    type="button"
-                    variant="outline"
-                    onClick={resetLocalFilters}
-                  >
-                    {t("filters.reset")}
-                  </Button>
+                  )}
                 </div>
               ) : (
-                <div className="space-y-6">
-                  <TripPlannerResultsSection
-                    title={t("sections.notVisited")}
-                    parks={groupedResults.notVisited}
-                    statusLabel={t("notVisited")}
+                <div
+                  id="trip-planner-panel-map"
+                  role="tabpanel"
+                  aria-labelledby="trip-planner-view-map"
+                  className="space-y-4"
+                >
+                  <TripPlannerMap
+                    destination={result.destination}
+                    origin={result.origin}
+                    parks={filteredParks}
+                    route={result.route}
                   />
-                  <TripPlannerResultsSection
-                    title={t("sections.visited")}
-                    parks={groupedResults.visited}
-                    statusLabel={t("visited")}
-                  />
+
+                  {totalParkCount === 0 ? (
+                    <p className="rounded-xl border border-dashed border-white/45 bg-white/50 px-4 py-6 text-sm text-muted-foreground dark:border-white/10 dark:bg-slate-950/38">
+                      {t("noResults")}
+                    </p>
+                  ) : !hasFilteredResults ? (
+                    <div className="rounded-xl border border-dashed border-white/45 bg-white/50 px-4 py-6 dark:border-white/10 dark:bg-slate-950/38">
+                      <p className="text-sm text-muted-foreground">{t("filteredEmpty")}</p>
+                      <Button
+                        className="mt-4 rounded-xl"
+                        type="button"
+                        variant="outline"
+                        onClick={resetLocalFilters}
+                      >
+                        {t("filters.reset")}
+                      </Button>
+                    </div>
+                  ) : null}
                 </div>
               )}
-            </div>
-          ) : (
-            <div
-              id="trip-planner-panel-map"
-              role="tabpanel"
-              aria-labelledby="trip-planner-view-map"
-              className="space-y-4"
-            >
-              <TripPlannerMap
-                destination={result.destination}
-                origin={result.origin}
-                parks={filteredParks}
-                route={result.route}
-              />
-
-              {totalParkCount === 0 ? (
-                <p className="rounded-xl border border-dashed border-white/45 bg-white/50 px-4 py-6 text-sm text-muted-foreground dark:border-white/10 dark:bg-slate-950/38">
-                  {t("noResults")}
-                </p>
-              ) : !hasFilteredResults ? (
-                <div className="rounded-xl border border-dashed border-white/45 bg-white/50 px-4 py-6 dark:border-white/10 dark:bg-slate-950/38">
-                  <p className="text-sm text-muted-foreground">{t("filteredEmpty")}</p>
-                  <Button
-                    className="mt-4 rounded-xl"
-                    type="button"
-                    variant="outline"
-                    onClick={resetLocalFilters}
-                  >
-                    {t("filters.reset")}
-                  </Button>
-                </div>
-              ) : null}
-            </div>
-          )}
+            </>
+          ) : null}
         </section>
       ) : null}
     </div>
