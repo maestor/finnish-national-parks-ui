@@ -15,10 +15,39 @@ export type TripPlannerSearchRequest = NonNullable<
 export type TripPlannerSearchResponse =
   paths["/api/trip-planner/search"]["post"]["responses"][200]["content"]["application/json"];
 
-export type TripPlannerParkResult = TripPlannerSearchResponse["parks"][number];
+export type TripPlannerNearbyRequest = NonNullable<
+  paths["/api/trip-planner/nearby"]["post"]["requestBody"]
+>["content"]["application/json"];
+
+export type TripPlannerNearbyResponse =
+  paths["/api/trip-planner/nearby"]["post"]["responses"][200]["content"]["application/json"];
+
+export type TripPlannerSearchParkResult = TripPlannerSearchResponse["parks"][number];
+export type TripPlannerNearbyParkResult = TripPlannerNearbyResponse["parks"][number];
 export type TripPlannerRouteResult = TripPlannerSearchResponse["route"];
 export type TripPlannerResolvedLocation = TripPlannerSearchResponse["origin"];
+export type TripPlannerSearchAreaResult = TripPlannerNearbyResponse["searchArea"];
 export type TripPlannerSuggestion = TripPlannerSuggestionsResponse["suggestions"][number];
+export type TripPlannerUiParkResult = Omit<TripPlannerSearchParkResult, "distanceFromRouteKm"> & {
+  distanceKm: number;
+};
+export type TripPlannerUiResult =
+  | {
+      destination: TripPlannerResolvedLocation;
+      mode: "route";
+      origin: TripPlannerResolvedLocation;
+      parks: TripPlannerUiParkResult[];
+      route: TripPlannerRouteResult;
+      searchArea: null;
+    }
+  | {
+      destination: null;
+      mode: "nearby";
+      origin: TripPlannerResolvedLocation;
+      parks: TripPlannerUiParkResult[];
+      route: null;
+      searchArea: TripPlannerSearchAreaResult;
+    };
 
 export const fetchTripPlannerSuggestions = async (
   request: TripPlannerSuggestionsRequest,
@@ -40,3 +69,53 @@ export const searchTripPlanner = async (
       mode: "drive",
     } satisfies TripPlannerSearchRequest),
   });
+
+export const searchTripPlannerNearby = async (
+  request: TripPlannerNearbyRequest,
+): Promise<TripPlannerNearbyResponse> =>
+  apiFetch<TripPlannerNearbyResponse>("/api/trip-planner/nearby", {
+    method: "POST",
+    body: JSON.stringify(request),
+  });
+
+const toUiParkResult = (
+  park: TripPlannerSearchParkResult | TripPlannerNearbyParkResult,
+): TripPlannerUiParkResult => {
+  if ("distanceFromRouteKm" in park) {
+    const { distanceFromRouteKm, ...rest } = park;
+
+    return {
+      ...rest,
+      distanceKm: distanceFromRouteKm,
+    };
+  }
+
+  const { distanceFromOriginKm, ...rest } = park;
+
+  return {
+    ...rest,
+    distanceKm: distanceFromOriginKm,
+  };
+};
+
+export const normalizeTripPlannerSearchResponse = (
+  response: TripPlannerSearchResponse,
+): TripPlannerUiResult => ({
+  destination: response.destination,
+  mode: "route",
+  origin: response.origin,
+  parks: response.parks.map(toUiParkResult),
+  route: response.route,
+  searchArea: null,
+});
+
+export const normalizeTripPlannerNearbyResponse = (
+  response: TripPlannerNearbyResponse,
+): TripPlannerUiResult => ({
+  destination: null,
+  mode: "nearby",
+  origin: response.origin,
+  parks: response.parks.map(toUiParkResult),
+  route: null,
+  searchArea: response.searchArea,
+});
