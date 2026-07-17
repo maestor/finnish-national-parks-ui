@@ -33,7 +33,9 @@ export type TripPlannerUiParkResult = Omit<TripPlannerSearchParkResult, "distanc
 };
 export type TripPlannerUiResult =
   | {
+      defaultDistanceKm: number;
       destination: TripPlannerResolvedLocation;
+      maxDistanceKm: number;
       mode: "route";
       origin: TripPlannerResolvedLocation;
       parks: TripPlannerUiParkResult[];
@@ -41,7 +43,9 @@ export type TripPlannerUiResult =
       searchArea: null;
     }
   | {
+      defaultDistanceKm: number;
       destination: null;
+      maxDistanceKm: number;
       mode: "nearby";
       origin: TripPlannerResolvedLocation;
       parks: TripPlannerUiParkResult[];
@@ -101,7 +105,9 @@ const toUiParkResult = (
 export const normalizeTripPlannerSearchResponse = (
   response: TripPlannerSearchResponse,
 ): TripPlannerUiResult => ({
+  defaultDistanceKm: response.defaultDistanceKm,
   destination: response.destination,
+  maxDistanceKm: response.maxDistanceKm,
   mode: "route",
   origin: response.origin,
   parks: response.parks.map(toUiParkResult),
@@ -112,7 +118,9 @@ export const normalizeTripPlannerSearchResponse = (
 export const normalizeTripPlannerNearbyResponse = (
   response: TripPlannerNearbyResponse,
 ): TripPlannerUiResult => ({
+  defaultDistanceKm: response.defaultDistanceKm,
   destination: null,
+  maxDistanceKm: response.maxDistanceKm,
   mode: "nearby",
   origin: response.origin,
   parks: response.parks.map(toUiParkResult),

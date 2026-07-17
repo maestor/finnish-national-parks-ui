@@ -740,6 +740,7 @@ export const TripPlannerPage = () => {
   const routeDurationValue = result?.route
     ? formatRouteDuration(result.route.durationSeconds)
     : null;
+  const activeDistanceMaxKm = result?.maxDistanceKm ?? DEFAULT_DISTANCE_FILTER_KM;
 
   useEffect(() => {
     if (!shouldShowFilters) {
@@ -747,10 +748,14 @@ export const TripPlannerPage = () => {
     }
   }, [shouldShowFilters]);
 
-  const resetLocalFilters = () => {
+  const resetLocalFilters = (nextResult: TripPlannerUiResult | null = result) => {
+    if (!nextResult) {
+      return;
+    }
+
     setActiveParkFilter("all");
     setActiveVisitStatus("all");
-    setActiveDistanceKm(DEFAULT_DISTANCE_FILTER_KM);
+    setActiveDistanceKm(nextResult.defaultDistanceKm);
   };
 
   const getResultsTitle = (mode: TripPlannerMode) =>
@@ -845,8 +850,8 @@ export const TripPlannerPage = () => {
               }),
             );
 
+      resetLocalFilters(response);
       setResult(response);
-      resetLocalFilters();
       setActiveView("map");
       setIsMobileFiltersOpen(false);
       setIsSearchPanelExpanded(false);
@@ -1237,7 +1242,7 @@ export const TripPlannerPage = () => {
                               className={INLINE_SLIDER_CLASS_NAME}
                               type="range"
                               min={MIN_DISTANCE_FILTER_KM}
-                              max={DEFAULT_DISTANCE_FILTER_KM}
+                              max={activeDistanceMaxKm}
                               step={1}
                               value={activeDistanceKm}
                               disabled={!isResultsFiltersVisible}
@@ -1268,7 +1273,7 @@ export const TripPlannerPage = () => {
                         className="mt-4 rounded-xl"
                         type="button"
                         variant="outline"
-                        onClick={resetLocalFilters}
+                        onClick={() => resetLocalFilters()}
                       >
                         {t("filters.reset")}
                       </Button>
@@ -1318,7 +1323,7 @@ export const TripPlannerPage = () => {
                         className="mt-4 rounded-xl"
                         type="button"
                         variant="outline"
-                        onClick={resetLocalFilters}
+                        onClick={() => resetLocalFilters()}
                       >
                         {t("filters.reset")}
                       </Button>
