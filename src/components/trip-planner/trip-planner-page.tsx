@@ -244,6 +244,18 @@ const renderMultilineText = (text: string) => {
 
 const removeTrailingColon = (label: string) => label.replace(/:\s*$/, "");
 
+const TripPlannerRouteSummaryValue = ({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) => (
+  <span aria-label={`${label} ${value}`} title={label} className="text-muted-foreground">
+    {value}
+  </span>
+);
+
 const useMediaQuery = (query: string) => {
   const [matches, setMatches] = useState(false);
 
@@ -720,6 +732,14 @@ export const TripPlannerPage = () => {
   const shouldShowFilters = totalParkCount > FILTER_VISIBILITY_THRESHOLD;
   const isResultsFiltersVisible = !isMobileResultsLayout || isMobileFiltersOpen;
   const originLocationStatusMessage = getUserLocationStatusMessage(originLocationStatus, t);
+  const routeDistanceLabel = result?.route ? removeTrailingColon(t("routeDistance")) : null;
+  const routeDurationLabel = result?.route ? removeTrailingColon(t("routeDuration")) : null;
+  const routeDistanceValue = result?.route
+    ? formatRouteDistance(result.route.distanceMeters)
+    : null;
+  const routeDurationValue = result?.route
+    ? formatRouteDuration(result.route.durationSeconds)
+    : null;
 
   useEffect(() => {
     if (!shouldShowFilters) {
@@ -847,8 +867,8 @@ export const TripPlannerPage = () => {
           isSearchPanelExpanded ? "z-20" : "z-10",
         )}
       >
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-2">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1 space-y-2">
             <p className="text-sm font-medium text-primary">{t("eyebrow")}</p>
             <h1 className="text-3xl font-semibold tracking-tight text-foreground">{t("title")}</h1>
           </div>
@@ -883,17 +903,27 @@ export const TripPlannerPage = () => {
           <dl
             className={cn(
               "grid gap-2 text-sm text-muted-foreground",
-              result.mode === "route" ? "sm:grid-cols-2" : "sm:grid-cols-1",
+              result.mode === "route" ? "md:grid-cols-2" : "md:grid-cols-1",
             )}
           >
-            <div>
-              <dt className="font-medium text-foreground">{t("originResolvedLabel")}</dt>
-              <dd>{result.origin.label}</dd>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 md:block">
+              <dt className="inline font-medium text-foreground md:block">
+                {t("originResolvedLabel")}
+              </dt>
+              <span className="text-foreground md:hidden" aria-hidden="true">
+                →
+              </span>
+              <dd className="inline md:block">{result.origin.label}</dd>
             </div>
             {result.destination ? (
-              <div>
-                <dt className="font-medium text-foreground">{t("destinationResolvedLabel")}</dt>
-                <dd>{result.destination.label}</dd>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 md:block">
+                <dt className="inline font-medium text-foreground md:block">
+                  {t("destinationResolvedLabel")}
+                </dt>
+                <span className="text-foreground md:hidden" aria-hidden="true">
+                  →
+                </span>
+                <dd className="inline md:block">{result.destination.label}</dd>
               </div>
             ) : null}
           </dl>
@@ -1067,7 +1097,11 @@ export const TripPlannerPage = () => {
                     </div>
                   </div>
 
-                  {result.route ? (
+                  {result.route &&
+                  routeDistanceLabel &&
+                  routeDurationLabel &&
+                  routeDistanceValue &&
+                  routeDurationValue ? (
                     <div
                       className={cn(
                         "rounded-2xl border border-white/45 bg-white/74 px-4 py-3 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] dark:border-white/10 dark:bg-slate-950/46 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]",
@@ -1085,18 +1119,19 @@ export const TripPlannerPage = () => {
                             {t("routeSummaryTitle")}
                           </span>
                           <span className="text-foreground" aria-hidden="true">
-                            •
+                            →
                           </span>
-                          <span className="text-muted-foreground">
-                            {removeTrailingColon(t("routeDistance"))}{" "}
-                            {formatRouteDistance(result.route.distanceMeters)}
-                          </span>
+                          <TripPlannerRouteSummaryValue
+                            label={routeDistanceLabel}
+                            value={routeDistanceValue}
+                          />
                           <span className="text-foreground" aria-hidden="true">
                             •
                           </span>
-                          <span className="text-muted-foreground">
-                            {t("routeDuration")} {formatRouteDuration(result.route.durationSeconds)}
-                          </span>
+                          <TripPlannerRouteSummaryValue
+                            label={routeDurationLabel}
+                            value={routeDurationValue}
+                          />
                         </div>
                       ) : (
                         <>
@@ -1104,11 +1139,18 @@ export const TripPlannerPage = () => {
                             <Route className="h-4 w-4" aria-hidden="true" />
                             <span>{t("routeSummaryTitle")}</span>
                           </div>
-                          <p className="mt-2 text-muted-foreground">
-                            {t("routeDistance")} {formatRouteDistance(result.route.distanceMeters)}
-                          </p>
-                          <p className="text-muted-foreground">
-                            {t("routeDuration")} {formatRouteDuration(result.route.durationSeconds)}
+                          <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+                            <TripPlannerRouteSummaryValue
+                              label={routeDistanceLabel}
+                              value={routeDistanceValue}
+                            />
+                            <span className="text-foreground" aria-hidden="true">
+                              •
+                            </span>
+                            <TripPlannerRouteSummaryValue
+                              label={routeDurationLabel}
+                              value={routeDurationValue}
+                            />
                           </p>
                         </>
                       )}
