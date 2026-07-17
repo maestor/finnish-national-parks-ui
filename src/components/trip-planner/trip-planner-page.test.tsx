@@ -1157,17 +1157,11 @@ describe("TripPlannerPage", () => {
       "tripPlanner.originResolvedLabel",
     );
     expect(screen.getByText("tripPlanner.originResolvedLabel").parentElement).toHaveTextContent(
-      "→",
-    );
-    expect(screen.getByText("tripPlanner.originResolvedLabel").parentElement).toHaveTextContent(
       "Helsinki",
     );
     expect(
       screen.getByText("tripPlanner.destinationResolvedLabel").parentElement,
     ).toHaveTextContent("tripPlanner.destinationResolvedLabel");
-    expect(
-      screen.getByText("tripPlanner.destinationResolvedLabel").parentElement,
-    ).toHaveTextContent("→");
     expect(
       screen.getByText("tripPlanner.destinationResolvedLabel").parentElement,
     ).toHaveTextContent("Tampere");
@@ -1300,7 +1294,6 @@ describe("TripPlannerPage", () => {
     const mobileRouteSummary = screen.getByText("tripPlanner.routeSummaryTitle").parentElement;
 
     expect(mobileRouteSummary).toHaveTextContent("180 km");
-    expect(mobileRouteSummary).toHaveTextContent("→");
     expect(mobileRouteSummary).toHaveTextContent("•");
     expect(mobileRouteSummary).toHaveTextContent("2 h 30 min");
     expect(mobileRouteSummary).not.toHaveTextContent("tripPlanner.routeDistance");

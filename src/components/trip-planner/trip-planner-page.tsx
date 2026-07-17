@@ -244,13 +244,7 @@ const renderMultilineText = (text: string) => {
 
 const removeTrailingColon = (label: string) => label.replace(/:\s*$/, "");
 
-const TripPlannerRouteSummaryValue = ({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) => (
+const TripPlannerRouteSummaryValue = ({ label, value }: { label: string; value: string }) => (
   <span aria-label={`${label} ${value}`} title={label} className="text-muted-foreground">
     {value}
   </span>
@@ -915,9 +909,6 @@ export const TripPlannerPage = () => {
               <dt className="inline font-medium text-foreground md:block">
                 {t("originResolvedLabel")}
               </dt>
-              <span className="text-foreground md:hidden" aria-hidden="true">
-                →
-              </span>
               <dd className="inline md:block">{result.origin.label}</dd>
             </div>
             {result.destination ? (
@@ -925,9 +916,6 @@ export const TripPlannerPage = () => {
                 <dt className="inline font-medium text-foreground md:block">
                   {t("destinationResolvedLabel")}
                 </dt>
-                <span className="text-foreground md:hidden" aria-hidden="true">
-                  →
-                </span>
                 <dd className="inline md:block">{result.destination.label}</dd>
               </div>
             ) : null}
@@ -1124,7 +1112,7 @@ export const TripPlannerPage = () => {
                             {t("routeSummaryTitle")}
                           </span>
                           <span className="text-foreground" aria-hidden="true">
-                            →
+                            •
                           </span>
                           <TripPlannerRouteSummaryValue
                             label={routeDistanceLabel}
