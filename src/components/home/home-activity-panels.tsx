@@ -19,7 +19,7 @@ export const HomeActivityPanels = ({
   fallbackRecentVisits,
   fallbackLatestVisitEntries,
 }: HomeActivityPanelsProps) => (
-  <div className="grid gap-4 lg:grid-cols-2">
+  <div className="grid gap-6 lg:grid-cols-2">
     <RecentVisits
       title={recentVisitsTitle}
       emptyMessage={recentVisitsEmptyMessage}

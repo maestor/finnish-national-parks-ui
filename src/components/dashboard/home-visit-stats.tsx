@@ -1,3 +1,7 @@
+import {
+  PUBLIC_PANEL_CLASS_NAME,
+  PUBLIC_PANEL_ICON_SURFACE_CLASS_NAME,
+} from "@/components/layout/public-page-styles";
 import { BarChart3 } from "lucide-react";
 import Link from "next/link";
 
@@ -111,11 +115,11 @@ export const HomeVisitStats = ({
     : [];
 
   return (
-    <section className="mt-4" aria-labelledby="home-visit-stats-title">
-      <div className="rounded-[2rem] border border-white/55 bg-white/66 p-6 text-card-foreground shadow-[0_24px_60px_rgba(148,163,184,0.18)] backdrop-blur-xl supports-[backdrop-filter]:bg-white/58 dark:border-white/10 dark:bg-slate-950/52 dark:shadow-[0_28px_64px_rgba(2,6,23,0.34)]">
+    <section aria-labelledby="home-visit-stats-title">
+      <div className={`${PUBLIC_PANEL_CLASS_NAME} text-card-foreground`}>
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div className="flex items-center gap-3">
-            <span className="inline-flex h-11 w-11 items-center justify-center rounded-[1.1rem] border border-white/50 bg-white/72 text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+            <span className={PUBLIC_PANEL_ICON_SURFACE_CLASS_NAME}>
               <BarChart3 className="h-4 w-4 text-primary" aria-hidden="true" />
             </span>
             <h2 id="home-visit-stats-title" className="text-xl font-semibold tracking-tight">

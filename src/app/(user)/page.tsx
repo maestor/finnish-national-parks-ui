@@ -2,6 +2,7 @@ import { HomeVisitStats } from "@/components/dashboard/home-visit-stats";
 import { MostVisitedParks } from "@/components/dashboard/most-visited-parks";
 import { HomeActivityPanels } from "@/components/home/home-activity-panels";
 import { HomeIntro } from "@/components/home/home-intro";
+import { PUBLIC_PAGE_SHELL_CLASS_NAME } from "@/components/layout/public-page-styles";
 import {
   createHomeLatestVisitEntriesFromSummary,
   createHomeMostVisitedParks,
@@ -34,7 +35,7 @@ const HomePage = async () => {
     .filter(Boolean);
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 py-8">
+    <div className={PUBLIC_PAGE_SHELL_CLASS_NAME}>
       <HomeIntro
         title={t("title")}
         summary={t("summary")}
@@ -56,7 +57,7 @@ const HomePage = async () => {
         autumnLabel={t("statistics.seasons.autumn")}
         winterLabel={t("statistics.seasons.winter")}
       />
-      <div className="mt-4 space-y-4">
+      <div className="space-y-6">
         <MostVisitedParks
           title={t("mostVisitedParks.title")}
           emptyMessage={t("mostVisitedParks.empty")}

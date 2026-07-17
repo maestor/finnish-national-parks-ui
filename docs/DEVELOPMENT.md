@@ -256,6 +256,7 @@ See `AGENTS.md` for the full convention list. Key rules:
 - **Finnish UI copy** — all user-facing text in `messages/fi.json`
 - **Accessible by default** — semantic HTML, `aria-label` on icon buttons, visible focus
 - **Fix clearly off-pattern code in touched areas** — when a task brings you into code that obviously conflicts with current repo conventions, fold the nearby refactor into the same change instead of preserving the mismatch
+- **Centralize repeated UI patterns early** — when a page shell, hero block, panel surface, filter row, card layout, or class recipe is already reused or clearly becoming a shared pattern, extend an existing shared component/style module or create one in a neutral location instead of copying and re-tuning nearly identical markup page by page
 - **Tailwind v4** — semantic tokens (`bg-background`, `text-primary`)
 - **Dark mode** — use `dark:` variants, test both themes
 

@@ -46,7 +46,7 @@ describe("HomeActivityPanels", () => {
 
     expect(screen.getByTestId("recent-visits")).toHaveTextContent("visits:1|edit:false");
     expect(screen.getByTestId("latest-visit-entries")).toHaveTextContent("visits:1|edit:false");
-    expect(container.firstElementChild).toHaveClass("grid", "gap-4", "lg:grid-cols-2");
+    expect(container.firstElementChild).toHaveClass("grid", "gap-6", "lg:grid-cols-2");
     expect(container.firstElementChild).not.toHaveClass("xl:grid-cols-2");
   });
 });
