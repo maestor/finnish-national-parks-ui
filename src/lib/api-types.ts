@@ -1301,6 +1301,7 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
+                            defaultDistanceKm: number;
                             destination: {
                                 coordinate: {
                                     lat: number;
@@ -1308,6 +1309,7 @@ export interface paths {
                                 };
                                 label: string;
                             };
+                            maxDistanceKm: number;
                             origin: {
                                 coordinate: {
                                     lat: number;
@@ -1452,6 +1454,8 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
+                            defaultDistanceKm: number;
+                            maxDistanceKm: number;
                             origin: {
                                 coordinate: {
                                     lat: number;

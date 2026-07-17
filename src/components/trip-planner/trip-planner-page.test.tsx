@@ -61,10 +61,12 @@ describe("TripPlannerPage", () => {
   type SuggestionResponse = TripPlannerSuggestionsResponse;
 
   const createSearchResponse = (): SearchResponse => ({
+    defaultDistanceKm: 25,
     destination: {
       coordinate: { lat: 61.5, lon: 23.7 },
       label: "Tampere",
     },
+    maxDistanceKm: 60,
     origin: {
       coordinate: { lat: 60.17, lon: 24.94 },
       label: "Helsinki",
@@ -189,6 +191,32 @@ describe("TripPlannerPage", () => {
     const routeResponse = createSearchResponse();
 
     return {
+      defaultDistanceKm: 25,
+      maxDistanceKm: 40,
+      origin: routeResponse.origin,
+      parks: routeResponse.parks.map(({ distanceFromRouteKm, ...park }) => ({
+        ...park,
+        distanceFromOriginKm: distanceFromRouteKm,
+      })),
+      searchArea: {
+        boundingBox: {
+          minLat: 59.95,
+          minLon: 24.69,
+          maxLat: 60.39,
+          maxLon: 25.19,
+        },
+        center: routeResponse.origin.coordinate,
+        maxDistanceKm: 25,
+      },
+    };
+  };
+
+  const createLargeNearbyResponse = (): NearbyResponse => {
+    const routeResponse = createLargeSearchResponse();
+
+    return {
+      defaultDistanceKm: 18,
+      maxDistanceKm: 40,
       origin: routeResponse.origin,
       parks: routeResponse.parks.map(({ distanceFromRouteKm, ...park }) => ({
         ...park,
@@ -478,7 +506,7 @@ describe("TripPlannerPage", () => {
   });
 
   it("uses the nearby endpoint when only an origin is submitted", async () => {
-    mockTripPlannerApi({ nearbyResponses: [createNearbyResponse()] });
+    mockTripPlannerApi({ nearbyResponses: [createLargeNearbyResponse()] });
 
     const user = userEvent.setup();
 
@@ -501,6 +529,11 @@ describe("TripPlannerPage", () => {
     expect(screen.queryByText("tripPlanner.destinationResolvedLabel")).not.toBeInTheDocument();
     expect(screen.getByTestId("trip-planner-map")).toHaveAttribute("data-mode", "nearby");
     expect(screen.getByTestId("trip-planner-map")).toHaveAttribute("data-destination", "");
+    const distanceSlider = screen.getByRole("slider", {
+      name: "tripPlanner.filters.distanceFromOriginLabel",
+    }) as HTMLInputElement;
+    expect(distanceSlider.max).toBe("40");
+    expect(distanceSlider.value).toBe("18");
 
     await user.click(screen.getByRole("tab", { name: "tripPlanner.viewTabs.list" }));
 
@@ -1003,6 +1036,11 @@ describe("TripPlannerPage", () => {
     expect(
       screen.getByRole("slider", { name: "tripPlanner.filters.distanceLabel" }),
     ).toBeInTheDocument();
+    const distanceSlider = screen.getByRole("slider", {
+      name: "tripPlanner.filters.distanceLabel",
+    }) as HTMLInputElement;
+    expect(distanceSlider.max).toBe("60");
+    expect(distanceSlider.value).toBe("25");
     expect(screen.getByRole("tab", { name: "tripPlanner.viewTabs.map" })).toHaveAttribute(
       "aria-selected",
       "true",
@@ -1078,7 +1116,20 @@ describe("TripPlannerPage", () => {
   });
 
   it("collapses the search form after a successful search and allows reopening it", async () => {
-    mockTripPlannerApi({ searchResponses: [createLargeSearchResponse()] });
+    mockTripPlannerApi({
+      searchResponses: [
+        createLargeSearchResponse(),
+        {
+          ...createLargeSearchResponse(),
+          defaultDistanceKm: 9,
+          destination: {
+            coordinate: { lat: 62.24, lon: 25.75 },
+            label: "Jyväskylä",
+          },
+          maxDistanceKm: 45,
+        },
+      ],
+    });
 
     const user = userEvent.setup();
 
@@ -1274,8 +1325,13 @@ describe("TripPlannerPage", () => {
       screen.getByRole("combobox", { name: "tripPlanner.filters.visitStatusLabel" }),
       "visited",
     );
+    fireEvent.change(screen.getByRole("slider", { name: "tripPlanner.filters.distanceLabel" }), {
+      target: { value: "7" },
+    });
 
-    expect(screen.getByTestId("trip-planner-map")).toHaveTextContent("map:seurasaari");
+    expect(screen.getByTestId("trip-planner-map")).toHaveTextContent(
+      "map:lisapaikka-1,lisapaikka-13",
+    );
     expect(screen.getByRole("button", { name: "tripPlanner.filters.hideMobile" })).toHaveAttribute(
       "aria-expanded",
       "true",
@@ -1354,10 +1410,12 @@ describe("TripPlannerPage", () => {
         createLargeSearchResponse(),
         {
           ...createLargeSearchResponse(),
+          defaultDistanceKm: 9,
           destination: {
             coordinate: { lat: 61.49, lon: 23.76 },
             label: "Jyväskylä",
           },
+          maxDistanceKm: 45,
         },
       ],
     });
@@ -1397,11 +1455,16 @@ describe("TripPlannerPage", () => {
     });
 
     expect(screen.getByTestId("trip-planner-map")).toHaveTextContent(
-      "map:nuuksio,hossan-polku,seurasaari",
+      "map:nuuksio,seurasaari,lisapaikka-1,lisapaikka-2,lisapaikka-3,lisapaikka-4,lisapaikka-5,lisapaikka-11,lisapaikka-12,lisapaikka-13,lisapaikka-14,lisapaikka-15",
     );
     expect(
       screen.getByRole("combobox", { name: "tripPlanner.filters.visitStatusLabel" }),
     ).toHaveValue("all");
+    const distanceSlider = screen.getByRole("slider", {
+      name: "tripPlanner.filters.distanceLabel",
+    }) as HTMLInputElement;
+    expect(distanceSlider.max).toBe("45");
+    expect(distanceSlider.value).toBe("9");
   });
 
   it("shows a request error", async () => {
