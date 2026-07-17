@@ -165,6 +165,18 @@ describe("TripPlannerPage", () => {
     return error;
   };
 
+  const createDeferred = <T,>() => {
+    let resolve!: (value: T) => void;
+    let reject!: (reason?: unknown) => void;
+
+    const promise = new Promise<T>((nextResolve, nextReject) => {
+      resolve = nextResolve;
+      reject = nextReject;
+    });
+
+    return { promise, reject, resolve };
+  };
+
   const getApiCallsForPath = (path: string) =>
     vi.mocked(apiFetch).mock.calls.filter(([calledPath]) => calledPath === path);
 
@@ -279,6 +291,112 @@ describe("TripPlannerPage", () => {
 
     expect(screen.getByTestId("trip-planner-map")).toBeInTheDocument();
     expect(getApiCallsForPath("/api/trip-planner/search")).toHaveLength(1);
+  });
+
+  it("disables the search button and shows a results loading placeholder during the first search", async () => {
+    const deferredSearch = createDeferred<SearchResponse>();
+
+    mockTripPlannerApi({
+      searchResponses: [],
+    });
+
+    vi.mocked(apiFetch).mockImplementation(async (path, options) => {
+      if (path === "/api/trip-planner/search") {
+        return deferredSearch.promise as never;
+      }
+
+      if (path === "/api/trip-planner/suggestions") {
+        const body = JSON.parse(String(options?.body ?? "{}")) as { query: string };
+        return createSuggestionResponse(body.query) as never;
+      }
+
+      throw new Error(`Unexpected apiFetch path: ${path}`);
+    });
+
+    const user = userEvent.setup();
+
+    render(<TripPlannerPage />);
+
+    await user.type(screen.getByRole("combobox", { name: "tripPlanner.originLabel" }), "Helsinki");
+    await user.type(
+      screen.getByRole("combobox", { name: "tripPlanner.destinationLabel" }),
+      "Tampere",
+    );
+    await user.click(screen.getByRole("button", { name: "tripPlanner.submit" }));
+
+    expect(screen.getByRole("button", { name: "tripPlanner.submit" })).toBeDisabled();
+    expect(screen.getByText("tripPlanner.loading")).toBeInTheDocument();
+    expect(screen.getByText("tripPlanner.resultsTitle")).toBeInTheDocument();
+
+    deferredSearch.resolve(createSearchResponse());
+    expect(await screen.findByTestId("trip-planner-map")).toBeInTheDocument();
+  });
+
+  it("replaces existing results with a loading placeholder while a new route search is in progress", async () => {
+    const secondSearch = createDeferred<SearchResponse>();
+    const firstResponse = createSearchResponse();
+
+    vi.mocked(apiFetch).mockImplementation(async (path, options) => {
+      if (path === "/api/trip-planner/search") {
+        const body = JSON.parse(String(options?.body ?? "{}")) as {
+          destinationQuery: string;
+          mode: "drive";
+          originQuery: string;
+        };
+
+        if (body.destinationQuery === "Tampere") {
+          return firstResponse as never;
+        }
+
+        if (body.destinationQuery === "Jyväskylä") {
+          return secondSearch.promise as never;
+        }
+      }
+
+      if (path === "/api/trip-planner/suggestions") {
+        const body = JSON.parse(String(options?.body ?? "{}")) as { query: string };
+        return createSuggestionResponse(body.query) as never;
+      }
+
+      throw new Error(`Unexpected apiFetch path: ${path}`);
+    });
+
+    const user = userEvent.setup();
+
+    render(<TripPlannerPage />);
+
+    await user.type(screen.getByRole("combobox", { name: "tripPlanner.originLabel" }), "Helsinki");
+    await user.type(
+      screen.getByRole("combobox", { name: "tripPlanner.destinationLabel" }),
+      "Tampere",
+    );
+    await user.click(screen.getByRole("button", { name: "tripPlanner.submit" }));
+
+    expect(await screen.findByTestId("trip-planner-map")).toHaveTextContent(
+      "map:nuuksio,hossan-polku,seurasaari",
+    );
+
+    await user.click(screen.getByRole("button", { name: "tripPlanner.expandSearch" }));
+    await user.clear(screen.getByRole("combobox", { name: "tripPlanner.destinationLabel" }));
+    await user.type(
+      screen.getByRole("combobox", { name: "tripPlanner.destinationLabel" }),
+      "Jyväskylä",
+    );
+    await user.click(screen.getByRole("button", { name: "tripPlanner.submit" }));
+
+    expect(screen.getByText("tripPlanner.loading")).toBeInTheDocument();
+    expect(screen.queryByTestId("trip-planner-map")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "tripPlanner.submit" })).toBeDisabled();
+
+    secondSearch.resolve({
+      ...firstResponse,
+      destination: {
+        coordinate: { lat: 62.24, lon: 25.75 },
+        label: "Jyväskylä",
+      },
+    });
+
+    expect(await screen.findByTestId("trip-planner-map")).toBeInTheDocument();
   });
 
   it("ignores stale suggestion results after the query changes", async () => {
