@@ -2,8 +2,9 @@
 
 import { CalendarRange, Camera, Footprints, Images, Route } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useRef } from "react";
+import { type ChangeEvent, useRef } from "react";
 import {
   PUBLIC_EMPTY_STATE_PANEL_CLASS_NAME,
   PUBLIC_EYEBROW_BADGE_CLASS_NAME,
@@ -14,6 +15,8 @@ import {
   PUBLIC_PANEL_CLASS_NAME,
 } from "@/components/layout/public-page-styles";
 import { ParkTypeBadge } from "@/components/park/park-type-badge";
+import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/cn";
 import { formatFinnishDate } from "@/lib/fi-date";
 import {
@@ -46,11 +49,13 @@ const PublicVisitsTimeline = ({
   selectedYear,
   visits,
 }: PublicVisitsTimelineProps) => {
+  const router = useRouter();
   const t = useTranslations("visits");
   const model = buildPublicVisitsTimelineModel(visits, {
     selectedYear,
     selectedMonth,
   });
+  const mobileMonthOptions = model.monthOptions.filter((month) => month.hasVisits);
   const yearRefs = useRef<Array<HTMLAnchorElement | null>>([]);
   const monthRefs = useRef<Array<HTMLAnchorElement | null>>([]);
   const visitRefs = useRef<Array<HTMLAnchorElement | null>>([]);
@@ -178,6 +183,28 @@ const PublicVisitsTimeline = ({
     focusYear();
   };
 
+  const handleYearSelectChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    const nextYear = event.target.value ? Number.parseInt(event.target.value, 10) : null;
+
+    router.push(
+      createPublicVisitsHref({
+        year: Number.isNaN(nextYear ?? Number.NaN) ? null : nextYear,
+        month: null,
+      }),
+    );
+  };
+
+  const handleMonthSelectChange = (event: ChangeEvent<HTMLSelectElement>) => {
+    const nextMonth = event.target.value ? Number.parseInt(event.target.value, 10) : null;
+
+    router.push(
+      createPublicVisitsHref({
+        year: model.selectedYear,
+        month: Number.isNaN(nextMonth ?? Number.NaN) ? null : nextMonth,
+      }),
+    );
+  };
+
   let monthSideIndex = 0;
   let visitFocusIndex = 0;
 
@@ -215,7 +242,46 @@ const PublicVisitsTimeline = ({
           </p>
         </div>
 
-        <nav aria-label={t("filters.yearsLabel")} className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-4 grid gap-3 md:hidden">
+          <div className="space-y-2">
+            <Label htmlFor="visits-year-filter-mobile">{t("filters.yearSelectLabel")}</Label>
+            <Select
+              id="visits-year-filter-mobile"
+              value={model.selectedYear?.toString() ?? ""}
+              onChange={handleYearSelectChange}
+            >
+              <option value="">{t("filters.allYearsLabel")}</option>
+              {model.availableYears.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="visits-month-filter-mobile">{t("filters.monthSelectLabel")}</Label>
+            <Select
+              id="visits-month-filter-mobile"
+              disabled={model.selectedYear === null}
+              value={model.selectedMonth?.toString() ?? ""}
+              onChange={handleMonthSelectChange}
+            >
+              <option value="">
+                {model.selectedYear === null
+                  ? t("filters.monthSelectPlaceholder")
+                  : t("filters.allMonthsLabel")}
+              </option>
+              {mobileMonthOptions.map((month) => (
+                <option key={month.value} value={month.value}>
+                  {month.longLabel}
+                </option>
+              ))}
+            </Select>
+          </div>
+        </div>
+
+        <nav aria-label={t("filters.yearsLabel")} className="mt-4 hidden flex-wrap gap-2 md:flex">
           <Link
             href={createPublicVisitsHref({ year: null, month: null })}
             aria-label={t("filters.allYearsLabel")}
@@ -255,7 +321,10 @@ const PublicVisitsTimeline = ({
         </nav>
 
         {model.selectedYear !== null ? (
-          <nav aria-label={t("filters.monthsLabel")} className="mt-4 flex flex-wrap gap-2">
+          <nav
+            aria-label={t("filters.monthsLabel")}
+            className="mt-4 hidden flex-wrap gap-2 md:flex"
+          >
             <Link
               href={createPublicVisitsHref({ year: model.selectedYear, month: null })}
               aria-label={t("filters.allMonthsLabel")}

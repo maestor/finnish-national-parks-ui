@@ -3,10 +3,19 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { FrontendTimelineVisit } from "@/lib/public-visits";
 import { PublicVisitsTimeline } from "./public-visits-timeline";
 
+const { mockPush } = vi.hoisted(() => ({
+  mockPush: vi.fn(),
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: mockPush }),
+}));
+
 describe("PublicVisitsTimeline", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-06-04T09:00:00Z"));
+    mockPush.mockReset();
   });
 
   const visits: FrontendTimelineVisit[] = [
@@ -98,6 +107,57 @@ describe("PublicVisitsTimeline", () => {
     expect(januaryPill.closest("a")).toBeNull();
     expect(januaryPill).toHaveAttribute("title", "visits.filters.noVisitsInMonth");
     expect(januaryPill).toHaveTextContent("visits.filters.noVisitsInMonth");
+  });
+
+  it("renders compact mobile selects and limits month options to available months", () => {
+    render(<PublicVisitsTimeline visits={visits} selectedYear={2024} selectedMonth={null} />);
+
+    const yearSelect = screen.getByLabelText("visits.filters.yearSelectLabel");
+    const monthSelect = screen.getByLabelText("visits.filters.monthSelectLabel");
+
+    expect(yearSelect).toHaveValue("2024");
+    expect(monthSelect).toHaveValue("");
+    expect(
+      within(yearSelect).getByRole("option", { name: "visits.filters.allYearsLabel" }),
+    ).toBeInTheDocument();
+    expect(
+      within(monthSelect).getByRole("option", { name: "visits.filters.allMonthsLabel" }),
+    ).toBeInTheDocument();
+    expect(within(monthSelect).getByRole("option", { name: /kesäkuu/i })).toBeInTheDocument();
+    expect(within(monthSelect).getByRole("option", { name: /elokuu/i })).toBeInTheDocument();
+    expect(
+      within(monthSelect).queryByRole("option", { name: /tammikuu/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("disables the mobile month select until a year is chosen", () => {
+    render(<PublicVisitsTimeline visits={visits} selectedYear={null} selectedMonth={null} />);
+
+    const monthSelect = screen.getByLabelText("visits.filters.monthSelectLabel");
+
+    expect(monthSelect).toBeDisabled();
+    expect(
+      within(monthSelect).getByRole("option", { name: "visits.filters.monthSelectPlaceholder" }),
+    ).toBeInTheDocument();
+  });
+
+  it("navigates through the mobile selects when the user changes year or month", () => {
+    render(<PublicVisitsTimeline visits={visits} selectedYear={2024} selectedMonth={null} />);
+
+    fireEvent.change(screen.getByLabelText("visits.filters.yearSelectLabel"), {
+      target: { value: "2025" },
+    });
+    expect(mockPush).toHaveBeenLastCalledWith("/kaynnit?year=2025");
+
+    fireEvent.change(screen.getByLabelText("visits.filters.monthSelectLabel"), {
+      target: { value: "8" },
+    });
+    expect(mockPush).toHaveBeenLastCalledWith("/kaynnit?year=2024&month=8");
+
+    fireEvent.change(screen.getByLabelText("visits.filters.monthSelectLabel"), {
+      target: { value: "" },
+    });
+    expect(mockPush).toHaveBeenLastCalledWith("/kaynnit?year=2024");
   });
 
   it("filters timeline items by selected year and month and links to the targeted visit", () => {
