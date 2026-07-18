@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  PUBLIC_HOME_SUMMARY_TAG,
-  PUBLIC_MAP_SUMMARY_TAG,
+  HOME_SUMMARY_TAG,
+  MAP_SUMMARY_TAG,
   PUBLIC_VISITS_TAG,
   getPublicParkTag,
   revalidatePublicCache,
@@ -13,8 +13,8 @@ describe("public cache helpers", () => {
   });
 
   it("builds the park cache tag", () => {
-    expect(PUBLIC_HOME_SUMMARY_TAG).toBe("public-home-summary");
-    expect(PUBLIC_MAP_SUMMARY_TAG).toBe("public-map-summary");
+    expect(HOME_SUMMARY_TAG).toBe("home-summary");
+    expect(MAP_SUMMARY_TAG).toBe("map-summary");
     expect(PUBLIC_VISITS_TAG).toBe("public-visits");
     expect(getPublicParkTag("pallas")).toBe("public-park:pallas");
   });

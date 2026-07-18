@@ -44,7 +44,7 @@ describe("RecentVisits", () => {
     expect(screen.queryByLabelText("controlPanel.visits.edit")).not.toBeInTheDocument();
   });
 
-  it("renders public summary visits without ids", () => {
+  it("renders home summary visits without ids", () => {
     render(
       <RecentVisits
         title="Viimeisimmät käynnit"

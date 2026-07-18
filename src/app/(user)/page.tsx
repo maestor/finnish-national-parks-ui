@@ -8,8 +8,8 @@ import {
   createHomeMostVisitedParks,
   createHomeProgressItems,
   createHomeRecentVisitsFromSummary,
-  fetchPublicHomeSummary,
-} from "@/lib/public-summaries";
+  fetchHomeSummary,
+} from "@/lib/frontend-summaries";
 import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +23,7 @@ export const generateMetadata = async () => {
 
 const HomePage = async () => {
   const t = await getTranslations("home");
-  const summary = await fetchPublicHomeSummary();
+  const summary = await fetchHomeSummary();
   const progressItems = createHomeProgressItems(summary, t("statistics.allParks"));
   const mostVisitedParks = createHomeMostVisitedParks(summary);
   const recentVisits = createHomeRecentVisitsFromSummary(summary);
@@ -58,12 +58,6 @@ const HomePage = async () => {
         winterLabel={t("statistics.seasons.winter")}
       />
       <div className="space-y-6">
-        <MostVisitedParks
-          title={t("mostVisitedParks.title")}
-          emptyMessage={t("mostVisitedParks.empty")}
-          visitCountLabel={t("mostVisitedParks.visitCount")}
-          parks={mostVisitedParks}
-        />
         <HomeActivityPanels
           recentVisitsTitle={t("recentVisits.title")}
           recentVisitsEmptyMessage={t("recentVisits.empty")}
@@ -71,6 +65,12 @@ const HomePage = async () => {
           latestEntriesEmptyMessage={t("latestEntries.empty")}
           fallbackRecentVisits={recentVisits}
           fallbackLatestVisitEntries={latestVisitEntries}
+        />
+        <MostVisitedParks
+          title={t("mostVisitedParks.title")}
+          emptyMessage={t("mostVisitedParks.empty")}
+          visitCountLabel={t("mostVisitedParks.visitCount")}
+          parks={mostVisitedParks}
         />
       </div>
     </div>

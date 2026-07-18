@@ -1,6 +1,6 @@
 import { ParkExplorer } from "@/components/map/park-explorer";
+import { type MapSummary, fetchMapSummary } from "@/lib/frontend-summaries";
 import { buildPageMetadata } from "@/lib/page-metadata";
-import { type PublicMapSummary, fetchPublicMapSummary } from "@/lib/public-summaries";
 import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
@@ -11,11 +11,11 @@ export const generateMetadata = async () => {
 };
 
 const ParksMapPage = async () => {
-  let parks: PublicMapSummary["parks"] = [];
+  let parks: MapSummary["parks"] = [];
   let error: string | null = null;
 
   try {
-    const summary = await fetchPublicMapSummary();
+    const summary = await fetchMapSummary();
     parks = summary.parks;
   } catch (failure) {
     const t = await getTranslations("errors.generic");

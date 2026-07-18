@@ -1,4 +1,4 @@
-import type { VisitWithPark } from "@/lib/parks";
+import type { FrontendTimelineVisit } from "@/lib/public-visits";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PublicVisitsTimeline } from "./public-visits-timeline";
@@ -9,60 +9,41 @@ describe("PublicVisitsTimeline", () => {
     vi.setSystemTime(new Date("2026-06-04T09:00:00Z"));
   });
 
-  const visits: VisitWithPark[] = [
+  const visits: FrontendTimelineVisit[] = [
     {
       id: 1,
       visitedOn: "2024-06-15",
       route: "Punarinnankierros",
-      author: "Maija",
-      note: "Kesainen paiva.",
       createdAt: "2024-06-15T10:00:00Z",
-      updatedAt: "2024-06-15T10:00:00Z",
-      images: [],
+      imageCount: 0,
       park: {
         name: "Nuuksio",
         slug: "nuuksio",
+        typeLabel: "Kansallispuisto",
       },
     },
     {
       id: 2,
       visitedOn: "2024-08-10",
       route: null,
-      author: "Kalle",
-      note: null,
       createdAt: "2024-08-10T10:00:00Z",
-      updatedAt: "2024-08-10T10:00:00Z",
-      images: [
-        {
-          id: 20,
-          fullUrl: "https://example.com/full.jpg",
-          thumbUrl: "https://example.com/thumb.jpg",
-          fullWidth: 1200,
-          fullHeight: 800,
-          thumbWidth: 400,
-          thumbHeight: 267,
-          originalName: "retki.jpg",
-          displayOrder: 0,
-          createdAt: "2024-08-10T10:00:00Z",
-        },
-      ],
+      imageCount: 1,
       park: {
         name: "Pallas-Yllastunturi",
         slug: "pallas-yllastunturi",
+        typeLabel: "Kansallispuisto",
       },
     },
     {
       id: 3,
       visitedOn: "2025-02-05",
       route: "Talvipolku",
-      author: null,
-      note: "Lumista ja kirkasta.",
       createdAt: "2025-02-05T10:00:00Z",
-      updatedAt: "2025-02-05T10:00:00Z",
-      images: [],
+      imageCount: 0,
       park: {
         name: "Oulanka",
         slug: "oulanka",
+        typeLabel: "Kansallispuisto",
       },
     },
   ];
@@ -112,7 +93,6 @@ describe("PublicVisitsTimeline", () => {
     expect(screen.getByRole("heading", { name: "2024" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /elokuu/i })).toBeInTheDocument();
     expect(screen.queryByText("Nuuksio")).not.toBeInTheDocument();
-    expect(screen.queryByText("Kesainen paiva.")).not.toBeInTheDocument();
 
     const visitLink = screen.getByRole("link", {
       name: /Pallas-Yllastunturi/,
@@ -220,22 +200,56 @@ describe("PublicVisitsTimeline", () => {
     expect(monthLinks[1]).toHaveFocus();
   });
 
-  it("shows a continuous month spine and simplified note and image badges", () => {
+  it("shows a continuous month spine with the park type as the first detail badge", () => {
     render(<PublicVisitsTimeline visits={visits} selectedYear={null} selectedMonth={null} />);
 
     const monthTimeline = screen.getAllByRole("list")[0]?.closest("ol");
-    const noteBadge = screen.getAllByLabelText("visits.item.note")[0];
+    const parkTypeBadge = screen.getAllByText("Kansallispuisto")[0];
     const imageBadge = screen.getByLabelText("visits.item.imageCount");
+    const routeBadge = screen.getByText("Punarinnankierros");
 
-    if (!(monthTimeline instanceof HTMLElement) || !(noteBadge instanceof HTMLElement)) {
-      throw new Error("Expected timeline list and note badge");
+    if (
+      !(monthTimeline instanceof HTMLElement) ||
+      !(parkTypeBadge instanceof HTMLElement) ||
+      !(routeBadge instanceof HTMLElement)
+    ) {
+      throw new Error("Expected timeline list and detail badges");
     }
 
     expect(monthTimeline).toHaveClass("before:absolute");
-    expect(noteBadge).toHaveTextContent("");
+    expect(parkTypeBadge.compareDocumentPosition(routeBadge)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
     expect(imageBadge).toHaveTextContent("1");
-    expect(screen.queryByText("visits.item.note")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("visits.item.note")).not.toBeInTheDocument();
     expect(screen.getAllByText("visits.item.viewVisit")).toHaveLength(3);
+  });
+
+  it("shows the park type badge in the shared detail badge row when metadata is available", () => {
+    render(<PublicVisitsTimeline visits={visits} selectedYear={null} selectedMonth={null} />);
+
+    const badgeRow = screen.getByText("Punarinnankierros").parentElement;
+
+    if (!(badgeRow instanceof HTMLElement)) {
+      throw new Error("Expected visit badge row");
+    }
+
+    expect(badgeRow).toHaveClass("mt-3", "flex", "flex-wrap", "gap-2");
+    expect(within(badgeRow).getByText("Kansallispuisto")).toBeInTheDocument();
+  });
+
+  it("keeps the view-visit label on the same top row as the date", () => {
+    render(<PublicVisitsTimeline visits={visits} selectedYear={null} selectedMonth={null} />);
+
+    const nuuksioHeading = screen.getByRole("heading", { name: "Nuuksio" });
+    const topRow = nuuksioHeading.previousElementSibling;
+
+    if (!(topRow instanceof HTMLElement)) {
+      throw new Error("Expected visit top row");
+    }
+
+    expect(topRow).toHaveClass("flex", "items-start", "justify-between", "gap-3");
+    expect(within(topRow).getByText("15.6.2024")).toBeInTheDocument();
   });
 
   it("uses centered mobile month headers and aligns the mobile spine with visit markers", () => {

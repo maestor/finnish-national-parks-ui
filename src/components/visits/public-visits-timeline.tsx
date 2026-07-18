@@ -9,16 +9,17 @@ import {
   PUBLIC_PAGE_SHELL_CLASS_NAME,
   PUBLIC_PANEL_CLASS_NAME,
 } from "@/components/layout/public-page-styles";
+import { ParkTypeBadge } from "@/components/park/park-type-badge";
 import { cn } from "@/lib/cn";
 import { formatFinnishDate } from "@/lib/fi-date";
-import type { VisitWithPark } from "@/lib/parks";
 import {
+  type FrontendTimelineVisit,
   buildPublicVisitsTimelineModel,
   createParkVisitHref,
   createPublicVisitsHref,
 } from "@/lib/public-visits";
 import { appRoutes } from "@/lib/routes";
-import { CalendarRange, Camera, FileText, Footprints, Images, Route } from "lucide-react";
+import { CalendarRange, Camera, Footprints, Images, Route } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRef } from "react";
@@ -27,7 +28,7 @@ interface PublicVisitsTimelineProps {
   error?: string | null;
   selectedMonth: number | null;
   selectedYear: number | null;
-  visits: VisitWithPark[];
+  visits: FrontendTimelineVisit[];
 }
 
 const FILTER_LINK_CLASS_NAME =
@@ -353,8 +354,7 @@ const PublicVisitsTimeline = ({
                         {monthSection.visits.map((visit) => {
                           const currentVisitFocusIndex = visitFocusIndex;
                           visitFocusIndex += 1;
-                          const hasImages = visit.images.length > 0;
-                          const hasNote = Boolean(visit.note?.trim());
+                          const hasImages = visit.imageCount > 0;
 
                           return (
                             <li
@@ -382,48 +382,41 @@ const PublicVisitsTimeline = ({
                                 >
                                   <div className="flex flex-col gap-4">
                                     <div className="min-w-0">
-                                      <p className="text-sm font-medium text-primary md:pr-44">
-                                        {formatFinnishDate(visit.visitedOn)}
-                                      </p>
+                                      <div className="flex items-start justify-between gap-3">
+                                        <p className="text-sm font-medium text-primary">
+                                          {formatFinnishDate(visit.visitedOn)}
+                                        </p>
+                                        <span className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full border border-white/45 bg-white/72 px-3 py-1 text-xs font-medium whitespace-nowrap text-foreground/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.48)] dark:border-white/10 dark:bg-slate-950/56 dark:text-sky-100/72 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                                          <Camera className="h-3.5 w-3.5" aria-hidden="true" />
+                                          {t("item.viewVisit")}
+                                        </span>
+                                      </div>
                                       <h4 className="mt-3 text-xl font-semibold tracking-tight">
                                         {visit.park.name}
                                       </h4>
 
                                       <div className="mt-3 flex flex-wrap gap-2">
+                                        <ParkTypeBadge label={visit.park.typeLabel} />
                                         {visit.route ? (
                                           <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/70 bg-[linear-gradient(145deg,rgba(22,101,52,0.12),rgba(16,185,129,0.18))] px-2.5 py-1 text-xs font-semibold text-emerald-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-emerald-300/15 dark:bg-[linear-gradient(145deg,rgba(22,101,52,0.24),rgba(16,185,129,0.16))] dark:text-emerald-200 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
                                             <Route className="h-3.5 w-3.5" aria-hidden="true" />
                                             {visit.route}
                                           </span>
                                         ) : null}
-                                        {hasNote ? (
-                                          <span
-                                            aria-label={t("item.note")}
-                                            className="inline-flex items-center rounded-full border border-sky-200/70 bg-[linear-gradient(145deg,rgba(22,101,52,0.08),rgba(37,99,235,0.12))] p-1.5 text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-sky-300/15 dark:bg-[linear-gradient(145deg,rgba(22,101,52,0.18),rgba(37,99,235,0.16))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
-                                            role="img"
-                                          >
-                                            <FileText className="h-3.5 w-3.5" aria-hidden="true" />
-                                          </span>
-                                        ) : null}
                                         {hasImages ? (
                                           <span
                                             aria-label={t("item.imageCount", {
-                                              count: visit.images.length,
+                                              count: visit.imageCount,
                                             })}
                                             className="inline-flex items-center gap-1.5 rounded-full border border-sky-200/70 bg-[linear-gradient(145deg,rgba(37,99,235,0.12),rgba(14,165,233,0.16))] px-2.5 py-1 text-xs font-semibold text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-sky-300/15 dark:bg-[linear-gradient(145deg,rgba(37,99,235,0.18),rgba(14,165,233,0.14))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
                                             role="img"
                                           >
                                             <Images className="h-3.5 w-3.5" aria-hidden="true" />
-                                            {visit.images.length}
+                                            {visit.imageCount}
                                           </span>
                                         ) : null}
                                       </div>
                                     </div>
-
-                                    <span className="inline-flex items-center gap-1.5 self-start rounded-full border border-white/45 bg-white/72 px-3 py-1 text-xs font-medium text-foreground/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.48)] md:absolute md:right-5 md:top-5 md:whitespace-nowrap dark:border-white/10 dark:bg-slate-950/56 dark:text-sky-100/72 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                                      <Camera className="h-3.5 w-3.5" aria-hidden="true" />
-                                      {t("item.viewVisit")}
-                                    </span>
                                   </div>
                                 </Link>
                               </div>

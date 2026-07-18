@@ -32,7 +32,7 @@ const fallbackLatestVisitEntries = [
 ];
 
 describe("HomeActivityPanels", () => {
-  it("renders the public summary fallbacks without edit actions", () => {
+  it("renders the home summary fallbacks without edit actions", () => {
     const { container } = render(
       <HomeActivityPanels
         recentVisitsTitle="Recent"

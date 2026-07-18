@@ -1,5 +1,5 @@
 import { apiPublicFetch } from "./api";
-import type { VisitWithPark } from "./parks";
+import type { paths } from "./api-types";
 import { PUBLIC_VISITS_TAG } from "./public-cache";
 import { appRoutes, createPathWithSearchParams } from "./routes";
 
@@ -22,7 +22,7 @@ export interface PublicVisitMonthOption {
 export interface PublicVisitMonthSection {
   label: string;
   month: number;
-  visits: VisitWithPark[];
+  visits: FrontendTimelineVisit[];
 }
 
 export interface PublicVisitYearSection {
@@ -32,12 +32,15 @@ export interface PublicVisitYearSection {
 
 export interface PublicVisitsTimelineModel {
   availableYears: number[];
-  filteredVisits: VisitWithPark[];
+  filteredVisits: FrontendTimelineVisit[];
   monthOptions: PublicVisitMonthOption[];
   sections: PublicVisitYearSection[];
   selectedMonth: number | null;
   selectedYear: number | null;
 }
+
+export type FrontendTimelineVisit =
+  paths["/api/visits-timeline"]["get"]["responses"][200]["content"]["application/json"]["visits"][number];
 
 const MONTH_FILTER_LABEL_FORMATTER = new Intl.DateTimeFormat("fi-FI", {
   month: "short",
@@ -80,13 +83,13 @@ const parseIntegerParam = (value?: string | string[]) => {
   return Number.isInteger(parsedValue) ? parsedValue : null;
 };
 
-const compareVisitsByTimeline = (left: VisitWithPark, right: VisitWithPark) =>
+const compareVisitsByTimeline = (left: FrontendTimelineVisit, right: FrontendTimelineVisit) =>
   right.visitedOn.localeCompare(left.visitedOn) ||
   right.createdAt.localeCompare(left.createdAt) ||
   right.id - left.id;
 
-export const fetchPublicVisits = async (): Promise<{ visits: VisitWithPark[] }> =>
-  apiPublicFetch<{ visits: VisitWithPark[] }>("/api/visits", {
+export const fetchVisitsTimeline = async (): Promise<{ visits: FrontendTimelineVisit[] }> =>
+  apiPublicFetch<{ visits: FrontendTimelineVisit[] }>("/api/visits-timeline", {
     cache: "force-cache",
     next: {
       tags: [PUBLIC_VISITS_TAG],
@@ -130,7 +133,7 @@ export const createParkVisitHref = ({
 };
 
 export const buildAvailableVisitYears = (
-  visits: VisitWithPark[],
+  visits: FrontendTimelineVisit[],
   currentYear = getCurrentHelsinkiYear(),
 ) => {
   if (visits.length === 0) {
@@ -165,7 +168,7 @@ const createPublicVisitTimelineMonthLabel = (month: number) =>
   MONTH_TIMELINE_LABEL_FORMATTER.format(new Date(Date.UTC(2024, month - 1, 1, 12)));
 
 export const resolvePublicVisitsFilters = (
-  visits: VisitWithPark[],
+  visits: FrontendTimelineVisit[],
   { yearParam, monthParam }: ResolvePublicVisitsFiltersOptions,
   currentYear = getCurrentHelsinkiYear(),
 ) => {
@@ -186,7 +189,7 @@ export const resolvePublicVisitsFilters = (
 };
 
 export const buildPublicVisitsTimelineModel = (
-  visits: VisitWithPark[],
+  visits: FrontendTimelineVisit[],
   {
     currentYear = getCurrentHelsinkiYear(),
     selectedMonth,
@@ -221,12 +224,12 @@ export const buildPublicVisitsTimelineModel = (
     })
     .sort(compareVisitsByTimeline);
 
-  const yearSections = new Map<number, Map<number, VisitWithPark[]>>();
+  const yearSections = new Map<number, Map<number, FrontendTimelineVisit[]>>();
 
   for (const visit of filteredVisits) {
     const visitYear = getVisitYear(visit.visitedOn);
     const visitMonth = getVisitMonth(visit.visitedOn);
-    const yearMonths = yearSections.get(visitYear) ?? new Map<number, VisitWithPark[]>();
+    const yearMonths = yearSections.get(visitYear) ?? new Map<number, FrontendTimelineVisit[]>();
     const monthVisits = yearMonths.get(visitMonth) ?? [];
 
     monthVisits.push(visit);

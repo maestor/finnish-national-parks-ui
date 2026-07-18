@@ -115,7 +115,7 @@ describe("apiFetch", () => {
         json: async () => ({ ok: true }),
       } as Response);
 
-      await apiPublicFetch("/api/public/home-summary");
+      await apiPublicFetch("/api/home-summary");
 
       const [, options] = vi.mocked(globalThis.fetch).mock.calls[0] ?? [];
       const headers = options?.headers as Headers;

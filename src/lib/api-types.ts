@@ -984,7 +984,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/public/home-summary": {
+    "/api/home-summary": {
         parameters: {
             query?: never;
             header?: never;
@@ -1000,7 +1000,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Public visit summary for the home page */
+                /** @description Frontend visit summary for the home page */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -1075,7 +1075,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Public home summary not modified */
+                /** @description Home summary not modified */
                 304: {
                     headers: {
                         [name: string]: unknown;
@@ -1092,7 +1092,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/public/map-summary": {
+    "/api/map-summary": {
         parameters: {
             query?: never;
             header?: never;
@@ -1108,7 +1108,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Public park and visit summary for the map page */
+                /** @description Frontend park and visit summary for the map page */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -1174,7 +1174,63 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Public map summary not modified */
+                /** @description Map summary not modified */
+                304: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/visits-timeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Frontend visits timeline dataset */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            visits: {
+                                /** Format: date-time */
+                                createdAt: string;
+                                id: number;
+                                imageCount: number;
+                                park: {
+                                    name: string;
+                                    slug: string;
+                                    typeLabel: string;
+                                };
+                                route: string | null;
+                                visitedOn: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Visits timeline not modified */
                 304: {
                     headers: {
                         [name: string]: unknown;

@@ -154,7 +154,7 @@ The backend handles:
 - Park detail admin updates (`PATCH /api/parks/{slug}`)
 - Park visit history API (`/api/parks/{slug}/visits`)
 - Visit management API (`/api/visits`, `/api/visits/{id}`, image routes under `/api/visits/{id}`)
-- Public summary API for cacheable landing and map data (`/api/public/home-summary`, `/api/public/map-summary`)
+- Cacheable landing and map API (`/api/home-summary`, `/api/map-summary`) plus the lightweight visits timeline API (`/api/visits-timeline`)
 
 Visit image upload runtime caveat:
 
@@ -168,8 +168,9 @@ Route naming caveat:
 
 ### Public Page Data Strategy
 
-- The public home page (`/`) reads `GET /api/public/home-summary`.
-- The public map page (`/paikat`) reads `GET /api/public/map-summary`.
+- The public home page (`/`) reads `GET /api/home-summary`.
+- The public map page (`/paikat`) reads `GET /api/map-summary`.
+- The public visits page (`/kaynnit`) reads `GET /api/visits-timeline`.
 - Public park detail pages still read `GET /api/parks/{slug}` and `GET /api/parks/{slug}/visits`, but those reads now use cacheable public fetches by default and fall back to an authenticated request when the backend requires an admin session for a hidden park.
 - Admin-only quick links on public pages are resolved client-side with `useAuth`, so the page HTML can stay cache-friendly while signed-in users still see edit and add-visit affordances after hydration.
 - Visit and public park mutations call the local Next.js route `POST /api/revalidate-public-cache` so the frontend can invalidate cached public pages immediately after a successful write.
@@ -288,7 +289,7 @@ See `AGENTS.md` for the full convention list. Key rules:
 - Port: **3004**
 - Auth endpoints: `/auth/google`, `/auth/google/callback`, `/auth/me`, `/auth/logout`
 - API endpoints: `/api/parks`, `/api/parks/{slug}`, `/api/parks/{slug}/visits`, `/api/parks/{slug}/removed`, `/api/visits`, `/api/visits/{id}`
-- Public summary endpoints: `/api/public/home-summary`, `/api/public/map-summary`
+- Cacheable frontend endpoints: `/api/home-summary`, `/api/map-summary`, `/api/visits-timeline`
 - `GET` endpoints are public-readable; non-`GET` endpoints require authenticated admin access
 - OpenAPI doc: `http://localhost:3004/openapi.json`
 
