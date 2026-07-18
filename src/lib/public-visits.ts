@@ -17,6 +17,7 @@ interface BuildPublicVisitsTimelineModelOptions {
 export interface PublicVisitMonthOption {
   hasVisits: boolean;
   label: string;
+  longLabel: string;
   value: number;
 }
 
@@ -205,6 +206,7 @@ export const createPublicVisitMonthOptions = (
       hasVisits: availableMonths.has(value),
       value,
       label: MONTH_FILTER_LABEL_FORMATTER.format(new Date(Date.UTC(2024, index, 1, 12))),
+      longLabel: MONTH_TIMELINE_LABEL_FORMATTER.format(new Date(Date.UTC(2024, index, 1, 12))),
     };
   });
 
