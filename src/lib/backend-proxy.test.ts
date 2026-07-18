@@ -61,7 +61,7 @@ describe("proxyBackendRequest", () => {
     const response = await proxyBackendRequest(request, "/auth/google/callback");
 
     expect(response.status).toBe(302);
-    expect(response.headers.get("location")).toBe("https://frontend.example/control-panel");
+    expect(response.headers.get("location")).toBe("https://frontend.example/hallinta");
     expect(response.headers.get("set-cookie")).toContain("__session=signed-token");
   });
 

@@ -90,7 +90,7 @@ describe("ParkForm", () => {
     expect(revalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "pallas" });
     expect(revalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "pallas-yllastunturi" });
     expect(replaceMock).toHaveBeenCalledWith(
-      "/control-panel/parks/pallas-yllastunturi/edit?updated=1",
+      "/hallinta/paikat/pallas-yllastunturi/muokkaa?updated=1",
     );
     expect(refreshMock).toHaveBeenCalled();
     expect(

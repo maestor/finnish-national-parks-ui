@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { apiFetch } from "@/lib/api";
 import type { ParkDetail, ParkUpdateRequest, ParkUpdateResponse } from "@/lib/parks";
 import { revalidatePublicCache } from "@/lib/public-cache";
+import { appRoutes, createPathWithSearchParams } from "@/lib/routes";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
@@ -84,7 +85,7 @@ export const ParkForm = ({ park }: ParkFormProps) => {
   };
 
   const handleBack = () => {
-    router.push("/control-panel/parks");
+    router.push(appRoutes.controlPanel.parks);
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -167,7 +168,11 @@ export const ParkForm = ({ park }: ParkFormProps) => {
       ]);
 
       startTransition(() => {
-        router.replace(`/control-panel/parks/${updatedPark.slug}/edit?updated=1`);
+        router.replace(
+          createPathWithSearchParams(appRoutes.controlPanel.parkEdit(updatedPark.slug), {
+            updated: 1,
+          }),
+        );
         router.refresh();
       });
     } catch (error) {

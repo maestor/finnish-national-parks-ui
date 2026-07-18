@@ -85,7 +85,7 @@ describe("Park admin controls", () => {
     const editLink = screen.getByRole("link", { name: "park.admin.editAction" });
     const hideButton = screen.getByRole("button", { name: "park.admin.hideAction" });
 
-    expect(editLink).toHaveAttribute("href", "/control-panel/parks/pallas/edit");
+    expect(editLink).toHaveAttribute("href", "/hallinta/paikat/pallas/muokkaa");
     expect(editLink).toHaveClass("bg-primary", "text-primary-foreground");
     expect(editLink.parentElement?.firstElementChild).toBe(editLink);
     expect(editLink.parentElement?.children[1]).toBe(hideButton);

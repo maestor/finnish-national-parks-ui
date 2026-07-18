@@ -1,4 +1,5 @@
 import { env } from "@/lib/env";
+import { normalizeAppPath } from "@/lib/routes";
 
 interface ProxyRequestOptions {
   includeApiKey?: boolean;
@@ -49,7 +50,13 @@ const buildProxyResponseHeaders = (response: Response, request: Request): Header
 
     if (normalizedKey === "location" && value.startsWith(backendOrigin)) {
       const requestOrigin = new URL(request.url).origin;
-      headers.set(key, `${requestOrigin}${value.slice(backendOrigin.length)}`);
+      headers.set(key, `${requestOrigin}${normalizeAppPath(value.slice(backendOrigin.length))}`);
+      return;
+    }
+
+    if (normalizedKey === "location" && value.startsWith("/")) {
+      const requestOrigin = new URL(request.url).origin;
+      headers.set(key, `${requestOrigin}${normalizeAppPath(value)}`);
       return;
     }
 

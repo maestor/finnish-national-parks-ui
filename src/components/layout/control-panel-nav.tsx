@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/cn";
+import { appRoutes, normalizeAppPath } from "@/lib/routes";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -13,12 +14,12 @@ const activeLinkClassName =
 
 export const ControlPanelNav = () => {
   const t = useTranslations("controlPanel");
-  const pathname = usePathname();
+  const normalizedPathname = normalizeAppPath(usePathname());
 
   const links = [
-    { href: "/control-panel", label: t("dashboard.title") },
-    { href: "/control-panel/parks", label: t("parks.title") },
-    { href: "/control-panel/visits", label: t("visits.title") },
+    { href: appRoutes.controlPanel.root, label: t("dashboard.title") },
+    { href: appRoutes.controlPanel.parks, label: t("parks.title") },
+    { href: appRoutes.controlPanel.visits, label: t("visits.title") },
   ];
 
   return (
@@ -27,8 +28,8 @@ export const ControlPanelNav = () => {
         <Link
           key={link.href}
           href={link.href}
-          className={cn(navLinkClassName, pathname === link.href && activeLinkClassName)}
-          aria-current={pathname === link.href ? "page" : undefined}
+          className={cn(navLinkClassName, normalizedPathname === link.href && activeLinkClassName)}
+          aria-current={normalizedPathname === link.href ? "page" : undefined}
         >
           {link.label}
         </Link>

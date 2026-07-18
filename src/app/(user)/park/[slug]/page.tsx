@@ -5,6 +5,7 @@ import { apiAuthFetch } from "@/lib/api";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import { type ParkDetail, type ParkVisits, getParkTypeDisplayName } from "@/lib/parks";
 import { fetchPublicParkDetail, fetchPublicParkVisits } from "@/lib/public-summaries";
+import { appRoutes, createPathWithSearchParams } from "@/lib/routes";
 import { ExternalLink, FileDown, MapPin } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
@@ -204,7 +205,7 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
                 <h2 className="text-lg font-semibold tracking-tight">{t("boundaryMapTitle")}</h2>
               </div>
               <Link
-                href={`/parks?park=${slug}`}
+                href={createPathWithSearchParams(appRoutes.parks, { park: slug })}
                 prefetch
                 className="rounded-full border border-sky-200/70 bg-white/60 px-3 py-1.5 text-sm font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/82 dark:border-sky-300/15 dark:bg-slate-950/44 dark:hover:bg-slate-950/62"
               >

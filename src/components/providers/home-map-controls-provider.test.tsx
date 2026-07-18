@@ -84,7 +84,7 @@ describe("HomeMapControlsProvider", () => {
     expect(screen.getByTestId("seen-request")).toHaveTextContent("hossan-kansallispuisto");
 
     await waitFor(() => {
-      expect(replaceMock).toHaveBeenCalledWith("/parks", { scroll: false });
+      expect(replaceMock).toHaveBeenCalledWith("/paikat", { scroll: false });
     });
 
     expect(screen.getByTestId("focus-request")).toHaveTextContent("none");
@@ -104,7 +104,9 @@ describe("HomeMapControlsProvider", () => {
     expect(screen.getByTestId("seen-request")).toHaveTextContent("hossa");
 
     await waitFor(() => {
-      expect(replaceMock).toHaveBeenCalledWith("/parks?visitStatus=visited", { scroll: false });
+      expect(replaceMock).toHaveBeenCalledWith("/paikat?visitStatus=visited", {
+        scroll: false,
+      });
     });
 
     expect(screen.getByTestId("focus-request")).toHaveTextContent("none");

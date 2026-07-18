@@ -1,6 +1,7 @@
 import { apiPublicFetch } from "./api";
 import type { VisitWithPark } from "./parks";
 import { PUBLIC_VISITS_TAG } from "./public-cache";
+import { appRoutes, createPathWithSearchParams } from "./routes";
 
 interface ResolvePublicVisitsFiltersOptions {
   monthParam?: string | string[] | undefined;
@@ -111,7 +112,7 @@ export const createPublicVisitsHref = ({
 
   const query = searchParams.toString();
 
-  return query ? `/visits?${query}` : "/visits";
+  return query ? `${appRoutes.visits}?${query}` : appRoutes.visits;
 };
 
 export const createParkVisitHref = ({
@@ -122,10 +123,10 @@ export const createParkVisitHref = ({
   visitId?: number;
 }) => {
   if (visitId === undefined) {
-    return `/park/${parkSlug}`;
+    return appRoutes.park(parkSlug);
   }
 
-  return `/park/${parkSlug}?visit=${visitId}#visit-history`;
+  return `${createPathWithSearchParams(appRoutes.park(parkSlug), { visit: visitId })}#visit-history`;
 };
 
 export const buildAvailableVisitYears = (

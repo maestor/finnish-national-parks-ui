@@ -72,10 +72,10 @@ describe("revalidate public cache route", () => {
     expect(revalidateTagMock).toHaveBeenCalledWith("admin-park-visibility", "max");
     expect(revalidateTagMock).toHaveBeenCalledWith("public-park:pallas", "max");
     expect(revalidatePathMock).toHaveBeenCalledWith("/", "page");
-    expect(revalidatePathMock).toHaveBeenCalledWith("/parks", "page");
-    expect(revalidatePathMock).toHaveBeenCalledWith("/visits", "page");
-    expect(revalidatePathMock).toHaveBeenCalledWith("/control-panel/parks", "page");
-    expect(revalidatePathMock).toHaveBeenCalledWith("/park/pallas", "page");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/paikat", "page");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/kaynnit", "page");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/hallinta/paikat", "page");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/paikka/pallas", "page");
     await expect(response.json()).resolves.toEqual({
       ok: true,
       parkSlug: "pallas",
@@ -104,10 +104,13 @@ describe("revalidate public cache route", () => {
       "max",
     );
     expect(revalidatePathMock).toHaveBeenCalledWith("/", "page");
-    expect(revalidatePathMock).toHaveBeenCalledWith("/parks", "page");
-    expect(revalidatePathMock).toHaveBeenCalledWith("/visits", "page");
-    expect(revalidatePathMock).toHaveBeenCalledWith("/control-panel/parks", "page");
-    expect(revalidatePathMock).not.toHaveBeenCalledWith(expect.stringMatching(/^\/park\//), "page");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/paikat", "page");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/kaynnit", "page");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/hallinta/paikat", "page");
+    expect(revalidatePathMock).not.toHaveBeenCalledWith(
+      expect.stringMatching(/^\/paikka\//),
+      "page",
+    );
     await expect(response.json()).resolves.toEqual({
       ok: true,
       parkSlug: null,

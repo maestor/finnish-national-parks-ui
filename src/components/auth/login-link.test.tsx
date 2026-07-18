@@ -21,7 +21,7 @@ describe("LoginLink", () => {
     fireEvent.click(link);
 
     expect(window.sessionStorage.getItem("post-login-redirect-path")).toBe(
-      "/park/pallas?tab=history",
+      "/paikka/pallas?tab=history",
     );
   });
 

@@ -39,7 +39,7 @@ describe("PostLoginReturnRedirector", () => {
     render(<PostLoginReturnRedirector />);
 
     await waitFor(() => {
-      expect(navigationState.replace).toHaveBeenCalledWith("/park/pallas");
+      expect(navigationState.replace).toHaveBeenCalledWith("/paikka/pallas");
     });
     expect(window.sessionStorage.getItem("post-login-redirect-path")).toBeNull();
   });

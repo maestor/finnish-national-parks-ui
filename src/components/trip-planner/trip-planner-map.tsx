@@ -1,6 +1,7 @@
 "use client";
 
 import { getParkTypeDisplayName } from "@/lib/parks";
+import { appRoutes } from "@/lib/routes";
 import type {
   TripPlannerResolvedLocation,
   TripPlannerRouteResult,
@@ -169,7 +170,7 @@ const createPopupNode = (park: TripPlannerUiParkResult, labels: PopupLabels) => 
   title.className = "text-sm leading-tight font-semibold";
 
   const titleLink = document.createElement("a");
-  titleLink.href = `/park/${park.slug}`;
+  titleLink.href = appRoutes.park(park.slug);
   titleLink.className =
     "text-foreground underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
   titleLink.textContent = park.name;
@@ -203,7 +204,7 @@ const createPopupNode = (park: TripPlannerUiParkResult, labels: PopupLabels) => 
   container.appendChild(details);
 
   const actionLink = document.createElement("a");
-  actionLink.href = `/park/${park.slug}`;
+  actionLink.href = appRoutes.park(park.slug);
   actionLink.className =
     "inline-flex items-center self-center rounded-full border border-sky-200/70 bg-white/74 px-3 py-1.5 text-xs font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 dark:border-sky-300/15 dark:bg-slate-950/62 dark:hover:bg-slate-950/78";
   actionLink.textContent = labels.openParkPage;

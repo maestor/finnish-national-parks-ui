@@ -266,11 +266,11 @@ describe("TripPlannerMap", () => {
 
     expect(screen.getByRole("link", { name: "Nuuksion kansallispuisto" })).toHaveAttribute(
       "href",
-      "/park/nuuksio",
+      "/paikka/nuuksio",
     );
     expect(screen.getByRole("link", { name: "map.openParkPage" })).toHaveAttribute(
       "href",
-      "/park/nuuksio",
+      "/paikka/nuuksio",
     );
   });
 

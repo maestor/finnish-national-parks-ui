@@ -1,8 +1,9 @@
 import { jwtVerify } from "jose";
 import { type NextRequest, NextResponse } from "next/server";
+import { appRoutes } from "./lib/routes";
 
 export const config = {
-  matcher: ["/control-panel/:path*"],
+  matcher: ["/hallinta/:path*", "/control-panel/:path*"],
 };
 
 export const proxy = async (request: NextRequest) => {
@@ -10,7 +11,7 @@ export const proxy = async (request: NextRequest) => {
   const secret = process.env.AUTH_JWT_SECRET;
 
   if (!token || !secret) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(new URL(appRoutes.login, request.url));
   }
 
   try {
@@ -19,6 +20,6 @@ export const proxy = async (request: NextRequest) => {
     });
     return NextResponse.next();
   } catch {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(new URL(appRoutes.login, request.url));
   }
 };

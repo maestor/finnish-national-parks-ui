@@ -73,11 +73,11 @@ describe("ParkList", () => {
     expect(rows).toHaveLength(3);
     expect(screen.getByRole("link", { name: "Aulangon luonnonsuojelualue" })).toHaveAttribute(
       "href",
-      "/control-panel/parks/aulanko/edit",
+      "/hallinta/paikat/aulanko/muokkaa",
     );
     expect(screen.getByRole("link", { name: "Teijon kansallispuisto" })).toHaveAttribute(
       "href",
-      "/control-panel/parks/teijo/edit",
+      "/hallinta/paikat/teijo/muokkaa",
     );
     expect(screen.getByText("Maailmanperintökohde")).toBeInTheDocument();
     expect(screen.getByText("Aulangontie 93, 13220 Hämeenlinna")).toBeInTheDocument();
@@ -90,7 +90,7 @@ describe("ParkList", () => {
 
     expect(screen.getByRole("link", { name: "Repoveden kansallispuisto" })).toHaveAttribute(
       "href",
-      "/park/repovesi",
+      "/paikka/repovesi",
     );
   });
 

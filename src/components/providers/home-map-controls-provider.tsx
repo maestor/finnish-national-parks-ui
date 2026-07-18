@@ -1,5 +1,6 @@
 "use client";
 
+import { appRoutes, normalizeAppPath } from "@/lib/routes";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 
@@ -32,6 +33,7 @@ export const HomeMapControlsProvider = ({
   children: React.ReactNode;
 }>) => {
   const pathname = usePathname();
+  const normalizedPathname = normalizeAppPath(pathname);
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
@@ -67,7 +69,7 @@ export const HomeMapControlsProvider = ({
 
       setHomeParkFocusRequest(null);
 
-      if (pathname !== "/parks" || !pendingParkParamCleanupRef.current) {
+      if (normalizedPathname !== appRoutes.parks || !pendingParkParamCleanupRef.current) {
         return;
       }
 
@@ -76,13 +78,15 @@ export const HomeMapControlsProvider = ({
       const nextSearch = nextSearchParams.toString();
 
       pendingParkParamCleanupRef.current = null;
-      router.replace(nextSearch ? `${pathname}?${nextSearch}` : pathname, { scroll: false });
+      router.replace(nextSearch ? `${appRoutes.parks}?${nextSearch}` : appRoutes.parks, {
+        scroll: false,
+      });
     },
-    [homeParkFocusRequest, pathname, router, searchParams],
+    [homeParkFocusRequest, normalizedPathname, router, searchParams],
   );
 
   useEffect(() => {
-    const parkSlug = pathname === "/parks" ? searchParams.get("park") : null;
+    const parkSlug = normalizedPathname === appRoutes.parks ? searchParams.get("park") : null;
 
     if (!parkSlug) {
       lastHandledParkParamRef.current = null;
@@ -97,7 +101,7 @@ export const HomeMapControlsProvider = ({
     lastHandledParkParamRef.current = parkSlug;
     pendingParkParamCleanupRef.current = parkSlug;
     focusParkOnHome(parkSlug);
-  }, [focusParkOnHome, pathname, searchParams]);
+  }, [focusParkOnHome, normalizedPathname, searchParams]);
 
   return (
     <HomeMapControlsContext.Provider

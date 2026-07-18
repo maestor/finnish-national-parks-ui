@@ -1,7 +1,13 @@
+import { appRoutePatterns, normalizeAppPath } from "./routes";
+
 const POST_LOGIN_REDIRECT_STORAGE_KEY = "post-login-redirect-path";
 
 const isReturnablePath = (path: string): boolean => {
-  return path !== "/login" && !path.startsWith("/control-panel");
+  const normalizedPath = normalizeAppPath(path);
+  return (
+    !appRoutePatterns.isLoginPath(normalizedPath) &&
+    !appRoutePatterns.isControlPanelPath(normalizedPath)
+  );
 };
 
 export const storePostLoginRedirectPath = (path: string): void => {
@@ -10,7 +16,7 @@ export const storePostLoginRedirectPath = (path: string): void => {
   }
 
   try {
-    window.sessionStorage.setItem(POST_LOGIN_REDIRECT_STORAGE_KEY, path);
+    window.sessionStorage.setItem(POST_LOGIN_REDIRECT_STORAGE_KEY, normalizeAppPath(path));
   } catch {}
 };
 
@@ -24,7 +30,7 @@ export const consumePostLoginRedirectPath = (): string | null => {
     if (path) {
       window.sessionStorage.removeItem(POST_LOGIN_REDIRECT_STORAGE_KEY);
     }
-    return path;
+    return path ? normalizeAppPath(path) : null;
   } catch {
     return null;
   }
@@ -36,5 +42,5 @@ export const getCurrentPathWithSearchAndHash = (): string | null => {
   }
 
   const { pathname, search, hash } = window.location;
-  return `${pathname}${search}${hash}`;
+  return normalizeAppPath(`${pathname}${search}${hash}`);
 };

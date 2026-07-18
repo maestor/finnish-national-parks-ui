@@ -17,6 +17,7 @@ import {
   createParkVisitHref,
   createPublicVisitsHref,
 } from "@/lib/public-visits";
+import { appRoutes } from "@/lib/routes";
 import { CalendarRange, Camera, FileText, Footprints, Images, Route } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -297,7 +298,7 @@ const PublicVisitsTimeline = ({
         <section className={PUBLIC_EMPTY_STATE_PANEL_CLASS_NAME}>
           <p className="text-muted-foreground">{t("empty.filtered")}</p>
           <Link
-            href="/visits"
+            href={appRoutes.visits}
             className="mt-4 inline-flex items-center rounded-full border border-white/45 bg-white/72 px-4 py-2 text-sm font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.52)] transition-colors hover:bg-white/88 dark:border-white/10 dark:bg-slate-950/56 dark:hover:bg-slate-950/76"
           >
             {t("filters.reset")}

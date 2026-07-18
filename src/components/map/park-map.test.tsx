@@ -328,7 +328,7 @@ describe("ParkMap", () => {
     expect(document.body).toHaveTextContent("Pallas-Yllästunturin kansallispuisto");
     expect(screen.getByRole("link", { name: "map.openParkPage" })).toHaveAttribute(
       "href",
-      "/park/pallas",
+      "/paikka/pallas",
     );
   });
 
@@ -921,11 +921,11 @@ describe("ParkMap", () => {
 
     expect(screen.getByRole("link", { name: "map.openParkPage" })).toHaveAttribute(
       "href",
-      "/park/pallas",
+      "/paikka/pallas",
     );
     expect(screen.getByRole("link", { name: "map.addVisit" })).toHaveAttribute(
       "href",
-      "/control-panel/visits/new?park=pallas",
+      "/hallinta/kaynnit/uusi?park=pallas",
     );
   });
 
@@ -1055,7 +1055,7 @@ describe("ParkMap", () => {
 
     expect(screen.getByRole("link", { name: "map.openParkPage" })).toHaveAttribute(
       "href",
-      "/park/pallas",
+      "/paikka/pallas",
     );
   });
 

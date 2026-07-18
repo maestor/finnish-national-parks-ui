@@ -142,7 +142,7 @@ describe("HomeParkSearch", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /Päijänteen kansallispuisto/i }));
 
-    expect(mockPush).toHaveBeenCalledWith("/park/paijanne");
+    expect(mockPush).toHaveBeenCalledWith("/paikka/paijanne");
   });
 
   it("shows an empty state when no parks match the query", async () => {
@@ -357,7 +357,7 @@ describe("HomeParkSearch", () => {
 
     expect(
       await screen.findByRole("link", { name: "layout.parkSearch.openParkPage" }),
-    ).toHaveAttribute("href", "/park/paijanne");
+    ).toHaveAttribute("href", "/paikka/paijanne");
   });
 
   it("closes the result list when the direct park-page link is activated", async () => {

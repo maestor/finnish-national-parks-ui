@@ -84,7 +84,7 @@ describe("VisitForm", () => {
       }),
     });
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/control-panel/visits/42/edit?created=1");
+      expect(mockPush).toHaveBeenCalledWith("/hallinta/kaynnit/42/muokkaa?created=1");
     });
     expect(mockRevalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "pallas" });
     expect(mockRefresh).not.toHaveBeenCalled();
@@ -121,7 +121,7 @@ describe("VisitForm", () => {
     expect(submitButton).toBeDisabled();
     expect(submitButton).toHaveTextContent("...");
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/control-panel/visits/42/edit?created=1");
+      expect(mockPush).toHaveBeenCalledWith("/hallinta/kaynnit/42/muokkaa?created=1");
     });
     expect(submitButton).toBeDisabled();
   });
@@ -222,7 +222,7 @@ describe("VisitForm", () => {
     expect(mockRevalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "pallas" });
     expect(
       screen.getByRole("link", { name: "controlPanel.visits.form.viewAllVisits" }),
-    ).toHaveAttribute("href", "/control-panel/visits");
+    ).toHaveAttribute("href", "/hallinta/kaynnit");
   });
 
   it("shows the API error when creating a visit fails", async () => {
@@ -297,7 +297,7 @@ describe("VisitForm", () => {
 
     expect(apiFetch).toHaveBeenCalledWith("/api/visits/1", { method: "DELETE" });
     expect(mockRevalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "pallas" });
-    expect(mockPush).toHaveBeenCalledWith("/control-panel/visits");
+    expect(mockPush).toHaveBeenCalledWith("/hallinta/kaynnit");
     expect(mockRefresh).toHaveBeenCalled();
   });
 
