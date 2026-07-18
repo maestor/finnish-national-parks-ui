@@ -207,14 +207,35 @@ vi.mock("@/components/home/home-intro", () => ({
     summary,
     openMapLabel,
     infoClosedLabel,
+    children,
   }: {
     title: string;
     summary: string;
     openMapLabel: string;
     infoClosedLabel: string;
+    children?: React.ReactNode;
   }) => (
     <div data-testid="home-intro">
       title:{title}|summary:{summary}|map:{openMapLabel}|info:{infoClosedLabel}
+      {children}
+    </div>
+  ),
+}));
+
+vi.mock("@/components/home/home-social-links", () => ({
+  HomeSocialLinks: ({
+    linkedInLabel,
+    githubUiLabel,
+    githubApiLabel,
+    copyrightLabel,
+  }: {
+    linkedInLabel: string;
+    githubUiLabel: string;
+    githubApiLabel: string;
+    copyrightLabel: string;
+  }) => (
+    <div data-testid="home-social-links">
+      linkedin:{linkedInLabel}|ui:{githubUiLabel}|api:{githubApiLabel}|copyright:{copyrightLabel}
     </div>
   ),
 }));
@@ -466,6 +487,12 @@ describe("App pages", () => {
       "parks:1|top:Pallas-Yllästunturi:1",
     );
     expect(screen.getByTestId("home-activity-panels")).toHaveTextContent("recent:1|latest:1");
+    expect(screen.getByTestId("home-social-links")).toHaveTextContent(
+      "linkedin:home.social.linkedin|ui:home.social.githubUi|api:home.social.githubApi|copyright:home.social.copyright",
+    );
+    expect(screen.getByTestId("home-intro")).toContainElement(
+      screen.getByTestId("home-social-links"),
+    );
     expect(
       screen
         .getByTestId("home-activity-panels")

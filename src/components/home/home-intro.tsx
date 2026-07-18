@@ -2,7 +2,7 @@
 
 import { CircleHelp, MapPin } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import {
   PUBLIC_HERO_DESCRIPTION_CLASS_NAME,
   PUBLIC_HERO_TITLE_CLASS_NAME,
@@ -16,6 +16,7 @@ interface HomeIntroProps {
   openMapLabel: string;
   infoClosedLabel: string;
   infoOpenLabel: string;
+  children?: ReactNode;
 }
 
 export const HomeIntro = ({
@@ -25,6 +26,7 @@ export const HomeIntro = ({
   openMapLabel,
   infoClosedLabel,
   infoOpenLabel,
+  children,
 }: HomeIntroProps) => {
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const infoButtonLabel = isInfoOpen ? infoOpenLabel : infoClosedLabel;
@@ -71,6 +73,7 @@ export const HomeIntro = ({
             {descriptionParagraphs.map((paragraph) => (
               <p key={paragraph}>{paragraph}</p>
             ))}
+            {children}
           </div>
         </div>
       </div>

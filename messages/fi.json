@@ -68,6 +68,17 @@
       "title": "Uusimmat käyntikirjaukset",
       "empty": "Ei vielä käyntikirjauksia."
     },
+    "social": {
+      "sectionLabel": "Projektin linkit",
+      "title": "Toteutus",
+      "linkedin": "Kallen LinkedIn-profiili",
+      "linkedinText": "LinkedIn",
+      "githubUi": "Reissuvihkon UI GitHubissa",
+      "githubUiText": "UI",
+      "githubApi": "Reissuvihkon API GitHubissa",
+      "githubApiText": "API",
+      "copyright": "Copyright © Kalle Haavisto 2026->"
+    },
     "filters": {
       "panelLabel": "Karttasuodattimet",
       "all": "Kaikki kohteet",
