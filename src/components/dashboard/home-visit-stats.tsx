@@ -2,6 +2,7 @@ import {
   PUBLIC_PANEL_CLASS_NAME,
   PUBLIC_PANEL_ICON_SURFACE_CLASS_NAME,
 } from "@/components/layout/public-page-styles";
+import { appRoutes } from "@/lib/routes";
 import { BarChart3 } from "lucide-react";
 import Link from "next/link";
 
@@ -69,7 +70,7 @@ export const HomeVisitStats = ({
 
     const search = searchParams.toString();
 
-    return search ? `/parks?${search}` : "/parks";
+    return search ? `${appRoutes.parks}?${search}` : appRoutes.parks;
   };
 
   const hasSeasonalData =

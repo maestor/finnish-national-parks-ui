@@ -2,6 +2,7 @@
 
 import type { MapPark } from "@/lib/parks";
 import { getParkTypeDisplayName, getVisitStatusColor } from "@/lib/parks";
+import { appRoutes, createPathWithSearchParams } from "@/lib/routes";
 import { LoaderCircle, LocateFixed } from "lucide-react";
 import maplibregl from "maplibre-gl";
 import { useTranslations } from "next-intl";
@@ -438,7 +439,7 @@ const createPopupNode = (
   }
 
   const parkLink = document.createElement("a");
-  parkLink.href = `/park/${park.slug}`;
+  parkLink.href = appRoutes.park(park.slug);
   parkLink.className =
     "inline-flex items-center rounded-full border border-sky-200/70 bg-white/74 px-3 py-1.5 font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 dark:border-sky-300/15 dark:bg-slate-950/62 dark:hover:bg-slate-950/78";
   parkLink.textContent = labels.openParkPage;
@@ -451,7 +452,9 @@ const createPopupNode = (
 
   if (canManageVisits && !onToggleRemoved) {
     const addLink = document.createElement("a");
-    addLink.href = `/control-panel/visits/new?park=${park.slug}`;
+    addLink.href = createPathWithSearchParams(appRoutes.controlPanel.newVisit, {
+      park: park.slug,
+    });
     addLink.className =
       "inline-flex items-center gap-1 rounded-full border border-emerald-200/70 bg-white/74 px-3 py-1.5 font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 dark:border-emerald-300/15 dark:bg-slate-950/62 dark:hover:bg-slate-950/78";
     addLink.appendChild(

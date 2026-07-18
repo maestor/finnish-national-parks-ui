@@ -4,6 +4,7 @@ import {
   PUBLIC_HERO_DESCRIPTION_CLASS_NAME,
   PUBLIC_HERO_TITLE_CLASS_NAME,
 } from "@/components/layout/public-page-styles";
+import { appRoutes } from "@/lib/routes";
 import { CircleHelp, MapPin } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -48,7 +49,7 @@ export const HomeIntro = ({
           <CircleHelp className="h-4 w-4 text-primary" aria-hidden="true" />
           {infoButtonLabel}
         </button>
-        <Link href="/parks" className={actionClassName}>
+        <Link href={appRoutes.parks} className={actionClassName}>
           <MapPin className="h-4 w-4 text-primary" aria-hidden="true" />
           {openMapLabel}
         </Link>

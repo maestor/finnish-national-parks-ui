@@ -3,6 +3,7 @@
 import { VisitAccordion } from "@/components/park/visit-accordion";
 import { useAuth } from "@/hooks/use-auth";
 import type { Visit } from "@/lib/parks";
+import { appRoutes, createPathWithSearchParams } from "@/lib/routes";
 import { NotebookPen } from "lucide-react";
 import Link from "next/link";
 
@@ -37,7 +38,9 @@ export const ParkVisitHistory = ({
         </div>
         {auth.isAuthenticated ? (
           <Link
-            href={`/control-panel/visits/new?park=${parkSlug}`}
+            href={createPathWithSearchParams(appRoutes.controlPanel.newVisit, {
+              park: parkSlug,
+            })}
             className="inline-flex items-center gap-1 rounded-full bg-[linear-gradient(145deg,#166534_0%,#0f766e_55%,#2563eb_100%)] px-3 py-1.5 text-xs font-medium text-primary-foreground shadow-[0_14px_28px_rgba(37,99,235,0.24)] transition-[filter,transform] hover:brightness-105"
           >
             <svg

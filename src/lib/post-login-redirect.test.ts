@@ -14,14 +14,17 @@ describe("post-login redirect helpers", () => {
   it("stores and consumes a public return path", () => {
     storePostLoginRedirectPath("/park/pallas?tab=history");
 
-    expect(consumePostLoginRedirectPath()).toBe("/park/pallas?tab=history");
+    expect(consumePostLoginRedirectPath()).toBe("/paikka/pallas?tab=history");
     expect(consumePostLoginRedirectPath()).toBeNull();
   });
 
   it("ignores login and control-panel paths", () => {
     storePostLoginRedirectPath("/login");
+    storePostLoginRedirectPath("/kirjaudu");
     storePostLoginRedirectPath("/control-panel");
     storePostLoginRedirectPath("/control-panel/visits");
+    storePostLoginRedirectPath("/hallinta");
+    storePostLoginRedirectPath("/hallinta/kaynnit");
 
     expect(consumePostLoginRedirectPath()).toBeNull();
   });
@@ -29,6 +32,6 @@ describe("post-login redirect helpers", () => {
   it("captures the current path with search and hash", () => {
     window.history.replaceState({}, "", "/park/pallas?tab=history#kuvat");
 
-    expect(getCurrentPathWithSearchAndHash()).toBe("/park/pallas?tab=history#kuvat");
+    expect(getCurrentPathWithSearchAndHash()).toBe("/paikka/pallas?tab=history#kuvat");
   });
 });

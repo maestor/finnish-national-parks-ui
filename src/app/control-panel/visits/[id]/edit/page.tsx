@@ -3,6 +3,7 @@ import { VisitImageSection } from "@/components/visits/visit-image-section";
 import { apiFetch } from "@/lib/api";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import type { Park, VisitWithPark } from "@/lib/parks";
+import { appRoutes } from "@/lib/routes";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -42,7 +43,7 @@ const EditVisitPage = async ({ params, searchParams }: EditVisitPageProps) => {
       <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
       <p className="mt-2 text-muted-foreground">{t("description")}</p>
       <Link
-        href={`/park/${visitToEdit.park.slug}`}
+        href={appRoutes.park(visitToEdit.park.slug)}
         className="mt-3 inline-flex text-sm font-medium text-primary underline underline-offset-4 hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       >
         {t("viewParkPage")}

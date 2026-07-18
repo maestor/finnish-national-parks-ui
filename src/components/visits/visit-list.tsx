@@ -3,6 +3,7 @@
 import { AdminTableFilters } from "@/components/admin/admin-table-filters";
 import { EditVisitLink } from "@/components/visits/edit-visit-link";
 import type { VisitWithPark } from "@/lib/parks";
+import { appRoutes } from "@/lib/routes";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -67,7 +68,7 @@ export const VisitList = ({ visits }: VisitListProps) => {
       <div className="mt-6 rounded-[1.5rem] border border-dashed border-white/45 bg-white/48 p-8 text-center backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/38">
         <p className="text-muted-foreground">{t("noVisits")}</p>
         <Link
-          href="/control-panel/visits/new"
+          href={appRoutes.controlPanel.newVisit}
           className="mt-4 inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
         >
           {t("addFirstVisit")}
@@ -124,7 +125,7 @@ export const VisitList = ({ visits }: VisitListProps) => {
                   className="transition-colors hover:bg-white/56 dark:hover:bg-slate-950/42"
                 >
                   <td className="px-4 py-3">
-                    <Link href={`/park/${visit.park.slug}`} className="hover:underline">
+                    <Link href={appRoutes.park(visit.park.slug)} className="hover:underline">
                       {visit.park.name}
                     </Link>
                   </td>

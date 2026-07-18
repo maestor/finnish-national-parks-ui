@@ -73,7 +73,7 @@ describe("ParkVisitHistory", () => {
 
     expect(screen.getByRole("link", { name: "Lisää käynti" })).toHaveAttribute(
       "href",
-      "/control-panel/visits/new?park=pallas",
+      "/hallinta/kaynnit/uusi?park=pallas",
     );
     expect(screen.getByTestId("visit-accordion")).toHaveTextContent("visits:1|editable:true");
   });

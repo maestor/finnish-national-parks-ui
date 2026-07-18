@@ -18,7 +18,10 @@ describe("HomeIntro", () => {
 
     expect(screen.getByRole("heading", { name: "Reissuvihko" })).toBeInTheDocument();
     expect(screen.getByText("Lyhyt kuvaus.")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Siirry kartalle" })).toHaveAttribute("href", "/parks");
+    expect(screen.getByRole("link", { name: "Siirry kartalle" })).toHaveAttribute(
+      "href",
+      "/paikat",
+    );
     expect(screen.getByRole("button", { name: "Mista on kyse?" })).toHaveAttribute(
       "aria-expanded",
       "false",

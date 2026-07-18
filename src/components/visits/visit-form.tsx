@@ -6,6 +6,7 @@ import { Select } from "@/components/ui/select";
 import { apiFetch } from "@/lib/api";
 import type { Park, Visit, VisitWithPark } from "@/lib/parks";
 import { revalidatePublicCache } from "@/lib/public-cache";
+import { appRoutes, createPathWithSearchParams } from "@/lib/routes";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -108,7 +109,11 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
         });
         await revalidatePublicCache({ parkSlug });
         shouldResetSubmittingState = false;
-        router.push(`/control-panel/visits/${createdVisit.id}/edit?created=1`);
+        router.push(
+          createPathWithSearchParams(appRoutes.controlPanel.editVisit(createdVisit.id), {
+            created: 1,
+          }),
+        );
       }
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : String(error));
@@ -128,7 +133,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
     try {
       await apiFetch(`/api/visits/${visitToEdit.id}`, { method: "DELETE" });
       await revalidatePublicCache({ parkSlug: visitToEdit.park.slug });
-      router.push("/control-panel/visits");
+      router.push(appRoutes.controlPanel.visits);
       router.refresh();
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : String(error));
@@ -250,7 +255,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
         >
           <span>{statusMessage}</span>{" "}
           <Link
-            href="/control-panel/visits"
+            href={appRoutes.controlPanel.visits}
             className="font-medium underline underline-offset-4 hover:text-emerald-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:hover:text-emerald-100"
           >
             {t("viewAllVisits")}

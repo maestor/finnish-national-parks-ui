@@ -5,6 +5,7 @@ import {
   PUBLIC_VISITS_TAG,
   getPublicParkTag,
 } from "@/lib/public-cache";
+import { appRoutes } from "@/lib/routes";
 import { jwtVerify } from "jose";
 import { revalidatePath, revalidateTag } from "next/cache";
 
@@ -70,14 +71,14 @@ export const POST = async (request: Request) => {
   revalidateTag(PUBLIC_MAP_SUMMARY_TAG, "max");
   revalidateTag(PUBLIC_VISITS_TAG, "max");
   revalidateTag(ADMIN_PARK_VISIBILITY_TAG, "max");
-  revalidatePath("/", "page");
-  revalidatePath("/parks", "page");
-  revalidatePath("/visits", "page");
-  revalidatePath("/control-panel/parks", "page");
+  revalidatePath(appRoutes.home, "page");
+  revalidatePath(appRoutes.parks, "page");
+  revalidatePath(appRoutes.visits, "page");
+  revalidatePath(appRoutes.controlPanel.parks, "page");
 
   if (parkSlug) {
     revalidateTag(getPublicParkTag(parkSlug), "max");
-    revalidatePath(`/park/${parkSlug}`, "page");
+    revalidatePath(appRoutes.park(parkSlug), "page");
   }
 
   return Response.json({

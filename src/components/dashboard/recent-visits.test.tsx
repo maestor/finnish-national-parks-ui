@@ -23,11 +23,11 @@ describe("RecentVisits", () => {
     expect(screen.getByText("20.7.2024")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Pallas" })).toHaveAttribute(
       "href",
-      "/park/pallas?visit=1#visit-history",
+      "/paikka/pallas?visit=1#visit-history",
     );
     expect(screen.getByRole("link", { name: "Nuuksio" })).toHaveAttribute(
       "href",
-      "/park/nuuksio?visit=2#visit-history",
+      "/paikka/nuuksio?visit=2#visit-history",
     );
     expect(screen.getAllByLabelText("controlPanel.visits.edit").length).toBe(2);
   });
@@ -58,8 +58,11 @@ describe("RecentVisits", () => {
 
     expect(screen.getByText("Pallas")).toBeInTheDocument();
     expect(screen.getByText("Nuuksio")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Pallas" })).toHaveAttribute("href", "/park/pallas");
-    expect(screen.getByRole("link", { name: "Nuuksio" })).toHaveAttribute("href", "/park/nuuksio");
+    expect(screen.getByRole("link", { name: "Pallas" })).toHaveAttribute("href", "/paikka/pallas");
+    expect(screen.getByRole("link", { name: "Nuuksio" })).toHaveAttribute(
+      "href",
+      "/paikka/nuuksio",
+    );
   });
 
   it("shows empty state when no visits", () => {

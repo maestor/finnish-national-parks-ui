@@ -19,6 +19,7 @@ import {
   TRAILS_AND_ROUTES_CATEGORY_SLUG,
 } from "@/lib/park-type-filters";
 import { getParkTypeDisplayName } from "@/lib/parks";
+import { appRoutes } from "@/lib/routes";
 import {
   type TripPlannerResolvedLocation,
   type TripPlannerSuggestion,
@@ -1375,7 +1376,7 @@ const TripPlannerResultsSection = ({
                 <div className="space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
                     <Link
-                      href={`/park/${park.slug}`}
+                      href={appRoutes.park(park.slug)}
                       className="text-base font-semibold text-foreground underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       {park.name}

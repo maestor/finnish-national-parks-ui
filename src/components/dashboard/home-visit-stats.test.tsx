@@ -34,11 +34,11 @@ describe("HomeVisitStats", () => {
     expect(screen.getByText("5 / 10")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Kaikki puistot/i })).toHaveAttribute(
       "href",
-      "/parks?filter=all&visitStatus=visited",
+      "/paikat?filter=all&visitStatus=visited",
     );
     expect(screen.getByRole("link", { name: /Kansallispuistot/i })).toHaveAttribute(
       "href",
-      "/parks?filter=national-park&visitStatus=visited",
+      "/paikat?filter=national-park&visitStatus=visited",
     );
     expect(screen.queryByText("Käynnit tyypeittäin")).not.toBeInTheDocument();
   });

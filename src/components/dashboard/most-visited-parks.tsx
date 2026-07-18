@@ -1,4 +1,5 @@
 import { DashboardSectionCard } from "@/components/dashboard/dashboard-section-card";
+import { appRoutes } from "@/lib/routes";
 import { Trophy } from "lucide-react";
 import Link from "next/link";
 
@@ -45,7 +46,7 @@ export const MostVisitedParks = ({
                   {index + 1}
                 </span>
                 <Link
-                  href={`/park/${park.parkSlug}`}
+                  href={appRoutes.park(park.parkSlug)}
                   className="min-w-0 whitespace-normal break-words text-sm font-medium leading-snug hover:underline sm:truncate sm:text-base sm:leading-normal"
                 >
                   {park.parkName}

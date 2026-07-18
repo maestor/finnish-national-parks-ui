@@ -12,6 +12,7 @@ import {
   isHikingAndWildernessAreaTypeSlug,
 } from "@/lib/park-type-filters";
 import type { FilterableMapPark } from "@/lib/parks";
+import { appRoutes, normalizeAppPath } from "@/lib/routes";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -100,6 +101,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
   const t = useTranslations("home.filters");
   const auth = useAuth();
   const pathname = usePathname();
+  const normalizedPathname = normalizeAppPath(pathname);
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeFilter, setActiveFilter] = useState<ParkTypeMapFilter>("all");
@@ -226,8 +228,9 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
   );
 
   useEffect(() => {
-    const filterParam = pathname === "/parks" ? searchParams.get("filter") : null;
-    const visitStatusParam = pathname === "/parks" ? searchParams.get("visitStatus") : null;
+    const filterParam = normalizedPathname === appRoutes.parks ? searchParams.get("filter") : null;
+    const visitStatusParam =
+      normalizedPathname === appRoutes.parks ? searchParams.get("visitStatus") : null;
     const normalizedFilter = isMapFilter(filterParam) ? normalizeMapFilter(filterParam) : null;
     const normalizedVisitStatus = isVisitStatusFilter(visitStatusParam)
       ? visitStatusParam
@@ -266,8 +269,10 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
 
     const nextSearch = nextSearchParams.toString();
 
-    router.replace(nextSearch ? `${pathname}?${nextSearch}` : pathname, { scroll: false });
-  }, [activeFilter, activeVisitStatus, applyFilters, pathname, router, searchParams]);
+    router.replace(nextSearch ? `${appRoutes.parks}?${nextSearch}` : appRoutes.parks, {
+      scroll: false,
+    });
+  }, [activeFilter, activeVisitStatus, applyFilters, normalizedPathname, router, searchParams]);
 
   useEffect(() => {
     if (!homeParkFocusRequest) {

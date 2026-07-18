@@ -242,7 +242,7 @@ describe("ParkExplorer", () => {
       "text-primary-foreground",
     );
     expect(screen.getByRole("button", { name: "home.filters.notVisited" })).toBeInTheDocument();
-    expect(replaceMock).toHaveBeenCalledWith("/parks", { scroll: false });
+    expect(replaceMock).toHaveBeenCalledWith("/paikat", { scroll: false });
   });
 
   it("maps legacy hiking area query params to the combined category filter", () => {
@@ -255,7 +255,7 @@ describe("ParkExplorer", () => {
     expect(
       screen.getByRole("button", { name: "home.filters.hikingAndWildernessAreas" }),
     ).toHaveClass("text-primary-foreground");
-    expect(replaceMock).toHaveBeenCalledWith("/parks", { scroll: false });
+    expect(replaceMock).toHaveBeenCalledWith("/paikat", { scroll: false });
   });
 
   it("maps legacy visited-status query params to the visit status toggle", () => {
@@ -269,7 +269,7 @@ describe("ParkExplorer", () => {
       "text-primary-foreground",
     );
     expect(screen.getByRole("button", { name: "home.filters.notVisited" })).toBeInTheDocument();
-    expect(replaceMock).toHaveBeenCalledWith("/parks", { scroll: false });
+    expect(replaceMock).toHaveBeenCalledWith("/paikat", { scroll: false });
   });
 
   it("maps legacy factory-village query params to the renamed cultural history filter", () => {
@@ -282,7 +282,7 @@ describe("ParkExplorer", () => {
     expect(screen.getByRole("button", { name: "home.filters.culturalHistoryAreas" })).toHaveClass(
       "text-primary-foreground",
     );
-    expect(replaceMock).toHaveBeenCalledWith("/parks", { scroll: false });
+    expect(replaceMock).toHaveBeenCalledWith("/paikat", { scroll: false });
   });
 
   it("ignores legacy individual trail query params", () => {

@@ -93,17 +93,29 @@ Workflow shorthand:
 src/app/
   (user)/           # Public routes (grouped, no layout effect)
     page.tsx        # Public landing page
-    parks/page.tsx  # Map route
-    visits/page.tsx # Visit timeline route
-    park/[slug]/    # Park detail pages
-  control-panel/    # Admin routes (protected by proxy)
+    paikat/page.tsx # Canonical public map route
+    kaynnit/page.tsx # Canonical public timeline route
+    paikka/[slug]/  # Canonical public park detail pages
+    reissusuunnittelu/page.tsx # Canonical public trip-planner route
+  hallinta/         # Canonical admin routes (protected by proxy)
     layout.tsx      # Sidebar layout
     page.tsx        # Admin landing page
-    parks/          # Park visibility management + park detail editing
-    visits/         # Visit management
-  login/            # OAuth login page
+    paikat/         # Park visibility management + park detail editing
+    kaynnit/        # Visit management
+  kirjaudu/         # OAuth login page
   proxy.ts          # Route protection (Next.js 16 proxy convention)
 ```
+
+Canonical end-user URLs are Finnish-only:
+
+- `/paikat`
+- `/kaynnit`
+- `/paikka/[slug]`
+- `/reissusuunnittelu`
+- `/hallinta`
+- `/kirjaudu`
+
+Legacy English URLs such as `/parks`, `/visits`, `/park/[slug]`, `/trip-planner`, `/control-panel`, and `/login` still redirect to the Finnish canonical route.
 
 ### Server vs Client Components
 
@@ -157,7 +169,7 @@ Route naming caveat:
 ### Public Page Data Strategy
 
 - The public home page (`/`) reads `GET /api/public/home-summary`.
-- The public map page (`/parks`) reads `GET /api/public/map-summary`.
+- The public map page (`/paikat`) reads `GET /api/public/map-summary`.
 - Public park detail pages still read `GET /api/parks/{slug}` and `GET /api/parks/{slug}/visits`, but those reads now use cacheable public fetches by default and fall back to an authenticated request when the backend requires an admin session for a hidden park.
 - Admin-only quick links on public pages are resolved client-side with `useAuth`, so the page HTML can stay cache-friendly while signed-in users still see edit and add-visit affordances after hydration.
 - Visit and public park mutations call the local Next.js route `POST /api/revalidate-public-cache` so the frontend can invalidate cached public pages immediately after a successful write.
@@ -166,13 +178,13 @@ Route naming caveat:
 
 ## Authentication Flow
 
-1. User clicks **"Kirjaudu"** → goes to `/login`
+1. User clicks **"Kirjaudu"** → goes to `/kirjaudu`
 2. Clicks **"Kirjaudu Googlella"** → goes to frontend `/auth/login`
 3. Frontend redirects to proxied `/auth/google`
 4. Backend redirects to Google OAuth consent screen
 5. Google redirects back to frontend `/auth/google/callback`, which proxies the backend callback
-6. Backend validates allowlist, sets `__session` cookie through the frontend response, then redirects to `/control-panel`
-7. `src/proxy.ts` verifies the cookie on every `/control-panel/*` request
+6. Backend validates allowlist, sets `__session` cookie through the frontend response, then redirects to `/hallinta`
+7. `src/proxy.ts` verifies the cookie on every `/hallinta/*` request
 8. Header shows **"Hallinta"** link when authenticated
 9. Control panel has **"Kirjaudu ulos"** logout button
 

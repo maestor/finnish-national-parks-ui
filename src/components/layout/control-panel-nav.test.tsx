@@ -22,15 +22,15 @@ describe("ControlPanelNav", () => {
 
     expect(within(nav).getByRole("link", { name: "controlPanel.dashboard.title" })).toHaveAttribute(
       "href",
-      "/control-panel",
+      "/hallinta",
     );
     expect(within(nav).getByRole("link", { name: "controlPanel.parks.title" })).toHaveAttribute(
       "href",
-      "/control-panel/parks",
+      "/hallinta/paikat",
     );
     expect(within(nav).getByRole("link", { name: "controlPanel.visits.title" })).toHaveAttribute(
       "href",
-      "/control-panel/visits",
+      "/hallinta/kaynnit",
     );
   });
 

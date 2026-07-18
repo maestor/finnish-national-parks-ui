@@ -1,5 +1,6 @@
 "use client";
 
+import { appRoutes } from "@/lib/routes";
 import { Pencil } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -21,7 +22,7 @@ export const EditVisitLink = ({
 
   return (
     <Link
-      href={`/control-panel/visits/${visitId}/edit`}
+      href={appRoutes.controlPanel.editVisit(visitId)}
       className={className}
       title={t("edit")}
       aria-label={t("edit")}

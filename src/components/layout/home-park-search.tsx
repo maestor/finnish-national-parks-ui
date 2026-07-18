@@ -3,6 +3,7 @@
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { type ParkSearchResult, getParkTypeDisplayName } from "@/lib/parks";
+import { appRoutes, normalizeAppPath } from "@/lib/routes";
 import { MapPin, Search, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -26,6 +27,7 @@ export const HomeParkSearch = () => {
   const t = useTranslations("layout.parkSearch");
   const router = useRouter();
   const pathname = usePathname();
+  const normalizedPathname = normalizeAppPath(pathname);
   const { closeMobileFilters, focusParkOnHome } = useHomeMapControls();
   const containerRef = useRef<HTMLDivElement>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
@@ -35,7 +37,7 @@ export const HomeParkSearch = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const isParksMapPage = pathname === "/parks";
+  const isParksMapPage = normalizedPathname === appRoutes.parks;
 
   useEffect(() => {
     let mounted = true;
@@ -116,7 +118,7 @@ export const HomeParkSearch = () => {
       return;
     }
 
-    router.push(`/park/${park.slug}`);
+    router.push(appRoutes.park(park.slug));
   };
 
   const handleKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
@@ -272,7 +274,7 @@ export const HomeParkSearch = () => {
                     </button>
                     {isParksMapPage && (
                       <Link
-                        href={`/park/${park.slug}`}
+                        href={appRoutes.park(park.slug)}
                         onClick={() => {
                           setQuery("");
                           setIsOpen(false);

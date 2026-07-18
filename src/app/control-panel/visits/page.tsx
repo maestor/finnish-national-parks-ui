@@ -2,6 +2,7 @@ import { VisitList } from "@/components/visits/visit-list";
 import { apiFetch } from "@/lib/api";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import type { VisitWithPark } from "@/lib/parks";
+import { appRoutes } from "@/lib/routes";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 
@@ -24,7 +25,7 @@ const VisitsPage = async () => {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
         <Link
-          href="/control-panel/visits/new"
+          href={appRoutes.controlPanel.newVisit}
           className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
         >
           {t("addVisit")}

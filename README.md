@@ -8,8 +8,8 @@ This is a Finnish-language, PWA-capable web application built with Next.js 16 Ap
 
 The app serves two audiences:
 
-- **Public view** — Visit-focused landing page at `/`, interactive map at `/parks` with park filters, a visited/unvisited toggle, and current-location targeting, visit timeline browsing at `/visits`, persistent park search, and public visit history
-- **Admin view** — Adding and editing visits, editing park details, and hiding parks from the catalog via `/control-panel`, including the shared map view with current-location targeting and admin-only access to hidden park detail pages
+- **Public view** — Visit-focused landing page at `/`, interactive map at `/paikat` with park filters, a visited/unvisited toggle, and current-location targeting, visit timeline browsing at `/kaynnit`, persistent park search, park detail pages under `/paikka/[slug]`, route planning at `/reissusuunnittelu`, and public visit history
+- **Admin view** — Adding and editing visits, editing park details, and hiding parks from the catalog via `/hallinta`, including the shared map view with current-location targeting and admin-only access to hidden park detail pages
 
 ## Tech Stack
 
@@ -145,6 +145,7 @@ Current PWA support includes:
 
 - **Arrow functions only** — Enforced via Biome (`useArrowFunction: error`)
 - **Finnish UI copy** — All user-facing text is in Finnish via `next-intl`
+- **Finnish canonical URLs** — Public and admin page routes use Finnish slugs such as `/paikat`, `/kaynnit`, `/paikka/[slug]`, `/reissusuunnittelu`, and `/hallinta`; legacy English URLs still redirect
 - **Accessibility first** — Semantic HTML, ARIA labels, keyboard navigation, `prefers-reduced-motion` support
 - **Backend boundary is sacred** — No direct DB access; all data flows through the Hono API
 - **Security and sustainability are defaults** — Guard mutation routes, keep secrets server-only, allowlist external origins narrowly, and document cache or offline behavior changes in the same PR

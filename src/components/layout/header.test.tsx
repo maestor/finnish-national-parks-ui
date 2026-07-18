@@ -70,7 +70,7 @@ describe("Header", () => {
 
     const siteTitleLink = screen.getByRole("link", { name: "layout.siteTitle" });
 
-    expect(siteTitleLink).toHaveAttribute("href", "/parks");
+    expect(siteTitleLink).toHaveAttribute("href", "/paikat");
     expect(within(siteTitleLink).getByTestId("header-brand-mark")).toBeInTheDocument();
   });
 
@@ -151,7 +151,7 @@ describe("Header", () => {
 
     expect(screen.getByRole("link", { name: "layout.nav.controlPanel" })).toHaveAttribute(
       "href",
-      "/control-panel",
+      "/hallinta",
     );
   });
 
@@ -174,14 +174,14 @@ describe("Header", () => {
     render(<Header />);
 
     expect(screen.getByRole("link", { name: "layout.nav.home" })).toHaveAttribute("href", "/");
-    expect(screen.getByRole("link", { name: "layout.nav.map" })).toHaveAttribute("href", "/parks");
+    expect(screen.getByRole("link", { name: "layout.nav.map" })).toHaveAttribute("href", "/paikat");
     expect(screen.getByRole("link", { name: "layout.nav.visits" })).toHaveAttribute(
       "href",
-      "/visits",
+      "/kaynnit",
     );
     expect(screen.getByRole("link", { name: "layout.nav.tripPlanner" })).toHaveAttribute(
       "href",
-      "/trip-planner",
+      "/reissusuunnittelu",
     );
   });
 
@@ -259,15 +259,15 @@ describe("Header", () => {
     );
     expect(within(dialog).getByRole("link", { name: "layout.nav.map" })).toHaveAttribute(
       "href",
-      "/parks",
+      "/paikat",
     );
     expect(within(dialog).getByRole("link", { name: "layout.nav.visits" })).toHaveAttribute(
       "href",
-      "/visits",
+      "/kaynnit",
     );
     expect(within(dialog).getByRole("link", { name: "layout.nav.controlPanel" })).toHaveAttribute(
       "href",
-      "/control-panel",
+      "/hallinta",
     );
     expect(
       within(dialog).getByRole("button", { name: "layout.themeToggle.darkMode" }),

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api";
 import { type AdminVisibilityPark, getParkTypeDisplayName } from "@/lib/parks";
 import { revalidatePublicCache } from "@/lib/public-cache";
+import { appRoutes } from "@/lib/routes";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -223,8 +224,8 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
                       <Link
                         href={
                           isVisibleTab
-                            ? `/control-panel/parks/${park.slug}/edit`
-                            : `/park/${park.slug}`
+                            ? appRoutes.controlPanel.parkEdit(park.slug)
+                            : appRoutes.park(park.slug)
                         }
                         className="font-medium hover:underline"
                       >

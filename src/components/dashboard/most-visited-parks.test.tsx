@@ -17,7 +17,7 @@ describe("MostVisitedParks", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Eniten käydyt puistot" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Pallas" })).toHaveAttribute("href", "/park/pallas");
+    expect(screen.getByRole("link", { name: "Pallas" })).toHaveAttribute("href", "/paikka/pallas");
     expect(screen.getByText("4 käyntiä")).toBeInTheDocument();
   });
 

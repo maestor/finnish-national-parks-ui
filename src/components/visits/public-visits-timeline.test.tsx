@@ -79,9 +79,18 @@ describe("PublicVisitsTimeline", () => {
       "2025",
       "2024",
     ]);
-    expect(screen.getByRole("link", { name: "2024" })).toHaveAttribute("href", "/visits?year=2024");
-    expect(screen.getByRole("link", { name: "2025" })).toHaveAttribute("href", "/visits?year=2025");
-    expect(screen.getByRole("link", { name: "2026" })).toHaveAttribute("href", "/visits?year=2026");
+    expect(screen.getByRole("link", { name: "2024" })).toHaveAttribute(
+      "href",
+      "/kaynnit?year=2024",
+    );
+    expect(screen.getByRole("link", { name: "2025" })).toHaveAttribute(
+      "href",
+      "/kaynnit?year=2025",
+    );
+    expect(screen.getByRole("link", { name: "2026" })).toHaveAttribute(
+      "href",
+      "/kaynnit?year=2026",
+    );
   });
 
   it("shows all twelve month filters when a year is selected", () => {
@@ -94,7 +103,7 @@ describe("PublicVisitsTimeline", () => {
     expect(monthLinks[1]).toHaveTextContent(/tammi/i);
     expect(
       within(monthNav).getByRole("link", { name: "visits.filters.allMonthsLabel" }),
-    ).toHaveAttribute("href", "/visits?year=2024");
+    ).toHaveAttribute("href", "/kaynnit?year=2024");
   });
 
   it("filters timeline items by selected year and month and links to the targeted visit", () => {
@@ -108,7 +117,7 @@ describe("PublicVisitsTimeline", () => {
     const visitLink = screen.getByRole("link", {
       name: /Pallas-Yllastunturi/,
     });
-    expect(visitLink).toHaveAttribute("href", "/park/pallas-yllastunturi?visit=2#visit-history");
+    expect(visitLink).toHaveAttribute("href", "/paikka/pallas-yllastunturi?visit=2#visit-history");
     expect(visitLink).toHaveAccessibleName(/10\.8\.2024/);
     expect(visitLink).toHaveAccessibleName(/Pallas-Yllastunturi/);
     expect(visitLink).toHaveAccessibleName(/visits\.item\.viewVisit/);
@@ -262,7 +271,7 @@ describe("PublicVisitsTimeline", () => {
     expect(screen.getByText("visits.empty.filtered")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "visits.filters.reset" })).toHaveAttribute(
       "href",
-      "/visits",
+      "/kaynnit",
     );
   });
 });

@@ -1055,12 +1055,12 @@ describe("TripPlannerPage", () => {
     expect(screen.getByText("tripPlanner.sections.visited")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Nuuksion kansallispuisto" })).toHaveAttribute(
       "href",
-      "/park/nuuksio",
+      "/paikka/nuuksio",
     );
     expect(screen.getByRole("link", { name: "Hossan polku" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Seurasaari" })).toHaveAttribute(
       "href",
-      "/park/seurasaari",
+      "/paikka/seurasaari",
     );
     expect(screen.getAllByText("tripPlanner.visited").length).toBeGreaterThan(0);
     expect(screen.getAllByText("tripPlanner.distanceFromRoute").length).toBeGreaterThan(3);

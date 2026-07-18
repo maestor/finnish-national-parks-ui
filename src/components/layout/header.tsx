@@ -4,6 +4,7 @@ import { LoginLink } from "@/components/auth/login-link";
 import { HeaderBrandMark } from "@/components/layout/header-brand-mark";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/cn";
+import { appRoutePatterns, appRoutes, normalizeAppPath } from "@/lib/routes";
 import {
   Footprints,
   House,
@@ -42,9 +43,10 @@ export const Header = () => {
   const t = useTranslations("layout");
   const auth = useAuth();
   const pathname = usePathname();
-  const isControlPanel = pathname.startsWith("/control-panel");
-  const isParksMapPage = pathname === "/parks";
-  const isPublicVisitsPage = pathname === "/visits";
+  const normalizedPathname = normalizeAppPath(pathname);
+  const isControlPanel = appRoutePatterns.isControlPanelPath(pathname);
+  const isParksMapPage = normalizedPathname === appRoutes.parks;
+  const isPublicVisitsPage = normalizedPathname === appRoutes.visits;
   const { isMobileFiltersOpen, toggleMobileFilters } = useHomeMapControls();
   const [isMobileMenuMounted, setIsMobileMenuMounted] = useState(false);
   const [isMobileMenuVisible, setIsMobileMenuVisible] = useState(false);
@@ -158,36 +160,36 @@ export const Header = () => {
   const desktopNavItems = useMemo(
     () => [
       {
-        href: "/",
+        href: appRoutes.home,
         label: t("nav.home"),
-        isCurrent: pathname === "/",
+        isCurrent: normalizedPathname === appRoutes.home,
       },
       {
-        href: "/parks",
+        href: appRoutes.parks,
         label: t("nav.map"),
-        isCurrent: pathname === "/parks",
+        isCurrent: normalizedPathname === appRoutes.parks,
       },
       {
-        href: "/visits",
+        href: appRoutes.visits,
         label: t("nav.visits"),
         isCurrent: isPublicVisitsPage,
       },
       {
-        href: "/trip-planner",
+        href: appRoutes.tripPlanner,
         label: t("nav.tripPlanner"),
-        isCurrent: pathname === "/trip-planner",
+        isCurrent: normalizedPathname === appRoutes.tripPlanner,
       },
       ...(auth.isAuthenticated
         ? [
             {
-              href: "/control-panel",
+              href: appRoutes.controlPanel.root,
               label: t("nav.controlPanel"),
               isCurrent: isControlPanel,
             },
           ]
         : []),
     ],
-    [auth.isAuthenticated, isControlPanel, isPublicVisitsPage, pathname, t],
+    [auth.isAuthenticated, isControlPanel, isPublicVisitsPage, normalizedPathname, t],
   );
 
   const mobileMenu =
@@ -239,16 +241,24 @@ export const Header = () => {
 
               <div className="rounded-[1.6rem] border border-white/40 bg-white/56 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.42)] dark:border-white/8 dark:bg-slate-950/44 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                 <nav className="flex flex-col gap-1">
-                  <Link href="/" className={MOBILE_SHEET_ITEM_CLASS} onClick={closeMobileMenu}>
+                  <Link
+                    href={appRoutes.home}
+                    className={MOBILE_SHEET_ITEM_CLASS}
+                    onClick={closeMobileMenu}
+                  >
                     <House className="h-4 w-4 shrink-0" aria-hidden="true" />
                     <span>{t("nav.home")}</span>
                   </Link>
-                  <Link href="/parks" className={MOBILE_SHEET_ITEM_CLASS} onClick={closeMobileMenu}>
+                  <Link
+                    href={appRoutes.parks}
+                    className={MOBILE_SHEET_ITEM_CLASS}
+                    onClick={closeMobileMenu}
+                  >
                     <MapPin className="h-4 w-4 shrink-0" aria-hidden="true" />
                     <span>{t("nav.map")}</span>
                   </Link>
                   <Link
-                    href="/visits"
+                    href={appRoutes.visits}
                     className={MOBILE_SHEET_ITEM_CLASS}
                     onClick={closeMobileMenu}
                   >
@@ -256,7 +266,7 @@ export const Header = () => {
                     <span>{t("nav.visits")}</span>
                   </Link>
                   <Link
-                    href="/trip-planner"
+                    href={appRoutes.tripPlanner}
                     className={MOBILE_SHEET_ITEM_CLASS}
                     onClick={closeMobileMenu}
                   >
@@ -265,7 +275,7 @@ export const Header = () => {
                   </Link>
                   {auth.isAuthenticated && (
                     <Link
-                      href="/control-panel"
+                      href={appRoutes.controlPanel.root}
                       className={MOBILE_SHEET_ITEM_CLASS}
                       onClick={closeMobileMenu}
                     >
@@ -328,7 +338,7 @@ export const Header = () => {
         />
         <div className="relative container mx-auto flex h-14 items-center gap-2 px-4 md:gap-3">
           <Link
-            href="/parks"
+            href={appRoutes.parks}
             className="flex min-w-0 items-center gap-3 rounded-full border border-white/35 bg-white/70 py-1 pl-2 pr-3 text-foreground shadow-sm backdrop-blur-sm transition-colors hover:bg-white/85 dark:border-white/10 dark:bg-slate-950/30 dark:hover:bg-slate-950/45"
           >
             <HeaderBrandMark testId="header-brand-mark" />

@@ -584,7 +584,7 @@ describe("App pages", () => {
     expect(screen.getByText("Maailmanperintökohde")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "park.showInFinlandsMap" })).toHaveAttribute(
       "href",
-      "/parks?park=pallas",
+      "/paikat?park=pallas",
     );
     expect(screen.getByTestId("park-boundary-map")).toHaveTextContent("Pallas-Yllästunturi");
     expect(screen.getByTestId("park-visit-history")).toHaveTextContent(
@@ -771,15 +771,15 @@ describe("App pages", () => {
     expect(screen.getByRole("navigation", { name: "controlPanel.title" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "controlPanel.dashboard.title" })).toHaveAttribute(
       "href",
-      "/control-panel",
+      "/hallinta",
     );
     expect(screen.getByRole("link", { name: "controlPanel.parks.title" })).toHaveAttribute(
       "href",
-      "/control-panel/parks",
+      "/hallinta/paikat",
     );
     expect(screen.getByRole("link", { name: "controlPanel.visits.title" })).toHaveAttribute(
       "href",
-      "/control-panel/visits",
+      "/hallinta/kaynnit",
     );
     expect(screen.getByText("controlPanel.dashboard.description")).toBeInTheDocument();
   });
@@ -829,10 +829,10 @@ describe("App pages", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "controlPanel.parks.edit.backToList" }),
-    ).toHaveAttribute("href", "/control-panel/parks");
+    ).toHaveAttribute("href", "/hallinta/paikat");
     expect(
       screen.getByRole("link", { name: "controlPanel.parks.edit.viewParkPage" }),
-    ).toHaveAttribute("href", "/park/pallas");
+    ).toHaveAttribute("href", "/paikka/pallas");
     expect(screen.getByText("controlPanel.parks.edit.updatedNotice")).toBeInTheDocument();
     expect(apiAuthFetch).toHaveBeenNthCalledWith(1, "/api/parks/pallas");
     expect(screen.getByTestId("park-form")).toHaveTextContent(
@@ -855,7 +855,7 @@ describe("App pages", () => {
     expect(screen.getByRole("navigation", { name: "controlPanel.title" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "controlPanel.visits.addVisit" })).toHaveAttribute(
       "href",
-      "/control-panel/visits/new",
+      "/hallinta/kaynnit/uusi",
     );
     expect(screen.getByTestId("visit-list")).toHaveTextContent("visits:1");
   });
@@ -904,7 +904,7 @@ describe("App pages", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "controlPanel.visits.editVisit.viewParkPage" }),
-    ).toHaveAttribute("href", "/park/pallas");
+    ).toHaveAttribute("href", "/paikka/pallas");
     expect(screen.getByText("controlPanel.visits.editVisit.createdNotice")).toBeInTheDocument();
     expect(screen.getByTestId("visit-form")).toHaveTextContent("parks:1|edit:10|default:none");
     expect(screen.getByTestId("visit-image-section")).toHaveTextContent("visit:10|images:1");
