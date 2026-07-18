@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { apiFetch, apiPublicFetch } from "./api";
-import type { PublicHomeSummary } from "./public-summaries";
+import type { HomeSummary } from "./frontend-summaries";
 import {
   createHomeLatestVisitEntriesFromSummary,
   createHomeLatestVisitEntriesFromVisitList,
@@ -8,18 +8,18 @@ import {
   createHomeProgressItems,
   createHomeRecentVisitsFromSummary,
   createHomeRecentVisitsFromVisitList,
-  fetchPublicHomeSummary,
-  fetchPublicMapSummary,
+  fetchHomeSummary,
+  fetchMapSummary,
   fetchPublicParkDetail,
   fetchPublicParkVisits,
-} from "./public-summaries";
+} from "./frontend-summaries";
 
 vi.mock("./api", () => ({
   apiFetch: vi.fn(),
   apiPublicFetch: vi.fn(),
 }));
 
-const buildSummary = (): PublicHomeSummary => ({
+const buildSummary = (): HomeSummary => ({
   totalVisits: 12,
   uniqueVisitedParks: 5,
   seasonalVisitCounts: {
@@ -289,7 +289,7 @@ describe("createHomeProgressItems", () => {
     ]);
   });
 
-  it("sorts latest visit entries from the public summary by newest creation time", () => {
+  it("sorts latest visit entries from the home summary by newest creation time", () => {
     const summary = buildSummary();
     summary.latestVisitEntries = [
       {
@@ -481,20 +481,20 @@ describe("createHomeProgressItems", () => {
     ]);
   });
 
-  it("fetches the public home summary through the cacheable API client", async () => {
+  it("fetches the home summary through the cacheable API client", async () => {
     vi.mocked(apiPublicFetch).mockResolvedValueOnce(buildSummary());
 
-    await fetchPublicHomeSummary();
+    await fetchHomeSummary();
 
-    expect(apiPublicFetch).toHaveBeenCalledWith("/api/public/home-summary", {
+    expect(apiPublicFetch).toHaveBeenCalledWith("/api/home-summary", {
       cache: "force-cache",
       next: {
-        tags: ["public-home-summary"],
+        tags: ["home-summary"],
       },
     });
   });
 
-  it("fetches the public map summary through the cacheable API client", async () => {
+  it("fetches the map summary through the cacheable API client", async () => {
     vi.mocked(apiPublicFetch).mockResolvedValueOnce({
       parks: [],
       totalParks: 0,
@@ -504,12 +504,12 @@ describe("createHomeProgressItems", () => {
       version: 1,
     });
 
-    await fetchPublicMapSummary();
+    await fetchMapSummary();
 
-    expect(apiPublicFetch).toHaveBeenCalledWith("/api/public/map-summary", {
+    expect(apiPublicFetch).toHaveBeenCalledWith("/api/map-summary", {
       cache: "force-cache",
       next: {
-        tags: ["public-map-summary"],
+        tags: ["map-summary"],
       },
     });
   });

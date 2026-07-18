@@ -14,13 +14,13 @@ import type {
   ParkVisits,
   VisitWithPark,
 } from "./parks";
-import { PUBLIC_HOME_SUMMARY_TAG, PUBLIC_MAP_SUMMARY_TAG, getPublicParkTag } from "./public-cache";
+import { HOME_SUMMARY_TAG, MAP_SUMMARY_TAG, getPublicParkTag } from "./public-cache";
 
-export type PublicHomeSummary =
-  paths["/api/public/home-summary"]["get"]["responses"][200]["content"]["application/json"];
+export type HomeSummary =
+  paths["/api/home-summary"]["get"]["responses"][200]["content"]["application/json"];
 
-export type PublicMapSummary = Omit<
-  paths["/api/public/map-summary"]["get"]["responses"][200]["content"]["application/json"],
+export type MapSummary = Omit<
+  paths["/api/map-summary"]["get"]["responses"][200]["content"]["application/json"],
   "parks"
 > & {
   parks: FilterableMapPark[];
@@ -56,19 +56,19 @@ export interface HomeLatestVisitEntryItem {
 
 const HOME_ACTIVITY_ITEM_LIMIT = 10;
 
-export const fetchPublicHomeSummary = async (): Promise<PublicHomeSummary> =>
-  apiPublicFetch<PublicHomeSummary>("/api/public/home-summary", {
+export const fetchHomeSummary = async (): Promise<HomeSummary> =>
+  apiPublicFetch<HomeSummary>("/api/home-summary", {
     cache: "force-cache",
     next: {
-      tags: [PUBLIC_HOME_SUMMARY_TAG],
+      tags: [HOME_SUMMARY_TAG],
     },
   });
 
-export const fetchPublicMapSummary = async (): Promise<PublicMapSummary> =>
-  apiPublicFetch<PublicMapSummary>("/api/public/map-summary", {
+export const fetchMapSummary = async (): Promise<MapSummary> =>
+  apiPublicFetch<MapSummary>("/api/map-summary", {
     cache: "force-cache",
     next: {
-      tags: [PUBLIC_MAP_SUMMARY_TAG],
+      tags: [MAP_SUMMARY_TAG],
     },
   });
 
@@ -97,7 +97,7 @@ export const fetchPublicParkVisits = async (slug: string): Promise<ParkVisits> =
   });
 
 export const createHomeProgressItems = (
-  summary: PublicHomeSummary,
+  summary: HomeSummary,
   allParksLabel: string,
 ): HomeProgressItem[] => {
   const visibleTypeItems = summary.progressByType
@@ -169,16 +169,14 @@ export const createHomeProgressItems = (
   ];
 };
 
-export const createHomeMostVisitedParks = (summary: PublicHomeSummary): HomeMostVisitedPark[] =>
+export const createHomeMostVisitedParks = (summary: HomeSummary): HomeMostVisitedPark[] =>
   summary.mostVisitedParks.map((park) => ({
     parkName: park.park.name,
     parkSlug: park.park.slug,
     visitCount: park.visitCount,
   }));
 
-export const createHomeRecentVisitsFromSummary = (
-  summary: PublicHomeSummary,
-): HomeRecentVisitItem[] =>
+export const createHomeRecentVisitsFromSummary = (summary: HomeSummary): HomeRecentVisitItem[] =>
   summary.recentVisits.slice(0, HOME_ACTIVITY_ITEM_LIMIT).map((visit) => ({
     parkName: visit.park.name,
     parkSlug: visit.park.slug,
@@ -186,7 +184,7 @@ export const createHomeRecentVisitsFromSummary = (
   }));
 
 export const createHomeLatestVisitEntriesFromSummary = (
-  summary: PublicHomeSummary,
+  summary: HomeSummary,
 ): HomeLatestVisitEntryItem[] =>
   [...summary.latestVisitEntries]
     .sort((left, right) => right.createdAt.localeCompare(left.createdAt) || right.id - left.id)

@@ -41,7 +41,7 @@ describe("LatestVisitEntries", () => {
     expect(screen.getByText("Ei käyntikirjauksia")).toBeInTheDocument();
   });
 
-  it("renders public summary entries without ids", () => {
+  it("renders home summary entries without ids", () => {
     render(
       <LatestVisitEntries
         title="Uusimmat käyntikirjaukset"

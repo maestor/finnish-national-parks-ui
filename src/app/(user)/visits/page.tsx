@@ -1,7 +1,10 @@
 import { PublicVisitsTimeline } from "@/components/visits/public-visits-timeline";
 import { buildPageMetadata } from "@/lib/page-metadata";
-import type { VisitWithPark } from "@/lib/parks";
-import { fetchPublicVisits, resolvePublicVisitsFilters } from "@/lib/public-visits";
+import {
+  type FrontendTimelineVisit,
+  fetchVisitsTimeline,
+  resolvePublicVisitsFilters,
+} from "@/lib/public-visits";
 import { getTranslations } from "next-intl/server";
 
 interface PublicVisitsPageProps {
@@ -23,11 +26,11 @@ export const generateMetadata = async () => {
 const PublicVisitsPage = async ({ searchParams }: PublicVisitsPageProps) => {
   const { month, year } = await searchParams;
   const t = await getTranslations("errors.generic");
-  let visits: VisitWithPark[] = [];
+  let visits: FrontendTimelineVisit[] = [];
   let error: string | null = null;
 
   try {
-    const response = await fetchPublicVisits();
+    const response = await fetchVisitsTimeline();
     visits = response.visits;
   } catch (failure) {
     error = failure instanceof Error ? failure.message : t("unknownError");

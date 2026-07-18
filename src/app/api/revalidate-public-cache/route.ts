@@ -1,7 +1,7 @@
 import { ADMIN_PARK_VISIBILITY_TAG } from "@/lib/admin-cache";
 import {
-  PUBLIC_HOME_SUMMARY_TAG,
-  PUBLIC_MAP_SUMMARY_TAG,
+  HOME_SUMMARY_TAG,
+  MAP_SUMMARY_TAG,
   PUBLIC_VISITS_TAG,
   getPublicParkTag,
 } from "@/lib/public-cache";
@@ -67,8 +67,8 @@ export const POST = async (request: Request) => {
     parkSlug = null;
   }
 
-  revalidateTag(PUBLIC_HOME_SUMMARY_TAG, "max");
-  revalidateTag(PUBLIC_MAP_SUMMARY_TAG, "max");
+  revalidateTag(HOME_SUMMARY_TAG, "max");
+  revalidateTag(MAP_SUMMARY_TAG, "max");
   revalidateTag(PUBLIC_VISITS_TAG, "max");
   revalidateTag(ADMIN_PARK_VISIBILITY_TAG, "max");
   revalidatePath(appRoutes.home, "page");

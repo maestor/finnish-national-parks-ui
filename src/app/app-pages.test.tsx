@@ -1,5 +1,6 @@
 import { apiAuthFetch, apiFetch, apiPublicFetch } from "@/lib/api";
 import type { AdminVisibilityPark, Park, Visit, VisitWithPark } from "@/lib/parks";
+import type { FrontendTimelineVisit } from "@/lib/public-visits";
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import UserLayout from "./(user)/layout";
@@ -122,7 +123,7 @@ vi.mock("@/components/visits/public-visits-timeline", () => ({
     selectedMonth,
     error,
   }: {
-    visits: VisitWithPark[];
+    visits: FrontendTimelineVisit[];
     selectedYear: number | null;
     selectedMonth: number | null;
     error?: string | null;
@@ -358,6 +359,19 @@ const visitWithPark = {
   },
 } satisfies VisitWithPark;
 
+const timelineVisit = {
+  id: personalVisit.id,
+  visitedOn: personalVisit.visitedOn,
+  route: personalVisit.route,
+  createdAt: personalVisit.createdAt,
+  imageCount: personalVisit.images.length,
+  park: {
+    name: publicPark.name,
+    slug: publicPark.slug,
+    typeLabel: "Maailmanperintökohde",
+  },
+} satisfies FrontendTimelineVisit;
+
 const renderPublicRoute = async (page: React.ReactNode) => {
   return render(UserLayout({ children: page }));
 };
@@ -458,9 +472,14 @@ describe("App pages", () => {
       "parks:1|top:Pallas-Yllästunturi:1",
     );
     expect(screen.getByTestId("home-activity-panels")).toHaveTextContent("recent:1|latest:1");
+    expect(
+      screen
+        .getByTestId("home-activity-panels")
+        .compareDocumentPosition(screen.getByTestId("most-visited-parks")),
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 
-  it("renders the parks map page from the public summary endpoint", async () => {
+  it("renders the parks map page from the map summary endpoint", async () => {
     vi.mocked(apiPublicFetch).mockResolvedValueOnce({
       parks: [
         {
@@ -720,7 +739,7 @@ describe("App pages", () => {
   });
 
   it("renders the public visits page with selected year and month filters", async () => {
-    vi.mocked(apiPublicFetch).mockResolvedValueOnce({ visits: [visitWithPark] });
+    vi.mocked(apiPublicFetch).mockResolvedValueOnce({ visits: [timelineVisit] });
 
     await renderPublicRoute(
       await PublicVisitsPage({

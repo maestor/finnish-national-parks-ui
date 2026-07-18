@@ -1,6 +1,6 @@
 import { LatestVisitEntries } from "@/components/dashboard/latest-visit-entries";
 import { RecentVisits } from "@/components/dashboard/recent-visits";
-import type { HomeLatestVisitEntryItem, HomeRecentVisitItem } from "@/lib/public-summaries";
+import type { HomeLatestVisitEntryItem, HomeRecentVisitItem } from "@/lib/frontend-summaries";
 
 interface HomeActivityPanelsProps {
   recentVisitsTitle: string;

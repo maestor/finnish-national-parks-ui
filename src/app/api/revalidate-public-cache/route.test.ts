@@ -44,7 +44,7 @@ describe("revalidate public cache route", () => {
     });
   });
 
-  it("revalidates public summary tags and the specific park page for an authenticated admin session", async () => {
+  it("revalidates summary tags and the specific park page for an authenticated admin session", async () => {
     jwtVerifyMock.mockResolvedValueOnce({} as never);
 
     const request = new Request("http://localhost:4300/api/revalidate-public-cache", {
@@ -66,8 +66,8 @@ describe("revalidate public cache route", () => {
     expect(jwtVerifyMock.mock.calls[0]?.[2]).toEqual({
       algorithms: ["HS256"],
     });
-    expect(revalidateTagMock).toHaveBeenCalledWith("public-home-summary", "max");
-    expect(revalidateTagMock).toHaveBeenCalledWith("public-map-summary", "max");
+    expect(revalidateTagMock).toHaveBeenCalledWith("home-summary", "max");
+    expect(revalidateTagMock).toHaveBeenCalledWith("map-summary", "max");
     expect(revalidateTagMock).toHaveBeenCalledWith("public-visits", "max");
     expect(revalidateTagMock).toHaveBeenCalledWith("admin-park-visibility", "max");
     expect(revalidateTagMock).toHaveBeenCalledWith("public-park:pallas", "max");
@@ -95,8 +95,8 @@ describe("revalidate public cache route", () => {
 
     const response = await POST(request);
 
-    expect(revalidateTagMock).toHaveBeenCalledWith("public-home-summary", "max");
-    expect(revalidateTagMock).toHaveBeenCalledWith("public-map-summary", "max");
+    expect(revalidateTagMock).toHaveBeenCalledWith("home-summary", "max");
+    expect(revalidateTagMock).toHaveBeenCalledWith("map-summary", "max");
     expect(revalidateTagMock).toHaveBeenCalledWith("public-visits", "max");
     expect(revalidateTagMock).toHaveBeenCalledWith("admin-park-visibility", "max");
     expect(revalidateTagMock).not.toHaveBeenCalledWith(
