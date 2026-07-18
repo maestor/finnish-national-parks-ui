@@ -74,17 +74,30 @@ describe("PublicVisitsTimeline", () => {
     );
   });
 
-  it("shows all twelve month filters when a year is selected", () => {
+  it("shows all twelve month pills and disables months without visits", () => {
     render(<PublicVisitsTimeline visits={visits} selectedYear={2024} selectedMonth={null} />);
 
     const monthNav = screen.getByRole("navigation", { name: "visits.filters.monthsLabel" });
     const monthLinks = within(monthNav).getAllByRole("link");
+    const januaryPillLabel = within(monthNav).getByText(/tammi/i);
+    const januaryPill = januaryPillLabel.closest("[title]");
+    const juneLink = within(monthNav).getByRole("link", { name: /kesä/i });
+    const augustLink = within(monthNav).getByRole("link", { name: /elo/i });
 
-    expect(monthLinks).toHaveLength(13);
-    expect(monthLinks[1]).toHaveTextContent(/tammi/i);
+    if (!(januaryPill instanceof HTMLElement)) {
+      throw new Error("Expected disabled month pill container");
+    }
+
+    expect(within(monthNav).getByText(/joulu/i)).toBeInTheDocument();
+    expect(monthLinks).toHaveLength(3);
     expect(
       within(monthNav).getByRole("link", { name: "visits.filters.allMonthsLabel" }),
     ).toHaveAttribute("href", "/kaynnit?year=2024");
+    expect(juneLink).toHaveAttribute("href", "/kaynnit?year=2024&month=6");
+    expect(augustLink).toHaveAttribute("href", "/kaynnit?year=2024&month=8");
+    expect(januaryPill.closest("a")).toBeNull();
+    expect(januaryPill).toHaveAttribute("title", "visits.filters.noVisitsInMonth");
+    expect(januaryPill).toHaveTextContent("visits.filters.noVisitsInMonth");
   });
 
   it("filters timeline items by selected year and month and links to the targeted visit", () => {
@@ -198,6 +211,19 @@ describe("PublicVisitsTimeline", () => {
 
     fireEvent.keyDown(monthLinks[2], { key: "ArrowLeft" });
     expect(monthLinks[1]).toHaveFocus();
+  });
+
+  it("ignores unavailable month query selections and keeps the year view active", () => {
+    render(<PublicVisitsTimeline visits={visits} selectedYear={2024} selectedMonth={1} />);
+
+    expect(screen.getByRole("link", { name: "visits.filters.allMonthsLabel" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(screen.getByRole("heading", { name: "2024" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /elo/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /kesä/i })).toBeInTheDocument();
+    expect(screen.queryByText("visits.empty.filtered")).not.toBeInTheDocument();
   });
 
   it("shows a continuous month spine with the park type as the first detail badge", () => {

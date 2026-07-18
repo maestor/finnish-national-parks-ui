@@ -15,6 +15,7 @@ interface BuildPublicVisitsTimelineModelOptions {
 }
 
 export interface PublicVisitMonthOption {
+  hasVisits: boolean;
   label: string;
   value: number;
 }
@@ -88,6 +89,46 @@ const compareVisitsByTimeline = (left: FrontendTimelineVisit, right: FrontendTim
   right.createdAt.localeCompare(left.createdAt) ||
   right.id - left.id;
 
+const buildAvailableVisitMonths = (visits: FrontendTimelineVisit[], year: number | null) => {
+  const availableMonths = new Set<number>();
+
+  if (year === null) {
+    return availableMonths;
+  }
+
+  for (const visit of visits) {
+    if (getVisitYear(visit.visitedOn) !== year) {
+      continue;
+    }
+
+    availableMonths.add(getVisitMonth(visit.visitedOn));
+  }
+
+  return availableMonths;
+};
+
+const normalizeSelectedVisitMonth = ({
+  availableMonths,
+  selectedMonth,
+  selectedYear,
+}: {
+  availableMonths: Set<number>;
+  selectedMonth: number | null;
+  selectedYear: number | null;
+}) => {
+  if (
+    selectedYear === null ||
+    selectedMonth === null ||
+    selectedMonth < 1 ||
+    selectedMonth > 12 ||
+    !availableMonths.has(selectedMonth)
+  ) {
+    return null;
+  }
+
+  return selectedMonth;
+};
+
 export const fetchVisitsTimeline = async (): Promise<{ visits: FrontendTimelineVisit[] }> =>
   apiPublicFetch<{ visits: FrontendTimelineVisit[] }>("/api/visits-timeline", {
     cache: "force-cache",
@@ -154,11 +195,14 @@ export const buildAvailableVisitYears = (
   return availableYears.reverse();
 };
 
-export const createPublicVisitMonthOptions = (): PublicVisitMonthOption[] =>
+export const createPublicVisitMonthOptions = (
+  availableMonths = new Set<number>(),
+): PublicVisitMonthOption[] =>
   Array.from({ length: 12 }, (_, index) => {
     const value = index + 1;
 
     return {
+      hasVisits: availableMonths.has(value),
       value,
       label: MONTH_FILTER_LABEL_FORMATTER.format(new Date(Date.UTC(2024, index, 1, 12))),
     };
@@ -176,11 +220,13 @@ export const resolvePublicVisitsFilters = (
   const requestedYear = parseIntegerParam(yearParam);
   const selectedYear =
     requestedYear !== null && availableYears.includes(requestedYear) ? requestedYear : null;
+  const availableMonths = buildAvailableVisitMonths(visits, selectedYear);
   const requestedMonth = parseIntegerParam(monthParam);
-  const selectedMonth =
-    selectedYear !== null && requestedMonth !== null && requestedMonth >= 1 && requestedMonth <= 12
-      ? requestedMonth
-      : null;
+  const selectedMonth = normalizeSelectedVisitMonth({
+    availableMonths,
+    selectedMonth: requestedMonth,
+    selectedYear,
+  });
 
   return {
     selectedYear,
@@ -199,13 +245,12 @@ export const buildPublicVisitsTimelineModel = (
   const availableYears = buildAvailableVisitYears(visits, currentYear);
   const normalizedSelectedYear =
     selectedYear !== null && availableYears.includes(selectedYear) ? selectedYear : null;
-  const normalizedSelectedMonth =
-    normalizedSelectedYear !== null &&
-    selectedMonth !== null &&
-    selectedMonth >= 1 &&
-    selectedMonth <= 12
-      ? selectedMonth
-      : null;
+  const availableMonths = buildAvailableVisitMonths(visits, normalizedSelectedYear);
+  const normalizedSelectedMonth = normalizeSelectedVisitMonth({
+    availableMonths,
+    selectedMonth,
+    selectedYear: normalizedSelectedYear,
+  });
 
   const filteredVisits = [...visits]
     .filter((visit) => {
@@ -237,7 +282,7 @@ export const buildPublicVisitsTimelineModel = (
     yearSections.set(visitYear, yearMonths);
   }
 
-  const monthOptions = createPublicVisitMonthOptions();
+  const monthOptions = createPublicVisitMonthOptions(availableMonths);
 
   const sections = [...yearSections.entries()]
     .sort((left, right) => right[0] - left[0])
