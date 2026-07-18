@@ -1,6 +1,6 @@
-import { apiFetch } from "@/lib/api";
 import { renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { apiFetch } from "@/lib/api";
 import { type AuthUser, useAuth } from "./use-auth";
 
 vi.mock("@/lib/api", () => ({

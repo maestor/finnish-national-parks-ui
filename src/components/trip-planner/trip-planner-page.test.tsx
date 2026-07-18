@@ -1,12 +1,12 @@
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError, apiFetch } from "@/lib/api";
 import type {
   TripPlannerNearbyResponse,
   TripPlannerSearchResponse,
   TripPlannerSuggestionsResponse,
 } from "@/lib/trip-planner";
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TripPlannerPage } from "./trip-planner-page";
 
 vi.mock("./trip-planner-map", () => ({

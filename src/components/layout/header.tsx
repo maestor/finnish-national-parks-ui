@@ -1,10 +1,5 @@
 "use client";
 
-import { LoginLink } from "@/components/auth/login-link";
-import { HeaderBrandMark } from "@/components/layout/header-brand-mark";
-import { useAuth } from "@/hooks/use-auth";
-import { cn } from "@/lib/cn";
-import { appRoutePatterns, appRoutes, normalizeAppPath } from "@/lib/routes";
 import {
   Footprints,
   House,
@@ -17,11 +12,16 @@ import {
   SlidersHorizontal,
   X,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { LoginLink } from "@/components/auth/login-link";
+import { HeaderBrandMark } from "@/components/layout/header-brand-mark";
+import { useAuth } from "@/hooks/use-auth";
+import { cn } from "@/lib/cn";
+import { appRoutePatterns, appRoutes, normalizeAppPath } from "@/lib/routes";
 import { useHomeMapControls } from "../providers/home-map-controls-provider";
 import { HomeParkSearch } from "./home-park-search";
 import { ThemeToggle } from "./theme-toggle";

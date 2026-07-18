@@ -1,10 +1,10 @@
 "use client";
 
-import { cn } from "@/lib/cn";
 import { Moon, Sun } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/cn";
 
 interface ThemeToggleProps {
   className?: string;

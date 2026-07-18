@@ -1,8 +1,8 @@
 "use client";
 
-import { appRoutes, normalizeAppPath } from "@/lib/routes";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { appRoutes, normalizeAppPath } from "@/lib/routes";
 
 export interface HomeParkFocusRequest {
   requestId: number;

@@ -1,2 +1,1 @@
-export { default } from "../trip-planner/page";
-export { generateMetadata } from "../trip-planner/page";
+export { default, generateMetadata } from "../trip-planner/page";

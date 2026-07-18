@@ -1,5 +1,5 @@
-import { getTranslations } from "next-intl/server";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 const NotFoundPage = async () => {
   const t = await getTranslations("errors.notFound");

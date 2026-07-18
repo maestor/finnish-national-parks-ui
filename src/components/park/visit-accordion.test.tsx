@@ -1,7 +1,7 @@
-import type { Visit } from "@/lib/parks";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
+import type { Visit } from "@/lib/parks";
 import { VisitAccordion } from "./visit-accordion";
 
 describe("VisitAccordion", () => {

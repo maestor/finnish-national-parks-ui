@@ -1,5 +1,11 @@
 "use client";
 
+import { Images, Trash2, Upload, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import type { ChangeEvent, KeyboardEvent, PointerEvent } from "react";
+import { useEffect, useRef, useState } from "react";
+import { AppImage } from "@/components/ui/app-image";
 import { Button } from "@/components/ui/button";
 import { VisitImageGallery } from "@/components/visits/visit-image-gallery";
 import { apiFetch } from "@/lib/api";
@@ -8,11 +14,6 @@ import { cn } from "@/lib/cn";
 import { isLocalImageUploadMode, prepareImageFileForUpload } from "@/lib/image-upload";
 import type { VisitImage } from "@/lib/parks";
 import { revalidatePublicCache } from "@/lib/public-cache";
-import { Images, Trash2, Upload, X } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
-import type { ChangeEvent, KeyboardEvent, PointerEvent } from "react";
-import { useEffect, useRef, useState } from "react";
 
 interface VisitImageSectionProps {
   visitId: number;
@@ -825,12 +826,16 @@ export const VisitImageSection = ({
                       aria-describedby="pending-image-reorder-hint"
                       draggable={false}
                     >
-                      <img
-                        src={pendingImage.previewUrl}
-                        alt=""
-                        className="h-full w-full object-cover"
-                        draggable={false}
-                      />
+                      <div className="relative h-full w-full">
+                        <AppImage
+                          src={pendingImage.previewUrl}
+                          alt=""
+                          fill
+                          sizes="(max-width: 640px) 112px, 144px"
+                          className="object-cover"
+                          draggable={false}
+                        />
+                      </div>
                     </button>
                     <button
                       type="button"

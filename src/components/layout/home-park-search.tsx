@@ -1,15 +1,15 @@
 "use client";
 
-import { apiFetch } from "@/lib/api";
-import { cn } from "@/lib/cn";
-import { type ParkSearchResult, getParkTypeDisplayName } from "@/lib/parks";
-import { appRoutes, normalizeAppPath } from "@/lib/routes";
 import { MapPin, Search, X } from "lucide-react";
-import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { apiFetch } from "@/lib/api";
+import { cn } from "@/lib/cn";
+import { getParkTypeDisplayName, type ParkSearchResult } from "@/lib/parks";
+import { appRoutes, normalizeAppPath } from "@/lib/routes";
 import { useHomeMapControls } from "../providers/home-map-controls-provider";
 
 const SEARCH_SURFACE_CLASS_NAME =

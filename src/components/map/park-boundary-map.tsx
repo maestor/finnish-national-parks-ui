@@ -1,9 +1,9 @@
 "use client";
 
-import type { ParkDetail } from "@/lib/parks";
 import maplibregl from "maplibre-gl";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
+import type { ParkDetail } from "@/lib/parks";
 import { ThreeDotPulse } from "../ui/three-dot-pulse";
 import "maplibre-gl/dist/maplibre-gl.css";
 

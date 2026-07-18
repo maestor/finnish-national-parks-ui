@@ -1,9 +1,9 @@
-import { apiFetch } from "@/lib/api";
-import { prepareImageFileForUpload } from "@/lib/image-upload";
-import type { VisitImage } from "@/lib/parks";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { apiFetch } from "@/lib/api";
+import { prepareImageFileForUpload } from "@/lib/image-upload";
+import type { VisitImage } from "@/lib/parks";
 import { VisitImageSection } from "./visit-image-section";
 
 const mockRefresh = vi.fn();

@@ -1,6 +1,6 @@
+import { getTranslations } from "next-intl/server";
 import { TripPlannerPage } from "@/components/trip-planner/trip-planner-page";
 import { buildPageMetadata } from "@/lib/page-metadata";
-import { getTranslations } from "next-intl/server";
 
 export const generateMetadata = async () => {
   const [t, metadataT] = await Promise.all([

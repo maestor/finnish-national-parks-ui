@@ -1,7 +1,7 @@
 "use client";
 
-import { apiFetch } from "@/lib/api";
 import { useCallback, useEffect, useState } from "react";
+import { apiFetch } from "@/lib/api";
 
 export type AuthUser = {
   id: string;

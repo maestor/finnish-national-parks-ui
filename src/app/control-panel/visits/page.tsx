@@ -1,10 +1,10 @@
+import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { VisitList } from "@/components/visits/visit-list";
 import { apiFetch } from "@/lib/api";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import type { VisitWithPark } from "@/lib/parks";
 import { appRoutes } from "@/lib/routes";
-import { getTranslations } from "next-intl/server";
-import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 

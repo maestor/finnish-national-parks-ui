@@ -1,12 +1,13 @@
 "use client";
 
-import { cn } from "@/lib/cn";
-import type { VisitImage } from "@/lib/parks";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ButtonHTMLAttributes, HTMLAttributes, MouseEvent, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { AppImage } from "@/components/ui/app-image";
+import { cn } from "@/lib/cn";
+import type { VisitImage } from "@/lib/parks";
 
 interface VisitImageGalleryProps {
   images: VisitImage[];
@@ -263,13 +264,18 @@ export const VisitImageGallery = ({
                 )}
 
                 <div className="flex h-full w-full items-center justify-center overflow-hidden sm:mx-auto sm:max-h-[calc(100dvh-8rem)] sm:max-w-6xl sm:rounded-[2rem] sm:border sm:border-white/10 sm:bg-white/[0.06] sm:p-4 sm:shadow-[0_32px_70px_rgba(2,6,23,0.4)] sm:backdrop-blur-xl">
-                  <img
-                    src={activeImage.image.fullUrl}
-                    alt={t("activeImage", { index: activeImage.index + 1 })}
-                    className="max-h-[calc(100dvh-7rem)] w-auto max-w-full object-contain select-none sm:max-h-[calc(100dvh-11rem)] sm:rounded-[1.4rem]"
-                    onTouchStart={handleLightboxTouchStart}
-                    onTouchEnd={handleLightboxTouchEnd}
-                  />
+                  <div className="relative h-full w-full max-h-[calc(100dvh-7rem)] sm:max-h-[calc(100dvh-11rem)] sm:max-w-6xl">
+                    <AppImage
+                      src={activeImage.image.fullUrl}
+                      alt={t("activeImage", { index: activeImage.index + 1 })}
+                      fill
+                      sizes="100vw"
+                      className="max-h-[calc(100dvh-7rem)] w-auto max-w-full object-contain select-none sm:max-h-[calc(100dvh-11rem)] sm:rounded-[1.4rem]"
+                      draggable={false}
+                      onTouchStart={handleLightboxTouchStart}
+                      onTouchEnd={handleLightboxTouchEnd}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -394,13 +400,16 @@ export const VisitImageGallery = ({
                     )}
                     aria-label={t("open", { index: index + 1 })}
                   >
-                    <img
-                      src={image.thumbUrl}
-                      alt=""
-                      className="aspect-square h-full w-full object-cover"
-                      loading="lazy"
-                      draggable={false}
-                    />
+                    <div className="relative aspect-square h-full w-full">
+                      <AppImage
+                        src={image.thumbUrl}
+                        alt=""
+                        fill
+                        sizes="(max-width: 640px) 112px, 144px"
+                        className="object-cover"
+                        draggable={false}
+                      />
+                    </div>
                   </button>
                   {renderThumbnailOverlay && (
                     <div className="pointer-events-none absolute inset-0">

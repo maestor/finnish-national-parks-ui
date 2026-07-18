@@ -1,9 +1,9 @@
+import { Footprints } from "lucide-react";
+import Link from "next/link";
 import { DashboardSectionCard } from "@/components/dashboard/dashboard-section-card";
 import { EditVisitLink } from "@/components/visits/edit-visit-link";
 import { formatOptionalFinnishDate } from "@/lib/fi-date";
 import { createParkVisitHref } from "@/lib/public-visits";
-import { Footprints } from "lucide-react";
-import Link from "next/link";
 
 interface RecentVisit {
   id?: number;

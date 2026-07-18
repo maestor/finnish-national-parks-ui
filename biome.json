@@ -1,18 +1,17 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
-  "organizeImports": {
-    "enabled": true
-  },
+  "$schema": "https://biomejs.dev/schemas/2.5.4/schema.json",
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "files": {
-    "ignore": [
-      "node_modules",
-      ".next",
-      "out",
-      "dist",
-      "coverage",
-      "public",
-      "*.d.ts",
-      "src/lib/api-types.ts"
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/.next",
+      "!**/out",
+      "!**/dist",
+      "!**/coverage",
+      "!**/public",
+      "!**/*.d.ts",
+      "!**/src/lib/api-types.ts"
     ]
   },
   "formatter": {
@@ -24,20 +23,20 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
+      "preset": "recommended",
       "complexity": {
         "useArrowFunction": "error"
       },
       "style": {
-        "useConst": "error",
-        "noVar": "error"
+        "useConst": "error"
       },
       "correctness": {
         "noUnusedVariables": "error",
         "noUnusedImports": "error"
       },
       "suspicious": {
-        "noConsoleLog": "warn"
+        "noVar": "error",
+        "noConsole": { "level": "warn", "options": { "allow": ["log"] } }
       }
     }
   },
@@ -46,6 +45,11 @@
       "quoteStyle": "double",
       "trailingCommas": "all",
       "semicolons": "always"
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
     }
   }
 }

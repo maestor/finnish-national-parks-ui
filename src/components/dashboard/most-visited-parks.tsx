@@ -1,7 +1,7 @@
-import { DashboardSectionCard } from "@/components/dashboard/dashboard-section-card";
-import { appRoutes } from "@/lib/routes";
 import { Trophy } from "lucide-react";
 import Link from "next/link";
+import { DashboardSectionCard } from "@/components/dashboard/dashboard-section-card";
+import { appRoutes } from "@/lib/routes";
 
 interface MostVisitedPark {
   parkName: string;

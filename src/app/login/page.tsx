@@ -1,5 +1,5 @@
-import { LoginLink } from "@/components/auth/login-link";
 import { getTranslations } from "next-intl/server";
+import { LoginLink } from "@/components/auth/login-link";
 
 const LoginPage = async ({
   searchParams,

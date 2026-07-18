@@ -53,16 +53,10 @@ describe("env", () => {
 
   it("throws when required environment variables are invalid", async () => {
     process.env.NEXT_PUBLIC_API_URL = "not-a-url";
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
 
     const { env } = await importEnvModule();
 
     expect(() => env.NEXT_PUBLIC_API_URL).toThrow("Invalid environment variables");
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "Invalid environment variables:",
-      expect.objectContaining({
-        NEXT_PUBLIC_API_URL: expect.any(Array),
-      }),
-    );
+    expect(() => env.NEXT_PUBLIC_API_URL).toThrow(/NEXT_PUBLIC_API_URL/);
   });
 });

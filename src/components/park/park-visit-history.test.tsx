@@ -1,6 +1,6 @@
-import type { Visit } from "@/lib/parks";
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { Visit } from "@/lib/parks";
 import { ParkVisitHistory } from "./park-visit-history";
 
 const mockUseAuth = vi.fn();

@@ -1,6 +1,27 @@
 "use client";
 
 import {
+  ChevronDown,
+  ChevronUp,
+  LoaderCircle,
+  LocateFixed,
+  Route,
+  SlidersHorizontal,
+} from "lucide-react";
+import Link from "next/link";
+import { useTranslations } from "next-intl";
+import {
+  type ChangeEvent,
+  type FormEvent,
+  type KeyboardEvent,
+  type ReactNode,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
   PUBLIC_EYEBROW_BADGE_CLASS_NAME,
   PUBLIC_HERO_DESCRIPTION_CLASS_NAME,
   PUBLIC_HERO_HEADING_STACK_CLASS_NAME,
@@ -21,37 +42,16 @@ import {
 import { getParkTypeDisplayName } from "@/lib/parks";
 import { appRoutes } from "@/lib/routes";
 import {
-  type TripPlannerResolvedLocation,
-  type TripPlannerSuggestion,
-  type TripPlannerUiParkResult,
-  type TripPlannerUiResult,
   fetchTripPlannerSuggestions,
   normalizeTripPlannerNearbyResponse,
   normalizeTripPlannerSearchResponse,
   searchTripPlanner,
   searchTripPlannerNearby,
+  type TripPlannerResolvedLocation,
+  type TripPlannerSuggestion,
+  type TripPlannerUiParkResult,
+  type TripPlannerUiResult,
 } from "@/lib/trip-planner";
-import {
-  ChevronDown,
-  ChevronUp,
-  LoaderCircle,
-  LocateFixed,
-  Route,
-  SlidersHorizontal,
-} from "lucide-react";
-import { useTranslations } from "next-intl";
-import Link from "next/link";
-import {
-  type ChangeEvent,
-  type FormEvent,
-  type KeyboardEvent,
-  type ReactNode,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
 import { TripPlannerMap } from "./trip-planner-map";
 
 const INPUT_CLASS_NAME =
@@ -232,6 +232,9 @@ const getUserLocationStatusMessage = (
 const formatCoordinateQuery = (coordinate: { lat: number; lon: number }) =>
   `${coordinate.lat.toFixed(6)},${coordinate.lon.toFixed(6)}`;
 
+const getTripPlannerSuggestionKey = ({ coordinate, label }: TripPlannerSuggestion) =>
+  `${label}-${formatCoordinateQuery(coordinate)}`;
+
 const renderMultilineText = (text: string) => {
   let offset = 0;
 
@@ -252,9 +255,9 @@ const renderMultilineText = (text: string) => {
 const removeTrailingColon = (label: string) => label.replace(/:\s*$/, "");
 
 const TripPlannerRouteSummaryValue = ({ label, value }: { label: string; value: string }) => (
-  <span aria-label={`${label} ${value}`} title={label} className="text-muted-foreground">
+  <output aria-label={`${label} ${value}`} title={label} className="text-muted-foreground">
     {value}
-  </span>
+  </output>
 );
 
 const useMediaQuery = (query: string) => {
@@ -334,7 +337,9 @@ const TripPlannerSuggestionInput = ({
     : null;
   const hasSuggestionQuery = normalizedValue.length >= MIN_SUGGESTION_QUERY_LENGTH;
   const activeSuggestionId =
-    highlightedIndex >= 0 ? `${listboxId}-option-${highlightedIndex}` : undefined;
+    highlightedIndex >= 0
+      ? `${listboxId}-option-${getTripPlannerSuggestionKey(suggestions[highlightedIndex])}`
+      : undefined;
   const showRequiredError = required && hasBeenTouched && normalizedValue.length === 0;
   const describedBy = [
     showRequiredError ? errorId : null,
@@ -583,13 +588,11 @@ const TripPlannerSuggestionInput = ({
       ) : null}
 
       {isOpen ? (
-        // biome-ignore lint/a11y/useSemanticElements: ARIA combobox popups intentionally use a listbox while focus stays on the text input.
         <div id={listboxId} role="listbox" tabIndex={-1} className={SUGGESTION_LIST_CLASS_NAME}>
           {suggestions.map((suggestion, index) => (
             <div
-              key={`${suggestion.label}-${index}`}
-              id={`${listboxId}-option-${index}`}
-              // biome-ignore lint/a11y/useSemanticElements: ARIA combobox popups intentionally expose each suggestion as an option instead of moving focus off the input.
+              key={getTripPlannerSuggestionKey(suggestion)}
+              id={`${listboxId}-option-${getTripPlannerSuggestionKey(suggestion)}`}
               role="option"
               tabIndex={-1}
               aria-selected={highlightedIndex === index}

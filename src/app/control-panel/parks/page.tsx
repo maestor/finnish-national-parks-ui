@@ -1,9 +1,9 @@
+import { getTranslations } from "next-intl/server";
 import { ParkManagement } from "@/components/parks/park-management";
 import { ADMIN_PARK_VISIBILITY_TAG } from "@/lib/admin-cache";
 import { apiAuthFetch } from "@/lib/api";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import type { AdminParkVisibilityResponse } from "@/lib/parks";
-import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 

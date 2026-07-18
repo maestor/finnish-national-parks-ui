@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom/vitest";
 
-import type { ReactNode } from "react";
+import { createElement, type ReactNode } from "react";
 import { vi } from "vitest";
 
 vi.mock("@/lib/env", () => ({
@@ -37,3 +37,21 @@ vi.mock("next-intl", () => {
     NextIntlClientProvider: ({ children }: { children: ReactNode }) => children,
   };
 });
+
+vi.mock("next/image", () => ({
+  default: ({
+    alt,
+    fill: _fill,
+    loader: _loader,
+    priority: _priority,
+    unoptimized: _unoptimized,
+    ...props
+  }: {
+    alt: string;
+    fill?: boolean;
+    loader?: unknown;
+    priority?: boolean;
+    unoptimized?: boolean;
+    [key: string]: unknown;
+  }) => createElement("img", { alt, ...props }),
+}));

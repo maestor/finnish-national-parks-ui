@@ -1,7 +1,7 @@
-import type { VisitWithPark } from "@/lib/parks";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import type { VisitWithPark } from "@/lib/parks";
 import { VisitList } from "./visit-list";
 
 vi.mock("@/lib/api", () => ({

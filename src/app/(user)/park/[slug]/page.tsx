@@ -1,15 +1,16 @@
+import { ExternalLink, FileDown, MapPin } from "lucide-react";
+import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { ParkBoundaryMap } from "@/components/map/park-boundary-map";
 import { ParkAdminControlsProvider, ParkAdminSection } from "@/components/park/park-admin-controls";
 import { ParkTypeBadge } from "@/components/park/park-type-badge";
 import { ParkVisitHistory } from "@/components/park/park-visit-history";
+import { AppImage } from "@/components/ui/app-image";
 import { apiAuthFetch } from "@/lib/api";
 import { fetchPublicParkDetail, fetchPublicParkVisits } from "@/lib/frontend-summaries";
 import { buildPageMetadata } from "@/lib/page-metadata";
-import { type ParkDetail, type ParkVisits, getParkTypeDisplayName } from "@/lib/parks";
+import { getParkTypeDisplayName, type ParkDetail, type ParkVisits } from "@/lib/parks";
 import { appRoutes, createPathWithSearchParams } from "@/lib/routes";
-import { ExternalLink, FileDown, MapPin } from "lucide-react";
-import { getTranslations } from "next-intl/server";
-import Link from "next/link";
 
 interface ParkDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -144,7 +145,15 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
         <section className="rounded-[2rem] border border-white/45 bg-white/65 px-6 py-6 shadow-[0_24px_48px_rgba(148,163,184,0.16)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/45 dark:shadow-[0_28px_56px_rgba(2,6,23,0.34)]">
           <div className="flex flex-wrap items-center justify-center gap-3">
             {publicPark.logo?.url && (
-              <img src={publicPark.logo.url} alt={publicPark.name} className="h-28 w-auto" />
+              <div className="relative h-28 w-48 shrink-0">
+                <AppImage
+                  src={publicPark.logo.url}
+                  alt={publicPark.name}
+                  fill
+                  sizes="192px"
+                  className="object-contain"
+                />
+              </div>
             )}
             <div className="flex flex-wrap items-center justify-center gap-3">
               <h1 className="text-center text-3xl font-bold tracking-tight">{publicPark.name}</h1>

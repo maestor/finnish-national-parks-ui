@@ -1,9 +1,9 @@
+import type { LucideIcon } from "lucide-react";
 import {
   PUBLIC_PANEL_CLASS_NAME,
   PUBLIC_PANEL_ICON_SURFACE_CLASS_NAME,
 } from "@/components/layout/public-page-styles";
 import { cn } from "@/lib/cn";
-import type { LucideIcon } from "lucide-react";
 
 interface DashboardSectionCardProps {
   title: string;

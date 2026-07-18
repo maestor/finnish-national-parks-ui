@@ -1,5 +1,8 @@
 "use client";
 
+import maplibregl from "maplibre-gl";
+import { useTranslations } from "next-intl";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getParkTypeDisplayName } from "@/lib/parks";
 import { appRoutes } from "@/lib/routes";
 import type {
@@ -8,9 +11,6 @@ import type {
   TripPlannerSearchAreaResult,
   TripPlannerUiParkResult,
 } from "@/lib/trip-planner";
-import maplibregl from "maplibre-gl";
-import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState } from "react";
 import { ThreeDotPulse } from "../ui/three-dot-pulse";
 import "maplibre-gl/dist/maplibre-gl.css";
 

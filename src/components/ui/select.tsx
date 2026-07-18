@@ -1,8 +1,8 @@
 "use client";
 
-import { cn } from "@/lib/cn";
 import { ChevronDown } from "lucide-react";
 import type { SelectHTMLAttributes } from "react";
+import { cn } from "@/lib/cn";
 
 interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   wrapperClassName?: string;
