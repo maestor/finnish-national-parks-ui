@@ -12,7 +12,7 @@ export const PUBLIC_EYEBROW_BADGE_CLASS_NAME =
 
 export const PUBLIC_HERO_HEADING_STACK_CLASS_NAME = "space-y-2";
 
-export const PUBLIC_HERO_TITLE_CLASS_NAME = "text-3xl font-bold tracking-tight sm:text-4xl";
+export const PUBLIC_HERO_TITLE_CLASS_NAME = "mt-1 text-3xl font-bold tracking-tight sm:text-4xl";
 
 export const PUBLIC_HERO_DESCRIPTION_CLASS_NAME =
   "max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base";
