@@ -1,7 +1,7 @@
 import { render } from "@testing-library/react";
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { PwaIcon, createPwaIconResponse } from "./pwa-icon";
+import { createPwaIconResponse, PwaIcon } from "./pwa-icon";
 
 const { imageResponseMock } = vi.hoisted(() => ({
   // biome-ignore lint: Vitest v4 constructor mocks must be constructible.

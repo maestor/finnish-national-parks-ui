@@ -162,13 +162,7 @@ const drawImageToCanvas = (imageSource: LoadedImageSource, width: number, height
   return canvas;
 };
 
-const createOptimizedFile = ({
-  blob,
-  file,
-}: {
-  blob: Blob;
-  file: File;
-}) => {
+const createOptimizedFile = ({ blob, file }: { blob: Blob; file: File }) => {
   const outputMimeType = blob.type || getOutputMimeType(file.type);
 
   return new File([blob], getOutputFileName(file.name, outputMimeType), {

@@ -2,9 +2,9 @@ import { render, screen } from "@testing-library/react";
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import {
+  createSocialPreviewImageResponse,
   SocialPreviewImage,
   type SocialPreviewVariant,
-  createSocialPreviewImageResponse,
 } from "./social-preview-image";
 
 const { imageResponseMock } = vi.hoisted(() => ({

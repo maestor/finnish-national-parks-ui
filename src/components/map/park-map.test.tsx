@@ -1,6 +1,6 @@
-import type { FilterableMapPark } from "@/lib/parks";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { FilterableMapPark } from "@/lib/parks";
 import { ParkMap } from "./park-map";
 
 const loadHandlers: Array<() => void> = [];

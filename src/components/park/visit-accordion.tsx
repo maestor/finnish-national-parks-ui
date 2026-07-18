@@ -1,14 +1,14 @@
 "use client";
 
-import { EditVisitLink } from "@/components/visits/edit-visit-link";
-import { VisitImageGallery } from "@/components/visits/visit-image-gallery";
-import { formatFinnishDate } from "@/lib/fi-date";
-import type { Visit } from "@/lib/parks";
 import { ChevronDown, FileText, Images, Route, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { EditVisitLink } from "@/components/visits/edit-visit-link";
+import { VisitImageGallery } from "@/components/visits/visit-image-gallery";
+import { formatFinnishDate } from "@/lib/fi-date";
+import type { Visit } from "@/lib/parks";
 
 interface VisitAccordionProps {
   initialOpenVisitId?: number | null;

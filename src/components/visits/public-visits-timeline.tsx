@@ -1,5 +1,9 @@
 "use client";
 
+import { CalendarRange, Camera, Footprints, Images, Route } from "lucide-react";
+import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { useRef } from "react";
 import {
   PUBLIC_EMPTY_STATE_PANEL_CLASS_NAME,
   PUBLIC_EYEBROW_BADGE_CLASS_NAME,
@@ -13,16 +17,12 @@ import { ParkTypeBadge } from "@/components/park/park-type-badge";
 import { cn } from "@/lib/cn";
 import { formatFinnishDate } from "@/lib/fi-date";
 import {
-  type FrontendTimelineVisit,
   buildPublicVisitsTimelineModel,
   createParkVisitHref,
   createPublicVisitsHref,
+  type FrontendTimelineVisit,
 } from "@/lib/public-visits";
 import { appRoutes } from "@/lib/routes";
-import { CalendarRange, Camera, Footprints, Images, Route } from "lucide-react";
-import { useTranslations } from "next-intl";
-import Link from "next/link";
-import { useRef } from "react";
 
 interface PublicVisitsTimelineProps {
   error?: string | null;

@@ -43,6 +43,9 @@ type SiteEnv = z.infer<typeof siteEnvSchema>;
 let cachedEnv: Env | null = null;
 let cachedSiteEnv: SiteEnv | null = null;
 
+const formatEnvError = (message: string, fieldErrors: Record<string, string[] | undefined>) =>
+  `${message}: ${JSON.stringify(fieldErrors)}`;
+
 const validateEnv = (): Env => {
   if (cachedEnv) return cachedEnv;
 
@@ -58,9 +61,9 @@ const validateEnv = (): Env => {
   });
 
   if (!parsed.success) {
-    // eslint-disable-next-line no-console
-    console.error("Invalid environment variables:", parsed.error.flatten().fieldErrors);
-    throw new Error("Invalid environment variables");
+    throw new Error(
+      formatEnvError("Invalid environment variables", parsed.error.flatten().fieldErrors),
+    );
   }
 
   cachedEnv = parsed.data;
@@ -77,9 +80,9 @@ const validateSiteEnv = (): SiteEnv => {
   });
 
   if (!parsed.success) {
-    // eslint-disable-next-line no-console
-    console.error("Invalid site environment variables:", parsed.error.flatten().fieldErrors);
-    throw new Error("Invalid site environment variables");
+    throw new Error(
+      formatEnvError("Invalid site environment variables", parsed.error.flatten().fieldErrors),
+    );
   }
 
   cachedSiteEnv = parsed.data;

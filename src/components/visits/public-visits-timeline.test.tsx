@@ -1,6 +1,6 @@
-import type { FrontendTimelineVisit } from "@/lib/public-visits";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { FrontendTimelineVisit } from "@/lib/public-visits";
 import { PublicVisitsTimeline } from "./public-visits-timeline";
 
 describe("PublicVisitsTimeline", () => {

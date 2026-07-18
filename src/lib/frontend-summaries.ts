@@ -1,10 +1,10 @@
 import { apiFetch, apiPublicFetch } from "./api";
 import type { paths } from "./api-types";
 import {
-  HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG,
-  TRAILS_AND_ROUTES_CATEGORY_SLUG,
   getParkFilterSortIndex,
+  HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG,
   isHikingAndWildernessAreaTypeSlug,
+  TRAILS_AND_ROUTES_CATEGORY_SLUG,
 } from "./park-type-filters";
 import type {
   FilterableMapPark,
@@ -14,7 +14,7 @@ import type {
   ParkVisits,
   VisitWithPark,
 } from "./parks";
-import { HOME_SUMMARY_TAG, MAP_SUMMARY_TAG, getPublicParkTag } from "./public-cache";
+import { getPublicParkTag, HOME_SUMMARY_TAG, MAP_SUMMARY_TAG } from "./public-cache";
 
 export type HomeSummary =
   paths["/api/home-summary"]["get"]["responses"][200]["content"]["application/json"];

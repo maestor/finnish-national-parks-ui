@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { PublicVisitsTimeline } from "@/components/visits/public-visits-timeline";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import {
@@ -5,7 +6,6 @@ import {
   fetchVisitsTimeline,
   resolvePublicVisitsFilters,
 } from "@/lib/public-visits";
-import { getTranslations } from "next-intl/server";
 
 interface PublicVisitsPageProps {
   searchParams: Promise<{

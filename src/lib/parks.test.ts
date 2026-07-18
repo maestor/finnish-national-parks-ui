@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import type { Park, VisitWithPark } from "./parks";
 import {
   buildVisitedSummaryByParkSlug,
@@ -8,8 +9,6 @@ import {
   mergeParksWithVisitSummaries,
   toAdminMapParks,
 } from "./parks";
-
-import { describe, expect, it } from "vitest";
 
 const buildPark = (overrides: Partial<Park> = {}): Park =>
   ({

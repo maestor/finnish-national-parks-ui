@@ -1,13 +1,13 @@
 "use client";
 
+import { CircleHelp, MapPin } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
 import {
   PUBLIC_HERO_DESCRIPTION_CLASS_NAME,
   PUBLIC_HERO_TITLE_CLASS_NAME,
 } from "@/components/layout/public-page-styles";
 import { appRoutes } from "@/lib/routes";
-import { CircleHelp, MapPin } from "lucide-react";
-import Link from "next/link";
-import { useState } from "react";
 
 interface HomeIntroProps {
   title: string;

@@ -1,10 +1,10 @@
 "use client";
 
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { consumePostLoginRedirectPath } from "@/lib/post-login-redirect";
 import { appRoutes, normalizeAppPath } from "@/lib/routes";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
 
 export const PostLoginReturnRedirector = () => {
   const auth = useAuth();

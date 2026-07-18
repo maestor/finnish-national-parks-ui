@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
-@variant dark (&:where(.dark, .dark *));
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
   --color-background: hsl(var(--background));
@@ -47,7 +47,8 @@
 
 :root {
   --background: 0 0% 100%;
-  --background-image: radial-gradient(circle at top left, rgba(22, 101, 52, 0.12), transparent 26%),
+  --background-image:
+    radial-gradient(circle at top left, rgba(22, 101, 52, 0.12), transparent 26%),
     radial-gradient(circle at top right, rgba(37, 99, 235, 0.1), transparent 22%),
     linear-gradient(180deg, #eff6f8 0%, #eef4f7 42%, #edf3f9 100%);
   --foreground: 240 10% 3.9%;
@@ -75,7 +76,8 @@
 
 .dark {
   --background: 240 10% 3.9%;
-  --background-image: radial-gradient(circle at top left, rgba(22, 101, 52, 0.18), transparent 24%),
+  --background-image:
+    radial-gradient(circle at top left, rgba(22, 101, 52, 0.18), transparent 24%),
     radial-gradient(circle at top right, rgba(37, 99, 235, 0.16), transparent 22%),
     linear-gradient(180deg, #09111d 0%, #0d1627 46%, #111827 100%);
   --foreground: 0 0% 98%;
@@ -117,12 +119,12 @@ body {
     scroll-behavior: auto;
   }
 
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  html body *[class],
+  html body *[class]::before,
+  html body *[class]::after {
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+    transition-duration: 0.01ms;
   }
 }
 
@@ -139,74 +141,78 @@ summary::-webkit-details-marker {
   z-index: 20;
 }
 
-.maplibregl-popup-content {
-  background: rgb(255 255 255 / 0.92) !important;
-  color: hsl(var(--card-foreground)) !important;
-  border: 1px solid rgb(255 255 255 / 0.55) !important;
-  border-radius: 1.5rem !important;
-  backdrop-filter: blur(20px) !important;
-  padding: 0 !important;
-  box-shadow: 0 24px 60px rgb(148 163 184 / 0.2), inset 0 1px 0 rgb(255 255 255 / 0.5) !important;
+.maplibregl-popup .maplibregl-popup-content {
+  background: rgb(255 255 255 / 0.92);
+  color: hsl(var(--card-foreground));
+  border: 1px solid rgb(255 255 255 / 0.55);
+  border-radius: 1.5rem;
+  backdrop-filter: blur(20px);
+  padding: 0;
+  box-shadow:
+    0 24px 60px rgb(148 163 184 / 0.2),
+    inset 0 1px 0 rgb(255 255 255 / 0.5);
 }
 
-.maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
-.maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
-.maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip {
-  border-top-color: rgb(255 255 255 / 0.92) !important;
+.maplibregl-popup.maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
+.maplibregl-popup.maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
+.maplibregl-popup.maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip {
+  border-top-color: rgb(255 255 255 / 0.92);
 }
 
-.maplibregl-popup-anchor-top .maplibregl-popup-tip,
-.maplibregl-popup-anchor-top-left .maplibregl-popup-tip,
-.maplibregl-popup-anchor-top-right .maplibregl-popup-tip {
-  border-bottom-color: rgb(255 255 255 / 0.92) !important;
+.maplibregl-popup.maplibregl-popup-anchor-top .maplibregl-popup-tip,
+.maplibregl-popup.maplibregl-popup-anchor-top-left .maplibregl-popup-tip,
+.maplibregl-popup.maplibregl-popup-anchor-top-right .maplibregl-popup-tip {
+  border-bottom-color: rgb(255 255 255 / 0.92);
 }
 
-.maplibregl-popup-anchor-left .maplibregl-popup-tip {
-  border-right-color: rgb(255 255 255 / 0.92) !important;
+.maplibregl-popup.maplibregl-popup-anchor-left .maplibregl-popup-tip {
+  border-right-color: rgb(255 255 255 / 0.92);
 }
 
-.maplibregl-popup-anchor-right .maplibregl-popup-tip {
-  border-left-color: rgb(255 255 255 / 0.92) !important;
+.maplibregl-popup.maplibregl-popup-anchor-right .maplibregl-popup-tip {
+  border-left-color: rgb(255 255 255 / 0.92);
 }
 
-.maplibregl-popup-anchor-top-left .maplibregl-popup-content {
-  border-top-left-radius: 0 !important;
+.maplibregl-popup.maplibregl-popup-anchor-top-left .maplibregl-popup-content {
+  border-top-left-radius: 0;
 }
 
-.maplibregl-popup-anchor-top-right .maplibregl-popup-content {
-  border-top-right-radius: 0 !important;
+.maplibregl-popup.maplibregl-popup-anchor-top-right .maplibregl-popup-content {
+  border-top-right-radius: 0;
 }
 
-.maplibregl-popup-anchor-bottom-left .maplibregl-popup-content {
-  border-bottom-left-radius: 0 !important;
+.maplibregl-popup.maplibregl-popup-anchor-bottom-left .maplibregl-popup-content {
+  border-bottom-left-radius: 0;
 }
 
-.maplibregl-popup-anchor-bottom-right .maplibregl-popup-content {
-  border-bottom-right-radius: 0 !important;
+.maplibregl-popup.maplibregl-popup-anchor-bottom-right .maplibregl-popup-content {
+  border-bottom-right-radius: 0;
 }
 
-.dark .maplibregl-popup-content {
-  background: rgb(2 6 23 / 0.86) !important;
-  border-color: rgb(255 255 255 / 0.1) !important;
-  box-shadow: 0 28px 64px rgb(2 6 23 / 0.42), inset 0 1px 0 rgb(255 255 255 / 0.08) !important;
+.dark .maplibregl-popup .maplibregl-popup-content {
+  background: rgb(2 6 23 / 0.86);
+  border-color: rgb(255 255 255 / 0.1);
+  box-shadow:
+    0 28px 64px rgb(2 6 23 / 0.42),
+    inset 0 1px 0 rgb(255 255 255 / 0.08);
 }
 
-.dark .maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
-.dark .maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
-.dark .maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip {
-  border-top-color: rgb(2 6 23 / 0.86) !important;
+.dark .maplibregl-popup.maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
+.dark .maplibregl-popup.maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
+.dark .maplibregl-popup.maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip {
+  border-top-color: rgb(2 6 23 / 0.86);
 }
 
-.dark .maplibregl-popup-anchor-top .maplibregl-popup-tip,
-.dark .maplibregl-popup-anchor-top-left .maplibregl-popup-tip,
-.dark .maplibregl-popup-anchor-top-right .maplibregl-popup-tip {
-  border-bottom-color: rgb(2 6 23 / 0.86) !important;
+.dark .maplibregl-popup.maplibregl-popup-anchor-top .maplibregl-popup-tip,
+.dark .maplibregl-popup.maplibregl-popup-anchor-top-left .maplibregl-popup-tip,
+.dark .maplibregl-popup.maplibregl-popup-anchor-top-right .maplibregl-popup-tip {
+  border-bottom-color: rgb(2 6 23 / 0.86);
 }
 
-.dark .maplibregl-popup-anchor-left .maplibregl-popup-tip {
-  border-right-color: rgb(2 6 23 / 0.86) !important;
+.dark .maplibregl-popup.maplibregl-popup-anchor-left .maplibregl-popup-tip {
+  border-right-color: rgb(2 6 23 / 0.86);
 }
 
-.dark .maplibregl-popup-anchor-right .maplibregl-popup-tip {
-  border-left-color: rgb(2 6 23 / 0.86) !important;
+.dark .maplibregl-popup.maplibregl-popup-anchor-right .maplibregl-popup-tip {
+  border-left-color: rgb(2 6 23 / 0.86);
 }

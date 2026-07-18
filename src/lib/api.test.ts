@@ -1,6 +1,5 @@
-import { apiAuthFetch, apiFetch, apiPublicFetch } from "./api";
-
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { apiAuthFetch, apiFetch, apiPublicFetch } from "./api";
 
 vi.mock("next/headers", () => ({
   headers: vi.fn(async () => new Headers({ cookie: "__session=test-session" })),

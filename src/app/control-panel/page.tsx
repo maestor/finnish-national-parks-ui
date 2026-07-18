@@ -1,6 +1,6 @@
+import { getTranslations } from "next-intl/server";
 import { PostLoginReturnRedirector } from "@/components/auth/post-login-return-redirector";
 import { buildPageMetadata } from "@/lib/page-metadata";
-import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 

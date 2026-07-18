@@ -1,8 +1,8 @@
 "use client";
 
-import type { AdminVisibilityPark } from "@/lib/parks";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import type { AdminVisibilityPark } from "@/lib/parks";
 import { AdminParkMap } from "./admin-park-map";
 import { ParkList } from "./park-list";
 

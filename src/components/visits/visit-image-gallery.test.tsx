@@ -1,6 +1,6 @@
-import type { VisitImage } from "@/lib/parks";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { VisitImage } from "@/lib/parks";
 import { VisitImageGallery } from "./visit-image-gallery";
 
 const scrollByMock = vi.fn();

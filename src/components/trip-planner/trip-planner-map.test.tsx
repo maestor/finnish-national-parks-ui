@@ -1,6 +1,6 @@
-import type { TripPlannerRouteResult, TripPlannerUiParkResult } from "@/lib/trip-planner";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { TripPlannerRouteResult, TripPlannerUiParkResult } from "@/lib/trip-planner";
 import { TripPlannerMap } from "./trip-planner-map";
 
 interface MockMarker {

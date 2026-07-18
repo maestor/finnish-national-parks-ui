@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { HomeVisitStats } from "@/components/dashboard/home-visit-stats";
 import { MostVisitedParks } from "@/components/dashboard/most-visited-parks";
 import { HomeActivityPanels } from "@/components/home/home-activity-panels";
@@ -10,7 +11,6 @@ import {
   createHomeRecentVisitsFromSummary,
   fetchHomeSummary,
 } from "@/lib/frontend-summaries";
-import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 

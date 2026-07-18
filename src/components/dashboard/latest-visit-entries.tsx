@@ -1,9 +1,9 @@
+import { NotebookPen } from "lucide-react";
+import Link from "next/link";
 import { DashboardSectionCard } from "@/components/dashboard/dashboard-section-card";
 import { EditVisitLink } from "@/components/visits/edit-visit-link";
 import { formatFinnishDate } from "@/lib/fi-date";
 import { createParkVisitHref } from "@/lib/public-visits";
-import { NotebookPen } from "lucide-react";
-import Link from "next/link";
 
 interface LatestVisitEntry {
   id?: number;

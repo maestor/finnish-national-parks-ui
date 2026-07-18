@@ -1,8 +1,8 @@
+import { render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { apiAuthFetch, apiFetch, apiPublicFetch } from "@/lib/api";
 import type { AdminVisibilityPark, Park, Visit, VisitWithPark } from "@/lib/parks";
 import type { FrontendTimelineVisit } from "@/lib/public-visits";
-import { render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import UserLayout from "./(user)/layout";
 import HomePage, { generateMetadata as generateHomeMetadata } from "./(user)/page";
 import ParkDetailPage, {
@@ -15,6 +15,7 @@ import TripPlannerRoutePage, {
 import PublicVisitsPage, {
   generateMetadata as generatePublicVisitsMetadata,
 } from "./(user)/visits/page";
+import OfflinePage from "./~offline/page";
 import ControlPanelLayout from "./control-panel/layout";
 import ControlPanelPage, {
   generateMetadata as generateControlPanelMetadata,
@@ -34,7 +35,6 @@ import VisitsPage, {
 } from "./control-panel/visits/page";
 import LoginPage from "./login/page";
 import NotFoundPage from "./not-found";
-import OfflinePage from "./~offline/page";
 
 const { mockNotFound } = vi.hoisted(() => ({
   mockNotFound: vi.fn(() => {
@@ -67,13 +67,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/components/map/park-explorer", () => ({
-  ParkExplorer: ({
-    parks,
-    error,
-  }: {
-    parks: Park[];
-    error?: string | null;
-  }) => (
+  ParkExplorer: ({ parks, error }: { parks: Park[]; error?: string | null }) => (
     <div data-testid="park-explorer">
       parks:{parks.length}|error:{error ?? "none"}
     </div>
@@ -669,7 +663,7 @@ describe("App pages", () => {
     const logo = screen.getByRole("img", { name: "Pallas-Yllästunturi" });
     expect(logo).toBeInTheDocument();
     expect(logo).toHaveAttribute("src", "https://example.com/pallas-logo.png");
-    expect(logo).toHaveClass("h-28", "w-auto");
+    expect(logo.parentElement).toHaveClass("h-28", "w-48");
   });
 
   it("does not render a logo when the park has no logo", async () => {

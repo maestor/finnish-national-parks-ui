@@ -1,5 +1,5 @@
-import { cn } from "@/lib/cn";
 import type { LabelHTMLAttributes } from "react";
+import { cn } from "@/lib/cn";
 
 interface LabelProps extends LabelHTMLAttributes<HTMLLabelElement> {
   required?: boolean;

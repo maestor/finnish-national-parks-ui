@@ -1,7 +1,7 @@
-import { ParkExplorer } from "@/components/map/park-explorer";
-import { type MapSummary, fetchMapSummary } from "@/lib/frontend-summaries";
-import { buildPageMetadata } from "@/lib/page-metadata";
 import { getTranslations } from "next-intl/server";
+import { ParkExplorer } from "@/components/map/park-explorer";
+import { fetchMapSummary, type MapSummary } from "@/lib/frontend-summaries";
+import { buildPageMetadata } from "@/lib/page-metadata";
 
 export const dynamic = "force-dynamic";
 

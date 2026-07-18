@@ -1,21 +1,21 @@
 "use client";
 
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/cn";
 import {
   type FilterableParkTypeSlug,
   HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG,
+  isHikingAndWildernessAreaTypeSlug,
   PARK_TYPE_FILTER_LABEL_KEYS,
   type ParkTypeFilterLabelKey,
   TRAILS_AND_ROUTES_CATEGORY_SLUG,
-  isHikingAndWildernessAreaTypeSlug,
 } from "@/lib/park-type-filters";
 import type { FilterableMapPark } from "@/lib/parks";
 import { appRoutes, normalizeAppPath } from "@/lib/routes";
-import { useTranslations } from "next-intl";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHomeMapControls } from "../providers/home-map-controls-provider";
 import { ParkMap } from "./park-map";
 
@@ -109,6 +109,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
   const [isVisitStatusSelectorOpen, setIsVisitStatusSelectorOpen] = useState(false);
   const [mapResetRequestId, setMapResetRequestId] = useState(0);
   const { isMobileFiltersOpen, homeParkFocusRequest } = useHomeMapControls();
+  const filterPanelRef = useRef<HTMLDivElement | null>(null);
   const lastHandledMapParamsRef = useRef<string | null>(null);
 
   const filterOptions = useMemo(() => {
@@ -275,6 +276,27 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
   }, [activeFilter, activeVisitStatus, applyFilters, normalizedPathname, router, searchParams]);
 
   useEffect(() => {
+    const filterPanelElement = filterPanelRef.current;
+
+    if (!filterPanelElement) {
+      return;
+    }
+
+    // Keep map drag gestures from starting when the user presses inside the overlay.
+    const stopPointerPropagation = (event: Event) => {
+      event.stopPropagation();
+    };
+
+    filterPanelElement.addEventListener("mousedown", stopPointerPropagation, true);
+    filterPanelElement.addEventListener("pointerdown", stopPointerPropagation, true);
+
+    return () => {
+      filterPanelElement.removeEventListener("mousedown", stopPointerPropagation, true);
+      filterPanelElement.removeEventListener("pointerdown", stopPointerPropagation, true);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!homeParkFocusRequest) {
       return;
     }
@@ -307,7 +329,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
   const visitStatusListId = "park-map-visit-status-options";
 
   const filterPanel = (
-    <div className={FILTER_PANEL_CLASS_NAME} onMouseDown={(e) => e.stopPropagation()}>
+    <div ref={filterPanelRef} className={FILTER_PANEL_CLASS_NAME}>
       {filterOptions.map((option) => (
         <Button
           key={option.id}
@@ -345,7 +367,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
           <span className="block w-full text-center">{activeVisitStatusOption.label}</span>
         </Button>
         {isVisitStatusSelectorOpen ? (
-          <div id={visitStatusListId} className="mt-2 space-y-1" aria-label={t("visitStatusLabel")}>
+          <div id={visitStatusListId} className="mt-2 space-y-1">
             {visitStatusOptions.map((option) => (
               <Button
                 key={option.id}

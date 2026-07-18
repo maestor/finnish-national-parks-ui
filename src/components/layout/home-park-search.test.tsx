@@ -1,13 +1,13 @@
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import type { AnchorHTMLAttributes } from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   HomeMapControlsProvider,
   useHomeMapControls,
 } from "@/components/providers/home-map-controls-provider";
 import { apiFetch } from "@/lib/api";
 import type { ParkSearchResult } from "@/lib/parks";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import type { AnchorHTMLAttributes } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import { HomeParkSearch } from "./home-park-search";
 
 const { mockPush, pathnameState, searchParamsState } = vi.hoisted(() => ({

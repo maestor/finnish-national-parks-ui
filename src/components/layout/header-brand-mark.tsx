@@ -1,6 +1,6 @@
+import type { ReactElement } from "react";
 import { AppIconArtwork } from "@/lib/app-icon-artwork";
 import { cn } from "@/lib/cn";
-import type { ReactElement } from "react";
 
 type HeaderBrandMarkProps = {
   className?: string;
