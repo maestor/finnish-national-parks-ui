@@ -37,6 +37,8 @@ const ACTIVE_FILTER_LINK_CLASS_NAME =
   "border-emerald-700/15 bg-[linear-gradient(145deg,#166534_0%,#0f766e_55%,#2563eb_100%)] text-primary-foreground shadow-[0_12px_28px_rgba(37,99,235,0.24)]";
 const INACTIVE_FILTER_LINK_CLASS_NAME =
   "border-white/45 bg-white/70 text-foreground/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.52)] hover:bg-white/88 dark:border-white/10 dark:bg-slate-950/52 dark:text-sky-100/78 dark:hover:bg-slate-950/72";
+const DISABLED_FILTER_PILL_CLASS_NAME =
+  "cursor-not-allowed border-dashed border-border/70 bg-transparent text-muted-foreground shadow-none dark:border-white/10 dark:bg-transparent dark:text-slate-400";
 
 const PublicVisitsTimeline = ({
   error = null,
@@ -73,13 +75,18 @@ const PublicVisitsTimeline = ({
     currentIndex: number,
     delta: number,
   ) => {
-    const nextIndex = currentIndex + delta;
+    let nextIndex = currentIndex + delta;
 
-    if (nextIndex < 0 || nextIndex >= refs.length) {
-      return;
+    while (nextIndex >= 0 && nextIndex < refs.length) {
+      const nextRef = refs[nextIndex];
+
+      if (nextRef) {
+        nextRef.focus();
+        return;
+      }
+
+      nextIndex += delta;
     }
-
-    refs[nextIndex]?.focus();
   };
 
   const handleYearKeyDown = (event: React.KeyboardEvent<HTMLAnchorElement>, index: number) => {
@@ -266,25 +273,39 @@ const PublicVisitsTimeline = ({
             >
               {t("filters.all")}
             </Link>
-            {model.monthOptions.map((month, index) => (
-              <Link
-                key={month.value}
-                href={createPublicVisitsHref({ year: model.selectedYear, month: month.value })}
-                aria-current={model.selectedMonth === month.value ? "page" : undefined}
-                className={cn(
-                  FILTER_LINK_CLASS_NAME,
-                  model.selectedMonth === month.value
-                    ? ACTIVE_FILTER_LINK_CLASS_NAME
-                    : INACTIVE_FILTER_LINK_CLASS_NAME,
-                )}
-                ref={(element) => {
-                  monthRefs.current[index + 1] = element;
-                }}
-                onKeyDown={(event) => handleMonthKeyDown(event, index + 1)}
-              >
-                {month.label}
-              </Link>
-            ))}
+            {model.monthOptions.map((month, index) =>
+              month.hasVisits ? (
+                <Link
+                  key={month.value}
+                  href={createPublicVisitsHref({ year: model.selectedYear, month: month.value })}
+                  aria-current={model.selectedMonth === month.value ? "page" : undefined}
+                  className={cn(
+                    FILTER_LINK_CLASS_NAME,
+                    model.selectedMonth === month.value
+                      ? ACTIVE_FILTER_LINK_CLASS_NAME
+                      : INACTIVE_FILTER_LINK_CLASS_NAME,
+                  )}
+                  ref={(element) => {
+                    monthRefs.current[index + 1] = element;
+                  }}
+                  onKeyDown={(event) => handleMonthKeyDown(event, index + 1)}
+                >
+                  {month.label}
+                </Link>
+              ) : (
+                <span
+                  key={month.value}
+                  className={cn(FILTER_LINK_CLASS_NAME, DISABLED_FILTER_PILL_CLASS_NAME)}
+                  ref={() => {
+                    monthRefs.current[index + 1] = null;
+                  }}
+                  title={t("filters.noVisitsInMonth")}
+                >
+                  <span aria-hidden="true">{month.label}</span>
+                  <span className="sr-only">{` ${t("filters.noVisitsInMonth")}`}</span>
+                </span>
+              ),
+            )}
           </nav>
         ) : null}
       </section>
