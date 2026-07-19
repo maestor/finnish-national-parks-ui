@@ -14,15 +14,18 @@ vi.mock("./trip-planner-map", () => ({
     destination,
     mode,
     parks,
+    visibleDistanceKm,
   }: {
     destination?: { label: string } | null;
     mode: "nearby" | "route";
     parks: Array<{ slug: string }>;
+    visibleDistanceKm?: number;
   }) => (
     <div
       data-testid="trip-planner-map"
       data-destination={destination?.label ?? ""}
       data-mode={mode}
+      data-visible-distance-km={visibleDistanceKm ?? ""}
     >
       map:{parks.map((park) => park.slug).join(",")}
     </div>
@@ -529,11 +532,33 @@ describe("TripPlannerPage", () => {
     expect(screen.queryByText("tripPlanner.destinationResolvedLabel")).not.toBeInTheDocument();
     expect(screen.getByTestId("trip-planner-map")).toHaveAttribute("data-mode", "nearby");
     expect(screen.getByTestId("trip-planner-map")).toHaveAttribute("data-destination", "");
+    expect(screen.getByTestId("trip-planner-map")).toHaveAttribute(
+      "data-visible-distance-km",
+      "18",
+    );
+    expect(
+      screen.getByRole("combobox", { name: "tripPlanner.filters.visitStatusLabel" }),
+    ).toHaveValue("not-visited");
+    expect(screen.getByTestId("trip-planner-map")).toHaveTextContent(
+      "map:nuuksio,lisapaikka-2,lisapaikka-3,lisapaikka-5,lisapaikka-6,lisapaikka-8,lisapaikka-9,lisapaikka-11,lisapaikka-12,lisapaikka-14,lisapaikka-15,lisapaikka-17,lisapaikka-18",
+    );
     const distanceSlider = screen.getByRole("slider", {
       name: "tripPlanner.filters.distanceFromOriginLabel",
     }) as HTMLInputElement;
     expect(distanceSlider.max).toBe("40");
     expect(distanceSlider.value).toBe("18");
+
+    fireEvent.change(distanceSlider, {
+      target: { value: "25" },
+    });
+
+    expect(screen.getByTestId("trip-planner-map")).toHaveAttribute(
+      "data-visible-distance-km",
+      "25",
+    );
+    expect(screen.getByTestId("trip-planner-map")).toHaveTextContent(
+      "map:nuuksio,hossan-polku,lisapaikka-2,lisapaikka-3,lisapaikka-5,lisapaikka-6,lisapaikka-8,lisapaikka-9,lisapaikka-11,lisapaikka-12,lisapaikka-14,lisapaikka-15,lisapaikka-17,lisapaikka-18",
+    );
 
     await user.click(screen.getByRole("tab", { name: "tripPlanner.viewTabs.list" }));
 
@@ -649,7 +674,7 @@ describe("TripPlannerPage", () => {
     await user.click(screen.getByRole("button", { name: "tripPlanner.submit" }));
 
     expect(await screen.findByTestId("trip-planner-map")).toHaveTextContent(
-      "map:nuuksio,hossan-polku,seurasaari",
+      "map:nuuksio,hossan-polku",
     );
 
     await user.click(screen.getByRole("button", { name: "tripPlanner.expandSearch" }));
@@ -1045,34 +1070,31 @@ describe("TripPlannerPage", () => {
       "aria-selected",
       "true",
     );
-    expect(screen.getByTestId("trip-planner-map")).toHaveTextContent(
-      "map:nuuksio,hossan-polku,seurasaari",
-    );
+    expect(
+      screen.getByRole("combobox", { name: "tripPlanner.filters.visitStatusLabel" }),
+    ).toHaveValue("not-visited");
+    expect(screen.getByTestId("trip-planner-map")).toHaveTextContent("map:nuuksio,hossan-polku");
 
     await user.click(screen.getByRole("tab", { name: "tripPlanner.viewTabs.list" }));
 
     expect(screen.getByText("tripPlanner.sections.notVisited")).toBeInTheDocument();
-    expect(screen.getByText("tripPlanner.sections.visited")).toBeInTheDocument();
+    expect(screen.queryByText("tripPlanner.sections.visited")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Nuuksion kansallispuisto" })).toHaveAttribute(
       "href",
       "/paikka/nuuksio",
     );
     expect(screen.getByRole("link", { name: "Hossan polku" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Seurasaari" })).toHaveAttribute(
-      "href",
-      "/paikka/seurasaari",
-    );
-    expect(screen.getAllByText("tripPlanner.visited").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("tripPlanner.distanceFromRoute").length).toBeGreaterThan(3);
+    expect(screen.queryByRole("link", { name: "Seurasaari" })).not.toBeInTheDocument();
+    expect(screen.getAllByText("tripPlanner.distanceFromRoute").length).toBeGreaterThan(2);
 
     await user.selectOptions(
       screen.getByRole("combobox", { name: "tripPlanner.filters.visitStatusLabel" }),
-      "not-visited",
+      "all",
     );
 
     expect(screen.getByRole("link", { name: "Nuuksion kansallispuisto" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Hossan polku" })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Seurasaari" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Seurasaari" })).toBeInTheDocument();
     expect(getApiCallsForPath("/api/trip-planner/search")).toHaveLength(1);
 
     await user.selectOptions(
@@ -1213,9 +1235,7 @@ describe("TripPlannerPage", () => {
       "aria-selected",
       "true",
     );
-    expect(screen.getByTestId("trip-planner-map")).toHaveTextContent(
-      "map:nuuksio,hossan-polku,seurasaari",
-    );
+    expect(screen.getByTestId("trip-planner-map")).toHaveTextContent("map:nuuksio,hossan-polku");
 
     await user.selectOptions(
       screen.getByRole("combobox", { name: "tripPlanner.filters.visitStatusLabel" }),
@@ -1366,9 +1386,7 @@ describe("TripPlannerPage", () => {
 
     await user.click(screen.getByRole("button", { name: "tripPlanner.filters.reset" }));
 
-    expect(screen.getByTestId("trip-planner-map")).toHaveTextContent(
-      "map:nuuksio,hossan-polku,seurasaari",
-    );
+    expect(screen.getByTestId("trip-planner-map")).toHaveTextContent("map:nuuksio,hossan-polku");
   });
 
   it("falls back to showing all returned park types if the filter value is unexpected", async () => {
@@ -1394,7 +1412,7 @@ describe("TripPlannerPage", () => {
 
     expect(screen.getByRole("link", { name: "Nuuksion kansallispuisto" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Hossan polku" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Seurasaari" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Seurasaari" })).not.toBeInTheDocument();
   });
 
   it("resets local filters when a new trip search succeeds", async () => {
@@ -1448,11 +1466,11 @@ describe("TripPlannerPage", () => {
     });
 
     expect(screen.getByTestId("trip-planner-map")).toHaveTextContent(
-      "map:nuuksio,seurasaari,lisapaikka-1,lisapaikka-2,lisapaikka-3,lisapaikka-4,lisapaikka-5,lisapaikka-11,lisapaikka-12,lisapaikka-13,lisapaikka-14,lisapaikka-15",
+      "map:nuuksio,lisapaikka-2,lisapaikka-3,lisapaikka-5,lisapaikka-11,lisapaikka-12,lisapaikka-14,lisapaikka-15",
     );
     expect(
       screen.getByRole("combobox", { name: "tripPlanner.filters.visitStatusLabel" }),
-    ).toHaveValue("all");
+    ).toHaveValue("not-visited");
     const distanceSlider = screen.getByRole("slider", {
       name: "tripPlanner.filters.distanceLabel",
     }) as HTMLInputElement;

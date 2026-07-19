@@ -22,6 +22,7 @@ interface TripPlannerMapProps {
   parks: TripPlannerUiParkResult[];
   route: TripPlannerRouteResult | null;
   searchArea: TripPlannerSearchAreaResult | null;
+  visibleDistanceKm?: number;
 }
 
 interface PopupLabels {
@@ -38,6 +39,7 @@ const MAP_PADDING = 44;
 const ROUTE_LINE_LAYER_ID = "trip-planner-route-line";
 const ROUTE_SOURCE_ID = "trip-planner-route";
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
+const EARTH_RADIUS_KM = 6371;
 const POPUP_DETAIL_ROW_CLASS_NAME =
   "rounded-xl border border-sky-200/45 bg-[linear-gradient(145deg,rgba(255,255,255,0.84),rgba(237,245,249,0.92))] px-3 py-2 shadow-[0_10px_20px_rgba(148,163,184,0.1),inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-white/10 dark:bg-[linear-gradient(145deg,rgba(15,23,42,0.76),rgba(2,6,23,0.58))] dark:shadow-[0_14px_24px_rgba(2,6,23,0.22),inset_0_1px_0_rgba(255,255,255,0.06)]";
 
@@ -95,6 +97,57 @@ const getVisibleBounds = (
     [combinedBounds.minLon, combinedBounds.minLat],
     [combinedBounds.maxLon, combinedBounds.maxLat],
   ];
+};
+
+const getBoundingBoxForDistanceKm = (
+  center: TripPlannerResolvedLocation["coordinate"],
+  distanceKm: number,
+): TripPlannerSearchAreaResult["boundingBox"] => {
+  const latitudeOffsetDegrees = (distanceKm / EARTH_RADIUS_KM) * (180 / Math.PI);
+  const longitudeOffsetDegrees =
+    latitudeOffsetDegrees / Math.max(Math.cos((center.lat * Math.PI) / 180), 0.000001);
+
+  return {
+    minLat: center.lat - latitudeOffsetDegrees,
+    minLon: center.lon - longitudeOffsetDegrees,
+    maxLat: center.lat + latitudeOffsetDegrees,
+    maxLon: center.lon + longitudeOffsetDegrees,
+  };
+};
+
+const getBaseBoundingBox = ({
+  origin,
+  route,
+  searchArea,
+  visibleDistanceKm,
+}: {
+  origin: TripPlannerResolvedLocation;
+  route: TripPlannerRouteResult | null;
+  searchArea: TripPlannerSearchAreaResult | null;
+  visibleDistanceKm?: number;
+}) => {
+  if (route) {
+    return route.boundingBox;
+  }
+
+  if (!searchArea) {
+    return {
+      minLat: origin.coordinate.lat,
+      minLon: origin.coordinate.lon,
+      maxLat: origin.coordinate.lat,
+      maxLon: origin.coordinate.lon,
+    };
+  }
+
+  if (
+    visibleDistanceKm === undefined ||
+    visibleDistanceKm >= searchArea.maxDistanceKm ||
+    visibleDistanceKm <= 0
+  ) {
+    return searchArea.boundingBox;
+  }
+
+  return getBoundingBoxForDistanceKm(searchArea.center, visibleDistanceKm);
 };
 
 const createSvgPin = (fill: string, className = "pointer-events-none h-7 w-7 drop-shadow-md") => {
@@ -225,6 +278,7 @@ export const TripPlannerMap = ({
   parks,
   route,
   searchArea,
+  visibleDistanceKm,
 }: TripPlannerMapProps) => {
   const t = useTranslations("tripPlanner");
   const mapT = useTranslations("map");
@@ -543,16 +597,7 @@ export const TripPlannerMap = ({
 
     markerRefs.current = nextMarkers;
     map.fitBounds(
-      getVisibleBounds(
-        route?.boundingBox ??
-          searchArea?.boundingBox ?? {
-            minLat: origin.coordinate.lat,
-            minLon: origin.coordinate.lon,
-            maxLat: origin.coordinate.lat,
-            maxLon: origin.coordinate.lon,
-          },
-        parks,
-      ),
+      getVisibleBounds(getBaseBoundingBox({ origin, route, searchArea, visibleDistanceKm }), parks),
       {
         padding: MAP_PADDING,
         duration: 0,
@@ -572,6 +617,7 @@ export const TripPlannerMap = ({
     searchArea,
     scheduleClose,
     syncPopupVisibility,
+    visibleDistanceKm,
   ]);
 
   useEffect(() => {

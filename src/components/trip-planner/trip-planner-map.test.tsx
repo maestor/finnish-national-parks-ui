@@ -178,6 +178,7 @@ const routeModeProps = {
   parks,
   route,
   searchArea: null,
+  visibleDistanceKm: undefined,
 };
 
 describe("TripPlannerMap", () => {
@@ -251,12 +252,64 @@ describe("TripPlannerMap", () => {
           center: { lat: 60.1, lon: 24.0 },
           maxDistanceKm: 25,
         }}
+        visibleDistanceKm={25}
       />,
     );
 
     expect(mockMap.addSource).not.toHaveBeenCalled();
     expect(mockMap.addLayer).not.toHaveBeenCalled();
     expect(markerInstances).toHaveLength(3);
+  });
+
+  it("fits nearby results to the active visible distance instead of the full search area", () => {
+    const nearbyParks: TripPlannerUiParkResult[] = [
+      {
+        address: "Lahitien 1, 00100 Helsinki",
+        boundingBox: { minLat: 60.11, minLon: 24.02, maxLat: 60.13, maxLon: 24.06 },
+        category: { name: "Kansallispuistot", slug: "national-park" },
+        distanceKm: 4.2,
+        locationLabel: "Lahitien 1",
+        markerPoint: { lat: 60.12, lon: 24.04 },
+        name: "Lahipuisto",
+        postalCode: "00100",
+        postalOffice: "Helsinki",
+        slug: "lahipuisto",
+        type: { code: 111, id: 1, name: "Kansallispuisto", slug: "national-park" },
+        visitedSummary: { lastVisitedOn: null, visitCount: 0, visited: false },
+      },
+    ];
+
+    render(
+      <TripPlannerMap
+        destination={null}
+        distanceLabel="tripPlanner.distanceFromOrigin"
+        mode="nearby"
+        origin={{ coordinate: { lat: 60.1, lon: 24.0 }, label: "Helsinki" }}
+        parks={nearbyParks}
+        route={null}
+        searchArea={{
+          boundingBox: {
+            minLat: 59.95,
+            minLon: 23.75,
+            maxLat: 60.35,
+            maxLon: 24.75,
+          },
+          center: { lat: 60.1, lon: 24.0 },
+          maxDistanceKm: 25,
+        }}
+        visibleDistanceKm={10}
+      />,
+    );
+
+    expect(mockMap.fitBounds).toHaveBeenCalledWith(
+      [
+        [23.819590025150298, 60.01006783940813],
+        [24.180409974849702, 60.18993216059187],
+      ],
+      expect.objectContaining({
+        duration: 0,
+      }),
+    );
   });
 
   it("opens a park popup with a park page link when a park pin is clicked", () => {
