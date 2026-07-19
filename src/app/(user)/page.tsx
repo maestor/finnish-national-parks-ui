@@ -3,6 +3,7 @@ import { HomeVisitStats } from "@/components/dashboard/home-visit-stats";
 import { MostVisitedParks } from "@/components/dashboard/most-visited-parks";
 import { HomeActivityPanels } from "@/components/home/home-activity-panels";
 import { HomeIntro } from "@/components/home/home-intro";
+import { HomeSocialLinks } from "@/components/home/home-social-links";
 import { PUBLIC_PAGE_SHELL_CLASS_NAME } from "@/components/layout/public-page-styles";
 import {
   createHomeLatestVisitEntriesFromSummary,
@@ -43,7 +44,19 @@ const HomePage = async () => {
         openMapLabel={t("openMap")}
         infoClosedLabel={t("intro.showInfo")}
         infoOpenLabel={t("intro.hideInfo")}
-      />
+      >
+        <HomeSocialLinks
+          sectionLabel={t("social.sectionLabel")}
+          title={t("social.title")}
+          linkedInLabel={t("social.linkedin")}
+          linkedInText={t("social.linkedinText")}
+          githubUiLabel={t("social.githubUi")}
+          githubUiText={t("social.githubUiText")}
+          githubApiLabel={t("social.githubApi")}
+          githubApiText={t("social.githubApiText")}
+          copyrightLabel={t("social.copyright")}
+        />
+      </HomeIntro>
 
       <HomeVisitStats
         sectionTitle={t("statistics.title")}

@@ -13,7 +13,9 @@ describe("HomeIntro", () => {
         openMapLabel="Siirry kartalle"
         infoClosedLabel="Mista on kyse?"
         infoOpenLabel="Piilota info"
-      />,
+      >
+        <div>Lisatiedot</div>
+      </HomeIntro>,
     );
 
     expect(screen.getByRole("heading", { name: "Reissuvihko" })).toBeInTheDocument();
@@ -28,6 +30,7 @@ describe("HomeIntro", () => {
     );
     expect(screen.getByRole("button", { name: "Mista on kyse?" })).toHaveClass("cursor-pointer");
     expect(screen.getByText("Ensimmainen kappale.")).toBeInTheDocument();
+    expect(screen.getByText("Lisatiedot")).toBeInTheDocument();
     expect(container.querySelector("section")).toHaveAttribute(
       "aria-labelledby",
       "home-intro-title",
@@ -43,7 +46,9 @@ describe("HomeIntro", () => {
         openMapLabel="Siirry kartalle"
         infoClosedLabel="Mista on kyse?"
         infoOpenLabel="Piilota info"
-      />,
+      >
+        <div>Lisatiedot</div>
+      </HomeIntro>,
     );
 
     const toggle = screen.getByRole("button", { name: "Mista on kyse?" });
