@@ -64,6 +64,7 @@ const INLINE_SLIDER_CLASS_NAME =
   "relative -top-1 h-2 w-full cursor-pointer appearance-none rounded-full bg-sky-100 accent-primary dark:bg-slate-800";
 const FILTER_GROUP_CLASS_NAME = "flex min-w-0 flex-col gap-1";
 const DEFAULT_DISTANCE_FILTER_KM = 25;
+const DEFAULT_VISIT_STATUS_FILTER: VisitStatusFilter = "not-visited";
 const MIN_DISTANCE_FILTER_KM = 1;
 const FILTER_VISIBILITY_THRESHOLD = 20;
 const MOBILE_RESULTS_FILTER_MEDIA_QUERY = "(max-width: 767px)";
@@ -641,7 +642,9 @@ export const TripPlannerPage = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [result, setResult] = useState<TripPlannerUiResult | null>(null);
   const [activeParkFilter, setActiveParkFilter] = useState<TripPlannerParkTypeFilter>("all");
-  const [activeVisitStatus, setActiveVisitStatus] = useState<VisitStatusFilter>("all");
+  const [activeVisitStatus, setActiveVisitStatus] = useState<VisitStatusFilter>(
+    DEFAULT_VISIT_STATUS_FILTER,
+  );
   const [activeDistanceKm, setActiveDistanceKm] = useState(DEFAULT_DISTANCE_FILTER_KM);
   const [activeView, setActiveView] = useState<ViewTab>("map");
   const [isSearchPanelExpanded, setIsSearchPanelExpanded] = useState(true);
@@ -758,7 +761,7 @@ export const TripPlannerPage = () => {
     }
 
     setActiveParkFilter("all");
-    setActiveVisitStatus("all");
+    setActiveVisitStatus(DEFAULT_VISIT_STATUS_FILTER);
     setActiveDistanceKm(nextResult.defaultDistanceKm);
   };
 
@@ -1314,6 +1317,7 @@ export const TripPlannerPage = () => {
                     parks={filteredParks}
                     route={result.route}
                     searchArea={result.searchArea}
+                    visibleDistanceKm={result.mode === "nearby" ? activeDistanceKm : undefined}
                   />
 
                   {totalParkCount === 0 ? (
