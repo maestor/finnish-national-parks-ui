@@ -457,20 +457,20 @@ const PublicVisitsTimeline = ({
                                   isLeftMonth ? "md:col-start-1" : "md:col-start-3",
                                 )}
                               >
-                                <Link
-                                  href={createParkVisitHref({
-                                    parkSlug: visit.park.slug,
-                                    visitId: visit.id,
-                                  })}
-                                  className="group relative block rounded-[1.8rem] border border-white/45 bg-white/68 p-5 shadow-[0_20px_44px_rgba(148,163,184,0.16)] backdrop-blur-xl transition-colors hover:bg-white/82 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/44 dark:shadow-[0_24px_52px_rgba(2,6,23,0.32)] dark:hover:bg-slate-950/58"
-                                  ref={(element) => {
-                                    visitRefs.current[currentVisitFocusIndex] = element;
-                                  }}
-                                  onKeyDown={(event) =>
-                                    handleVisitKeyDown(event, currentVisitFocusIndex)
-                                  }
-                                >
-                                  <div className="flex flex-col gap-4">
+                                <div className="rounded-[1.8rem] border border-white/45 bg-white/68 shadow-[0_20px_44px_rgba(148,163,184,0.16)] backdrop-blur-xl transition-colors hover:bg-white/82 dark:border-white/10 dark:bg-slate-950/44 dark:shadow-[0_24px_52px_rgba(2,6,23,0.32)] dark:hover:bg-slate-950/58">
+                                  <Link
+                                    href={createParkVisitHref({
+                                      parkSlug: visit.park.slug,
+                                      visitId: visit.id,
+                                    })}
+                                    className="group block rounded-[1.8rem] px-5 pt-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    ref={(element) => {
+                                      visitRefs.current[currentVisitFocusIndex] = element;
+                                    }}
+                                    onKeyDown={(event) =>
+                                      handleVisitKeyDown(event, currentVisitFocusIndex)
+                                    }
+                                  >
                                     <div className="min-w-0">
                                       <div className="flex items-start justify-between gap-3">
                                         <p className="text-sm font-medium text-primary">
@@ -484,31 +484,31 @@ const PublicVisitsTimeline = ({
                                       <h4 className="mt-3 text-xl font-semibold tracking-tight">
                                         {visit.park.name}
                                       </h4>
-
-                                      <div className="mt-3 flex flex-wrap gap-2">
-                                        <ParkTypeBadge label={visit.park.typeLabel} />
-                                        {visit.route ? (
-                                          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/70 bg-[linear-gradient(145deg,rgba(22,101,52,0.12),rgba(16,185,129,0.18))] px-2.5 py-1 text-xs font-semibold text-emerald-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-emerald-300/15 dark:bg-[linear-gradient(145deg,rgba(22,101,52,0.24),rgba(16,185,129,0.16))] dark:text-emerald-200 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-                                            <Route className="h-3.5 w-3.5" aria-hidden="true" />
-                                            {visit.route}
-                                          </span>
-                                        ) : null}
-                                        {hasImages ? (
-                                          <span
-                                            aria-label={t("item.imageCount", {
-                                              count: visit.imageCount,
-                                            })}
-                                            className="inline-flex items-center gap-1.5 rounded-full border border-sky-200/70 bg-[linear-gradient(145deg,rgba(37,99,235,0.12),rgba(14,165,233,0.16))] px-2.5 py-1 text-xs font-semibold text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-sky-300/15 dark:bg-[linear-gradient(145deg,rgba(37,99,235,0.18),rgba(14,165,233,0.14))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
-                                            role="img"
-                                          >
-                                            <Images className="h-3.5 w-3.5" aria-hidden="true" />
-                                            {visit.imageCount}
-                                          </span>
-                                        ) : null}
-                                      </div>
                                     </div>
+                                  </Link>
+
+                                  <div className="mt-3 flex flex-wrap gap-2 px-5 pb-5">
+                                    <ParkTypeBadge label={visit.park.typeLabel} />
+                                    {visit.route ? (
+                                      <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/70 bg-[linear-gradient(145deg,rgba(22,101,52,0.12),rgba(16,185,129,0.18))] px-2.5 py-1 text-xs font-semibold text-emerald-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-emerald-300/15 dark:bg-[linear-gradient(145deg,rgba(22,101,52,0.24),rgba(16,185,129,0.16))] dark:text-emerald-200 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+                                        <Route className="h-3.5 w-3.5" aria-hidden="true" />
+                                        {visit.route}
+                                      </span>
+                                    ) : null}
+                                    {hasImages ? (
+                                      <span
+                                        aria-label={t("item.imageCount", {
+                                          count: visit.imageCount,
+                                        })}
+                                        className="inline-flex items-center gap-1.5 rounded-full border border-sky-200/70 bg-[linear-gradient(145deg,rgba(37,99,235,0.12),rgba(14,165,233,0.16))] px-2.5 py-1 text-xs font-semibold text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-sky-300/15 dark:bg-[linear-gradient(145deg,rgba(37,99,235,0.18),rgba(14,165,233,0.14))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+                                        role="img"
+                                      >
+                                        <Images className="h-3.5 w-3.5" aria-hidden="true" />
+                                        {visit.imageCount}
+                                      </span>
+                                    ) : null}
                                   </div>
-                                </Link>
+                                </div>
                               </div>
 
                               <div className="pointer-events-none absolute bottom-0 left-4 top-0 flex w-4 -translate-x-1/2 justify-center md:static md:col-start-2 md:row-start-1 md:w-auto md:translate-x-0">

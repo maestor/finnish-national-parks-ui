@@ -5,13 +5,16 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { CopyLinkButton } from "@/components/ui/copy-link-button";
 import { EditVisitLink } from "@/components/visits/edit-visit-link";
 import { VisitImageGallery } from "@/components/visits/visit-image-gallery";
 import { formatFinnishDate } from "@/lib/fi-date";
 import type { Visit } from "@/lib/parks";
+import { createParkVisitHref } from "@/lib/public-visits";
 
 interface VisitAccordionProps {
   initialOpenVisitId?: number | null;
+  parkSlug: string;
   visits: Visit[];
   isEditable?: boolean;
 }
@@ -87,6 +90,7 @@ const getVisitAuthorDetails = (visit: Visit): VisitAuthorDetails => {
 
 export const VisitAccordion = ({
   visits,
+  parkSlug,
   isEditable = false,
   initialOpenVisitId = null,
 }: VisitAccordionProps) => {
@@ -134,6 +138,10 @@ export const VisitAccordion = ({
         const isOpen = openId === visit.id;
         const season = getSeasonPresentation(visit.visitedOn);
         const authorDetails = visit.author ? getVisitAuthorDetails(visit) : null;
+        const visitHref = createParkVisitHref({
+          parkSlug,
+          visitId: visit.id,
+        });
 
         if (!isExpandable) {
           return (
@@ -157,7 +165,14 @@ export const VisitAccordion = ({
                   </span>
                 )}
               </span>
-              {isEditable && <EditVisitLink visitId={visit.id} />}
+              <span className="flex shrink-0 items-center gap-1.5">
+                <CopyLinkButton
+                  href={visitHref}
+                  label={t("copyVisitLink")}
+                  copiedLabel={t("visitLinkCopied")}
+                />
+                {isEditable ? <EditVisitLink visitId={visit.id} /> : null}
+              </span>
             </div>
           );
         }
@@ -167,46 +182,52 @@ export const VisitAccordion = ({
             key={visit.id}
             className={`overflow-hidden ${VISIT_CARD_CLASS_NAME} ${season.borderClass} ${isHighlighted ? "ring-2 ring-primary/35 ring-offset-2 ring-offset-background dark:ring-offset-slate-950/44" : ""} border-l-4`}
           >
-            <button
-              type="button"
-              onClick={() => toggle(visit.id, isExpandable)}
-              className="flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-white/36 dark:hover:bg-slate-950/26"
-              aria-expanded={isOpen}
-              title={isOpen ? t("hideDetails") : t("showDetails")}
-              aria-label={isOpen ? t("hideDetails") : t("showDetails")}
-            >
-              <span className="flex flex-wrap items-center gap-2.5 text-sm font-medium">
-                <span
-                  aria-hidden="true"
-                  className={`inline-flex items-center justify-center rounded-full px-2.5 py-1 text-sm leading-none ${season.badgeClass}`}
-                >
-                  {season.emoji}
+            <div className="flex items-center gap-3 px-4 py-3">
+              <button
+                type="button"
+                onClick={() => toggle(visit.id, isExpandable)}
+                className="flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-3 text-left transition-colors hover:text-foreground/88"
+                aria-expanded={isOpen}
+                title={isOpen ? t("hideDetails") : t("showDetails")}
+                aria-label={isOpen ? t("hideDetails") : t("showDetails")}
+              >
+                <span className="flex flex-wrap items-center gap-2.5 text-sm font-medium">
+                  <span
+                    aria-hidden="true"
+                    className={`inline-flex items-center justify-center rounded-full px-2.5 py-1 text-sm leading-none ${season.badgeClass}`}
+                  >
+                    {season.emoji}
+                  </span>
+                  <span className={VISIT_BADGE_CLASS_NAME}>{t("visitNumber", { number })}</span>
+                  <span className="text-base">{formatFinnishDate(visit.visitedOn)}</span>
+                  {visit.route && (
+                    <span className={ROUTE_BADGE_CLASS_NAME}>
+                      <Route className="h-3.5 w-3.5" aria-hidden="true" />
+                      {visit.route}
+                    </span>
+                  )}
+                  {hasImages && (
+                    <span className={IMAGE_BADGE_CLASS_NAME}>
+                      <Images className="h-3.5 w-3.5" aria-hidden="true" />
+                      {t("imageCount", { count: imageCount })}
+                    </span>
+                  )}
                 </span>
-                <span className={VISIT_BADGE_CLASS_NAME}>{t("visitNumber", { number })}</span>
-                <span className="text-base">{formatFinnishDate(visit.visitedOn)}</span>
-                {visit.route && (
-                  <span className={ROUTE_BADGE_CLASS_NAME}>
-                    <Route className="h-3.5 w-3.5" aria-hidden="true" />
-                    {visit.route}
-                  </span>
-                )}
-                {hasImages && (
-                  <span className={IMAGE_BADGE_CLASS_NAME}>
-                    <Images className="h-3.5 w-3.5" aria-hidden="true" />
-                    {t("imageCount", { count: imageCount })}
-                  </span>
-                )}
-              </span>
-              <span className="flex shrink-0 items-center gap-1.5">
-                {isEditable && (
-                  <EditVisitLink visitId={visit.id} onClick={(e) => e.stopPropagation()} />
-                )}
                 <ChevronDown
                   className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
                   aria-hidden="true"
                 />
+              </button>
+              <span className="flex shrink-0 items-center gap-1.5">
+                <CopyLinkButton
+                  href={visitHref}
+                  label={t("copyVisitLink")}
+                  copiedLabel={t("visitLinkCopied")}
+                  onClick={(event) => event.stopPropagation()}
+                />
+                {isEditable ? <EditVisitLink visitId={visit.id} /> : null}
               </span>
-            </button>
+            </div>
             <div
               className="grid transition-[grid-template-rows] duration-300 ease-in-out"
               style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}

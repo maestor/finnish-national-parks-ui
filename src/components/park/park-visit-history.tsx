@@ -66,6 +66,7 @@ export const ParkVisitHistory = ({
         <div className="mt-4">
           <VisitAccordion
             visits={visits}
+            parkSlug={parkSlug}
             isEditable={auth.isAuthenticated}
             initialOpenVisitId={initialOpenVisitId}
           />

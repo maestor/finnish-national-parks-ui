@@ -290,17 +290,15 @@ describe("PublicVisitsTimeline", () => {
     render(<PublicVisitsTimeline visits={visits} selectedYear={null} selectedMonth={null} />);
 
     const monthTimeline = screen.getAllByRole("list")[0]?.closest("ol");
-    const parkTypeBadge = screen.getAllByText("Kansallispuisto")[0];
+    const nuuksioVisitItem = screen.getByRole("heading", { name: "Nuuksio" }).closest("li");
     const imageBadge = screen.getByLabelText("visits.item.imageCount");
     const routeBadge = screen.getByText("Punarinnankierros");
 
-    if (
-      !(monthTimeline instanceof HTMLElement) ||
-      !(parkTypeBadge instanceof HTMLElement) ||
-      !(routeBadge instanceof HTMLElement)
-    ) {
-      throw new Error("Expected timeline list and detail badges");
+    if (!(monthTimeline instanceof HTMLElement) || !(nuuksioVisitItem instanceof HTMLElement)) {
+      throw new Error("Expected timeline list and Nuuksio visit item");
     }
+
+    const parkTypeBadge = within(nuuksioVisitItem).getByText("Kansallispuisto");
 
     expect(monthTimeline).toHaveClass("before:absolute");
     expect(parkTypeBadge.compareDocumentPosition(routeBadge)).toBe(
@@ -313,6 +311,12 @@ describe("PublicVisitsTimeline", () => {
 
   it("shows the park type badge in the shared detail badge row when metadata is available", () => {
     render(<PublicVisitsTimeline visits={visits} selectedYear={null} selectedMonth={null} />);
+
+    const nuuksioVisitItem = screen.getByRole("heading", { name: "Nuuksio" }).closest("li");
+
+    if (!(nuuksioVisitItem instanceof HTMLElement)) {
+      throw new Error("Expected Nuuksio visit item");
+    }
 
     const badgeRow = screen.getByText("Punarinnankierros").parentElement;
 
