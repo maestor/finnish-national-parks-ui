@@ -1,10 +1,22 @@
-import { render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Visit } from "@/lib/parks";
 import { VisitAccordion } from "./visit-accordion";
 
+const clipboardWrite = vi.fn().mockResolvedValue(undefined);
+
 describe("VisitAccordion", () => {
+  beforeEach(() => {
+    clipboardWrite.mockReset();
+    Object.defineProperty(window.navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText: clipboardWrite,
+      },
+    });
+  });
+
   const visits: Visit[] = [
     {
       id: 1,
@@ -92,7 +104,7 @@ describe("VisitAccordion", () => {
   };
 
   it("renders visits sorted newest first with correct numbering", () => {
-    render(<VisitAccordion visits={visits} />);
+    render(<VisitAccordion visits={visits} parkSlug="pallas" />);
 
     // Visit numbers are shown as translated badges via park.visitNumber
     const badges = screen.getAllByText(/park\.visitNumber/);
@@ -100,7 +112,7 @@ describe("VisitAccordion", () => {
   });
 
   it("shows expandable items for visits with notes, images or authors", () => {
-    render(<VisitAccordion visits={visits} />);
+    render(<VisitAccordion visits={visits} parkSlug="pallas" />);
 
     const toggleButtons = screen.getAllByRole("button", {
       name: /park\.(showDetails|hideDetails)/i,
@@ -109,14 +121,14 @@ describe("VisitAccordion", () => {
   });
 
   it("opens the newest expandable visit by default", () => {
-    render(<VisitAccordion visits={visits} />);
+    render(<VisitAccordion visits={visits} parkSlug="pallas" />);
 
     expect(getVisitToggle("1.9.2024")).toHaveAttribute("aria-expanded", "true");
     expect(getVisitToggle("15.8.2024")).toHaveAttribute("aria-expanded", "false");
   });
 
   it("opens the targeted visit when an initial open id is provided", () => {
-    render(<VisitAccordion visits={visits} initialOpenVisitId={4} />);
+    render(<VisitAccordion visits={visits} parkSlug="pallas" initialOpenVisitId={4} />);
 
     expect(getVisitToggle("15.8.2024")).toHaveAttribute("aria-expanded", "true");
     expect(getVisitToggle("1.9.2024")).toHaveAttribute("aria-expanded", "false");
@@ -125,7 +137,7 @@ describe("VisitAccordion", () => {
   it("lets the user switch between detailed visits and collapse the active one", async () => {
     const user = userEvent.setup();
 
-    render(<VisitAccordion visits={visits} />);
+    render(<VisitAccordion visits={visits} parkSlug="pallas" />);
 
     const newestVisit = getVisitToggle("1.9.2024");
     const imageVisit = getVisitToggle("15.8.2024");
@@ -141,7 +153,7 @@ describe("VisitAccordion", () => {
   });
 
   it("shows non-expandable items when a visit has no expandable content", () => {
-    render(<VisitAccordion visits={visits} />);
+    render(<VisitAccordion visits={visits} parkSlug="pallas" />);
 
     expect(screen.getByText("15.1.2024")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /15\.1\.2024/ })).not.toBeInTheDocument();
@@ -150,7 +162,7 @@ describe("VisitAccordion", () => {
   it("keeps plain visits non-interactive even when clicked by surrounding controls", async () => {
     const user = userEvent.setup();
 
-    render(<VisitAccordion visits={visits} />);
+    render(<VisitAccordion visits={visits} parkSlug="pallas" />);
 
     const plainVisitCard = getVisitCard("15.1.2024");
 
@@ -161,14 +173,14 @@ describe("VisitAccordion", () => {
   });
 
   it("displays route badge when present", () => {
-    render(<VisitAccordion visits={visits} />);
+    render(<VisitAccordion visits={visits} parkSlug="pallas" />);
 
     expect(screen.getByText("Pallas-reitti")).toBeInTheDocument();
     expect(screen.getByText("Nuuksion reitti")).toBeInTheDocument();
   });
 
   it("displays author details with Finnish creation and update dates", () => {
-    render(<VisitAccordion visits={visits} />);
+    render(<VisitAccordion visits={visits} parkSlug="pallas" />);
 
     const updatedAuthorVisit = getVisitCard("15.8.2024");
     const sameDayAuthorVisit = getVisitCard("1.9.2024");
@@ -187,14 +199,20 @@ describe("VisitAccordion", () => {
   });
 
   it("displays an image section when visit images exist", () => {
-    render(<VisitAccordion visits={visits} />);
+    render(<VisitAccordion visits={visits} parkSlug="pallas" />);
 
     expect(screen.getByText("park.imagesTitle")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "imageGallery.open" })).toBeInTheDocument();
   });
 
+  it("shows copy-link buttons for every visit", () => {
+    render(<VisitAccordion visits={visits} parkSlug="pallas" />);
+
+    expect(screen.getAllByRole("button", { name: "park.copyVisitLink" })).toHaveLength(5);
+  });
+
   it("shows edit links when editable", () => {
-    render(<VisitAccordion visits={visits} isEditable />);
+    render(<VisitAccordion visits={visits} parkSlug="pallas" isEditable />);
 
     expect(screen.getAllByLabelText("controlPanel.visits.edit").length).toBe(5);
   });
@@ -202,14 +220,15 @@ describe("VisitAccordion", () => {
   it("does not toggle an expanded visit when the edit link is clicked", async () => {
     const user = userEvent.setup();
 
-    render(<VisitAccordion visits={visits} isEditable />);
+    render(<VisitAccordion visits={visits} parkSlug="pallas" isEditable />);
 
     const imageVisit = getVisitToggle("15.8.2024");
+    const imageVisitCard = getVisitCard("15.8.2024");
 
     await user.click(imageVisit);
     expect(imageVisit).toHaveAttribute("aria-expanded", "true");
 
-    const editLink = within(imageVisit).getByRole("link", { name: "controlPanel.visits.edit" });
+    const editLink = within(imageVisitCard).getByRole("link", { name: "controlPanel.visits.edit" });
     editLink.addEventListener("click", (event) => event.preventDefault());
 
     await user.click(editLink);
@@ -217,14 +236,36 @@ describe("VisitAccordion", () => {
     expect(imageVisit).toHaveAttribute("aria-expanded", "true");
   });
 
+  it("copies a targeted visit link without toggling the current card", async () => {
+    const user = userEvent.setup();
+
+    render(<VisitAccordion visits={visits} parkSlug="pallas" />);
+
+    const imageVisit = getVisitToggle("15.8.2024");
+    const imageVisitCard = getVisitCard("15.8.2024");
+
+    await user.click(imageVisit);
+    expect(imageVisit).toHaveAttribute("aria-expanded", "true");
+
+    await act(async () => {
+      fireEvent.click(within(imageVisitCard).getByRole("button", { name: "park.copyVisitLink" }));
+    });
+
+    expect(imageVisit).toHaveAttribute("aria-expanded", "true");
+    expect(
+      within(imageVisitCard).getByRole("button", { name: "park.copyVisitLink" }),
+    ).toHaveAttribute("aria-describedby");
+    expect(screen.getByRole("status")).toHaveTextContent("park.visitLinkCopied");
+  });
+
   it("does not show edit links when not editable", () => {
-    render(<VisitAccordion visits={visits} />);
+    render(<VisitAccordion visits={visits} parkSlug="pallas" />);
 
     expect(screen.queryByLabelText("controlPanel.visits.edit")).not.toBeInTheDocument();
   });
 
   it("applies the seasonal accent border for each visit month", () => {
-    render(<VisitAccordion visits={visits} />);
+    render(<VisitAccordion visits={visits} parkSlug="pallas" />);
 
     expect(getVisitCard("15.1.2024")).toHaveClass("border-l-sky-600", "dark:border-l-cyan-400");
     expect(getVisitCard("20.3.2024")).toHaveClass(
@@ -236,7 +277,7 @@ describe("VisitAccordion", () => {
   });
 
   it("shows a season emoji before the visit number badge in each header", () => {
-    render(<VisitAccordion visits={visits} />);
+    render(<VisitAccordion visits={visits} parkSlug="pallas" />);
 
     expect(getVisitCard("15.1.2024")).toHaveTextContent("❄️");
     expect(getVisitCard("20.3.2024")).toHaveTextContent("🌱");

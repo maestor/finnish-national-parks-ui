@@ -116,6 +116,10 @@
     "imagesTitle": "Kuvat",
     "imageCount": "{count} kuvaa",
     "visitNumber": "{number}. käynti",
+    "copyVisitLink": "Kopioi käynnin linkki",
+    "visitLinkCopied": "Käynnin linkki kopioitu",
+    "copyParkPageLink": "Kopioi paikan sivun linkki",
+    "parkPageLinkCopied": "Paikan sivun linkki kopioitu",
     "boundaryMapTitle": "Paikan kartta",
     "showInFinlandsMap": "Näytä Suomen kartalla",
     "admin": {

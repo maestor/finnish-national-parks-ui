@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { apiAuthFetch, apiFetch, apiPublicFetch } from "@/lib/api";
 import type { AdminVisibilityPark, Park, Visit, VisitWithPark } from "@/lib/parks";
@@ -36,10 +36,11 @@ import VisitsPage, {
 import LoginPage from "./login/page";
 import NotFoundPage from "./not-found";
 
-const { mockNotFound } = vi.hoisted(() => ({
+const { mockNotFound, mockWriteText } = vi.hoisted(() => ({
   mockNotFound: vi.fn(() => {
     throw new Error("NEXT_NOT_FOUND");
   }),
+  mockWriteText: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("@/lib/api", () => ({
@@ -419,8 +420,15 @@ describe("App pages", () => {
     vi.mocked(apiFetch).mockReset();
     vi.mocked(apiPublicFetch).mockReset();
     mockNotFound.mockReset();
+    mockWriteText.mockReset();
     mockNotFound.mockImplementation(() => {
       throw new Error("NEXT_NOT_FOUND");
+    });
+    Object.defineProperty(window.navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText: mockWriteText,
+      },
     });
   });
 
@@ -622,6 +630,7 @@ describe("App pages", () => {
 
     expect(screen.getByRole("heading", { name: "Pallas-Yllästunturi" })).toBeInTheDocument();
     expect(screen.getByText("Maailmanperintökohde")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "park.copyParkPageLink" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "park.showInFinlandsMap" })).toHaveAttribute(
       "href",
       "/paikat?park=pallas",
@@ -631,6 +640,39 @@ describe("App pages", () => {
       "slug:pallas|visits:1|open:none",
     );
     expect(screen.getByTestId("park-admin-section")).toBeInTheDocument();
+  });
+
+  it("copies the park page link from the park detail header", async () => {
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({
+        ...publicPark,
+        boundaryGeoJson: null,
+      })
+      .mockResolvedValueOnce({
+        visitedSummary: {
+          visited: true,
+          visitCount: 1,
+          lastVisitedOn: "2024-06-15",
+        },
+        visits: [personalVisit],
+      });
+
+    await renderPublicRoute(
+      await ParkDetailPage({
+        params: Promise.resolve({ slug: "pallas" }),
+        searchParams: Promise.resolve({}),
+      }),
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "park.copyParkPageLink" }));
+    });
+
+    expect(mockWriteText).toHaveBeenCalledWith("http://localhost:3000/paikka/pallas");
+    expect(screen.getByRole("button", { name: "park.copyParkPageLink" })).toHaveAttribute(
+      "aria-describedby",
+    );
+    expect(screen.getByText("park.parkPageLinkCopied")).toBeInTheDocument();
   });
 
   it("passes a targeted visit id to the park detail visit history", async () => {
