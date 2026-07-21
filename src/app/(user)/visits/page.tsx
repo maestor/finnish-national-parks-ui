@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { PublicVisitsTimeline } from "@/components/visits/public-visits-timeline";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import {
+  buildPublicVisitsTimelineModel,
   type FrontendTimelineVisit,
   fetchVisitsTimeline,
   resolvePublicVisitsFilters,
@@ -41,12 +42,20 @@ const PublicVisitsPage = async ({ searchParams }: PublicVisitsPageProps) => {
     monthParam: month,
   });
 
+  // Build the timeline model server-side so the client bundle receives only the
+  // filtered sections and filter metadata, not the full visit history.
+  const model = buildPublicVisitsTimelineModel(visits, { selectedYear, selectedMonth });
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <PublicVisitsTimeline
-        visits={visits}
-        selectedYear={selectedYear}
-        selectedMonth={selectedMonth}
+        availableYears={model.availableYears}
+        filteredCount={model.filteredVisits.length}
+        monthOptions={model.monthOptions}
+        sections={model.sections}
+        selectedMonth={model.selectedMonth}
+        selectedYear={model.selectedYear}
+        totalCount={visits.length}
         error={error}
       />
     </div>

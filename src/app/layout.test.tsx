@@ -94,6 +94,23 @@ describe("RootLayout", () => {
     getTranslationsMock.mockResolvedValue((key: string) => `metadata.${key}`);
   });
 
+  it("preconnects to the OpenStreetMap tile origin", async () => {
+    const layout = (await RootLayout({
+      children: <div data-testid="page-content">page</div>,
+    })) as ReactElement<{
+      children: ReactElement<{
+        children: ReactNode;
+      }>;
+    }>;
+
+    render(layout.props.children.props.children);
+
+    expect(document.head.querySelector('link[rel="preconnect"]')).toHaveAttribute(
+      "href",
+      "https://tile.openstreetmap.org",
+    );
+  });
+
   it("renders the global app shell around page content", async () => {
     const layout = (await RootLayout({
       children: <div data-testid="page-content">page</div>,

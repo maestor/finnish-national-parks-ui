@@ -3,6 +3,8 @@ import { ParkExplorer } from "@/components/map/park-explorer";
 import { fetchMapSummary, type MapSummary } from "@/lib/frontend-summaries";
 import { buildPageMetadata } from "@/lib/page-metadata";
 
+// Reads use force-cache tagged fetches, but force-dynamic keeps Next from
+// prerendering this page at build time, when no backend is reachable.
 export const dynamic = "force-dynamic";
 
 export const generateMetadata = async () => {
