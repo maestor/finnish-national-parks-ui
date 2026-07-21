@@ -104,10 +104,12 @@ describe("RootLayout", () => {
       }>;
       lang: string;
       suppressHydrationWarning: boolean;
+      "data-scroll-behavior": string;
     }>;
 
     expect(layout.type).toBe("html");
     expect(layout.props.lang).toBe("fi");
+    expect(layout.props["data-scroll-behavior"]).toBe("smooth");
     expect(layout.props.suppressHydrationWarning).toBe(true);
     expect(layout.props.children.type).toBe("body");
     expect(layout.props.children.props.className).toContain("font-geist-sans");
