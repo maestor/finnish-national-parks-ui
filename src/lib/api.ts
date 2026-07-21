@@ -78,6 +78,8 @@ interface ApiFetchOptions extends RequestInit {
   };
 }
 
+const DEFAULT_BACKEND_TIMEOUT_MS = 10_000;
+
 const performApiFetch = async <T>(
   path: string,
   {
@@ -108,6 +110,9 @@ const performApiFetch = async <T>(
   const fetchOptions: RequestInit = {
     ...options,
     headers,
+    // A hung backend must not pin server components or route handlers
+    // indefinitely; a caller-provided signal still wins.
+    signal: options.signal ?? AbortSignal.timeout(DEFAULT_BACKEND_TIMEOUT_MS),
   };
 
   if (typeof window !== "undefined" && includeBrowserCredentials) {

@@ -87,4 +87,27 @@ describe("proxyBackendRequest", () => {
     expect(response.headers.get("content-length")).toBeNull();
     expect(response.headers.get("content-type")).toBe("application/json");
   });
+
+  it("applies a timeout signal so a hung backend cannot pin the route handler", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    const request = new Request("https://frontend.example/api/parks");
+
+    await proxyBackendRequest(request, "/api/parks");
+
+    const [, options] = vi.mocked(globalThis.fetch).mock.calls[0] ?? [];
+    expect(options?.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it("returns 504 when the backend request times out", async () => {
+    vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(
+      new DOMException("The operation timed out", "TimeoutError"),
+    );
+
+    const request = new Request("https://frontend.example/api/parks");
+
+    const response = await proxyBackendRequest(request, "/api/parks");
+
+    expect(response.status).toBe(504);
+  });
 });

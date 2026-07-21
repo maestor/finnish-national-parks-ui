@@ -25,7 +25,7 @@ const envSchema = z.object({
   NEXT_PUBLIC_SITE_URL: urlOrHostSchema.optional(),
   API_KEY: z.string().min(1).optional(),
   NEXT_PUBLIC_MAP_STYLE_URL: z.string().url().optional(),
-  AUTH_JWT_SECRET: z.string().min(1).optional(),
+  AUTH_JWT_SECRET: z.string().min(32).optional(),
   AUTH_COOKIE_NAME: z.string().min(1).default("__session"),
   VERCEL_PROJECT_PRODUCTION_URL: urlOrHostSchema.optional(),
   VERCEL_URL: urlOrHostSchema.optional(),

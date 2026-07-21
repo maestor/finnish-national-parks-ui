@@ -59,4 +59,23 @@ describe("env", () => {
     expect(() => env.NEXT_PUBLIC_API_URL).toThrow("Invalid environment variables");
     expect(() => env.NEXT_PUBLIC_API_URL).toThrow(/NEXT_PUBLIC_API_URL/);
   });
+
+  it("rejects an AUTH_JWT_SECRET shorter than 32 characters", async () => {
+    process.env.NEXT_PUBLIC_API_URL = "http://localhost:3004";
+    process.env.AUTH_JWT_SECRET = "too-short";
+
+    const { env } = await importEnvModule();
+
+    expect(() => env.AUTH_JWT_SECRET).toThrow("Invalid environment variables");
+    expect(() => env.AUTH_JWT_SECRET).toThrow(/AUTH_JWT_SECRET/);
+  });
+
+  it("accepts an AUTH_JWT_SECRET of 32 characters or more", async () => {
+    process.env.NEXT_PUBLIC_API_URL = "http://localhost:3004";
+    process.env.AUTH_JWT_SECRET = "a".repeat(32);
+
+    const { env } = await importEnvModule();
+
+    expect(env.AUTH_JWT_SECRET).toBe("a".repeat(32));
+  });
 });

@@ -29,6 +29,19 @@ describe("post-login redirect helpers", () => {
     expect(consumePostLoginRedirectPath()).toBeNull();
   });
 
+  it("refuses to store absolute or protocol-relative URLs", () => {
+    storePostLoginRedirectPath("https://evil.example.com/phish");
+    storePostLoginRedirectPath("//evil.example.com/phish");
+
+    expect(consumePostLoginRedirectPath()).toBeNull();
+  });
+
+  it("drops a tampered external URL from storage instead of redirecting to it", () => {
+    window.sessionStorage.setItem("post-login-redirect-path", "https://evil.example.com/phish");
+
+    expect(consumePostLoginRedirectPath()).toBeNull();
+  });
+
   it("captures the current path with search and hash", () => {
     window.history.replaceState({}, "", "/park/pallas?tab=history#kuvat");
 

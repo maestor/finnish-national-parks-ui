@@ -200,4 +200,33 @@ describe("apiFetch", () => {
 
     await expect(apiFetch("/api/test")).resolves.toBeUndefined();
   });
+
+  it("applies a default timeout signal so a hung backend cannot pin the request", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: new Headers(),
+      json: async () => ({ ok: true }),
+    } as Response);
+
+    await apiFetch("/api/test");
+
+    const [, options] = vi.mocked(globalThis.fetch).mock.calls[0] ?? [];
+    expect(options?.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it("keeps a caller-provided abort signal instead of the default timeout", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: new Headers(),
+      json: async () => ({ ok: true }),
+    } as Response);
+
+    const controller = new AbortController();
+    await apiFetch("/api/test", { signal: controller.signal });
+
+    const [, options] = vi.mocked(globalThis.fetch).mock.calls[0] ?? [];
+    expect(options?.signal).toBe(controller.signal);
+  });
 });
