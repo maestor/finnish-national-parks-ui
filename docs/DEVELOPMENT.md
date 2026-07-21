@@ -52,10 +52,12 @@ AUTH_JWT_SECRET=at-least-32-characters-shared-secret
 # Optional
 NEXT_PUBLIC_MAP_STYLE_URL=https://demotiles.maplibre.org/style.json
 AUTH_COOKIE_NAME=__session
+AUTH_JWT_ISSUER=reissuvihko-api
+AUTH_JWT_AUDIENCE=reissuvihko-ui
 NEXT_PUBLIC_SITE_URL=https://reissuvihko.vercel.app
 ```
 
-The `AUTH_JWT_SECRET` must match the backend's `AUTH_JWT_SECRET` exactly.
+The `AUTH_JWT_SECRET` must match the backend's `AUTH_JWT_SECRET` exactly. `AUTH_JWT_ISSUER` and `AUTH_JWT_AUDIENCE` must match the claims the backend signs into session tokens; both default to the values above and only need to be set when the backend uses a different contract.
 
 ---
 
@@ -272,6 +274,14 @@ These are contributor defaults, not optional polish:
 - Backend fetches in `src/lib/api.ts` and `src/lib/backend-proxy.ts` use a 10-second `AbortSignal.timeout` so a hung backend cannot pin server components or route handlers; proxy timeouts surface as 504.
 - `AUTH_JWT_SECRET` must be at least 32 characters; the env schema rejects shorter secrets at boot.
 
+### Session Token Contract and Proxy AuthZ
+
+- Session verification is centralized in `src/lib/session-auth.ts`. Tokens must be HS256-signed with `AUTH_JWT_SECRET` and carry `iss: "reissuvihko-api"` and `aud: "reissuvihko-ui"` (overridable via `AUTH_JWT_ISSUER` / `AUTH_JWT_AUDIENCE`); both claims are bound at verification.
+- `src/proxy.ts` gates `/hallinta/*` page shells on a valid session. Route handlers that proxy admin mutations additionally require the `role: "admin"` claim via `proxyBackendRequest(request, path, { requireAdmin: true })`; missing/invalid sessions get 401 and non-admin sessions 403.
+- Admin-gated proxy routes: park mutations (`/api/parks/[slug]`, `/removed`, `/visits`), visit mutations (`/api/visits/[id]` and all image sub-routes), `GET /api/admin/parks/visibility`, and `POST /api/revalidate-public-cache`. Public reads and the public trip-planner POSTs stay unauthenticated.
+- Non-`GET` proxy requests must carry an `Origin` header whose host matches the request host; mismatches get 403 (CSRF defense-in-depth on top of the `SameSite=Lax` session cookie).
+- Proxy routes forward only an allowlist of client headers (`accept`, `content-type`, `cookie`) to the backend. Client-sent `authorization` headers are never forwarded; the proxy always sets the server-side `API_KEY` itself.
+
 ---
 
 ## Coding Conventions
@@ -310,6 +320,6 @@ See `AGENTS.md` for the full convention list. Key rules:
 ## Production Deployment Notes
 
 - The frontend expects `NEXT_PUBLIC_API_URL`, `API_KEY`, and `AUTH_JWT_SECRET` to be set in Vercel.
-- `AUTH_JWT_SECRET` must match the backend exactly so `src/proxy.ts` can verify the session JWT.
+- `AUTH_JWT_SECRET` must match the backend exactly so `src/proxy.ts` and `src/lib/session-auth.ts` can verify the session JWT. The token's `iss`/`aud` claims must also match `AUTH_JWT_ISSUER` / `AUTH_JWT_AUDIENCE` (defaults `reissuvihko-api` / `reissuvihko-ui`).
 - For production auth, prefer custom domains such as `app.example.com` and `api.example.com` over two separate default `*.vercel.app` domains.
 - See [docs/DEPLOYMENT.md](./DEPLOYMENT.md) for the full deployment checklist.

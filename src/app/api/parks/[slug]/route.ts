@@ -8,5 +8,5 @@ interface RouteContext {
 
 export const PATCH = async (request: Request, { params }: RouteContext) => {
   const { slug } = await params;
-  return proxyBackendRequest(request, `/api/parks/${slug}`);
+  return proxyBackendRequest(request, `/api/parks/${slug}`, { requireAdmin: true });
 };

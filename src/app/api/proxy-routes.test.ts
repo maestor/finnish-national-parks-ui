@@ -36,7 +36,9 @@ describe("api proxy routes", () => {
 
     await patchParkRemoved(request, { params: Promise.resolve({ slug: "pallas" }) });
 
-    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/parks/pallas/removed");
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/parks/pallas/removed", {
+      requireAdmin: true,
+    });
   });
 
   it("proxies park detail updates", async () => {
@@ -46,7 +48,9 @@ describe("api proxy routes", () => {
 
     await patchPark(request, { params: Promise.resolve({ slug: "pallas" }) });
 
-    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/parks/pallas");
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/parks/pallas", {
+      requireAdmin: true,
+    });
   });
 
   it("proxies admin park visibility reads", async () => {
@@ -54,7 +58,9 @@ describe("api proxy routes", () => {
 
     await getAdminParkVisibility(request);
 
-    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/admin/parks/visibility");
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/admin/parks/visibility", {
+      requireAdmin: true,
+    });
   });
 
   it("proxies public park listing reads", async () => {
@@ -110,7 +116,9 @@ describe("api proxy routes", () => {
 
     await postParkVisit(request, { params: Promise.resolve({ slug: "pallas" }) });
 
-    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/parks/pallas/visits");
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/parks/pallas/visits", {
+      requireAdmin: true,
+    });
   });
 
   it("proxies visit updates", async () => {
@@ -120,7 +128,9 @@ describe("api proxy routes", () => {
 
     await patchVisit(request, { params: Promise.resolve({ id: "123" }) });
 
-    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/visits/123");
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/visits/123", {
+      requireAdmin: true,
+    });
   });
 
   it("proxies visit deletion", async () => {
@@ -130,7 +140,9 @@ describe("api proxy routes", () => {
 
     await deleteVisit(request, { params: Promise.resolve({ id: "123" }) });
 
-    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/visits/123");
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/visits/123", {
+      requireAdmin: true,
+    });
   });
 
   it("proxies visit image uploads", async () => {
@@ -140,7 +152,9 @@ describe("api proxy routes", () => {
 
     await postVisitImage(request, { params: Promise.resolve({ id: "123" }) });
 
-    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/visits/123/images");
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/visits/123/images", {
+      requireAdmin: true,
+    });
   });
 
   it("proxies visit image upload-url requests", async () => {
@@ -153,6 +167,7 @@ describe("api proxy routes", () => {
     expect(proxyBackendRequestMock).toHaveBeenCalledWith(
       request,
       "/api/visits/123/images/upload-url",
+      { requireAdmin: true },
     );
   });
 
@@ -166,6 +181,7 @@ describe("api proxy routes", () => {
     expect(proxyBackendRequestMock).toHaveBeenCalledWith(
       request,
       "/api/visits/123/images/complete",
+      { requireAdmin: true },
     );
   });
 
@@ -178,7 +194,9 @@ describe("api proxy routes", () => {
       params: Promise.resolve({ id: "123", imageId: "5" }),
     });
 
-    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/visits/123/images/5");
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/visits/123/images/5", {
+      requireAdmin: true,
+    });
   });
 
   it("proxies visit image reorder", async () => {
@@ -188,6 +206,10 @@ describe("api proxy routes", () => {
 
     await patchVisitImageOrder(request, { params: Promise.resolve({ id: "123" }) });
 
-    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/visits/123/images/reorder");
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(
+      request,
+      "/api/visits/123/images/reorder",
+      { requireAdmin: true },
+    );
   });
 });
