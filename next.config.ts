@@ -6,8 +6,9 @@ import { legacyAppRedirects } from "./src/lib/routes";
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
-  // `@serwist/turbopack` loads Next config at route runtime, so Vercel needs
-  // those files traced into the `/serwist/*` server bundle.
+  // The /serwist/* route is prerendered at build time, but if it is ever
+  // invoked dynamically Vercel still needs the config files traced into the
+  // server bundle, since `@serwist/turbopack` loads Next config on startup.
   outputFileTracingIncludes: {
     "/serwist*": ["./next.config.*", "./node_modules/next/dist/server/config*.js"],
   },
