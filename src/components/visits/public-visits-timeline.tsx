@@ -20,18 +20,22 @@ import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/cn";
 import { formatFinnishDate } from "@/lib/fi-date";
 import {
-  buildPublicVisitsTimelineModel,
   createParkVisitHref,
   createPublicVisitsHref,
-  type FrontendTimelineVisit,
+  type PublicVisitMonthOption,
+  type PublicVisitYearSection,
 } from "@/lib/public-visits";
 import { appRoutes } from "@/lib/routes";
 
 interface PublicVisitsTimelineProps {
+  availableYears: number[];
   error?: string | null;
+  filteredCount: number;
+  monthOptions: PublicVisitMonthOption[];
+  sections: PublicVisitYearSection[];
   selectedMonth: number | null;
   selectedYear: number | null;
-  visits: FrontendTimelineVisit[];
+  totalCount: number;
 }
 
 const FILTER_LINK_CLASS_NAME =
@@ -44,24 +48,23 @@ const DISABLED_FILTER_PILL_CLASS_NAME =
   "cursor-not-allowed border-dashed border-border/70 bg-transparent text-muted-foreground shadow-none dark:border-white/10 dark:bg-transparent dark:text-slate-400";
 
 const PublicVisitsTimeline = ({
+  availableYears,
   error = null,
+  filteredCount,
+  monthOptions,
+  sections,
   selectedMonth,
   selectedYear,
-  visits,
+  totalCount,
 }: PublicVisitsTimelineProps) => {
   const router = useRouter();
   const t = useTranslations("visits");
-  const model = buildPublicVisitsTimelineModel(visits, {
-    selectedYear,
-    selectedMonth,
-  });
-  const mobileMonthOptions = model.monthOptions.filter((month) => month.hasVisits);
+  const mobileMonthOptions = monthOptions.filter((month) => month.hasVisits);
   const yearRefs = useRef<Array<HTMLAnchorElement | null>>([]);
   const monthRefs = useRef<Array<HTMLAnchorElement | null>>([]);
   const visitRefs = useRef<Array<HTMLAnchorElement | null>>([]);
-  const selectedYearIndex =
-    model.selectedYear === null ? 0 : model.availableYears.indexOf(model.selectedYear) + 1;
-  const selectedMonthIndex = model.selectedMonth ?? 0;
+  const selectedYearIndex = selectedYear === null ? 0 : availableYears.indexOf(selectedYear) + 1;
+  const selectedMonthIndex = selectedMonth ?? 0;
 
   const focusYear = (index = selectedYearIndex) => {
     yearRefs.current[index]?.focus();
@@ -114,7 +117,7 @@ const PublicVisitsTimeline = ({
     if (event.key === "ArrowDown") {
       event.preventDefault();
 
-      if (model.selectedYear !== null && monthRefs.current.length > 0) {
+      if (selectedYear !== null && monthRefs.current.length > 0) {
         focusMonth();
         return;
       }
@@ -175,7 +178,7 @@ const PublicVisitsTimeline = ({
       return;
     }
 
-    if (model.selectedYear !== null && monthRefs.current.length > 0) {
+    if (selectedYear !== null && monthRefs.current.length > 0) {
       focusMonth();
       return;
     }
@@ -199,7 +202,7 @@ const PublicVisitsTimeline = ({
 
     router.push(
       createPublicVisitsHref({
-        year: model.selectedYear,
+        year: selectedYear,
         month: Number.isNaN(nextMonth ?? Number.NaN) ? null : nextMonth,
       }),
     );
@@ -238,7 +241,7 @@ const PublicVisitsTimeline = ({
           <CalendarRange className="h-4 w-4 text-primary" aria-hidden="true" />
           <h2 className="text-lg font-semibold tracking-tight">{t("filters.title")}</h2>
           <p className="text-sm text-muted-foreground">
-            ({model.filteredVisits.length} {t("filters.visibleCount")})
+            ({filteredCount} {t("filters.visibleCount")})
           </p>
         </div>
 
@@ -247,11 +250,11 @@ const PublicVisitsTimeline = ({
             <Label htmlFor="visits-year-filter-mobile">{t("filters.yearSelectLabel")}</Label>
             <Select
               id="visits-year-filter-mobile"
-              value={model.selectedYear?.toString() ?? ""}
+              value={selectedYear?.toString() ?? ""}
               onChange={handleYearSelectChange}
             >
               <option value="">{t("filters.allYearsLabel")}</option>
-              {model.availableYears.map((year) => (
+              {availableYears.map((year) => (
                 <option key={year} value={year}>
                   {year}
                 </option>
@@ -263,12 +266,12 @@ const PublicVisitsTimeline = ({
             <Label htmlFor="visits-month-filter-mobile">{t("filters.monthSelectLabel")}</Label>
             <Select
               id="visits-month-filter-mobile"
-              disabled={model.selectedYear === null}
-              value={model.selectedMonth?.toString() ?? ""}
+              disabled={selectedYear === null}
+              value={selectedMonth?.toString() ?? ""}
               onChange={handleMonthSelectChange}
             >
               <option value="">
-                {model.selectedYear === null
+                {selectedYear === null
                   ? t("filters.monthSelectPlaceholder")
                   : t("filters.allMonthsLabel")}
               </option>
@@ -285,10 +288,10 @@ const PublicVisitsTimeline = ({
           <Link
             href={createPublicVisitsHref({ year: null, month: null })}
             aria-label={t("filters.allYearsLabel")}
-            aria-current={model.selectedYear === null ? "page" : undefined}
+            aria-current={selectedYear === null ? "page" : undefined}
             className={cn(
               FILTER_LINK_CLASS_NAME,
-              model.selectedYear === null
+              selectedYear === null
                 ? ACTIVE_FILTER_LINK_CLASS_NAME
                 : INACTIVE_FILTER_LINK_CLASS_NAME,
             )}
@@ -299,14 +302,14 @@ const PublicVisitsTimeline = ({
           >
             {t("filters.all")}
           </Link>
-          {model.availableYears.map((year, index) => (
+          {availableYears.map((year, index) => (
             <Link
               key={year}
               href={createPublicVisitsHref({ year, month: null })}
-              aria-current={model.selectedYear === year ? "page" : undefined}
+              aria-current={selectedYear === year ? "page" : undefined}
               className={cn(
                 FILTER_LINK_CLASS_NAME,
-                model.selectedYear === year
+                selectedYear === year
                   ? ACTIVE_FILTER_LINK_CLASS_NAME
                   : INACTIVE_FILTER_LINK_CLASS_NAME,
               )}
@@ -320,18 +323,18 @@ const PublicVisitsTimeline = ({
           ))}
         </nav>
 
-        {model.selectedYear !== null ? (
+        {selectedYear !== null ? (
           <nav
             aria-label={t("filters.monthsLabel")}
             className="mt-4 hidden flex-wrap gap-2 md:flex"
           >
             <Link
-              href={createPublicVisitsHref({ year: model.selectedYear, month: null })}
+              href={createPublicVisitsHref({ year: selectedYear, month: null })}
               aria-label={t("filters.allMonthsLabel")}
-              aria-current={model.selectedMonth === null ? "page" : undefined}
+              aria-current={selectedMonth === null ? "page" : undefined}
               className={cn(
                 FILTER_LINK_CLASS_NAME,
-                model.selectedMonth === null
+                selectedMonth === null
                   ? ACTIVE_FILTER_LINK_CLASS_NAME
                   : INACTIVE_FILTER_LINK_CLASS_NAME,
               )}
@@ -342,15 +345,15 @@ const PublicVisitsTimeline = ({
             >
               {t("filters.all")}
             </Link>
-            {model.monthOptions.map((month, index) =>
+            {monthOptions.map((month, index) =>
               month.hasVisits ? (
                 <Link
                   key={month.value}
-                  href={createPublicVisitsHref({ year: model.selectedYear, month: month.value })}
-                  aria-current={model.selectedMonth === month.value ? "page" : undefined}
+                  href={createPublicVisitsHref({ year: selectedYear, month: month.value })}
+                  aria-current={selectedMonth === month.value ? "page" : undefined}
                   className={cn(
                     FILTER_LINK_CLASS_NAME,
-                    model.selectedMonth === month.value
+                    selectedMonth === month.value
                       ? ACTIVE_FILTER_LINK_CLASS_NAME
                       : INACTIVE_FILTER_LINK_CLASS_NAME,
                   )}
@@ -379,13 +382,13 @@ const PublicVisitsTimeline = ({
         ) : null}
       </section>
 
-      {visits.length === 0 && !error ? (
+      {totalCount === 0 && !error ? (
         <section className={PUBLIC_EMPTY_STATE_PANEL_CLASS_NAME}>
           <p className="text-muted-foreground">{t("empty.all")}</p>
         </section>
       ) : null}
 
-      {visits.length > 0 && model.filteredVisits.length === 0 ? (
+      {totalCount > 0 && filteredCount === 0 ? (
         <section className={PUBLIC_EMPTY_STATE_PANEL_CLASS_NAME}>
           <p className="text-muted-foreground">{t("empty.filtered")}</p>
           <Link
@@ -397,9 +400,9 @@ const PublicVisitsTimeline = ({
         </section>
       ) : null}
 
-      {model.filteredVisits.length > 0 ? (
+      {filteredCount > 0 ? (
         <div className="relative space-y-8 before:absolute before:bottom-0 before:left-4 before:top-0 before:w-px before:-translate-x-1/2 before:bg-[linear-gradient(180deg,rgba(22,101,52,0.42),rgba(37,99,235,0.18),rgba(22,101,52,0.42))] before:content-[''] md:before:left-1/2 md:before:-translate-x-1/2">
-          {model.sections.map((section) => (
+          {sections.map((section) => (
             <section key={section.year} aria-labelledby={`visits-year-${section.year}`}>
               <div className="flex items-center gap-3 pl-12 pr-4 md:px-0">
                 <div className="h-px flex-1 bg-border/70" aria-hidden="true" />

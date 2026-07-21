@@ -104,6 +104,8 @@ const RootLayout = async ({
       <body
         className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-background font-sans antialiased`}
       >
+        {/* React hoists this to <head>; warms up the OSM tile connection before the map loads. */}
+        <link rel="preconnect" href="https://tile.openstreetmap.org" />
         <NextIntlClientProvider locale={locale} messages={messages}>
           <SerwistProvider swUrl="/serwist/sw.js" disable={shouldDisableSerwist}>
             <ThemeProvider

@@ -429,7 +429,10 @@
   },
   "errors": {
     "generic": {
-      "unknownError": "Tuntematon virhe"
+      "unknownError": "Tuntematon virhe",
+      "routeErrorTitle": "Jokin meni pieleen",
+      "routeErrorDescription": "Sivun lataaminen epäonnistui. Yritä uudelleen hetken kuluttua.",
+      "routeErrorRetry": "Yritä uudelleen"
     },
     "notFound": {
       "title": "404",

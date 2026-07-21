@@ -34,14 +34,19 @@ The app serves two audiences:
 ```
 src/
 ├── app/                        # Next.js App Router
-│   ├── (user)/                 # Public landing, map, and park views
-│   │   ├── visits/page.tsx     # Public timeline view for browsing visits
-│   ├── control-panel/          # Admin routes
+│   ├── (user)/                 # Public pages; implementations live in English-named
+│   │   │                       # dirs (parks/, park/[slug]/, visits/, trip-planner/),
+│   │   └── paikat|kaynnit|…    # canonical Finnish routes are one-line re-export shims
+│   ├── control-panel/          # Admin page implementations (English-named)
+│   ├── hallinta/               # Canonical Finnish admin routes (shims of control-panel/)
+│   ├── login|kirjaudu/         # Login implementation + Finnish shim
+│   ├── api/                    # Route handlers proxying the Hono backend
 │   ├── serwist/[path]/         # Service worker route (PWA)
+│   ├── error.tsx               # Shared route error boundary (per segment)
 │   ├── layout.tsx              # Root layout with providers
 │   └── globals.css             # Tailwind v4 + CSS variables
 ├── components/
-│   ├── layout/                 # Header, theme toggle
+│   ├── layout/                 # Header, theme toggle, shared error fallback
 │   ├── map/                    # MapLibre wrapper
 │   ├── providers/              # Theme, Serwist, i18n providers
 │   └── ui/                     # Button, inputs, cards
@@ -50,6 +55,8 @@ src/
 ├── i18n/request.ts             # next-intl request config
 └── test/                       # Test setup & helpers
 ```
+
+Canonical URLs are Finnish-only (`/paikat`, `/kaynnit`, `/paikka/[slug]`, `/reissusuunnittelu`, `/hallinta`, `/kirjaudu`). Legacy English URLs redirect to the Finnish canonical routes via `legacyAppRedirects` in `src/lib/routes.ts`.
 
 ## Getting Started
 

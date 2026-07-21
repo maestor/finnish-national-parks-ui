@@ -119,6 +119,13 @@ Canonical end-user URLs are Finnish-only:
 
 Legacy English URLs such as `/parks`, `/visits`, `/park/[slug]`, `/trip-planner`, `/control-panel`, and `/login` still redirect to the Finnish canonical route.
 
+**Shim convention:** page implementations live in English-named directories (`(user)/parks/`, `(user)/park/[slug]/`, `(user)/visits/`, `(user)/trip-planner/`, `control-panel/**`, `login/`). The canonical Finnish route directories hold one-line re-export shims (for example `src/app/hallinta/page.tsx` → `export { default } from "../control-panel/page"`). Keep this pattern when adding routes: implement in the English-named directory, expose the Finnish canonical route as a shim, and add a legacy redirect to `legacyAppRedirects` in `src/lib/routes.ts` when an English URL already exists.
+
+### Error Handling
+
+- Each route segment has an `error.tsx` boundary (`src/app/error.tsx`, `(user)/`, `control-panel/`, `hallinta/`) that re-exports the shared client fallback in `src/components/layout/route-error.tsx`. It catches unexpected render and fetch failures (for example the home page summary read) and offers a retry via `reset()`.
+- Pages that can degrade gracefully (map, visits timeline, park detail) additionally catch their own fetch errors and render an inline error state alongside the still-functional page chrome. Prefer the boundary for unrecoverable failures and inline states for partial degradation.
+
 ### Server vs Client Components
 
 - **Server Components** (default): Use `getTranslations` from `next-intl/server`

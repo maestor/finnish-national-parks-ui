@@ -113,18 +113,21 @@ vi.mock("@/components/park/park-admin-controls", () => ({
 
 vi.mock("@/components/visits/public-visits-timeline", () => ({
   PublicVisitsTimeline: ({
-    visits,
+    totalCount,
+    filteredCount,
     selectedYear,
     selectedMonth,
     error,
   }: {
-    visits: FrontendTimelineVisit[];
+    totalCount: number;
+    filteredCount: number;
     selectedYear: number | null;
     selectedMonth: number | null;
     error?: string | null;
   }) => (
     <div data-testid="public-visits-timeline">
-      visits:{visits.length}|year:{selectedYear ?? "all"}|month:{selectedMonth ?? "all"}|error:
+      total:{totalCount}|filtered:{filteredCount}|year:{selectedYear ?? "all"}|month:
+      {selectedMonth ?? "all"}|error:
       {error ?? "none"}
     </div>
   ),
@@ -817,7 +820,7 @@ describe("App pages", () => {
     );
 
     expect(screen.getByTestId("public-visits-timeline")).toHaveTextContent(
-      "visits:1|year:2024|month:6|error:none",
+      "total:1|filtered:1|year:2024|month:6|error:none",
     );
   });
 

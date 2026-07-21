@@ -1,7 +1,28 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { FrontendTimelineVisit } from "@/lib/public-visits";
+import { buildPublicVisitsTimelineModel, type FrontendTimelineVisit } from "@/lib/public-visits";
 import { PublicVisitsTimeline } from "./public-visits-timeline";
+
+// Mirrors the server page: the timeline model is built server-side and the
+// client component receives only the slim view model, not the raw visits.
+const renderTimeline = (
+  visits: FrontendTimelineVisit[],
+  selection: { selectedYear: number | null; selectedMonth: number | null },
+) => {
+  const model = buildPublicVisitsTimelineModel(visits, selection);
+
+  return render(
+    <PublicVisitsTimeline
+      availableYears={model.availableYears}
+      filteredCount={model.filteredVisits.length}
+      monthOptions={model.monthOptions}
+      sections={model.sections}
+      selectedMonth={model.selectedMonth}
+      selectedYear={model.selectedYear}
+      totalCount={visits.length}
+    />,
+  );
+};
 
 const { mockPush } = vi.hoisted(() => ({
   mockPush: vi.fn(),
@@ -58,7 +79,7 @@ describe("PublicVisitsTimeline", () => {
   ];
 
   it("shows years from the first visit year through the current year", () => {
-    render(<PublicVisitsTimeline visits={visits} selectedYear={null} selectedMonth={null} />);
+    renderTimeline(visits, { selectedYear: null, selectedMonth: null });
 
     const yearNav = screen.getByRole("navigation", { name: "visits.filters.yearsLabel" });
     const yearLinks = within(yearNav).getAllByRole("link");
@@ -84,7 +105,7 @@ describe("PublicVisitsTimeline", () => {
   });
 
   it("shows all twelve month pills and disables months without visits", () => {
-    render(<PublicVisitsTimeline visits={visits} selectedYear={2024} selectedMonth={null} />);
+    renderTimeline(visits, { selectedYear: 2024, selectedMonth: null });
 
     const monthNav = screen.getByRole("navigation", { name: "visits.filters.monthsLabel" });
     const monthLinks = within(monthNav).getAllByRole("link");
@@ -110,7 +131,7 @@ describe("PublicVisitsTimeline", () => {
   });
 
   it("renders compact mobile selects and limits month options to available months", () => {
-    render(<PublicVisitsTimeline visits={visits} selectedYear={2024} selectedMonth={null} />);
+    renderTimeline(visits, { selectedYear: 2024, selectedMonth: null });
 
     const yearSelect = screen.getByLabelText("visits.filters.yearSelectLabel");
     const monthSelect = screen.getByLabelText("visits.filters.monthSelectLabel");
@@ -131,7 +152,7 @@ describe("PublicVisitsTimeline", () => {
   });
 
   it("disables the mobile month select until a year is chosen", () => {
-    render(<PublicVisitsTimeline visits={visits} selectedYear={null} selectedMonth={null} />);
+    renderTimeline(visits, { selectedYear: null, selectedMonth: null });
 
     const monthSelect = screen.getByLabelText("visits.filters.monthSelectLabel");
 
@@ -142,7 +163,7 @@ describe("PublicVisitsTimeline", () => {
   });
 
   it("navigates through the mobile selects when the user changes year or month", () => {
-    render(<PublicVisitsTimeline visits={visits} selectedYear={2024} selectedMonth={null} />);
+    renderTimeline(visits, { selectedYear: 2024, selectedMonth: null });
 
     fireEvent.change(screen.getByLabelText("visits.filters.yearSelectLabel"), {
       target: { value: "2025" },
@@ -161,7 +182,7 @@ describe("PublicVisitsTimeline", () => {
   });
 
   it("filters timeline items by selected year and month and links to the targeted visit", () => {
-    render(<PublicVisitsTimeline visits={visits} selectedYear={2024} selectedMonth={8} />);
+    renderTimeline(visits, { selectedYear: 2024, selectedMonth: 8 });
 
     expect(screen.getByRole("heading", { name: "2024" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /elokuu/i })).toBeInTheDocument();
@@ -177,7 +198,7 @@ describe("PublicVisitsTimeline", () => {
   });
 
   it("shows the visible visit count inline with the filter title", () => {
-    render(<PublicVisitsTimeline visits={visits} selectedYear={2024} selectedMonth={null} />);
+    renderTimeline(visits, { selectedYear: 2024, selectedMonth: null });
 
     expect(screen.getByText("(2 visits.filters.visibleCount)")).toBeInTheDocument();
     expect(screen.queryByText("visits.summary.total")).not.toBeInTheDocument();
@@ -185,7 +206,7 @@ describe("PublicVisitsTimeline", () => {
   });
 
   it("alternates month cards on opposite sides of the centered timeline on desktop", () => {
-    render(<PublicVisitsTimeline visits={visits} selectedYear={null} selectedMonth={null} />);
+    renderTimeline(visits, { selectedYear: null, selectedMonth: null });
 
     const juneCard = screen.getByText("Nuuksio").closest("li");
     const augustCard = screen.getByText("Pallas-Yllastunturi").closest("li");
@@ -210,7 +231,7 @@ describe("PublicVisitsTimeline", () => {
   });
 
   it("uses arrow down and up keys to move from years to months to visit cards", async () => {
-    render(<PublicVisitsTimeline visits={visits} selectedYear={2024} selectedMonth={null} />);
+    renderTimeline(visits, { selectedYear: 2024, selectedMonth: null });
 
     const yearLinks = within(
       screen.getByRole("navigation", { name: "visits.filters.yearsLabel" }),
@@ -245,7 +266,7 @@ describe("PublicVisitsTimeline", () => {
   });
 
   it("uses arrow left and right keys to move within year and month filters", () => {
-    render(<PublicVisitsTimeline visits={visits} selectedYear={2024} selectedMonth={null} />);
+    renderTimeline(visits, { selectedYear: 2024, selectedMonth: null });
 
     const yearLinks = within(
       screen.getByRole("navigation", { name: "visits.filters.yearsLabel" }),
@@ -274,7 +295,7 @@ describe("PublicVisitsTimeline", () => {
   });
 
   it("ignores unavailable month query selections and keeps the year view active", () => {
-    render(<PublicVisitsTimeline visits={visits} selectedYear={2024} selectedMonth={1} />);
+    renderTimeline(visits, { selectedYear: 2024, selectedMonth: 1 });
 
     expect(screen.getByRole("link", { name: "visits.filters.allMonthsLabel" })).toHaveAttribute(
       "aria-current",
@@ -287,7 +308,7 @@ describe("PublicVisitsTimeline", () => {
   });
 
   it("shows a continuous month spine with the park type as the first detail badge", () => {
-    render(<PublicVisitsTimeline visits={visits} selectedYear={null} selectedMonth={null} />);
+    renderTimeline(visits, { selectedYear: null, selectedMonth: null });
 
     const monthTimeline = screen.getAllByRole("list")[0]?.closest("ol");
     const nuuksioVisitItem = screen.getByRole("heading", { name: "Nuuksio" }).closest("li");
@@ -310,7 +331,7 @@ describe("PublicVisitsTimeline", () => {
   });
 
   it("shows the park type badge in the shared detail badge row when metadata is available", () => {
-    render(<PublicVisitsTimeline visits={visits} selectedYear={null} selectedMonth={null} />);
+    renderTimeline(visits, { selectedYear: null, selectedMonth: null });
 
     const nuuksioVisitItem = screen.getByRole("heading", { name: "Nuuksio" }).closest("li");
 
@@ -329,7 +350,7 @@ describe("PublicVisitsTimeline", () => {
   });
 
   it("keeps the view-visit label on the same top row as the date", () => {
-    render(<PublicVisitsTimeline visits={visits} selectedYear={null} selectedMonth={null} />);
+    renderTimeline(visits, { selectedYear: null, selectedMonth: null });
 
     const nuuksioHeading = screen.getByRole("heading", { name: "Nuuksio" });
     const topRow = nuuksioHeading.previousElementSibling;
@@ -343,7 +364,7 @@ describe("PublicVisitsTimeline", () => {
   });
 
   it("uses centered mobile month headers and aligns the mobile spine with visit markers", () => {
-    render(<PublicVisitsTimeline visits={visits} selectedYear={null} selectedMonth={null} />);
+    renderTimeline(visits, { selectedYear: null, selectedMonth: null });
 
     const timelineWrapper = screen.getByRole("heading", { name: "2025" }).closest("div")
       ?.parentElement?.parentElement;
@@ -370,7 +391,7 @@ describe("PublicVisitsTimeline", () => {
   });
 
   it("shows an empty state when a selected year has no visits yet", () => {
-    render(<PublicVisitsTimeline visits={visits} selectedYear={2026} selectedMonth={null} />);
+    renderTimeline(visits, { selectedYear: 2026, selectedMonth: null });
 
     expect(screen.getByText("visits.empty.filtered")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "visits.filters.reset" })).toHaveAttribute(

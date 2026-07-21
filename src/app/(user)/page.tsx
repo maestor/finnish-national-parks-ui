@@ -13,6 +13,8 @@ import {
   fetchHomeSummary,
 } from "@/lib/frontend-summaries";
 
+// Reads use force-cache tagged fetches, but force-dynamic keeps Next from
+// prerendering this page at build time, when no backend is reachable.
 export const dynamic = "force-dynamic";
 
 export const generateMetadata = async () => {
