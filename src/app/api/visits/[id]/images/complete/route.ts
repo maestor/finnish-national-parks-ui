@@ -8,5 +8,5 @@ interface RouteContext {
 
 export const POST = async (request: Request, { params }: RouteContext) => {
   const { id } = await params;
-  return proxyBackendRequest(request, `/api/visits/${id}/images/complete`);
+  return proxyBackendRequest(request, `/api/visits/${id}/images/complete`, { requireAdmin: true });
 };

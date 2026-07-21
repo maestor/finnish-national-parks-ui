@@ -9,5 +9,7 @@ interface RouteContext {
 
 export const DELETE = async (request: Request, { params }: RouteContext) => {
   const { id, imageId } = await params;
-  return proxyBackendRequest(request, `/api/visits/${id}/images/${imageId}`);
+  return proxyBackendRequest(request, `/api/visits/${id}/images/${imageId}`, {
+    requireAdmin: true,
+  });
 };
