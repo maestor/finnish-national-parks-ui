@@ -11,6 +11,7 @@ import type {
   TripPlannerSearchAreaResult,
   TripPlannerUiParkResult,
 } from "@/lib/trip-planner";
+import { getMapStyle } from "../map/map-style";
 import { ThreeDotPulse } from "../ui/three-dot-pulse";
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -42,35 +43,6 @@ const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 const EARTH_RADIUS_KM = 6371;
 const POPUP_DETAIL_ROW_CLASS_NAME =
   "rounded-xl border border-sky-200/45 bg-[linear-gradient(145deg,rgba(255,255,255,0.84),rgba(237,245,249,0.92))] px-3 py-2 shadow-[0_10px_20px_rgba(148,163,184,0.1),inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-white/10 dark:bg-[linear-gradient(145deg,rgba(15,23,42,0.76),rgba(2,6,23,0.58))] dark:shadow-[0_14px_24px_rgba(2,6,23,0.22),inset_0_1px_0_rgba(255,255,255,0.06)]";
-
-const getMapStyle = () => {
-  const mapStyleUrl = process.env.NEXT_PUBLIC_MAP_STYLE_URL as string | undefined;
-  if (mapStyleUrl) {
-    return mapStyleUrl;
-  }
-
-  return {
-    version: 8,
-    sources: {
-      osm: {
-        type: "raster",
-        tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-        tileSize: 256,
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      },
-    },
-    layers: [
-      {
-        id: "osm",
-        type: "raster",
-        source: "osm",
-        minzoom: 0,
-        maxzoom: 19,
-      },
-    ],
-  } as maplibregl.StyleSpecification;
-};
 
 const getVisibleBounds = (
   baseBoundingBox:

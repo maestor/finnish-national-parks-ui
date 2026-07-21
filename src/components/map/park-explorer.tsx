@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -17,7 +18,12 @@ import {
 import type { FilterableMapPark } from "@/lib/parks";
 import { appRoutes, normalizeAppPath } from "@/lib/routes";
 import { useHomeMapControls } from "../providers/home-map-controls-provider";
-import { ParkMap } from "./park-map";
+import { MapLoadingFallback } from "./map-loading-fallback";
+
+const ParkMap = dynamic(() => import("./park-map").then((mod) => mod.ParkMap), {
+  ssr: false,
+  loading: MapLoadingFallback,
+});
 
 type VisitStatusFilter = "all" | "visited" | "not-visited";
 

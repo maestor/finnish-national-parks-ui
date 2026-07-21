@@ -8,6 +8,7 @@ import {
   Route,
   SlidersHorizontal,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import {
@@ -52,7 +53,15 @@ import {
   type TripPlannerUiParkResult,
   type TripPlannerUiResult,
 } from "@/lib/trip-planner";
-import { TripPlannerMap } from "./trip-planner-map";
+import { MapLoadingFallback } from "../map/map-loading-fallback";
+
+const TripPlannerMap = dynamic(
+  () => import("./trip-planner-map").then((mod) => mod.TripPlannerMap),
+  {
+    ssr: false,
+    loading: MapLoadingFallback,
+  },
+);
 
 const INPUT_CLASS_NAME =
   "flex h-11 w-full rounded-xl border border-white/45 bg-white/78 px-3 py-2 text-sm text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] placeholder:text-muted-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";

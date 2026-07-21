@@ -13,6 +13,7 @@ import {
 } from "../providers/home-map-controls-provider";
 import { Button } from "../ui/button";
 import { ThreeDotPulse } from "../ui/three-dot-pulse";
+import { getMapStyle } from "./map-style";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 interface ParkMapProps {
@@ -151,34 +152,6 @@ const getBoundsForVisibleParks = (parks: MapPark[]): maplibregl.LngLatBoundsLike
     [combinedBounds.minLon, combinedBounds.minLat],
     [combinedBounds.maxLon, combinedBounds.maxLat],
   ];
-};
-
-const getMapStyle = () => {
-  const mapStyleUrl = process.env.NEXT_PUBLIC_MAP_STYLE_URL as string | undefined;
-  if (mapStyleUrl) {
-    return mapStyleUrl;
-  }
-  return {
-    version: 8,
-    sources: {
-      osm: {
-        type: "raster",
-        tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-        tileSize: 256,
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      },
-    },
-    layers: [
-      {
-        id: "osm",
-        type: "raster",
-        source: "osm",
-        minzoom: 0,
-        maxzoom: 19,
-      },
-    ],
-  } as maplibregl.StyleSpecification;
 };
 
 const createMarkerElement = (park: MapPark, colorOverride?: string) => {

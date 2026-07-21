@@ -230,13 +230,13 @@ describe("ParkExplorer", () => {
     replaceMock.mockReset();
   });
 
-  it("activates the map filter and visit status query params and clears them from the url", () => {
+  it("activates the map filter and visit status query params and clears them from the url", async () => {
     pathnameState.value = "/parks";
     searchParamsState.value = "filter=national-park&visitStatus=not-visited";
 
     render(<ParkExplorer parks={parks} />);
 
-    expect(screen.getByText("count:1")).toBeInTheDocument();
+    expect(await screen.findByText("count:1")).toBeInTheDocument();
     expect(screen.getByText("reset:1")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "home.filters.nationalParks" })).toHaveClass(
       "text-primary-foreground",

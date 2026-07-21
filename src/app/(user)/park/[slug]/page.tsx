@@ -1,7 +1,7 @@
 import { ExternalLink, FileDown, MapPin } from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { ParkBoundaryMap } from "@/components/map/park-boundary-map";
+import { LazyParkBoundaryMap } from "@/components/map/lazy-park-boundary-map";
 import { ParkAdminControlsProvider, ParkAdminSection } from "@/components/park/park-admin-controls";
 import { ParkTypeBadge } from "@/components/park/park-type-badge";
 import { ParkVisitHistory } from "@/components/park/park-visit-history";
@@ -229,7 +229,7 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
                 {t("showInFinlandsMap")}
               </Link>
             </div>
-            <ParkBoundaryMap
+            <LazyParkBoundaryMap
               boundaryGeoJson={publicPark.boundaryGeoJson}
               boundingBox={publicPark.boundingBox}
               markerPoint={publicPark.markerPoint}
