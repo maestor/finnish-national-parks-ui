@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import type { ParkDetail } from "@/lib/parks";
 import { ThreeDotPulse } from "../ui/three-dot-pulse";
+import { getMapStyle } from "./map-style";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 type BoundaryGeoJson = NonNullable<ParkDetail["boundaryGeoJson"]>;
@@ -28,34 +29,6 @@ const SOURCE_ID = "park-boundary";
 const FILL_LAYER_ID = "park-boundary-fill";
 const OUTLINE_LAYER_ID = "park-boundary-outline";
 const MAP_PADDING = 40;
-
-const getMapStyle = () => {
-  const mapStyleUrl = process.env.NEXT_PUBLIC_MAP_STYLE_URL as string | undefined;
-  if (mapStyleUrl) {
-    return mapStyleUrl;
-  }
-  return {
-    version: 8,
-    sources: {
-      osm: {
-        type: "raster",
-        tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-        tileSize: 256,
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      },
-    },
-    layers: [
-      {
-        id: "osm",
-        type: "raster",
-        source: "osm",
-        minzoom: 0,
-        maxzoom: 19,
-      },
-    ],
-  } as maplibregl.StyleSpecification;
-};
 
 export const ParkBoundaryMap = ({
   boundaryGeoJson,

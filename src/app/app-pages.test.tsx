@@ -635,7 +635,7 @@ describe("App pages", () => {
       "href",
       "/paikat?park=pallas",
     );
-    expect(screen.getByTestId("park-boundary-map")).toHaveTextContent("Pallas-Yllästunturi");
+    expect(await screen.findByTestId("park-boundary-map")).toHaveTextContent("Pallas-Yllästunturi");
     expect(screen.getByTestId("park-visit-history")).toHaveTextContent(
       "slug:pallas|visits:1|open:none",
     );
