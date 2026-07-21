@@ -49,6 +49,27 @@ describe("useAuth", () => {
     expect(result.current.user).toBeNull();
   });
 
+  it("shares a single auth request between concurrent hook instances", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      id: "user-1",
+      email: "user@example.com",
+      name: "Test User",
+      picture: "https://example.com/user.png",
+    });
+
+    const first = renderHook(() => useAuth());
+    const second = renderHook(() => useAuth());
+
+    await waitFor(() => {
+      expect(first.result.current.isLoading).toBe(false);
+      expect(second.result.current.isLoading).toBe(false);
+    });
+
+    expect(apiFetch).toHaveBeenCalledTimes(1);
+    expect(first.result.current.user?.id).toBe("user-1");
+    expect(second.result.current.user?.id).toBe("user-1");
+  });
+
   it("does not update state after unmount when the auth request resolves later", async () => {
     let resolveUser: ((value: AuthUser) => void) | undefined;
 

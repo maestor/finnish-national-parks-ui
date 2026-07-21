@@ -10,6 +10,20 @@ export type AuthUser = {
   picture: string;
 };
 
+// Concurrent hook instances (header, map, visit history, admin controls) mount
+// together and would each fire their own /auth/me. Share the in-flight request;
+// once it settles, later mounts fetch again so session changes are picked up.
+let authMeRequest: Promise<AuthUser | null> | null = null;
+
+const fetchAuthUser = () => {
+  authMeRequest ??= apiFetch<AuthUser>("/auth/me")
+    .catch(() => null)
+    .finally(() => {
+      authMeRequest = null;
+    });
+  return authMeRequest;
+};
+
 export const useAuth = () => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -17,16 +31,11 @@ export const useAuth = () => {
   useEffect(() => {
     let mounted = true;
 
-    apiFetch<AuthUser>("/auth/me")
-      .then((data) => {
-        if (mounted) setUser(data);
-      })
-      .catch(() => {
-        if (mounted) setUser(null);
-      })
-      .finally(() => {
-        if (mounted) setIsLoading(false);
-      });
+    fetchAuthUser().then((data) => {
+      if (!mounted) return;
+      setUser(data);
+      setIsLoading(false);
+    });
 
     return () => {
       mounted = false;

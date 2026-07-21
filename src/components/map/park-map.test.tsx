@@ -9,6 +9,7 @@ const resizeObservers: MockResizeObserver[] = [];
 const popupInstances: Array<{
   addTo: ReturnType<typeof vi.fn>;
   remove: ReturnType<typeof vi.fn>;
+  setDOMContent: ReturnType<typeof vi.fn>;
 }> = [];
 let mapOptions: Record<string, unknown> | null = null;
 const fitBoundsMock = vi.fn();
@@ -256,6 +257,25 @@ describe("ParkMap", () => {
     const logo = document.querySelector('img[src="https://example.com/pallas-logo.png"]');
     expect(logo).toBeInTheDocument();
     expect(logo).toHaveClass("h-12", "w-auto");
+  });
+
+  it("builds popup content only when a park popup is first shown", () => {
+    render(<ParkMap parks={parks} />);
+    triggerMapLoad();
+
+    // Building popup DOM eagerly would also fetch every park logo up front.
+    for (const popup of popupInstances) {
+      expect(popup.setDOMContent).not.toHaveBeenCalled();
+    }
+
+    fireEvent.click(markerElements[0]);
+
+    const contentCalls = popupInstances.flatMap((popup) => popup.setDOMContent.mock.calls);
+    expect(contentCalls).toHaveLength(1);
+    const contentNode = contentCalls[0][0] as HTMLElement;
+    expect(
+      contentNode.querySelector('img[src="https://example.com/pallas-logo.png"]'),
+    ).not.toBeNull();
   });
 
   it("does not show a logo in the popup when the park has no logo", () => {

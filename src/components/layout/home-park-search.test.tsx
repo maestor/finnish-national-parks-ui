@@ -103,6 +103,21 @@ describe("HomeParkSearch", () => {
     searchParamsState.value = "";
   });
 
+  it("defers loading the park index until the search is first used", async () => {
+    vi.mocked(apiFetch).mockResolvedValue({ parks });
+
+    renderSearch();
+
+    expect(apiFetch).not.toHaveBeenCalled();
+
+    const input = screen.getByRole("combobox", { name: "layout.parkSearch.label" });
+    fireEvent.focus(input);
+
+    await waitFor(() => {
+      expect(apiFetch).toHaveBeenCalledWith("/api/parks/search");
+    });
+  });
+
   it("filters parks by query and activates the matching park on the parks map", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce({ parks });
 
@@ -191,6 +206,7 @@ describe("HomeParkSearch", () => {
 
     const input = screen.getByRole("combobox", { name: "layout.parkSearch.label" });
 
+    fireEvent.focus(input);
     fireEvent.keyDown(input, { key: "ArrowDown" });
 
     await waitFor(() => {
@@ -211,6 +227,7 @@ describe("HomeParkSearch", () => {
 
     const input = screen.getByRole("combobox", { name: "layout.parkSearch.label" });
 
+    fireEvent.focus(input);
     fireEvent.keyDown(input, { key: "ArrowDown" });
     await screen.findByRole("button", { name: /Päijänteen kansallispuisto/i });
 
@@ -304,8 +321,6 @@ describe("HomeParkSearch", () => {
   });
 
   it("renders the desktop search icon with visible foreground contrast styling", () => {
-    vi.mocked(apiFetch).mockImplementationOnce(() => new Promise(() => {}));
-
     const { container } = renderSearch();
     const icon = container.querySelector('svg[class*="text-foreground/60"]');
     const input = screen.getByRole("combobox", { name: "layout.parkSearch.label" });
