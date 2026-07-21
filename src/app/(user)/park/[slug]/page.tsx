@@ -31,20 +31,18 @@ const buildParkDetailPath = (slug: string, includeBoundary: boolean) =>
 
 const formatParkMetadataTitle = (slug: string) => slug.replace(/-/g, " ");
 
+// Shared by generateMetadata and the page. Both call it with the same slug and
+// always include the boundary, so Next.js request memoization collapses the
+// two call sites into a single underlying fetch per request.
 const fetchParkDetailForRequest = async (
   slug: string,
-  options?: {
-    includeBoundary?: boolean;
-  },
 ): Promise<{
   park: ParkDetail;
   usedAuthenticatedFallback: boolean;
 }> => {
-  const includeBoundary = options?.includeBoundary ?? false;
-
   try {
     return {
-      park: await fetchPublicParkDetail(slug, { includeBoundary }),
+      park: await fetchPublicParkDetail(slug, { includeBoundary: true }),
       usedAuthenticatedFallback: false,
     };
   } catch (error) {
@@ -53,27 +51,12 @@ const fetchParkDetailForRequest = async (
     }
 
     return {
-      park: await apiAuthFetch<ParkDetail>(buildParkDetailPath(slug, includeBoundary), {
+      park: await apiAuthFetch<ParkDetail>(buildParkDetailPath(slug, true), {
         cache: "no-store",
       }),
       usedAuthenticatedFallback: true,
     };
   }
-};
-
-const fetchParkVisitsForRequest = async (
-  slug: string,
-  options?: {
-    useAuthenticatedFetch?: boolean;
-  },
-): Promise<ParkVisits> => {
-  if (options?.useAuthenticatedFetch) {
-    return apiAuthFetch<ParkVisits>(`/api/parks/${slug}/visits`, {
-      cache: "no-store",
-    });
-  }
-
-  return fetchPublicParkVisits(slug);
 };
 
 export const generateMetadata = async ({ params }: ParkDetailPageProps) => {
@@ -104,14 +87,19 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
   const parsedVisitId = normalizedVisit ? Number.parseInt(normalizedVisit, 10) : Number.NaN;
   const initialOpenVisitId = Number.isInteger(parsedVisitId) ? parsedVisitId : null;
 
-  const parkResult = await fetchParkDetailForRequest(slug, { includeBoundary: true }).catch(
-    () => null,
-  );
+  // Public detail and visits go out in parallel; only a hidden park (401/404
+  // on the detail) redoes the visits read with an authenticated request.
+  const [parkResult, publicParkVisits] = await Promise.all([
+    fetchParkDetailForRequest(slug).catch(() => null),
+    fetchPublicParkVisits(slug).catch(() => null),
+  ]);
   const publicPark = parkResult?.park ?? null;
 
-  const parkVisits = await fetchParkVisitsForRequest(slug, {
-    useAuthenticatedFetch: parkResult?.usedAuthenticatedFallback ?? false,
-  }).catch(() => null);
+  const parkVisits = parkResult?.usedAuthenticatedFallback
+    ? await apiAuthFetch<ParkVisits>(`/api/parks/${slug}/visits`, { cache: "no-store" }).catch(
+        () => null,
+      )
+    : publicParkVisits;
 
   if (!publicPark) {
     return (

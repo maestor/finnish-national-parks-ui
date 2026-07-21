@@ -774,12 +774,15 @@ describe("App pages", () => {
   });
 
   it("falls back to an authenticated park fetch when a removed park is hidden from the public API", async () => {
+    // Public detail and visits both 404 for the hidden park; both reads are
+    // redone with the authenticated fetch.
+    vi.mocked(apiFetch).mockRejectedValueOnce(Object.assign(new Error("hidden"), { status: 404 }));
     vi.mocked(apiFetch).mockRejectedValueOnce(Object.assign(new Error("hidden"), { status: 404 }));
     vi.mocked(apiAuthFetch).mockResolvedValueOnce({
       ...publicPark,
       boundaryGeoJson: null,
     });
-    vi.mocked(apiFetch).mockResolvedValueOnce({
+    vi.mocked(apiAuthFetch).mockResolvedValueOnce({
       visitedSummary: {
         visited: false,
         visitCount: 0,
@@ -796,6 +799,9 @@ describe("App pages", () => {
     );
 
     expect(apiAuthFetch).toHaveBeenCalledWith("/api/parks/pallas?includeBoundary=true", {
+      cache: "no-store",
+    });
+    expect(apiAuthFetch).toHaveBeenCalledWith("/api/parks/pallas/visits", {
       cache: "no-store",
     });
     expect(screen.getByRole("heading", { name: "Pallas-Yllästunturi" })).toBeInTheDocument();

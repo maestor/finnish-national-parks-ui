@@ -493,6 +493,9 @@ export const ParkMap = ({
   const userLocationMarkerRef = useRef<maplibregl.Marker | null>(null);
   const popupsRef = useRef<Map<string, maplibregl.Popup>>(new Map());
   const shownPopupsRef = useRef<Set<string>>(new Set());
+  // Popup DOM (including logo <img> sources) is built on first show so loading
+  // the map does not fetch every park logo up front.
+  const popupContentFactoriesRef = useRef<Map<string, () => HTMLElement>>(new Map());
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeSlugRef = useRef<string | null>(null);
   const hoveredSlugRef = useRef<string | null>(null);
@@ -698,6 +701,11 @@ export const ParkMap = ({
         const isShown = shownPopupsRef.current.has(slug);
 
         if (shouldShow && !isShown) {
+          const buildContent = popupContentFactoriesRef.current.get(slug);
+          if (buildContent) {
+            popupContentFactoriesRef.current.delete(slug);
+            popup.setDOMContent(buildContent());
+          }
           popup.addTo(map);
           shownPopupsRef.current.add(slug);
         } else if (!shouldShow && isShown) {
@@ -755,6 +763,7 @@ export const ParkMap = ({
       }
       popupsRef.current.clear();
       shownPopupsRef.current.clear();
+      popupContentFactoriesRef.current.clear();
       userLocationMarkerRef.current?.remove();
       userLocationMarkerRef.current = null;
       map.remove();
@@ -779,6 +788,7 @@ export const ParkMap = ({
     }
     popupsRef.current.clear();
     shownPopupsRef.current.clear();
+    popupContentFactoriesRef.current.clear();
 
     if (parks.length === 0) return;
 
@@ -812,11 +822,11 @@ export const ParkMap = ({
           "bottom-left": [0, -32],
           "bottom-right": [0, -32],
         },
-      })
-        .setLngLat([park.markerPoint.lon, park.markerPoint.lat])
-        .setDOMContent(
-          createPopupNode(park, labels, canManageVisits, isRemoved, onToggleRemoved, toggleLabels),
-        );
+      }).setLngLat([park.markerPoint.lon, park.markerPoint.lat]);
+
+      popupContentFactoriesRef.current.set(park.slug, () =>
+        createPopupNode(park, labels, canManageVisits, isRemoved, onToggleRemoved, toggleLabels),
+      );
 
       popupsRef.current.set(park.slug, popup);
 

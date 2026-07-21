@@ -31,6 +31,7 @@ export const HomeParkSearch = () => {
   const { closeMobileFilters, focusParkOnHome } = useHomeMapControls();
   const containerRef = useRef<HTMLDivElement>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
+  const loadStartedRef = useRef(false);
   const [parks, setParks] = useState<ParkSearchResult[]>([]);
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -39,34 +40,27 @@ export const HomeParkSearch = () => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const isParksMapPage = normalizedPathname === appRoutes.parks;
 
-  useEffect(() => {
-    let mounted = true;
+  // The park index is only needed once the visitor actually uses search, so
+  // the first focus/click starts the fetch instead of every page load.
+  const ensureParksLoaded = () => {
+    if (loadStartedRef.current) {
+      return;
+    }
+    loadStartedRef.current = true;
 
     apiFetch<{ parks: ParkSearchResult[] }>("/api/parks/search")
       .then((data) => {
-        if (!mounted) {
-          return;
-        }
-
         setParks(
           [...data.parks].sort((left, right) => left.name.localeCompare(right.name, "fi-FI")),
         );
       })
       .catch(() => {
-        if (mounted) {
-          setParks([]);
-        }
+        setParks([]);
       })
       .finally(() => {
-        if (mounted) {
-          setIsLoading(false);
-        }
+        setIsLoading(false);
       });
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -157,6 +151,7 @@ export const HomeParkSearch = () => {
       <button
         type="button"
         onClick={() => {
+          ensureParksLoaded();
           setHighlightedIndex(0);
           setIsOpen((current) => !current);
           setIsMobileOpen((current) => !current);
@@ -186,11 +181,15 @@ export const HomeParkSearch = () => {
           type="search"
           value={query}
           onChange={(event) => {
+            ensureParksLoaded();
             setQuery(event.target.value);
             setHighlightedIndex(0);
             setIsOpen(true);
           }}
-          onFocus={() => setIsOpen(true)}
+          onFocus={() => {
+            ensureParksLoaded();
+            setIsOpen(true);
+          }}
           onKeyDown={handleKeyDown}
           placeholder={t("placeholder")}
           className={cn(SEARCH_INPUT_CLASS_NAME, SEARCH_SURFACE_CLASS_NAME)}
