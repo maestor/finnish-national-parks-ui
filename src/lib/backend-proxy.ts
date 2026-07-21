@@ -78,6 +78,11 @@ const buildProxyResponseHeaders = (response: Response, request: Request): Header
   return headers;
 };
 
+const BACKEND_TIMEOUT_MS = 10_000;
+
+const isTimeoutError = (error: unknown) =>
+  error instanceof DOMException && error.name === "TimeoutError";
+
 export const proxyBackendRequest = async (
   request: Request,
   backendPath: string,
@@ -85,12 +90,23 @@ export const proxyBackendRequest = async (
 ): Promise<Response> => {
   const backendUrl = getBackendUrl(request, backendPath);
   const body = await getRequestBody(request);
-  const response = await fetch(backendUrl, {
-    method: request.method,
-    headers: buildProxyRequestHeaders(request, includeApiKey),
-    body,
-    redirect: "manual",
-  });
+
+  let response: Response;
+  try {
+    response = await fetch(backendUrl, {
+      method: request.method,
+      headers: buildProxyRequestHeaders(request, includeApiKey),
+      body,
+      redirect: "manual",
+      // A hung backend must not pin the route handler indefinitely.
+      signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS),
+    });
+  } catch (error) {
+    if (isTimeoutError(error)) {
+      return new Response(null, { status: 504 });
+    }
+    throw error;
+  }
 
   return new Response(response.body, {
     status: response.status,
