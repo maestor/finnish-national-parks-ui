@@ -38,9 +38,9 @@ describe("AppImage", () => {
       alt: "Laajalahden luonnonsuojelualue",
       height: 112,
       src: "https://example.com/logo.png",
-      unoptimized: true,
       width: 192,
     });
+    expect(imageProps?.unoptimized).toBeUndefined();
     expect(imageProps?.loader).toBeUndefined();
   });
 });

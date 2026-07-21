@@ -166,6 +166,12 @@ Route naming caveat:
 - In this project, **all `GET` endpoints are public-readable**, including `GET /api/visits` and `GET /api/parks/{slug}/visits`.
 - **Non-`GET` endpoints require authenticated admin access.**
 
+### Image Hosting
+
+- Park logos and visit images are served from the backend's Cloudflare R2 bucket.
+- `next/image` optimization is enabled through the shared `AppImage` wrapper; the only allowed remote origin is the R2 host in `next.config.ts` `images.remotePatterns`.
+- If the backend moves image hosting (for example to a custom R2 domain), update `next.config.ts` and this note in the same change. Do not widen the allowlist with wildcards.
+
 ### Public Page Data Strategy
 
 - The public home page (`/`) reads `GET /api/home-summary`.
