@@ -68,6 +68,7 @@ describe("PublicVisitsTimeline", () => {
       route: "Punarinnankierros",
       createdAt: "2024-06-15T10:00:00Z",
       imageCount: 0,
+      trip: null,
       park: {
         name: "Nuuksio",
         slug: "nuuksio",
@@ -80,6 +81,7 @@ describe("PublicVisitsTimeline", () => {
       route: null,
       createdAt: "2024-08-10T10:00:00Z",
       imageCount: 1,
+      trip: null,
       park: {
         name: "Pallas-Yllastunturi",
         slug: "pallas-yllastunturi",
@@ -92,6 +94,7 @@ describe("PublicVisitsTimeline", () => {
       route: "Talvipolku",
       createdAt: "2025-02-05T10:00:00Z",
       imageCount: 0,
+      trip: null,
       park: {
         name: "Oulanka",
         slug: "oulanka",

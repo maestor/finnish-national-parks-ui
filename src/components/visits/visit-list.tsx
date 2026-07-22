@@ -16,6 +16,7 @@ export const VisitList = ({ visits }: VisitListProps) => {
   const t = useTranslations("controlPanel.visits.list");
   const [query, setQuery] = useState("");
   const [selectedParkSlug, setSelectedParkSlug] = useState("");
+  const [selectedTripId, setSelectedTripId] = useState("");
   const renderStatusBadge = (isComplete: boolean) => (
     <span
       className={`inline-flex min-w-20 items-center justify-center rounded-full border px-2.5 py-1 text-xs font-medium ${
@@ -52,15 +53,38 @@ export const VisitList = ({ visits }: VisitListProps) => {
     ];
   }, [t, visits]);
 
+  const tripOptions = useMemo(() => {
+    const uniqueTrips = Array.from(
+      new Map(
+        visits.flatMap((visit) => (visit.trip ? [[visit.trip.id, visit.trip]] : [])),
+      ).values(),
+    ).sort((left, right) => left.name.localeCompare(right.name, "fi-FI"));
+
+    return [
+      { label: t("filters.allTrips"), value: "" },
+      { label: t("filters.unassignedTrips"), value: "none" },
+      ...uniqueTrips.map((trip) => ({
+        label: trip.name,
+        value: String(trip.id),
+      })),
+    ];
+  }, [t, visits]);
+
   const normalizedQuery = query.trim().toLocaleLowerCase("fi-FI");
   const filteredVisits = sortedVisits.filter((visit) => {
     const matchesPark = selectedParkSlug ? visit.park.slug === selectedParkSlug : true;
-    const haystack = [visit.park.name, visit.route ?? "", visit.visitedOn]
+    const matchesTrip =
+      selectedTripId === ""
+        ? true
+        : selectedTripId === "none"
+          ? visit.trip === null
+          : String(visit.trip?.id ?? "") === selectedTripId;
+    const haystack = [visit.park.name, visit.trip?.name ?? "", visit.route ?? "", visit.visitedOn]
       .join(" ")
       .toLocaleLowerCase("fi-FI");
     const matchesQuery = normalizedQuery ? haystack.includes(normalizedQuery) : true;
 
-    return matchesPark && matchesQuery;
+    return matchesPark && matchesTrip && matchesQuery;
   });
 
   if (sortedVisits.length === 0) {
@@ -89,6 +113,7 @@ export const VisitList = ({ visits }: VisitListProps) => {
         onReset={() => {
           setQuery("");
           setSelectedParkSlug("");
+          setSelectedTripId("");
         }}
         selects={[
           {
@@ -97,6 +122,13 @@ export const VisitList = ({ visits }: VisitListProps) => {
             options: parkOptions,
             value: selectedParkSlug,
             onChange: setSelectedParkSlug,
+          },
+          {
+            id: "visits-trip-filter",
+            label: t("filters.tripLabel"),
+            options: tripOptions,
+            value: selectedTripId,
+            onChange: setSelectedTripId,
           },
         ]}
       />
@@ -111,6 +143,7 @@ export const VisitList = ({ visits }: VisitListProps) => {
             <thead className="bg-white/74 dark:bg-slate-950/56">
               <tr>
                 <th className="px-4 py-3 text-left font-medium">{t("parkName")}</th>
+                <th className="px-4 py-3 text-left font-medium">{t("trip")}</th>
                 <th className="px-4 py-3 text-left font-medium">{t("route")}</th>
                 <th className="px-4 py-3 text-left font-medium">{t("visitDate")}</th>
                 <th className="px-4 py-3 text-center font-medium">{t("noteStatus")}</th>
@@ -129,6 +162,7 @@ export const VisitList = ({ visits }: VisitListProps) => {
                       {visit.park.name}
                     </Link>
                   </td>
+                  <td className="px-4 py-3">{visit.trip?.name ?? t("noTrip")}</td>
                   <td className="px-4 py-3">{visit.route ?? "–"}</td>
                   <td className="px-4 py-3">{visit.visitedOn}</td>
                   <td className="px-4 py-3 text-center">

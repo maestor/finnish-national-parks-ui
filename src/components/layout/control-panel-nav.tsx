@@ -19,6 +19,7 @@ export const ControlPanelNav = () => {
   const links = [
     { href: appRoutes.controlPanel.root, label: t("dashboard.title") },
     { href: appRoutes.controlPanel.parks, label: t("parks.title") },
+    { href: appRoutes.controlPanel.trips, label: t("trips.title") },
     { href: appRoutes.controlPanel.visits, label: t("visits.title") },
   ];
 

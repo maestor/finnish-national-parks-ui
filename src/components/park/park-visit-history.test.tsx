@@ -24,6 +24,7 @@ const visits: Visit[] = [
     route: "Huippupolku",
     author: "Maija",
     note: "Aurinkoinen reissu",
+    trip: null,
     createdAt: "2024-06-15T10:00:00Z",
     updatedAt: "2024-06-15T10:00:00Z",
     images: [],

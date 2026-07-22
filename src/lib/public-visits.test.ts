@@ -14,6 +14,7 @@ const createTimelineVisit = (
   route: null,
   createdAt: "2024-06-15T10:00:00Z",
   imageCount: 0,
+  trip: null,
   park: {
     name: "Nuuksio",
     slug: "nuuksio",

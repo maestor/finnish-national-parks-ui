@@ -12,6 +12,9 @@ describe("routes", () => {
     expect(appRoutes.controlPanel.root).toBe("/hallinta");
     expect(appRoutes.controlPanel.parks).toBe("/hallinta/paikat");
     expect(appRoutes.controlPanel.parkEdit("pallas")).toBe("/hallinta/paikat/pallas/muokkaa");
+    expect(appRoutes.controlPanel.trips).toBe("/hallinta/retket");
+    expect(appRoutes.controlPanel.newTrip).toBe("/hallinta/retket/uusi");
+    expect(appRoutes.controlPanel.editTrip("7")).toBe("/hallinta/retket/7/muokkaa");
     expect(appRoutes.controlPanel.visits).toBe("/hallinta/kaynnit");
     expect(appRoutes.controlPanel.newVisit).toBe("/hallinta/kaynnit/uusi");
     expect(appRoutes.controlPanel.editVisit("42")).toBe("/hallinta/kaynnit/42/muokkaa");
@@ -30,6 +33,9 @@ describe("routes", () => {
     expect(normalizeAppPath("/control-panel/parks/pallas/edit")).toBe(
       "/hallinta/paikat/pallas/muokkaa",
     );
+    expect(normalizeAppPath("/control-panel/trips")).toBe("/hallinta/retket");
+    expect(normalizeAppPath("/control-panel/trips/new")).toBe("/hallinta/retket/uusi");
+    expect(normalizeAppPath("/control-panel/trips/7/edit")).toBe("/hallinta/retket/7/muokkaa");
     expect(normalizeAppPath("/control-panel/visits")).toBe("/hallinta/kaynnit");
     expect(normalizeAppPath("/control-panel/visits/new?park=pallas")).toBe(
       "/hallinta/kaynnit/uusi?park=pallas",
@@ -40,8 +46,10 @@ describe("routes", () => {
   it("detects canonical and legacy control-panel paths", () => {
     expect(appRoutePatterns.isControlPanelPath("/hallinta")).toBe(true);
     expect(appRoutePatterns.isControlPanelPath("/hallinta/kaynnit")).toBe(true);
+    expect(appRoutePatterns.isControlPanelPath("/hallinta/retket")).toBe(true);
     expect(appRoutePatterns.isControlPanelPath("/control-panel")).toBe(true);
     expect(appRoutePatterns.isControlPanelPath("/control-panel/parks")).toBe(true);
+    expect(appRoutePatterns.isControlPanelPath("/control-panel/trips")).toBe(true);
     expect(appRoutePatterns.isControlPanelPath("/paikat")).toBe(false);
   });
 });

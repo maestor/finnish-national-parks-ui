@@ -11,6 +11,9 @@ export const appRoutes = {
     root: CONTROL_PANEL_ROOT,
     parks: `${CONTROL_PANEL_ROOT}/paikat`,
     parkEdit: (slug: string) => `${CONTROL_PANEL_ROOT}/paikat/${slug}/muokkaa`,
+    trips: `${CONTROL_PANEL_ROOT}/retket`,
+    newTrip: `${CONTROL_PANEL_ROOT}/retket/uusi`,
+    editTrip: (tripId: string | number) => `${CONTROL_PANEL_ROOT}/retket/${tripId}/muokkaa`,
     visits: `${CONTROL_PANEL_ROOT}/kaynnit`,
     newVisit: `${CONTROL_PANEL_ROOT}/kaynnit/uusi`,
     editVisit: (visitId: string | number) => `${CONTROL_PANEL_ROOT}/kaynnit/${visitId}/muokkaa`,
@@ -32,6 +35,21 @@ export const legacyAppRedirects = [
   {
     source: "/control-panel/parks/:slug/edit",
     destination: "/hallinta/paikat/:slug/muokkaa",
+    permanent: true,
+  },
+  {
+    source: "/control-panel/trips",
+    destination: appRoutes.controlPanel.trips,
+    permanent: true,
+  },
+  {
+    source: "/control-panel/trips/new",
+    destination: appRoutes.controlPanel.newTrip,
+    permanent: true,
+  },
+  {
+    source: "/control-panel/trips/:id/edit",
+    destination: "/hallinta/retket/:id/muokkaa",
     permanent: true,
   },
   {
@@ -92,6 +110,14 @@ const normalizePathname = (pathname: string) => {
     return appRoutes.controlPanel.parks;
   }
 
+  if (pathname === "/control-panel/trips") {
+    return appRoutes.controlPanel.trips;
+  }
+
+  if (pathname === "/control-panel/trips/new") {
+    return appRoutes.controlPanel.newTrip;
+  }
+
   if (pathname === "/control-panel/visits") {
     return appRoutes.controlPanel.visits;
   }
@@ -108,6 +134,11 @@ const normalizePathname = (pathname: string) => {
   const controlPanelParkEditMatch = /^\/control-panel\/parks\/([^/]+)\/edit$/.exec(pathname);
   if (controlPanelParkEditMatch) {
     return appRoutes.controlPanel.parkEdit(controlPanelParkEditMatch[1]);
+  }
+
+  const controlPanelTripEditMatch = /^\/control-panel\/trips\/([^/]+)\/edit$/.exec(pathname);
+  if (controlPanelTripEditMatch) {
+    return appRoutes.controlPanel.editTrip(controlPanelTripEditMatch[1]);
   }
 
   const controlPanelVisitEditMatch = /^\/control-panel\/visits\/([^/]+)\/edit$/.exec(pathname);
