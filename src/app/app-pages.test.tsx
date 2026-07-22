@@ -118,17 +118,23 @@ vi.mock("@/components/visits/public-visits-timeline", () => ({
     selectedYear,
     selectedMonth,
     error,
+    view,
+    mapMarkers,
   }: {
     totalCount: number;
     filteredCount: number;
     selectedYear: number | null;
     selectedMonth: number | null;
     error?: string | null;
+    view?: "timeline" | "map";
+    mapMarkers?: { slug: string; visitCount: number }[];
   }) => (
     <div data-testid="public-visits-timeline">
       total:{totalCount}|filtered:{filteredCount}|year:{selectedYear ?? "all"}|month:
       {selectedMonth ?? "all"}|error:
-      {error ?? "none"}
+      {error ?? "none"}|view:{view ?? "timeline"}|markers:
+      {mapMarkers?.length ?? 0}|top:
+      {mapMarkers?.[0] ? `${mapMarkers[0].slug}:${mapMarkers[0].visitCount}` : "none"}
     </div>
   ),
 }));
@@ -820,7 +826,59 @@ describe("App pages", () => {
     );
 
     expect(screen.getByTestId("public-visits-timeline")).toHaveTextContent(
-      "total:1|filtered:1|year:2024|month:6|error:none",
+      "total:1|filtered:1|year:2024|month:6|error:none|view:timeline|markers:0|top:none",
+    );
+  });
+
+  it("renders the visits map view from the timeline and map summary join", async () => {
+    const hiddenParkVisit = {
+      ...timelineVisit,
+      id: 11,
+      visitedOn: "2024-07-01",
+      park: { name: "Piilotettu", slug: "piilotettu", typeLabel: "Kansallispuisto" },
+    } satisfies FrontendTimelineVisit;
+
+    vi.mocked(apiPublicFetch)
+      .mockResolvedValueOnce({ visits: [timelineVisit, hiddenParkVisit] })
+      .mockResolvedValueOnce({
+        parks: [
+          {
+            ...publicPark,
+            visitedSummary: { visited: true, visitCount: 1, lastVisitedOn: "2024-06-15" },
+          },
+        ],
+        updatedAt: visitWithPark.updatedAt,
+        version: 4,
+      });
+
+    await renderPublicRoute(
+      await PublicVisitsPage({
+        searchParams: Promise.resolve({ view: "map", year: "2024", month: "6" }),
+      }),
+    );
+
+    expect(apiPublicFetch).toHaveBeenCalledTimes(2);
+    expect(screen.getByTestId("public-visits-timeline")).toHaveTextContent(
+      "total:2|filtered:2|year:2024|month:all|error:none|view:map|markers:1|top:pallas:1",
+    );
+  });
+
+  it("falls back to the timeline view for unknown view params without fetching the map summary", async () => {
+    vi.mocked(apiPublicFetch).mockResolvedValueOnce({ visits: [timelineVisit] });
+
+    await renderPublicRoute(
+      await PublicVisitsPage({
+        searchParams: Promise.resolve({ view: "bogus" }),
+      }),
+    );
+
+    expect(apiPublicFetch).toHaveBeenCalledTimes(1);
+    expect(apiPublicFetch).toHaveBeenCalledWith(
+      "/api/visits-timeline",
+      expect.objectContaining({ cache: "force-cache" }),
+    );
+    expect(screen.getByTestId("public-visits-timeline")).toHaveTextContent(
+      "total:1|filtered:1|year:all|month:all|error:none|view:timeline|markers:0|top:none",
     );
   });
 

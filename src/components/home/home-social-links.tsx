@@ -1,3 +1,4 @@
+import { AppImage } from "@/components/ui/app-image";
 import { cn } from "@/lib/cn";
 
 interface HomeSocialLinksProps {
@@ -74,7 +75,7 @@ export const HomeSocialLinks = ({
               )}
             >
               <span className="relative flex h-5 w-5 shrink-0 items-center justify-center">
-                <img
+                <AppImage
                   src={lightIconSrc}
                   alt=""
                   aria-hidden="true"
@@ -82,7 +83,7 @@ export const HomeSocialLinks = ({
                   height={iconHeight}
                   className="h-5 w-5 object-contain dark:hidden"
                 />
-                <img
+                <AppImage
                   src={darkIconSrc}
                   alt=""
                   aria-hidden="true"

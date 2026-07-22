@@ -1,13 +1,33 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { buildPublicVisitsTimelineModel, type FrontendTimelineVisit } from "@/lib/public-visits";
+import {
+  buildPublicVisitsTimelineModel,
+  type FrontendTimelineVisit,
+  type PublicVisitsMapMarker,
+  type PublicVisitsView,
+} from "@/lib/public-visits";
 import { PublicVisitsTimeline } from "./public-visits-timeline";
+
+vi.mock("@/components/visits/lazy-visits-map", () => ({
+  LazyVisitsMap: ({
+    markers,
+    selectedYear,
+  }: {
+    markers: PublicVisitsMapMarker[];
+    selectedYear?: number | null;
+  }) => (
+    <div data-testid="visits-map">
+      markers:{markers.length}|year:{selectedYear ?? "all"}
+    </div>
+  ),
+}));
 
 // Mirrors the server page: the timeline model is built server-side and the
 // client component receives only the slim view model, not the raw visits.
 const renderTimeline = (
   visits: FrontendTimelineVisit[],
   selection: { selectedYear: number | null; selectedMonth: number | null },
+  extras?: { view?: PublicVisitsView; mapMarkers?: PublicVisitsMapMarker[] },
 ) => {
   const model = buildPublicVisitsTimelineModel(visits, selection);
 
@@ -20,6 +40,8 @@ const renderTimeline = (
       selectedMonth={model.selectedMonth}
       selectedYear={model.selectedYear}
       totalCount={visits.length}
+      view={extras?.view}
+      mapMarkers={extras?.mapMarkers}
     />,
   );
 };
@@ -168,17 +190,19 @@ describe("PublicVisitsTimeline", () => {
     fireEvent.change(screen.getByLabelText("visits.filters.yearSelectLabel"), {
       target: { value: "2025" },
     });
-    expect(mockPush).toHaveBeenLastCalledWith("/kaynnit?year=2025");
+    expect(mockPush).toHaveBeenLastCalledWith("/kaynnit?year=2025", { scroll: false });
 
     fireEvent.change(screen.getByLabelText("visits.filters.monthSelectLabel"), {
       target: { value: "8" },
     });
-    expect(mockPush).toHaveBeenLastCalledWith("/kaynnit?year=2024&month=8");
+    expect(mockPush).toHaveBeenLastCalledWith("/kaynnit?year=2024&month=8", {
+      scroll: false,
+    });
 
     fireEvent.change(screen.getByLabelText("visits.filters.monthSelectLabel"), {
       target: { value: "" },
     });
-    expect(mockPush).toHaveBeenLastCalledWith("/kaynnit?year=2024");
+    expect(mockPush).toHaveBeenLastCalledWith("/kaynnit?year=2024", { scroll: false });
   });
 
   it("filters timeline items by selected year and month and links to the targeted visit", () => {
@@ -398,5 +422,99 @@ describe("PublicVisitsTimeline", () => {
       "href",
       "/kaynnit",
     );
+  });
+
+  it("shows the view toggle with links that preserve the active filters", () => {
+    renderTimeline(visits, { selectedYear: 2024, selectedMonth: 6 });
+
+    const viewNav = screen.getByRole("navigation", { name: "visits.views.label" });
+    const timelineLink = within(viewNav).getByRole("link", { name: "visits.views.timeline" });
+    const mapLink = within(viewNav).getByRole("link", { name: "visits.views.map" });
+
+    expect(timelineLink).toHaveAttribute("href", "/kaynnit?year=2024&month=6");
+    expect(timelineLink).toHaveAttribute("aria-current", "page");
+    expect(mapLink).toHaveAttribute("href", "/kaynnit?year=2024&view=map");
+    expect(mapLink).not.toHaveAttribute("aria-current");
+  });
+
+  it("renders the map instead of the timeline sections when the map view is active", () => {
+    const mapMarkers: PublicVisitsMapMarker[] = [
+      {
+        slug: "nuuksio",
+        name: "Nuuksio",
+        coordinates: { lat: 60.3, lon: 24.5 },
+        visitCount: 1,
+        years: [2024],
+      },
+    ];
+
+    renderTimeline(
+      visits,
+      { selectedYear: 2024, selectedMonth: null },
+      {
+        view: "map",
+        mapMarkers,
+      },
+    );
+
+    expect(screen.getByTestId("visits-map")).toHaveTextContent("markers:1|year:2024");
+    expect(screen.queryByRole("heading", { name: "2024" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Nuuksio")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("navigation", { name: "visits.filters.monthsLabel" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("visits.filters.monthSelectLabel")).not.toBeInTheDocument();
+
+    const viewNav = screen.getByRole("navigation", { name: "visits.views.label" });
+    expect(within(viewNav).getByRole("link", { name: "visits.views.map" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(within(viewNav).getByRole("link", { name: "visits.views.timeline" })).toHaveAttribute(
+      "href",
+      "/kaynnit?year=2024",
+    );
+  });
+
+  it("keeps the map view in the year filters and hides month filters", () => {
+    const mapMarkers: PublicVisitsMapMarker[] = [
+      {
+        slug: "nuuksio",
+        name: "Nuuksio",
+        coordinates: { lat: 60.3, lon: 24.5 },
+        visitCount: 1,
+        years: [2024],
+      },
+    ];
+
+    renderTimeline(
+      visits,
+      { selectedYear: 2024, selectedMonth: null },
+      {
+        view: "map",
+        mapMarkers,
+      },
+    );
+
+    expect(screen.getByRole("link", { name: "2025" })).toHaveAttribute(
+      "href",
+      "/kaynnit?year=2025&view=map",
+    );
+    expect(screen.getByRole("link", { name: "visits.filters.allYearsLabel" })).toHaveAttribute(
+      "href",
+      "/kaynnit?view=map",
+    );
+
+    expect(
+      screen.queryByRole("navigation", { name: "visits.filters.monthsLabel" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("visits.filters.monthSelectLabel")).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("visits.filters.yearSelectLabel"), {
+      target: { value: "2025" },
+    });
+    expect(mockPush).toHaveBeenLastCalledWith("/kaynnit?year=2025&view=map", {
+      scroll: false,
+    });
   });
 });

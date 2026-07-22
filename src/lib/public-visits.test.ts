@@ -1,0 +1,167 @@
+import { describe, expect, it } from "vitest";
+import {
+  buildPublicVisitsMapModel,
+  createPublicVisitsHref,
+  type FrontendTimelineVisit,
+  type PublicVisitsMapPark,
+  resolvePublicVisitsView,
+} from "./public-visits";
+
+const createTimelineVisit = (
+  overrides: Partial<FrontendTimelineVisit> & { id: number },
+): FrontendTimelineVisit => ({
+  visitedOn: "2024-06-15",
+  route: null,
+  createdAt: "2024-06-15T10:00:00Z",
+  imageCount: 0,
+  park: {
+    name: "Nuuksio",
+    slug: "nuuksio",
+    typeLabel: "Kansallispuisto",
+  },
+  ...overrides,
+});
+
+const mapParks: PublicVisitsMapPark[] = [
+  {
+    slug: "nuuksio",
+    name: "Nuuksio",
+    markerPoint: { lat: 60.3, lon: 24.5 },
+  },
+  {
+    slug: "pallas-yllastunturi",
+    name: "Pallas-Yllästunturi",
+    markerPoint: { lat: 68.1, lon: 24.0 },
+  },
+];
+
+describe("resolvePublicVisitsView", () => {
+  it("defaults to the timeline view for missing, unknown, or empty params", () => {
+    expect(resolvePublicVisitsView(undefined)).toBe("timeline");
+    expect(resolvePublicVisitsView("")).toBe("timeline");
+    expect(resolvePublicVisitsView("timeline")).toBe("timeline");
+    expect(resolvePublicVisitsView("bogus")).toBe("timeline");
+  });
+
+  it("resolves the map view only for the explicit map param", () => {
+    expect(resolvePublicVisitsView("map")).toBe("map");
+    expect(resolvePublicVisitsView(["map", "timeline"])).toBe("map");
+    expect(resolvePublicVisitsView(["bogus", "map"])).toBe("timeline");
+  });
+});
+
+describe("createPublicVisitsHref", () => {
+  it("keeps timeline URLs free of the view param", () => {
+    expect(createPublicVisitsHref({})).toBe("/kaynnit");
+    expect(createPublicVisitsHref({ view: "timeline" })).toBe("/kaynnit");
+    expect(createPublicVisitsHref({ year: 2024, month: 6, view: "timeline" })).toBe(
+      "/kaynnit?year=2024&month=6",
+    );
+  });
+
+  it("keeps map URLs year-only even when a month is present", () => {
+    expect(createPublicVisitsHref({ view: "map" })).toBe("/kaynnit?view=map");
+    expect(createPublicVisitsHref({ year: 2024, view: "map" })).toBe("/kaynnit?year=2024&view=map");
+    expect(createPublicVisitsHref({ year: 2024, month: 6, view: "map" })).toBe(
+      "/kaynnit?year=2024&view=map",
+    );
+  });
+});
+
+describe("buildPublicVisitsMapModel", () => {
+  const visits: FrontendTimelineVisit[] = [
+    createTimelineVisit({ id: 1, visitedOn: "2023-07-10" }),
+    createTimelineVisit({ id: 2, visitedOn: "2024-06-15" }),
+    createTimelineVisit({ id: 3, visitedOn: "2024-08-20" }),
+    createTimelineVisit({
+      id: 4,
+      visitedOn: "2024-06-01",
+      park: {
+        name: "Pallas-Yllästunturi",
+        slug: "pallas-yllastunturi",
+        typeLabel: "Kansallispuisto",
+      },
+    }),
+    // A hidden park is absent from the map summary: the visit stays in the
+    // timeline counts but cannot be placed on the map.
+    createTimelineVisit({
+      id: 5,
+      visitedOn: "2024-09-05",
+      park: {
+        name: "Piilotettu",
+        slug: "piilotettu",
+        typeLabel: "Kansallispuisto",
+      },
+    }),
+  ];
+
+  it("aggregates one marker per visited park with coordinates, counts, and visit years", () => {
+    const markers = buildPublicVisitsMapModel(visits, mapParks, {
+      selectedYear: null,
+      selectedMonth: null,
+    });
+
+    expect(markers).toEqual([
+      {
+        slug: "nuuksio",
+        name: "Nuuksio",
+        coordinates: { lat: 60.3, lon: 24.5 },
+        visitCount: 3,
+        years: [2023, 2024],
+      },
+      {
+        slug: "pallas-yllastunturi",
+        name: "Pallas-Yllästunturi",
+        coordinates: { lat: 68.1, lon: 24.0 },
+        visitCount: 1,
+        years: [2024],
+      },
+    ]);
+  });
+
+  it("skips visits whose park is missing from the map summary", () => {
+    const markers = buildPublicVisitsMapModel(visits, mapParks, {
+      selectedYear: null,
+      selectedMonth: null,
+    });
+
+    expect(markers.some((marker) => marker.slug === "piilotettu")).toBe(false);
+  });
+
+  it("filters markers by the selected year and month", () => {
+    const yearMarkers = buildPublicVisitsMapModel(visits, mapParks, {
+      selectedYear: 2024,
+      selectedMonth: null,
+    });
+
+    expect(
+      yearMarkers.map((marker) => ({ slug: marker.slug, visitCount: marker.visitCount })),
+    ).toEqual([
+      { slug: "nuuksio", visitCount: 2 },
+      { slug: "pallas-yllastunturi", visitCount: 1 },
+    ]);
+    expect(yearMarkers[0]?.years).toEqual([2024]);
+
+    const monthMarkers = buildPublicVisitsMapModel(visits, mapParks, {
+      selectedYear: 2024,
+      selectedMonth: 6,
+    });
+
+    expect(monthMarkers.map((marker) => marker.slug)).toEqual(["nuuksio", "pallas-yllastunturi"]);
+  });
+
+  it("sorts markers by visit count and then by Finnish park name", () => {
+    const markers = buildPublicVisitsMapModel(visits, mapParks, {
+      selectedYear: 2024,
+      selectedMonth: 6,
+    });
+
+    expect(markers[0]?.visitCount).toBeGreaterThanOrEqual(markers[1]?.visitCount ?? 0);
+  });
+
+  it("returns no markers when nothing matches the selection", () => {
+    expect(
+      buildPublicVisitsMapModel(visits, mapParks, { selectedYear: 2025, selectedMonth: null }),
+    ).toEqual([]);
+  });
+});
