@@ -19,6 +19,8 @@ describe("routes", () => {
     expect(appRoutes.controlPanel.visits).toBe("/hallinta/kaynnit");
     expect(appRoutes.controlPanel.newVisit).toBe("/hallinta/kaynnit/uusi");
     expect(appRoutes.controlPanel.editVisit("42")).toBe("/hallinta/kaynnit/42/muokkaa");
+    expect(appRoutes.controlPanel.yearReview).toBe("/hallinta/vuosikatsaus");
+    expect(appRoutes.yearReview(2025)).toBe("/vuosikatsaus/2025");
   });
 
   it("normalizes legacy English routes to the canonical Finnish paths", () => {
@@ -43,6 +45,8 @@ describe("routes", () => {
       "/hallinta/kaynnit/uusi?park=pallas",
     );
     expect(normalizeAppPath("/control-panel/visits/42/edit")).toBe("/hallinta/kaynnit/42/muokkaa");
+    expect(normalizeAppPath("/control-panel/year-review")).toBe("/hallinta/vuosikatsaus");
+    expect(normalizeAppPath("/year-review/2025")).toBe("/vuosikatsaus/2025");
   });
 
   it("detects canonical and legacy control-panel paths", () => {

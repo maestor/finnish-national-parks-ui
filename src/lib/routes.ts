@@ -8,6 +8,7 @@ export const appRoutes = {
   trip: (slug: string) => `/retki/${slug}`,
   visits: "/kaynnit",
   tripPlanner: "/reissusuunnittelu",
+  yearReview: (year: number) => `/vuosikatsaus/${year}`,
   controlPanel: {
     root: CONTROL_PANEL_ROOT,
     parks: `${CONTROL_PANEL_ROOT}/paikat`,
@@ -18,6 +19,7 @@ export const appRoutes = {
     visits: `${CONTROL_PANEL_ROOT}/kaynnit`,
     newVisit: `${CONTROL_PANEL_ROOT}/kaynnit/uusi`,
     editVisit: (visitId: string | number) => `${CONTROL_PANEL_ROOT}/kaynnit/${visitId}/muokkaa`,
+    yearReview: `${CONTROL_PANEL_ROOT}/vuosikatsaus`,
   },
 } as const;
 
@@ -69,6 +71,12 @@ export const legacyAppRedirects = [
     destination: "/hallinta/kaynnit/:id/muokkaa",
     permanent: true,
   },
+  {
+    source: "/control-panel/year-review",
+    destination: appRoutes.controlPanel.yearReview,
+    permanent: true,
+  },
+  { source: "/year-review/:year", destination: "/vuosikatsaus/:year", permanent: true },
 ] as const;
 
 const splitPathAndSuffix = (path: string) => {
@@ -128,6 +136,10 @@ const normalizePathname = (pathname: string) => {
     return appRoutes.controlPanel.newVisit;
   }
 
+  if (pathname === "/control-panel/year-review") {
+    return appRoutes.controlPanel.yearReview;
+  }
+
   const parkMatch = /^\/park\/([^/]+)$/.exec(pathname);
   if (parkMatch) {
     return appRoutes.park(parkMatch[1]);
@@ -136,6 +148,11 @@ const normalizePathname = (pathname: string) => {
   const tripMatch = /^\/trip\/([^/]+)$/.exec(pathname);
   if (tripMatch) {
     return appRoutes.trip(tripMatch[1]);
+  }
+
+  const yearReviewMatch = /^\/year-review\/(\d+)$/.exec(pathname);
+  if (yearReviewMatch) {
+    return appRoutes.yearReview(Number.parseInt(yearReviewMatch[1], 10));
   }
 
   const controlPanelParkEditMatch = /^\/control-panel\/parks\/([^/]+)\/edit$/.exec(pathname);
