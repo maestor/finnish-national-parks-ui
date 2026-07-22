@@ -1,5 +1,6 @@
 import { apiPublicFetch } from "./api";
 import type { paths } from "./api-types";
+import type { FilterableMapPark } from "./parks";
 import { PUBLIC_VISITS_TAG } from "./public-cache";
 import { appRoutes, createPathWithSearchParams } from "./routes";
 
@@ -39,6 +40,21 @@ export interface PublicVisitsTimelineModel {
   sections: PublicVisitYearSection[];
   selectedMonth: number | null;
   selectedYear: number | null;
+}
+
+export type PublicVisitsView = "timeline" | "map";
+
+export type PublicVisitsMapPark = Pick<FilterableMapPark, "markerPoint" | "name" | "slug">;
+
+export interface PublicVisitsMapMarker {
+  coordinates: {
+    lat: number;
+    lon: number;
+  };
+  name: string;
+  slug: string;
+  visitCount: number;
+  years: number[];
 }
 
 export type FrontendTimelineVisit =
@@ -138,12 +154,17 @@ export const fetchVisitsTimeline = async (): Promise<{ visits: FrontendTimelineV
     },
   });
 
+export const resolvePublicVisitsView = (value?: string | string[]): PublicVisitsView =>
+  normalizeSearchParam(value) === "map" ? "map" : "timeline";
+
 export const createPublicVisitsHref = ({
   month,
   year,
+  view,
 }: {
   month?: number | null;
   year?: number | null;
+  view?: PublicVisitsView;
 }) => {
   const searchParams = new URLSearchParams();
 
@@ -151,8 +172,12 @@ export const createPublicVisitsHref = ({
     searchParams.set("year", String(year));
   }
 
-  if (typeof year === "number" && typeof month === "number") {
+  if (view !== "map" && typeof year === "number" && typeof month === "number") {
     searchParams.set("month", String(month));
+  }
+
+  if (view === "map") {
+    searchParams.set("view", "map");
   }
 
   const query = searchParams.toString();
@@ -307,4 +332,65 @@ export const buildPublicVisitsTimelineModel = (
     selectedMonth: normalizedSelectedMonth,
     selectedYear: normalizedSelectedYear,
   };
+};
+
+export const buildPublicVisitsMapModel = (
+  visits: FrontendTimelineVisit[],
+  parks: PublicVisitsMapPark[],
+  {
+    selectedMonth,
+    selectedYear,
+  }: {
+    selectedMonth: number | null;
+    selectedYear: number | null;
+  },
+): PublicVisitsMapMarker[] => {
+  const parksBySlug = new Map(parks.map((park) => [park.slug, park]));
+  const markersBySlug = new Map<
+    string,
+    { park: PublicVisitsMapPark; visitCount: number; years: Set<number> }
+  >();
+
+  for (const visit of visits) {
+    const visitYear = getVisitYear(visit.visitedOn);
+
+    if (selectedYear !== null && visitYear !== selectedYear) {
+      continue;
+    }
+
+    if (selectedMonth !== null && getVisitMonth(visit.visitedOn) !== selectedMonth) {
+      continue;
+    }
+
+    // Timeline visits carry no coordinates, so the map joins them to the map
+    // summary by slug. Visits whose park is missing from the summary (for
+    // example a hidden park) stay counted in the timeline but are skipped here.
+    const park = parksBySlug.get(visit.park.slug);
+
+    if (!park) {
+      continue;
+    }
+
+    const marker = markersBySlug.get(park.slug) ?? {
+      park,
+      visitCount: 0,
+      years: new Set<number>(),
+    };
+    marker.visitCount += 1;
+    marker.years.add(visitYear);
+    markersBySlug.set(park.slug, marker);
+  }
+
+  return [...markersBySlug.values()]
+    .map(({ park, visitCount, years }) => ({
+      slug: park.slug,
+      name: park.name,
+      coordinates: { lat: park.markerPoint.lat, lon: park.markerPoint.lon },
+      visitCount,
+      years: [...years].sort((left, right) => left - right),
+    }))
+    .sort(
+      (left, right) =>
+        right.visitCount - left.visitCount || left.name.localeCompare(right.name, "fi-FI"),
+    );
 };

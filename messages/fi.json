@@ -136,10 +136,15 @@
   "visits": {
     "eyebrow": "Käyntien aikajana",
     "title": "Käynnit",
-    "description": "Selaa kirjattuja käyntejä aikajärjestyksessä. Voit rajata näkymää vuoden mukaan ja tarkentaa tarvittaessa yksittäiseen kuukauteen.",
+    "description": "Selaa kirjattuja käyntejä aikajanalla tai kartalla. Voit rajata näkymää vuoden mukaan ja tarkentaa tarvittaessa yksittäiseen kuukauteen.",
     "errorTitle": "Käyntien lataus epäonnistui",
+    "views": {
+      "label": "Käyntinäkymät",
+      "timeline": "Aikajana",
+      "map": "Kartta"
+    },
     "filters": {
-      "title": "Rajaa aikajanalla",
+      "title": "Rajaa käyntejä",
       "visibleCount": "käyntiä näkyvissä",
       "yearsLabel": "Suodata käyntejä vuoden mukaan",
       "monthsLabel": "Suodata käyntejä kuukauden mukaan",
@@ -155,6 +160,15 @@
     "empty": {
       "all": "Ei vielä kirjattuja käyntejä.",
       "filtered": "Valitulla rajauksella ei löytynyt käyntejä."
+    },
+    "map": {
+      "ariaLabel": "Käynnit kartalla",
+      "empty": "Valitun rajauksen käyntejä ei voida näyttää kartalla.",
+      "listTitle": "Käydyt paikat kartalla",
+      "visitCount": "{count} käyntiä",
+      "visitCountInYear": "{count} käyntiä vuonna {year}",
+      "yearsLabel": "Käyntivuodet",
+      "openParkVisits": "Näytä paikan käynnit"
     },
     "item": {
       "note": "Muistiinpano",
