@@ -341,14 +341,18 @@
         "assignedTitle": "Tähän retkeen liitetyt",
         "assignedDescription": "{count} käyntiä tällä hetkellä tässä retkessä.",
         "assignedEmpty": "Tähän retkeen ei ole vielä liitetty käyntejä.",
+        "reorderHint": "Raahaa käyntejä uuteen järjestykseen tai käytä järjestyskahvan nuolinäppäimiä.",
+        "reorderSuccess": "Retken käyntijärjestys päivitettiin.",
         "availableTitle": "Ilman retkeä olevat käynnit",
         "availableDescription": "{count} käyntiä voidaan liittää tähän retkeen nykyisillä suodattimilla.",
         "availableEmpty": "Yhtään käyntiä ei löytynyt nykyisillä suodattimilla.",
         "attachAction": "Lisää",
         "removeAction": "Poista",
         "table": {
+          "order": "Järjestys",
           "park": "Paikka",
           "date": "Päivä",
+          "reorderVisit": "Järjestä käynti",
           "actions": "Toiminnot"
         },
         "filters": {

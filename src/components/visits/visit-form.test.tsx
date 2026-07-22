@@ -39,6 +39,7 @@ const visitToEdit = {
     id: 7,
     name: "Keski-Suomen kesaretki",
   },
+  tripStopOrder: 1,
   visitedOn: "2024-06-15",
   route: "Pallas-Yllästunturin reitti",
   author: "Maija Meikäläinen",
@@ -92,6 +93,7 @@ describe("VisitForm", () => {
       route: null,
       author: null,
       note: null,
+      tripStopOrder: null,
       createdAt: "2024-06-15T00:00:00Z",
       updatedAt: "2024-06-15T00:00:00Z",
     });
@@ -131,6 +133,7 @@ describe("VisitForm", () => {
       route: null,
       author: null,
       note: null,
+      tripStopOrder: null,
       createdAt: "2024-06-15T00:00:00Z",
       updatedAt: "2024-06-15T00:00:00Z",
     });
@@ -276,6 +279,7 @@ describe("VisitForm", () => {
       route: null,
       author: null,
       note: null,
+      tripStopOrder: null,
       createdAt: "2024-06-15T00:00:00Z",
       updatedAt: "2024-06-15T00:00:00Z",
     });

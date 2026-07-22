@@ -128,10 +128,32 @@ const compareVisitsByTimeline = (left: FrontendTimelineVisit, right: FrontendTim
   right.createdAt.localeCompare(left.createdAt) ||
   right.id - left.id;
 
-const compareVisitsByTripNarrative = (left: FrontendTimelineVisit, right: FrontendTimelineVisit) =>
-  left.visitedOn.localeCompare(right.visitedOn) ||
-  left.createdAt.localeCompare(right.createdAt) ||
-  left.id - right.id;
+const compareVisitsByTripNarrative = (
+  left: FrontendTimelineVisit,
+  right: FrontendTimelineVisit,
+) => {
+  if (
+    left.tripStopOrder !== null &&
+    right.tripStopOrder !== null &&
+    left.tripStopOrder !== right.tripStopOrder
+  ) {
+    return left.tripStopOrder - right.tripStopOrder;
+  }
+
+  if (left.tripStopOrder !== null && right.tripStopOrder === null) {
+    return -1;
+  }
+
+  if (left.tripStopOrder === null && right.tripStopOrder !== null) {
+    return 1;
+  }
+
+  return (
+    left.visitedOn.localeCompare(right.visitedOn) ||
+    left.createdAt.localeCompare(right.createdAt) ||
+    left.id - right.id
+  );
+};
 
 const buildAvailableVisitMonths = (visits: FrontendTimelineVisit[], year: number | null) => {
   const availableMonths = new Set<number>();

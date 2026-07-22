@@ -16,6 +16,7 @@ const createTimelineVisit = (
   createdAt: "2024-06-15T10:00:00Z",
   imageCount: 0,
   trip: null,
+  tripStopOrder: null,
   park: {
     name: "Nuuksio",
     slug: "nuuksio",
@@ -234,6 +235,44 @@ describe("buildPublicVisitsTimelineModel", () => {
     }
 
     expect(groupedTrip.visits.map((visit) => visit.id)).toEqual([1, 2]);
+  });
+
+  it("uses trip stop order for visits inside a grouped trip", () => {
+    const model = buildPublicVisitsTimelineModel(
+      [
+        createTimelineVisit({
+          id: 1,
+          visitedOn: "2024-06-15",
+          createdAt: "2024-06-15T09:00:00Z",
+          trip: { id: 7, name: "Kesaretki" },
+          tripStopOrder: 2,
+        }),
+        createTimelineVisit({
+          id: 2,
+          visitedOn: "2024-06-15",
+          createdAt: "2024-06-15T12:00:00Z",
+          park: {
+            name: "Pallas-Yllästunturi",
+            slug: "pallas-yllastunturi",
+            typeLabel: "Kansallispuisto",
+          },
+          trip: { id: 7, name: "Kesaretki" },
+          tripStopOrder: 1,
+        }),
+      ],
+      {
+        selectedYear: null,
+        selectedMonth: null,
+      },
+    );
+
+    const groupedTrip = model.sections[0]?.months[0]?.items[0];
+
+    if (groupedTrip?.kind !== "trip") {
+      throw new Error("Expected grouped trip item");
+    }
+
+    expect(groupedTrip.visits.map((visit) => visit.id)).toEqual([2, 1]);
   });
 
   it("keeps only the matching year slice inside a trip when filtered", () => {

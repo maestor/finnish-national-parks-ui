@@ -69,6 +69,7 @@ describe("PublicVisitsTimeline", () => {
       createdAt: "2024-06-15T10:00:00Z",
       imageCount: 0,
       trip: null,
+      tripStopOrder: null,
       park: {
         name: "Nuuksio",
         slug: "nuuksio",
@@ -82,6 +83,7 @@ describe("PublicVisitsTimeline", () => {
       createdAt: "2024-08-10T10:00:00Z",
       imageCount: 1,
       trip: null,
+      tripStopOrder: null,
       park: {
         name: "Pallas-Yllastunturi",
         slug: "pallas-yllastunturi",
@@ -95,6 +97,7 @@ describe("PublicVisitsTimeline", () => {
       createdAt: "2025-02-05T10:00:00Z",
       imageCount: 0,
       trip: null,
+      tripStopOrder: null,
       park: {
         name: "Oulanka",
         slug: "oulanka",
@@ -534,6 +537,7 @@ describe("PublicVisitsTimeline", () => {
             id: 7,
             name: "Kesaretki",
           },
+          tripStopOrder: 1,
           park: {
             name: "Nuuksio",
             slug: "nuuksio",
@@ -550,6 +554,7 @@ describe("PublicVisitsTimeline", () => {
             id: 7,
             name: "Kesaretki",
           },
+          tripStopOrder: 2,
           park: {
             name: "Pallas-Yllastunturi",
             slug: "pallas-yllastunturi",

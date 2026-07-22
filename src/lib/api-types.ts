@@ -872,6 +872,7 @@ export interface paths {
                                     id: number;
                                     name: string;
                                 } | null;
+                                tripStopOrder: number | null;
                                 updatedAt: string;
                                 visitedOn: string;
                             }[];
@@ -909,6 +910,7 @@ export interface paths {
                         note?: string | null;
                         route?: string | null;
                         tripId?: number | null;
+                        tripStopOrder?: number;
                         visitedOn: string;
                     };
                 };
@@ -944,6 +946,7 @@ export interface paths {
                                 id: number;
                                 name: string;
                             } | null;
+                            tripStopOrder: number | null;
                             updatedAt: string;
                             visitedOn: string;
                         };
@@ -963,6 +966,18 @@ export interface paths {
                 };
                 /** @description Park was not found */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Visit payload is invalid for the requested trip ordering */
+                422: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -1238,6 +1253,7 @@ export interface paths {
                                     id: number;
                                     name: string;
                                 } | null;
+                                tripStopOrder: number | null;
                                 visitedOn: string;
                             }[];
                         };
@@ -1800,6 +1816,7 @@ export interface paths {
                                     id: number;
                                     name: string;
                                 } | null;
+                                tripStopOrder: number | null;
                                 updatedAt: string;
                                 visitedOn: string;
                                 park: {
@@ -1868,6 +1885,7 @@ export interface paths {
                                 id: number;
                                 name: string;
                             } | null;
+                            tripStopOrder: number | null;
                             updatedAt: string;
                             visitedOn: string;
                             park: {
@@ -1967,6 +1985,7 @@ export interface paths {
                         note?: string | null;
                         route?: string | null;
                         tripId?: number | null;
+                        tripStopOrder?: number;
                         visitedOn?: string;
                     };
                 };
@@ -2002,6 +2021,7 @@ export interface paths {
                                 id: number;
                                 name: string;
                             } | null;
+                            tripStopOrder: number | null;
                             updatedAt: string;
                             visitedOn: string;
                         };
@@ -2021,6 +2041,18 @@ export interface paths {
                 };
                 /** @description Visit was not found */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Visit payload is invalid for the requested trip ordering */
+                422: {
                     headers: {
                         [name: string]: unknown;
                     };
