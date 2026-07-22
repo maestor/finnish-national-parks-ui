@@ -36,6 +36,9 @@ describe("ControlPanelNav", () => {
       "href",
       "/hallinta/kaynnit",
     );
+    expect(
+      within(nav).getByRole("link", { name: "controlPanel.yearReview.title" }),
+    ).toHaveAttribute("href", "/hallinta/vuosikatsaus");
   });
 
   it("marks the current page link with aria-current", () => {

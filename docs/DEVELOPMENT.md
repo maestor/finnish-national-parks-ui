@@ -114,6 +114,7 @@ Canonical end-user URLs are Finnish-only:
 - `/kaynnit`
 - `/paikka/[slug]`
 - `/reissusuunnittelu`
+- `/vuosikatsaus/[year]` (year-in-review share pages; intentionally not linked from public navigation)
 - `/hallinta`
 - `/kirjaudu`
 
