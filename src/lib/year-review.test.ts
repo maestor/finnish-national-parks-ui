@@ -9,6 +9,8 @@ const createVisit = (
   imageCount: 0,
   route: null,
   park: { name: "Nuuksio", slug: "nuuksio", typeLabel: "Kansallispuisto" },
+  trip: null,
+  tripStopOrder: null,
   ...overrides,
 });
 
