@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError, apiAuthFetch, apiFetch, apiPublicFetch } from "@/lib/api";
 import type { AdminVisibilityPark, Park, Visit, VisitWithPark } from "@/lib/parks";
@@ -18,6 +18,9 @@ import TripPlannerRoutePage, {
 import PublicVisitsPage, {
   generateMetadata as generatePublicVisitsMetadata,
 } from "./(user)/visits/page";
+import PublicYearReviewPage, {
+  generateMetadata as generatePublicYearReviewMetadata,
+} from "./(user)/year-review/[year]/page";
 import OfflinePage from "./~offline/page";
 import ControlPanelLayout from "./control-panel/layout";
 import ControlPanelPage, {
@@ -43,6 +46,9 @@ import NewVisitPage, {
 import VisitsPage, {
   generateMetadata as generateVisitsMetadata,
 } from "./control-panel/visits/page";
+import ControlPanelYearReviewPage, {
+  generateMetadata as generateControlPanelYearReviewMetadata,
+} from "./control-panel/year-review/page";
 import LoginPage from "./login/page";
 import NotFoundPage from "./not-found";
 
@@ -166,6 +172,19 @@ vi.mock("@/components/trips/public-trip-page", () => ({
   ),
 }));
 
+vi.mock("@/components/year-review/year-review-card", () => ({
+  buildYearReviewCardLabels: () => ({}),
+  YearReviewCard: ({
+    stats,
+  }: {
+    stats: { year: number; visitCount: number; mostVisitedPark: { name: string } | null };
+  }) => (
+    <div data-testid="year-review-card">
+      year:{stats.year}|visits:{stats.visitCount}|top:{stats.mostVisitedPark?.name ?? "none"}
+    </div>
+  ),
+}));
+
 vi.mock("@/hooks/use-auth", () => ({
   useAuth: () => ({
     isAuthenticated: false,
@@ -174,7 +193,6 @@ vi.mock("@/hooks/use-auth", () => ({
     user: null,
   }),
 }));
-
 vi.mock("@/components/dashboard/home-visit-stats", () => ({
   HomeVisitStats: ({
     totalVisits,
@@ -1088,6 +1106,98 @@ describe("App pages", () => {
   it("builds translated metadata for the public visits page", async () => {
     await expect(generatePublicVisitsMetadata()).resolves.toEqual(
       createExpectedShareMetadata("visits.title"),
+    );
+  });
+
+  it("renders the public year review page for a valid year", async () => {
+    vi.mocked(apiPublicFetch).mockResolvedValueOnce({ visits: [timelineVisit] });
+
+    await renderPublicRoute(
+      await PublicYearReviewPage({ params: Promise.resolve({ year: "2024" }) }),
+    );
+
+    expect(screen.getByTestId("year-review-card")).toHaveTextContent(
+      "year:2024|visits:1|top:Pallas-Yllästunturi",
+    );
+  });
+
+  it("calls notFound for malformed or out-of-range year review years", async () => {
+    vi.mocked(apiPublicFetch).mockResolvedValue({ visits: [timelineVisit] });
+
+    await expect(
+      PublicYearReviewPage({ params: Promise.resolve({ year: "not-a-year" }) }),
+    ).rejects.toThrow("NEXT_NOT_FOUND");
+    await expect(
+      PublicYearReviewPage({ params: Promise.resolve({ year: "2019" }) }),
+    ).rejects.toThrow("NEXT_NOT_FOUND");
+
+    expect(mockNotFound).toHaveBeenCalledTimes(2);
+  });
+
+  it("renders the current year review even before the first visit of the year", async () => {
+    vi.mocked(apiPublicFetch).mockResolvedValueOnce({ visits: [timelineVisit] });
+    const currentYear = Number.parseInt(
+      new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Helsinki", year: "numeric" }).format(
+        new Date(),
+      ),
+      10,
+    );
+
+    await renderPublicRoute(
+      await PublicYearReviewPage({ params: Promise.resolve({ year: String(currentYear) }) }),
+    );
+
+    expect(screen.getByTestId("year-review-card")).toHaveTextContent(
+      `year:${currentYear}|visits:0|top:none`,
+    );
+  });
+
+  it("builds translated metadata for the public year review page", async () => {
+    await expect(
+      generatePublicYearReviewMetadata({ params: Promise.resolve({ year: "2024" }) }),
+    ).resolves.toEqual(
+      createExpectedShareMetadata("yearReview.shareTitle", {
+        description: "yearReview.shareDescription",
+      }),
+    );
+  });
+
+  it("renders the admin year review preview with year links and share actions", async () => {
+    vi.mocked(apiPublicFetch).mockResolvedValueOnce({ visits: [timelineVisit] });
+
+    await renderControlPanelRoute(
+      await ControlPanelYearReviewPage({ searchParams: Promise.resolve({}) }),
+    );
+
+    expect(screen.getByTestId("year-review-card")).toHaveTextContent(
+      "year:2024|visits:1|top:Pallas-Yllästunturi",
+    );
+    const yearNav = screen.getByRole("navigation", { name: "yearReview.selectYear" });
+    expect(within(yearNav).getByRole("link", { name: "2024" })).toHaveAttribute(
+      "href",
+      "/hallinta/vuosikatsaus?year=2024",
+    );
+    expect(screen.getByRole("button", { name: "yearReview.copyShareLink" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "yearReview.openSharePage" })).toHaveAttribute(
+      "href",
+      "/vuosikatsaus/2024",
+    );
+  });
+
+  it("shows an empty state in the admin preview when there are no visits at all", async () => {
+    vi.mocked(apiPublicFetch).mockResolvedValueOnce({ visits: [] });
+
+    await renderControlPanelRoute(
+      await ControlPanelYearReviewPage({ searchParams: Promise.resolve({}) }),
+    );
+
+    expect(screen.getByText("yearReview.noVisits")).toBeInTheDocument();
+    expect(screen.queryByTestId("year-review-card")).not.toBeInTheDocument();
+  });
+
+  it("builds translated metadata for the admin year review page", async () => {
+    await expect(generateControlPanelYearReviewMetadata()).resolves.toEqual(
+      createExpectedShareMetadata("controlPanel.yearReview.title"),
     );
   });
 

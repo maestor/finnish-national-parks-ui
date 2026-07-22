@@ -274,6 +274,10 @@
       "title": "Hallinta",
       "description": "Täällä voit muokata paikkoja, hallita retkiä ja ylläpitää käyntikirjauksia."
     },
+    "yearReview": {
+      "title": "Vuosikatsaus",
+      "description": "Katso vuoden kooste juuri siinä muodossa, jossa se näkyy jaettuna, ja kopioi jakolinkki."
+    },
     "parks": {
       "title": "Paikat",
       "description": "Hallitse paikkojen näkyvyyttä julkisissa näkymissä ja muokkaa paikan perustietoja.",
@@ -611,6 +615,34 @@
     "visits": "Vierailut",
     "openParkPage": "Avaa paikan sivu",
     "addVisit": "Lisää käynti"
+  },
+  "yearReview": {
+    "eyebrow": "Vuosikatsaus",
+    "shareTitle": "Vuosikatsaus {year}",
+    "shareDescription": "Käynnit, uudet paikat ja kuvat vuodelta {year} Reissuvihkossa.",
+    "ogAlt": "Reissuvihkon vuosikatsaus.",
+    "stats": {
+      "visits": "Käyntiä",
+      "parks": "Paikkaa",
+      "newParks": "Uutta paikkaa",
+      "revisitedParks": "Uudelleenkäytyä",
+      "images": "Kuvaa",
+      "activeMonths": "Aktiivista kuukautta",
+      "mostVisited": "Eniten käyty"
+    },
+    "seasons": {
+      "title": "Käynnit vuodenajoittain",
+      "spring": "Kevät",
+      "summer": "Kesä",
+      "autumn": "Syksy",
+      "winter": "Talvi"
+    },
+    "emptyYear": "Ei käyntejä tänä vuonna.",
+    "noVisits": "Käyntejä ei ole vielä lisätty.",
+    "selectYear": "Valitse vuosi",
+    "copyShareLink": "Kopioi jakolinkki",
+    "shareLinkCopied": "Jakolinkki kopioitu",
+    "openSharePage": "Avaa jaettava sivu"
   },
   "errors": {
     "generic": {
