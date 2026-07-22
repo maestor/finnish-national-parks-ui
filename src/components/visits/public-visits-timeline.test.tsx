@@ -520,4 +520,64 @@ describe("PublicVisitsTimeline", () => {
       scroll: false,
     });
   });
+
+  it("renders grouped trip cards with summary badges and nested visit links", () => {
+    renderTimeline(
+      [
+        {
+          id: 1,
+          visitedOn: "2024-06-15",
+          route: "Punarinnankierros",
+          createdAt: "2024-06-15T10:00:00Z",
+          imageCount: 0,
+          trip: {
+            id: 7,
+            name: "Kesaretki",
+          },
+          park: {
+            name: "Nuuksio",
+            slug: "nuuksio",
+            typeLabel: "Kansallispuisto",
+          },
+        },
+        {
+          id: 2,
+          visitedOn: "2024-06-18",
+          route: null,
+          createdAt: "2024-06-18T10:00:00Z",
+          imageCount: 2,
+          trip: {
+            id: 7,
+            name: "Kesaretki",
+          },
+          park: {
+            name: "Pallas-Yllastunturi",
+            slug: "pallas-yllastunturi",
+            typeLabel: "Kansallispuisto",
+          },
+        },
+      ],
+      { selectedYear: null, selectedMonth: null },
+    );
+
+    expect(screen.getByText("visits.trip.label")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Kesaretki" })).toBeInTheDocument();
+    expect(screen.getByText("visits.trip.visitCount")).toBeInTheDocument();
+    expect(screen.getByText("visits.trip.imageCount")).toBeInTheDocument();
+
+    const tripCard = screen.getByRole("heading", { name: "Kesaretki" }).closest("article");
+
+    if (!(tripCard instanceof HTMLElement)) {
+      throw new Error("Expected trip card");
+    }
+
+    expect(within(tripCard).getByRole("link", { name: /Nuuksio/ })).toHaveAttribute(
+      "href",
+      "/paikka/nuuksio?visit=1#visit-history",
+    );
+    expect(within(tripCard).getByRole("link", { name: /Pallas-Yllastunturi/ })).toHaveAttribute(
+      "href",
+      "/paikka/pallas-yllastunturi?visit=2#visit-history",
+    );
+  });
 });

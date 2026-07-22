@@ -62,9 +62,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     return matchesPark && matchesQuery;
   };
 
-  const assignedVisits = sortedVisits.filter(
-    (visit) => visit.trip?.id === trip.id && matchesBaseFilters(visit),
-  );
+  const assignedVisits = sortedVisits.filter((visit) => visit.trip?.id === trip.id);
 
   const availableVisits = sortedVisits.filter(
     (visit) => visit.trip === null && matchesBaseFilters(visit),

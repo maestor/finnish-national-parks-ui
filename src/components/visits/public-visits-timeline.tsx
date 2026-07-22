@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarRange, Camera, Footprints, Images, Route } from "lucide-react";
+import { CalendarRange, Camera, Footprints, Images, Route, TentTree } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -25,6 +25,8 @@ import {
   type PublicVisitMonthOption,
   type PublicVisitsMapMarker,
   type PublicVisitsView,
+  type PublicVisitTimelineTripItem,
+  type PublicVisitTimelineVisitItem,
   type PublicVisitYearSection,
 } from "@/lib/public-visits";
 import { LazyVisitsMap } from "./lazy-visits-map";
@@ -221,6 +223,176 @@ const PublicVisitsTimeline = ({
 
   let monthSideIndex = 0;
   let visitFocusIndex = 0;
+
+  const renderVisitBadges = (visit: {
+    imageCount: number;
+    park: { typeLabel: string };
+    route: string | null;
+  }) => {
+    const hasImages = visit.imageCount > 0;
+
+    return (
+      <div className="mt-3 flex flex-wrap gap-2">
+        <ParkTypeBadge label={visit.park.typeLabel} />
+        {visit.route ? (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/70 bg-[linear-gradient(145deg,rgba(22,101,52,0.12),rgba(16,185,129,0.18))] px-2.5 py-1 text-xs font-semibold text-emerald-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-emerald-300/15 dark:bg-[linear-gradient(145deg,rgba(22,101,52,0.24),rgba(16,185,129,0.16))] dark:text-emerald-200 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+            <Route className="h-3.5 w-3.5" aria-hidden="true" />
+            {visit.route}
+          </span>
+        ) : null}
+        {hasImages ? (
+          <span
+            aria-label={t("item.imageCount", {
+              count: visit.imageCount,
+            })}
+            className="inline-flex items-center gap-1.5 rounded-full border border-sky-200/70 bg-[linear-gradient(145deg,rgba(37,99,235,0.12),rgba(14,165,233,0.16))] px-2.5 py-1 text-xs font-semibold text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-sky-300/15 dark:bg-[linear-gradient(145deg,rgba(37,99,235,0.18),rgba(14,165,233,0.14))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+            role="img"
+          >
+            <Images className="h-3.5 w-3.5" aria-hidden="true" />
+            {visit.imageCount}
+          </span>
+        ) : null}
+      </div>
+    );
+  };
+
+  const renderLooseVisitCard = (
+    visit: PublicVisitTimelineVisitItem,
+    isLeftMonth: boolean,
+    currentVisitFocusIndex: number,
+  ) => {
+    return (
+      <li
+        key={visit.visit.id}
+        className="relative pl-12 md:grid md:grid-cols-[minmax(0,1fr)_2.5rem_minmax(0,1fr)] md:gap-4 md:pl-0"
+      >
+        <div className={cn("md:row-start-1", isLeftMonth ? "md:col-start-1" : "md:col-start-3")}>
+          <div className="rounded-[1.8rem] border border-white/45 bg-white/68 shadow-[0_20px_44px_rgba(148,163,184,0.16)] backdrop-blur-xl transition-colors hover:bg-white/82 dark:border-white/10 dark:bg-slate-950/44 dark:shadow-[0_24px_52px_rgba(2,6,23,0.32)] dark:hover:bg-slate-950/58">
+            <Link
+              href={createParkVisitHref({
+                parkSlug: visit.visit.park.slug,
+                visitId: visit.visit.id,
+              })}
+              className="group block rounded-[1.8rem] px-5 pt-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              ref={(element) => {
+                visitRefs.current[currentVisitFocusIndex] = element;
+              }}
+              onKeyDown={(event) => handleVisitKeyDown(event, currentVisitFocusIndex)}
+            >
+              <div className="min-w-0">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-sm font-medium text-primary">
+                    {formatFinnishDate(visit.visit.visitedOn)}
+                  </p>
+                  <span className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full border border-white/45 bg-white/72 px-3 py-1 text-xs font-medium whitespace-nowrap text-foreground/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.48)] dark:border-white/10 dark:bg-slate-950/56 dark:text-sky-100/72 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                    <Camera className="h-3.5 w-3.5" aria-hidden="true" />
+                    {t("item.viewVisit")}
+                  </span>
+                </div>
+                <h4 className="mt-3 text-xl font-semibold tracking-tight">
+                  {visit.visit.park.name}
+                </h4>
+              </div>
+            </Link>
+
+            <div className="px-5 pb-5">{renderVisitBadges(visit.visit)}</div>
+          </div>
+        </div>
+
+        <div className="pointer-events-none absolute bottom-0 left-4 top-0 flex w-4 -translate-x-1/2 justify-center md:static md:col-start-2 md:row-start-1 md:w-auto md:translate-x-0">
+          <span
+            aria-hidden="true"
+            className="relative top-5 h-3.5 w-3.5 rounded-full border-2 border-background bg-primary shadow-[0_0_0_4px_rgba(255,255,255,0.75)] dark:shadow-[0_0_0_4px_rgba(2,6,23,0.72)]"
+          />
+        </div>
+      </li>
+    );
+  };
+
+  const renderTripCard = (
+    trip: PublicVisitTimelineTripItem,
+    sectionYear: number,
+    sectionMonth: number,
+    isLeftMonth: boolean,
+  ) => (
+    <li
+      key={`trip-${trip.tripId}-${sectionYear}-${sectionMonth}`}
+      className="relative pl-12 md:grid md:grid-cols-[minmax(0,1fr)_2.5rem_minmax(0,1fr)] md:gap-4 md:pl-0"
+    >
+      <div className={cn("md:row-start-1", isLeftMonth ? "md:col-start-1" : "md:col-start-3")}>
+        <article className="overflow-hidden rounded-[2rem] border border-white/45 bg-[linear-gradient(145deg,rgba(255,255,255,0.82),rgba(219,234,254,0.62),rgba(220,252,231,0.68))] shadow-[0_22px_52px_rgba(37,99,235,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(145deg,rgba(2,6,23,0.72),rgba(15,23,42,0.84),rgba(6,78,59,0.34))] dark:shadow-[0_28px_60px_rgba(2,6,23,0.34)]">
+          <div className="border-b border-white/35 px-5 py-5 dark:border-white/8">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-700/15 bg-[linear-gradient(145deg,#166534_0%,#0f766e_55%,#2563eb_100%)] px-3 py-1 text-xs font-semibold text-primary-foreground shadow-[0_10px_24px_rgba(37,99,235,0.22)]">
+                <TentTree className="h-3.5 w-3.5" aria-hidden="true" />
+                {t("trip.label")}
+              </span>
+              <span className="text-sm font-medium text-muted-foreground">
+                {formatFinnishDate(trip.dateRange.start)}
+                {" - "}
+                {formatFinnishDate(trip.dateRange.end)}
+              </span>
+            </div>
+            <h4 className="mt-3 text-2xl font-semibold tracking-tight">{trip.name}</h4>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/45 bg-white/72 px-3 py-1 text-xs font-medium text-foreground/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.48)] dark:border-white/10 dark:bg-slate-950/56 dark:text-sky-100/72 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                <Footprints className="h-3.5 w-3.5" aria-hidden="true" />
+                {t("trip.visitCount", { count: trip.visitCount })}
+              </span>
+              {trip.imageCount > 0 ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/45 bg-white/72 px-3 py-1 text-xs font-medium text-foreground/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.48)] dark:border-white/10 dark:bg-slate-950/56 dark:text-sky-100/72 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                  <Images className="h-3.5 w-3.5" aria-hidden="true" />
+                  {t("trip.imageCount", { count: trip.imageCount })}
+                </span>
+              ) : null}
+            </div>
+          </div>
+
+          <ol className="space-y-3 px-4 py-4">
+            {trip.visits.map((visit) => {
+              const currentVisitFocusIndex = visitFocusIndex;
+              visitFocusIndex += 1;
+
+              return (
+                <li key={visit.id}>
+                  <Link
+                    href={createParkVisitHref({
+                      parkSlug: visit.park.slug,
+                      visitId: visit.id,
+                    })}
+                    className="block rounded-[1.5rem] border border-white/38 bg-white/74 px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.52)] transition-colors hover:bg-white/92 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/54 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] dark:hover:bg-slate-950/72"
+                    ref={(element) => {
+                      visitRefs.current[currentVisitFocusIndex] = element;
+                    }}
+                    onKeyDown={(event) => handleVisitKeyDown(event, currentVisitFocusIndex)}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="text-sm font-medium text-primary">
+                        {formatFinnishDate(visit.visitedOn)}
+                      </p>
+                      <span className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full border border-white/45 bg-white/72 px-3 py-1 text-xs font-medium whitespace-nowrap text-foreground/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.48)] dark:border-white/10 dark:bg-slate-950/56 dark:text-sky-100/72 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                        <Camera className="h-3.5 w-3.5" aria-hidden="true" />
+                        {t("item.viewVisit")}
+                      </span>
+                    </div>
+                    <h5 className="mt-2 text-lg font-semibold tracking-tight">{visit.park.name}</h5>
+                    {renderVisitBadges(visit)}
+                  </Link>
+                </li>
+              );
+            })}
+          </ol>
+        </article>
+      </div>
+
+      <div className="pointer-events-none absolute bottom-0 left-4 top-0 flex w-4 -translate-x-1/2 justify-center md:static md:col-start-2 md:row-start-1 md:w-auto md:translate-x-0">
+        <span
+          aria-hidden="true"
+          className="relative top-5 h-4 w-4 rounded-full border-2 border-background bg-emerald-600 shadow-[0_0_0_4px_rgba(255,255,255,0.75)] dark:shadow-[0_0_0_4px_rgba(2,6,23,0.72)]"
+        />
+      </div>
+    </li>
+  );
 
   return (
     <div className={PUBLIC_PAGE_SHELL_CLASS_NAME}>
@@ -500,84 +672,20 @@ const PublicVisitsTimeline = ({
                       </div>
 
                       <ol className="relative mt-4 space-y-4 before:absolute before:bottom-0 before:left-4 before:top-0 before:w-px before:-translate-x-1/2 before:bg-[linear-gradient(180deg,rgba(22,101,52,0.38),rgba(37,99,235,0.12))] before:content-[''] md:before:left-1/2 md:before:-translate-x-1/2">
-                        {monthSection.visits.map((visit) => {
+                        {monthSection.items.map((item) => {
+                          if (item.kind === "trip") {
+                            return renderTripCard(
+                              item,
+                              section.year,
+                              monthSection.month,
+                              isLeftMonth,
+                            );
+                          }
+
                           const currentVisitFocusIndex = visitFocusIndex;
                           visitFocusIndex += 1;
-                          const hasImages = visit.imageCount > 0;
 
-                          return (
-                            <li
-                              key={visit.id}
-                              className="relative pl-12 md:grid md:grid-cols-[minmax(0,1fr)_2.5rem_minmax(0,1fr)] md:gap-4 md:pl-0"
-                            >
-                              <div
-                                className={cn(
-                                  "md:row-start-1",
-                                  isLeftMonth ? "md:col-start-1" : "md:col-start-3",
-                                )}
-                              >
-                                <div className="rounded-[1.8rem] border border-white/45 bg-white/68 shadow-[0_20px_44px_rgba(148,163,184,0.16)] backdrop-blur-xl transition-colors hover:bg-white/82 dark:border-white/10 dark:bg-slate-950/44 dark:shadow-[0_24px_52px_rgba(2,6,23,0.32)] dark:hover:bg-slate-950/58">
-                                  <Link
-                                    href={createParkVisitHref({
-                                      parkSlug: visit.park.slug,
-                                      visitId: visit.id,
-                                    })}
-                                    className="group block rounded-[1.8rem] px-5 pt-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                    ref={(element) => {
-                                      visitRefs.current[currentVisitFocusIndex] = element;
-                                    }}
-                                    onKeyDown={(event) =>
-                                      handleVisitKeyDown(event, currentVisitFocusIndex)
-                                    }
-                                  >
-                                    <div className="min-w-0">
-                                      <div className="flex items-start justify-between gap-3">
-                                        <p className="text-sm font-medium text-primary">
-                                          {formatFinnishDate(visit.visitedOn)}
-                                        </p>
-                                        <span className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full border border-white/45 bg-white/72 px-3 py-1 text-xs font-medium whitespace-nowrap text-foreground/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.48)] dark:border-white/10 dark:bg-slate-950/56 dark:text-sky-100/72 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                                          <Camera className="h-3.5 w-3.5" aria-hidden="true" />
-                                          {t("item.viewVisit")}
-                                        </span>
-                                      </div>
-                                      <h4 className="mt-3 text-xl font-semibold tracking-tight">
-                                        {visit.park.name}
-                                      </h4>
-                                    </div>
-                                  </Link>
-
-                                  <div className="mt-3 flex flex-wrap gap-2 px-5 pb-5">
-                                    <ParkTypeBadge label={visit.park.typeLabel} />
-                                    {visit.route ? (
-                                      <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/70 bg-[linear-gradient(145deg,rgba(22,101,52,0.12),rgba(16,185,129,0.18))] px-2.5 py-1 text-xs font-semibold text-emerald-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-emerald-300/15 dark:bg-[linear-gradient(145deg,rgba(22,101,52,0.24),rgba(16,185,129,0.16))] dark:text-emerald-200 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-                                        <Route className="h-3.5 w-3.5" aria-hidden="true" />
-                                        {visit.route}
-                                      </span>
-                                    ) : null}
-                                    {hasImages ? (
-                                      <span
-                                        aria-label={t("item.imageCount", {
-                                          count: visit.imageCount,
-                                        })}
-                                        className="inline-flex items-center gap-1.5 rounded-full border border-sky-200/70 bg-[linear-gradient(145deg,rgba(37,99,235,0.12),rgba(14,165,233,0.16))] px-2.5 py-1 text-xs font-semibold text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-sky-300/15 dark:bg-[linear-gradient(145deg,rgba(37,99,235,0.18),rgba(14,165,233,0.14))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
-                                        role="img"
-                                      >
-                                        <Images className="h-3.5 w-3.5" aria-hidden="true" />
-                                        {visit.imageCount}
-                                      </span>
-                                    ) : null}
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="pointer-events-none absolute bottom-0 left-4 top-0 flex w-4 -translate-x-1/2 justify-center md:static md:col-start-2 md:row-start-1 md:w-auto md:translate-x-0">
-                                <span
-                                  aria-hidden="true"
-                                  className="relative top-5 h-3.5 w-3.5 rounded-full border-2 border-background bg-primary shadow-[0_0_0_4px_rgba(255,255,255,0.75)] dark:shadow-[0_0_0_4px_rgba(2,6,23,0.72)]"
-                                />
-                              </div>
-                            </li>
-                          );
+                          return renderLooseVisitCard(item, isLeftMonth, currentVisitFocusIndex);
                         })}
                       </ol>
                     </section>

@@ -167,6 +167,29 @@ describe("TripVisitAssignments", () => {
     expect(within(availableSection).queryByText("Repovesi")).not.toBeInTheDocument();
   });
 
+  it("does not filter the assigned list when using the available-visits filters", async () => {
+    render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
+
+    await userEvent.type(
+      screen.getByLabelText("controlPanel.trips.assignments.filters.searchLabel"),
+      "Pallas",
+    );
+
+    const assignedSection = screen.getByRole("heading", {
+      name: "controlPanel.trips.assignments.assignedTitle",
+    }).parentElement?.parentElement;
+    const availableSection = screen.getByRole("heading", {
+      name: "controlPanel.trips.assignments.availableTitle",
+    }).parentElement?.parentElement;
+
+    if (!(assignedSection instanceof HTMLElement) || !(availableSection instanceof HTMLElement)) {
+      throw new Error("Expected trip visit sections");
+    }
+
+    expect(within(assignedSection).getByText("Nuuksio")).toBeInTheDocument();
+    expect(within(availableSection).getByText("Pallas-Yllästunturi")).toBeInTheDocument();
+  });
+
   it("removes a visit from the current trip", async () => {
     const { apiFetch } = await import("@/lib/api");
     vi.mocked(apiFetch).mockResolvedValueOnce(undefined);

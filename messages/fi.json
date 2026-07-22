@@ -175,6 +175,11 @@
       "viewVisit": "Näytä käynti",
       "openVisit": "Avaa käynti paikan sivulla",
       "imageCount": "{count} kuvaa"
+    },
+    "trip": {
+      "label": "Retki",
+      "visitCount": "{count} käyntiä",
+      "imageCount": "{count} kuvaa"
     }
   },
   "tripPlanner": {
