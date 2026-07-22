@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Park } from "@/lib/parks";
+import type { Trip } from "@/lib/trips";
 import { VisitForm } from "./visit-form";
 
 const mockPush = vi.fn();
@@ -34,6 +35,11 @@ const visitToEdit = {
     slug: "pallas",
     name: "Pallas-Yllästunturi",
   },
+  trip: {
+    id: 7,
+    name: "Keski-Suomen kesaretki",
+  },
+  tripStopOrder: 1,
   visitedOn: "2024-06-15",
   route: "Pallas-Yllästunturin reitti",
   author: "Maija Meikäläinen",
@@ -42,6 +48,33 @@ const visitToEdit = {
   updatedAt: "2024-06-15T00:00:00Z",
   images: [],
 };
+
+const trips = [
+  {
+    id: 7,
+    name: "Keski-Suomen kesaretki",
+    description: "Kolmen paivan kierros kansallispuistoihin.",
+    visitCount: 2,
+    dateRange: {
+      start: "2024-06-15",
+      end: "2024-06-17",
+    },
+    createdAt: "2024-06-18T00:00:00Z",
+    updatedAt: "2024-06-18T00:00:00Z",
+  },
+  {
+    id: 8,
+    name: "Syysloman rengasreitti",
+    description: null,
+    visitCount: 1,
+    dateRange: {
+      start: "2023-10-10",
+      end: "2023-10-10",
+    },
+    createdAt: "2023-10-11T00:00:00Z",
+    updatedAt: "2023-10-11T00:00:00Z",
+  },
+] satisfies Trip[];
 
 describe("VisitForm", () => {
   beforeEach(() => {
@@ -60,6 +93,7 @@ describe("VisitForm", () => {
       route: null,
       author: null,
       note: null,
+      tripStopOrder: null,
       createdAt: "2024-06-15T00:00:00Z",
       updatedAt: "2024-06-15T00:00:00Z",
     });
@@ -77,6 +111,7 @@ describe("VisitForm", () => {
     expect(apiFetch).toHaveBeenCalledWith("/api/parks/pallas/visits", {
       method: "POST",
       body: JSON.stringify({
+        tripId: null,
         visitedOn: "2024-06-15",
         route: null,
         author: null,
@@ -98,6 +133,7 @@ describe("VisitForm", () => {
       route: null,
       author: null,
       note: null,
+      tripStopOrder: null,
       createdAt: "2024-06-15T00:00:00Z",
       updatedAt: "2024-06-15T00:00:00Z",
     });
@@ -127,9 +163,10 @@ describe("VisitForm", () => {
   });
 
   it("renders create form fields", () => {
-    render(<VisitForm parks={parks} />);
+    render(<VisitForm parks={parks} trips={trips} />);
 
     expect(screen.getByLabelText(/controlPanel.visits.form.parkLabel/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/controlPanel.visits.form.tripLabel/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/controlPanel.visits.form.dateLabel/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/controlPanel.visits.form.routeLabel/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/controlPanel.visits.form.authorLabel/i)).toBeInTheDocument();
@@ -143,6 +180,12 @@ describe("VisitForm", () => {
     render(<VisitForm parks={parks} defaultParkSlug="nuuksio" />);
 
     expect(screen.getByLabelText(/controlPanel.visits.form.parkLabel/i)).toHaveValue("nuuksio");
+  });
+
+  it("uses the default trip when creating a visit from a trip shortcut", () => {
+    render(<VisitForm parks={parks} trips={trips} defaultTripId="8" />);
+
+    expect(screen.getByLabelText(/controlPanel.visits.form.tripLabel/i)).toHaveValue("8");
   });
 
   it("shows validation errors when required fields are empty", async () => {
@@ -160,7 +203,7 @@ describe("VisitForm", () => {
   });
 
   it("renders edit mode with prefilled values, read-only park and delete button", () => {
-    render(<VisitForm parks={parks} visitToEdit={visitToEdit} />);
+    render(<VisitForm parks={parks} trips={trips} visitToEdit={visitToEdit} />);
 
     expect(screen.getByText("Pallas-Yllästunturi")).toBeInTheDocument();
     expect(screen.getByDisplayValue("2024-06-15")).toBeInTheDocument();
@@ -170,10 +213,11 @@ describe("VisitForm", () => {
     expect(
       screen.getByRole("button", { name: /controlPanel.visits.form.delete/i }),
     ).toBeInTheDocument();
+    expect(screen.getByLabelText(/controlPanel.visits.form.tripLabel/i)).toHaveValue("7");
   });
 
   it("disables the edit save button until something changes", async () => {
-    render(<VisitForm parks={parks} visitToEdit={visitToEdit} />);
+    render(<VisitForm parks={parks} trips={trips} visitToEdit={visitToEdit} />);
 
     const submitButton = screen.getByRole("button", {
       name: /controlPanel.visits.form.submit/i,
@@ -196,7 +240,7 @@ describe("VisitForm", () => {
     const { apiFetch } = await import("@/lib/api");
     vi.mocked(apiFetch).mockResolvedValueOnce(undefined);
 
-    render(<VisitForm parks={parks} visitToEdit={visitToEdit} />);
+    render(<VisitForm parks={parks} trips={trips} visitToEdit={visitToEdit} />);
 
     await userEvent.clear(screen.getByLabelText(/controlPanel.visits.form.routeLabel/i));
     await userEvent.type(screen.getByLabelText(/controlPanel.visits.form.routeLabel/i), "Hetta");
@@ -206,6 +250,7 @@ describe("VisitForm", () => {
     expect(apiFetch).toHaveBeenCalledWith("/api/visits/1", {
       method: "PATCH",
       body: JSON.stringify({
+        tripId: 7,
         visitedOn: "2024-06-15",
         route: "Hetta",
         author: "Maija Meikäläinen",
@@ -223,6 +268,49 @@ describe("VisitForm", () => {
     expect(
       screen.getByRole("link", { name: "controlPanel.visits.form.viewAllVisits" }),
     ).toHaveAttribute("href", "/hallinta/kaynnit");
+  });
+
+  it("submits the selected trip assignment when creating a visit", async () => {
+    const { apiFetch } = await import("@/lib/api");
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      id: 42,
+      trip: null,
+      visitedOn: "2024-06-15",
+      route: null,
+      author: null,
+      note: null,
+      tripStopOrder: null,
+      createdAt: "2024-06-15T00:00:00Z",
+      updatedAt: "2024-06-15T00:00:00Z",
+    });
+
+    render(<VisitForm parks={parks} trips={trips} />);
+
+    await userEvent.selectOptions(
+      screen.getByLabelText(/controlPanel.visits.form.parkLabel/i),
+      "pallas",
+    );
+    await userEvent.selectOptions(
+      screen.getByLabelText(/controlPanel.visits.form.tripLabel/i),
+      "8",
+    );
+    await userEvent.type(
+      screen.getByLabelText(/controlPanel.visits.form.dateLabel/i),
+      "2024-06-15",
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.submit/i }));
+
+    expect(apiFetch).toHaveBeenCalledWith("/api/parks/pallas/visits", {
+      method: "POST",
+      body: JSON.stringify({
+        tripId: 8,
+        visitedOn: "2024-06-15",
+        route: null,
+        author: null,
+        note: null,
+      }),
+    });
   });
 
   it("shows the API error when creating a visit fails", async () => {
@@ -278,7 +366,7 @@ describe("VisitForm", () => {
       vi.fn(() => false),
     );
 
-    render(<VisitForm parks={parks} visitToEdit={visitToEdit} />);
+    render(<VisitForm parks={parks} trips={trips} visitToEdit={visitToEdit} />);
 
     await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.delete/i }));
 
@@ -291,7 +379,7 @@ describe("VisitForm", () => {
     const { apiFetch } = await import("@/lib/api");
     vi.mocked(apiFetch).mockResolvedValueOnce(undefined);
 
-    render(<VisitForm parks={parks} visitToEdit={visitToEdit} />);
+    render(<VisitForm parks={parks} trips={trips} visitToEdit={visitToEdit} />);
 
     await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.delete/i }));
 
@@ -305,7 +393,7 @@ describe("VisitForm", () => {
     const { apiFetch } = await import("@/lib/api");
     vi.mocked(apiFetch).mockRejectedValueOnce(new Error("delete failed"));
 
-    render(<VisitForm parks={parks} visitToEdit={visitToEdit} />);
+    render(<VisitForm parks={parks} trips={trips} visitToEdit={visitToEdit} />);
 
     await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.delete/i }));
 
@@ -318,7 +406,9 @@ describe("VisitForm", () => {
     const { apiFetch } = await import("@/lib/api");
     vi.mocked(apiFetch).mockResolvedValueOnce(undefined);
 
-    const { rerender } = render(<VisitForm parks={parks} visitToEdit={visitToEdit} />);
+    const { rerender } = render(
+      <VisitForm parks={parks} trips={trips} visitToEdit={visitToEdit} />,
+    );
 
     const routeField = screen.getByLabelText(/controlPanel.visits.form.routeLabel/i);
     await userEvent.clear(routeField);
@@ -337,7 +427,7 @@ describe("VisitForm", () => {
     expect(mockRefresh).toHaveBeenCalled();
 
     const updatedVisit = { ...visitToEdit, route: "Hetta" };
-    rerender(<VisitForm parks={parks} visitToEdit={updatedVisit} />);
+    rerender(<VisitForm parks={parks} trips={trips} visitToEdit={updatedVisit} />);
 
     expect(submitButton).toBeDisabled();
   });

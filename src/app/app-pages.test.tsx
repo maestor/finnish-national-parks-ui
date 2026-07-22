@@ -24,6 +24,13 @@ import EditParkPage, {
   generateMetadata as generateEditParkMetadata,
 } from "./control-panel/parks/[slug]/edit/page";
 import ParksPage, { generateMetadata as generateParksMetadata } from "./control-panel/parks/page";
+import EditTripPage, {
+  generateMetadata as generateEditTripMetadata,
+} from "./control-panel/trips/[id]/edit/page";
+import NewTripPage, {
+  generateMetadata as generateNewTripMetadata,
+} from "./control-panel/trips/new/page";
+import TripsPage, { generateMetadata as generateTripsMetadata } from "./control-panel/trips/page";
 import EditVisitPage, {
   generateMetadata as generateEditVisitMetadata,
 } from "./control-panel/visits/[id]/edit/page";
@@ -297,13 +304,18 @@ vi.mock("@/components/visits/visit-form", () => ({
     parks,
     visitToEdit,
     defaultParkSlug,
+    trips,
+    defaultTripId,
   }: {
     parks: Park[];
     visitToEdit?: { id: number } | undefined;
     defaultParkSlug?: string;
+    trips?: { id: number }[];
+    defaultTripId?: string;
   }) => (
     <div data-testid="visit-form">
-      parks:{parks.length}|edit:{visitToEdit?.id ?? "new"}|default:{defaultParkSlug ?? "none"}
+      parks:{parks.length}|trips:{trips?.length ?? 0}|edit:{visitToEdit?.id ?? "new"}|default:
+      {defaultParkSlug ?? "none"}|trip:{defaultTripId ?? "none"}
     </div>
   ),
 }));
@@ -312,6 +324,26 @@ vi.mock("@/components/visits/visit-image-section", () => ({
   VisitImageSection: ({ visitId, images }: { visitId: number; images: { id: number }[] }) => (
     <div data-testid="visit-image-section">
       visit:{visitId}|images:{images.length}
+    </div>
+  ),
+}));
+
+vi.mock("@/components/trips/trip-form", () => ({
+  TripForm: ({ tripToEdit }: { tripToEdit?: { id: number } | undefined }) => (
+    <div data-testid="trip-form">trip:{tripToEdit?.id ?? "new"}</div>
+  ),
+}));
+
+vi.mock("@/components/trips/trip-management", () => ({
+  TripManagement: ({ trips }: { trips: { id: number }[] }) => (
+    <div data-testid="trip-management">trips:{trips.length}</div>
+  ),
+}));
+
+vi.mock("@/components/trips/trip-visit-assignments", () => ({
+  TripVisitAssignments: ({ trip, visits }: { trip: { id: number }; visits: { id: number }[] }) => (
+    <div data-testid="trip-visit-assignments">
+      trip:{trip.id}|visits:{visits.length}
     </div>
   ),
 }));
@@ -358,6 +390,8 @@ const personalVisit = {
   route: "Huippupolku",
   author: "Maija",
   note: "Aurinkoinen reissu",
+  trip: null,
+  tripStopOrder: null,
   createdAt: "2024-06-15T10:00:00Z",
   updatedAt: "2024-06-15T10:00:00Z",
   images: [
@@ -376,8 +410,26 @@ const personalVisit = {
   ],
 } satisfies Visit;
 
+const trip = {
+  id: 7,
+  name: "Keski-Suomen kesaretki",
+  description: "Kolmen paivan kierros kansallispuistoihin.",
+  visitCount: 2,
+  dateRange: {
+    start: "2024-06-15",
+    end: "2024-06-17",
+  },
+  createdAt: "2024-06-18T10:00:00Z",
+  updatedAt: "2024-06-18T10:00:00Z",
+};
+
 const visitWithPark = {
   ...personalVisit,
+  trip: {
+    id: trip.id,
+    name: trip.name,
+  },
+  tripStopOrder: 1,
   park: {
     name: publicPark.name,
     slug: publicPark.slug,
@@ -390,6 +442,8 @@ const timelineVisit = {
   route: personalVisit.route,
   createdAt: personalVisit.createdAt,
   imageCount: personalVisit.images.length,
+  trip: null,
+  tripStopOrder: null,
   park: {
     name: publicPark.name,
     slug: publicPark.slug,
@@ -835,6 +889,7 @@ describe("App pages", () => {
       ...timelineVisit,
       id: 11,
       visitedOn: "2024-07-01",
+      tripStopOrder: null,
       park: { name: "Piilotettu", slug: "piilotettu", typeLabel: "Kansallispuisto" },
     } satisfies FrontendTimelineVisit;
 
@@ -926,6 +981,10 @@ describe("App pages", () => {
       "href",
       "/hallinta/paikat",
     );
+    expect(screen.getByRole("link", { name: "controlPanel.trips.title" })).toHaveAttribute(
+      "href",
+      "/hallinta/retket",
+    );
     expect(screen.getByRole("link", { name: "controlPanel.visits.title" })).toHaveAttribute(
       "href",
       "/hallinta/kaynnit",
@@ -1009,6 +1068,81 @@ describe("App pages", () => {
     expect(screen.getByTestId("visit-list")).toHaveTextContent("visits:1");
   });
 
+  it("renders the trips list page", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({ trips: [trip] });
+
+    await renderControlPanelRoute(await TripsPage());
+
+    expect(screen.getByRole("heading", { name: "controlPanel.trips.title" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "controlPanel.trips.addTrip" })).toHaveAttribute(
+      "href",
+      "/hallinta/retket/uusi",
+    );
+    expect(screen.getByTestId("trip-management")).toHaveTextContent("trips:1");
+  });
+
+  it("builds metadata for the trips list page", async () => {
+    await expect(generateTripsMetadata()).resolves.toEqual(
+      createExpectedShareMetadata("controlPanel.trips.title"),
+    );
+  });
+
+  it("renders the new trip page", async () => {
+    await renderControlPanelRoute(await NewTripPage());
+
+    expect(
+      screen.getByRole("heading", { name: "controlPanel.trips.newTrip.title" }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("trip-form")).toHaveTextContent("trip:new");
+  });
+
+  it("builds metadata for the new trip page", async () => {
+    await expect(generateNewTripMetadata()).resolves.toEqual(
+      createExpectedShareMetadata("controlPanel.trips.newTrip.title"),
+    );
+  });
+
+  it("renders the edit trip page with the created notice", async () => {
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({ trips: [trip] })
+      .mockResolvedValueOnce({ visits: [visitWithPark] });
+
+    await renderControlPanelRoute(
+      await EditTripPage({
+        params: Promise.resolve({ id: "7" }),
+        searchParams: Promise.resolve({ created: "1" }),
+      }),
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "controlPanel.trips.editTrip.title" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("controlPanel.trips.editTrip.createdNotice")).toBeInTheDocument();
+    expect(screen.getByTestId("trip-form")).toHaveTextContent("trip:7");
+    expect(screen.getByTestId("trip-visit-assignments")).toHaveTextContent("trip:7|visits:1");
+  });
+
+  it("builds metadata for the edit trip page", async () => {
+    await expect(generateEditTripMetadata()).resolves.toEqual(
+      createExpectedShareMetadata("controlPanel.trips.editTrip.title"),
+    );
+  });
+
+  it("calls notFound when the edit trip page cannot find the requested trip", async () => {
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({ trips: [] })
+      .mockResolvedValueOnce({ visits: [visitWithPark] });
+
+    await expect(
+      EditTripPage({
+        params: Promise.resolve({ id: "999" }),
+        searchParams: Promise.resolve({}),
+      }),
+    ).rejects.toThrow("NEXT_NOT_FOUND");
+
+    expect(mockNotFound).toHaveBeenCalled();
+  });
+
   it("builds metadata for the visits list page", async () => {
     await expect(generateVisitsMetadata()).resolves.toEqual(
       createExpectedShareMetadata("controlPanel.visits.title"),
@@ -1016,18 +1150,22 @@ describe("App pages", () => {
   });
 
   it("renders the new visit page with the selected park preset", async () => {
-    vi.mocked(apiFetch).mockResolvedValueOnce({ parks: [publicPark] });
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({ parks: [publicPark] })
+      .mockResolvedValueOnce({ trips: [trip] });
 
     await renderControlPanelRoute(
       await NewVisitPage({
-        searchParams: Promise.resolve({ park: "pallas" }),
+        searchParams: Promise.resolve({ park: "pallas", trip: "7" }),
       }),
     );
 
     expect(
       screen.getByRole("heading", { name: "controlPanel.visits.newVisit.title" }),
     ).toBeInTheDocument();
-    expect(screen.getByTestId("visit-form")).toHaveTextContent("parks:1|edit:new|default:pallas");
+    expect(screen.getByTestId("visit-form")).toHaveTextContent(
+      "parks:1|trips:1|edit:new|default:pallas|trip:7",
+    );
   });
 
   it("builds metadata for the new visit page", async () => {
@@ -1039,6 +1177,7 @@ describe("App pages", () => {
   it("renders the edit visit page with the created notice and edit helpers", async () => {
     vi.mocked(apiFetch)
       .mockResolvedValueOnce({ parks: [publicPark] })
+      .mockResolvedValueOnce({ trips: [trip] })
       .mockResolvedValueOnce(visitWithPark);
 
     await renderControlPanelRoute(
@@ -1055,7 +1194,9 @@ describe("App pages", () => {
       screen.getByRole("link", { name: "controlPanel.visits.editVisit.viewParkPage" }),
     ).toHaveAttribute("href", "/paikka/pallas");
     expect(screen.getByText("controlPanel.visits.editVisit.createdNotice")).toBeInTheDocument();
-    expect(screen.getByTestId("visit-form")).toHaveTextContent("parks:1|edit:10|default:none");
+    expect(screen.getByTestId("visit-form")).toHaveTextContent(
+      "parks:1|trips:1|edit:10|default:none|trip:none",
+    );
     expect(screen.getByTestId("visit-image-section")).toHaveTextContent("visit:10|images:1");
   });
 
@@ -1068,6 +1209,7 @@ describe("App pages", () => {
   it("calls notFound when the edit visit page cannot find the requested visit", async () => {
     vi.mocked(apiFetch)
       .mockResolvedValueOnce({ parks: [publicPark] })
+      .mockResolvedValueOnce({ trips: [trip] })
       .mockResolvedValueOnce(null);
 
     await expect(

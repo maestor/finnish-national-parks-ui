@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildPublicVisitsMapModel,
+  buildPublicVisitsTimelineModel,
   createPublicVisitsHref,
   type FrontendTimelineVisit,
   type PublicVisitsMapPark,
@@ -14,6 +15,8 @@ const createTimelineVisit = (
   route: null,
   createdAt: "2024-06-15T10:00:00Z",
   imageCount: 0,
+  trip: null,
+  tripStopOrder: null,
   park: {
     name: "Nuuksio",
     slug: "nuuksio",
@@ -163,5 +166,161 @@ describe("buildPublicVisitsMapModel", () => {
     expect(
       buildPublicVisitsMapModel(visits, mapParks, { selectedYear: 2025, selectedMonth: null }),
     ).toEqual([]);
+  });
+});
+
+describe("buildPublicVisitsTimelineModel", () => {
+  it("groups trips into one timeline item positioned by the latest trip visit", () => {
+    const model = buildPublicVisitsTimelineModel(
+      [
+        createTimelineVisit({
+          id: 1,
+          visitedOn: "2024-06-15",
+          trip: { id: 7, name: "Kesaretki" },
+        }),
+        createTimelineVisit({
+          id: 2,
+          visitedOn: "2024-06-18",
+          route: "Harjupolku",
+          imageCount: 2,
+          trip: { id: 7, name: "Kesaretki" },
+        }),
+        createTimelineVisit({
+          id: 3,
+          visitedOn: "2024-06-20",
+          park: {
+            name: "Repovesi",
+            slug: "repovesi",
+            typeLabel: "Kansallispuisto",
+          },
+        }),
+      ],
+      {
+        selectedYear: null,
+        selectedMonth: null,
+      },
+    );
+
+    expect(model.filteredVisits).toHaveLength(3);
+    expect(model.sections).toHaveLength(1);
+    expect(model.sections[0]?.months).toHaveLength(1);
+    expect(model.sections[0]?.months[0]?.items).toHaveLength(2);
+
+    const [latestLooseVisit, groupedTrip] = model.sections[0]?.months[0]?.items ?? [];
+
+    expect(latestLooseVisit).toMatchObject({
+      kind: "visit",
+      visit: {
+        id: 3,
+      },
+    });
+    expect(groupedTrip).toMatchObject({
+      kind: "trip",
+      tripId: 7,
+      name: "Kesaretki",
+      visitCount: 2,
+      parkCount: 1,
+      imageCount: 2,
+      dateRange: {
+        start: "2024-06-15",
+        end: "2024-06-18",
+      },
+      latestVisit: {
+        id: 2,
+      },
+    });
+
+    if (groupedTrip?.kind !== "trip") {
+      throw new Error("Expected grouped trip item");
+    }
+
+    expect(groupedTrip.visits.map((visit) => visit.id)).toEqual([1, 2]);
+  });
+
+  it("uses trip stop order for visits inside a grouped trip", () => {
+    const model = buildPublicVisitsTimelineModel(
+      [
+        createTimelineVisit({
+          id: 1,
+          visitedOn: "2024-06-15",
+          createdAt: "2024-06-15T09:00:00Z",
+          trip: { id: 7, name: "Kesaretki" },
+          tripStopOrder: 2,
+        }),
+        createTimelineVisit({
+          id: 2,
+          visitedOn: "2024-06-15",
+          createdAt: "2024-06-15T12:00:00Z",
+          park: {
+            name: "Pallas-Yllästunturi",
+            slug: "pallas-yllastunturi",
+            typeLabel: "Kansallispuisto",
+          },
+          trip: { id: 7, name: "Kesaretki" },
+          tripStopOrder: 1,
+        }),
+      ],
+      {
+        selectedYear: null,
+        selectedMonth: null,
+      },
+    );
+
+    const groupedTrip = model.sections[0]?.months[0]?.items[0];
+
+    if (groupedTrip?.kind !== "trip") {
+      throw new Error("Expected grouped trip item");
+    }
+
+    expect(groupedTrip.visits.map((visit) => visit.id)).toEqual([2, 1]);
+  });
+
+  it("keeps only the matching year slice inside a trip when filtered", () => {
+    const model = buildPublicVisitsTimelineModel(
+      [
+        createTimelineVisit({
+          id: 1,
+          visitedOn: "2024-12-30",
+          trip: { id: 7, name: "Uudenvuoden reissu" },
+        }),
+        createTimelineVisit({
+          id: 2,
+          visitedOn: "2025-01-02",
+          park: {
+            name: "Oulanka",
+            slug: "oulanka",
+            typeLabel: "Kansallispuisto",
+          },
+          trip: { id: 7, name: "Uudenvuoden reissu" },
+        }),
+      ],
+      {
+        selectedYear: 2025,
+        selectedMonth: null,
+      },
+    );
+
+    expect(model.filteredVisits).toHaveLength(1);
+    expect(model.sections).toHaveLength(1);
+    expect(model.sections[0]?.year).toBe(2025);
+
+    const groupedTrip = model.sections[0]?.months[0]?.items[0];
+
+    expect(groupedTrip).toMatchObject({
+      kind: "trip",
+      tripId: 7,
+      visitCount: 1,
+      parkCount: 1,
+      dateRange: {
+        start: "2025-01-02",
+        end: "2025-01-02",
+      },
+    });
+
+    if (groupedTrip?.kind !== "trip") {
+      throw new Error("Expected grouped trip item");
+    }
+
+    expect(groupedTrip.visits.map((visit) => visit.id)).toEqual([2]);
   });
 });

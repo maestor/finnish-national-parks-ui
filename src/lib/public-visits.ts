@@ -23,9 +23,9 @@ export interface PublicVisitMonthOption {
 }
 
 export interface PublicVisitMonthSection {
+  items: PublicVisitTimelineItem[];
   label: string;
   month: number;
-  visits: FrontendTimelineVisit[];
 }
 
 export interface PublicVisitYearSection {
@@ -59,6 +59,28 @@ export interface PublicVisitsMapMarker {
 
 export type FrontendTimelineVisit =
   paths["/api/visits-timeline"]["get"]["responses"][200]["content"]["application/json"]["visits"][number];
+
+export interface PublicVisitTimelineVisitItem {
+  kind: "visit";
+  visit: FrontendTimelineVisit;
+}
+
+export interface PublicVisitTimelineTripItem {
+  dateRange: {
+    end: string;
+    start: string;
+  };
+  imageCount: number;
+  kind: "trip";
+  latestVisit: FrontendTimelineVisit;
+  name: string;
+  parkCount: number;
+  tripId: number;
+  visitCount: number;
+  visits: FrontendTimelineVisit[];
+}
+
+export type PublicVisitTimelineItem = PublicVisitTimelineTripItem | PublicVisitTimelineVisitItem;
 
 const MONTH_FILTER_LABEL_FORMATTER = new Intl.DateTimeFormat("fi-FI", {
   month: "short",
@@ -105,6 +127,33 @@ const compareVisitsByTimeline = (left: FrontendTimelineVisit, right: FrontendTim
   right.visitedOn.localeCompare(left.visitedOn) ||
   right.createdAt.localeCompare(left.createdAt) ||
   right.id - left.id;
+
+const compareVisitsByTripNarrative = (
+  left: FrontendTimelineVisit,
+  right: FrontendTimelineVisit,
+) => {
+  if (
+    left.tripStopOrder !== null &&
+    right.tripStopOrder !== null &&
+    left.tripStopOrder !== right.tripStopOrder
+  ) {
+    return left.tripStopOrder - right.tripStopOrder;
+  }
+
+  if (left.tripStopOrder !== null && right.tripStopOrder === null) {
+    return -1;
+  }
+
+  if (left.tripStopOrder === null && right.tripStopOrder !== null) {
+    return 1;
+  }
+
+  return (
+    left.visitedOn.localeCompare(right.visitedOn) ||
+    left.createdAt.localeCompare(right.createdAt) ||
+    left.id - right.id
+  );
+};
 
 const buildAvailableVisitMonths = (visits: FrontendTimelineVisit[], year: number | null) => {
   const availableMonths = new Set<number>();
@@ -296,20 +345,78 @@ export const buildPublicVisitsTimelineModel = (
     })
     .sort(compareVisitsByTimeline);
 
-  const yearSections = new Map<number, Map<number, FrontendTimelineVisit[]>>();
+  const tripVisitsByTripId = new Map<number, FrontendTimelineVisit[]>();
+  const looseVisits: FrontendTimelineVisit[] = [];
 
   for (const visit of filteredVisits) {
-    const visitYear = getVisitYear(visit.visitedOn);
-    const visitMonth = getVisitMonth(visit.visitedOn);
-    const yearMonths = yearSections.get(visitYear) ?? new Map<number, FrontendTimelineVisit[]>();
-    const monthVisits = yearMonths.get(visitMonth) ?? [];
+    if (visit.trip) {
+      const groupedTripVisits = tripVisitsByTripId.get(visit.trip.id) ?? [];
+      groupedTripVisits.push(visit);
+      tripVisitsByTripId.set(visit.trip.id, groupedTripVisits);
+      continue;
+    }
 
-    monthVisits.push(visit);
-    yearMonths.set(visitMonth, monthVisits);
+    looseVisits.push(visit);
+  }
+
+  const yearSections = new Map<number, Map<number, PublicVisitTimelineItem[]>>();
+
+  const addTimelineItem = (visitedOn: string, item: PublicVisitTimelineItem) => {
+    const visitYear = getVisitYear(visitedOn);
+    const visitMonth = getVisitMonth(visitedOn);
+    const yearMonths = yearSections.get(visitYear) ?? new Map<number, PublicVisitTimelineItem[]>();
+    const monthItems = yearMonths.get(visitMonth) ?? [];
+
+    monthItems.push(item);
+    yearMonths.set(visitMonth, monthItems);
     yearSections.set(visitYear, yearMonths);
+  };
+
+  for (const visit of looseVisits) {
+    addTimelineItem(visit.visitedOn, {
+      kind: "visit",
+      visit,
+    });
+  }
+
+  for (const [tripId, groupedTripVisits] of tripVisitsByTripId.entries()) {
+    const latestVisit = [...groupedTripVisits].sort(compareVisitsByTimeline)[0];
+
+    if (!latestVisit?.trip) {
+      continue;
+    }
+
+    const visitsInNarrativeOrder = [...groupedTripVisits].sort(compareVisitsByTripNarrative);
+    const imageCount = groupedTripVisits.reduce((sum, visit) => sum + visit.imageCount, 0);
+    const parkCount = new Set(groupedTripVisits.map((visit) => visit.park.slug)).size;
+    const tripItem: PublicVisitTimelineTripItem = {
+      kind: "trip",
+      tripId,
+      name: latestVisit.trip.name,
+      dateRange: {
+        start: visitsInNarrativeOrder[0]?.visitedOn ?? latestVisit.visitedOn,
+        end:
+          visitsInNarrativeOrder[visitsInNarrativeOrder.length - 1]?.visitedOn ??
+          latestVisit.visitedOn,
+      },
+      imageCount,
+      latestVisit,
+      parkCount,
+      visitCount: groupedTripVisits.length,
+      visits: visitsInNarrativeOrder,
+    };
+
+    addTimelineItem(latestVisit.visitedOn, tripItem);
   }
 
   const monthOptions = createPublicVisitMonthOptions(availableMonths);
+
+  const compareTimelineItems = (left: PublicVisitTimelineItem, right: PublicVisitTimelineItem) => {
+    const leftVisit = left.kind === "trip" ? left.latestVisit : left.visit;
+    const rightVisit = right.kind === "trip" ? right.latestVisit : right.visit;
+
+    return compareVisitsByTimeline(leftVisit, rightVisit);
+  };
 
   const sections = [...yearSections.entries()]
     .sort((left, right) => right[0] - left[0])
@@ -317,10 +424,10 @@ export const buildPublicVisitsTimelineModel = (
       year,
       months: [...months.entries()]
         .sort((left, right) => right[0] - left[0])
-        .map(([month, monthVisits]) => ({
+        .map(([month, monthItems]) => ({
           month,
           label: createPublicVisitTimelineMonthLabel(month),
-          visits: monthVisits,
+          items: [...monthItems].sort(compareTimelineItems),
         })),
     }));
 

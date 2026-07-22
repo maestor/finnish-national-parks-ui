@@ -175,6 +175,11 @@
       "viewVisit": "Näytä käynti",
       "openVisit": "Avaa käynti paikan sivulla",
       "imageCount": "{count} kuvaa"
+    },
+    "trip": {
+      "label": "Retki",
+      "visitCount": "{count} käyntiä",
+      "imageCount": "{count} kuvaa"
     }
   },
   "tripPlanner": {
@@ -244,7 +249,7 @@
     "title": "Hallinta",
     "dashboard": {
       "title": "Hallinta",
-      "description": "Täällä voit muokata paikkoja ja hallita käyntikirjauksia."
+      "description": "Täällä voit muokata paikkoja, hallita retkiä ja ylläpitää käyntikirjauksia."
     },
     "parks": {
       "title": "Paikat",
@@ -317,18 +322,104 @@
       "emptyHidden": "Ei piilotettuja paikkoja.",
       "emptyFiltered": "Yksikään paikka ei vastaa nykyisiä suodattimia."
     },
+    "trips": {
+      "title": "Retket",
+      "description": "Luo retkiä ja liitä käyntejä niihin, jotta julkinen aikajana voidaan ryhmitellä harkitusti.",
+      "addTrip": "Lisää retki",
+      "newTrip": {
+        "title": "Uusi retki",
+        "description": "Luo uusi retki ja lisää siihen käyntejä myöhemmin tai saman tien."
+      },
+      "editTrip": {
+        "title": "Muokkaa retkeä",
+        "description": "Päivitä retken tiedot ja lisää siihen uusia käyntejä.",
+        "createdNotice": "Retki tallennettiin. Voit jatkaa sen muokkaamista täällä."
+      },
+      "assignments": {
+        "title": "Liitä olemassa olevia käyntejä",
+        "description": "Hae aiemmin kirjattuja ilman retkeä olevia käyntejä ja liitä ne tähän retkeen yhdellä napilla. Voit myös irrottaa käyntejä tästä retkestä takaisin ilman retkeä.",
+        "assignedTitle": "Tähän retkeen liitetyt",
+        "assignedDescription": "{count} käyntiä tällä hetkellä tässä retkessä.",
+        "assignedEmpty": "Tähän retkeen ei ole vielä liitetty käyntejä.",
+        "reorderHint": "Raahaa käyntejä uuteen järjestykseen tai käytä järjestyskahvan nuolinäppäimiä.",
+        "reorderSuccess": "Retken käyntijärjestys päivitettiin.",
+        "availableTitle": "Ilman retkeä olevat käynnit",
+        "availableDescription": "{count} käyntiä voidaan liittää tähän retkeen nykyisillä suodattimilla.",
+        "availableEmpty": "Yhtään käyntiä ei löytynyt nykyisillä suodattimilla.",
+        "attachAction": "Lisää",
+        "removeAction": "Poista",
+        "table": {
+          "order": "Järjestys",
+          "park": "Paikka",
+          "date": "Päivä",
+          "reorderVisit": "Järjestä käynti",
+          "actions": "Toiminnot"
+        },
+        "filters": {
+          "searchLabel": "Haku",
+          "searchPlaceholder": "Hae paikkaa, reittiä, päivää tai kirjoittajaa",
+          "parkLabel": "Paikka",
+          "allParks": "Kaikki paikat",
+          "results": "{assigned} tässä retkessä, {available} liitettävissä",
+          "reset": "Tyhjennä suodattimet"
+        }
+      },
+      "form": {
+        "nameLabel": "Retken nimi",
+        "namePlaceholder": "Esim. Keski-Suomen kesälomaretki",
+        "descriptionLabel": "Kuvaus",
+        "descriptionPlaceholder": "Kerro lyhyesti retken taustasta, tunnelmasta tai tarkoituksesta...",
+        "dateRangeLabel": "Retken aikaväli",
+        "visitCountLabel": "Käyntejä",
+        "visitCountValue": "{count} käyntiä",
+        "noDateRange": "Ei vielä käyntejä",
+        "addVisitToTrip": "Kirjaa käynti tähän retkeen",
+        "submit": "Tallenna",
+        "updateSuccess": "Retken tiedot päivitettiin onnistuneesti.",
+        "viewAllTrips": "Siirry retkilistaan",
+        "delete": "Poista",
+        "deleteConfirm": "Haluatko varmasti poistaa retken \"{tripName}\"? Käynnit säilyvät, mutta niiden retkiliitos poistetaan.",
+        "back": "Palaa takaisin",
+        "validation": {
+          "nameRequired": "Anna retkelle nimi"
+        }
+      },
+      "list": {
+        "tripName": "Retki",
+        "dateRange": "Aikaväli",
+        "visitCount": "Käynnit",
+        "visitCountValue": "{count} käyntiä",
+        "description": "Kuvaus",
+        "actions": "Toiminnot",
+        "addVisit": "Kirjaa käynti",
+        "edit": "Muokkaa",
+        "delete": "Poista",
+        "deleteConfirm": "Haluatko varmasti poistaa retken \"{tripName}\"? Käynnit säilyvät, mutta niiden retkiliitos poistetaan.",
+        "noDateRange": "Ei vielä käyntejä",
+        "noDescription": "Ei kuvausta",
+        "filters": {
+          "searchLabel": "Haku",
+          "searchPlaceholder": "Hae retkeä tai kuvausta",
+          "results": "{count} retkeä",
+          "reset": "Tyhjennä suodattimet"
+        },
+        "noTrips": "Ei vielä luotuja retkiä.",
+        "emptyFiltered": "Yksikään retki ei vastaa nykyisiä suodattimia.",
+        "addFirstTrip": "Lisää ensimmäinen retki"
+      }
+    },
     "visits": {
       "title": "Käynnit",
       "description": "Hallitse paikkakäyntejäsi. Lisää, muokkaa tai poista käyntitietoja.",
       "addVisit": "Lisää käynti",
       "newVisit": {
         "title": "Uusi käynti",
-        "description": "Kirjaa uusi käynti paikkaan."
+        "description": "Kirjaa uusi käynti paikkaan ja liitä se halutessasi retkeen."
       },
       "edit": "Muokkaa",
       "editVisit": {
         "title": "Muokkaa käyntiä",
-        "description": "Päivitä käynnin tietoja.",
+        "description": "Päivitä käynnin tietoja tai vaihda sen retkiliitosta.",
         "createdNotice": "Käynti tallennettiin. Voit jatkaa sen muokkaamista täällä.",
         "viewParkPage": "Siirry paikan sivulle",
         "manageImages": "Kuvien hallinta"
@@ -336,6 +427,10 @@
       "form": {
         "parkLabel": "Paikka",
         "parkPlaceholder": "Valitse paikka",
+        "tripLabel": "Retki",
+        "tripPlaceholder": "Ei retkeä",
+        "tripHint": "Voit liittää käynnin olemassa olevaan retkeen tai jättää sen ilman retkeä.",
+        "manageTrips": "Hallitse retkiä",
         "dateLabel": "Käyntipäivä",
         "routeLabel": "Reitti",
         "routePlaceholder": "Esim. Pallas-Yllästunturin reitti",
@@ -359,6 +454,8 @@
       },
       "list": {
         "parkName": "Paikka",
+        "trip": "Retki",
+        "noTrip": "Ei retkeä",
         "route": "Reitti",
         "visitDate": "Käyntipäivä",
         "noteStatus": "Muistiinpanot",
@@ -367,9 +464,12 @@
         "missing": "Puuttuu",
         "filters": {
           "searchLabel": "Haku",
-          "searchPlaceholder": "Hae paikkaa tai reittiä",
+          "searchPlaceholder": "Hae paikkaa, retkeä tai reittiä",
           "parkLabel": "Paikka",
+          "tripLabel": "Retki",
           "allParks": "Kaikki paikat",
+          "allTrips": "Kaikki retket",
+          "unassignedTrips": "Ilman retkeä",
           "results": "{count} käyntiä",
           "reset": "Tyhjennä suodattimet"
         },

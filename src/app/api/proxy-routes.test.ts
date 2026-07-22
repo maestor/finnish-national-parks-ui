@@ -17,6 +17,8 @@ import { GET as getParkSearch } from "./parks/search/route";
 import { POST as postTripPlannerNearby } from "./trip-planner/nearby/route";
 import { POST as postTripPlannerSearch } from "./trip-planner/search/route";
 import { POST as postTripPlannerSuggestions } from "./trip-planner/suggestions/route";
+import { DELETE as deleteTrip, PATCH as patchTrip } from "./trips/[id]/route";
+import { GET as getTrips, POST as postTrip } from "./trips/route";
 import { DELETE as deleteVisitImage } from "./visits/[id]/images/[imageId]/route";
 import { POST as postVisitImageComplete } from "./visits/[id]/images/complete/route";
 import { PATCH as patchVisitImageOrder } from "./visits/[id]/images/reorder/route";
@@ -77,6 +79,50 @@ describe("api proxy routes", () => {
     await getParkSearch(request);
 
     expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/parks/search");
+  });
+
+  it("proxies trip listing reads", async () => {
+    const request = new Request("https://frontend.example/api/trips");
+
+    await getTrips(request);
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/trips");
+  });
+
+  it("proxies trip creation", async () => {
+    const request = new Request("https://frontend.example/api/trips", {
+      method: "POST",
+    });
+
+    await postTrip(request);
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/trips", {
+      requireAdmin: true,
+    });
+  });
+
+  it("proxies trip updates", async () => {
+    const request = new Request("https://frontend.example/api/trips/7", {
+      method: "PATCH",
+    });
+
+    await patchTrip(request, { params: Promise.resolve({ id: "7" }) });
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/trips/7", {
+      requireAdmin: true,
+    });
+  });
+
+  it("proxies trip deletion", async () => {
+    const request = new Request("https://frontend.example/api/trips/7", {
+      method: "DELETE",
+    });
+
+    await deleteTrip(request, { params: Promise.resolve({ id: "7" }) });
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/trips/7", {
+      requireAdmin: true,
+    });
   });
 
   it("proxies trip planner search requests", async () => {

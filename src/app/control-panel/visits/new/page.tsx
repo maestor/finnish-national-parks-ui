@@ -3,6 +3,7 @@ import { VisitForm } from "@/components/visits/visit-form";
 import { apiFetch } from "@/lib/api";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import type { Park } from "@/lib/parks";
+import type { Trip } from "@/lib/trips";
 
 export const generateMetadata = async () => {
   const [t, metadataT] = await Promise.all([
@@ -13,19 +14,22 @@ export const generateMetadata = async () => {
 };
 
 interface NewVisitPageProps {
-  searchParams: Promise<{ park?: string }>;
+  searchParams: Promise<{ park?: string; trip?: string }>;
 }
 
 const NewVisitPage = async ({ searchParams }: NewVisitPageProps) => {
   const t = await getTranslations("controlPanel.visits.newVisit");
-  const { park } = await searchParams;
-  const { parks } = await apiFetch<{ parks: Park[] }>("/api/parks");
+  const { park, trip } = await searchParams;
+  const [{ parks }, { trips }] = await Promise.all([
+    apiFetch<{ parks: Park[] }>("/api/parks"),
+    apiFetch<{ trips: Trip[] }>("/api/trips"),
+  ]);
 
   return (
     <div>
       <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
       <p className="mt-2 text-muted-foreground">{t("description")}</p>
-      <VisitForm parks={parks} defaultParkSlug={park} />
+      <VisitForm parks={parks} trips={trips} defaultParkSlug={park} defaultTripId={trip} />
     </div>
   );
 };

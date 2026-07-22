@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { type FormEvent, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Button } from "@/components/ui/button";
@@ -13,19 +13,31 @@ import { apiFetch } from "@/lib/api";
 import type { Park, Visit, VisitWithPark } from "@/lib/parks";
 import { revalidatePublicCache } from "@/lib/public-cache";
 import { appRoutes, createPathWithSearchParams } from "@/lib/routes";
+import { sortTrips, type Trip } from "@/lib/trips";
 
 interface VisitFormProps {
   parks: Park[];
   visitToEdit?: VisitWithPark;
   defaultParkSlug?: string;
+  trips?: Trip[];
+  defaultTripId?: string;
 }
 
-export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProps) => {
+export const VisitForm = ({
+  parks,
+  visitToEdit,
+  defaultParkSlug,
+  trips = [],
+  defaultTripId,
+}: VisitFormProps) => {
   const t = useTranslations("controlPanel.visits.form");
   const router = useRouter();
   const isEditing = !!visitToEdit;
 
   const [parkSlug, setParkSlug] = useState(visitToEdit?.park.slug ?? defaultParkSlug ?? "");
+  const [tripId, setTripId] = useState(
+    visitToEdit?.trip?.id ? String(visitToEdit.trip.id) : (defaultTripId ?? ""),
+  );
   const [visitedOn, setVisitedOn] = useState(visitToEdit?.visitedOn ?? "");
   const [route, setRoute] = useState(visitToEdit?.route ?? "");
   const [author, setAuthor] = useState(visitToEdit?.author ?? "");
@@ -36,6 +48,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [savedSnapshot, setSavedSnapshot] = useState({
+    tripId: visitToEdit?.trip?.id ? String(visitToEdit.trip.id) : "",
     visitedOn: visitToEdit?.visitedOn ?? "",
     route: visitToEdit?.route ?? "",
     author: visitToEdit?.author ?? "",
@@ -43,6 +56,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
   });
   const isEditDirty =
     !visitToEdit ||
+    tripId !== savedSnapshot.tripId ||
     visitedOn !== savedSnapshot.visitedOn ||
     route !== savedSnapshot.route ||
     author !== savedSnapshot.author ||
@@ -53,7 +67,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
     router.back();
   };
 
-  const handleSubmit = async (event: React.FormEvent) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setErrors({});
     setSubmitError(null);
@@ -82,6 +96,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
         await apiFetch(`/api/visits/${visitToEdit.id}`, {
           method: "PATCH",
           body: JSON.stringify({
+            tripId: tripId ? Number(tripId) : null,
             visitedOn,
             route: route || null,
             author: author || null,
@@ -90,6 +105,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
         });
         await revalidatePublicCache({ parkSlug: visitToEdit.park.slug });
         setSavedSnapshot({
+          tripId,
           visitedOn,
           route: route || "",
           author: author || "",
@@ -101,6 +117,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
         const createdVisit = await apiFetch<Visit>(`/api/parks/${parkSlug}/visits`, {
           method: "POST",
           body: JSON.stringify({
+            tripId: tripId ? Number(tripId) : null,
             visitedOn,
             route: route || null,
             author: author || null,
@@ -169,6 +186,32 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
           </Select>
         )}
         {errors.parkSlug && <p className="text-sm text-destructive">{errors.parkSlug}</p>}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="trip">{t("tripLabel")}</Label>
+        <Select
+          id="trip"
+          value={tripId}
+          onChange={(e) => setTripId(e.target.value)}
+          className="h-10"
+        >
+          <option value="">{t("tripPlaceholder")}</option>
+          {sortTrips(trips).map((trip) => (
+            <option key={trip.id} value={trip.id}>
+              {trip.name}
+            </option>
+          ))}
+        </Select>
+        <p className="text-sm text-muted-foreground">
+          {t("tripHint")}{" "}
+          <Link
+            href={appRoutes.controlPanel.trips}
+            className="font-medium underline underline-offset-4 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            {t("manageTrips")}
+          </Link>
+        </p>
       </div>
 
       <div className="space-y-2">

@@ -28,6 +28,10 @@ describe("ControlPanelNav", () => {
       "href",
       "/hallinta/paikat",
     );
+    expect(within(nav).getByRole("link", { name: "controlPanel.trips.title" })).toHaveAttribute(
+      "href",
+      "/hallinta/retket",
+    );
     expect(within(nav).getByRole("link", { name: "controlPanel.visits.title" })).toHaveAttribute(
       "href",
       "/hallinta/kaynnit",
