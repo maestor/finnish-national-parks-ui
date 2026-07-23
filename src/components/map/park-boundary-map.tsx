@@ -29,6 +29,9 @@ const SOURCE_ID = "park-boundary";
 const FILL_LAYER_ID = "park-boundary-fill";
 const OUTLINE_LAYER_ID = "park-boundary-outline";
 const MAP_PADDING = 40;
+const MAP_MIN_ZOOM = 3;
+const MAP_MAX_ZOOM = 16;
+const ZOOM_OUT_LEVELS_FROM_FIT = 3;
 
 export const ParkBoundaryMap = ({
   boundaryGeoJson,
@@ -52,8 +55,8 @@ export const ParkBoundaryMap = ({
     const map = new maplibregl.Map({
       container,
       style: getMapStyle(),
-      minZoom: 3,
-      maxZoom: 16,
+      minZoom: MAP_MIN_ZOOM,
+      maxZoom: MAP_MAX_ZOOM,
     });
 
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
@@ -125,7 +128,7 @@ export const ParkBoundaryMap = ({
 
     const fittedCamera = map.cameraForBounds(bounds, { padding: MAP_PADDING });
     if (typeof fittedCamera?.zoom === "number") {
-      map.setMinZoom(fittedCamera.zoom);
+      map.setMinZoom(Math.max(MAP_MIN_ZOOM, fittedCamera.zoom - ZOOM_OUT_LEVELS_FROM_FIT));
     }
 
     // Add marker at park center
