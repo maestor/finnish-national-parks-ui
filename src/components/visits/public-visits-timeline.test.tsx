@@ -569,6 +569,7 @@ describe("PublicVisitsTimeline", () => {
     expect(screen.getByRole("heading", { name: "Kesaretki" })).toBeInTheDocument();
     expect(screen.getByText("visits.trip.visitCount")).toBeInTheDocument();
     expect(screen.getByText("visits.trip.imageCount")).toBeInTheDocument();
+    expect(screen.getByText("15.-18.6.2024")).toBeInTheDocument();
 
     const tripCard = screen.getByRole("heading", { name: "Kesaretki" }).closest("article");
 

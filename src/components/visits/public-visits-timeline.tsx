@@ -18,7 +18,7 @@ import { ParkTypeBadge } from "@/components/park/park-type-badge";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/cn";
-import { formatFinnishDate } from "@/lib/fi-date";
+import { formatFinnishDate, formatFinnishDateRange } from "@/lib/fi-date";
 import {
   createParkVisitHref,
   createPublicVisitsHref,
@@ -328,9 +328,7 @@ const PublicVisitsTimeline = ({
                 {t("trip.label")}
               </span>
               <span className="text-sm font-medium text-muted-foreground">
-                {formatFinnishDate(trip.dateRange.start)}
-                {" - "}
-                {formatFinnishDate(trip.dateRange.end)}
+                {formatFinnishDateRange(trip.dateRange.start, trip.dateRange.end)}
               </span>
             </div>
             <h4 className="mt-3 text-2xl font-semibold tracking-tight">{trip.name}</h4>
