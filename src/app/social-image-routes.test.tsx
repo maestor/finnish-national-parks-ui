@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import messages from "../../messages/fi.json";
 import OpenGraphImage, {
   alt as openGraphAlt,
   contentType as openGraphContentType,
@@ -30,9 +31,8 @@ describe("social image routes", () => {
     expect(openGraphContentType).toBe("image/png");
     expect(openGraphSize).toEqual({ width: 1200, height: 1200 });
     expect(OpenGraphImage()).toEqual({
-      title: "Reissuvihko",
-      description:
-        "Reissuvihko kokoaa tekijöidensä käynnit Suomen retkeilypaikoissa, tarinat kuvineen muistoina retkistä sekä etenemisen samoihin kuoriin.",
+      title: messages.metadata.title,
+      description: messages.metadata.description,
       variant: "square",
       width: 1200,
       height: 1200,
@@ -46,9 +46,8 @@ describe("social image routes", () => {
     expect(twitterContentType).toBe("image/png");
     expect(twitterSize).toEqual({ width: 1200, height: 630 });
     expect(TwitterImage()).toEqual({
-      title: "Reissuvihko",
-      description:
-        "Reissuvihko kokoaa tekijöidensä käynnit Suomen retkeilypaikoissa, tarinat kuvineen muistoina retkistä sekä etenemisen samoihin kuoriin.",
+      title: messages.metadata.title,
+      description: messages.metadata.description,
       variant: "landscape",
       width: 1200,
       height: 630,

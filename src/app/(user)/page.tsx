@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { HomeVisitStats } from "@/components/dashboard/home-visit-stats";
 import { MostVisitedParks } from "@/components/dashboard/most-visited-parks";
+import { HomeAboutSection } from "@/components/home/home-about-section";
 import { HomeActivityPanels } from "@/components/home/home-activity-panels";
 import { HomeIntro } from "@/components/home/home-intro";
 import { HomeSocialLinks } from "@/components/home/home-social-links";
@@ -38,33 +39,20 @@ const HomePage = async () => {
     .filter(Boolean);
 
   return (
-    <div className={PUBLIC_PAGE_SHELL_CLASS_NAME}>
+    <div id="home-top" className={`${PUBLIC_PAGE_SHELL_CLASS_NAME} scroll-mt-24 sm:scroll-mt-28`}>
       <HomeIntro
         title={t("title")}
         summary={t("summary")}
-        descriptionParagraphs={descriptionParagraphs}
         openMapLabel={t("openMap")}
-        infoClosedLabel={t("intro.showInfo")}
-        infoOpenLabel={t("intro.hideInfo")}
-      >
-        <HomeSocialLinks
-          sectionLabel={t("social.sectionLabel")}
-          title={t("social.title")}
-          linkedInLabel={t("social.linkedin")}
-          linkedInText={t("social.linkedinText")}
-          githubUiLabel={t("social.githubUi")}
-          githubUiText={t("social.githubUiText")}
-          githubApiLabel={t("social.githubApi")}
-          githubApiText={t("social.githubApiText")}
-          copyrightLabel={t("social.copyright")}
-        />
-      </HomeIntro>
+        infoLabel={t("intro.showInfo")}
+      />
 
       <HomeVisitStats
         sectionTitle={t("statistics.title")}
         totalVisitsLabel={t("statistics.totalVisits")}
         totalVisits={summary.totalVisits}
         progressItems={progressItems}
+        backToStartLabel={t("backToStart")}
         seasonalVisitsLabel={t("statistics.seasonalVisits")}
         seasonalVisits={summary.seasonalVisitCounts}
         springLabel={t("statistics.seasons.spring")}
@@ -78,6 +66,7 @@ const HomePage = async () => {
           recentVisitsEmptyMessage={t("recentVisits.empty")}
           latestEntriesTitle={t("latestEntries.title")}
           latestEntriesEmptyMessage={t("latestEntries.empty")}
+          backToStartLabel={t("backToStart")}
           fallbackRecentVisits={recentVisits}
           fallbackLatestVisitEntries={latestVisitEntries}
         />
@@ -85,9 +74,28 @@ const HomePage = async () => {
           title={t("mostVisitedParks.title")}
           emptyMessage={t("mostVisitedParks.empty")}
           visitCountLabel={t("mostVisitedParks.visitCount")}
+          backToStartLabel={t("backToStart")}
           parks={mostVisitedParks}
         />
       </div>
+
+      <HomeAboutSection
+        title={t("aboutTitle")}
+        descriptionParagraphs={descriptionParagraphs}
+        backToStartLabel={t("backToStart")}
+      >
+        <HomeSocialLinks
+          sectionLabel={t("social.sectionLabel")}
+          title={t("social.title")}
+          linkedInLabel={t("social.linkedin")}
+          linkedInText={t("social.linkedinText")}
+          githubUiLabel={t("social.githubUi")}
+          githubUiText={t("social.githubUiText")}
+          githubApiLabel={t("social.githubApi")}
+          githubApiText={t("social.githubApiText")}
+          copyrightLabel={t("social.copyright")}
+        />
+      </HomeAboutSection>
     </div>
   );
 };

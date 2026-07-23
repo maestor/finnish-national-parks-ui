@@ -8,6 +8,7 @@ describe("LatestVisitEntries", () => {
       <LatestVisitEntries
         title="Uusimmat käyntikirjaukset"
         emptyMessage="Ei käyntikirjauksia"
+        backToStartLabel="Takaisin alkuun"
         visits={[
           {
             id: 1,
@@ -27,6 +28,10 @@ describe("LatestVisitEntries", () => {
       "/paikka/pallas?visit=1#visit-history",
     );
     expect(screen.getByLabelText("controlPanel.visits.edit")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Takaisin alkuun" })).toHaveAttribute(
+      "href",
+      "#home-top",
+    );
   });
 
   it("shows an empty state without entries", () => {
@@ -34,6 +39,7 @@ describe("LatestVisitEntries", () => {
       <LatestVisitEntries
         title="Uusimmat käyntikirjaukset"
         emptyMessage="Ei käyntikirjauksia"
+        backToStartLabel="Takaisin alkuun"
         visits={[]}
       />,
     );
@@ -46,6 +52,7 @@ describe("LatestVisitEntries", () => {
       <LatestVisitEntries
         title="Uusimmat käyntikirjaukset"
         emptyMessage="Ei käyntikirjauksia"
+        backToStartLabel="Takaisin alkuun"
         visits={[
           {
             parkName: "Pallas",

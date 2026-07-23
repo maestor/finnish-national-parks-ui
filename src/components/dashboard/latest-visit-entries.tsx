@@ -1,6 +1,7 @@
 import { NotebookPen } from "lucide-react";
 import Link from "next/link";
 import { DashboardSectionCard } from "@/components/dashboard/dashboard-section-card";
+import { BackToStartLink } from "@/components/home/back-to-start-link";
 import { EditVisitLink } from "@/components/visits/edit-visit-link";
 import { formatFinnishDate } from "@/lib/fi-date";
 import { createParkVisitHref } from "@/lib/public-visits";
@@ -16,6 +17,7 @@ interface LatestVisitEntriesProps {
   title: string;
   emptyMessage: string;
   visits: LatestVisitEntry[];
+  backToStartLabel: string;
   showEditLinks?: boolean;
 }
 
@@ -23,6 +25,7 @@ export const LatestVisitEntries = ({
   title,
   emptyMessage,
   visits,
+  backToStartLabel,
   showEditLinks = false,
 }: LatestVisitEntriesProps) => {
   const getVisitKey = (visit: LatestVisitEntry) =>
@@ -36,6 +39,7 @@ export const LatestVisitEntries = ({
       iconClassName="text-sky-700 dark:text-sky-300"
       iconSurfaceClassName="bg-sky-500/12 dark:bg-sky-400/10"
       className="h-full"
+      footer={<BackToStartLink label={backToStartLabel} />}
     >
       {visits.length === 0 ? (
         <p className="rounded-[1.45rem] border border-dashed border-white/45 bg-white/48 px-4 py-8 text-sm text-muted-foreground backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/42">

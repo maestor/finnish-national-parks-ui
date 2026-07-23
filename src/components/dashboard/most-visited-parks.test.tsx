@@ -9,6 +9,7 @@ describe("MostVisitedParks", () => {
         title="Eniten käydyt puistot"
         emptyMessage="Ei käyntejä"
         visitCountLabel="käyntiä"
+        backToStartLabel="Takaisin alkuun"
         parks={[
           { parkName: "Pallas", parkSlug: "pallas", visitCount: 4 },
           { parkName: "Nuuksio", parkSlug: "nuuksio", visitCount: 2 },
@@ -19,6 +20,10 @@ describe("MostVisitedParks", () => {
     expect(screen.getByRole("heading", { name: "Eniten käydyt puistot" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Pallas" })).toHaveAttribute("href", "/paikka/pallas");
     expect(screen.getByText("4 käyntiä")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Takaisin alkuun" })).toHaveAttribute(
+      "href",
+      "#home-top",
+    );
   });
 
   it("shows an empty state when there is no visit data", () => {
@@ -27,6 +32,7 @@ describe("MostVisitedParks", () => {
         title="Eniten käydyt puistot"
         emptyMessage="Ei käyntejä"
         visitCountLabel="käyntiä"
+        backToStartLabel="Takaisin alkuun"
         parks={[]}
       />,
     );
@@ -40,6 +46,7 @@ describe("MostVisitedParks", () => {
         title="Eniten käydyt puistot"
         emptyMessage="Ei käyntejä"
         visitCountLabel="käyntiä"
+        backToStartLabel="Takaisin alkuun"
         parks={[
           {
             parkName: "Kuusijärven luonto- ja virkistysalue",
@@ -64,6 +71,7 @@ describe("MostVisitedParks", () => {
         title="Eniten käydyt puistot"
         emptyMessage="Ei käyntejä"
         visitCountLabel="käyntiä"
+        backToStartLabel="Takaisin alkuun"
         parks={[{ parkName: "Pallas", parkSlug: "pallas", visitCount: 4 }]}
       />,
     );

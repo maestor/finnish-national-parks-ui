@@ -1,7 +1,7 @@
 {
   "metadata": {
     "title": "Reissuvihko",
-    "description": "Reissuvihko kokoaa tekijöidensä käynnit Suomen retkeilypaikoissa, tarinat kuvineen muistoina retkistä sekä etenemisen samoihin kuoriin.",
+    "description": "Reissuvihko kokoaa tekijöidensä käynnit Suomen retkeilypaikoista, tarinat kuvineen muistoina retkistä sekä etenemisen ja reissusuunnittelun samoihin kuoriin.",
     "parkDescription": "Tarkastele paikan {park} tietoja ja vierailuja Reissuvihkossa."
   },
   "layout": {
@@ -36,12 +36,13 @@
   "home": {
     "title": "Reissuvihko",
     "mapTitle": "Paikkakartta",
-    "summary": "Reissuvihko kokoaa tekijöidensä käynnit Suomen retkeilypaikoissa, tarinat kuvineen muistoina retkistä sekä etenemisen samoihin kuoriin.",
+    "summary": "Reissuvihko kokoaa tekijöidensä käynnit Suomen retkeilypaikoista, tarinat kuvineen muistoina retkistä sekä etenemisen ja reissusuunnittelun samoihin kuoriin.",
+    "aboutTitle": "Mistä on kyse",
     "description": "Vuokko ja Kalle tutustuivat toisiinsa vuonna 2017 ja yhteiseen matkaan on kuulunut aina jaettu intohimo luonnossa liikkumiseen.\n\nKäytyjä kansallispuistoja on keräilty jo tovi sähkökaapin oveen kiinnitettävien magneettien muodossa ja kaikenlaisilla muillakin metsäreiteillä on vierailtu aina mahdollisuuksien mukaan.\n\nKallen pitkä tausta ohjelmointialalla ja tekoälyavusteisen tekemisen harjoittelu synnytti Reissuvihkon: Nyt paikkakäynnit muistoineen ovat näppärästi dokumentoitu yhdelle sivustolle.\n\nTervetuloa seuraamaan meidän matkaa luonnon äärellä ja hakemaan vaikka inspiraatiota omiin retkiin!",
     "openMap": "Siirry kartalle",
+    "backToStart": "Takaisin alkuun",
     "intro": {
-      "showInfo": "Mistä on kyse?",
-      "hideInfo": "Piilota info"
+      "showInfo": "Mistä on kyse?"
     },
     "statistics": {
       "title": "Käynnit",

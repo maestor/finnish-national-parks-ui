@@ -68,7 +68,7 @@ The `AUTH_JWT_SECRET` must match the backend's `AUTH_JWT_SECRET` exactly. `AUTH_
 | `npm run dev`                | Start dev server on `http://localhost:4300`             |
 | `npm run build`              | Production build                                        |
 | `npm run start`              | Start production server                                 |
-| `npm run typecheck`          | TypeScript check (`tsc --noEmit`)                       |
+| `npm run typecheck`          | Clear and regenerate Next-generated route/page types, then run `tsc --noEmit` |
 | `npm run lint`               | Biome lint check                                        |
 | `npm run lint:fix`           | Auto-fix Biome issues                                   |
 | `npm run test`               | Run Vitest unit/component tests once                    |
@@ -80,6 +80,8 @@ The `AUTH_JWT_SECRET` must match the backend's `AUTH_JWT_SECRET` exactly. `AUTH_
 | `npm run generate:api-types` | Regenerate `src/lib/api-types.ts` from backend OpenAPI  |
 
 **Always run `npm run verify` before asking for review.** Pull requests targeting `main` also run the same `npm run verify` gate in GitHub Actions.
+
+`npm run typecheck` intentionally clears `.next/types` and `.next/dev/types`, then rebuilds the current branch's route and App Router typings through `next typegen` before running `tsc`. This keeps local verification aligned with the checked-out implementation instead of stale generated artifacts from another branch.
 
 Workflow shorthand:
 

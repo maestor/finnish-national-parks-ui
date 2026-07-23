@@ -8,6 +8,7 @@ describe("RecentVisits", () => {
       <RecentVisits
         title="Viimeisimmät käynnit"
         emptyMessage="Ei käyntejä"
+        backToStartLabel="Takaisin alkuun"
         visits={[
           { id: 1, parkName: "Pallas", parkSlug: "pallas", visitedOn: "2024-06-15T22:30:00Z" },
           { id: 2, parkName: "Nuuksio", parkSlug: "nuuksio", visitedOn: "2024-07-20" },
@@ -30,6 +31,10 @@ describe("RecentVisits", () => {
       "/paikka/nuuksio?visit=2#visit-history",
     );
     expect(screen.getAllByLabelText("controlPanel.visits.edit").length).toBe(2);
+    expect(screen.getByRole("link", { name: "Takaisin alkuun" })).toHaveAttribute(
+      "href",
+      "#home-top",
+    );
   });
 
   it("hides edit links when visit management is not available", () => {
@@ -37,6 +42,7 @@ describe("RecentVisits", () => {
       <RecentVisits
         title="Viimeisimmät käynnit"
         emptyMessage="Ei käyntejä"
+        backToStartLabel="Takaisin alkuun"
         visits={[{ id: 1, parkName: "Pallas", parkSlug: "pallas", visitedOn: "2024-06-15" }]}
       />,
     );
@@ -49,6 +55,7 @@ describe("RecentVisits", () => {
       <RecentVisits
         title="Viimeisimmät käynnit"
         emptyMessage="Ei käyntejä"
+        backToStartLabel="Takaisin alkuun"
         visits={[
           { parkName: "Pallas", parkSlug: "pallas", visitedOn: "2024-06-15" },
           { parkName: "Nuuksio", parkSlug: "nuuksio", visitedOn: "2024-07-20" },
@@ -66,7 +73,14 @@ describe("RecentVisits", () => {
   });
 
   it("shows empty state when no visits", () => {
-    render(<RecentVisits title="Viimeisimmät käynnit" emptyMessage="Ei käyntejä" visits={[]} />);
+    render(
+      <RecentVisits
+        title="Viimeisimmät käynnit"
+        emptyMessage="Ei käyntejä"
+        backToStartLabel="Takaisin alkuun"
+        visits={[]}
+      />,
+    );
 
     expect(screen.getByText("Ei käyntejä")).toBeInTheDocument();
   });
