@@ -1208,7 +1208,6 @@ describe("App pages", () => {
 
   it("renders the edit visit page with the created notice and edit helpers", async () => {
     vi.mocked(apiFetch)
-      .mockResolvedValueOnce({ parks: [publicPark] })
       .mockResolvedValueOnce({ trips: [trip] })
       .mockResolvedValueOnce(visitWithPark);
 
@@ -1227,9 +1226,12 @@ describe("App pages", () => {
     ).toHaveAttribute("href", "/paikka/pallas");
     expect(screen.getByText("controlPanel.visits.editVisit.createdNotice")).toBeInTheDocument();
     expect(screen.getByTestId("visit-form")).toHaveTextContent(
-      "parks:1|trips:1|edit:10|default:none|trip:none",
+      "parks:0|trips:1|edit:10|default:none|trip:none",
     );
     expect(screen.getByTestId("visit-image-section")).toHaveTextContent("visit:10|images:1");
+    expect(apiFetch).toHaveBeenNthCalledWith(1, "/api/trips");
+    expect(apiFetch).toHaveBeenNthCalledWith(2, "/api/visits/10");
+    expect(apiFetch).toHaveBeenCalledTimes(2);
   });
 
   it("builds metadata for the edit visit page", async () => {
@@ -1240,7 +1242,6 @@ describe("App pages", () => {
 
   it("calls notFound when the edit visit page cannot find the requested visit", async () => {
     vi.mocked(apiFetch)
-      .mockResolvedValueOnce({ parks: [publicPark] })
       .mockResolvedValueOnce({ trips: [trip] })
       .mockResolvedValueOnce(null);
 
