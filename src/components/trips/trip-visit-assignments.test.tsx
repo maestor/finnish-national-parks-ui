@@ -80,6 +80,7 @@ const currentTrip = {
         createdAt: "2024-06-14T12:00:00Z",
         updatedAt: "2024-06-14T12:00:00Z",
         tripStopOrder: 2,
+        visitedOn: "2024-06-15",
       },
     },
   ],
@@ -151,6 +152,11 @@ const emptyTrip = {
   visitCount: 0,
 } satisfies TripDetail;
 
+const tripWithoutDateRange = {
+  ...currentTrip,
+  dateRange: null,
+} satisfies TripDetail;
+
 const getItineraryOrder = (section: HTMLElement) =>
   Array.from(section.querySelectorAll("[data-itinerary-item-key]")).map((row) =>
     row.getAttribute("data-itinerary-item-key"),
@@ -194,6 +200,85 @@ describe("TripVisitAssignments", () => {
     expect(screen.getByText("Lounaspaikka Jyvaskyla")).toBeInTheDocument();
     expect(screen.getAllByText("Pallas-Yllästunturi").length).toBeGreaterThan(0);
     expect(within(availableSection).queryByText("Repovesi")).not.toBeInTheDocument();
+  });
+
+  it("keeps stop creation on the itinerary side and limits the available visits list height", async () => {
+    render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
+
+    const itinerarySection = screen
+      .getByRole("heading", {
+        name: "controlPanel.trips.assignments.assignedTitle",
+      })
+      .closest("section");
+    const availableSection = screen
+      .getByRole("heading", {
+        name: "controlPanel.trips.assignments.availableTitle",
+      })
+      .closest("section");
+
+    if (!(itinerarySection instanceof HTMLElement) || !(availableSection instanceof HTMLElement)) {
+      throw new Error("Expected trip assignment sections");
+    }
+
+    expect(
+      screen.queryByRole("combobox", {
+        name: "controlPanel.trips.assignments.stopLocationLabel",
+      }),
+    ).not.toBeInTheDocument();
+
+    const openStopButton = within(itinerarySection).getByRole("button", {
+      name: "controlPanel.trips.assignments.addStopAction",
+    });
+    expect(openStopButton).toHaveAttribute("aria-expanded", "false");
+
+    await userEvent.click(openStopButton);
+
+    expect(
+      within(itinerarySection).getByRole("combobox", {
+        name: "controlPanel.trips.assignments.stopLocationLabel",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      within(itinerarySection).getByRole("button", {
+        name: "controlPanel.trips.assignments.cancelStopAdd",
+      }),
+    ).toBeInTheDocument();
+    const availableScrollArea = within(availableSection).getByTestId(
+      "available-visits-scroll-area",
+    );
+    expect(availableScrollArea).toHaveClass("max-h-[36rem]", "overflow-y-auto");
+    expect(within(availableScrollArea).getByRole("table")).toHaveClass("table-fixed");
+    expect(
+      within(availableScrollArea).getByRole("button", {
+        name: "controlPanel.trips.assignments.attachAction",
+      }),
+    ).toHaveClass("whitespace-nowrap");
+  });
+
+  it("does not allow adding a stop before the trip has any visits", () => {
+    render(<TripVisitAssignments trip={emptyTrip} visits={visits} />);
+
+    expect(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.addStopAction",
+      }),
+    ).toBeDisabled();
+    expect(
+      screen.getByText("controlPanel.trips.assignments.addStopRequiresVisit"),
+    ).toBeInTheDocument();
+  });
+
+  it("does not allow adding a stop when the trip has no date range", () => {
+    render(<TripVisitAssignments trip={tripWithoutDateRange} visits={visits} />);
+
+    expect(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.addStopAction",
+      }),
+    ).toBeDisabled();
+    expect(
+      screen.getByText("controlPanel.trips.assignments.addStopRequiresDateRange"),
+    ).toBeInTheDocument();
   });
 
   it("renders the empty itinerary and starting-point fallback states", () => {
@@ -408,6 +493,16 @@ describe("TripVisitAssignments", () => {
   it("validates that a stop needs a selected location", async () => {
     render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
 
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.addStopAction",
+      }),
+    );
+
+    await userEvent.selectOptions(
+      screen.getByLabelText("controlPanel.trips.assignments.stopVisitedOnLabel"),
+      "2024-06-15",
+    );
     await userEvent.type(
       screen.getByRole("combobox", {
         name: "controlPanel.trips.assignments.stopLocationLabel",
@@ -422,6 +517,36 @@ describe("TripVisitAssignments", () => {
 
     expect(
       screen.getByText("controlPanel.trips.assignments.validation.stopLocationSelectionRequired"),
+    ).toBeInTheDocument();
+  });
+
+  it("validates that a stop needs a selected day", async () => {
+    render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
+
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.addStopAction",
+      }),
+    );
+    await userEvent.type(
+      screen.getByRole("combobox", {
+        name: "controlPanel.trips.assignments.stopLocationLabel",
+      }),
+      "Mikkeli",
+    );
+
+    expect(screen.getByLabelText("controlPanel.trips.assignments.stopVisitedOnLabel")).toHaveValue(
+      "",
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.addStopAction",
+      }),
+    );
+
+    expect(
+      screen.getByText("controlPanel.trips.assignments.validation.stopVisitedOnRequired"),
     ).toBeInTheDocument();
   });
 
@@ -441,6 +566,7 @@ describe("TripVisitAssignments", () => {
       createdAt: "2024-06-15T18:00:00Z",
       updatedAt: "2024-06-15T18:00:00Z",
       tripStopOrder: 3,
+      visitedOn: "2024-06-15",
     });
 
     Object.defineProperty(window.navigator, "geolocation", {
@@ -461,6 +587,12 @@ describe("TripVisitAssignments", () => {
 
     await userEvent.click(
       screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.addStopAction",
+      }),
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", {
         name: "controlPanel.trips.assignments.useCurrentLocation",
       }),
     );
@@ -471,6 +603,10 @@ describe("TripVisitAssignments", () => {
         }),
       ).toHaveValue("Mikkeli");
     });
+    await userEvent.selectOptions(
+      screen.getByLabelText("controlPanel.trips.assignments.stopVisitedOnLabel"),
+      "2024-06-15",
+    );
     await userEvent.type(
       screen.getByLabelText("controlPanel.trips.assignments.stopNoteLabel"),
       "Yopyminen",
@@ -490,6 +626,7 @@ describe("TripVisitAssignments", () => {
         },
         note: "Yopyminen",
         tripStopOrder: 3,
+        visitedOn: "2024-06-15",
       }),
     });
     await waitFor(() => {
@@ -504,6 +641,12 @@ describe("TripVisitAssignments", () => {
     });
 
     render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
+
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.addStopAction",
+      }),
+    );
 
     await userEvent.click(
       screen.getByRole("button", {
@@ -542,6 +685,12 @@ describe("TripVisitAssignments", () => {
 
     await userEvent.click(
       screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.addStopAction",
+      }),
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", {
         name: "controlPanel.trips.assignments.useCurrentLocation",
       }),
     );
@@ -552,6 +701,10 @@ describe("TripVisitAssignments", () => {
         }),
       ).toHaveValue("Mikkeli");
     });
+    await userEvent.selectOptions(
+      screen.getByLabelText("controlPanel.trips.assignments.stopVisitedOnLabel"),
+      "2024-06-15",
+    );
     await userEvent.click(
       screen.getByRole("button", {
         name: "controlPanel.trips.assignments.addStopAction",
@@ -781,6 +934,7 @@ describe("TripVisitAssignments", () => {
       body: JSON.stringify({
         location: existingStop.stop.location,
         note: "Pitka lounastauko",
+        visitedOn: existingStop.stop.visitedOn,
       }),
     });
     await waitFor(() => {

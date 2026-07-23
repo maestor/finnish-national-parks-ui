@@ -15,6 +15,7 @@ import { AdminTableFilters } from "@/components/admin/admin-table-filters";
 import { LocationSuggestionInput } from "@/components/location/location-suggestion-input";
 import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api";
+import { formatFinnishDate } from "@/lib/fi-date";
 import {
   getUserLocationStatusFromError,
   LOCATION_REQUEST_OPTIONS,
@@ -148,6 +149,23 @@ const trimToNull = (value: string) => {
   return trimmed === "" ? null : trimmed;
 };
 
+const buildTripDateOptions = (startDate: string, endDate: string) => {
+  const options: { label: string; value: string }[] = [];
+  const cursor = new Date(`${startDate}T00:00:00Z`);
+  const end = new Date(`${endDate}T00:00:00Z`);
+
+  while (cursor.getTime() <= end.getTime()) {
+    const value = cursor.toISOString().slice(0, 10);
+    options.push({
+      value,
+      label: formatFinnishDate(value),
+    });
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+
+  return options;
+};
+
 export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps) => {
   const t = useTranslations("controlPanel.trips.assignments");
   const router = useRouter();
@@ -156,8 +174,10 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
   const [visitsState, setVisitsState] = useState(visits);
   const [itinerary, setItinerary] = useState(() => normalizeItinerary(trip.itinerary));
   const [editingStopId, setEditingStopId] = useState<number | null>(null);
+  const [isStopFormOpen, setIsStopFormOpen] = useState(false);
   const [stopLocationQuery, setStopLocationQuery] = useState("");
   const [stopLocation, setStopLocation] = useState<TripLocation | null>(null);
+  const [stopVisitedOn, setStopVisitedOn] = useState("");
   const [stopLocationStatus, setStopLocationStatus] = useState<UserLocationStatus>("idle");
   const [stopNote, setStopNote] = useState("");
   const [stopErrors, setStopErrors] = useState<Record<string, string>>({});
@@ -216,7 +236,32 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
   const stopLocationStatusMessage = getLocationStatusMessage(stopLocationStatus, t);
   const isBusy = pendingKey !== null;
   const isEditingStop = editingStopId !== null;
+  const isStopFormVisible = isStopFormOpen || isEditingStop;
+  const activeEditingStop =
+    editingStopId === null
+      ? null
+      : (itinerary.find(
+          (item): item is TripItineraryStopItem =>
+            item.kind === "stop" && item.stop.id === editingStopId,
+        )?.stop ?? null);
   const tripReference = createTripReference(trip);
+  const hasAssignedVisit = itinerary.some((item) => item.kind === "visit");
+  const tripDateOptions = trip.dateRange
+    ? buildTripDateOptions(trip.dateRange.start, trip.dateRange.end)
+    : activeEditingStop
+      ? [
+          {
+            value: activeEditingStop.visitedOn,
+            label: formatFinnishDate(activeEditingStop.visitedOn),
+          },
+        ]
+      : [];
+  const canOpenStopForm = hasAssignedVisit && tripDateOptions.length > 0;
+  const stopAddBlockedMessage = !hasAssignedVisit
+    ? t("addStopRequiresVisit")
+    : tripDateOptions.length === 0
+      ? t("addStopRequiresDateRange")
+      : null;
 
   const setItineraryWithRef = (
     updater: TripItineraryItem[] | ((currentItinerary: TripItineraryItem[]) => TripItineraryItem[]),
@@ -229,12 +274,27 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
   };
 
   const resetStopForm = () => {
+    setIsStopFormOpen(false);
     setEditingStopId(null);
     setStopLocationQuery("");
     setStopLocation(null);
+    setStopVisitedOn("");
     setStopLocationStatus("idle");
     setStopNote("");
     setStopErrors({});
+  };
+
+  const openStopForm = () => {
+    setIsStopFormOpen(true);
+    setEditingStopId(null);
+    setStopLocationQuery("");
+    setStopLocation(null);
+    setStopVisitedOn("");
+    setStopLocationStatus("idle");
+    setStopNote("");
+    setStopErrors({});
+    setActionError(null);
+    setStatusMessage(null);
   };
 
   const handleStopLocationValueChange = (value: string) => {
@@ -275,9 +335,11 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
   };
 
   const handleStartStopEdit = (stop: TripStop) => {
+    setIsStopFormOpen(true);
     setEditingStopId(stop.id);
     setStopLocationQuery(stop.location.label);
     setStopLocation(stop.location);
+    setStopVisitedOn(stop.visitedOn);
     setStopLocationStatus("idle");
     setStopNote(stop.note ?? "");
     setStopErrors({});
@@ -619,6 +681,10 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     const normalizedStopLocationQuery = stopLocationQuery.trim();
     const nextErrors: Record<string, string> = {};
 
+    if (!stopVisitedOn) {
+      nextErrors.visitedOn = t("validation.stopVisitedOnRequired");
+    }
+
     if (!normalizedStopLocationQuery) {
       nextErrors.location = t("validation.stopLocationRequired");
     } else if (stopLocation === null) {
@@ -666,6 +732,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
           body: JSON.stringify({
             location: selectedStopLocation,
             note,
+            visitedOn: stopVisitedOn,
           } satisfies TripStopUpdateRequest),
         });
 
@@ -711,6 +778,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
           location: selectedStopLocation,
           note,
           tripStopOrder: previousItinerary.length + 1,
+          visitedOn: stopVisitedOn,
         } satisfies TripStopCreateRequest),
       });
 
@@ -809,7 +877,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       {actionError ? <p className="text-sm text-destructive">{actionError}</p> : null}
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-        <section className="space-y-4 rounded-[1.6rem] border border-white/45 bg-white/56 p-4 shadow-[0_18px_36px_rgba(148,163,184,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/38 dark:shadow-[0_22px_40px_rgba(2,6,23,0.28)]">
+        <section className="min-w-0 space-y-4 rounded-[1.6rem] border border-white/45 bg-white/56 p-4 shadow-[0_18px_36px_rgba(148,163,184,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/38 dark:shadow-[0_22px_40px_rgba(2,6,23,0.28)]">
           <div className="rounded-[1.3rem] border border-dashed border-white/45 bg-white/40 p-4 dark:border-white/10 dark:bg-slate-950/28">
             <div className="flex items-start gap-3">
               <MapPinned className="mt-0.5 h-5 w-5 text-primary" aria-hidden="true" />
@@ -824,14 +892,134 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold">{t("assignedTitle")}</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {t("assignedDescription", { count: itinerary.length })}
-            </p>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-semibold">{t("assignedTitle")}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {t("assignedDescription", { count: itinerary.length })}
+                </p>
+              </div>
+              {!isStopFormVisible && !isEditingStop ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  aria-controls="trip-stop-editor"
+                  aria-expanded="false"
+                  disabled={isBusy || !canOpenStopForm}
+                  onClick={openStopForm}
+                >
+                  {t("addStopAction")}
+                </Button>
+              ) : null}
+            </div>
             <p id="trip-itinerary-reorder-hint" className="mt-2 text-sm text-muted-foreground">
               {t("reorderHint")}
             </p>
+            {!isStopFormVisible && stopAddBlockedMessage ? (
+              <p className="mt-2 text-sm text-muted-foreground">{stopAddBlockedMessage}</p>
+            ) : null}
           </div>
+
+          {isStopFormVisible ? (
+            <section
+              id="trip-stop-editor"
+              className="space-y-4 rounded-[1.3rem] border border-white/35 bg-white/40 p-4 dark:border-white/8 dark:bg-slate-950/28"
+            >
+              <div className="flex items-start gap-3">
+                <Milestone className="mt-0.5 h-5 w-5 text-primary" aria-hidden="true" />
+                <div>
+                  <h4 className="text-lg font-semibold">
+                    {isEditingStop ? t("editStopTitle") : t("addStopTitle")}
+                  </h4>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {isEditingStop ? t("editStopDescription") : t("addStopDescription")}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="trip-stop-visited-on" className="text-sm font-medium">
+                  {t("stopVisitedOnLabel")}
+                </label>
+                <select
+                  id="trip-stop-visited-on"
+                  value={stopVisitedOn}
+                  onChange={(event) => setStopVisitedOn(event.target.value)}
+                  className="flex h-10 w-full rounded-xl border border-white/45 bg-white/78 px-3 py-2 text-sm ring-offset-background shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                >
+                  <option value="">{t("stopVisitedOnPlaceholder")}</option>
+                  {tripDateOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                {stopErrors.visitedOn ? (
+                  <p className="text-sm text-destructive">{stopErrors.visitedOn}</p>
+                ) : null}
+              </div>
+
+              <div className="space-y-2">
+                <LocationSuggestionInput
+                  assistiveMessage={stopLocationStatusMessage ?? undefined}
+                  assistiveMessageTone={
+                    stopLocationStatus !== "idle" && stopLocationStatus !== "locating"
+                      ? "error"
+                      : "default"
+                  }
+                  id="trip-stop-location"
+                  inputClassName="h-10"
+                  isLocating={stopLocationStatus === "locating"}
+                  label={t("stopLocationLabel")}
+                  locateButtonLabel={t("useCurrentLocation")}
+                  name="stopLocation"
+                  onLocate={handleLocateStop}
+                  onSelectedLocationChange={setStopLocation}
+                  onValueChange={handleStopLocationValueChange}
+                  placeholder={t("stopLocationPlaceholder")}
+                  required={false}
+                  selectedLocation={stopLocation}
+                  value={stopLocationQuery}
+                />
+                {stopErrors.location ? (
+                  <p className="text-sm text-destructive">{stopErrors.location}</p>
+                ) : null}
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="trip-stop-note" className="text-sm font-medium">
+                  {t("stopNoteLabel")}
+                </label>
+                <textarea
+                  id="trip-stop-note"
+                  rows={4}
+                  value={stopNote}
+                  onChange={(event) => setStopNote(event.target.value)}
+                  placeholder={t("stopNotePlaceholder")}
+                  className="flex w-full resize-y rounded-xl border border-white/45 bg-white/78 px-3 py-2 text-sm ring-offset-background shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <Button type="button" disabled={isBusy} onClick={() => void handleSubmitStop()}>
+                  {pendingKey === "stop-create" || pendingKey?.startsWith("stop-") ? "..." : null}
+                  {pendingKey === "stop-create" || pendingKey?.startsWith("stop-")
+                    ? null
+                    : isEditingStop
+                      ? t("saveStopChanges")
+                      : t("addStopAction")}
+                </Button>
+                <button
+                  type="button"
+                  onClick={resetStopForm}
+                  className="text-sm text-muted-foreground underline hover:text-foreground"
+                >
+                  {isEditingStop ? t("cancelStopEdit") : t("cancelStopAdd")}
+                </button>
+              </div>
+            </section>
+          ) : null}
 
           {itinerary.length === 0 ? (
             <div className="rounded-[1.3rem] border border-dashed border-white/45 bg-white/40 p-6 text-center text-sm text-muted-foreground dark:border-white/10 dark:bg-slate-950/28">
@@ -922,7 +1110,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                           </div>
                         </td>
                         <td className="px-4 py-3 align-top text-muted-foreground">
-                          {isVisit ? item.visit.visitedOn : t("stopDetailPlaceholder")}
+                          {isVisit ? item.visit.visitedOn : item.stop.visitedOn}
                         </td>
                         <td className="px-4 py-3 text-right">
                           <div className="flex flex-wrap justify-end gap-2">
@@ -970,82 +1158,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
           )}
         </section>
 
-        <div className="space-y-6">
-          <section className="space-y-4 rounded-[1.6rem] border border-white/45 bg-white/56 p-4 shadow-[0_18px_36px_rgba(148,163,184,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/38 dark:shadow-[0_22px_40px_rgba(2,6,23,0.28)]">
-            <div className="flex items-start gap-3">
-              <Milestone className="mt-0.5 h-5 w-5 text-primary" aria-hidden="true" />
-              <div>
-                <h3 className="text-lg font-semibold">
-                  {isEditingStop ? t("editStopTitle") : t("addStopTitle")}
-                </h3>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {isEditingStop ? t("editStopDescription") : t("addStopDescription")}
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <LocationSuggestionInput
-                assistiveMessage={stopLocationStatusMessage ?? undefined}
-                assistiveMessageTone={
-                  stopLocationStatus !== "idle" && stopLocationStatus !== "locating"
-                    ? "error"
-                    : "default"
-                }
-                id="trip-stop-location"
-                inputClassName="h-10"
-                isLocating={stopLocationStatus === "locating"}
-                label={t("stopLocationLabel")}
-                locateButtonLabel={t("useCurrentLocation")}
-                name="stopLocation"
-                onLocate={handleLocateStop}
-                onSelectedLocationChange={setStopLocation}
-                onValueChange={handleStopLocationValueChange}
-                placeholder={t("stopLocationPlaceholder")}
-                required={false}
-                selectedLocation={stopLocation}
-                value={stopLocationQuery}
-              />
-              {stopErrors.location ? (
-                <p className="text-sm text-destructive">{stopErrors.location}</p>
-              ) : null}
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="trip-stop-note" className="text-sm font-medium">
-                {t("stopNoteLabel")}
-              </label>
-              <textarea
-                id="trip-stop-note"
-                rows={4}
-                value={stopNote}
-                onChange={(event) => setStopNote(event.target.value)}
-                placeholder={t("stopNotePlaceholder")}
-                className="flex w-full resize-y rounded-xl border border-white/45 bg-white/78 px-3 py-2 text-sm ring-offset-background shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
-              />
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <Button type="button" disabled={isBusy} onClick={() => void handleSubmitStop()}>
-                {pendingKey === "stop-create" || pendingKey?.startsWith("stop-") ? "..." : null}
-                {pendingKey === "stop-create" || pendingKey?.startsWith("stop-")
-                  ? null
-                  : isEditingStop
-                    ? t("saveStopChanges")
-                    : t("addStopAction")}
-              </Button>
-              {isEditingStop ? (
-                <button
-                  type="button"
-                  onClick={resetStopForm}
-                  className="text-sm text-muted-foreground underline hover:text-foreground"
-                >
-                  {t("cancelStopEdit")}
-                </button>
-              ) : null}
-            </div>
-          </section>
-
+        <div className="min-w-0">
           <section className="space-y-3 rounded-[1.6rem] border border-white/45 bg-white/56 p-4 shadow-[0_18px_36px_rgba(148,163,184,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/38 dark:shadow-[0_22px_40px_rgba(2,6,23,0.28)]">
             <div className="flex items-start gap-3">
               <Plus className="mt-0.5 h-5 w-5 text-primary" aria-hidden="true" />
@@ -1062,13 +1175,18 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                 {t("availableEmpty")}
               </div>
             ) : (
-              <div className="overflow-hidden rounded-[1.3rem] border border-white/35 dark:border-white/8">
-                <table className="w-full text-sm">
-                  <thead className="bg-white/70 dark:bg-slate-950/52">
+              <div
+                data-testid="available-visits-scroll-area"
+                className="max-h-[36rem] overflow-y-auto rounded-[1.3rem] border border-white/35 dark:border-white/8"
+              >
+                <table className="w-full table-fixed text-sm">
+                  <thead className="sticky top-0 z-10 bg-white/70 dark:bg-slate-950/52">
                     <tr>
                       <th className="px-4 py-3 text-left font-medium">{t("table.target")}</th>
-                      <th className="px-4 py-3 text-left font-medium">{t("table.details")}</th>
-                      <th className="px-4 py-3 text-right font-medium">{t("table.actions")}</th>
+                      <th className="w-28 px-4 py-3 text-left font-medium">{t("table.details")}</th>
+                      <th className="w-28 px-4 py-3 text-right font-medium">
+                        {t("table.actions")}
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/30 dark:divide-white/8">
@@ -1085,14 +1203,15 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                             ) : null}
                           </div>
                         </td>
-                        <td className="px-4 py-3 align-top whitespace-nowrap text-muted-foreground">
+                        <td className="w-28 px-4 py-3 align-top whitespace-nowrap text-muted-foreground">
                           {visit.visitedOn}
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="w-28 px-4 py-3 text-right">
                           <Button
                             type="button"
                             size="sm"
                             variant="outline"
+                            className="whitespace-nowrap"
                             disabled={isBusy}
                             onClick={() => void handleAttachVisit(visit)}
                           >

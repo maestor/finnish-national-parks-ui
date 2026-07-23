@@ -1024,6 +1024,16 @@ describe("App pages", () => {
     expect(screen.getByText("controlPanel.dashboard.description")).toBeInTheDocument();
   });
 
+  it("keeps the control panel layout full width on large screens", async () => {
+    const { container } = await renderControlPanelRoute(<div data-testid="control-panel-child" />);
+    const layoutRoot = container.firstElementChild;
+
+    expect(layoutRoot).not.toBeNull();
+    expect(layoutRoot).toHaveClass("w-full", "xl:px-6", "2xl:px-8");
+    expect(layoutRoot).not.toHaveClass("container");
+    expect(screen.getByTestId("control-panel-child")).toBeInTheDocument();
+  });
+
   it("builds metadata for the control panel dashboard", async () => {
     await expect(generateControlPanelMetadata()).resolves.toEqual(
       createExpectedShareMetadata("controlPanel.title"),
