@@ -9,6 +9,7 @@ describe("HomeVisitStats", () => {
         sectionTitle="Käynnit"
         totalVisitsLabel="Käyntejä yhteensä"
         totalVisits={12}
+        backToStartLabel="Takaisin alkuun"
         progressItems={[
           {
             label: "Kaikki puistot",
@@ -40,6 +41,10 @@ describe("HomeVisitStats", () => {
       "href",
       "/paikat?filter=national-park&visitStatus=visited",
     );
+    expect(screen.getByRole("link", { name: "Takaisin alkuun" })).toHaveAttribute(
+      "href",
+      "#home-top",
+    );
     expect(screen.queryByText("Käynnit tyypeittäin")).not.toBeInTheDocument();
   });
 
@@ -49,6 +54,7 @@ describe("HomeVisitStats", () => {
         sectionTitle="Käynnit"
         totalVisitsLabel="Käyntejä yhteensä"
         totalVisits={85}
+        backToStartLabel="Takaisin alkuun"
         progressItems={[{ label: "Kaikki puistot", visited: 5, total: 10 }]}
         seasonalVisitsLabel="Käynnit kausittain"
         seasonalVisits={{ spring: 27, summer: 37, autumn: 16, winter: 5 }}
@@ -76,6 +82,7 @@ describe("HomeVisitStats", () => {
         sectionTitle="Käynnit"
         totalVisitsLabel="Käyntejä yhteensä"
         totalVisits={12}
+        backToStartLabel="Takaisin alkuun"
         progressItems={[{ label: "Kaikki puistot", visited: 5, total: 10 }]}
       />,
     );
@@ -89,10 +96,25 @@ describe("HomeVisitStats", () => {
         sectionTitle="Käynnit"
         totalVisitsLabel="Käyntejä yhteensä"
         totalVisits={0}
+        backToStartLabel="Takaisin alkuun"
         progressItems={[]}
       />,
     );
 
     expect(container.firstChild).toBeNull();
+  });
+
+  it("renders zero-progress items without dividing by zero", () => {
+    render(
+      <HomeVisitStats
+        sectionTitle="Käynnit"
+        totalVisitsLabel="Käyntejä yhteensä"
+        totalVisits={0}
+        backToStartLabel="Takaisin alkuun"
+        progressItems={[{ label: "Kaikki puistot", visited: 0, total: 0 }]}
+      />,
+    );
+
+    expect(screen.getByText("0 / 0")).toBeInTheDocument();
   });
 });

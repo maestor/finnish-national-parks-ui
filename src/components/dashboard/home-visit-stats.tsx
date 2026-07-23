@@ -1,5 +1,6 @@
 import { BarChart3 } from "lucide-react";
 import Link from "next/link";
+import { BackToStartLink } from "@/components/home/back-to-start-link";
 import {
   PUBLIC_PANEL_CLASS_NAME,
   PUBLIC_PANEL_ICON_SURFACE_CLASS_NAME,
@@ -26,6 +27,7 @@ interface HomeVisitStatsProps {
   totalVisitsLabel: string;
   totalVisits: number;
   progressItems: ProgressItem[];
+  backToStartLabel: string;
   seasonalVisitsLabel?: string;
   seasonalVisits?: SeasonalVisitCounts;
   springLabel?: string;
@@ -46,6 +48,7 @@ export const HomeVisitStats = ({
   totalVisitsLabel,
   totalVisits,
   progressItems,
+  backToStartLabel,
   seasonalVisitsLabel,
   seasonalVisits,
   springLabel,
@@ -212,6 +215,10 @@ export const HomeVisitStats = ({
               </Link>
             );
           })}
+        </div>
+
+        <div className="mt-5">
+          <BackToStartLink label={backToStartLabel} />
         </div>
       </div>
     </section>

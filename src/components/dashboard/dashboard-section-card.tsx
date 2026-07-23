@@ -13,6 +13,7 @@ interface DashboardSectionCardProps {
   iconSurfaceClassName?: string;
   className?: string;
   children: React.ReactNode;
+  footer?: React.ReactNode;
 }
 
 export const DashboardSectionCard = ({
@@ -23,6 +24,7 @@ export const DashboardSectionCard = ({
   iconSurfaceClassName,
   className,
   children,
+  footer,
 }: DashboardSectionCardProps) => {
   return (
     <section aria-labelledby={titleId} className={cn(PUBLIC_PANEL_CLASS_NAME, className)}>
@@ -35,6 +37,7 @@ export const DashboardSectionCard = ({
         </h2>
       </div>
       <div className="mt-5">{children}</div>
+      {footer ? <div className="mt-5">{footer}</div> : null}
     </section>
   );
 };

@@ -208,12 +208,15 @@ vi.mock("@/components/home/home-activity-panels", () => ({
   HomeActivityPanels: ({
     fallbackRecentVisits,
     fallbackLatestVisitEntries,
+    backToStartLabel,
   }: {
     fallbackRecentVisits: { parkName: string }[];
     fallbackLatestVisitEntries: { parkName: string }[];
+    backToStartLabel: string;
   }) => (
     <div data-testid="home-activity-panels">
-      recent:{fallbackRecentVisits.length}|latest:{fallbackLatestVisitEntries.length}
+      recent:{fallbackRecentVisits.length}|latest:{fallbackLatestVisitEntries.length}|back:
+      {backToStartLabel}
     </div>
   ),
 }));
@@ -223,17 +226,33 @@ vi.mock("@/components/home/home-intro", () => ({
     title,
     summary,
     openMapLabel,
-    infoClosedLabel,
-    children,
+    infoLabel,
   }: {
     title: string;
     summary: string;
     openMapLabel: string;
-    infoClosedLabel: string;
-    children?: React.ReactNode;
+    infoLabel: string;
   }) => (
     <div data-testid="home-intro">
-      title:{title}|summary:{summary}|map:{openMapLabel}|info:{infoClosedLabel}
+      title:{title}|summary:{summary}|map:{openMapLabel}|info:{infoLabel}
+    </div>
+  ),
+}));
+
+vi.mock("@/components/home/home-about-section", () => ({
+  HomeAboutSection: ({
+    title,
+    descriptionParagraphs,
+    backToStartLabel,
+    children,
+  }: {
+    title: string;
+    descriptionParagraphs: string[];
+    backToStartLabel: string;
+    children?: React.ReactNode;
+  }) => (
+    <div data-testid="home-about-section">
+      title:{title}|paragraphs:{descriptionParagraphs.length}|back:{backToStartLabel}
       {children}
     </div>
   ),
@@ -551,23 +570,33 @@ describe("App pages", () => {
     expect(screen.getByTestId("home-intro")).toHaveTextContent(
       "title:home.title|summary:home.summary|map:home.openMap|info:home.intro.showInfo",
     );
+    expect(screen.getByTestId("home-about-section")).toHaveTextContent(
+      "title:home.aboutTitle|paragraphs:1|back:home.backToStart",
+    );
     expect(screen.getByTestId("home-visit-stats")).toHaveTextContent(
       "total:1|items:2|first:home.statistics.allParks",
     );
     expect(screen.getByTestId("most-visited-parks")).toHaveTextContent(
       "parks:1|top:Pallas-Yllästunturi:1",
     );
-    expect(screen.getByTestId("home-activity-panels")).toHaveTextContent("recent:1|latest:1");
+    expect(screen.getByTestId("home-activity-panels")).toHaveTextContent(
+      "recent:1|latest:1|back:home.backToStart",
+    );
     expect(screen.getByTestId("home-social-links")).toHaveTextContent(
       "linkedin:home.social.linkedin|ui:home.social.githubUi|api:home.social.githubApi|copyright:home.social.copyright",
     );
-    expect(screen.getByTestId("home-intro")).toContainElement(
+    expect(screen.getByTestId("home-about-section")).toContainElement(
       screen.getByTestId("home-social-links"),
     );
     expect(
       screen
         .getByTestId("home-activity-panels")
         .compareDocumentPosition(screen.getByTestId("most-visited-parks")),
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(
+      screen
+        .getByTestId("most-visited-parks")
+        .compareDocumentPosition(screen.getByTestId("home-about-section")),
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 
