@@ -431,17 +431,11 @@
         "dateRange": "Aikaväli",
         "visitCount": "Käynnit",
         "visitCountValue": "{count} käyntiä",
-        "description": "Kuvaus",
-        "actions": "Toiminnot",
-        "addVisit": "Kirjaa käynti",
         "edit": "Muokkaa",
-        "delete": "Poista",
-        "deleteConfirm": "Haluatko varmasti poistaa retken \"{tripName}\"? Käynnit säilyvät, mutta niiden retkiliitos poistetaan.",
         "noDateRange": "Ei vielä käyntejä",
-        "noDescription": "Ei kuvausta",
         "filters": {
           "searchLabel": "Haku",
-          "searchPlaceholder": "Hae retkeä tai kuvausta",
+          "searchPlaceholder": "Hae retkeä",
           "results": "{count} retkeä",
           "reset": "Tyhjennä suodattimet"
         },
