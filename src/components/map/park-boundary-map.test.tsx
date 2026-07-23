@@ -124,7 +124,7 @@ describe("ParkBoundaryMap", () => {
     expect(screen.getByText("map.loading")).toBeInTheDocument();
   });
 
-  it("locks minimum zoom to the fitted park bounds", () => {
+  it("allows zooming out three levels from the fitted park bounds", () => {
     render(
       <ParkBoundaryMap
         boundaryGeoJson={mockBoundaryGeoJson}
@@ -135,6 +135,22 @@ describe("ParkBoundaryMap", () => {
     );
 
     expect(mockMap.cameraForBounds).toHaveBeenCalled();
-    expect(mockMap.setMinZoom).toHaveBeenCalledWith(8);
+    expect(mockMap.setMinZoom).toHaveBeenCalledWith(5);
+  });
+
+  it("does not allow zooming out past the shared map floor", () => {
+    mockMap = createMockMap();
+    mockMap.cameraForBounds = vi.fn(() => ({ zoom: 4 }));
+
+    render(
+      <ParkBoundaryMap
+        boundaryGeoJson={mockBoundaryGeoJson}
+        boundingBox={mockBoundingBox}
+        markerPoint={mockMarkerPoint}
+        parkName="Test Park"
+      />,
+    );
+
+    expect(mockMap.setMinZoom).toHaveBeenCalledWith(3);
   });
 });
