@@ -1506,6 +1506,7 @@ export interface paths {
                                     tripStopOrder: number;
                                     /** Format: date-time */
                                     updatedAt: string;
+                                    visitedOn: string;
                                 };
                             })[];
                         };
@@ -2397,6 +2398,7 @@ export interface paths {
                         };
                         note?: string | null;
                         tripStopOrder?: number;
+                        visitedOn: string;
                     };
                 };
             };
@@ -2422,6 +2424,7 @@ export interface paths {
                             tripStopOrder: number;
                             /** Format: date-time */
                             updatedAt: string;
+                            visitedOn: string;
                         };
                     };
                 };
@@ -2647,6 +2650,7 @@ export interface paths {
                         };
                         note?: string | null;
                         tripStopOrder?: number;
+                        visitedOn?: string;
                     };
                 };
             };
@@ -2672,6 +2676,7 @@ export interface paths {
                             tripStopOrder: number;
                             /** Format: date-time */
                             updatedAt: string;
+                            visitedOn: string;
                         };
                     };
                 };
