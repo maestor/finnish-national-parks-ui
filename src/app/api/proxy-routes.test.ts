@@ -17,7 +17,9 @@ import { GET as getParkSearch } from "./parks/search/route";
 import { POST as postTripPlannerNearby } from "./trip-planner/nearby/route";
 import { POST as postTripPlannerSearch } from "./trip-planner/search/route";
 import { POST as postTripPlannerSuggestions } from "./trip-planner/suggestions/route";
-import { DELETE as deleteTrip, PATCH as patchTrip } from "./trips/[id]/route";
+import { DELETE as deleteTripStop, PATCH as patchTripStop } from "./trip-stops/[id]/route";
+import { DELETE as deleteTrip, GET as getTrip, PATCH as patchTrip } from "./trips/[id]/route";
+import { POST as postTripStop } from "./trips/[id]/stops/route";
 import { GET as getTrips, POST as postTrip } from "./trips/route";
 import { DELETE as deleteVisitImage } from "./visits/[id]/images/[imageId]/route";
 import { POST as postVisitImageComplete } from "./visits/[id]/images/complete/route";
@@ -113,6 +115,14 @@ describe("api proxy routes", () => {
     });
   });
 
+  it("proxies trip detail reads", async () => {
+    const request = new Request("https://frontend.example/api/trips/7");
+
+    await getTrip(request, { params: Promise.resolve({ id: "7" }) });
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/trips/7");
+  });
+
   it("proxies trip deletion", async () => {
     const request = new Request("https://frontend.example/api/trips/7", {
       method: "DELETE",
@@ -121,6 +131,42 @@ describe("api proxy routes", () => {
     await deleteTrip(request, { params: Promise.resolve({ id: "7" }) });
 
     expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/trips/7", {
+      requireAdmin: true,
+    });
+  });
+
+  it("proxies trip stop creation", async () => {
+    const request = new Request("https://frontend.example/api/trips/7/stops", {
+      method: "POST",
+    });
+
+    await postTripStop(request, { params: Promise.resolve({ id: "7" }) });
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/trips/7/stops", {
+      requireAdmin: true,
+    });
+  });
+
+  it("proxies trip stop updates", async () => {
+    const request = new Request("https://frontend.example/api/trip-stops/11", {
+      method: "PATCH",
+    });
+
+    await patchTripStop(request, { params: Promise.resolve({ id: "11" }) });
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/trip-stops/11", {
+      requireAdmin: true,
+    });
+  });
+
+  it("proxies trip stop deletion", async () => {
+    const request = new Request("https://frontend.example/api/trip-stops/11", {
+      method: "DELETE",
+    });
+
+    await deleteTripStop(request, { params: Promise.resolve({ id: "11" }) });
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/trip-stops/11", {
       requireAdmin: true,
     });
   });

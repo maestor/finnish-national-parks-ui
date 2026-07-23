@@ -2,11 +2,12 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { VisitWithPark } from "@/lib/parks";
-import type { Trip } from "@/lib/trips";
+import type { TripDetail } from "@/lib/trips";
 import { TripVisitAssignments } from "./trip-visit-assignments";
 
 const mockRefresh = vi.fn();
-const { mockRevalidatePublicCache } = vi.hoisted(() => ({
+const { mockResolveLocationFromCoordinate, mockRevalidatePublicCache } = vi.hoisted(() => ({
+  mockResolveLocationFromCoordinate: vi.fn(),
   mockRevalidatePublicCache: vi.fn(async () => true),
 }));
 
@@ -18,6 +19,16 @@ vi.mock("@/lib/public-cache", () => ({
   revalidatePublicCache: mockRevalidatePublicCache,
 }));
 
+vi.mock("@/lib/location", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/location")>("@/lib/location");
+
+  return {
+    ...actual,
+    getUserLocationStatusFromError: vi.fn(() => "permissionDenied"),
+    resolveLocationFromCoordinate: mockResolveLocationFromCoordinate,
+  };
+});
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: mockRefresh }),
 }));
@@ -25,15 +36,54 @@ vi.mock("next/navigation", () => ({
 const currentTrip = {
   id: 7,
   name: "Keski-Suomen kesaretki",
+  slug: "keski-suomen-kesaretki",
   description: "Kolmen paivan kierros kansallispuistoihin.",
-  visitCount: 2,
+  startingPoint: {
+    coordinate: { lat: 62.24147, lon: 25.72088 },
+    label: "Jyvaskyla",
+  },
+  visitCount: 1,
   dateRange: {
     start: "2024-06-14",
     end: "2024-06-15",
   },
   createdAt: "2024-06-18T00:00:00Z",
   updatedAt: "2024-06-18T00:00:00Z",
-} satisfies Trip;
+  itinerary: [
+    {
+      kind: "visit",
+      tripStopOrder: 1,
+      visit: {
+        id: 11,
+        park: {
+          slug: "nuuksio",
+          name: "Nuuksio",
+        },
+        visitedOn: "2024-06-14",
+        route: null,
+        author: null,
+        note: null,
+        createdAt: "2024-06-14T00:00:00Z",
+        updatedAt: "2024-06-14T00:00:00Z",
+      },
+    },
+    {
+      kind: "stop",
+      tripStopOrder: 2,
+      stop: {
+        id: 21,
+        location: {
+          coordinate: { lat: 61.92411, lon: 25.74815 },
+          label: "Lounaspaikka Jyvaskyla",
+        },
+        note: "Lounastauko",
+        createdAt: "2024-06-14T12:00:00Z",
+        updatedAt: "2024-06-14T12:00:00Z",
+        tripStopOrder: 2,
+      },
+    },
+  ],
+} satisfies TripDetail;
 
 const visits = [
   {
@@ -61,6 +111,7 @@ const visits = [
     trip: {
       id: currentTrip.id,
       name: currentTrip.name,
+      slug: currentTrip.slug,
     },
     visitedOn: "2024-06-14",
     route: null,
@@ -72,25 +123,6 @@ const visits = [
     images: [],
   },
   {
-    id: 13,
-    park: {
-      slug: "sipoo",
-      name: "Sipoonkorpi",
-    },
-    trip: {
-      id: currentTrip.id,
-      name: currentTrip.name,
-    },
-    visitedOn: "2024-06-14",
-    route: "Byabacken",
-    author: null,
-    note: null,
-    createdAt: "2024-06-14T12:00:00Z",
-    tripStopOrder: 2,
-    updatedAt: "2024-06-14T12:00:00Z",
-    images: [],
-  },
-  {
     id: 12,
     park: {
       slug: "repovesi",
@@ -99,6 +131,7 @@ const visits = [
     trip: {
       id: 8,
       name: "Syysloman rengasreitti",
+      slug: "syysloman-rengasreitti",
     },
     visitedOn: "2024-06-13",
     route: "Korpinkierros",
@@ -111,9 +144,16 @@ const visits = [
   },
 ] satisfies VisitWithPark[];
 
-const getAssignedVisitOrder = (section: HTMLElement) =>
-  Array.from(section.querySelectorAll("[data-assigned-visit-id]")).map((row) =>
-    row.getAttribute("data-assigned-visit-id"),
+const emptyTrip = {
+  ...currentTrip,
+  startingPoint: null,
+  itinerary: [],
+  visitCount: 0,
+} satisfies TripDetail;
+
+const getItineraryOrder = (section: HTMLElement) =>
+  Array.from(section.querySelectorAll("[data-itinerary-item-key]")).map((row) =>
+    row.getAttribute("data-itinerary-item-key"),
   );
 
 const mockElementFromPoint = (element: Element) => {
@@ -130,26 +170,40 @@ const mockElementFromPoint = (element: Element) => {
 describe("TripVisitAssignments", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockResolveLocationFromCoordinate.mockReset();
+    vi.stubGlobal(
+      "confirm",
+      vi.fn(() => true),
+    );
   });
 
-  it("shows assigned visits and defaults available visits to unassigned ones", () => {
+  it("renders the starting point, mixed itinerary, and unassigned visits", () => {
     render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
+    const availableSection = screen
+      .getByRole("heading", {
+        name: "controlPanel.trips.assignments.availableTitle",
+      })
+      .closest("section");
 
-    const assignedSection = screen.getByRole("heading", {
-      name: "controlPanel.trips.assignments.assignedTitle",
-    }).parentElement?.parentElement;
-    const availableSection = screen.getByRole("heading", {
-      name: "controlPanel.trips.assignments.availableTitle",
-    }).parentElement?.parentElement;
-
-    if (!(assignedSection instanceof HTMLElement) || !(availableSection instanceof HTMLElement)) {
-      throw new Error("Expected trip visit sections");
+    if (!(availableSection instanceof HTMLElement)) {
+      throw new Error("Expected available visits section");
     }
 
-    expect(within(assignedSection).getByText("Nuuksio")).toBeInTheDocument();
-    expect(within(assignedSection).getByText("Sipoonkorpi")).toBeInTheDocument();
-    expect(within(availableSection).getByText("Pallas-Yllästunturi")).toBeInTheDocument();
+    expect(screen.getByText("Jyvaskyla")).toBeInTheDocument();
+    expect(screen.getAllByText("Nuuksio").length).toBeGreaterThan(0);
+    expect(screen.getByText("Lounaspaikka Jyvaskyla")).toBeInTheDocument();
+    expect(screen.getAllByText("Pallas-Yllästunturi").length).toBeGreaterThan(0);
     expect(within(availableSection).queryByText("Repovesi")).not.toBeInTheDocument();
+  });
+
+  it("renders the empty itinerary and starting-point fallback states", () => {
+    render(<TripVisitAssignments trip={emptyTrip} visits={[visits[2]]} />);
+
+    expect(
+      screen.getByText("controlPanel.trips.assignments.startingPointEmpty"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("controlPanel.trips.assignments.assignedEmpty")).toBeInTheDocument();
+    expect(screen.getByText("controlPanel.trips.assignments.availableEmpty")).toBeInTheDocument();
   });
 
   it("attaches an unassigned visit to the current trip", async () => {
@@ -158,22 +212,8 @@ describe("TripVisitAssignments", () => {
 
     render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
 
-    const availableSection = screen.getByRole("heading", {
-      name: "controlPanel.trips.assignments.availableTitle",
-    }).parentElement?.parentElement;
-
-    if (!(availableSection instanceof HTMLElement)) {
-      throw new Error("Expected available visits section");
-    }
-
-    const pallasRow = within(availableSection).getByText("Pallas-Yllästunturi").closest("tr");
-
-    if (!(pallasRow instanceof HTMLTableRowElement)) {
-      throw new Error("Expected Pallas visit row");
-    }
-
     await userEvent.click(
-      within(pallasRow).getByRole("button", {
+      screen.getByRole("button", {
         name: "controlPanel.trips.assignments.attachAction",
       }),
     );
@@ -185,127 +225,87 @@ describe("TripVisitAssignments", () => {
         tripStopOrder: 3,
       }),
     });
-
     await waitFor(() => {
       expect(mockRefresh).toHaveBeenCalled();
     });
     expect(mockRevalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "pallas" });
-    expect(screen.getAllByText("Pallas-Yllästunturi").length).toBeGreaterThan(1);
   });
 
-  it("keeps visits from other trips out of the available list", () => {
-    render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
-
-    const availableSection = screen.getByRole("heading", {
-      name: "controlPanel.trips.assignments.availableTitle",
-    }).parentElement?.parentElement;
-
-    if (!(availableSection instanceof HTMLElement)) {
-      throw new Error("Expected available visits section");
-    }
-
-    expect(within(availableSection).queryByText("Repovesi")).not.toBeInTheDocument();
-  });
-
-  it("does not filter the assigned list when using the available-visits filters", async () => {
+  it("resets the visit filters", async () => {
     render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
 
     await userEvent.type(
       screen.getByLabelText("controlPanel.trips.assignments.filters.searchLabel"),
       "Pallas",
     );
-
-    const assignedSection = screen.getByRole("heading", {
-      name: "controlPanel.trips.assignments.assignedTitle",
-    }).parentElement?.parentElement;
-    const availableSection = screen.getByRole("heading", {
-      name: "controlPanel.trips.assignments.availableTitle",
-    }).parentElement?.parentElement;
-
-    if (!(assignedSection instanceof HTMLElement) || !(availableSection instanceof HTMLElement)) {
-      throw new Error("Expected trip visit sections");
-    }
-
-    expect(within(assignedSection).getByText("Nuuksio")).toBeInTheDocument();
-    expect(within(assignedSection).getByText("Sipoonkorpi")).toBeInTheDocument();
-    expect(within(availableSection).getByText("Pallas-Yllästunturi")).toBeInTheDocument();
-  });
-
-  it("resets the available-visits filters", async () => {
-    render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
-
-    const availableSection = screen.getByRole("heading", {
-      name: "controlPanel.trips.assignments.availableTitle",
-    }).parentElement?.parentElement;
-
-    if (!(availableSection instanceof HTMLElement)) {
-      throw new Error("Expected available visits section");
-    }
-
-    await userEvent.type(
-      screen.getByLabelText("controlPanel.trips.assignments.filters.searchLabel"),
-      "does-not-match",
+    await userEvent.selectOptions(
+      screen.getByLabelText("controlPanel.trips.assignments.filters.parkLabel"),
+      "nuuksio",
     );
-
-    expect(screen.getByText("controlPanel.trips.assignments.availableEmpty")).toBeInTheDocument();
-
     await userEvent.click(
       screen.getByRole("button", {
         name: "controlPanel.trips.assignments.filters.reset",
       }),
     );
 
-    expect(
-      screen.queryByText("controlPanel.trips.assignments.availableEmpty"),
-    ).not.toBeInTheDocument();
-    expect(within(availableSection).getByText("Pallas-Yllästunturi")).toBeInTheDocument();
+    expect(screen.getByLabelText("controlPanel.trips.assignments.filters.searchLabel")).toHaveValue(
+      "",
+    );
+    expect(screen.getByLabelText("controlPanel.trips.assignments.filters.parkLabel")).toHaveValue(
+      "",
+    );
   });
 
-  it("reorders assigned visits with drag and drop and saves the moved stop order", async () => {
+  it("reorders a stop before a visit with drag and drop and saves both updated orders", async () => {
     const { apiFetch } = await import("@/lib/api");
-    vi.mocked(apiFetch).mockResolvedValueOnce(undefined);
+    vi.mocked(apiFetch).mockResolvedValue(undefined);
     const user = userEvent.setup();
 
     render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
 
-    const assignedSection = screen.getByRole("heading", {
-      name: "controlPanel.trips.assignments.assignedTitle",
-    }).parentElement?.parentElement;
+    const itinerarySection = screen
+      .getByRole("heading", {
+        name: "controlPanel.trips.assignments.assignedTitle",
+      })
+      .closest("section");
+    const stopRow =
+      itinerarySection instanceof HTMLElement
+        ? within(itinerarySection).getByText("Lounaspaikka Jyvaskyla").closest("tr")
+        : null;
 
-    if (!(assignedSection instanceof HTMLElement)) {
-      throw new Error("Expected assigned visits section");
+    if (!(itinerarySection instanceof HTMLElement) || !(stopRow instanceof HTMLTableRowElement)) {
+      throw new Error("Expected itinerary row");
     }
 
-    const sipoonkorpiRow = within(assignedSection).getByText("Sipoonkorpi").closest("tr");
+    mockElementFromPoint(stopRow);
 
-    if (!(sipoonkorpiRow instanceof HTMLTableRowElement)) {
-      throw new Error("Expected Sipoonkorpi visit row");
+    const visitRow = within(itinerarySection).getByText("Nuuksio").closest("tr");
+
+    if (!(visitRow instanceof HTMLTableRowElement)) {
+      throw new Error("Expected itinerary visit row");
     }
 
-    mockElementFromPoint(sipoonkorpiRow);
-
-    const reorderButtons = within(assignedSection).getAllByRole("button", {
-      name: "controlPanel.trips.assignments.table.reorderVisit",
+    const reorderButton = within(visitRow).getByRole("button", {
+      name: "controlPanel.trips.assignments.table.reorderItem",
     });
 
-    expect(getAssignedVisitOrder(assignedSection)).toEqual(["11", "13"]);
+    expect(getItineraryOrder(itinerarySection)).toEqual(["visit-11", "stop-21"]);
 
     await user.pointer([
-      { target: reorderButtons[0], keys: "[MouseLeft>]", coords: { x: 10, y: 10 } },
-      { target: reorderButtons[0], coords: { x: 22, y: 20 } },
+      { target: reorderButton, keys: "[MouseLeft>]", coords: { x: 10, y: 10 } },
+      { target: reorderButton, coords: { x: 22, y: 20 } },
     ]);
 
     await waitFor(() => {
-      expect(getAssignedVisitOrder(assignedSection)).toEqual(["13", "11"]);
+      expect(getItineraryOrder(itinerarySection)).toEqual(["stop-21", "visit-11"]);
     });
 
-    await user.pointer([{ target: reorderButtons[0], keys: "[/MouseLeft]" }]);
+    await user.pointer([{ target: reorderButton, keys: "[/MouseLeft]" }]);
 
     await waitFor(() => {
-      expect(apiFetch).toHaveBeenNthCalledWith(1, "/api/visits/13", {
+      expect(apiFetch).toHaveBeenNthCalledWith(1, "/api/trip-stops/21", {
         method: "PATCH",
         body: JSON.stringify({
-          tripId: 7,
           tripStopOrder: 1,
         }),
       });
@@ -318,216 +318,78 @@ describe("TripVisitAssignments", () => {
       });
     });
 
-    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "sipoo" });
+    expect(mockRevalidatePublicCache).toHaveBeenCalled();
     expect(mockRefresh).toHaveBeenCalled();
   });
 
-  it("reorders assigned visits with the keyboard", async () => {
-    const { apiFetch } = await import("@/lib/api");
-    vi.mocked(apiFetch).mockResolvedValue(undefined);
-
+  it("restores the previous itinerary order when a drag is canceled", async () => {
     render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
 
-    const assignedSection = screen.getByRole("heading", {
-      name: "controlPanel.trips.assignments.assignedTitle",
-    }).parentElement?.parentElement;
+    const itinerarySection = screen
+      .getByRole("heading", {
+        name: "controlPanel.trips.assignments.assignedTitle",
+      })
+      .closest("section");
+    const stopRow =
+      itinerarySection instanceof HTMLElement
+        ? within(itinerarySection).getByText("Lounaspaikka Jyvaskyla").closest("tr")
+        : null;
+    const visitRow =
+      itinerarySection instanceof HTMLElement
+        ? within(itinerarySection).getByText("Nuuksio").closest("tr")
+        : null;
 
-    if (!(assignedSection instanceof HTMLElement)) {
-      throw new Error("Expected assigned visits section");
+    if (
+      !(itinerarySection instanceof HTMLElement) ||
+      !(stopRow instanceof HTMLTableRowElement) ||
+      !(visitRow instanceof HTMLTableRowElement)
+    ) {
+      throw new Error("Expected itinerary rows");
     }
 
-    const reorderButtons = within(assignedSection).getAllByRole("button", {
-      name: "controlPanel.trips.assignments.table.reorderVisit",
+    mockElementFromPoint(stopRow);
+
+    const reorderButton = within(visitRow).getByRole("button", {
+      name: "controlPanel.trips.assignments.table.reorderItem",
     });
 
-    reorderButtons[0]?.focus();
-    await userEvent.keyboard("{ArrowRight}");
-
-    await waitFor(() => {
-      expect(getAssignedVisitOrder(assignedSection)).toEqual(["13", "11"]);
-      expect(apiFetch).toHaveBeenCalledTimes(2);
-    });
-  });
-
-  it("reorders assigned visits upward with the left arrow key", async () => {
-    const { apiFetch } = await import("@/lib/api");
-    vi.mocked(apiFetch).mockResolvedValue(undefined);
-
-    render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
-
-    const assignedSection = screen.getByRole("heading", {
-      name: "controlPanel.trips.assignments.assignedTitle",
-    }).parentElement?.parentElement;
-
-    if (!(assignedSection instanceof HTMLElement)) {
-      throw new Error("Expected assigned visits section");
-    }
-
-    const reorderButtons = within(assignedSection).getAllByRole("button", {
-      name: "controlPanel.trips.assignments.table.reorderVisit",
-    });
-
-    reorderButtons[1]?.focus();
-    await userEvent.keyboard("{ArrowLeft}");
-
-    await waitFor(() => {
-      expect(getAssignedVisitOrder(assignedSection)).toEqual(["13", "11"]);
-      expect(apiFetch).toHaveBeenCalledTimes(2);
-    });
-  });
-
-  it("does not reorder past the start of the assigned list", async () => {
-    const { apiFetch } = await import("@/lib/api");
-
-    render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
-
-    const assignedSection = screen.getByRole("heading", {
-      name: "controlPanel.trips.assignments.assignedTitle",
-    }).parentElement?.parentElement;
-
-    if (!(assignedSection instanceof HTMLElement)) {
-      throw new Error("Expected assigned visits section");
-    }
-
-    const reorderButtons = within(assignedSection).getAllByRole("button", {
-      name: "controlPanel.trips.assignments.table.reorderVisit",
-    });
-
-    reorderButtons[0]?.focus();
-    await userEvent.keyboard("{ArrowLeft}");
-
-    expect(getAssignedVisitOrder(assignedSection)).toEqual(["11", "13"]);
-    expect(apiFetch).not.toHaveBeenCalled();
-  });
-
-  it("does not save when drag starts but the order does not change", async () => {
-    const { apiFetch } = await import("@/lib/api");
-    const user = userEvent.setup();
-
-    render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
-
-    const assignedSection = screen.getByRole("heading", {
-      name: "controlPanel.trips.assignments.assignedTitle",
-    }).parentElement?.parentElement;
-
-    if (!(assignedSection instanceof HTMLElement)) {
-      throw new Error("Expected assigned visits section");
-    }
-
-    const reorderButtons = within(assignedSection).getAllByRole("button", {
-      name: "controlPanel.trips.assignments.table.reorderVisit",
-    });
-
-    await user.pointer([{ target: reorderButtons[0], keys: "[MouseLeft>]" }]);
-    await user.pointer([{ target: reorderButtons[0], keys: "[/MouseLeft]" }]);
-
-    expect(apiFetch).not.toHaveBeenCalled();
-    expect(getAssignedVisitOrder(assignedSection)).toEqual(["11", "13"]);
-  });
-
-  it("restores the previous order when a drag is canceled", async () => {
-    const { apiFetch } = await import("@/lib/api");
-
-    render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
-
-    const assignedSection = screen.getByRole("heading", {
-      name: "controlPanel.trips.assignments.assignedTitle",
-    }).parentElement?.parentElement;
-
-    if (!(assignedSection instanceof HTMLElement)) {
-      throw new Error("Expected assigned visits section");
-    }
-
-    const sipoonkorpiRow = within(assignedSection).getByText("Sipoonkorpi").closest("tr");
-
-    if (!(sipoonkorpiRow instanceof HTMLTableRowElement)) {
-      throw new Error("Expected Sipoonkorpi visit row");
-    }
-
-    mockElementFromPoint(sipoonkorpiRow);
-
-    const reorderButtons = within(assignedSection).getAllByRole("button", {
-      name: "controlPanel.trips.assignments.table.reorderVisit",
-    });
-
-    fireEvent.pointerDown(reorderButtons[0], { pointerId: 1, clientX: 10, clientY: 10 });
+    fireEvent.pointerDown(reorderButton, { pointerId: 1, clientX: 10, clientY: 10 });
     fireEvent.pointerMove(window, { pointerId: 1, clientX: 24, clientY: 24 });
 
     await waitFor(() => {
-      expect(getAssignedVisitOrder(assignedSection)).toEqual(["13", "11"]);
+      expect(getItineraryOrder(itinerarySection)).toEqual(["stop-21", "visit-11"]);
     });
 
     fireEvent.pointerCancel(window, { pointerId: 1 });
 
     await waitFor(() => {
-      expect(getAssignedVisitOrder(assignedSection)).toEqual(["11", "13"]);
-    });
-
-    expect(apiFetch).not.toHaveBeenCalled();
-  });
-
-  it("restores the previous order when saving a reorder fails", async () => {
-    const { apiFetch } = await import("@/lib/api");
-    vi.mocked(apiFetch).mockRejectedValueOnce(new Error("save failed"));
-    const user = userEvent.setup();
-
-    render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
-
-    const assignedSection = screen.getByRole("heading", {
-      name: "controlPanel.trips.assignments.assignedTitle",
-    }).parentElement?.parentElement;
-
-    if (!(assignedSection instanceof HTMLElement)) {
-      throw new Error("Expected assigned visits section");
-    }
-
-    const sipoonkorpiRow = within(assignedSection).getByText("Sipoonkorpi").closest("tr");
-
-    if (!(sipoonkorpiRow instanceof HTMLTableRowElement)) {
-      throw new Error("Expected Sipoonkorpi visit row");
-    }
-
-    mockElementFromPoint(sipoonkorpiRow);
-
-    const reorderButtons = within(assignedSection).getAllByRole("button", {
-      name: "controlPanel.trips.assignments.table.reorderVisit",
-    });
-
-    await user.pointer([
-      { target: reorderButtons[0], keys: "[MouseLeft>]", coords: { x: 10, y: 10 } },
-      { target: reorderButtons[0], coords: { x: 22, y: 20 } },
-    ]);
-    await user.pointer([{ target: reorderButtons[0], keys: "[/MouseLeft]" }]);
-
-    await waitFor(() => {
-      expect(screen.getByText("save failed")).toBeInTheDocument();
-      expect(getAssignedVisitOrder(assignedSection)).toEqual(["11", "13"]);
+      expect(getItineraryOrder(itinerarySection)).toEqual(["visit-11", "stop-21"]);
     });
   });
 
-  it("removes a visit from the current trip", async () => {
+  it("removes an assigned visit from the trip", async () => {
     const { apiFetch } = await import("@/lib/api");
     vi.mocked(apiFetch).mockResolvedValueOnce(undefined);
 
     render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
 
-    const assignedSection = screen.getByRole("heading", {
-      name: "controlPanel.trips.assignments.assignedTitle",
-    }).parentElement?.parentElement;
+    const itinerarySection = screen
+      .getByRole("heading", {
+        name: "controlPanel.trips.assignments.assignedTitle",
+      })
+      .closest("section");
+    const visitRow =
+      itinerarySection instanceof HTMLElement
+        ? within(itinerarySection).getByText("Nuuksio").closest("tr")
+        : null;
 
-    if (!(assignedSection instanceof HTMLElement)) {
-      throw new Error("Expected assigned visits section");
-    }
-
-    const nuuksioRow = within(assignedSection).getByText("Nuuksio").closest("tr");
-
-    if (!(nuuksioRow instanceof HTMLTableRowElement)) {
-      throw new Error("Expected Nuuksio visit row");
+    if (!(visitRow instanceof HTMLTableRowElement)) {
+      throw new Error("Expected visit row");
     }
 
     await userEvent.click(
-      within(nuuksioRow).getByRole("button", {
-        name: "controlPanel.trips.assignments.removeAction",
+      within(visitRow).getByRole("button", {
+        name: "controlPanel.trips.assignments.removeVisitAction",
       }),
     );
 
@@ -538,75 +400,391 @@ describe("TripVisitAssignments", () => {
       }),
     });
     expect(mockRevalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "nuuksio" });
+    await waitFor(() => {
+      expect(mockRefresh).toHaveBeenCalled();
+    });
   });
 
-  it("restores the available visit when attaching fails", async () => {
+  it("validates that a stop needs a selected location", async () => {
+    render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
+
+    await userEvent.type(
+      screen.getByRole("combobox", {
+        name: "controlPanel.trips.assignments.stopLocationLabel",
+      }),
+      "Mikkeli",
+    );
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.addStopAction",
+      }),
+    );
+
+    expect(
+      screen.getByText("controlPanel.trips.assignments.validation.stopLocationSelectionRequired"),
+    ).toBeInTheDocument();
+  });
+
+  it("creates a stop using the current location", async () => {
     const { apiFetch } = await import("@/lib/api");
-    vi.mocked(apiFetch).mockRejectedValueOnce(new Error("attach failed"));
+    mockResolveLocationFromCoordinate.mockResolvedValueOnce({
+      coordinate: { lat: 61.6886, lon: 27.2736 },
+      label: "Mikkeli",
+    });
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      id: 33,
+      location: {
+        coordinate: { lat: 61.6886, lon: 27.2736 },
+        label: "Mikkeli",
+      },
+      note: "Yopyminen",
+      createdAt: "2024-06-15T18:00:00Z",
+      updatedAt: "2024-06-15T18:00:00Z",
+      tripStopOrder: 3,
+    });
+
+    Object.defineProperty(window.navigator, "geolocation", {
+      configurable: true,
+      value: {
+        getCurrentPosition: vi.fn((success: PositionCallback) =>
+          success({
+            coords: {
+              latitude: 61.6886,
+              longitude: 27.2736,
+            },
+          } as GeolocationPosition),
+        ),
+      },
+    });
 
     render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
 
-    const availableSection = screen.getByRole("heading", {
-      name: "controlPanel.trips.assignments.availableTitle",
-    }).parentElement?.parentElement;
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.useCurrentLocation",
+      }),
+    );
+    await waitFor(() => {
+      expect(
+        screen.getByRole("combobox", {
+          name: "controlPanel.trips.assignments.stopLocationLabel",
+        }),
+      ).toHaveValue("Mikkeli");
+    });
+    await userEvent.type(
+      screen.getByLabelText("controlPanel.trips.assignments.stopNoteLabel"),
+      "Yopyminen",
+    );
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.addStopAction",
+      }),
+    );
 
-    if (!(availableSection instanceof HTMLElement)) {
-      throw new Error("Expected available visits section");
-    }
+    expect(apiFetch).toHaveBeenCalledWith("/api/trips/7/stops", {
+      method: "POST",
+      body: JSON.stringify({
+        location: {
+          coordinate: { lat: 61.6886, lon: 27.2736 },
+          label: "Mikkeli",
+        },
+        note: "Yopyminen",
+        tripStopOrder: 3,
+      }),
+    });
+    await waitFor(() => {
+      expect(mockRefresh).toHaveBeenCalled();
+    });
+  });
 
-    const pallasRow = within(availableSection).getByText("Pallas-Yllästunturi").closest("tr");
+  it("shows an unsupported-location message when stop geolocation is unavailable", async () => {
+    Object.defineProperty(window.navigator, "geolocation", {
+      configurable: true,
+      value: undefined,
+    });
 
-    if (!(pallasRow instanceof HTMLTableRowElement)) {
-      throw new Error("Expected Pallas visit row");
-    }
+    render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
 
     await userEvent.click(
-      within(pallasRow).getByRole("button", {
-        name: "controlPanel.trips.assignments.attachAction",
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.useCurrentLocation",
+      }),
+    );
+
+    expect(
+      screen.getByText("controlPanel.trips.assignments.locationUnsupported"),
+    ).toBeInTheDocument();
+  });
+
+  it("shows an error when creating a stop fails", async () => {
+    const { apiFetch } = await import("@/lib/api");
+    mockResolveLocationFromCoordinate.mockResolvedValueOnce({
+      coordinate: { lat: 61.6886, lon: 27.2736 },
+      label: "Mikkeli",
+    });
+    vi.mocked(apiFetch).mockRejectedValueOnce(new Error("stop failed"));
+
+    Object.defineProperty(window.navigator, "geolocation", {
+      configurable: true,
+      value: {
+        getCurrentPosition: vi.fn((success: PositionCallback) =>
+          success({
+            coords: {
+              latitude: 61.6886,
+              longitude: 27.2736,
+            },
+          } as GeolocationPosition),
+        ),
+      },
+    });
+
+    render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
+
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.useCurrentLocation",
+      }),
+    );
+    await waitFor(() => {
+      expect(
+        screen.getByRole("combobox", {
+          name: "controlPanel.trips.assignments.stopLocationLabel",
+        }),
+      ).toHaveValue("Mikkeli");
+    });
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.addStopAction",
       }),
     );
 
     await waitFor(() => {
-      expect(screen.getByText("attach failed")).toBeInTheDocument();
-      expect(within(availableSection).getByText("Pallas-Yllästunturi")).toBeInTheDocument();
+      expect(screen.getByText("stop failed")).toBeInTheDocument();
     });
   });
 
-  it("restores the assigned visit when removing fails", async () => {
+  it("deletes an existing stop", async () => {
+    const { apiFetch } = await import("@/lib/api");
+    vi.mocked(apiFetch).mockResolvedValueOnce(undefined);
+
+    render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
+
+    const stopRow = screen.getByText("Lounaspaikka Jyvaskyla").closest("tr");
+
+    if (!(stopRow instanceof HTMLTableRowElement)) {
+      throw new Error("Expected stop row");
+    }
+
+    await userEvent.click(
+      within(stopRow).getByRole("button", {
+        name: "controlPanel.trips.assignments.deleteStopAction",
+      }),
+    );
+
+    expect(apiFetch).toHaveBeenCalledWith("/api/trip-stops/21", {
+      method: "DELETE",
+    });
+    await waitFor(() => {
+      expect(mockRefresh).toHaveBeenCalled();
+    });
+  });
+
+  it("does not delete a stop when deletion is canceled", async () => {
+    const { apiFetch } = await import("@/lib/api");
+    vi.stubGlobal(
+      "confirm",
+      vi.fn(() => false),
+    );
+
+    render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
+
+    const stopRow = screen.getByText("Lounaspaikka Jyvaskyla").closest("tr");
+
+    if (!(stopRow instanceof HTMLTableRowElement)) {
+      throw new Error("Expected stop row");
+    }
+
+    await userEvent.click(
+      within(stopRow).getByRole("button", {
+        name: "controlPanel.trips.assignments.deleteStopAction",
+      }),
+    );
+
+    expect(apiFetch).not.toHaveBeenCalled();
+  });
+
+  it("shows an error when deleting a stop fails", async () => {
+    const { apiFetch } = await import("@/lib/api");
+    vi.mocked(apiFetch).mockRejectedValueOnce(new Error("delete failed"));
+
+    render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
+
+    const stopRow = screen.getByText("Lounaspaikka Jyvaskyla").closest("tr");
+
+    if (!(stopRow instanceof HTMLTableRowElement)) {
+      throw new Error("Expected stop row");
+    }
+
+    await userEvent.click(
+      within(stopRow).getByRole("button", {
+        name: "controlPanel.trips.assignments.deleteStopAction",
+      }),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("delete failed")).toBeInTheDocument();
+    });
+  });
+
+  it("shows an error when detaching a visit fails", async () => {
     const { apiFetch } = await import("@/lib/api");
     vi.mocked(apiFetch).mockRejectedValueOnce(new Error("remove failed"));
 
     render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
 
-    const assignedSection = screen.getByRole("heading", {
-      name: "controlPanel.trips.assignments.assignedTitle",
-    }).parentElement?.parentElement;
+    const itinerarySection = screen
+      .getByRole("heading", {
+        name: "controlPanel.trips.assignments.assignedTitle",
+      })
+      .closest("section");
+    const visitRow =
+      itinerarySection instanceof HTMLElement
+        ? within(itinerarySection).getByText("Nuuksio").closest("tr")
+        : null;
 
-    if (!(assignedSection instanceof HTMLElement)) {
-      throw new Error("Expected assigned visits section");
-    }
-
-    const nuuksioRow = within(assignedSection).getByText("Nuuksio").closest("tr");
-
-    if (!(nuuksioRow instanceof HTMLTableRowElement)) {
-      throw new Error("Expected Nuuksio visit row");
+    if (!(visitRow instanceof HTMLTableRowElement)) {
+      throw new Error("Expected visit row");
     }
 
     await userEvent.click(
-      within(nuuksioRow).getByRole("button", {
-        name: "controlPanel.trips.assignments.removeAction",
+      within(visitRow).getByRole("button", {
+        name: "controlPanel.trips.assignments.removeVisitAction",
       }),
     );
 
     await waitFor(() => {
       expect(screen.getByText("remove failed")).toBeInTheDocument();
-      expect(within(assignedSection).getByText("Nuuksio")).toBeInTheDocument();
     });
   });
 
-  it("shows the assigned empty state when the current trip has no visits", () => {
-    render(<TripVisitAssignments trip={currentTrip} visits={[visits[0], visits[3]]} />);
+  it("resets stop editing state when the edited stop is deleted", async () => {
+    const { apiFetch } = await import("@/lib/api");
+    vi.mocked(apiFetch).mockResolvedValueOnce(undefined);
 
-    expect(screen.getByText("controlPanel.trips.assignments.assignedEmpty")).toBeInTheDocument();
+    render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
+
+    const stopRow = screen.getByText("Lounaspaikka Jyvaskyla").closest("tr");
+
+    if (!(stopRow instanceof HTMLTableRowElement)) {
+      throw new Error("Expected stop row");
+    }
+
+    await userEvent.click(
+      within(stopRow).getByRole("button", {
+        name: "controlPanel.trips.assignments.editStopAction",
+      }),
+    );
+
+    expect(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.cancelStopEdit",
+      }),
+    ).toBeInTheDocument();
+
+    await userEvent.click(
+      within(stopRow).getByRole("button", {
+        name: "controlPanel.trips.assignments.deleteStopAction",
+      }),
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("button", {
+          name: "controlPanel.trips.assignments.cancelStopEdit",
+        }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  it("reorders itinerary items with the keyboard handle", async () => {
+    const { apiFetch } = await import("@/lib/api");
+    vi.mocked(apiFetch).mockResolvedValue(undefined);
+
+    render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
+
+    const itinerarySection = screen
+      .getByRole("heading", {
+        name: "controlPanel.trips.assignments.assignedTitle",
+      })
+      .closest("section");
+    const visitRow =
+      itinerarySection instanceof HTMLElement
+        ? within(itinerarySection).getByText("Nuuksio").closest("tr")
+        : null;
+
+    if (!(itinerarySection instanceof HTMLElement) || !(visitRow instanceof HTMLTableRowElement)) {
+      throw new Error("Expected itinerary row");
+    }
+
+    const reorderButton = within(visitRow).getByRole("button", {
+      name: "controlPanel.trips.assignments.table.reorderItem",
+    });
+
+    reorderButton.focus();
+    await userEvent.keyboard("{ArrowDown}");
+
+    await waitFor(() => {
+      expect(getItineraryOrder(itinerarySection)).toEqual(["stop-21", "visit-11"]);
+      expect(apiFetch).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  it("edits an existing stop", async () => {
+    const { apiFetch } = await import("@/lib/api");
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ...currentTrip.itinerary[1].stop,
+      note: "Pitka lounastauko",
+    });
+
+    render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
+
+    const stopRow = screen.getByText("Lounaspaikka Jyvaskyla").closest("tr");
+
+    if (!(stopRow instanceof HTMLTableRowElement)) {
+      throw new Error("Expected stop row");
+    }
+
+    await userEvent.click(
+      within(stopRow).getByRole("button", {
+        name: "controlPanel.trips.assignments.editStopAction",
+      }),
+    );
+    await userEvent.clear(screen.getByLabelText("controlPanel.trips.assignments.stopNoteLabel"));
+    await userEvent.type(
+      screen.getByLabelText("controlPanel.trips.assignments.stopNoteLabel"),
+      "Pitka lounastauko",
+    );
+    const existingStop = currentTrip.itinerary[1];
+
+    if (existingStop?.kind !== "stop") {
+      throw new Error("Expected stop itinerary item");
+    }
+
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.saveStopChanges",
+      }),
+    );
+
+    expect(apiFetch).toHaveBeenCalledWith("/api/trip-stops/21", {
+      method: "PATCH",
+      body: JSON.stringify({
+        location: existingStop.stop.location,
+        note: "Pitka lounastauko",
+      }),
+    });
+    await waitFor(() => {
+      expect(mockRefresh).toHaveBeenCalled();
+    });
   });
 });

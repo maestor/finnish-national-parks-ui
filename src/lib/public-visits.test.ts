@@ -176,14 +176,14 @@ describe("buildPublicVisitsTimelineModel", () => {
         createTimelineVisit({
           id: 1,
           visitedOn: "2024-06-15",
-          trip: { id: 7, name: "Kesaretki" },
+          trip: { id: 7, name: "Kesaretki", slug: "kesaretki" },
         }),
         createTimelineVisit({
           id: 2,
           visitedOn: "2024-06-18",
           route: "Harjupolku",
           imageCount: 2,
-          trip: { id: 7, name: "Kesaretki" },
+          trip: { id: 7, name: "Kesaretki", slug: "kesaretki" },
         }),
         createTimelineVisit({
           id: 3,
@@ -244,7 +244,7 @@ describe("buildPublicVisitsTimelineModel", () => {
           id: 1,
           visitedOn: "2024-06-15",
           createdAt: "2024-06-15T09:00:00Z",
-          trip: { id: 7, name: "Kesaretki" },
+          trip: { id: 7, name: "Kesaretki", slug: "kesaretki" },
           tripStopOrder: 2,
         }),
         createTimelineVisit({
@@ -256,7 +256,7 @@ describe("buildPublicVisitsTimelineModel", () => {
             slug: "pallas-yllastunturi",
             typeLabel: "Kansallispuisto",
           },
-          trip: { id: 7, name: "Kesaretki" },
+          trip: { id: 7, name: "Kesaretki", slug: "kesaretki" },
           tripStopOrder: 1,
         }),
       ],
@@ -281,7 +281,7 @@ describe("buildPublicVisitsTimelineModel", () => {
         createTimelineVisit({
           id: 1,
           visitedOn: "2024-12-30",
-          trip: { id: 7, name: "Uudenvuoden reissu" },
+          trip: { id: 7, name: "Uudenvuoden reissu", slug: "uudenvuoden-reissu" },
         }),
         createTimelineVisit({
           id: 2,
@@ -291,7 +291,7 @@ describe("buildPublicVisitsTimelineModel", () => {
             slug: "oulanka",
             typeLabel: "Kansallispuisto",
           },
-          trip: { id: 7, name: "Uudenvuoden reissu" },
+          trip: { id: 7, name: "Uudenvuoden reissu", slug: "uudenvuoden-reissu" },
         }),
       ],
       {

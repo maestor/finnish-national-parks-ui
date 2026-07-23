@@ -5,7 +5,7 @@ import { TripVisitAssignments } from "@/components/trips/trip-visit-assignments"
 import { apiFetch } from "@/lib/api";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import type { VisitWithPark } from "@/lib/parks";
-import type { Trip } from "@/lib/trips";
+import type { TripDetail } from "@/lib/trips";
 
 export const dynamic = "force-dynamic";
 
@@ -32,11 +32,10 @@ const EditTripPage = async ({ params, searchParams }: EditTripPageProps) => {
     notFound();
   }
 
-  const [{ trips }, { visits }] = await Promise.all([
-    apiFetch<{ trips: Trip[] }>("/api/trips"),
+  const [tripToEdit, { visits }] = await Promise.all([
+    apiFetch<TripDetail>(`/api/trips/${tripId}`).catch(() => null),
     apiFetch<{ visits: VisitWithPark[] }>("/api/visits"),
   ]);
-  const tripToEdit = trips.find((trip) => trip.id === tripId) ?? null;
 
   if (tripToEdit === null) {
     notFound();

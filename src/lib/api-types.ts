@@ -871,6 +871,7 @@ export interface paths {
                                 trip: {
                                     id: number;
                                     name: string;
+                                    slug: string;
                                 } | null;
                                 tripStopOrder: number | null;
                                 updatedAt: string;
@@ -945,6 +946,7 @@ export interface paths {
                             trip: {
                                 id: number;
                                 name: string;
+                                slug: string;
                             } | null;
                             tripStopOrder: number | null;
                             updatedAt: string;
@@ -1252,6 +1254,7 @@ export interface paths {
                                 trip: {
                                     id: number;
                                     name: string;
+                                    slug: string;
                                 } | null;
                                 tripStopOrder: number | null;
                                 visitedOn: string;
@@ -1309,6 +1312,14 @@ export interface paths {
                                 description: string | null;
                                 id: number;
                                 name: string;
+                                slug: string;
+                                startingPoint: {
+                                    coordinate: {
+                                        lat: number;
+                                        lon: number;
+                                    };
+                                    label: string;
+                                } | null;
                                 /** Format: date-time */
                                 updatedAt: string;
                                 visitCount: number;
@@ -1338,6 +1349,14 @@ export interface paths {
                     "application/json": {
                         description?: string | null;
                         name: string;
+                        slug?: string;
+                        startingPoint?: {
+                            coordinate: {
+                                lat: number;
+                                lon: number;
+                            };
+                            label: string;
+                        } | null;
                     };
                 };
             };
@@ -1358,6 +1377,14 @@ export interface paths {
                             description: string | null;
                             id: number;
                             name: string;
+                            slug: string;
+                            startingPoint: {
+                                coordinate: {
+                                    lat: number;
+                                    lon: number;
+                                };
+                                label: string;
+                            } | null;
                             /** Format: date-time */
                             updatedAt: string;
                             visitCount: number;
@@ -1394,6 +1421,264 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/trips/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Trip detail with merged itinerary */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: date-time */
+                            createdAt: string;
+                            dateRange: {
+                                end: string;
+                                start: string;
+                            } | null;
+                            description: string | null;
+                            id: number;
+                            name: string;
+                            slug: string;
+                            startingPoint: {
+                                coordinate: {
+                                    lat: number;
+                                    lon: number;
+                                };
+                                label: string;
+                            } | null;
+                            /** Format: date-time */
+                            updatedAt: string;
+                            visitCount: number;
+                            itinerary: ({
+                                /** @enum {string} */
+                                kind: "visit";
+                                tripStopOrder: number;
+                                visit: {
+                                    author: string | null;
+                                    /** Format: date-time */
+                                    createdAt: string;
+                                    id: number;
+                                    note: string | null;
+                                    park: {
+                                        name: string;
+                                        slug: string;
+                                    };
+                                    route: string | null;
+                                    /** Format: date-time */
+                                    updatedAt: string;
+                                    visitedOn: string;
+                                };
+                            } | {
+                                /** @enum {string} */
+                                kind: "stop";
+                                tripStopOrder: number;
+                                stop: {
+                                    /** Format: date-time */
+                                    createdAt: string;
+                                    id: number;
+                                    location: {
+                                        coordinate: {
+                                            lat: number;
+                                            lon: number;
+                                        };
+                                        label: string;
+                                    };
+                                    note: string | null;
+                                    tripStopOrder: number;
+                                    /** Format: date-time */
+                                    updatedAt: string;
+                                };
+                            })[];
+                        };
+                    };
+                };
+                /** @description Trip was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted trip */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Trip was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        description?: string | null;
+                        name?: string;
+                        slug?: string;
+                        startingPoint?: {
+                            coordinate: {
+                                lat: number;
+                                lon: number;
+                            };
+                            label: string;
+                        } | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Updated trip */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: date-time */
+                            createdAt: string;
+                            dateRange: {
+                                end: string;
+                                start: string;
+                            } | null;
+                            description: string | null;
+                            id: number;
+                            name: string;
+                            slug: string;
+                            startingPoint: {
+                                coordinate: {
+                                    lat: number;
+                                    lon: number;
+                                };
+                                label: string;
+                            } | null;
+                            /** Format: date-time */
+                            updatedAt: string;
+                            visitCount: number;
+                        };
+                    };
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Trip was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
         trace?: never;
     };
     "/api/trip-planner/suggestions": {
@@ -1815,6 +2100,7 @@ export interface paths {
                                 trip: {
                                     id: number;
                                     name: string;
+                                    slug: string;
                                 } | null;
                                 tripStopOrder: number | null;
                                 updatedAt: string;
@@ -1884,6 +2170,7 @@ export interface paths {
                             trip: {
                                 id: number;
                                 name: string;
+                                slug: string;
                             } | null;
                             tripStopOrder: number | null;
                             updatedAt: string;
@@ -2020,6 +2307,7 @@ export interface paths {
                             trip: {
                                 id: number;
                                 name: string;
+                                slug: string;
                             } | null;
                             tripStopOrder: number | null;
                             updatedAt: string;
@@ -2077,6 +2365,120 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/api/trips/{id}/stops": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        location: {
+                            coordinate: {
+                                lat: number;
+                                lon: number;
+                            };
+                            label: string;
+                        };
+                        note?: string | null;
+                        tripStopOrder?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Created trip stop */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: date-time */
+                            createdAt: string;
+                            id: number;
+                            location: {
+                                coordinate: {
+                                    lat: number;
+                                    lon: number;
+                                };
+                                label: string;
+                            };
+                            note: string | null;
+                            tripStopOrder: number;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Trip was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Invalid trip stop payload */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/parks/{slug}/removed": {
@@ -2156,7 +2558,7 @@ export interface paths {
         };
         trace?: never;
     };
-    "/api/trips/{id}": {
+    "/api/trip-stops/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -2177,7 +2579,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Deleted trip */
+                /** @description Deleted trip stop */
                 204: {
                     headers: {
                         [name: string]: unknown;
@@ -2196,7 +2598,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Trip was not found */
+                /** @description Trip stop was not found */
                 404: {
                     headers: {
                         [name: string]: unknown;
@@ -2236,13 +2638,20 @@ export interface paths {
             requestBody?: {
                 content: {
                     "application/json": {
-                        description?: string | null;
-                        name?: string;
+                        location?: {
+                            coordinate: {
+                                lat: number;
+                                lon: number;
+                            };
+                            label: string;
+                        };
+                        note?: string | null;
+                        tripStopOrder?: number;
                     };
                 };
             };
             responses: {
-                /** @description Updated trip */
+                /** @description Updated trip stop */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -2251,16 +2660,18 @@ export interface paths {
                         "application/json": {
                             /** Format: date-time */
                             createdAt: string;
-                            dateRange: {
-                                end: string;
-                                start: string;
-                            } | null;
-                            description: string | null;
                             id: number;
-                            name: string;
+                            location: {
+                                coordinate: {
+                                    lat: number;
+                                    lon: number;
+                                };
+                                label: string;
+                            };
+                            note: string | null;
+                            tripStopOrder: number;
                             /** Format: date-time */
                             updatedAt: string;
-                            visitCount: number;
                         };
                     };
                 };
@@ -2276,8 +2687,20 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Trip was not found */
+                /** @description Trip stop was not found */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Invalid trip stop payload */
+                422: {
                     headers: {
                         [name: string]: unknown;
                     };
