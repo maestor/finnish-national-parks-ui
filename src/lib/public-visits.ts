@@ -387,6 +387,7 @@ export const buildPublicVisitsTimelineModel = (
     }
 
     const visitsInNarrativeOrder = [...groupedTripVisits].sort(compareVisitsByTripNarrative);
+    const visitsInTimelineOrder = [...visitsInNarrativeOrder].reverse();
     const imageCount = groupedTripVisits.reduce((sum, visit) => sum + visit.imageCount, 0);
     const parkCount = new Set(groupedTripVisits.map((visit) => visit.park.slug)).size;
     const tripItem: PublicVisitTimelineTripItem = {
@@ -403,7 +404,7 @@ export const buildPublicVisitsTimelineModel = (
       latestVisit,
       parkCount,
       visitCount: groupedTripVisits.length,
-      visits: visitsInNarrativeOrder,
+      visits: visitsInTimelineOrder,
     };
 
     addTimelineItem(latestVisit.visitedOn, tripItem);

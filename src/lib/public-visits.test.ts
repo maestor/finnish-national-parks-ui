@@ -234,10 +234,10 @@ describe("buildPublicVisitsTimelineModel", () => {
       throw new Error("Expected grouped trip item");
     }
 
-    expect(groupedTrip.visits.map((visit) => visit.id)).toEqual([1, 2]);
+    expect(groupedTrip.visits.map((visit) => visit.id)).toEqual([2, 1]);
   });
 
-  it("uses trip stop order for visits inside a grouped trip", () => {
+  it("shows grouped trip visits in reverse stop order to match the newest-first timeline", () => {
     const model = buildPublicVisitsTimelineModel(
       [
         createTimelineVisit({
@@ -272,6 +272,44 @@ describe("buildPublicVisitsTimelineModel", () => {
       throw new Error("Expected grouped trip item");
     }
 
+    expect(groupedTrip.visits.map((visit) => visit.id)).toEqual([1, 2]);
+  });
+
+  it("shows cross-year trip visits newest first while keeping the full date range", () => {
+    const model = buildPublicVisitsTimelineModel(
+      [
+        createTimelineVisit({
+          id: 1,
+          visitedOn: "2024-12-30",
+          trip: { id: 7, name: "Uudenvuoden reissu", slug: "uudenvuoden-reissu" },
+        }),
+        createTimelineVisit({
+          id: 2,
+          visitedOn: "2025-01-02",
+          park: {
+            name: "Oulanka",
+            slug: "oulanka",
+            typeLabel: "Kansallispuisto",
+          },
+          trip: { id: 7, name: "Uudenvuoden reissu", slug: "uudenvuoden-reissu" },
+        }),
+      ],
+      {
+        selectedYear: null,
+        selectedMonth: null,
+      },
+    );
+
+    const groupedTrip = model.sections[0]?.months[0]?.items[0];
+
+    if (groupedTrip?.kind !== "trip") {
+      throw new Error("Expected grouped trip item");
+    }
+
+    expect(groupedTrip.dateRange).toEqual({
+      start: "2024-12-30",
+      end: "2025-01-02",
+    });
     expect(groupedTrip.visits.map((visit) => visit.id)).toEqual([2, 1]);
   });
 

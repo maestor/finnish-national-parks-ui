@@ -138,6 +138,7 @@
     "eyebrow": "Käyntien aikajana",
     "title": "Käynnit",
     "description": "Selaa kirjattuja käyntejä aikajanalla tai kartalla. Voit rajata näkymää vuoden mukaan ja tarkentaa tarvittaessa yksittäiseen kuukauteen.",
+    "backToTop": "Takaisin ylös",
     "errorTitle": "Käyntien lataus epäonnistui",
     "views": {
       "label": "Käyntinäkymät",
