@@ -102,21 +102,20 @@ global.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
 let mockMap = createMockMap();
 
 vi.mock("maplibre-gl", () => ({
-  default: {
-    // biome-ignore lint: Vitest v4 constructor mocks must be constructible.
-    Map: vi.fn(function () {
-      return mockMap;
-    }),
-    // biome-ignore lint: Vitest v4 constructor mocks must be constructible.
-    Marker: vi.fn(function (options?: { element?: HTMLElement }) {
-      return createMockMarker(options);
-    }),
-    // biome-ignore lint: Vitest v4 constructor mocks must be constructible.
-    Popup: vi.fn(function () {
-      return createMockPopup();
-    }),
-    NavigationControl: vi.fn(),
-  },
+  // biome-ignore lint: Vitest v4 constructor mocks must be constructible.
+  Map: vi.fn(function () {
+    return mockMap;
+  }),
+  // biome-ignore lint: Vitest v4 constructor mocks must be constructible.
+  Marker: vi.fn(function (options?: { element?: HTMLElement }) {
+    return createMockMarker(options);
+  }),
+  // biome-ignore lint: Vitest v4 constructor mocks must be constructible.
+  Popup: vi.fn(function () {
+    return createMockPopup();
+  }),
+  NavigationControl: vi.fn(),
+  setWorkerUrl: vi.fn(),
 }));
 
 const route: TripPlannerRouteResult = {

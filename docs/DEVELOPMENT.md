@@ -78,6 +78,7 @@ The `AUTH_JWT_SECRET` must match the backend's `AUTH_JWT_SECRET` exactly. `AUTH_
 | `npm run test:e2e:all`       | Run Playwright E2E (all browsers)                       |
 | `npm run verify`             | Full gate: typecheck → lint:fix → test:coverage → build |
 | `npm run generate:api-types` | Regenerate `src/lib/api-types.ts` from backend OpenAPI  |
+| `npm run copy:maplibre-worker` | Sync the MapLibre v6 worker files into `public/maplibre/` (runs automatically via `predev`/`prebuild`) |
 
 **Always run `npm run verify` before asking for review.** Pull requests targeting `main` also run the same `npm run verify` gate in GitHub Actions.
 
@@ -191,6 +192,14 @@ Route naming caveat:
 - Public park detail pages still read `GET /api/parks/{slug}` and `GET /api/parks/{slug}/visits`, but those reads now use cacheable public fetches by default and fall back to an authenticated request when the backend requires an admin session for a hidden park.
 - Admin-only quick links on public pages are resolved client-side with `useAuth`, so the page HTML can stay cache-friendly while signed-in users still see edit and add-visit affordances after hydration.
 - Visit and public park mutations call the local Next.js route `POST /api/revalidate-public-cache` so the frontend can invalidate cached public pages immediately after a successful write.
+
+### MapLibre Worker (v6)
+
+MapLibre GL v6 ships ESM-only and cannot auto-detect its worker URL inside the Next.js/Turbopack module graph. The app therefore self-hosts the worker:
+
+- `scripts/copy-maplibre-worker.mjs` copies `maplibre-gl-worker.mjs` and its sibling `maplibre-gl-shared.mjs` from `node_modules` into `public/maplibre/` (gitignored) and runs automatically via the `predev` and `prebuild` npm hooks, so local dev, `npm run verify`, and Vercel builds all stay in sync with the installed `maplibre-gl` version.
+- `src/components/map/map-worker.ts` calls `setWorkerUrl("/maplibre/maplibre-gl-worker.mjs")`; it is imported by `src/components/map/map-style.ts`, which every map component already imports.
+- The CSP `worker-src 'self' blob:` in `next.config.ts` covers the same-origin worker file.
 
 ---
 

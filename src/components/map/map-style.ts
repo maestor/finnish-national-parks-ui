@@ -1,4 +1,5 @@
-import type maplibregl from "maplibre-gl";
+import type * as maplibregl from "maplibre-gl";
+import "./map-worker";
 
 export const getMapStyle = (): string | maplibregl.StyleSpecification => {
   const mapStyleUrl = process.env.NEXT_PUBLIC_MAP_STYLE_URL as string | undefined;

@@ -41,7 +41,8 @@ const buildContentSecurityPolicy = (isProduction: boolean) => {
     "style-src 'self' 'unsafe-inline'",
     `img-src 'self' data: blob: ${externalFetchOrigins}`,
     `connect-src 'self' ${externalFetchOrigins}${isProduction ? "" : " ws:"}`,
-    // MapLibre GL runs its tile pipeline in blob workers.
+    // MapLibre GL v6 loads its tile-pipeline worker from the self-hosted ESM
+    // file under /maplibre/ ('self'); blob: stays allowed for worker fallbacks.
     "worker-src 'self' blob:",
     "font-src 'self'",
     "object-src 'none'",
