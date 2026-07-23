@@ -432,7 +432,9 @@ const personalVisit = {
 const trip = {
   id: 7,
   name: "Keski-Suomen kesaretki",
+  slug: "keski-suomen-kesaretki",
   description: "Kolmen paivan kierros kansallispuistoihin.",
+  startingPoint: null,
   visitCount: 2,
   dateRange: {
     start: "2024-06-15",
@@ -447,6 +449,7 @@ const visitWithPark = {
   trip: {
     id: trip.id,
     name: trip.name,
+    slug: trip.slug,
   },
   tripStopOrder: 1,
   park: {
@@ -1133,7 +1136,7 @@ describe("App pages", () => {
 
   it("renders the edit trip page with the created notice", async () => {
     vi.mocked(apiFetch)
-      .mockResolvedValueOnce({ trips: [trip] })
+      .mockResolvedValueOnce(trip)
       .mockResolvedValueOnce({ visits: [visitWithPark] });
 
     await renderControlPanelRoute(
@@ -1159,7 +1162,7 @@ describe("App pages", () => {
 
   it("calls notFound when the edit trip page cannot find the requested trip", async () => {
     vi.mocked(apiFetch)
-      .mockResolvedValueOnce({ trips: [] })
+      .mockResolvedValueOnce(null)
       .mockResolvedValueOnce({ visits: [visitWithPark] });
 
     await expect(

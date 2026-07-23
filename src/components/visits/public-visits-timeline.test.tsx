@@ -536,6 +536,7 @@ describe("PublicVisitsTimeline", () => {
           trip: {
             id: 7,
             name: "Kesaretki",
+            slug: "kesaretki",
           },
           tripStopOrder: 1,
           park: {
@@ -553,6 +554,7 @@ describe("PublicVisitsTimeline", () => {
           trip: {
             id: 7,
             name: "Kesaretki",
+            slug: "kesaretki",
           },
           tripStopOrder: 2,
           park: {

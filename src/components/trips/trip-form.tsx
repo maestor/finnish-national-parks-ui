@@ -4,16 +4,67 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
+import { LocationSuggestionInput } from "@/components/location/location-suggestion-input";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { apiFetch } from "@/lib/api";
+import {
+  formatCoordinateQuery,
+  getUserLocationStatusFromError,
+  LOCATION_REQUEST_OPTIONS,
+  resolveLocationFromCoordinate,
+  type UserLocationStatus,
+} from "@/lib/location";
 import { revalidatePublicCache } from "@/lib/public-cache";
 import { appRoutes, createPathWithSearchParams } from "@/lib/routes";
-import { formatTripDateRange, type Trip } from "@/lib/trips";
+import type {
+  Trip,
+  TripCreateRequest,
+  TripDetail,
+  TripLocation,
+  TripUpdateRequest,
+} from "@/lib/trips";
 
 interface TripFormProps {
   tripToEdit?: Trip;
 }
+
+type TripFormLocationMessageKey =
+  | "locationLocating"
+  | "locationUnsupported"
+  | "locationPermissionDenied"
+  | "locationTimeout"
+  | "locationUnavailable";
+
+const INPUT_CLASS_NAME =
+  "flex w-full rounded-xl border border-white/45 bg-white/78 px-3 py-2 text-sm ring-offset-background shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
+
+const getLocationStatusMessage = (
+  status: UserLocationStatus,
+  t: (key: TripFormLocationMessageKey) => string,
+) => {
+  switch (status) {
+    case "idle":
+      return null;
+    case "locating":
+      return t("locationLocating");
+    case "unsupported":
+      return t("locationUnsupported");
+    case "permissionDenied":
+      return t("locationPermissionDenied");
+    case "timeout":
+      return t("locationTimeout");
+    case "unavailable":
+      return t("locationUnavailable");
+  }
+};
+
+const getLocationKey = (location: TripLocation | null) =>
+  location ? `${location.label}|${formatCoordinateQuery(location.coordinate)}` : "";
+
+const trimToNull = (value: string) => {
+  const trimmed = value.trim();
+  return trimmed === "" ? null : trimmed;
+};
 
 export const TripForm = ({ tripToEdit }: TripFormProps) => {
   const t = useTranslations("controlPanel.trips.form");
@@ -22,6 +73,14 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
 
   const [name, setName] = useState(tripToEdit?.name ?? "");
   const [description, setDescription] = useState(tripToEdit?.description ?? "");
+  const [startingPointQuery, setStartingPointQuery] = useState(
+    tripToEdit?.startingPoint?.label ?? "",
+  );
+  const [startingPoint, setStartingPoint] = useState<TripLocation | null>(
+    tripToEdit?.startingPoint ?? null,
+  );
+  const [startingPointLocationStatus, setStartingPointLocationStatus] =
+    useState<UserLocationStatus>("idle");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -29,17 +88,75 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
   const [savedSnapshot, setSavedSnapshot] = useState({
     name: tripToEdit?.name ?? "",
     description: tripToEdit?.description ?? "",
+    startingPointKey: getLocationKey(tripToEdit?.startingPoint ?? null),
   });
 
   const trimmedName = name.trim();
-  const trimmedDescription = description.trim();
+  const normalizedStartingPointQuery = startingPointQuery.trim();
+  const startingPointLocationStatusMessage = getLocationStatusMessage(
+    startingPointLocationStatus,
+    t,
+  );
   const isEditDirty =
-    !tripToEdit || trimmedName !== savedSnapshot.name || description !== savedSnapshot.description;
+    !tripToEdit ||
+    trimmedName !== savedSnapshot.name ||
+    description !== savedSnapshot.description ||
+    getLocationKey(startingPoint) !== savedSnapshot.startingPointKey;
   const isSubmitDisabled = isSubmitting || (isEditing && !isEditDirty);
-  const tripDateRange = tripToEdit ? formatTripDateRange(tripToEdit) : null;
 
   const handleBack = () => {
     router.back();
+  };
+
+  const handleStartingPointValueChange = (value: string) => {
+    if (startingPointLocationStatus !== "locating") {
+      setStartingPointLocationStatus("idle");
+    }
+
+    setStartingPointQuery(value);
+  };
+
+  const handleClearStartingPoint = () => {
+    setStartingPointLocationStatus("idle");
+    setStartingPointQuery("");
+    setStartingPoint(null);
+    setErrors((currentErrors) => {
+      if (!currentErrors.startingPoint) {
+        return currentErrors;
+      }
+
+      const { startingPoint: _startingPoint, ...rest } = currentErrors;
+      return rest;
+    });
+  };
+
+  const handleLocateStartingPoint = () => {
+    const geolocation = window.navigator.geolocation;
+
+    if (!geolocation) {
+      setStartingPointLocationStatus("unsupported");
+      return;
+    }
+
+    setSubmitError(null);
+    setStartingPointLocationStatus("locating");
+
+    geolocation.getCurrentPosition(
+      async (position) => {
+        const resolvedLocation = await resolveLocationFromCoordinate({
+          lat: position.coords.latitude,
+          lon: position.coords.longitude,
+        });
+
+        setStartingPointQuery(resolvedLocation.label);
+        setStartingPoint(resolvedLocation);
+        setStartingPointLocationStatus("idle");
+      },
+      (error) => {
+        setStartingPointLocationStatus(getUserLocationStatusFromError(error));
+      },
+      LOCATION_REQUEST_OPTIONS,
+    );
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -48,8 +165,18 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
     setSubmitError(null);
     setStatusMessage(null);
 
+    const nextErrors: Record<string, string> = {};
+
     if (!trimmedName) {
-      setErrors({ name: t("validation.nameRequired") });
+      nextErrors.name = t("validation.nameRequired");
+    }
+
+    if (normalizedStartingPointQuery.length > 0 && startingPoint === null) {
+      nextErrors.startingPoint = t("validation.startingPointSelectionRequired");
+    }
+
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors);
       return;
     }
 
@@ -57,32 +184,54 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
       return;
     }
 
-    const payload = {
-      name: trimmedName,
-      description: trimmedDescription || null,
-    };
-
     let shouldResetSubmittingState = true;
     setIsSubmitting(true);
 
     try {
       if (tripToEdit) {
-        await apiFetch(`/api/trips/${tripToEdit.id}`, {
+        const payload: TripUpdateRequest = {};
+
+        if (trimmedName !== savedSnapshot.name) {
+          payload.name = trimmedName;
+        }
+
+        if (description !== savedSnapshot.description) {
+          payload.description = trimToNull(description);
+        }
+
+        if (getLocationKey(startingPoint) !== savedSnapshot.startingPointKey) {
+          payload.startingPoint = startingPoint;
+        }
+
+        const updatedTrip = await apiFetch<TripDetail>(`/api/trips/${tripToEdit.id}`, {
           method: "PATCH",
           body: JSON.stringify(payload),
         });
+
         await revalidatePublicCache();
+        setName(updatedTrip.name);
+        setDescription(updatedTrip.description ?? "");
+        setStartingPoint(updatedTrip.startingPoint);
+        setStartingPointQuery(updatedTrip.startingPoint?.label ?? "");
         setSavedSnapshot({
-          name: trimmedName,
-          description,
+          name: updatedTrip.name,
+          description: updatedTrip.description ?? "",
+          startingPointKey: getLocationKey(updatedTrip.startingPoint),
         });
         setStatusMessage(t("updateSuccess"));
         router.refresh();
       } else {
+        const payload = {
+          description: trimToNull(description),
+          name: trimmedName,
+          startingPoint,
+        } satisfies TripCreateRequest;
+
         const createdTrip = await apiFetch<Trip>("/api/trips", {
           method: "POST",
           body: JSON.stringify(payload),
         });
+
         await revalidatePublicCache();
         shouldResetSubmittingState = false;
         router.push(
@@ -124,50 +273,77 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
     }
   };
 
-  const inputClassName =
-    "flex w-full rounded-xl border border-white/45 bg-white/78 px-3 py-2 text-sm ring-offset-background shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
-
   return (
-    <form onSubmit={handleSubmit} className="mt-6 max-w-3xl space-y-6">
-      {tripToEdit ? (
-        <section className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-[1.5rem] border border-white/45 bg-white/58 p-4 shadow-[0_18px_36px_rgba(148,163,184,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/40 dark:shadow-[0_22px_40px_rgba(2,6,23,0.28)]">
-            <p className="text-sm font-medium text-muted-foreground">{t("dateRangeLabel")}</p>
-            <p className="mt-2 text-base font-semibold">{tripDateRange ?? t("noDateRange")}</p>
-          </div>
-          <div className="rounded-[1.5rem] border border-white/45 bg-white/58 p-4 shadow-[0_18px_36px_rgba(148,163,184,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/40 dark:shadow-[0_22px_40px_rgba(2,6,23,0.28)]">
-            <p className="text-sm font-medium text-muted-foreground">{t("visitCountLabel")}</p>
-            <p className="mt-2 text-base font-semibold">
-              {t("visitCountValue", { count: tripToEdit.visitCount })}
-            </p>
-          </div>
-        </section>
-      ) : null}
+    <form onSubmit={handleSubmit} className="mt-6 max-w-4xl space-y-6">
+      <div className="grid gap-6 md:grid-cols-2">
+        <div className="space-y-2">
+          <label htmlFor="trip-name" className="text-sm font-medium">
+            {t("nameLabel")}
+            <span className="text-primary" aria-hidden="true">
+              {" *"}
+            </span>
+          </label>
+          <input
+            id="trip-name"
+            type="text"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            placeholder={t("namePlaceholder")}
+            className={`${INPUT_CLASS_NAME} h-10`}
+          />
+          {errors.name ? <p className="text-sm text-destructive">{errors.name}</p> : null}
+        </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="trip-name" required>
-          {t("nameLabel")}
-        </Label>
-        <input
-          id="trip-name"
-          type="text"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          placeholder={t("namePlaceholder")}
-          className={`${inputClassName} h-10`}
-        />
-        {errors.name ? <p className="text-sm text-destructive">{errors.name}</p> : null}
+        <div className="space-y-2">
+          <LocationSuggestionInput
+            assistiveMessage={startingPointLocationStatusMessage ?? undefined}
+            assistiveMessageTone={
+              startingPointLocationStatus !== "idle" && startingPointLocationStatus !== "locating"
+                ? "error"
+                : "default"
+            }
+            id="trip-starting-point"
+            inputClassName="h-10"
+            isLocating={startingPointLocationStatus === "locating"}
+            label={t("startingPointLabel")}
+            locateButtonLabel={t("useCurrentLocation")}
+            name="startingPoint"
+            onLocate={handleLocateStartingPoint}
+            onSelectedLocationChange={setStartingPoint}
+            onValueChange={handleStartingPointValueChange}
+            placeholder={t("startingPointPlaceholder")}
+            required={false}
+            selectedLocation={startingPoint}
+            value={startingPointQuery}
+          />
+          {errors.startingPoint ? (
+            <p className="text-sm text-destructive">{errors.startingPoint}</p>
+          ) : null}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            {startingPoint || normalizedStartingPointQuery ? (
+              <button
+                type="button"
+                onClick={handleClearStartingPoint}
+                className="text-sm text-muted-foreground underline hover:text-foreground"
+              >
+                {t("clearStartingPoint")}
+              </button>
+            ) : null}
+          </div>
+        </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="trip-description">{t("descriptionLabel")}</Label>
+        <label htmlFor="trip-description" className="text-sm font-medium">
+          {t("descriptionLabel")}
+        </label>
         <textarea
           id="trip-description"
           value={description}
           onChange={(event) => setDescription(event.target.value)}
           placeholder={t("descriptionPlaceholder")}
           rows={5}
-          className={`${inputClassName} resize-y`}
+          className={`${INPUT_CLASS_NAME} resize-y`}
         />
       </div>
 

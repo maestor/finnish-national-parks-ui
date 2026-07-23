@@ -38,6 +38,7 @@ const visitToEdit = {
   trip: {
     id: 7,
     name: "Keski-Suomen kesaretki",
+    slug: "keski-suomen-kesaretki",
   },
   tripStopOrder: 1,
   visitedOn: "2024-06-15",
@@ -53,7 +54,9 @@ const trips = [
   {
     id: 7,
     name: "Keski-Suomen kesaretki",
+    slug: "keski-suomen-kesaretki",
     description: "Kolmen paivan kierros kansallispuistoihin.",
+    startingPoint: null,
     visitCount: 2,
     dateRange: {
       start: "2024-06-15",
@@ -65,7 +68,12 @@ const trips = [
   {
     id: 8,
     name: "Syysloman rengasreitti",
+    slug: "syysloman-rengasreitti",
     description: null,
+    startingPoint: {
+      coordinate: { lat: 61.9241, lon: 25.7482 },
+      label: "Jyvaskyla",
+    },
     visitCount: 1,
     dateRange: {
       start: "2023-10-10",

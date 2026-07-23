@@ -6,17 +6,12 @@ interface RouteContext {
   }>;
 }
 
-export const GET = async (request: Request, { params }: RouteContext) => {
-  const { id } = await params;
-  return proxyBackendRequest(request, `/api/trips/${id}`);
-};
-
 export const PATCH = async (request: Request, { params }: RouteContext) => {
   const { id } = await params;
-  return proxyBackendRequest(request, `/api/trips/${id}`, { requireAdmin: true });
+  return proxyBackendRequest(request, `/api/trip-stops/${id}`, { requireAdmin: true });
 };
 
 export const DELETE = async (request: Request, { params }: RouteContext) => {
   const { id } = await params;
-  return proxyBackendRequest(request, `/api/trips/${id}`, { requireAdmin: true });
+  return proxyBackendRequest(request, `/api/trip-stops/${id}`, { requireAdmin: true });
 };
