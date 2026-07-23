@@ -5,7 +5,7 @@ import { VisitForm } from "@/components/visits/visit-form";
 import { VisitImageSection } from "@/components/visits/visit-image-section";
 import { apiFetch } from "@/lib/api";
 import { buildPageMetadata } from "@/lib/page-metadata";
-import type { Park, VisitWithPark } from "@/lib/parks";
+import type { VisitWithPark } from "@/lib/parks";
 import { appRoutes } from "@/lib/routes";
 import type { Trip } from "@/lib/trips";
 
@@ -30,8 +30,7 @@ const EditVisitPage = async ({ params, searchParams }: EditVisitPageProps) => {
   const { created } = await searchParams;
   const visitId = Number(id);
 
-  const [{ parks }, { trips }, visitToEdit] = await Promise.all([
-    apiFetch<{ parks: Park[] }>("/api/parks"),
+  const [{ trips }, visitToEdit] = await Promise.all([
     apiFetch<{ trips: Trip[] }>("/api/trips"),
     apiFetch<VisitWithPark>(`/api/visits/${visitId}`).catch(() => null),
   ]);
@@ -58,7 +57,7 @@ const EditVisitPage = async ({ params, searchParams }: EditVisitPageProps) => {
           {t("createdNotice")}
         </output>
       )}
-      <VisitForm parks={parks} trips={trips} visitToEdit={visitToEdit} />
+      <VisitForm parks={[]} trips={trips} visitToEdit={visitToEdit} />
       <VisitImageSection
         visitId={visitToEdit.id}
         images={visitToEdit.images}
