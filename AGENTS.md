@@ -136,5 +136,6 @@ This is the Finnish National Parks UI, a Next.js 16 App Router application consu
 | `src/lib/env.ts` | Zod-validated environment variables |
 | `src/lib/api-types.ts` | Auto-generated from backend OpenAPI |
 | `src/i18n/request.ts` | `next-intl` request config |
+| `src/components/map/map-worker.ts` | MapLibre v6 `setWorkerUrl` setup (worker synced to `public/maplibre/` by `scripts/copy-maplibre-worker.mjs`) |
 | `src/app/sw.ts` | Serwist service worker |
 | `messages/fi.json` | Finnish translation messages |
