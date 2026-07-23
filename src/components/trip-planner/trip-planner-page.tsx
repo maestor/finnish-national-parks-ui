@@ -706,8 +706,15 @@ export const TripPlannerPage = () => {
     ] satisfies Array<{ id: TripPlannerParkTypeFilter; label: string }>;
   }, [homeFilterT]);
 
+  const totalParkCount = result?.parks.length ?? 0;
+  const shouldShowFilters = totalParkCount > FILTER_VISIBILITY_THRESHOLD;
+
   const filteredParks = useMemo(() => {
     const parks = result?.parks ?? [];
+
+    if (!shouldShowFilters) {
+      return parks;
+    }
 
     return parks.filter((park) => {
       const matchesVisitStatus =
@@ -739,13 +746,11 @@ export const TripPlannerPage = () => {
 
       return matchesVisitStatus && matchesParkType && park.distanceKm <= activeDistanceKm;
     });
-  }, [activeDistanceKm, activeParkFilter, activeVisitStatus, result]);
+  }, [activeDistanceKm, activeParkFilter, activeVisitStatus, result, shouldShowFilters]);
 
   const groupedResults = useMemo(() => splitTripPlannerResults(filteredParks), [filteredParks]);
-  const totalParkCount = result?.parks.length ?? 0;
   const filteredParkCount = filteredParks.length;
   const hasFilteredResults = filteredParkCount > 0;
-  const shouldShowFilters = totalParkCount > FILTER_VISIBILITY_THRESHOLD;
   const isResultsFiltersVisible = !isMobileResultsLayout || isMobileFiltersOpen;
   const originLocationStatusMessage = getUserLocationStatusMessage(originLocationStatus, t);
   const routeDistanceLabel = result?.route ? removeTrailingColon(t("routeDistance")) : null;
@@ -1184,10 +1189,10 @@ export const TripPlannerPage = () => {
                       aria-hidden={isMobileResultsLayout ? !isMobileFiltersOpen : undefined}
                       className={cn(
                         result.route && !isMobileResultsLayout && "md:col-span-2",
-                        "overflow-hidden transition-[max-height,opacity,transform] duration-300 ease-out motion-reduce:transition-none",
+                        "transition-[max-height,opacity,transform] duration-300 ease-out motion-reduce:transition-none",
                         isResultsFiltersVisible
-                          ? "max-h-[28rem] translate-y-0 opacity-100"
-                          : "pointer-events-none max-h-0 -translate-y-1 opacity-0",
+                          ? "max-h-[28rem] translate-y-0 overflow-visible opacity-100"
+                          : "pointer-events-none max-h-0 -translate-y-1 overflow-hidden opacity-0",
                       )}
                     >
                       <div className="grid gap-3 pt-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.2fr)]">
