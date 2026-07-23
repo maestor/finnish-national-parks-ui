@@ -1,6 +1,6 @@
 "use client";
 
-import maplibregl from "maplibre-gl";
+import * as maplibregl from "maplibre-gl";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
