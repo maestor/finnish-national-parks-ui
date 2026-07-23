@@ -1,25 +1,8 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import type { Trip } from "@/lib/trips";
 import { TripManagement } from "./trip-management";
-
-const mockRefresh = vi.fn();
-const { mockRevalidatePublicCache } = vi.hoisted(() => ({
-  mockRevalidatePublicCache: vi.fn(async () => true),
-}));
-
-vi.mock("@/lib/api", () => ({
-  apiFetch: vi.fn(),
-}));
-
-vi.mock("@/lib/public-cache", () => ({
-  revalidatePublicCache: mockRevalidatePublicCache,
-}));
-
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: mockRefresh }),
-}));
 
 const trips = [
   {
@@ -56,24 +39,28 @@ const trips = [
 ] satisfies Trip[];
 
 describe("TripManagement", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    vi.stubGlobal(
-      "confirm",
-      vi.fn(() => true),
-    );
-  });
-
-  it("renders the trip table and quick add links", () => {
+  it("renders linked trip names and compact edit actions", () => {
     render(<TripManagement trips={trips} />);
 
-    expect(screen.getByText("Keski-Suomen kesaretki")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Keski-Suomen kesaretki" })).toHaveAttribute(
+      "href",
+      "/hallinta/retket/7/muokkaa",
+    );
     expect(
-      screen.getAllByRole("link", { name: "controlPanel.trips.list.addVisit" })[0],
-    ).toHaveAttribute("href", "/hallinta/kaynnit/uusi?trip=7");
+      screen.queryByRole("columnheader", { name: "controlPanel.trips.list.description" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("columnheader", { name: "controlPanel.trips.list.actions" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getAllByRole("link", { name: "controlPanel.trips.list.edit" })[0],
+    ).toHaveAttribute("href", "/hallinta/retket/7/muokkaa");
+    expect(
+      screen.queryByRole("button", { name: "controlPanel.trips.list.delete" }),
+    ).not.toBeInTheDocument();
   });
 
-  it("filters trips by query", async () => {
+  it("filters trips by visible table content", async () => {
     render(<TripManagement trips={trips} />);
 
     await userEvent.type(
@@ -85,20 +72,15 @@ describe("TripManagement", () => {
     expect(screen.getByText("Syysloman rengasreitti")).toBeInTheDocument();
   });
 
-  it("deletes a trip and refreshes the page", async () => {
-    const { apiFetch } = await import("@/lib/api");
-    vi.mocked(apiFetch).mockResolvedValueOnce(undefined);
-
+  it("does not match trips by hidden descriptions", async () => {
     render(<TripManagement trips={trips} />);
 
-    await userEvent.click(
-      screen.getAllByRole("button", { name: "controlPanel.trips.list.delete" })[0],
+    await userEvent.type(
+      screen.getByLabelText("controlPanel.trips.list.filters.searchLabel"),
+      "kansallispuistoihin",
     );
 
-    expect(apiFetch).toHaveBeenCalledWith("/api/trips/7", { method: "DELETE" });
-    await waitFor(() => {
-      expect(mockRefresh).toHaveBeenCalled();
-    });
-    expect(mockRevalidatePublicCache).toHaveBeenCalled();
+    expect(screen.queryByText("Keski-Suomen kesaretki")).not.toBeInTheDocument();
+    expect(screen.getByText("controlPanel.trips.list.emptyFiltered")).toBeInTheDocument();
   });
 });

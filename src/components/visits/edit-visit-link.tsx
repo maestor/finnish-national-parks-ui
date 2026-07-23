@@ -1,8 +1,7 @@
 "use client";
 
-import { Pencil } from "lucide-react";
-import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { EditIconLink } from "@/components/admin/edit-icon-link";
 import { appRoutes } from "@/lib/routes";
 
 interface EditVisitLinkProps {
@@ -21,14 +20,12 @@ export const EditVisitLink = ({
   const t = useTranslations("controlPanel.visits");
 
   return (
-    <Link
+    <EditIconLink
       href={appRoutes.controlPanel.editVisit(visitId)}
+      label={t("edit")}
       className={className}
-      title={t("edit")}
-      aria-label={t("edit")}
+      iconClassName={iconClassName}
       onClick={onClick}
-    >
-      <Pencil className={iconClassName} />
-    </Link>
+    />
   );
 };
