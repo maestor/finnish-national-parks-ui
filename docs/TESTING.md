@@ -235,6 +235,8 @@ npm run verify
 
 This runs: typecheck → lint → coverage-tested Vitest suite → build.
 
+The `typecheck` step clears old generated Next type folders first, then regenerates route/page/layout types for the current branch before running `tsc`, so verification stays anchored to the checked-out implementation instead of stale `.next` artifacts.
+
 If any step fails, fix before review. If environment limits block verification (e.g., backend not running), report the specific gap clearly.
 
 For security-sensitive or resource-sensitive changes, also report the focused checks you ran beyond the broad gate so future reviewers know the critical boundary was exercised on purpose.

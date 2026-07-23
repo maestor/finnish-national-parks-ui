@@ -100,7 +100,7 @@ The dev server runs on **port 4300** by default: `http://localhost:4300`
 
 ```bash
 npm run verify        # typecheck + lint + unit tests + build
-npm run typecheck     # TypeScript strict check
+npm run typecheck     # Clear generated Next types, regenerate them, then run TypeScript strict check
 npm run lint          # Biome lint & format check
 npm run test          # Vitest unit tests
 npm run test:e2e      # Playwright E2E (chromium only)
