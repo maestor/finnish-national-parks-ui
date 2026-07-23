@@ -1289,6 +1289,32 @@ describe("TripPlannerPage", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("shows all nearby parks when filters are hidden for a small result set", async () => {
+    mockTripPlannerApi({ nearbyResponses: [createNearbyResponse()] });
+
+    const user = userEvent.setup();
+
+    render(<TripPlannerPage />);
+
+    await user.type(screen.getByRole("combobox", { name: "tripPlanner.originLabel" }), "Helsinki");
+    await user.click(screen.getByRole("button", { name: "tripPlanner.submit" }));
+
+    await screen.findByTestId("trip-planner-map");
+
+    expect(
+      screen.queryByRole("combobox", { name: "tripPlanner.filters.parkTypeLabel" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("combobox", { name: "tripPlanner.filters.visitStatusLabel" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("slider", { name: "tripPlanner.filters.distanceFromOriginLabel" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByTestId("trip-planner-map")).toHaveTextContent(
+      "map:nuuksio,hossan-polku,seurasaari",
+    );
+  });
+
   it("toggles stacked mobile filters from the results title button", async () => {
     setTripPlannerResultsViewport(true);
     mockTripPlannerApi({ searchResponses: [createLargeSearchResponse()] });
