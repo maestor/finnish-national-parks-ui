@@ -7,6 +7,9 @@ import {
   type SocialPreviewVariant,
 } from "./social-preview-image";
 
+const testTitle = "Reissuvihko";
+const testDescription = "Ytimekas testikuvaus sosiaalisen esikatselun tarkistamiseen.";
+
 const { imageResponseMock } = vi.hoisted(() => ({
   // biome-ignore lint: Vitest v4 constructor mocks must be constructible.
   imageResponseMock: vi.fn(function (
@@ -26,20 +29,10 @@ vi.mock("next/og", () => ({
 
 describe("social preview image", () => {
   it("renders a square preview layout with the brand illustration and copy", () => {
-    render(
-      <SocialPreviewImage
-        title="Reissuvihko"
-        description="Reissuvihko kokoaa tekijöidensä käynnit Suomen retkeilypaikoissa, tarinat kuvineen muistoina retkistä sekä etenemisen samoihin kuoriin."
-        variant="square"
-      />,
-    );
+    render(<SocialPreviewImage title={testTitle} description={testDescription} variant="square" />);
 
-    expect(screen.getByText("Reissuvihko")).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "Reissuvihko kokoaa tekijöidensä käynnit Suomen retkeilypaikoissa, tarinat kuvineen muistoina retkistä sekä etenemisen samoihin kuoriin.",
-      ),
-    ).toBeInTheDocument();
+    expect(screen.getByText(testTitle)).toBeInTheDocument();
+    expect(screen.getByText(testDescription)).toBeInTheDocument();
     expect(screen.getByTestId("social-preview-icon")).toHaveAttribute("viewBox", "0 0 512 512");
   });
 
@@ -50,9 +43,8 @@ describe("social preview image", () => {
     "builds a %s image response at the requested size",
     (variant, width, height) => {
       const response = createSocialPreviewImageResponse({
-        title: "Reissuvihko",
-        description:
-          "Reissuvihko kokoaa tekijöidensä käynnit Suomen retkeilypaikoissa, tarinat kuvineen muistoina retkistä sekä etenemisen samoihin kuoriin.",
+        title: testTitle,
+        description: testDescription,
         variant,
         width,
         height,
