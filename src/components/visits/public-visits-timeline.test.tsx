@@ -50,6 +50,8 @@ const { mockPush } = vi.hoisted(() => ({
   mockPush: vi.fn(),
 }));
 
+const mockScrollTo = vi.fn();
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
 }));
@@ -59,6 +61,23 @@ describe("PublicVisitsTimeline", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-06-04T09:00:00Z"));
     mockPush.mockReset();
+    mockScrollTo.mockReset();
+
+    Object.defineProperty(window, "scrollTo", {
+      configurable: true,
+      value: mockScrollTo,
+      writable: true,
+    });
+
+    Object.defineProperty(window, "matchMedia", {
+      configurable: true,
+      value: vi.fn().mockImplementation(() => ({
+        matches: false,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      })),
+      writable: true,
+    });
   });
 
   const visits: FrontendTimelineVisit[] = [
@@ -420,6 +439,30 @@ describe("PublicVisitsTimeline", () => {
     expect(firstVisitMarker).toHaveClass("-translate-x-1/2");
   });
 
+  it("renders a centered back-to-top button at the end of the timeline and scrolls smoothly", () => {
+    renderTimeline(visits, { selectedYear: null, selectedMonth: null });
+
+    const backToTopButton = screen.getByRole("button", { name: "visits.backToTop" });
+    const backToTopRow = backToTopButton.parentElement;
+    const timelineWrapper = backToTopRow?.parentElement;
+
+    if (!(backToTopRow instanceof HTMLElement) || !(timelineWrapper instanceof HTMLElement)) {
+      throw new Error("Expected back-to-top row and timeline wrapper");
+    }
+
+    expect(backToTopRow).toHaveClass("pl-12");
+    expect(backToTopRow).toHaveClass("pr-4");
+    expect(backToTopRow).toHaveClass("md:px-0");
+    expect(timelineWrapper).toHaveClass("md:before:bottom-[3.25rem]");
+
+    fireEvent.click(backToTopButton);
+
+    expect(mockScrollTo).toHaveBeenCalledWith({
+      top: 0,
+      behavior: "smooth",
+    });
+  });
+
   it("shows an empty state when a selected year has no visits yet", () => {
     renderTimeline(visits, { selectedYear: 2026, selectedMonth: null });
 
@@ -579,13 +622,11 @@ describe("PublicVisitsTimeline", () => {
       throw new Error("Expected trip card");
     }
 
-    expect(within(tripCard).getByRole("link", { name: /Nuuksio/ })).toHaveAttribute(
-      "href",
-      "/paikka/nuuksio?visit=1#visit-history",
-    );
-    expect(within(tripCard).getByRole("link", { name: /Pallas-Yllastunturi/ })).toHaveAttribute(
-      "href",
+    const tripVisitLinks = within(tripCard).getAllByRole("link");
+
+    expect(tripVisitLinks.map((link) => link.getAttribute("href"))).toEqual([
       "/paikka/pallas-yllastunturi?visit=2#visit-history",
-    );
+      "/paikka/nuuksio?visit=1#visit-history",
+    ]);
   });
 });

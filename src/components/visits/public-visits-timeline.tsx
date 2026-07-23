@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarRange, Camera, Footprints, Images, Route, TentTree } from "lucide-react";
+import { ArrowUp, CalendarRange, Camera, Footprints, Images, Route, TentTree } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -52,6 +52,8 @@ const INACTIVE_FILTER_LINK_CLASS_NAME =
   "border-white/45 bg-white/70 text-foreground/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.52)] hover:bg-white/88 dark:border-white/10 dark:bg-slate-950/52 dark:text-sky-100/78 dark:hover:bg-slate-950/72";
 const DISABLED_FILTER_PILL_CLASS_NAME =
   "cursor-not-allowed border-dashed border-border/70 bg-transparent text-muted-foreground shadow-none dark:border-white/10 dark:bg-transparent dark:text-slate-400";
+const TIMELINE_BACK_TO_TOP_BUTTON_CLASS_NAME =
+  "inline-flex items-center gap-2 rounded-full border border-white/45 bg-white/82 px-4 py-2 text-sm font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.52)] transition-colors hover:bg-white/94 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/62 dark:text-sky-100 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] dark:hover:bg-slate-950/82";
 
 const PublicVisitsTimeline = ({
   availableYears,
@@ -74,6 +76,20 @@ const PublicVisitsTimeline = ({
   const visitRefs = useRef<Array<HTMLAnchorElement | null>>([]);
   const selectedYearIndex = selectedYear === null ? 0 : availableYears.indexOf(selectedYear) + 1;
   const selectedMonthIndex = selectedMonth ?? 0;
+  const getScrollBehavior = () => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      return "smooth" as const;
+    }
+
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+  };
+
+  const handleBackToTopClick = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: getScrollBehavior(),
+    });
+  };
 
   const focusYear = (index = selectedYearIndex) => {
     yearRefs.current[index]?.focus();
@@ -627,7 +643,7 @@ const PublicVisitsTimeline = ({
       ) : null}
 
       {filteredCount > 0 && view === "timeline" ? (
-        <div className="relative space-y-8 before:absolute before:bottom-0 before:left-4 before:top-0 before:w-px before:-translate-x-1/2 before:bg-[linear-gradient(180deg,rgba(22,101,52,0.42),rgba(37,99,235,0.18),rgba(22,101,52,0.42))] before:content-[''] md:before:left-1/2 md:before:-translate-x-1/2">
+        <div className="relative space-y-8 before:absolute before:bottom-0 before:left-4 before:top-0 before:w-px before:-translate-x-1/2 before:bg-[linear-gradient(180deg,rgba(22,101,52,0.42),rgba(37,99,235,0.18),rgba(22,101,52,0.42))] before:content-[''] md:before:bottom-[3.25rem] md:before:left-1/2 md:before:-translate-x-1/2">
           {sections.map((section) => (
             <section key={section.year} aria-labelledby={`visits-year-${section.year}`}>
               <div className="flex items-center gap-3 pl-12 pr-4 md:px-0">
@@ -692,6 +708,19 @@ const PublicVisitsTimeline = ({
               </div>
             </section>
           ))}
+
+          <div className="flex items-center gap-3 pl-12 pr-4 md:px-0">
+            <div className="h-px flex-1 bg-border/70" aria-hidden="true" />
+            <button
+              type="button"
+              className={TIMELINE_BACK_TO_TOP_BUTTON_CLASS_NAME}
+              onClick={handleBackToTopClick}
+            >
+              <ArrowUp className="h-4 w-4" aria-hidden="true" />
+              {t("backToTop")}
+            </button>
+            <div className="h-px flex-1 bg-border/70" aria-hidden="true" />
+          </div>
         </div>
       ) : null}
     </div>
