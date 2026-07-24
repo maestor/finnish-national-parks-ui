@@ -77,6 +77,7 @@ const trip: PublicTripDetail = {
         id: 11,
         author: null,
         createdAt: "2024-06-15T10:00:00Z",
+        excludeFromRoute: false,
         note: "Aamupäivän kierros",
         park: {
           name: "Nuuksio",
@@ -120,6 +121,7 @@ const trip: PublicTripDetail = {
         id: 12,
         author: null,
         createdAt: "2024-06-18T10:00:00Z",
+        excludeFromRoute: true,
         note: null,
         park: {
           name: "Pallas-Yllästunturi",
@@ -179,6 +181,7 @@ describe("PublicTripPage", () => {
       "href",
       "/paikka/pallas-yllastunturi?visit=12#visit-history",
     );
+    expect(within(itinerary).queryByText("tripPage.excludedFromRoute")).not.toBeInTheDocument();
   });
 
   it("renders the trip map without a route line when route geometry is unavailable", () => {

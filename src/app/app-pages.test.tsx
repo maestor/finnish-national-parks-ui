@@ -432,6 +432,7 @@ const personalVisit = {
   id: 10,
   visitedOn: "2024-06-15",
   route: "Huippupolku",
+  excludeFromRoute: false,
   author: "Maija",
   note: "Aurinkoinen reissu",
   trip: null,
@@ -486,6 +487,7 @@ const publicTrip = {
         id: 11,
         author: null,
         createdAt: "2024-06-15T10:00:00Z",
+        excludeFromRoute: false,
         note: null,
         park: {
           name: publicPark.name,

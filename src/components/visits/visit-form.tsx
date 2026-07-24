@@ -40,6 +40,7 @@ export const VisitForm = ({
   );
   const [visitedOn, setVisitedOn] = useState(visitToEdit?.visitedOn ?? "");
   const [route, setRoute] = useState(visitToEdit?.route ?? "");
+  const [excludeFromRoute, setExcludeFromRoute] = useState(visitToEdit?.excludeFromRoute ?? false);
   const [author, setAuthor] = useState(visitToEdit?.author ?? "");
   const [note, setNote] = useState(visitToEdit?.note ?? "");
   const [isPreview, setIsPreview] = useState(false);
@@ -51,6 +52,7 @@ export const VisitForm = ({
     tripId: visitToEdit?.trip?.id ? String(visitToEdit.trip.id) : "",
     visitedOn: visitToEdit?.visitedOn ?? "",
     route: visitToEdit?.route ?? "",
+    excludeFromRoute: visitToEdit?.excludeFromRoute ?? false,
     author: visitToEdit?.author ?? "",
     note: visitToEdit?.note ?? "",
   });
@@ -59,6 +61,7 @@ export const VisitForm = ({
     tripId !== savedSnapshot.tripId ||
     visitedOn !== savedSnapshot.visitedOn ||
     route !== savedSnapshot.route ||
+    excludeFromRoute !== savedSnapshot.excludeFromRoute ||
     author !== savedSnapshot.author ||
     note !== savedSnapshot.note;
   const isSubmitDisabled = isSubmitting || (isEditing && !isEditDirty);
@@ -132,6 +135,7 @@ export const VisitForm = ({
             tripId: tripId ? Number(tripId) : null,
             visitedOn,
             route: route || null,
+            excludeFromRoute,
             author: author || null,
             note: note || null,
           }),
@@ -145,6 +149,7 @@ export const VisitForm = ({
           tripId,
           visitedOn,
           route: route || "",
+          excludeFromRoute,
           author: author || "",
           note: note || "",
         });
@@ -157,6 +162,7 @@ export const VisitForm = ({
             tripId: tripId ? Number(tripId) : null,
             visitedOn,
             route: route || null,
+            excludeFromRoute,
             author: author || null,
             note: note || null,
           }),
@@ -282,6 +288,22 @@ export const VisitForm = ({
           placeholder={t("routePlaceholder")}
           className={`${inputClassName} h-10`}
         />
+      </div>
+
+      <div className="rounded-3xl border border-white/45 bg-white/68 p-4 shadow-[0_12px_24px_rgba(148,163,184,0.12)] dark:border-white/10 dark:bg-slate-950/44 dark:shadow-[0_18px_36px_rgba(2,6,23,0.24)]">
+        <div className="flex items-start gap-3">
+          <input
+            id="excludeFromRoute"
+            type="checkbox"
+            checked={excludeFromRoute}
+            onChange={(event) => setExcludeFromRoute(event.target.checked)}
+            className="mt-1 h-4 w-4 rounded border-border text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          />
+          <div className="space-y-1">
+            <Label htmlFor="excludeFromRoute">{t("excludeFromRouteLabel")}</Label>
+            <p className="text-sm text-muted-foreground">{t("excludeFromRouteHint")}</p>
+          </div>
+        </div>
       </div>
 
       <div className="space-y-2">
