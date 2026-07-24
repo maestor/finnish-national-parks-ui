@@ -1521,16 +1521,43 @@ export interface paths {
                                 };
                             })[];
                             route: {
-                                distanceMeters: number;
-                                durationSeconds: number;
-                                geometry: {
-                                    coordinates: number[][];
+                                data: {
+                                    distanceMeters: number;
+                                    durationSeconds: number;
+                                    geometry: {
+                                        coordinates: number[][];
+                                        /** @enum {string} */
+                                        type: "LineString";
+                                    };
+                                    returnsToStart: boolean;
+                                    waypointCount: number;
+                                } | null;
+                                error: {
+                                    error: string;
                                     /** @enum {string} */
-                                    type: "LineString";
-                                };
-                                returnsToStart: boolean;
-                                waypointCount: number;
-                            } | null;
+                                    errorCode: "provider_unavailable" | "route_not_found" | "trip_planner_not_configured";
+                                    routeFailure?: {
+                                        destination: {
+                                            coordinate: {
+                                                lat: number;
+                                                lon: number;
+                                            };
+                                            displayName: string;
+                                            label: string;
+                                        };
+                                        origin: {
+                                            coordinate: {
+                                                lat: number;
+                                                lon: number;
+                                            };
+                                            displayName: string;
+                                            label: string;
+                                        };
+                                        waypointIndex: number;
+                                    };
+                                } | null;
+                                success: boolean;
+                            };
                             stopCount: number;
                         };
                     };
@@ -1884,6 +1911,25 @@ export interface paths {
                             error: string;
                             /** @enum {string} */
                             errorCode: "destination_not_found" | "origin_not_found" | "provider_unavailable" | "route_not_found" | "trip_planner_not_configured";
+                            routeFailure?: {
+                                destination: {
+                                    coordinate: {
+                                        lat: number;
+                                        lon: number;
+                                    };
+                                    displayName: string;
+                                    label: string;
+                                };
+                                origin: {
+                                    coordinate: {
+                                        lat: number;
+                                        lon: number;
+                                    };
+                                    displayName: string;
+                                    label: string;
+                                };
+                                waypointIndex: number;
+                            };
                         };
                     };
                 };
@@ -2028,6 +2074,25 @@ export interface paths {
                             error: string;
                             /** @enum {string} */
                             errorCode: "destination_not_found" | "origin_not_found" | "provider_unavailable" | "route_not_found" | "trip_planner_not_configured";
+                            routeFailure?: {
+                                destination: {
+                                    coordinate: {
+                                        lat: number;
+                                        lon: number;
+                                    };
+                                    displayName: string;
+                                    label: string;
+                                };
+                                origin: {
+                                    coordinate: {
+                                        lat: number;
+                                        lon: number;
+                                    };
+                                    displayName: string;
+                                    label: string;
+                                };
+                                waypointIndex: number;
+                            };
                         };
                     };
                 };
@@ -2042,6 +2107,25 @@ export interface paths {
                             error: string;
                             /** @enum {string} */
                             errorCode: "destination_not_found" | "origin_not_found" | "provider_unavailable" | "route_not_found" | "trip_planner_not_configured";
+                            routeFailure?: {
+                                destination: {
+                                    coordinate: {
+                                        lat: number;
+                                        lon: number;
+                                    };
+                                    displayName: string;
+                                    label: string;
+                                };
+                                origin: {
+                                    coordinate: {
+                                        lat: number;
+                                        lon: number;
+                                    };
+                                    displayName: string;
+                                    label: string;
+                                };
+                                waypointIndex: number;
+                            };
                         };
                     };
                 };
@@ -2171,6 +2255,25 @@ export interface paths {
                             error: string;
                             /** @enum {string} */
                             errorCode: "destination_not_found" | "origin_not_found" | "provider_unavailable" | "route_not_found" | "trip_planner_not_configured";
+                            routeFailure?: {
+                                destination: {
+                                    coordinate: {
+                                        lat: number;
+                                        lon: number;
+                                    };
+                                    displayName: string;
+                                    label: string;
+                                };
+                                origin: {
+                                    coordinate: {
+                                        lat: number;
+                                        lon: number;
+                                    };
+                                    displayName: string;
+                                    label: string;
+                                };
+                                waypointIndex: number;
+                            };
                         };
                     };
                 };
@@ -2185,6 +2288,25 @@ export interface paths {
                             error: string;
                             /** @enum {string} */
                             errorCode: "destination_not_found" | "origin_not_found" | "provider_unavailable" | "route_not_found" | "trip_planner_not_configured";
+                            routeFailure?: {
+                                destination: {
+                                    coordinate: {
+                                        lat: number;
+                                        lon: number;
+                                    };
+                                    displayName: string;
+                                    label: string;
+                                };
+                                origin: {
+                                    coordinate: {
+                                        lat: number;
+                                        lon: number;
+                                    };
+                                    displayName: string;
+                                    label: string;
+                                };
+                                waypointIndex: number;
+                            };
                         };
                     };
                 };
