@@ -12,6 +12,7 @@ import {
   PUBLIC_PAGE_SHELL_CLASS_NAME,
   PUBLIC_PANEL_CLASS_NAME,
 } from "@/components/layout/public-page-styles";
+import { CopyLinkButton } from "@/components/ui/copy-link-button";
 import { useAuth } from "@/hooks/use-auth";
 import { formatFinnishDate, formatFinnishDateRange } from "@/lib/fi-date";
 import { createParkVisitHref } from "@/lib/public-visits";
@@ -31,6 +32,8 @@ const IMAGE_BADGE_CLASS_NAME =
   "inline-flex items-center gap-1.5 rounded-full border border-sky-200/70 bg-[linear-gradient(145deg,rgba(22,101,52,0.08),rgba(37,99,235,0.12))] px-2.5 py-1 text-sm leading-none font-semibold text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-sky-300/15 dark:bg-[linear-gradient(145deg,rgba(22,101,52,0.18),rgba(37,99,235,0.16))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]";
 const ITINERARY_NUMBER_BADGE_CLASS_NAME =
   "inline-flex h-8 min-w-8 items-center justify-center rounded-full border border-sky-200/75 bg-white/88 px-2 text-sm font-semibold text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.56)] dark:border-sky-300/15 dark:bg-slate-950/58";
+const HERO_ICON_BUTTON_CLASS_NAME =
+  "inline-flex items-center justify-center rounded-full border border-white/45 bg-white/76 p-2 text-foreground/72 shadow-[0_8px_20px_rgba(148,163,184,0.18)] backdrop-blur-sm transition-colors hover:bg-white/92 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/56 dark:text-sky-100/72 dark:shadow-[0_12px_24px_rgba(2,6,23,0.24)] dark:hover:bg-slate-950/72";
 
 const ROUTE_KM_FORMATTER = new Intl.NumberFormat("fi-FI", {
   maximumFractionDigits: 0,
@@ -66,7 +69,9 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
             </p>
           )}
           {trip.description !== null && (
-            <p className={`mt-3 whitespace-pre-line ${PUBLIC_HERO_DESCRIPTION_CLASS_NAME}`}>
+            <p
+              className={`mt-3 whitespace-pre-line ${PUBLIC_HERO_DESCRIPTION_CLASS_NAME} !max-w-none`}
+            >
               {trip.description}
             </p>
           )}
@@ -89,11 +94,19 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
               {trip.imageCount} {t("imageCount", { count: trip.imageCount })}
             </span>
           )}
+          <CopyLinkButton
+            href={appRoutes.trip(trip.slug)}
+            label={t("copyTripPageLink")}
+            copiedLabel={t("tripPageLinkCopied")}
+            tooltipSide="top"
+            className={HERO_ICON_BUTTON_CLASS_NAME}
+            iconClassName="h-3.5 w-3.5"
+          />
           {shouldShowEditTripLink === true && (
             <EditIconLink
               href={appRoutes.controlPanel.editTrip(trip.id)}
               label={t("editTrip")}
-              className="inline-flex items-center justify-center rounded-full border border-white/45 bg-white/76 p-2 text-foreground/72 shadow-[0_8px_20px_rgba(148,163,184,0.18)] backdrop-blur-sm transition-colors hover:bg-white/92 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/56 dark:text-sky-100/72 dark:shadow-[0_12px_24px_rgba(2,6,23,0.24)] dark:hover:bg-slate-950/72"
+              className={HERO_ICON_BUTTON_CLASS_NAME}
               iconClassName="h-3.5 w-3.5"
             />
           )}

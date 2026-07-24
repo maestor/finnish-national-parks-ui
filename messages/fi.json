@@ -197,6 +197,8 @@
     "startLabel": "Lähtöpiste",
     "openPark": "Avaa paikan sivu",
     "openVisit": "Näytä käynti",
+    "copyTripPageLink": "Kopioi retken sivun linkki",
+    "tripPageLinkCopied": "Retken sivun linkki kopioitu",
     "editTrip": "Muokkaa retkeä",
     "mapAriaLabel": "Retken {trip} kartta",
     "routeDistanceLabel": "Reitin pituus",
