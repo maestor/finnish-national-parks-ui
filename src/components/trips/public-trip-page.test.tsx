@@ -1,5 +1,5 @@
-import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { PublicTripDetail } from "@/lib/trips";
 import { PublicTripPage } from "./public-trip-page";
 
@@ -9,6 +9,7 @@ const authState = {
   logout: vi.fn(),
   user: null,
 };
+const mockWriteText = vi.fn().mockResolvedValue(undefined);
 
 vi.mock("./lazy-public-trip-map", () => ({
   LazyPublicTripMap: ({
@@ -139,11 +140,22 @@ const trip: PublicTripDetail = {
 };
 
 describe("PublicTripPage", () => {
+  beforeEach(() => {
+    authState.isAuthenticated = false;
+    mockWriteText.mockReset();
+    Object.defineProperty(window.navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText: mockWriteText,
+      },
+    });
+  });
+
   it("renders the trip summary, route section, and itinerary", () => {
     render(<PublicTripPage trip={trip} />);
 
     expect(screen.getByRole("heading", { name: "Kesaretki" })).toBeInTheDocument();
-    expect(screen.getByText("Kesäinen kierros pohjoiseen.")).toBeInTheDocument();
+    expect(screen.getByText("Kesäinen kierros pohjoiseen.")).toHaveClass("!max-w-none");
     expect(screen.getByText("2 tripPage.visitCount")).toBeInTheDocument();
     expect(screen.getByText("1 tripPage.stopCount")).toBeInTheDocument();
     expect(screen.getByText("3 tripPage.imageCount")).toBeInTheDocument();
@@ -155,6 +167,7 @@ describe("PublicTripPage", () => {
     expect(screen.getByText("Punarinnankierros")).toHaveClass("text-emerald-900");
     expect(screen.getByText("1 tripPage.imageCount")).toHaveClass("text-primary");
     expect(screen.queryByText("Helsinki")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "tripPage.copyTripPageLink" })).toBeInTheDocument();
 
     const itinerary = screen.getByRole("list", { name: "tripPage.itineraryTitle" });
     expect(within(itinerary).getByRole("link", { name: "Nuuksio" })).toHaveAttribute(
@@ -230,12 +243,27 @@ describe("PublicTripPage", () => {
 
     const description = screen.getByText(/Ensimmainen rivi/);
     expect(description).toHaveClass("whitespace-pre-line");
+    expect(description).toHaveClass("!max-w-none");
     expect(description).toHaveTextContent("Ensimmainen rivi Toinen rivi");
     expect(screen.queryByText("1 tripPage.stopCount")).not.toBeInTheDocument();
     expect(screen.queryByText("3 tripPage.imageCount")).not.toBeInTheDocument();
     expect(screen.queryByText("Helsinki")).not.toBeInTheDocument();
     expect(screen.queryByTestId("public-trip-map")).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "tripPage.routeTitle" })).not.toBeInTheDocument();
+  });
+
+  it("copies the trip page link from the hero", async () => {
+    render(<PublicTripPage trip={trip} />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "tripPage.copyTripPageLink" }));
+    });
+
+    expect(mockWriteText).toHaveBeenCalledWith("http://localhost:3000/retki/kesaretki");
+    expect(screen.getByRole("button", { name: "tripPage.copyTripPageLink" })).toHaveAttribute(
+      "aria-describedby",
+    );
+    expect(screen.getByText("tripPage.tripPageLinkCopied")).toBeInTheDocument();
   });
 
   it("shows the admin edit link next to the trip summary pills for authenticated users", () => {
