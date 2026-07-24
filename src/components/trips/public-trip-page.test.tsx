@@ -187,7 +187,7 @@ describe("PublicTripPage", () => {
     expect(screen.queryByText("tripPage.routeDistanceLabel")).not.toBeInTheDocument();
   });
 
-  it("shows a friendly route error message and keeps itinerary points on the map when route generation failed", () => {
+  it("keeps itinerary points on the map when route generation failed", () => {
     render(
       <PublicTripPage
         trip={{
@@ -205,8 +205,8 @@ describe("PublicTripPage", () => {
     );
 
     expect(screen.getByRole("heading", { name: "tripPage.routeTitle" })).toBeInTheDocument();
-    expect(screen.getByText("tripPage.routeError")).toBeInTheDocument();
     expect(screen.getByTestId("public-trip-map")).toHaveTextContent("trip:Kesaretki|distance:none");
+    expect(screen.queryByText("tripPage.routeError")).not.toBeInTheDocument();
   });
 
   it("hides optional hero and summary details when the trip does not include them", () => {

@@ -49,9 +49,7 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
   const shouldShowRouteMap =
     startingPoint !== null &&
     (trip.itinerary.length > 0 || routeStatus.success === false || shouldShowRouteContent);
-  const shouldShowRouteError = routeStatus.success === false;
-  const shouldShowRouteSection =
-    shouldShowRouteContent || shouldShowRouteError || shouldShowRouteMap;
+  const shouldShowRouteSection = shouldShowRouteContent || shouldShowRouteMap;
 
   return (
     <div className={PUBLIC_PAGE_SHELL_CLASS_NAME}>
@@ -121,20 +119,15 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
             </div>
           )}
           {shouldShowRouteContent === true && (
-            <>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <span className={META_PILL_CLASS_NAME}>
-                  <Route className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span>{t("routeDistanceLabel")}</span>
-                  {t("routeDistanceValue", {
-                    kilometers: ROUTE_KM_FORMATTER.format(route.distanceMeters / 1000),
-                  })}
-                </span>
-              </div>
-            </>
-          )}
-          {shouldShowRouteError === true && (
-            <p className="mt-4 text-sm font-medium text-destructive">{t("routeError")}</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <span className={META_PILL_CLASS_NAME}>
+                <Route className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>{t("routeDistanceLabel")}</span>
+                {t("routeDistanceValue", {
+                  kilometers: ROUTE_KM_FORMATTER.format(route.distanceMeters / 1000),
+                })}
+              </span>
+            </div>
           )}
         </section>
       )}
