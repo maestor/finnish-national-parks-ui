@@ -114,7 +114,7 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
 
   if (sortedParks.length === 0 && sortedRemovedParks.length === 0) {
     return (
-      <div className="mt-6 rounded-[1.5rem] border border-dashed border-white/45 bg-white/48 p-8 text-center backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/38">
+      <div className="mt-6 rounded-3xl border border-dashed border-white/45 bg-white/48 p-8 text-center backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/38">
         <p className="text-muted-foreground">{t("emptyAll")}</p>
       </div>
     );
@@ -191,13 +191,13 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
       )}
 
       {displayedParks.length === 0 ? (
-        <div className="rounded-[1.5rem] border border-dashed border-white/45 bg-white/48 p-8 text-center backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/38">
+        <div className="rounded-3xl border border-dashed border-white/45 bg-white/48 p-8 text-center backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/38">
           <p className="text-muted-foreground">
             {activeTab === "visible" ? t("emptyVisible") : t("emptyHidden")}
           </p>
         </div>
       ) : filteredParks.length === 0 ? (
-        <div className="rounded-[1.5rem] border border-dashed border-white/45 bg-white/48 p-8 text-center backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/38">
+        <div className="rounded-3xl border border-dashed border-white/45 bg-white/48 p-8 text-center backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/38">
           <p className="text-muted-foreground">{t("emptyFiltered")}</p>
         </div>
       ) : (

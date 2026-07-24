@@ -318,7 +318,7 @@ export const VisitForm = ({
           </div>
         </div>
         {isPreview ? (
-          <div className="prose prose-sm dark:prose-invert max-w-none min-h-[120px] rounded-xl border border-white/45 bg-white/78 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+          <div className="prose prose-sm dark:prose-invert max-w-none min-h-30 rounded-xl border border-white/45 bg-white/78 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{note || "_"}</ReactMarkdown>
           </div>
         ) : (

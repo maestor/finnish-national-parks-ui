@@ -70,7 +70,7 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
           )}
           {trip.description !== null && (
             <p
-              className={`mt-3 whitespace-pre-line ${PUBLIC_HERO_DESCRIPTION_CLASS_NAME} !max-w-none`}
+              className={`mt-3 whitespace-pre-line ${PUBLIC_HERO_DESCRIPTION_CLASS_NAME} max-w-none!`}
             >
               {trip.description}
             </p>
@@ -159,7 +159,7 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
             item.kind === "visit" ? (
               <li
                 key={`visit-${item.visit.id}`}
-                className="rounded-[1.5rem] border border-white/45 bg-white/68 px-5 py-4 shadow-[0_14px_30px_rgba(148,163,184,0.14)] dark:border-white/10 dark:bg-slate-950/44 dark:shadow-[0_18px_36px_rgba(2,6,23,0.28)]"
+                className="rounded-3xl border border-white/45 bg-white/68 px-5 py-4 shadow-[0_14px_30px_rgba(148,163,184,0.14)] dark:border-white/10 dark:bg-slate-950/44 dark:shadow-[0_18px_36px_rgba(2,6,23,0.28)]"
               >
                 <div className="flex items-start gap-3">
                   <span className={ITINERARY_NUMBER_BADGE_CLASS_NAME}>{item.tripStopOrder}</span>
@@ -212,7 +212,7 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
             ) : (
               <li
                 key={`stop-${item.stop.id}`}
-                className="rounded-[1.5rem] border border-white/45 bg-white/60 px-5 py-4 shadow-[0_12px_24px_rgba(148,163,184,0.12)] dark:border-white/10 dark:bg-slate-950/38 dark:shadow-[0_16px_28px_rgba(2,6,23,0.24)]"
+                className="rounded-3xl border border-white/45 bg-white/60 px-5 py-4 shadow-[0_12px_24px_rgba(148,163,184,0.12)] dark:border-white/10 dark:bg-slate-950/38 dark:shadow-[0_16px_28px_rgba(2,6,23,0.24)]"
               >
                 <div className="flex items-start gap-3">
                   <span className={ITINERARY_NUMBER_BADGE_CLASS_NAME}>{item.tripStopOrder}</span>

@@ -189,7 +189,7 @@ const TripPlannerResultsLoadingState = ({ loadingLabel }: { loadingLabel: string
 
       <div className={cn(RESULTS_LOADING_PLACEHOLDER_CLASS_NAME, "space-y-4")}>
         <p className="text-sm font-medium text-foreground">{loadingLabel}</p>
-        <div className={cn(RESULTS_LOADING_BAR_CLASS_NAME, "h-48 w-full rounded-[1.5rem]")} />
+        <div className={cn(RESULTS_LOADING_BAR_CLASS_NAME, "h-48 w-full rounded-3xl")} />
         <div className="grid gap-3 md:grid-cols-2">
           <div className={cn(RESULTS_LOADING_BAR_CLASS_NAME, "h-20 w-full rounded-[1.25rem]")} />
           <div className={cn(RESULTS_LOADING_BAR_CLASS_NAME, "h-20 w-full rounded-[1.25rem]")} />
@@ -1040,7 +1040,7 @@ export const TripPlannerPage = () => {
                 value={destinationQuery}
               />
 
-              <div className="flex items-end md:items-start md:pt-[26px]">
+              <div className="flex items-end md:items-start md:pt-6.5">
                 <Button
                   className="w-full rounded-xl md:w-auto"
                   disabled={!hasOriginQuery || isResultsLoading}
@@ -1224,7 +1224,7 @@ export const TripPlannerPage = () => {
                           result.route && !isMobileResultsLayout && "md:col-span-2",
                           "transition-[max-height,opacity,transform] duration-300 ease-out motion-reduce:transition-none",
                           isResultsFiltersVisible
-                            ? "max-h-[28rem] translate-y-0 overflow-visible opacity-100"
+                            ? "max-h-112 translate-y-0 overflow-visible opacity-100"
                             : "pointer-events-none max-h-0 -translate-y-1 overflow-hidden opacity-0",
                         )}
                       >

@@ -474,7 +474,7 @@ export const PublicTripMap = ({
       ref={mapContainerRef}
       role="application"
       aria-label={t("mapAriaLabel", { trip: tripName })}
-      className="h-[26rem] w-full overflow-hidden rounded-[1.75rem] border border-white/35 bg-white/52 shadow-[0_18px_40px_rgba(148,163,184,0.16)] dark:border-white/10 dark:bg-slate-950/44 dark:shadow-[0_22px_48px_rgba(2,6,23,0.3)]"
+      className="h-104 w-full overflow-hidden rounded-[1.75rem] border border-white/35 bg-white/52 shadow-[0_18px_40px_rgba(148,163,184,0.16)] dark:border-white/10 dark:bg-slate-950/44 dark:shadow-[0_22px_48px_rgba(2,6,23,0.3)]"
     />
   );
 };

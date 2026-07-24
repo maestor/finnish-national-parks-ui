@@ -168,14 +168,14 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
             {facts.map((fact) => (
               <div
                 key={fact.label}
-                className="flex h-full min-h-[5.75rem] flex-col rounded-2xl border border-sky-200/45 bg-[linear-gradient(145deg,rgba(255,255,255,0.82),rgba(237,245,249,0.92))] px-4 py-3 shadow-[0_14px_28px_rgba(148,163,184,0.12),inset_0_1px_0_rgba(255,255,255,0.58)] dark:border-white/8 dark:bg-[linear-gradient(145deg,rgba(15,23,42,0.72),rgba(2,6,23,0.52))] dark:shadow-[0_18px_34px_rgba(2,6,23,0.2),inset_0_1px_0_rgba(255,255,255,0.06)]"
+                className="flex h-full min-h-23 flex-col rounded-2xl border border-sky-200/45 bg-[linear-gradient(145deg,rgba(255,255,255,0.82),rgba(237,245,249,0.92))] px-4 py-3 shadow-[0_14px_28px_rgba(148,163,184,0.12),inset_0_1px_0_rgba(255,255,255,0.58)] dark:border-white/8 dark:bg-[linear-gradient(145deg,rgba(15,23,42,0.72),rgba(2,6,23,0.52))] dark:shadow-[0_18px_34px_rgba(2,6,23,0.2),inset_0_1px_0_rgba(255,255,255,0.06)]"
               >
                 <p className="text-xs text-muted-foreground">{fact.label}</p>
                 <p className="mt-3 text-sm font-medium">{fact.value}</p>
               </div>
             ))}
             {hasAboutLinks === true && (
-              <div className="flex h-full min-h-[5.75rem] flex-col rounded-2xl border border-sky-200/45 bg-[linear-gradient(145deg,rgba(255,255,255,0.82),rgba(237,245,249,0.92))] px-4 py-3 shadow-[0_14px_28px_rgba(148,163,184,0.12),inset_0_1px_0_rgba(255,255,255,0.58)] dark:border-white/8 dark:bg-[linear-gradient(145deg,rgba(15,23,42,0.72),rgba(2,6,23,0.52))] dark:shadow-[0_18px_34px_rgba(2,6,23,0.2),inset_0_1px_0_rgba(255,255,255,0.06)]">
+              <div className="flex h-full min-h-23 flex-col rounded-2xl border border-sky-200/45 bg-[linear-gradient(145deg,rgba(255,255,255,0.82),rgba(237,245,249,0.92))] px-4 py-3 shadow-[0_14px_28px_rgba(148,163,184,0.12),inset_0_1px_0_rgba(255,255,255,0.58)] dark:border-white/8 dark:bg-[linear-gradient(145deg,rgba(15,23,42,0.72),rgba(2,6,23,0.52))] dark:shadow-[0_18px_34px_rgba(2,6,23,0.2),inset_0_1px_0_rgba(255,255,255,0.06)]">
                 <p className="text-xs text-muted-foreground">{t("aboutTitle")}</p>
                 <div className="mt-2 flex flex-col gap-1">
                   {parkUrl !== null && (

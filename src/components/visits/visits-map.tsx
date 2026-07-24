@@ -408,7 +408,7 @@ export const VisitsMap = ({ markers, selectedYear = null }: VisitsMapProps) => {
       <section className="overflow-hidden rounded-[2rem] border border-white/45 shadow-[0_22px_48px_rgba(148,163,184,0.2)] dark:border-white/10 dark:shadow-[0_26px_56px_rgba(2,6,23,0.38)]">
         <div
           ref={mapContainerRef}
-          className="h-[24rem] w-full md:h-[32rem]"
+          className="h-96 w-full md:h-128"
           role="application"
           aria-label={t("map.ariaLabel")}
         />

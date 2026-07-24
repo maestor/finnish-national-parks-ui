@@ -155,7 +155,7 @@ describe("PublicTripPage", () => {
     render(<PublicTripPage trip={trip} />);
 
     expect(screen.getByRole("heading", { name: "Kesaretki" })).toBeInTheDocument();
-    expect(screen.getByText("Kesäinen kierros pohjoiseen.")).toHaveClass("!max-w-none");
+    expect(screen.getByText("Kesäinen kierros pohjoiseen.")).toHaveClass("max-w-none!");
     expect(screen.getByText("2 tripPage.visitCount")).toBeInTheDocument();
     expect(screen.getByText("1 tripPage.stopCount")).toBeInTheDocument();
     expect(screen.getByText("3 tripPage.imageCount")).toBeInTheDocument();
@@ -243,7 +243,7 @@ describe("PublicTripPage", () => {
 
     const description = screen.getByText(/Ensimmainen rivi/);
     expect(description).toHaveClass("whitespace-pre-line");
-    expect(description).toHaveClass("!max-w-none");
+    expect(description).toHaveClass("max-w-none!");
     expect(description).toHaveTextContent("Ensimmainen rivi Toinen rivi");
     expect(screen.queryByText("1 tripPage.stopCount")).not.toBeInTheDocument();
     expect(screen.queryByText("3 tripPage.imageCount")).not.toBeInTheDocument();
