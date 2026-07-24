@@ -154,6 +154,9 @@ const buildTripDateOptions = (startDate: string, endDate: string) => {
   const cursor = new Date(`${startDate}T00:00:00Z`);
   const end = new Date(`${endDate}T00:00:00Z`);
 
+  cursor.setUTCDate(cursor.getUTCDate() - 1);
+  end.setUTCDate(end.getUTCDate() + 1);
+
   while (cursor.getTime() <= end.getTime()) {
     const value = cursor.toISOString().slice(0, 10);
     options.push({

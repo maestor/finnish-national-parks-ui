@@ -336,6 +336,31 @@ describe("PublicTripMap", () => {
     expect(document.querySelector(".maplibregl-popup")).toBeNull();
   });
 
+  it("renders only the starting point and itinerary markers when no route geometry is available", async () => {
+    render(
+      <PublicTripMap
+        route={null}
+        startingPoint={startingPoint}
+        tripName="Kesaretki"
+        tripStops={tripStops}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(markerInstances).toHaveLength(3);
+    });
+
+    expect(mockMap.addSource).not.toHaveBeenCalled();
+    expect(mockMap.addLayer).not.toHaveBeenCalled();
+    expect(mockMap.fitBounds).toHaveBeenCalledWith(
+      [
+        [24.53, 60.1699],
+        [25.4651, 65.0121],
+      ],
+      { padding: 44, duration: 0 },
+    );
+  });
+
   it("reuses an existing route source and layer when they are already present", async () => {
     mockMap = createMockMap({
       initialSourceExists: true,

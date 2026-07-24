@@ -15,11 +15,11 @@ vi.mock("./lazy-public-trip-map", () => ({
     route,
     tripName,
   }: {
-    route: { distanceMeters: number };
+    route: { distanceMeters: number } | null;
     tripName: string;
   }) => (
     <div data-testid="public-trip-map">
-      trip:{tripName}|distance:{route.distanceMeters}
+      trip:{tripName}|distance:{route?.distanceMeters ?? "none"}
     </div>
   ),
 }));
@@ -168,7 +168,7 @@ describe("PublicTripPage", () => {
     );
   });
 
-  it("hides the route section entirely when route geometry is unavailable", () => {
+  it("renders the trip map without a route line when route geometry is unavailable", () => {
     render(
       <PublicTripPage
         trip={{
@@ -182,11 +182,12 @@ describe("PublicTripPage", () => {
       />,
     );
 
-    expect(screen.queryByTestId("public-trip-map")).not.toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "tripPage.routeTitle" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "tripPage.routeTitle" })).toBeInTheDocument();
+    expect(screen.getByTestId("public-trip-map")).toHaveTextContent("trip:Kesaretki|distance:none");
+    expect(screen.queryByText("tripPage.routeDistanceLabel")).not.toBeInTheDocument();
   });
 
-  it("shows a friendly route error message when route generation failed", () => {
+  it("shows a friendly route error message and keeps itinerary points on the map when route generation failed", () => {
     render(
       <PublicTripPage
         trip={{
@@ -205,7 +206,7 @@ describe("PublicTripPage", () => {
 
     expect(screen.getByRole("heading", { name: "tripPage.routeTitle" })).toBeInTheDocument();
     expect(screen.getByText("tripPage.routeError")).toBeInTheDocument();
-    expect(screen.queryByTestId("public-trip-map")).not.toBeInTheDocument();
+    expect(screen.getByTestId("public-trip-map")).toHaveTextContent("trip:Kesaretki|distance:none");
   });
 
   it("hides optional hero and summary details when the trip does not include them", () => {
@@ -233,6 +234,8 @@ describe("PublicTripPage", () => {
     expect(screen.queryByText("1 tripPage.stopCount")).not.toBeInTheDocument();
     expect(screen.queryByText("3 tripPage.imageCount")).not.toBeInTheDocument();
     expect(screen.queryByText("Helsinki")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("public-trip-map")).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "tripPage.routeTitle" })).not.toBeInTheDocument();
   });
 
   it("shows the admin edit link next to the trip summary pills for authenticated users", () => {
