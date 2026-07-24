@@ -46,9 +46,10 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
   const shouldShowStopCount = trip.stopCount > 0;
   const shouldShowImageCount = trip.imageCount > 0;
   const shouldShowRouteContent = routeStatus.success && route !== null;
-  const shouldShowRouteSection = shouldShowRouteContent || routeStatus.success === false;
-  const shouldShowRouteMap = shouldShowRouteContent && startingPoint !== null;
-  const shouldShowRouteError = routeStatus.success === false;
+  const shouldShowRouteMap =
+    startingPoint !== null &&
+    (trip.itinerary.length > 0 || routeStatus.success === false || shouldShowRouteContent);
+  const shouldShowRouteSection = shouldShowRouteContent || shouldShowRouteMap;
 
   return (
     <div className={PUBLIC_PAGE_SHELL_CLASS_NAME}>
@@ -107,31 +108,26 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
               {t("routeTitle")}
             </h2>
           </div>
-          {shouldShowRouteContent === true && (
-            <>
-              {shouldShowRouteMap === true && (
-                <div className="mt-4">
-                  <LazyPublicTripMap
-                    route={route}
-                    startingPoint={startingPoint}
-                    tripName={trip.name}
-                    tripStops={trip.itinerary}
-                  />
-                </div>
-              )}
-              <div className="mt-4 flex flex-wrap gap-2">
-                <span className={META_PILL_CLASS_NAME}>
-                  <Route className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span>{t("routeDistanceLabel")}</span>
-                  {t("routeDistanceValue", {
-                    kilometers: ROUTE_KM_FORMATTER.format(route.distanceMeters / 1000),
-                  })}
-                </span>
-              </div>
-            </>
+          {shouldShowRouteMap === true && (
+            <div className="mt-4">
+              <LazyPublicTripMap
+                route={route}
+                startingPoint={startingPoint}
+                tripName={trip.name}
+                tripStops={trip.itinerary}
+              />
+            </div>
           )}
-          {shouldShowRouteError === true && (
-            <p className="mt-4 text-sm font-medium text-destructive">{t("routeError")}</p>
+          {shouldShowRouteContent === true && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              <span className={META_PILL_CLASS_NAME}>
+                <Route className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>{t("routeDistanceLabel")}</span>
+                {t("routeDistanceValue", {
+                  kilometers: ROUTE_KM_FORMATTER.format(route.distanceMeters / 1000),
+                })}
+              </span>
+            </div>
           )}
         </section>
       )}

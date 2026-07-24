@@ -188,8 +188,6 @@
   "tripPage": {
     "eyebrow": "Retki",
     "routeTitle": "Retken reitti",
-    "routeError": "Reitin piirtäminen kartalle epäonnistui",
-    "routeUnavailable": "Tallella olevaa reittiä ei vielä ole tälle retkelle.",
     "itineraryTitle": "Retken kulku",
     "itineraryDescription": "Tarkemmat kokemukset ja kuvat kohteista näet klikkaamalla paikan nimeä.",
     "visitCount": "{count, plural, one {käynti} other {käyntiä}}",

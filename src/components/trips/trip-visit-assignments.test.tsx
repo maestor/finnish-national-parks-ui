@@ -560,6 +560,27 @@ describe("TripVisitAssignments", () => {
     ).toBeInTheDocument();
   });
 
+  it("allows selecting the day before and after the trip date range for stops", async () => {
+    render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
+
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.addStopAction",
+      }),
+    );
+
+    expect(screen.getByLabelText("controlPanel.trips.assignments.stopVisitedOnLabel")).toHaveValue(
+      "",
+    );
+
+    const dateSelect = screen.getByLabelText("controlPanel.trips.assignments.stopVisitedOnLabel");
+    const optionValues = within(dateSelect)
+      .getAllByRole("option")
+      .map((option) => option.getAttribute("value"));
+
+    expect(optionValues).toEqual(["", "2024-06-13", "2024-06-14", "2024-06-15", "2024-06-16"]);
+  });
+
   it("creates a stop using the current location", async () => {
     const { apiFetch } = await import("@/lib/api");
     mockResolveLocationFromCoordinate.mockResolvedValueOnce({

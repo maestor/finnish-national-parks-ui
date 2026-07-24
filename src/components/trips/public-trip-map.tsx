@@ -10,7 +10,7 @@ import { getMapStyle } from "../map/map-style";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 interface PublicTripMapProps {
-  route: PublicTripRoute;
+  route: PublicTripRoute | null;
   startingPoint: NonNullable<PublicTripDetail["startingPoint"]>;
   tripName: string;
   tripStops: PublicTripDetail["itinerary"];
@@ -127,6 +127,21 @@ const getBoundsFromRoute = (route: PublicTripRoute): maplibregl.LngLatBoundsLike
   ];
 };
 
+const getBoundsFromCoordinates = (
+  coordinates: Array<{
+    lat: number;
+    lon: number;
+  }>,
+): maplibregl.LngLatBoundsLike => {
+  const lons = coordinates.map((point) => point.lon);
+  const lats = coordinates.map((point) => point.lat);
+
+  return [
+    [Math.min(...lons), Math.min(...lats)],
+    [Math.max(...lons), Math.max(...lats)],
+  ];
+};
+
 export const PublicTripMap = ({
   route,
   startingPoint,
@@ -194,6 +209,18 @@ export const PublicTripMap = ({
       return;
     }
 
+    if (route === null) {
+      if (map.getLayer(ROUTE_LINE_LAYER_ID)) {
+        map.removeLayer(ROUTE_LINE_LAYER_ID);
+      }
+
+      if (map.getSource(ROUTE_SOURCE_ID)) {
+        map.removeSource(ROUTE_SOURCE_ID);
+      }
+
+      return;
+    }
+
     const routeFeature = {
       type: "Feature" as const,
       properties: {},
@@ -258,17 +285,6 @@ export const PublicTripMap = ({
 
     popupRefs.current = [];
 
-    map.fitBounds(getBoundsFromRoute(route), {
-      padding: MAP_PADDING,
-      duration: 0,
-    });
-
-    const nextMarkers: maplibregl.Marker[] = [
-      new maplibregl.Marker({
-        element: createEndpointMarkerElement(t("startLabel")),
-        anchor: "center",
-      }).setLngLat([startingPoint.coordinate.lon, startingPoint.coordinate.lat]),
-    ];
     const tripPoints: TripMapPoint[] = tripStops.map((item) =>
       item.kind === "visit"
         ? {
@@ -292,7 +308,22 @@ export const PublicTripMap = ({
             visitedOn: item.stop.visitedOn,
           },
     );
+    const pointBounds = getBoundsFromCoordinates([
+      startingPoint.coordinate,
+      ...tripPoints.map((point) => point.coordinate),
+    ]);
 
+    map.fitBounds(route ? getBoundsFromRoute(route) : pointBounds, {
+      padding: MAP_PADDING,
+      duration: 0,
+    });
+
+    const nextMarkers: maplibregl.Marker[] = [
+      new maplibregl.Marker({
+        element: createEndpointMarkerElement(t("startLabel")),
+        anchor: "center",
+      }).setLngLat([startingPoint.coordinate.lon, startingPoint.coordinate.lat]),
+    ];
     let activePopup: maplibregl.Popup | null = null;
     let lockedPopup: maplibregl.Popup | null = null;
     let hoverCloseTimer: ReturnType<typeof setTimeout> | null = null;
