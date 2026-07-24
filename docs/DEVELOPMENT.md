@@ -69,8 +69,10 @@ The `AUTH_JWT_SECRET` must match the backend's `AUTH_JWT_SECRET` exactly. `AUTH_
 | `npm run build`              | Production build                                        |
 | `npm run start`              | Start production server                                 |
 | `npm run typecheck`          | Clear and regenerate Next-generated route/page types, then run `tsc --noEmit` |
-| `npm run lint`               | Biome lint check                                        |
-| `npm run lint:fix`           | Auto-fix Biome issues                                   |
+| `npm run lint`               | Biome lint check + Tailwind canonical class check       |
+| `npm run lint:fix`           | Auto-fix Biome issues + Tailwind canonical class fixes  |
+| `npm run lint:tailwind:canonical` | Report non-canonical Tailwind class names          |
+| `npm run lint:tailwind:canonical:fix` | Rewrite Tailwind classes to canonical equivalents |
 | `npm run test`               | Run Vitest unit/component tests once                    |
 | `npm run test:coverage`      | Run Vitest with V8 coverage summary + HTML report       |
 | `npm run test:watch`         | Run Vitest in watch mode                                |
@@ -83,6 +85,13 @@ The `AUTH_JWT_SECRET` must match the backend's `AUTH_JWT_SECRET` exactly. `AUTH_
 **Always run `npm run verify` before asking for review.** Pull requests targeting `main` also run the same `npm run verify` gate in GitHub Actions.
 
 `npm run typecheck` intentionally clears `.next/types` and `.next/dev/types`, then rebuilds the current branch's route and App Router typings through `next typegen` before running `tsc`. This keeps local verification aligned with the checked-out implementation instead of stale generated artifacts from another branch.
+
+Tailwind class naming rule:
+
+- Prefer Tailwind's canonical class spelling whenever the framework already has an equivalent utility.
+- Use the important suffix form (`max-w-none!`) instead of the prefix form (`!max-w-none`).
+- Prefer named or scale-based utilities such as `rounded-3xl`, `pt-6.5`, `h-104`, and `min-h-30` over equivalent arbitrary values like `rounded-[1.5rem]`, `pt-[26px]`, `h-[26rem]`, or `min-h-[120px]`.
+- `scripts/check-tailwind-canonical.mjs` is the repo's source of truth for this rule and runs as part of `npm run lint` and `npm run verify`.
 
 Workflow shorthand:
 

@@ -248,7 +248,7 @@ describe("TripVisitAssignments", () => {
     const availableScrollArea = within(availableSection).getByTestId(
       "available-visits-scroll-area",
     );
-    expect(availableScrollArea).toHaveClass("max-h-[36rem]", "overflow-y-auto");
+    expect(availableScrollArea).toHaveClass("max-h-144", "overflow-y-auto");
     expect(within(availableScrollArea).getByRole("table")).toHaveClass("table-fixed");
     expect(
       within(availableScrollArea).getByRole("button", {

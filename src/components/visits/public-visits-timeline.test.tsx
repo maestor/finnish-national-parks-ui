@@ -453,7 +453,7 @@ describe("PublicVisitsTimeline", () => {
     expect(backToTopRow).toHaveClass("pl-12");
     expect(backToTopRow).toHaveClass("pr-4");
     expect(backToTopRow).toHaveClass("md:px-0");
-    expect(timelineWrapper).toHaveClass("md:before:bottom-[3.25rem]");
+    expect(timelineWrapper).toHaveClass("md:before:bottom-13");
 
     fireEvent.click(backToTopButton);
 

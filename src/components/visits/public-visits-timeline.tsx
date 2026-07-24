@@ -381,7 +381,7 @@ const PublicVisitsTimeline = ({
                       parkSlug: visit.park.slug,
                       visitId: visit.id,
                     })}
-                    className="block rounded-[1.5rem] border border-white/38 bg-white/74 px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.52)] transition-colors hover:bg-white/92 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/54 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] dark:hover:bg-slate-950/72"
+                    className="block rounded-3xl border border-white/38 bg-white/74 px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.52)] transition-colors hover:bg-white/92 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/54 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] dark:hover:bg-slate-950/72"
                     ref={(element) => {
                       visitRefs.current[currentVisitFocusIndex] = element;
                     }}
@@ -650,7 +650,7 @@ const PublicVisitsTimeline = ({
       )}
 
       {filteredCount > 0 && view === "timeline" && (
-        <div className="relative space-y-8 before:absolute before:bottom-0 before:left-4 before:top-0 before:w-px before:-translate-x-1/2 before:bg-[linear-gradient(180deg,rgba(22,101,52,0.42),rgba(37,99,235,0.18),rgba(22,101,52,0.42))] before:content-[''] md:before:bottom-[3.25rem] md:before:left-1/2 md:before:-translate-x-1/2">
+        <div className="relative space-y-8 before:absolute before:bottom-0 before:left-4 before:top-0 before:w-px before:-translate-x-1/2 before:bg-[linear-gradient(180deg,rgba(22,101,52,0.42),rgba(37,99,235,0.18),rgba(22,101,52,0.42))] before:content-[''] md:before:bottom-13 md:before:left-1/2 md:before:-translate-x-1/2">
           {sections.map((section) => (
             <section key={section.year} aria-labelledby={`visits-year-${section.year}`}>
               <div className="flex items-center gap-3 pl-12 pr-4 md:px-0">

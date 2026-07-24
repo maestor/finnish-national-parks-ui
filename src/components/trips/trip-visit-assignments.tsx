@@ -1180,7 +1180,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
             ) : (
               <div
                 data-testid="available-visits-scroll-area"
-                className="max-h-[36rem] overflow-y-auto rounded-[1.3rem] border border-white/35 dark:border-white/8"
+                className="max-h-144 overflow-y-auto rounded-[1.3rem] border border-white/35 dark:border-white/8"
               >
                 <table className="w-full table-fixed text-sm">
                   <thead className="sticky top-0 z-10 bg-white/70 dark:bg-slate-950/52">

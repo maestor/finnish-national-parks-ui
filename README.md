@@ -101,7 +101,8 @@ The dev server runs on **port 4300** by default: `http://localhost:4300`
 ```bash
 npm run verify        # typecheck + lint + unit tests + build
 npm run typecheck     # Clear generated Next types, regenerate them, then run TypeScript strict check
-npm run lint          # Biome lint & format check
+npm run lint          # Biome lint check + Tailwind canonical class check
+npm run lint:fix      # Biome auto-fixes + Tailwind canonical class fixes
 npm run test          # Vitest unit tests
 npm run test:e2e      # Playwright E2E (chromium only)
 npm run test:e2e:all  # Playwright E2E (all browsers)
@@ -151,6 +152,7 @@ Current PWA support includes:
 ## Conventions
 
 - **Arrow functions only** — Enforced via Biome (`useArrowFunction: error`)
+- **Canonical Tailwind classes** — Prefer Tailwind's canonical utility names such as `max-w-none!`, `rounded-3xl`, `pt-6.5`, and `h-104` instead of equivalent non-canonical arbitrary or prefixed forms; `npm run lint` and `npm run lint:fix` enforce this
 - **Finnish UI copy** — All user-facing text is in Finnish via `next-intl`
 - **Finnish canonical URLs** — Public and admin page routes use Finnish slugs such as `/paikat`, `/kaynnit`, `/paikka/[slug]`, `/reissusuunnittelu`, and `/hallinta`; legacy English URLs still redirect
 - **Accessibility first** — Semantic HTML, ARIA labels, keyboard navigation, `prefers-reduced-motion` support

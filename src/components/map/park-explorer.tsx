@@ -353,7 +353,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
           {option.label}
         </Button>
       ))}
-      <fieldset className="mt-1 rounded-[1.5rem] border border-white/45 bg-white/56 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] dark:border-white/10 dark:bg-slate-950/42 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+      <fieldset className="mt-1 rounded-3xl border border-white/45 bg-white/56 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] dark:border-white/10 dark:bg-slate-950/42 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
         <legend className="mx-auto rounded-full border border-white/60 bg-white/88 px-3 py-1 text-center text-[0.7rem] font-semibold tracking-[0.18em] text-slate-700 uppercase shadow-[0_10px_20px_rgba(148,163,184,0.14)] dark:border-white/12 dark:bg-slate-900/88 dark:text-sky-100 dark:shadow-[0_14px_24px_rgba(2,6,23,0.24)]">
           {t("visitStatusLabel")}
         </legend>

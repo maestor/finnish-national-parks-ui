@@ -85,6 +85,8 @@ This is the Finnish National Parks UI, a Next.js 16 App Router application consu
 
 ## Styling
 - Tailwind CSS v4 with CSS variables for theming.
+- Prefer Tailwind's canonical utility spellings when an equivalent exists. Examples: use `max-w-none!` instead of `!max-w-none`, `rounded-3xl` instead of `rounded-[1.5rem]`, and scale-based spacing utilities such as `pt-6.5`, `h-104`, or `min-h-30` instead of equivalent arbitrary values.
+- `npm run lint` and `npm run lint:fix` enforce canonical Tailwind class names through `scripts/check-tailwind-canonical.mjs`. Do not introduce a new arbitrary utility form when Tailwind already has a canonical class for the same value.
 - Use semantic color tokens such as `bg-background`, `text-foreground`, and `text-primary`.
 - Dark mode support uses `next-themes` with the `dark` class strategy.
 
