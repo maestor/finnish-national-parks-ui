@@ -23,7 +23,8 @@ export type TripStop = TripItineraryStopItem["stop"];
 export type PublicTripStop = PublicTripItineraryStopItem["stop"];
 
 export type TripLocation = NonNullable<Trip["startingPoint"]>;
-export type PublicTripRoute = NonNullable<PublicTripDetail["route"]>;
+export type PublicTripRouteStatus = PublicTripDetail["route"];
+export type PublicTripRoute = NonNullable<PublicTripRouteStatus["data"]>;
 
 export type TripCreateRequest = NonNullable<
   paths["/api/trips"]["post"]["requestBody"]

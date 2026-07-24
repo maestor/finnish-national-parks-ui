@@ -39,9 +39,12 @@ const ROUTE_KM_FORMATTER = new Intl.NumberFormat("fi-FI", {
 export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
   const t = useTranslations("tripPage");
   const auth = useAuth();
-  const route = trip.route;
+  const routeStatus = trip.route;
+  const route = routeStatus.data;
   const startingPoint = trip.startingPoint;
-  const hasRoute = route !== null && startingPoint !== null;
+  const shouldShowRouteSection = !routeStatus.success || (routeStatus.success && route !== null);
+  const hasRouteMap = routeStatus.success && route !== null && startingPoint !== null;
+  const hasRouteError = !routeStatus.success;
 
   return (
     <div className={PUBLIC_PAGE_SHELL_CLASS_NAME}>
@@ -92,7 +95,7 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
         </div>
       </section>
 
-      {hasRoute ? (
+      {shouldShowRouteSection ? (
         <section className={PUBLIC_PANEL_CLASS_NAME} aria-labelledby="trip-route-title">
           <div className="flex items-center gap-2">
             <Route className="h-4 w-4 text-primary" aria-hidden="true" />
@@ -100,23 +103,32 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
               {t("routeTitle")}
             </h2>
           </div>
-          <div className="mt-4">
-            <LazyPublicTripMap
-              route={route}
-              startingPoint={startingPoint}
-              tripName={trip.name}
-              tripStops={trip.itinerary}
-            />
-          </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <span className={META_PILL_CLASS_NAME}>
-              <Route className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>{t("routeDistanceLabel")}</span>
-              {t("routeDistanceValue", {
-                kilometers: ROUTE_KM_FORMATTER.format(route.distanceMeters / 1000),
-              })}
-            </span>
-          </div>
+          {routeStatus.success && route !== null ? (
+            <>
+              {hasRouteMap ? (
+                <div className="mt-4">
+                  <LazyPublicTripMap
+                    route={route}
+                    startingPoint={startingPoint}
+                    tripName={trip.name}
+                    tripStops={trip.itinerary}
+                  />
+                </div>
+              ) : null}
+              <div className="mt-4 flex flex-wrap gap-2">
+                <span className={META_PILL_CLASS_NAME}>
+                  <Route className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>{t("routeDistanceLabel")}</span>
+                  {t("routeDistanceValue", {
+                    kilometers: ROUTE_KM_FORMATTER.format(route.distanceMeters / 1000),
+                  })}
+                </span>
+              </div>
+            </>
+          ) : null}
+          {hasRouteError ? (
+            <p className="mt-4 text-sm font-medium text-destructive">{t("routeError")}</p>
+          ) : null}
         </section>
       ) : null}
 

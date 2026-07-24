@@ -473,7 +473,11 @@ const publicTrip = {
   ...trip,
   imageCount: 3,
   stopCount: 1,
-  route: null,
+  route: {
+    success: true,
+    error: null,
+    data: null,
+  },
   itinerary: [
     {
       kind: "visit",

@@ -51,18 +51,22 @@ const trip: PublicTripDetail = {
   createdAt: "2024-06-18T10:00:00Z",
   updatedAt: "2024-06-18T10:00:00Z",
   route: {
-    distanceMeters: 880000,
-    durationSeconds: 36000,
-    geometry: {
-      type: "LineString",
-      coordinates: [
-        [24.9384, 60.1699],
-        [25.0, 62.0],
-        [24.9384, 60.1699],
-      ],
+    success: true,
+    error: null,
+    data: {
+      distanceMeters: 880000,
+      durationSeconds: 36000,
+      geometry: {
+        type: "LineString",
+        coordinates: [
+          [24.9384, 60.1699],
+          [25.0, 62.0],
+          [24.9384, 60.1699],
+        ],
+      },
+      returnsToStart: true,
+      waypointCount: 4,
     },
-    returnsToStart: true,
-    waypointCount: 4,
   },
   itinerary: [
     {
@@ -169,13 +173,39 @@ describe("PublicTripPage", () => {
       <PublicTripPage
         trip={{
           ...trip,
-          route: null,
+          route: {
+            success: true,
+            error: null,
+            data: null,
+          },
         }}
       />,
     );
 
     expect(screen.queryByTestId("public-trip-map")).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "tripPage.routeTitle" })).not.toBeInTheDocument();
+  });
+
+  it("shows a friendly route error message when route generation failed", () => {
+    render(
+      <PublicTripPage
+        trip={{
+          ...trip,
+          route: {
+            success: false,
+            data: null,
+            error: {
+              error: "provider down",
+              errorCode: "provider_unavailable",
+            },
+          },
+        }}
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "tripPage.routeTitle" })).toBeInTheDocument();
+    expect(screen.getByText("tripPage.routeError")).toBeInTheDocument();
+    expect(screen.queryByTestId("public-trip-map")).not.toBeInTheDocument();
   });
 
   it("hides optional hero and summary details when the trip does not include them", () => {
@@ -186,7 +216,11 @@ describe("PublicTripPage", () => {
           description: "Ensimmainen rivi\nToinen rivi",
           dateRange: null,
           imageCount: 0,
-          route: null,
+          route: {
+            success: true,
+            error: null,
+            data: null,
+          },
           startingPoint: null,
           stopCount: 0,
         }}
