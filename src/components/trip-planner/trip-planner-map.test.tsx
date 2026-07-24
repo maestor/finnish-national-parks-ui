@@ -170,10 +170,18 @@ const parks: TripPlannerUiParkResult[] = [
 ];
 
 const routeModeProps = {
-  destination: { coordinate: { lat: 60.6, lon: 24.9 }, label: "Tampere" },
+  destination: {
+    coordinate: { lat: 60.6, lon: 24.9 },
+    displayName: "Tampere",
+    label: "Tampere",
+  },
   distanceLabel: "tripPlanner.distanceFromRoute",
   mode: "route" as const,
-  origin: { coordinate: { lat: 60.1, lon: 24.0 }, label: "Helsinki" },
+  origin: {
+    coordinate: { lat: 60.1, lon: 24.0 },
+    displayName: "Helsinki",
+    label: "Helsinki",
+  },
   parks,
   route,
   searchArea: null,
@@ -238,7 +246,11 @@ describe("TripPlannerMap", () => {
         destination={null}
         distanceLabel="tripPlanner.distanceFromOrigin"
         mode="nearby"
-        origin={{ coordinate: { lat: 60.1, lon: 24.0 }, label: "Helsinki" }}
+        origin={{
+          coordinate: { lat: 60.1, lon: 24.0 },
+          displayName: "Helsinki",
+          label: "Helsinki",
+        }}
         parks={parks}
         route={null}
         searchArea={{
@@ -283,7 +295,11 @@ describe("TripPlannerMap", () => {
         destination={null}
         distanceLabel="tripPlanner.distanceFromOrigin"
         mode="nearby"
-        origin={{ coordinate: { lat: 60.1, lon: 24.0 }, label: "Helsinki" }}
+        origin={{
+          coordinate: { lat: 60.1, lon: 24.0 },
+          displayName: "Helsinki",
+          label: "Helsinki",
+        }}
         parks={nearbyParks}
         route={null}
         searchArea={{

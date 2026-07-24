@@ -72,6 +72,7 @@ const trips = [
     description: null,
     startingPoint: {
       coordinate: { lat: 61.9241, lon: 25.7482 },
+      displayName: "Jyvaskyla",
       label: "Jyvaskyla",
     },
     visitCount: 1,
@@ -131,6 +132,39 @@ describe("VisitForm", () => {
     });
     expect(mockRevalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "pallas" });
     expect(mockRefresh).not.toHaveBeenCalled();
+  });
+
+  it("revalidates both the park page and the selected trip page when creating an assigned visit", async () => {
+    const { apiFetch } = await import("@/lib/api");
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      id: 43,
+      visitedOn: "2024-06-15",
+      route: null,
+      author: null,
+      note: null,
+      tripStopOrder: 1,
+      createdAt: "2024-06-15T00:00:00Z",
+      updatedAt: "2024-06-15T00:00:00Z",
+    });
+
+    render(<VisitForm parks={parks} trips={trips} defaultTripId="7" />);
+
+    await userEvent.selectOptions(
+      screen.getByLabelText(/controlPanel.visits.form.parkLabel/i),
+      "pallas",
+    );
+    await userEvent.type(
+      screen.getByLabelText(/controlPanel.visits.form.dateLabel/i),
+      "2024-06-15",
+    );
+    await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.submit/i }));
+
+    await waitFor(() => {
+      expect(mockRevalidatePublicCache).toHaveBeenNthCalledWith(1, {
+        parkSlug: "pallas",
+        tripSlug: "keski-suomen-kesaretki",
+      });
+    });
   });
 
   it("keeps the create submit button pending until navigation leaves the page", async () => {
@@ -272,7 +306,10 @@ describe("VisitForm", () => {
       );
     });
     expect(mockRefresh).toHaveBeenCalled();
-    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "pallas" });
+    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({
+      parkSlug: "pallas",
+      tripSlug: "keski-suomen-kesaretki",
+    });
     expect(
       screen.getByRole("link", { name: "controlPanel.visits.form.viewAllVisits" }),
     ).toHaveAttribute("href", "/hallinta/kaynnit");
@@ -392,9 +429,36 @@ describe("VisitForm", () => {
     await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.delete/i }));
 
     expect(apiFetch).toHaveBeenCalledWith("/api/visits/1", { method: "DELETE" });
-    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "pallas" });
+    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({
+      parkSlug: "pallas",
+      tripSlug: "keski-suomen-kesaretki",
+    });
     expect(mockPush).toHaveBeenCalledWith("/hallinta/kaynnit");
     expect(mockRefresh).toHaveBeenCalled();
+  });
+
+  it("revalidates both the old and new trip pages when moving a visit to another trip", async () => {
+    const { apiFetch } = await import("@/lib/api");
+    vi.mocked(apiFetch).mockResolvedValueOnce(undefined);
+
+    render(<VisitForm parks={parks} trips={trips} visitToEdit={visitToEdit} />);
+
+    await userEvent.selectOptions(
+      screen.getByLabelText(/controlPanel.visits.form.tripLabel/i),
+      "8",
+    );
+    await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.submit/i }));
+
+    await waitFor(() => {
+      expect(mockRevalidatePublicCache).toHaveBeenNthCalledWith(1, {
+        parkSlug: "pallas",
+        tripSlug: "keski-suomen-kesaretki",
+      });
+    });
+    expect(mockRevalidatePublicCache).toHaveBeenNthCalledWith(2, {
+      parkSlug: null,
+      tripSlug: "syysloman-rengasreitti",
+    });
   });
 
   it("shows the delete error and stays on the form when removing a visit fails", async () => {

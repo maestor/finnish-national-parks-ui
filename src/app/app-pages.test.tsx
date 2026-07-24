@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { apiAuthFetch, apiFetch, apiPublicFetch } from "@/lib/api";
+import { ApiError, apiAuthFetch, apiFetch, apiPublicFetch } from "@/lib/api";
 import type { AdminVisibilityPark, Park, Visit, VisitWithPark } from "@/lib/parks";
 import type { FrontendTimelineVisit } from "@/lib/public-visits";
 import UserLayout from "./(user)/layout";
@@ -9,6 +9,9 @@ import ParkDetailPage, {
   generateMetadata as generateParkDetailMetadata,
 } from "./(user)/park/[slug]/page";
 import ParksMapPage, { generateMetadata as generateParksMapMetadata } from "./(user)/parks/page";
+import PublicTripRoutePage, {
+  generateMetadata as generatePublicTripMetadata,
+} from "./(user)/trip/[slug]/page";
 import TripPlannerRoutePage, {
   generateMetadata as generateTripPlannerMetadata,
 } from "./(user)/trip-planner/page";
@@ -50,11 +53,16 @@ const { mockNotFound, mockWriteText } = vi.hoisted(() => ({
   mockWriteText: vi.fn().mockResolvedValue(undefined),
 }));
 
-vi.mock("@/lib/api", () => ({
-  apiAuthFetch: vi.fn(),
-  apiFetch: vi.fn(),
-  apiPublicFetch: vi.fn(),
-}));
+vi.mock("@/lib/api", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/api")>("@/lib/api");
+
+  return {
+    ...actual,
+    apiAuthFetch: vi.fn(),
+    apiFetch: vi.fn(),
+    apiPublicFetch: vi.fn(),
+  };
+});
 
 vi.mock("next-intl/server", () => ({
   getTranslations: vi.fn(async (namespace?: string) => {
@@ -148,6 +156,23 @@ vi.mock("@/components/visits/public-visits-timeline", () => ({
 
 vi.mock("@/components/trip-planner/trip-planner-page", () => ({
   TripPlannerPage: () => <div data-testid="trip-planner-page">trip-planner</div>,
+}));
+
+vi.mock("@/components/trips/public-trip-page", () => ({
+  PublicTripPage: ({ trip }: { trip: { slug: string; visitCount: number } }) => (
+    <div data-testid="public-trip-page">
+      slug:{trip.slug}|visits:{trip.visitCount}
+    </div>
+  ),
+}));
+
+vi.mock("@/hooks/use-auth", () => ({
+  useAuth: () => ({
+    isAuthenticated: false,
+    isLoading: false,
+    logout: vi.fn(),
+    user: null,
+  }),
 }));
 
 vi.mock("@/components/dashboard/home-visit-stats", () => ({
@@ -444,6 +469,35 @@ const trip = {
   updatedAt: "2024-06-18T10:00:00Z",
 };
 
+const publicTrip = {
+  ...trip,
+  imageCount: 3,
+  stopCount: 1,
+  route: null,
+  itinerary: [
+    {
+      kind: "visit",
+      tripStopOrder: 1,
+      visit: {
+        id: 11,
+        author: null,
+        createdAt: "2024-06-15T10:00:00Z",
+        note: null,
+        park: {
+          name: publicPark.name,
+          slug: publicPark.slug,
+          markerPoint: publicPark.markerPoint,
+          typeLabel: "Maailmanperintökohde",
+        },
+        route: personalVisit.route,
+        updatedAt: "2024-06-15T10:00:00Z",
+        visitedOn: "2024-06-15",
+        imageCount: 1,
+      },
+    },
+  ],
+};
+
 const visitWithPark = {
   ...personalVisit,
   trip: {
@@ -630,6 +684,38 @@ describe("App pages", () => {
     expect(screen.getByTestId("trip-planner-page")).toHaveTextContent("trip-planner");
   });
 
+  it("renders the public trip page", async () => {
+    vi.mocked(apiPublicFetch).mockResolvedValueOnce(publicTrip);
+
+    await renderPublicRoute(
+      await PublicTripRoutePage({
+        params: Promise.resolve({ slug: "keski-suomen-kesaretki" }),
+      }),
+    );
+
+    expect(screen.getByTestId("public-trip-page")).toHaveTextContent(
+      "slug:keski-suomen-kesaretki|visits:2",
+    );
+    expect(apiPublicFetch).toHaveBeenCalledWith("/api/trips/slug/keski-suomen-kesaretki", {
+      cache: "force-cache",
+      next: {
+        tags: ["public-trip:keski-suomen-kesaretki"],
+      },
+    });
+  });
+
+  it("calls notFound when the public trip page cannot find the requested slug", async () => {
+    vi.mocked(apiPublicFetch).mockRejectedValueOnce(new ApiError(404, "API error 404: missing"));
+
+    await expect(
+      PublicTripRoutePage({
+        params: Promise.resolve({ slug: "tuntematon-retki" }),
+      }),
+    ).rejects.toThrow("NEXT_NOT_FOUND");
+
+    expect(mockNotFound).toHaveBeenCalled();
+  });
+
   it("shows the fallback error message when the public map summary request fails", async () => {
     vi.mocked(apiPublicFetch).mockRejectedValueOnce(new Error("backend offline"));
 
@@ -656,6 +742,30 @@ describe("App pages", () => {
         description: "tripPlanner.description",
       }),
     );
+  });
+
+  it("builds metadata for the public trip page", async () => {
+    vi.mocked(apiPublicFetch).mockResolvedValueOnce(publicTrip);
+
+    await expect(
+      generatePublicTripMetadata({
+        params: Promise.resolve({ slug: "keski-suomen-kesaretki" }),
+      }),
+    ).resolves.toEqual(
+      createExpectedShareMetadata("Keski-Suomen kesaretki", {
+        description: "Kolmen paivan kierros kansallispuistoihin.",
+      }),
+    );
+  });
+
+  it("builds fallback metadata when the public trip slug is missing", async () => {
+    vi.mocked(apiPublicFetch).mockRejectedValueOnce(new ApiError(404, "API error 404: missing"));
+
+    await expect(
+      generatePublicTripMetadata({
+        params: Promise.resolve({ slug: "keski-suomen-kesaretki" }),
+      }),
+    ).resolves.toEqual(createExpectedShareMetadata("keski suomen kesaretki"));
   });
 
   it("keeps public page modules free of nested main landmarks", async () => {
@@ -1159,6 +1269,9 @@ describe("App pages", () => {
     expect(
       screen.getByRole("heading", { name: "controlPanel.trips.editTrip.title" }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "controlPanel.trips.editTrip.viewTripPage" }),
+    ).toHaveAttribute("href", "/retki/keski-suomen-kesaretki");
     expect(screen.getByText("controlPanel.trips.editTrip.createdNotice")).toBeInTheDocument();
     expect(screen.getByTestId("trip-form")).toHaveTextContent("trip:7");
     expect(screen.getByTestId("trip-visit-assignments")).toHaveTextContent("trip:7|visits:1");

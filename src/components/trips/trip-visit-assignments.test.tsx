@@ -40,6 +40,7 @@ const currentTrip = {
   description: "Kolmen paivan kierros kansallispuistoihin.",
   startingPoint: {
     coordinate: { lat: 62.24147, lon: 25.72088 },
+    displayName: "Jyvaskyla",
     label: "Jyvaskyla",
   },
   visitCount: 1,
@@ -74,6 +75,7 @@ const currentTrip = {
         id: 21,
         location: {
           coordinate: { lat: 61.92411, lon: 25.74815 },
+          displayName: "Lounaspaikka Jyvaskyla",
           label: "Lounaspaikka Jyvaskyla",
         },
         note: "Lounastauko",
@@ -313,7 +315,10 @@ describe("TripVisitAssignments", () => {
     await waitFor(() => {
       expect(mockRefresh).toHaveBeenCalled();
     });
-    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "pallas" });
+    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({
+      parkSlug: "pallas",
+      tripSlug: "keski-suomen-kesaretki",
+    });
   });
 
   it("resets the visit filters", async () => {
@@ -403,7 +408,9 @@ describe("TripVisitAssignments", () => {
       });
     });
 
-    expect(mockRevalidatePublicCache).toHaveBeenCalled();
+    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({
+      tripSlug: "keski-suomen-kesaretki",
+    });
     expect(mockRefresh).toHaveBeenCalled();
   });
 
@@ -484,7 +491,10 @@ describe("TripVisitAssignments", () => {
         tripId: null,
       }),
     });
-    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "nuuksio" });
+    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({
+      parkSlug: "nuuksio",
+      tripSlug: "keski-suomen-kesaretki",
+    });
     await waitFor(() => {
       expect(mockRefresh).toHaveBeenCalled();
     });

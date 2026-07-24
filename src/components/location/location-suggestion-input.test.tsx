@@ -15,6 +15,7 @@ const createSuggestion = (
   coordinate = { lat: 60.1699, lon: 24.9384 },
 ): TripPlannerSuggestion => ({
   coordinate,
+  displayName: label,
   label,
 });
 
@@ -124,6 +125,7 @@ describe("LocationSuggestionInput", () => {
     expect(handleValueChange).toHaveBeenCalledWith("Helsinki, Suomi");
     expect(handleSelectedLocationChange).toHaveBeenLastCalledWith({
       coordinate: { lat: 60.1699, lon: 24.9384 },
+      displayName: "Helsinki, Suomi",
       label: "Helsinki, Suomi",
     });
     expect(screen.queryByRole("option", { name: "Helsinki keskusta" })).not.toBeInTheDocument();
@@ -158,6 +160,7 @@ describe("LocationSuggestionInput", () => {
     expect(input).toHaveValue("Tampere keskusta");
     expect(handleSelectedLocationChange).toHaveBeenLastCalledWith({
       coordinate: { lat: 61.498, lon: 23.761 },
+      displayName: "Tampere keskusta",
       label: "Tampere keskusta",
     });
   });
@@ -306,6 +309,7 @@ describe("LocationSuggestionInput", () => {
     expect(input).toHaveValue("Vaasa keskusta");
     expect(handleSelectedLocationChange).toHaveBeenLastCalledWith({
       coordinate: { lat: 63.0951, lon: 21.6165 },
+      displayName: "Vaasa keskusta",
       label: "Vaasa keskusta",
     });
   });

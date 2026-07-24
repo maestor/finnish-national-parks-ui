@@ -625,8 +625,14 @@ describe("PublicVisitsTimeline", () => {
     const tripVisitLinks = within(tripCard).getAllByRole("link");
 
     expect(tripVisitLinks.map((link) => link.getAttribute("href"))).toEqual([
+      "/retki/kesaretki",
       "/paikka/pallas-yllastunturi?visit=2#visit-history",
       "/paikka/nuuksio?visit=1#visit-history",
     ]);
+
+    expect(within(tripCard).getByRole("link", { name: "visits.trip.viewTrip" })).toHaveAttribute(
+      "href",
+      "/retki/kesaretki",
+    );
   });
 });

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   getPublicParkTag,
+  getPublicTripTag,
   HOME_SUMMARY_TAG,
   MAP_SUMMARY_TAG,
   PUBLIC_VISITS_TAG,
@@ -17,14 +18,17 @@ describe("public cache helpers", () => {
     expect(MAP_SUMMARY_TAG).toBe("map-summary");
     expect(PUBLIC_VISITS_TAG).toBe("public-visits");
     expect(getPublicParkTag("pallas")).toBe("public-park:pallas");
+    expect(getPublicTripTag("kesaretki")).toBe("public-trip:kesaretki");
   });
 
-  it("posts a revalidation request with an optional park slug", async () => {
+  it("posts a revalidation request with optional park and trip slugs", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
       ok: true,
     } as Response);
 
-    await expect(revalidatePublicCache({ parkSlug: "pallas" })).resolves.toBe(true);
+    await expect(
+      revalidatePublicCache({ parkSlug: "pallas", tripSlug: "kesaretki" }),
+    ).resolves.toBe(true);
 
     expect(globalThis.fetch).toHaveBeenCalledWith("/api/revalidate-public-cache", {
       credentials: "include",
@@ -32,7 +36,7 @@ describe("public cache helpers", () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ parkSlug: "pallas" }),
+      body: JSON.stringify({ parkSlug: "pallas", tripSlug: "kesaretki" }),
     });
   });
 

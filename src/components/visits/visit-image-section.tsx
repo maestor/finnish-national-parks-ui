@@ -20,6 +20,7 @@ interface VisitImageSectionProps {
   images: VisitImage[];
   parkSlug: string;
   sectionTitle?: string;
+  tripSlug?: string | null;
 }
 
 interface PendingImage {
@@ -105,6 +106,7 @@ export const VisitImageSection = ({
   images,
   parkSlug,
   sectionTitle,
+  tripSlug = null,
 }: VisitImageSectionProps) => {
   const t = useTranslations("controlPanel.visits.images");
   const router = useRouter();
@@ -444,7 +446,7 @@ export const VisitImageSection = ({
     }
 
     if (response.images.length > 0) {
-      await revalidatePublicCache({ parkSlug });
+      await revalidatePublicCache({ parkSlug, tripSlug });
       setStatusMessage(t("uploadSuccess", { count: response.images.length }));
       router.refresh();
     }
@@ -532,7 +534,7 @@ export const VisitImageSection = ({
         ...currentOrder,
         ...uploadedImages.map((image) => String(image.id)),
       ]);
-      await revalidatePublicCache({ parkSlug });
+      await revalidatePublicCache({ parkSlug, tripSlug });
       setStatusMessage(t("uploadSuccess", { count: uploadedImages.length }));
       router.refresh();
     }
@@ -583,7 +585,7 @@ export const VisitImageSection = ({
       await apiFetch(`/api/visits/${visitId}/images/${imageId}`, {
         method: "DELETE",
       });
-      await revalidatePublicCache({ parkSlug });
+      await revalidatePublicCache({ parkSlug, tripSlug });
       setStatusMessage(t("deleteSuccess"));
       router.refresh();
     } catch (error) {
@@ -609,7 +611,7 @@ export const VisitImageSection = ({
           imageIds: localImages.map((image) => image.id),
         }),
       });
-      await revalidatePublicCache({ parkSlug });
+      await revalidatePublicCache({ parkSlug, tripSlug });
       setSavedImageOrder(localImages.map((image) => String(image.id)));
       setStatusMessage(t("reorderSuccess"));
       router.refresh();

@@ -262,6 +262,19 @@ const renderMultilineText = (text: string) => {
   });
 };
 
+const renderSuggestionOptionLabel = (suggestion: TripPlannerSuggestion) => {
+  if (suggestion.displayName === suggestion.label) {
+    return suggestion.displayName;
+  }
+
+  return (
+    <div className="space-y-0.5">
+      <p className="font-medium text-foreground">{suggestion.displayName}</p>
+      <p className="text-xs text-muted-foreground">{suggestion.label}</p>
+    </div>
+  );
+};
+
 const removeTrailingColon = (label: string) => label.replace(/:\s*$/, "");
 
 const TripPlannerRouteSummaryValue = ({ label, value }: { label: string; value: string }) => (
@@ -628,7 +641,7 @@ const TripPlannerSuggestionInput = ({
                 }
               }}
             >
-              {suggestion.label}
+              {renderSuggestionOptionLabel(suggestion)}
             </div>
           ))}
         </div>
@@ -817,6 +830,10 @@ export const TripPlannerPage = () => {
             lat: position.coords.latitude,
             lon: position.coords.longitude,
           },
+          displayName: formatCoordinateQuery({
+            lat: position.coords.latitude,
+            lon: position.coords.longitude,
+          }),
           label: formatCoordinateQuery({
             lat: position.coords.latitude,
             lon: position.coords.longitude,
@@ -939,14 +956,14 @@ export const TripPlannerPage = () => {
               <dt className="inline font-medium text-foreground md:block">
                 {t("originResolvedLabel")}
               </dt>
-              <dd className="inline md:block">{result.origin.label}</dd>
+              <dd className="inline md:block">{result.origin.displayName}</dd>
             </div>
             {result.destination ? (
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1 md:block">
                 <dt className="inline font-medium text-foreground md:block">
                   {t("destinationResolvedLabel")}
                 </dt>
-                <dd className="inline md:block">{result.destination.label}</dd>
+                <dd className="inline md:block">{result.destination.displayName}</dd>
               </div>
             ) : null}
           </dl>

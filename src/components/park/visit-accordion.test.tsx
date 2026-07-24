@@ -221,6 +221,29 @@ describe("VisitAccordion", () => {
     expect(screen.getAllByRole("button", { name: "park.copyVisitLink" })).toHaveLength(5);
   });
 
+  it("shows a trip link for visits that belong to a trip", () => {
+    render(
+      <VisitAccordion
+        visits={[
+          {
+            ...visits[3],
+            trip: {
+              id: 7,
+              name: "Kesaretki",
+              slug: "kesaretki",
+            },
+          },
+        ]}
+        parkSlug="pallas"
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "Kesaretki" })).toHaveAttribute(
+      "href",
+      "/retki/kesaretki",
+    );
+  });
+
   it("shows edit links when editable", () => {
     render(<VisitAccordion visits={visits} parkSlug="pallas" isEditable />);
 

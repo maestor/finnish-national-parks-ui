@@ -115,7 +115,7 @@
     "authorTitle": "Käynnin kirjannut",
     "updatedAtLabel": "Päivitetty:",
     "imagesTitle": "Kuvat",
-    "imageCount": "{count} kuvaa",
+    "imageCount": "{count, plural, one {# kuva} other {# kuvaa}}",
     "visitNumber": "{number}. käynti",
     "copyVisitLink": "Kopioi käynnin linkki",
     "visitLinkCopied": "Käynnin linkki kopioitu",
@@ -167,8 +167,8 @@
       "ariaLabel": "Käynnit kartalla",
       "empty": "Valitun rajauksen käyntejä ei voida näyttää kartalla.",
       "listTitle": "Käydyt paikat kartalla",
-      "visitCount": "{count} käyntiä",
-      "visitCountInYear": "{count} käyntiä vuonna {year}",
+      "visitCount": "{count, plural, one {# käynti} other {# käyntiä}}",
+      "visitCountInYear": "{count, plural, one {# käynti vuonna {year}} other {# käyntiä vuonna {year}}}",
       "yearsLabel": "Käyntivuodet",
       "openParkVisits": "Näytä paikan käynnit"
     },
@@ -176,13 +176,32 @@
       "note": "Muistiinpano",
       "viewVisit": "Näytä käynti",
       "openVisit": "Avaa käynti paikan sivulla",
-      "imageCount": "{count} kuvaa"
+      "imageCount": "{count, plural, one {# kuva} other {# kuvaa}}"
     },
     "trip": {
       "label": "Retki",
-      "visitCount": "{count} käyntiä",
-      "imageCount": "{count} kuvaa"
+      "visitCount": "{count, plural, one {# käynti} other {# käyntiä}}",
+      "imageCount": "{count, plural, one {# kuva} other {# kuvaa}}",
+      "viewTrip": "Näytä retki"
     }
+  },
+  "tripPage": {
+    "eyebrow": "Retki",
+    "routeTitle": "Retken reitti",
+    "routeUnavailable": "Tallella olevaa reittiä ei vielä ole tälle retkelle.",
+    "itineraryTitle": "Retken kulku",
+    "itineraryDescription": "Tarkemmat kokemukset ja kuvat kohteista näet klikkaamalla paikan nimeä.",
+    "visitCount": "{count, plural, one {käynti} other {käyntiä}}",
+    "stopCount": "{count, plural, one {pysähdys} other {pysähdystä}}",
+    "imageCount": "{count, plural, one {kuva} other {kuvaa}}",
+    "stopLabel": "Pysähdys",
+    "startLabel": "Lähtöpiste",
+    "openPark": "Avaa paikan sivu",
+    "openVisit": "Näytä käynti",
+    "editTrip": "Muokkaa retkeä",
+    "mapAriaLabel": "Retken {trip} kartta",
+    "routeDistanceLabel": "Reitin pituus",
+    "routeDistanceValue": "{kilometers} km"
   },
   "tripPlanner": {
     "eyebrow": "Matkan varrelta",
@@ -335,7 +354,8 @@
       "editTrip": {
         "title": "Muokkaa retkeä",
         "description": "Päivitä retken tiedot ja hallitse reitin järjestystä käyntien sekä muiden pysähdysten välillä.",
-        "createdNotice": "Retki tallennettiin. Voit jatkaa sen muokkaamista täällä."
+        "createdNotice": "Retki tallennettiin. Voit jatkaa sen muokkaamista täällä.",
+        "viewTripPage": "Siirry retken sivulle"
       },
       "assignments": {
         "title": "Muokkaa retken reittiä",
@@ -436,7 +456,7 @@
         "tripName": "Retki",
         "dateRange": "Aikaväli",
         "visitCount": "Käynnit",
-        "visitCountValue": "{count} käyntiä",
+        "visitCountValue": "{count, plural, one {# käynti} other {# käyntiä}}",
         "edit": "Muokkaa",
         "noDateRange": "Ei vielä käyntejä",
         "filters": {
@@ -522,7 +542,7 @@
       "images": {
         "title": "Käyntikuvat",
         "selectFiles": "Lisää uusia kuvia",
-        "selectedCount": "{count} kuvaa valittu",
+        "selectedCount": "{count, plural, one {# kuva valittu} other {# kuvaa valittu}}",
         "preparing": "Optimoidaan kuvia...",
         "upload": "Lähetä kuvat",
         "uploading": "Lähetetään...",

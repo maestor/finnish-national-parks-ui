@@ -1,6 +1,7 @@
 "use client";
 
-import { ChevronDown, FileText, Images, Route, User } from "lucide-react";
+import { ChevronDown, FileText, Images, Route, TentTree, User } from "lucide-react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
@@ -11,6 +12,7 @@ import { VisitImageGallery } from "@/components/visits/visit-image-gallery";
 import { formatFinnishDate } from "@/lib/fi-date";
 import type { Visit } from "@/lib/parks";
 import { createParkVisitHref } from "@/lib/public-visits";
+import { appRoutes } from "@/lib/routes";
 
 interface VisitAccordionProps {
   initialOpenVisitId?: number | null;
@@ -41,6 +43,8 @@ const ROUTE_BADGE_CLASS_NAME =
   "inline-flex items-center gap-1.5 rounded-full border border-emerald-200/70 bg-[linear-gradient(145deg,rgba(22,101,52,0.12),rgba(16,185,129,0.18))] px-2.5 py-1 text-sm leading-none font-semibold text-emerald-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-emerald-300/15 dark:bg-[linear-gradient(145deg,rgba(22,101,52,0.24),rgba(16,185,129,0.16))] dark:text-emerald-200 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]";
 const IMAGE_BADGE_CLASS_NAME =
   "inline-flex items-center gap-1.5 rounded-full border border-sky-200/70 bg-[linear-gradient(145deg,rgba(22,101,52,0.08),rgba(37,99,235,0.12))] px-2.5 py-1 text-sm leading-none font-semibold text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-sky-300/15 dark:bg-[linear-gradient(145deg,rgba(22,101,52,0.18),rgba(37,99,235,0.16))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]";
+const TRIP_LINK_CLASS_NAME =
+  "inline-flex items-center gap-1.5 rounded-full border border-sky-200/70 bg-[linear-gradient(145deg,rgba(14,165,233,0.12),rgba(37,99,235,0.14))] px-2.5 py-1 text-sm leading-none font-semibold text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-[linear-gradient(145deg,rgba(14,165,233,0.18),rgba(37,99,235,0.2))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-sky-300/15 dark:bg-[linear-gradient(145deg,rgba(2,132,199,0.2),rgba(37,99,235,0.16))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]";
 
 const hasExpandableContent = (visit: Visit) => {
   const hasImages = (visit.images?.length ?? 0) > 0;
@@ -164,6 +168,12 @@ export const VisitAccordion = ({
                     {visit.route}
                   </span>
                 )}
+                {visit.trip ? (
+                  <Link href={appRoutes.trip(visit.trip.slug)} className={TRIP_LINK_CLASS_NAME}>
+                    <TentTree className="h-3.5 w-3.5" aria-hidden="true" />
+                    {visit.trip.name}
+                  </Link>
+                ) : null}
               </span>
               <span className="flex shrink-0 items-center gap-1.5">
                 <CopyLinkButton
@@ -212,6 +222,16 @@ export const VisitAccordion = ({
                       {t("imageCount", { count: imageCount })}
                     </span>
                   )}
+                  {visit.trip ? (
+                    <Link
+                      href={appRoutes.trip(visit.trip.slug)}
+                      className={TRIP_LINK_CLASS_NAME}
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <TentTree className="h-3.5 w-3.5" aria-hidden="true" />
+                      {visit.trip.name}
+                    </Link>
+                  ) : null}
                 </span>
                 <ChevronDown
                   className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}

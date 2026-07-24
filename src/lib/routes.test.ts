@@ -7,6 +7,7 @@ describe("routes", () => {
     expect(appRoutes.login).toBe("/kirjaudu");
     expect(appRoutes.parks).toBe("/paikat");
     expect(appRoutes.park("pallas")).toBe("/paikka/pallas");
+    expect(appRoutes.trip("kesaretki")).toBe("/retki/kesaretki");
     expect(appRoutes.visits).toBe("/kaynnit");
     expect(appRoutes.tripPlanner).toBe("/reissusuunnittelu");
     expect(appRoutes.controlPanel.root).toBe("/hallinta");
@@ -26,6 +27,7 @@ describe("routes", () => {
     expect(normalizeAppPath("/park/pallas?visit=2#visit-history")).toBe(
       "/paikka/pallas?visit=2#visit-history",
     );
+    expect(normalizeAppPath("/trip/kesaretki")).toBe("/retki/kesaretki");
     expect(normalizeAppPath("/visits?year=2026")).toBe("/kaynnit?year=2026");
     expect(normalizeAppPath("/trip-planner")).toBe("/reissusuunnittelu");
     expect(normalizeAppPath("/control-panel")).toBe("/hallinta");

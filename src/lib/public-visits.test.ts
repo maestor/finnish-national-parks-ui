@@ -218,8 +218,8 @@ describe("buildPublicVisitsTimelineModel", () => {
       kind: "trip",
       tripId: 7,
       name: "Kesaretki",
+      slug: "kesaretki",
       visitCount: 2,
-      parkCount: 1,
       imageCount: 2,
       dateRange: {
         start: "2024-06-15",
@@ -347,8 +347,8 @@ describe("buildPublicVisitsTimelineModel", () => {
     expect(groupedTrip).toMatchObject({
       kind: "trip",
       tripId: 7,
+      slug: "uudenvuoden-reissu",
       visitCount: 1,
-      parkCount: 1,
       dateRange: {
         start: "2025-01-02",
         end: "2025-01-02",

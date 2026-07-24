@@ -72,7 +72,7 @@ describe("revalidate public cache route", () => {
         "Content-Type": "application/json",
         cookie: "__session=test-session",
       },
-      body: JSON.stringify({ parkSlug: "pallas" }),
+      body: JSON.stringify({ parkSlug: "pallas", tripSlug: "kesaretki" }),
     });
 
     const response = await POST(request);
@@ -92,14 +92,17 @@ describe("revalidate public cache route", () => {
     expect(revalidateTagMock).toHaveBeenCalledWith("public-visits", "max");
     expect(revalidateTagMock).toHaveBeenCalledWith("admin-park-visibility", "max");
     expect(revalidateTagMock).toHaveBeenCalledWith("public-park:pallas", "max");
+    expect(revalidateTagMock).toHaveBeenCalledWith("public-trip:kesaretki", "max");
     expect(revalidatePathMock).toHaveBeenCalledWith("/", "page");
     expect(revalidatePathMock).toHaveBeenCalledWith("/paikat", "page");
     expect(revalidatePathMock).toHaveBeenCalledWith("/kaynnit", "page");
     expect(revalidatePathMock).toHaveBeenCalledWith("/hallinta/paikat", "page");
     expect(revalidatePathMock).toHaveBeenCalledWith("/paikka/pallas", "page");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/retki/kesaretki", "page");
     await expect(response.json()).resolves.toEqual({
       ok: true,
       parkSlug: "pallas",
+      tripSlug: "kesaretki",
     });
   });
 
@@ -132,9 +135,14 @@ describe("revalidate public cache route", () => {
       expect.stringMatching(/^\/paikka\//),
       "page",
     );
+    expect(revalidatePathMock).not.toHaveBeenCalledWith(
+      expect.stringMatching(/^\/retki\//),
+      "page",
+    );
     await expect(response.json()).resolves.toEqual({
       ok: true,
       parkSlug: null,
+      tripSlug: null,
     });
   });
 });

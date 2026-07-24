@@ -16,14 +16,14 @@ vi.mock("./trip-planner-map", () => ({
     parks,
     visibleDistanceKm,
   }: {
-    destination?: { label: string } | null;
+    destination?: { displayName: string; label: string } | null;
     mode: "nearby" | "route";
     parks: Array<{ slug: string }>;
     visibleDistanceKm?: number;
   }) => (
     <div
       data-testid="trip-planner-map"
-      data-destination={destination?.label ?? ""}
+      data-destination={destination?.displayName ?? ""}
       data-mode={mode}
       data-visible-distance-km={visibleDistanceKm ?? ""}
     >
@@ -67,11 +67,13 @@ describe("TripPlannerPage", () => {
     defaultDistanceKm: 25,
     destination: {
       coordinate: { lat: 61.5, lon: 23.7 },
+      displayName: "Tampere",
       label: "Tampere",
     },
     maxDistanceKm: 60,
     origin: {
       coordinate: { lat: 60.17, lon: 24.94 },
+      displayName: "Helsinki",
       label: "Helsinki",
     },
     parks: [
@@ -244,6 +246,7 @@ describe("TripPlannerPage", () => {
         lat: 60.17 + index * 0.01,
         lon: 24.94 + index * 0.01,
       },
+      displayName: `${query} suggestion ${index + 1}`,
       label: `${query} suggestion ${index + 1}`,
     })),
   });
@@ -272,6 +275,7 @@ describe("TripPlannerPage", () => {
       lat: 60.192033,
       lon: 24.9455609,
     },
+    displayName: "Aleksis Kiven katu 52-54, 00510 Helsinki, Suomi",
     label: "Aleksis Kiven katu 52-54, 00510 Helsinki, Suomi",
   } satisfies SuggestionResponse["suggestions"][number];
 
@@ -373,10 +377,12 @@ describe("TripPlannerPage", () => {
         suggestions: [
           {
             coordinate: { lat: 60.17, lon: 24.94 },
+            displayName: `${query}, Suomi`,
             label: `${query}, Suomi`,
           },
           {
             coordinate: { lat: 60.18, lon: 24.95 },
+            displayName: `${query} keskusta`,
             label: `${query} keskusta`,
           },
         ],
@@ -410,6 +416,7 @@ describe("TripPlannerPage", () => {
         suggestions: [
           {
             coordinate: { lat: 61.5, lon: 23.76 },
+            displayName: `${query}, Suomi`,
             label: `${query}, Suomi`,
           },
         ],
@@ -693,6 +700,7 @@ describe("TripPlannerPage", () => {
       ...firstResponse,
       destination: {
         coordinate: { lat: 62.24, lon: 25.75 },
+        displayName: "Jyväskylä",
         label: "Jyväskylä",
       },
     });
@@ -719,6 +727,7 @@ describe("TripPlannerPage", () => {
           suggestions: [
             {
               coordinate: { lat: 60.2, lon: 24.9 },
+              displayName: "Helsinki newer",
               label: "Helsinki newer",
             },
           ],
@@ -750,6 +759,7 @@ describe("TripPlannerPage", () => {
         suggestions: [
           {
             coordinate: { lat: 60.17, lon: 24.94 },
+            displayName: "Hel stale",
             label: "Hel stale",
           },
         ],
@@ -826,8 +836,16 @@ describe("TripPlannerPage", () => {
     mockTripPlannerApi({
       suggestionHandler: async () => ({
         suggestions: [
-          { coordinate: { lat: 60.17, lon: 24.94 }, label: "Helsinki 1" },
-          { coordinate: { lat: 60.18, lon: 24.95 }, label: "Helsinki 2" },
+          {
+            coordinate: { lat: 60.17, lon: 24.94 },
+            displayName: "Helsinki 1",
+            label: "Helsinki 1",
+          },
+          {
+            coordinate: { lat: 60.18, lon: 24.95 },
+            displayName: "Helsinki 2",
+            label: "Helsinki 2",
+          },
         ],
       }),
     });
@@ -870,7 +888,13 @@ describe("TripPlannerPage", () => {
     vi.useFakeTimers();
     mockTripPlannerApi({
       suggestionHandler: async () => ({
-        suggestions: [{ coordinate: { lat: 60.17, lon: 24.94 }, label: "Helsinki, Suomi" }],
+        suggestions: [
+          {
+            coordinate: { lat: 60.17, lon: 24.94 },
+            displayName: "Helsinki, Suomi",
+            label: "Helsinki, Suomi",
+          },
+        ],
       }),
     });
 
@@ -1146,6 +1170,7 @@ describe("TripPlannerPage", () => {
           defaultDistanceKm: 9,
           destination: {
             coordinate: { lat: 62.24, lon: 25.75 },
+            displayName: "Jyväskylä",
             label: "Jyväskylä",
           },
           maxDistanceKm: 45,
@@ -1450,6 +1475,7 @@ describe("TripPlannerPage", () => {
           defaultDistanceKm: 9,
           destination: {
             coordinate: { lat: 61.49, lon: 23.76 },
+            displayName: "Jyväskylä",
             label: "Jyväskylä",
           },
           maxDistanceKm: 45,

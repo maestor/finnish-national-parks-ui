@@ -53,6 +53,7 @@ const tripWithStartingPoint = {
   ...tripToEdit,
   startingPoint: {
     coordinate: { lat: 62.24147, lon: 25.72088 },
+    displayName: "Jyvaskyla",
     label: "Jyvaskyla",
   },
 } satisfies Trip;
@@ -97,7 +98,9 @@ describe("TripForm", () => {
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith("/hallinta/retket/12/muokkaa?created=1");
     });
-    expect(mockRevalidatePublicCache).toHaveBeenCalled();
+    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({
+      tripSlug: "keski-suomen-kesaretki",
+    });
   });
 
   it("validates that name is required", async () => {
@@ -134,6 +137,12 @@ describe("TripForm", () => {
     });
     await waitFor(() => {
       expect(screen.getByRole("status")).toHaveTextContent("controlPanel.trips.form.updateSuccess");
+    });
+    expect(mockRevalidatePublicCache).toHaveBeenNthCalledWith(1, {
+      tripSlug: "keski-suomen-kesaretki",
+    });
+    expect(mockRevalidatePublicCache).toHaveBeenNthCalledWith(2, {
+      tripSlug: "lapin-kierros",
     });
     expect(mockRefresh).toHaveBeenCalled();
   });
@@ -182,12 +191,14 @@ describe("TripForm", () => {
     const { apiFetch } = await import("@/lib/api");
     mockResolveLocationFromCoordinate.mockResolvedValueOnce({
       coordinate: { lat: 61.4978, lon: 23.761 },
+      displayName: "Tampere",
       label: "Tampere",
     });
     vi.mocked(apiFetch).mockResolvedValueOnce({
       ...tripToEdit,
       startingPoint: {
         coordinate: { lat: 61.4978, lon: 23.761 },
+        displayName: "Tampere",
         label: "Tampere",
       },
     });
@@ -229,6 +240,7 @@ describe("TripForm", () => {
       body: JSON.stringify({
         startingPoint: {
           coordinate: { lat: 61.4978, lon: 23.761 },
+          displayName: "Tampere",
           label: "Tampere",
         },
       }),
