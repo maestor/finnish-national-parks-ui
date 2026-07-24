@@ -21,6 +21,7 @@ interface TripMapPoint {
     lat: number;
     lon: number;
   };
+  excludeFromRoute: boolean;
   href?: string;
   index: number;
   kind: "stop" | "visit";
@@ -30,6 +31,7 @@ interface TripMapPoint {
 }
 
 interface PopupLabels {
+  excludedFromRoute: string;
   openVisit: string;
 }
 
@@ -54,8 +56,11 @@ const createWaypointMarkerElement = (point: TripMapPoint) => {
   button.type = "button";
   button.className =
     "flex h-8 min-w-8 cursor-pointer items-center justify-center rounded-full border border-white/85 px-2 text-xs font-semibold text-white shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
-  button.classList.add(point.kind === "visit" ? "bg-emerald-600" : "bg-amber-500");
+  button.classList.add(point.kind === "stop" ? "bg-amber-500" : "bg-emerald-600");
   button.setAttribute("aria-label", `${point.index}. ${point.label}`);
+  if (point.excludeFromRoute) {
+    button.setAttribute("data-route-excluded", "true");
+  }
   button.textContent = String(point.index);
   return button;
 };
@@ -97,6 +102,9 @@ const createPopupNode = (point: TripMapPoint, labels: PopupLabels) => {
   const details = document.createElement("div");
   details.className = "mt-3 space-y-2 text-xs text-muted-foreground";
   details.appendChild(createPopupDetailRow(formatFinnishDate(point.visitedOn)));
+  if (point.excludeFromRoute) {
+    details.appendChild(createPopupDetailRow(labels.excludedFromRoute));
+  }
   container.appendChild(details);
 
   if (point.href) {
@@ -117,16 +125,6 @@ const createPopupNode = (point: TripMapPoint, labels: PopupLabels) => {
   return container;
 };
 
-const getBoundsFromRoute = (route: PublicTripRoute): maplibregl.LngLatBoundsLike => {
-  const lons = route.geometry.coordinates.map((point) => point[0]);
-  const lats = route.geometry.coordinates.map((point) => point[1]);
-
-  return [
-    [Math.min(...lons), Math.min(...lats)],
-    [Math.max(...lons), Math.max(...lats)],
-  ];
-};
-
 const getBoundsFromCoordinates = (
   coordinates: Array<{
     lat: number;
@@ -141,6 +139,21 @@ const getBoundsFromCoordinates = (
     [Math.max(...lons), Math.max(...lats)],
   ];
 };
+
+const getBoundsFromRouteAndCoordinates = (
+  route: PublicTripRoute,
+  coordinates: Array<{
+    lat: number;
+    lon: number;
+  }>,
+): maplibregl.LngLatBoundsLike =>
+  getBoundsFromCoordinates([
+    ...coordinates,
+    ...route.geometry.coordinates.map(([lon, lat]) => ({
+      lat,
+      lon,
+    })),
+  ]);
 
 export const PublicTripMap = ({
   route,
@@ -289,6 +302,7 @@ export const PublicTripMap = ({
       item.kind === "visit"
         ? {
             coordinate: item.visit.park.markerPoint,
+            excludeFromRoute: item.visit.excludeFromRoute,
             href: createParkVisitHref({
               parkSlug: item.visit.park.slug,
               visitId: item.visit.id,
@@ -301,6 +315,7 @@ export const PublicTripMap = ({
           }
         : {
             coordinate: item.stop.location.coordinate,
+            excludeFromRoute: false,
             index: item.tripStopOrder,
             kind: "stop",
             label: item.stop.location.displayName,
@@ -313,10 +328,18 @@ export const PublicTripMap = ({
       ...tripPoints.map((point) => point.coordinate),
     ]);
 
-    map.fitBounds(route ? getBoundsFromRoute(route) : pointBounds, {
-      padding: MAP_PADDING,
-      duration: 0,
-    });
+    map.fitBounds(
+      route
+        ? getBoundsFromRouteAndCoordinates(route, [
+            startingPoint.coordinate,
+            ...tripPoints.map((point) => point.coordinate),
+          ])
+        : pointBounds,
+      {
+        padding: MAP_PADDING,
+        duration: 0,
+      },
+    );
 
     const nextMarkers: maplibregl.Marker[] = [
       new maplibregl.Marker({
@@ -386,6 +409,7 @@ export const PublicTripMap = ({
     for (const point of tripPoints) {
       const element = createWaypointMarkerElement(point);
       const popupContent = createPopupNode(point, {
+        excludedFromRoute: t("excludedFromRoute"),
         openVisit: t("openVisit"),
       });
       const popup = new maplibregl.Popup({

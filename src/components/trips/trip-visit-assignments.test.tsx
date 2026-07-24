@@ -62,6 +62,7 @@ const currentTrip = {
         },
         visitedOn: "2024-06-14",
         route: null,
+        excludeFromRoute: true,
         author: null,
         note: null,
         createdAt: "2024-06-14T00:00:00Z",
@@ -98,6 +99,7 @@ const visits = [
     trip: null,
     visitedOn: "2024-06-15",
     route: "Huippupolku",
+    excludeFromRoute: false,
     author: "Maija",
     note: null,
     createdAt: "2024-06-15T00:00:00Z",
@@ -118,6 +120,7 @@ const visits = [
     },
     visitedOn: "2024-06-14",
     route: null,
+    excludeFromRoute: true,
     author: null,
     note: null,
     createdAt: "2024-06-14T00:00:00Z",
@@ -138,6 +141,7 @@ const visits = [
     },
     visitedOn: "2024-06-13",
     route: "Korpinkierros",
+    excludeFromRoute: false,
     author: null,
     note: null,
     createdAt: "2024-06-13T00:00:00Z",
@@ -199,9 +203,36 @@ describe("TripVisitAssignments", () => {
 
     expect(screen.getByText("Jyvaskyla")).toBeInTheDocument();
     expect(screen.getAllByText("Nuuksio").length).toBeGreaterThan(0);
+    expect(
+      screen.getByText("controlPanel.trips.assignments.excludedFromRoute"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Lounaspaikka Jyvaskyla")).toBeInTheDocument();
     expect(screen.getAllByText("Pallas-Yllästunturi").length).toBeGreaterThan(0);
     expect(within(availableSection).queryByText("Repovesi")).not.toBeInTheDocument();
+  });
+
+  it("toggles route exclusion for an assigned visit", async () => {
+    const { apiFetch } = await import("@/lib/api");
+    vi.mocked(apiFetch).mockResolvedValueOnce(undefined);
+
+    render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
+
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.includeInRouteAction",
+      }),
+    );
+
+    expect(apiFetch).toHaveBeenCalledWith("/api/visits/11", {
+      method: "PATCH",
+      body: JSON.stringify({
+        excludeFromRoute: false,
+      }),
+    });
+    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({
+      parkSlug: "nuuksio",
+      tripSlug: "keski-suomen-kesaretki",
+    });
   });
 
   it("keeps stop creation on the itinerary side and limits the available visits list height", async () => {

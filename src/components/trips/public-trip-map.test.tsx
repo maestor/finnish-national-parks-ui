@@ -172,6 +172,7 @@ const tripStops: PublicTripDetail["itinerary"] = [
       id: 11,
       author: null,
       createdAt: "2024-06-15T10:00:00Z",
+      excludeFromRoute: false,
       note: null,
       park: {
         name: "Nuuksio",
@@ -189,8 +190,32 @@ const tripStops: PublicTripDetail["itinerary"] = [
     },
   },
   {
-    kind: "stop",
+    kind: "visit",
     tripStopOrder: 2,
+    visit: {
+      id: 12,
+      author: null,
+      createdAt: "2024-06-15T18:00:00Z",
+      excludeFromRoute: true,
+      note: null,
+      park: {
+        name: "Ulko-Tammio",
+        slug: "ulko-tammio",
+        markerPoint: {
+          lat: 60.52,
+          lon: 27.08,
+        },
+        typeLabel: "Kansallispuisto",
+      },
+      route: null,
+      updatedAt: "2024-06-15T18:00:00Z",
+      visitedOn: "2024-06-15",
+      imageCount: 0,
+    },
+  },
+  {
+    kind: "stop",
+    tripStopOrder: 3,
     stop: {
       id: 31,
       createdAt: "2024-06-16T10:00:00Z",
@@ -203,7 +228,7 @@ const tripStops: PublicTripDetail["itinerary"] = [
         },
       },
       note: null,
-      tripStopOrder: 2,
+      tripStopOrder: 3,
       updatedAt: "2024-06-16T10:00:00Z",
       visitedOn: "2024-06-16",
     },
@@ -256,17 +281,20 @@ describe("PublicTripMap", () => {
     );
     expect(mockMap.fitBounds).toHaveBeenCalledWith(
       [
-        [24.9384, 60.1699],
-        [25, 62],
+        [24.53, 60.1699],
+        [27.08, 65.0121],
       ],
       { padding: 44, duration: 0 },
     );
-    expect(markerInstances).toHaveLength(3);
+    expect(markerInstances).toHaveLength(4);
     expect(markerInstances[0]?.element).toHaveAttribute("title", "tripPage.startLabel");
     expect(markerInstances[1]?.element).toHaveAttribute("aria-label", "1. Nuuksio");
     expect(markerInstances[1]?.element).toHaveTextContent("1");
-    expect(markerInstances[2]?.element).toHaveAttribute("aria-label", "2. Yöpyminen Oulussa");
+    expect(markerInstances[2]?.element).toHaveAttribute("aria-label", "2. Ulko-Tammio");
     expect(markerInstances[2]?.element).toHaveTextContent("2");
+    expect(markerInstances[2]?.element).toHaveAttribute("data-route-excluded", "true");
+    expect(markerInstances[3]?.element).toHaveAttribute("aria-label", "3. Yöpyminen Oulussa");
+    expect(markerInstances[3]?.element).toHaveTextContent("3");
 
     unmount();
 
@@ -287,7 +315,7 @@ describe("PublicTripMap", () => {
     );
 
     await waitFor(() => {
-      expect(markerInstances).toHaveLength(3);
+      expect(markerInstances).toHaveLength(4);
     });
 
     fireEvent.click(markerInstances[1].element);
@@ -318,12 +346,12 @@ describe("PublicTripMap", () => {
       />,
     );
 
-    expect(markerInstances).toHaveLength(3);
+    expect(markerInstances).toHaveLength(4);
 
-    fireEvent.mouseEnter(markerInstances[2].element);
+    fireEvent.mouseEnter(markerInstances[3].element);
     expect(document.querySelector(".maplibregl-popup")).not.toBeNull();
 
-    fireEvent.mouseLeave(markerInstances[2].element);
+    fireEvent.mouseLeave(markerInstances[3].element);
 
     act(() => {
       vi.advanceTimersByTime(249);
@@ -347,7 +375,7 @@ describe("PublicTripMap", () => {
     );
 
     await waitFor(() => {
-      expect(markerInstances).toHaveLength(3);
+      expect(markerInstances).toHaveLength(4);
     });
 
     expect(mockMap.addSource).not.toHaveBeenCalled();
@@ -355,10 +383,35 @@ describe("PublicTripMap", () => {
     expect(mockMap.fitBounds).toHaveBeenCalledWith(
       [
         [24.53, 60.1699],
-        [25.4651, 65.0121],
+        [27.08, 65.0121],
       ],
       { padding: 44, duration: 0 },
     );
+  });
+
+  it("shows excluded visits as non-route markers in the popup", async () => {
+    render(
+      <PublicTripMap
+        route={route}
+        startingPoint={startingPoint}
+        tripName="Kesaretki"
+        tripStops={tripStops}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(markerInstances).toHaveLength(4);
+    });
+
+    fireEvent.click(markerInstances[2].element);
+
+    const popup = document.querySelector(".maplibregl-popup");
+
+    if (!(popup instanceof HTMLElement)) {
+      throw new Error("Expected an open map popup");
+    }
+
+    expect(popup).toHaveTextContent("tripPage.excludedFromRoute");
   });
 
   it("reuses an existing route source and layer when they are already present", async () => {

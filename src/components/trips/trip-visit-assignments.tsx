@@ -28,6 +28,7 @@ import type {
   TripDetail,
   TripItineraryItem,
   TripItineraryStopItem,
+  TripItineraryVisitItem,
   TripLocation,
   TripStop,
   TripStopCreateRequest,
@@ -81,6 +82,17 @@ const updateItineraryItemOrder = (
           tripStopOrder,
         },
       };
+
+const updateItineraryVisitExcludeFromRoute = (
+  item: TripItineraryVisitItem,
+  excludeFromRoute: boolean,
+): TripItineraryVisitItem => ({
+  ...item,
+  visit: {
+    ...item.visit,
+    excludeFromRoute,
+  },
+});
 
 const reindexItinerary = (items: TripItineraryItem[]) =>
   items.map((item, index) => updateItineraryItemOrder(item, index + 1));
@@ -594,6 +606,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
           note: visit.note,
           park: visit.park,
           route: visit.route,
+          excludeFromRoute: visit.excludeFromRoute,
           updatedAt: visit.updatedAt,
           visitedOn: visit.visitedOn,
         },
@@ -620,6 +633,56 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       });
       await revalidatePublicCache({ parkSlug: visit.park.slug, tripSlug: trip.slug });
       setStatusMessage(t("attachSuccess"));
+      router.refresh();
+    } catch (error) {
+      itineraryRef.current = previousItinerary;
+      setItinerary(previousItinerary);
+      setVisitsState(previousVisitsState);
+      setActionError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setPendingKey(null);
+    }
+  };
+
+  const handleToggleVisitExcludeFromRoute = async (visitId: number, excludeFromRoute: boolean) => {
+    const previousItinerary = itineraryRef.current;
+    const previousVisitsState = visitsState;
+    const visit = visitsState.find((currentVisit) => currentVisit.id === visitId);
+
+    if (!visit) {
+      return;
+    }
+
+    setPendingKey(`visit-${visitId}-exclude`);
+    setActionError(null);
+    setStatusMessage(null);
+    setItineraryWithRef((currentItinerary) =>
+      currentItinerary.map((item) =>
+        item.kind === "visit" && item.visit.id === visitId
+          ? updateItineraryVisitExcludeFromRoute(item, excludeFromRoute)
+          : item,
+      ),
+    );
+    setVisitsState((currentVisits) =>
+      currentVisits.map((currentVisit) =>
+        currentVisit.id === visitId
+          ? {
+              ...currentVisit,
+              excludeFromRoute,
+            }
+          : currentVisit,
+      ),
+    );
+
+    try {
+      await apiFetch(`/api/visits/${visitId}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          excludeFromRoute,
+        }),
+      });
+      await revalidatePublicCache({ parkSlug: visit.park.slug, tripSlug: trip.slug });
+      setStatusMessage(excludeFromRoute ? t("routeExclusionSuccess") : t("routeInclusionSuccess"));
       router.refresh();
     } catch (error) {
       itineraryRef.current = previousItinerary;
@@ -1101,15 +1164,24 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                               </span>
                               <p className="font-medium">{itemLabel}</p>
                             </div>
-                            {isVisit
-                              ? item.visit.route !== null && (
+                            {isVisit ? (
+                              <>
+                                {item.visit.route !== null && (
                                   <p className="text-sm text-muted-foreground">
                                     {item.visit.route}
                                   </p>
-                                )
-                              : item.stop.note !== null && (
-                                  <p className="text-sm text-muted-foreground">{item.stop.note}</p>
                                 )}
+                                {item.visit.excludeFromRoute === true && (
+                                  <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                                    {t("excludedFromRoute")}
+                                  </p>
+                                )}
+                              </>
+                            ) : (
+                              item.stop.note !== null && (
+                                <p className="text-sm text-muted-foreground">{item.stop.note}</p>
+                              )
+                            )}
                           </div>
                         </td>
                         <td className="px-4 py-3 align-top text-muted-foreground">
@@ -1118,15 +1190,35 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                         <td className="px-4 py-3 text-right">
                           <div className="flex flex-wrap justify-end gap-2">
                             {isVisit ? (
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                disabled={isBusy}
-                                onClick={() => void handleRemoveVisit(item.visit.id)}
-                              >
-                                {isPending ? "..." : t("removeVisitAction")}
-                              </Button>
+                              <>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  disabled={isBusy}
+                                  onClick={() =>
+                                    void handleToggleVisitExcludeFromRoute(
+                                      item.visit.id,
+                                      !item.visit.excludeFromRoute,
+                                    )
+                                  }
+                                >
+                                  {isPending
+                                    ? "..."
+                                    : item.visit.excludeFromRoute
+                                      ? t("includeInRouteAction")
+                                      : t("excludeFromRouteAction")}
+                                </Button>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  disabled={isBusy}
+                                  onClick={() => void handleRemoveVisit(item.visit.id)}
+                                >
+                                  {isPending ? "..." : t("removeVisitAction")}
+                                </Button>
+                              </>
                             ) : (
                               <>
                                 <Button

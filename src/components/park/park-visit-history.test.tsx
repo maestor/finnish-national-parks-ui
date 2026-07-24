@@ -22,6 +22,7 @@ const visits: Visit[] = [
     id: 10,
     visitedOn: "2024-06-15",
     route: "Huippupolku",
+    excludeFromRoute: false,
     author: "Maija",
     note: "Aurinkoinen reissu",
     trip: null,

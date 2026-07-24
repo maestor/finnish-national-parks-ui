@@ -43,6 +43,7 @@ const visitToEdit = {
   tripStopOrder: 1,
   visitedOn: "2024-06-15",
   route: "Pallas-Yllästunturin reitti",
+  excludeFromRoute: true,
   author: "Maija Meikäläinen",
   note: "Great hike",
   createdAt: "2024-06-15T00:00:00Z",
@@ -100,6 +101,7 @@ describe("VisitForm", () => {
       id: 42,
       visitedOn: "2024-06-15",
       route: null,
+      excludeFromRoute: false,
       author: null,
       note: null,
       tripStopOrder: null,
@@ -123,6 +125,7 @@ describe("VisitForm", () => {
         tripId: null,
         visitedOn: "2024-06-15",
         route: null,
+        excludeFromRoute: false,
         author: null,
         note: null,
       }),
@@ -140,6 +143,7 @@ describe("VisitForm", () => {
       id: 43,
       visitedOn: "2024-06-15",
       route: null,
+      excludeFromRoute: false,
       author: null,
       note: null,
       tripStopOrder: 1,
@@ -173,6 +177,7 @@ describe("VisitForm", () => {
       id: 42,
       visitedOn: "2024-06-15",
       route: null,
+      excludeFromRoute: false,
       author: null,
       note: null,
       tripStopOrder: null,
@@ -211,6 +216,9 @@ describe("VisitForm", () => {
     expect(screen.getByLabelText(/controlPanel.visits.form.tripLabel/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/controlPanel.visits.form.dateLabel/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/controlPanel.visits.form.routeLabel/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("checkbox", { name: /controlPanel.visits.form.excludeFromRouteLabel/i }),
+    ).toBeInTheDocument();
     expect(screen.getByLabelText(/controlPanel.visits.form.authorLabel/i)).toBeInTheDocument();
     expect(screen.getByText(/controlPanel.visits.form.noteLabel/i)).toBeInTheDocument();
     expect(
@@ -250,6 +258,9 @@ describe("VisitForm", () => {
     expect(screen.getByText("Pallas-Yllästunturi")).toBeInTheDocument();
     expect(screen.getByDisplayValue("2024-06-15")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Pallas-Yllästunturin reitti")).toBeInTheDocument();
+    expect(
+      screen.getByRole("checkbox", { name: /controlPanel.visits.form.excludeFromRouteLabel/i }),
+    ).toBeChecked();
     expect(screen.getByDisplayValue("Maija Meikäläinen")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Great hike")).toBeInTheDocument();
     expect(
@@ -295,6 +306,7 @@ describe("VisitForm", () => {
         tripId: 7,
         visitedOn: "2024-06-15",
         route: "Hetta",
+        excludeFromRoute: true,
         author: "Maija Meikäläinen",
         note: "Great hike",
       }),
@@ -322,6 +334,7 @@ describe("VisitForm", () => {
       trip: null,
       visitedOn: "2024-06-15",
       route: null,
+      excludeFromRoute: false,
       author: null,
       note: null,
       tripStopOrder: null,
@@ -352,6 +365,49 @@ describe("VisitForm", () => {
         tripId: 8,
         visitedOn: "2024-06-15",
         route: null,
+        excludeFromRoute: false,
+        author: null,
+        note: null,
+      }),
+    });
+  });
+
+  it("submits route exclusion when creating a visit", async () => {
+    const { apiFetch } = await import("@/lib/api");
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      id: 44,
+      visitedOn: "2024-06-15",
+      route: null,
+      excludeFromRoute: true,
+      author: null,
+      note: null,
+      tripStopOrder: null,
+      createdAt: "2024-06-15T00:00:00Z",
+      updatedAt: "2024-06-15T00:00:00Z",
+    });
+
+    render(<VisitForm parks={parks} trips={trips} defaultTripId="7" />);
+
+    await userEvent.selectOptions(
+      screen.getByLabelText(/controlPanel.visits.form.parkLabel/i),
+      "pallas",
+    );
+    await userEvent.type(
+      screen.getByLabelText(/controlPanel.visits.form.dateLabel/i),
+      "2024-06-15",
+    );
+    await userEvent.click(
+      screen.getByRole("checkbox", { name: /controlPanel.visits.form.excludeFromRouteLabel/i }),
+    );
+    await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.submit/i }));
+
+    expect(apiFetch).toHaveBeenCalledWith("/api/parks/pallas/visits", {
+      method: "POST",
+      body: JSON.stringify({
+        tripId: 7,
+        visitedOn: "2024-06-15",
+        route: null,
+        excludeFromRoute: true,
         author: null,
         note: null,
       }),

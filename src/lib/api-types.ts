@@ -851,6 +851,7 @@ export interface paths {
                             visits: {
                                 author: string | null;
                                 createdAt: string;
+                                excludeFromRoute: boolean;
                                 id: number;
                                 images: {
                                     id: number;
@@ -908,6 +909,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         author?: string | null;
+                        excludeFromRoute?: boolean;
                         note?: string | null;
                         route?: string | null;
                         tripId?: number | null;
@@ -926,6 +928,7 @@ export interface paths {
                         "application/json": {
                             author: string | null;
                             createdAt: string;
+                            excludeFromRoute: boolean;
                             id: number;
                             images: {
                                 id: number;
@@ -1480,6 +1483,7 @@ export interface paths {
                                     author: string | null;
                                     /** Format: date-time */
                                     createdAt: string;
+                                    excludeFromRoute: boolean;
                                     id: number;
                                     note: string | null;
                                     park: {
@@ -1638,6 +1642,7 @@ export interface paths {
                                     author: string | null;
                                     /** Format: date-time */
                                     createdAt: string;
+                                    excludeFromRoute: boolean;
                                     id: number;
                                     note: string | null;
                                     park: {
@@ -2344,6 +2349,7 @@ export interface paths {
                             visits: {
                                 author: string | null;
                                 createdAt: string;
+                                excludeFromRoute: boolean;
                                 id: number;
                                 images: {
                                     id: number;
@@ -2414,6 +2420,7 @@ export interface paths {
                         "application/json": {
                             author: string | null;
                             createdAt: string;
+                            excludeFromRoute: boolean;
                             id: number;
                             images: {
                                 id: number;
@@ -2533,6 +2540,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         author?: string | null;
+                        excludeFromRoute?: boolean;
                         note?: string | null;
                         route?: string | null;
                         tripId?: number | null;
@@ -2551,6 +2559,7 @@ export interface paths {
                         "application/json": {
                             author: string | null;
                             createdAt: string;
+                            excludeFromRoute: boolean;
                             id: number;
                             images: {
                                 id: number;
