@@ -26,6 +26,7 @@ describe("location helpers", () => {
   it("builds a fallback resolved location from coordinates", () => {
     expect(buildFallbackResolvedLocation({ lat: 61.5, lon: 23.76 })).toEqual({
       coordinate: { lat: 61.5, lon: 23.76 },
+      displayName: "61.500000,23.760000",
       label: "61.500000,23.760000",
     });
   });
@@ -35,6 +36,7 @@ describe("location helpers", () => {
       suggestions: [
         {
           coordinate: { lat: 60.17, lon: 24.94 },
+          displayName: "Helsinki, Suomi",
           label: "Helsinki, Suomi",
         },
       ],
@@ -42,6 +44,7 @@ describe("location helpers", () => {
 
     await expect(resolveLocationFromCoordinate({ lat: 60.17, lon: 24.94 })).resolves.toEqual({
       coordinate: { lat: 60.17, lon: 24.94 },
+      displayName: "Helsinki, Suomi",
       label: "Helsinki, Suomi",
     });
   });
@@ -53,6 +56,7 @@ describe("location helpers", () => {
 
     await expect(resolveLocationFromCoordinate({ lat: 65.0121, lon: 25.4651 })).resolves.toEqual({
       coordinate: { lat: 65.0121, lon: 25.4651 },
+      displayName: "65.012100,25.465100",
       label: "65.012100,25.465100",
     });
   });
@@ -62,6 +66,7 @@ describe("location helpers", () => {
 
     await expect(resolveLocationFromCoordinate({ lat: 62.2426, lon: 25.7473 })).resolves.toEqual({
       coordinate: { lat: 62.2426, lon: 25.7473 },
+      displayName: "62.242600,25.747300",
       label: "62.242600,25.747300",
     });
   });

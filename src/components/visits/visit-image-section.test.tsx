@@ -134,7 +134,10 @@ describe("VisitImageSection", () => {
         method: "DELETE",
       });
     });
-    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "pallas" });
+    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({
+      parkSlug: "pallas",
+      tripSlug: null,
+    });
     expect(mockRefresh).toHaveBeenCalled();
     expect(screen.getByText("controlPanel.visits.images.deleteSuccess")).toBeInTheDocument();
   });
@@ -218,7 +221,10 @@ describe("VisitImageSection", () => {
       });
     });
 
-    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "pallas" });
+    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({
+      parkSlug: "pallas",
+      tripSlug: null,
+    });
     expect(mockRefresh).toHaveBeenCalled();
     expect(screen.getByText("controlPanel.visits.images.reorderSuccess")).toBeInTheDocument();
     expect(
@@ -643,7 +649,10 @@ describe("VisitImageSection", () => {
       },
       body: firstFile,
     });
-    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "pallas" });
+    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({
+      parkSlug: "pallas",
+      tripSlug: null,
+    });
     expect(mockRefresh).toHaveBeenCalled();
     expect(screen.getByText("controlPanel.visits.images.uploadSuccess")).toBeInTheDocument();
     expect(
@@ -706,7 +715,10 @@ describe("VisitImageSection", () => {
       expect(screen.getByRole("alert")).toHaveTextContent("second.jpg: signature expired");
     });
 
-    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "pallas" });
+    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({
+      parkSlug: "pallas",
+      tripSlug: null,
+    });
     expect(mockRefresh).toHaveBeenCalled();
     expect(screen.getByText("controlPanel.visits.images.uploadSuccess")).toBeInTheDocument();
     expect(screen.getByText("controlPanel.visits.images.selectedCount")).toBeInTheDocument();

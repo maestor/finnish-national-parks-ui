@@ -74,7 +74,7 @@ export interface PublicVisitTimelineTripItem {
   kind: "trip";
   latestVisit: FrontendTimelineVisit;
   name: string;
-  parkCount: number;
+  slug: string;
   tripId: number;
   visitCount: number;
   visits: FrontendTimelineVisit[];
@@ -389,11 +389,11 @@ export const buildPublicVisitsTimelineModel = (
     const visitsInNarrativeOrder = [...groupedTripVisits].sort(compareVisitsByTripNarrative);
     const visitsInTimelineOrder = [...visitsInNarrativeOrder].reverse();
     const imageCount = groupedTripVisits.reduce((sum, visit) => sum + visit.imageCount, 0);
-    const parkCount = new Set(groupedTripVisits.map((visit) => visit.park.slug)).size;
     const tripItem: PublicVisitTimelineTripItem = {
       kind: "trip",
       tripId,
       name: latestVisit.trip.name,
+      slug: latestVisit.trip.slug,
       dateRange: {
         start: visitsInNarrativeOrder[0]?.visitedOn ?? latestVisit.visitedOn,
         end:
@@ -402,7 +402,6 @@ export const buildPublicVisitsTimelineModel = (
       },
       imageCount,
       latestVisit,
-      parkCount,
       visitCount: groupedTripVisits.length,
       visits: visitsInTimelineOrder,
     };

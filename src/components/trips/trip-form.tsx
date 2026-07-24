@@ -66,6 +66,17 @@ const trimToNull = (value: string) => {
   return trimmed === "" ? null : trimmed;
 };
 
+const revalidateTripPages = async (...tripSlugs: Array<string | null | undefined>) => {
+  const uniqueTripSlugs = [...new Set(tripSlugs.filter((slug): slug is string => Boolean(slug)))];
+
+  if (uniqueTripSlugs.length === 0) {
+    await revalidatePublicCache();
+    return;
+  }
+
+  await Promise.all(uniqueTripSlugs.map((tripSlug) => revalidatePublicCache({ tripSlug })));
+};
+
 export const TripForm = ({ tripToEdit }: TripFormProps) => {
   const t = useTranslations("controlPanel.trips.form");
   const router = useRouter();
@@ -208,7 +219,7 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
           body: JSON.stringify(payload),
         });
 
-        await revalidatePublicCache();
+        await revalidateTripPages(tripToEdit.slug, updatedTrip.slug);
         setName(updatedTrip.name);
         setDescription(updatedTrip.description ?? "");
         setStartingPoint(updatedTrip.startingPoint);
@@ -232,7 +243,7 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
           body: JSON.stringify(payload),
         });
 
-        await revalidatePublicCache();
+        await revalidateTripPages(createdTrip.slug);
         shouldResetSubmittingState = false;
         router.push(
           createPathWithSearchParams(appRoutes.controlPanel.editTrip(createdTrip.id), {
@@ -263,7 +274,7 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
 
     try {
       await apiFetch(`/api/trips/${tripToEdit.id}`, { method: "DELETE" });
-      await revalidatePublicCache();
+      await revalidateTripPages(tripToEdit.slug);
       router.push(appRoutes.controlPanel.trips);
       router.refresh();
     } catch (error) {

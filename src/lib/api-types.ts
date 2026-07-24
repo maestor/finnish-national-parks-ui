@@ -1318,6 +1318,7 @@ export interface paths {
                                         lat: number;
                                         lon: number;
                                     };
+                                    displayName: string;
                                     label: string;
                                 } | null;
                                 /** Format: date-time */
@@ -1383,6 +1384,7 @@ export interface paths {
                                     lat: number;
                                     lon: number;
                                 };
+                                displayName: string;
                                 label: string;
                             } | null;
                             /** Format: date-time */
@@ -1417,6 +1419,138 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trips/slug/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    slug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Page-ready trip detail by slug */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: date-time */
+                            createdAt: string;
+                            dateRange: {
+                                end: string;
+                                start: string;
+                            } | null;
+                            description: string | null;
+                            id: number;
+                            name: string;
+                            slug: string;
+                            startingPoint: {
+                                coordinate: {
+                                    lat: number;
+                                    lon: number;
+                                };
+                                displayName: string;
+                                label: string;
+                            } | null;
+                            /** Format: date-time */
+                            updatedAt: string;
+                            visitCount: number;
+                            imageCount: number;
+                            itinerary: ({
+                                /** @enum {string} */
+                                kind: "visit";
+                                tripStopOrder: number;
+                                visit: {
+                                    author: string | null;
+                                    /** Format: date-time */
+                                    createdAt: string;
+                                    id: number;
+                                    note: string | null;
+                                    park: {
+                                        name: string;
+                                        slug: string;
+                                        markerPoint: {
+                                            lat: number;
+                                            lon: number;
+                                        };
+                                        typeLabel: string;
+                                    };
+                                    route: string | null;
+                                    /** Format: date-time */
+                                    updatedAt: string;
+                                    visitedOn: string;
+                                    imageCount: number;
+                                };
+                            } | {
+                                /** @enum {string} */
+                                kind: "stop";
+                                tripStopOrder: number;
+                                stop: {
+                                    /** Format: date-time */
+                                    createdAt: string;
+                                    id: number;
+                                    location: {
+                                        coordinate: {
+                                            lat: number;
+                                            lon: number;
+                                        };
+                                        displayName: string;
+                                        label: string;
+                                    };
+                                    note: string | null;
+                                    tripStopOrder: number;
+                                    /** Format: date-time */
+                                    updatedAt: string;
+                                    visitedOn: string;
+                                };
+                            })[];
+                            route: {
+                                distanceMeters: number;
+                                durationSeconds: number;
+                                geometry: {
+                                    coordinates: number[][];
+                                    /** @enum {string} */
+                                    type: "LineString";
+                                };
+                                returnsToStart: boolean;
+                                waypointCount: number;
+                            } | null;
+                            stopCount: number;
+                        };
+                    };
+                };
+                /** @description Trip was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1463,6 +1597,7 @@ export interface paths {
                                     lat: number;
                                     lon: number;
                                 };
+                                displayName: string;
                                 label: string;
                             } | null;
                             /** Format: date-time */
@@ -1500,6 +1635,7 @@ export interface paths {
                                             lat: number;
                                             lon: number;
                                         };
+                                        displayName: string;
                                         label: string;
                                     };
                                     note: string | null;
@@ -1634,6 +1770,7 @@ export interface paths {
                                     lat: number;
                                     lon: number;
                                 };
+                                displayName: string;
                                 label: string;
                             } | null;
                             /** Format: date-time */
@@ -1718,6 +1855,7 @@ export interface paths {
                                     lat: number;
                                     lon: number;
                                 };
+                                displayName: string;
                                 label: string;
                             }[];
                         };
@@ -1798,6 +1936,7 @@ export interface paths {
                                     lat: number;
                                     lon: number;
                                 };
+                                displayName: string;
                                 label: string;
                             };
                             maxDistanceKm: number;
@@ -1806,6 +1945,7 @@ export interface paths {
                                     lat: number;
                                     lon: number;
                                 };
+                                displayName: string;
                                 label: string;
                             };
                             parks: {
@@ -1952,6 +2092,7 @@ export interface paths {
                                     lat: number;
                                     lon: number;
                                 };
+                                displayName: string;
                                 label: string;
                             };
                             parks: {
@@ -2418,6 +2559,7 @@ export interface paths {
                                     lat: number;
                                     lon: number;
                                 };
+                                displayName: string;
                                 label: string;
                             };
                             note: string | null;
@@ -2670,6 +2812,7 @@ export interface paths {
                                     lat: number;
                                     lon: number;
                                 };
+                                displayName: string;
                                 label: string;
                             };
                             note: string | null;

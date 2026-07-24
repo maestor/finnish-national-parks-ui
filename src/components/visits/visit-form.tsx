@@ -67,6 +67,35 @@ export const VisitForm = ({
     router.back();
   };
 
+  const getTripSlugById = (value: string) =>
+    trips.find((trip) => String(trip.id) === value)?.slug ?? null;
+
+  const revalidateVisitPublicViews = async ({
+    parkSlug,
+    previousTripSlug = null,
+    nextTripSlug = null,
+  }: {
+    nextTripSlug?: string | null;
+    parkSlug: string;
+    previousTripSlug?: string | null;
+  }) => {
+    const tripSlugs = [...new Set([previousTripSlug, nextTripSlug].filter(Boolean))];
+
+    if (tripSlugs.length === 0) {
+      await revalidatePublicCache({ parkSlug });
+      return;
+    }
+
+    await Promise.all(
+      tripSlugs.map((tripSlug, index) =>
+        revalidatePublicCache({
+          parkSlug: index === 0 ? parkSlug : null,
+          tripSlug,
+        }),
+      ),
+    );
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setErrors({});
@@ -103,7 +132,11 @@ export const VisitForm = ({
             note: note || null,
           }),
         });
-        await revalidatePublicCache({ parkSlug: visitToEdit.park.slug });
+        await revalidateVisitPublicViews({
+          parkSlug: visitToEdit.park.slug,
+          previousTripSlug: visitToEdit.trip?.slug ?? null,
+          nextTripSlug: getTripSlugById(tripId),
+        });
         setSavedSnapshot({
           tripId,
           visitedOn,
@@ -124,7 +157,10 @@ export const VisitForm = ({
             note: note || null,
           }),
         });
-        await revalidatePublicCache({ parkSlug });
+        await revalidateVisitPublicViews({
+          parkSlug,
+          nextTripSlug: getTripSlugById(tripId),
+        });
         shouldResetSubmittingState = false;
         router.push(
           createPathWithSearchParams(appRoutes.controlPanel.editVisit(createdVisit.id), {
@@ -149,7 +185,10 @@ export const VisitForm = ({
     setIsSubmitting(true);
     try {
       await apiFetch(`/api/visits/${visitToEdit.id}`, { method: "DELETE" });
-      await revalidatePublicCache({ parkSlug: visitToEdit.park.slug });
+      await revalidateVisitPublicViews({
+        parkSlug: visitToEdit.park.slug,
+        previousTripSlug: visitToEdit.trip?.slug ?? null,
+      });
       router.push(appRoutes.controlPanel.visits);
       router.refresh();
     } catch (error) {

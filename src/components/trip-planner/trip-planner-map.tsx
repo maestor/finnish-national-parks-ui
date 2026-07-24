@@ -478,7 +478,7 @@ export const TripPlannerMap = ({
 
     const nextMarkers = [
       new maplibregl.Marker({
-        element: createEndpointMarkerElement(origin.label, "bg-sky-500"),
+        element: createEndpointMarkerElement(origin.displayName, "bg-sky-500"),
         anchor: "center",
       }).setLngLat([origin.coordinate.lon, origin.coordinate.lat]),
     ];
@@ -486,7 +486,7 @@ export const TripPlannerMap = ({
     if (destination) {
       nextMarkers.push(
         new maplibregl.Marker({
-          element: createEndpointMarkerElement(destination.label, "bg-emerald-600"),
+          element: createEndpointMarkerElement(destination.displayName, "bg-emerald-600"),
           anchor: "center",
         }).setLngLat([destination.coordinate.lon, destination.coordinate.lat]),
       );

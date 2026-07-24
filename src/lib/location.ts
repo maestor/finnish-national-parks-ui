@@ -27,6 +27,7 @@ export const buildFallbackResolvedLocation = (
   coordinate: LocationCoordinate,
 ): TripPlannerResolvedLocation => ({
   coordinate,
+  displayName: formatCoordinateQuery(coordinate),
   label: formatCoordinateQuery(coordinate),
 });
 

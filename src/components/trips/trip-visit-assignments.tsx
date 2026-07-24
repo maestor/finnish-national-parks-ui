@@ -386,7 +386,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
           }
         }
 
-        await revalidatePublicCache();
+        await revalidatePublicCache({ tripSlug: trip.slug });
         setStatusMessage(t("reorderSuccess"));
         router.refresh();
       } catch (error) {
@@ -615,7 +615,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
           tripStopOrder: nextOrder,
         }),
       });
-      await revalidatePublicCache({ parkSlug: visit.park.slug });
+      await revalidatePublicCache({ parkSlug: visit.park.slug, tripSlug: trip.slug });
       setStatusMessage(t("attachSuccess"));
       router.refresh();
     } catch (error) {
@@ -664,7 +664,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
           tripId: null,
         }),
       });
-      await revalidatePublicCache({ parkSlug: visit.park.slug });
+      await revalidatePublicCache({ parkSlug: visit.park.slug, tripSlug: trip.slug });
       setStatusMessage(t("detachSuccess"));
       router.refresh();
     } catch (error) {
@@ -747,7 +747,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
               : item,
           ),
         );
-        await revalidatePublicCache();
+        await revalidatePublicCache({ tripSlug: trip.slug });
         setStatusMessage(t("stopUpdateSuccess"));
         resetStopForm();
         router.refresh();
@@ -792,7 +792,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
           } satisfies TripItineraryStopItem,
         ]),
       );
-      await revalidatePublicCache();
+      await revalidatePublicCache({ tripSlug: trip.slug });
       setStatusMessage(t("stopCreateSuccess"));
       resetStopForm();
       router.refresh();
@@ -824,7 +824,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       await apiFetch(`/api/trip-stops/${stop.id}`, {
         method: "DELETE",
       });
-      await revalidatePublicCache();
+      await revalidatePublicCache({ tripSlug: trip.slug });
       setStatusMessage(t("stopDeleteSuccess"));
       if (editingStopId === stop.id) {
         resetStopForm();

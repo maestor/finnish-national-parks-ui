@@ -7,15 +7,23 @@ export type Trip =
 export type TripDetail =
   paths["/api/trips/{id}"]["get"]["responses"][200]["content"]["application/json"];
 
+export type PublicTripDetail =
+  paths["/api/trips/slug/{slug}"]["get"]["responses"][200]["content"]["application/json"];
+
 export type TripItineraryItem = TripDetail["itinerary"][number];
+export type PublicTripItineraryItem = PublicTripDetail["itinerary"][number];
 
 export type TripItineraryVisitItem = Extract<TripItineraryItem, { kind: "visit" }>;
+export type PublicTripItineraryVisitItem = Extract<PublicTripItineraryItem, { kind: "visit" }>;
 
 export type TripItineraryStopItem = Extract<TripItineraryItem, { kind: "stop" }>;
+export type PublicTripItineraryStopItem = Extract<PublicTripItineraryItem, { kind: "stop" }>;
 
 export type TripStop = TripItineraryStopItem["stop"];
+export type PublicTripStop = PublicTripItineraryStopItem["stop"];
 
 export type TripLocation = NonNullable<Trip["startingPoint"]>;
+export type PublicTripRoute = NonNullable<PublicTripDetail["route"]>;
 
 export type TripCreateRequest = NonNullable<
   paths["/api/trips"]["post"]["requestBody"]
@@ -51,7 +59,7 @@ export const sortTrips = (trips: Trip[]) =>
     return left.name.localeCompare(right.name, "fi-FI");
   });
 
-export const formatTripDateRange = (trip: Trip) => {
+export const formatTripDateRange = (trip: Pick<Trip, "dateRange">) => {
   if (!trip.dateRange) {
     return null;
   }

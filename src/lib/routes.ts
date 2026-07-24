@@ -5,6 +5,7 @@ export const appRoutes = {
   login: "/kirjaudu",
   parks: "/paikat",
   park: (slug: string) => `/paikka/${slug}`,
+  trip: (slug: string) => `/retki/${slug}`,
   visits: "/kaynnit",
   tripPlanner: "/reissusuunnittelu",
   controlPanel: {
@@ -24,6 +25,7 @@ export const legacyAppRedirects = [
   { source: "/login", destination: appRoutes.login, permanent: true },
   { source: "/parks", destination: appRoutes.parks, permanent: true },
   { source: "/park/:slug", destination: "/paikka/:slug", permanent: true },
+  { source: "/trip/:slug", destination: "/retki/:slug", permanent: true },
   { source: "/visits", destination: appRoutes.visits, permanent: true },
   { source: "/trip-planner", destination: appRoutes.tripPlanner, permanent: true },
   { source: "/control-panel", destination: appRoutes.controlPanel.root, permanent: true },
@@ -129,6 +131,11 @@ const normalizePathname = (pathname: string) => {
   const parkMatch = /^\/park\/([^/]+)$/.exec(pathname);
   if (parkMatch) {
     return appRoutes.park(parkMatch[1]);
+  }
+
+  const tripMatch = /^\/trip\/([^/]+)$/.exec(pathname);
+  if (tripMatch) {
+    return appRoutes.trip(tripMatch[1]);
   }
 
   const controlPanelParkEditMatch = /^\/control-panel\/parks\/([^/]+)\/edit$/.exec(pathname);

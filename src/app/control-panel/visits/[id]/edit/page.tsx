@@ -63,6 +63,7 @@ const EditVisitPage = async ({ params, searchParams }: EditVisitPageProps) => {
         images={visitToEdit.images}
         parkSlug={visitToEdit.park.slug}
         sectionTitle={t("manageImages")}
+        tripSlug={visitToEdit.trip?.slug ?? null}
       />
     </div>
   );

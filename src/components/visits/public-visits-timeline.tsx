@@ -29,6 +29,7 @@ import {
   type PublicVisitTimelineVisitItem,
   type PublicVisitYearSection,
 } from "@/lib/public-visits";
+import { appRoutes } from "@/lib/routes";
 import { LazyVisitsMap } from "./lazy-visits-map";
 
 interface PublicVisitsTimelineProps {
@@ -359,6 +360,12 @@ const PublicVisitsTimeline = ({
                   {t("trip.imageCount", { count: trip.imageCount })}
                 </span>
               ) : null}
+              <Link
+                href={appRoutes.trip(trip.slug)}
+                className="inline-flex items-center rounded-full border border-sky-200/70 bg-white/76 px-3 py-1 text-xs font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-sky-300/15 dark:bg-slate-950/56 dark:hover:bg-slate-950/72"
+              >
+                {t("trip.viewTrip")}
+              </Link>
             </div>
           </div>
 

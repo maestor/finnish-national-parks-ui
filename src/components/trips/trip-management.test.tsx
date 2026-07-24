@@ -26,6 +26,7 @@ const trips = [
     description: null,
     startingPoint: {
       coordinate: { lat: 61.9241, lon: 25.7482 },
+      displayName: "Jyvaskyla",
       label: "Jyvaskyla",
     },
     visitCount: 1,

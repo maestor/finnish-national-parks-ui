@@ -2,6 +2,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { ADMIN_PARK_VISIBILITY_TAG } from "@/lib/admin-cache";
 import {
   getPublicParkTag,
+  getPublicTripTag,
   HOME_SUMMARY_TAG,
   MAP_SUMMARY_TAG,
   PUBLIC_VISITS_TAG,
@@ -11,6 +12,7 @@ import { isAdminSession, readSessionToken, verifySessionToken } from "@/lib/sess
 
 interface RevalidateRequestBody {
   parkSlug?: string | null;
+  tripSlug?: string | null;
 }
 
 export const POST = async (request: Request) => {
@@ -38,12 +40,15 @@ export const POST = async (request: Request) => {
   }
 
   let parkSlug: string | null = null;
+  let tripSlug: string | null = null;
 
   try {
     const body = (await request.json()) as RevalidateRequestBody;
     parkSlug = typeof body.parkSlug === "string" && body.parkSlug.trim() ? body.parkSlug : null;
+    tripSlug = typeof body.tripSlug === "string" && body.tripSlug.trim() ? body.tripSlug : null;
   } catch {
     parkSlug = null;
+    tripSlug = null;
   }
 
   revalidateTag(HOME_SUMMARY_TAG, "max");
@@ -60,8 +65,14 @@ export const POST = async (request: Request) => {
     revalidatePath(appRoutes.park(parkSlug), "page");
   }
 
+  if (tripSlug) {
+    revalidateTag(getPublicTripTag(tripSlug), "max");
+    revalidatePath(appRoutes.trip(tripSlug), "page");
+  }
+
   return Response.json({
     ok: true,
     parkSlug,
+    tripSlug,
   });
 };
