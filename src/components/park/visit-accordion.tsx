@@ -162,18 +162,18 @@ export const VisitAccordion = ({
                 </span>
                 <span className={VISIT_BADGE_CLASS_NAME}>{t("visitNumber", { number })}</span>
                 <span className="text-base">{formatFinnishDate(visit.visitedOn)}</span>
-                {visit.route && (
+                {!!visit.route && (
                   <span className={ROUTE_BADGE_CLASS_NAME}>
                     <Route className="h-3.5 w-3.5" aria-hidden="true" />
                     {visit.route}
                   </span>
                 )}
-                {visit.trip ? (
+                {visit.trip !== null && (
                   <Link href={appRoutes.trip(visit.trip.slug)} className={TRIP_LINK_CLASS_NAME}>
                     <TentTree className="h-3.5 w-3.5" aria-hidden="true" />
                     {visit.trip.name}
                   </Link>
-                ) : null}
+                )}
               </span>
               <span className="flex shrink-0 items-center gap-1.5">
                 <CopyLinkButton
@@ -181,7 +181,7 @@ export const VisitAccordion = ({
                   label={t("copyVisitLink")}
                   copiedLabel={t("visitLinkCopied")}
                 />
-                {isEditable ? <EditVisitLink visitId={visit.id} /> : null}
+                {isEditable === true && <EditVisitLink visitId={visit.id} />}
               </span>
             </div>
           );
@@ -210,7 +210,7 @@ export const VisitAccordion = ({
                   </span>
                   <span className={VISIT_BADGE_CLASS_NAME}>{t("visitNumber", { number })}</span>
                   <span className="text-base">{formatFinnishDate(visit.visitedOn)}</span>
-                  {visit.route && (
+                  {!!visit.route && (
                     <span className={ROUTE_BADGE_CLASS_NAME}>
                       <Route className="h-3.5 w-3.5" aria-hidden="true" />
                       {visit.route}
@@ -222,7 +222,7 @@ export const VisitAccordion = ({
                       {t("imageCount", { count: imageCount })}
                     </span>
                   )}
-                  {visit.trip ? (
+                  {visit.trip !== null && (
                     <Link
                       href={appRoutes.trip(visit.trip.slug)}
                       className={TRIP_LINK_CLASS_NAME}
@@ -231,7 +231,7 @@ export const VisitAccordion = ({
                       <TentTree className="h-3.5 w-3.5" aria-hidden="true" />
                       {visit.trip.name}
                     </Link>
-                  ) : null}
+                  )}
                 </span>
                 <ChevronDown
                   className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
@@ -245,7 +245,7 @@ export const VisitAccordion = ({
                   copiedLabel={t("visitLinkCopied")}
                   onClick={(event) => event.stopPropagation()}
                 />
-                {isEditable ? <EditVisitLink visitId={visit.id} /> : null}
+                {isEditable === true && <EditVisitLink visitId={visit.id} />}
               </span>
             </div>
             <div
@@ -254,7 +254,7 @@ export const VisitAccordion = ({
             >
               <div className="overflow-hidden min-h-0">
                 <div className="space-y-3 border-t border-white/35 bg-white/30 px-4 py-3 dark:border-white/10 dark:bg-slate-950/22">
-                  {visit.note && (
+                  {!!visit.note && (
                     <>
                       <h3 className={DETAIL_SECTION_HEADING_CLASS_NAME}>
                         <FileText className="h-4 w-4 text-muted-foreground" />
@@ -265,7 +265,7 @@ export const VisitAccordion = ({
                       </div>
                     </>
                   )}
-                  {hasImages && visit.images && (
+                  {hasImages && (
                     <>
                       <h3 className={DETAIL_SECTION_HEADING_CLASS_NAME}>
                         <Images className="h-4 w-4 text-muted-foreground" />
@@ -274,7 +274,7 @@ export const VisitAccordion = ({
                       <VisitImageGallery images={visit.images} centerThumbnailsWhenStatic />
                     </>
                   )}
-                  {visit.author && authorDetails && (
+                  {authorDetails !== null && (
                     <>
                       <h3 className={DETAIL_SECTION_HEADING_CLASS_NAME}>
                         <User className="h-4 w-4 text-muted-foreground" />
@@ -282,12 +282,12 @@ export const VisitAccordion = ({
                       </h3>
                       <p className="text-sm">
                         {visit.author}, {authorDetails.createdAt}
-                        {authorDetails.showUpdatedAt ? (
+                        {authorDetails.showUpdatedAt === true && (
                           <span>
                             {" "}
                             ({t("updatedAtLabel")} {authorDetails.updatedAt})
                           </span>
-                        ) : null}
+                        )}
                       </p>
                     </>
                   )}

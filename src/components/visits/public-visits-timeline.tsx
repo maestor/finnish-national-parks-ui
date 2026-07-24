@@ -251,13 +251,13 @@ const PublicVisitsTimeline = ({
     return (
       <div className="mt-3 flex flex-wrap gap-2">
         <ParkTypeBadge label={visit.park.typeLabel} />
-        {visit.route ? (
+        {visit.route !== null && (
           <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/70 bg-[linear-gradient(145deg,rgba(22,101,52,0.12),rgba(16,185,129,0.18))] px-2.5 py-1 text-xs font-semibold text-emerald-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-emerald-300/15 dark:bg-[linear-gradient(145deg,rgba(22,101,52,0.24),rgba(16,185,129,0.16))] dark:text-emerald-200 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
             <Route className="h-3.5 w-3.5" aria-hidden="true" />
             {visit.route}
           </span>
-        ) : null}
-        {hasImages ? (
+        )}
+        {hasImages && (
           <span
             aria-label={t("item.imageCount", {
               count: visit.imageCount,
@@ -268,7 +268,7 @@ const PublicVisitsTimeline = ({
             <Images className="h-3.5 w-3.5" aria-hidden="true" />
             {visit.imageCount}
           </span>
-        ) : null}
+        )}
       </div>
     );
   };
@@ -354,12 +354,12 @@ const PublicVisitsTimeline = ({
                 <Footprints className="h-3.5 w-3.5" aria-hidden="true" />
                 {t("trip.visitCount", { count: trip.visitCount })}
               </span>
-              {trip.imageCount > 0 ? (
+              {trip.imageCount > 0 && (
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-white/45 bg-white/72 px-3 py-1 text-xs font-medium text-foreground/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.48)] dark:border-white/10 dark:bg-slate-950/56 dark:text-sky-100/72 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                   <Images className="h-3.5 w-3.5" aria-hidden="true" />
                   {t("trip.imageCount", { count: trip.imageCount })}
                 </span>
-              ) : null}
+              )}
               <Link
                 href={appRoutes.trip(trip.slug)}
                 className="inline-flex items-center rounded-full border border-sky-200/70 bg-white/76 px-3 py-1 text-xs font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-sky-300/15 dark:bg-slate-950/56 dark:hover:bg-slate-950/72"
@@ -464,7 +464,7 @@ const PublicVisitsTimeline = ({
         </div>
       </section>
 
-      {error ? (
+      {!!error && (
         <section
           className="rounded-[2rem] border border-destructive/20 bg-destructive/8 p-5 text-destructive shadow-[0_16px_36px_rgba(190,24,93,0.08)] dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-200"
           role="alert"
@@ -472,7 +472,7 @@ const PublicVisitsTimeline = ({
           <h2 className="text-lg font-semibold tracking-tight">{t("errorTitle")}</h2>
           <p className="mt-2 text-sm">{error}</p>
         </section>
-      ) : null}
+      )}
 
       <section className={PUBLIC_PANEL_CLASS_NAME}>
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-2">
@@ -500,7 +500,7 @@ const PublicVisitsTimeline = ({
             </Select>
           </div>
 
-          {!isMapView ? (
+          {!isMapView && (
             <div className="space-y-2">
               <Label htmlFor="visits-month-filter-mobile">{t("filters.monthSelectLabel")}</Label>
               <Select
@@ -521,7 +521,7 @@ const PublicVisitsTimeline = ({
                 ))}
               </Select>
             </div>
-          ) : null}
+          )}
         </div>
 
         <nav aria-label={t("filters.yearsLabel")} className="mt-4 hidden flex-wrap gap-2 md:flex">
@@ -565,7 +565,7 @@ const PublicVisitsTimeline = ({
           ))}
         </nav>
 
-        {selectedYear !== null && !isMapView ? (
+        {selectedYear !== null && !isMapView && (
           <nav
             aria-label={t("filters.monthsLabel")}
             className="mt-4 hidden flex-wrap gap-2 md:flex"
@@ -623,16 +623,16 @@ const PublicVisitsTimeline = ({
               ),
             )}
           </nav>
-        ) : null}
+        )}
       </section>
 
-      {totalCount === 0 && !error ? (
+      {totalCount === 0 && !error && (
         <section className={PUBLIC_EMPTY_STATE_PANEL_CLASS_NAME}>
           <p className="text-muted-foreground">{t("empty.all")}</p>
         </section>
-      ) : null}
+      )}
 
-      {totalCount > 0 && filteredCount === 0 ? (
+      {totalCount > 0 && filteredCount === 0 && (
         <section className={PUBLIC_EMPTY_STATE_PANEL_CLASS_NAME}>
           <p className="text-muted-foreground">{t("empty.filtered")}</p>
           <Link
@@ -643,13 +643,13 @@ const PublicVisitsTimeline = ({
             {t("filters.reset")}
           </Link>
         </section>
-      ) : null}
+      )}
 
-      {filteredCount > 0 && view === "map" ? (
+      {filteredCount > 0 && view === "map" && (
         <LazyVisitsMap markers={mapMarkers} selectedYear={selectedYear} />
-      ) : null}
+      )}
 
-      {filteredCount > 0 && view === "timeline" ? (
+      {filteredCount > 0 && view === "timeline" && (
         <div className="relative space-y-8 before:absolute before:bottom-0 before:left-4 before:top-0 before:w-px before:-translate-x-1/2 before:bg-[linear-gradient(180deg,rgba(22,101,52,0.42),rgba(37,99,235,0.18),rgba(22,101,52,0.42))] before:content-[''] md:before:bottom-[3.25rem] md:before:left-1/2 md:before:-translate-x-1/2">
           {sections.map((section) => (
             <section key={section.year} aria-labelledby={`visits-year-${section.year}`}>
@@ -729,7 +729,7 @@ const PublicVisitsTimeline = ({
             <div className="h-px flex-1 bg-border/70" aria-hidden="true" />
           </div>
         </div>
-      ) : null}
+      )}
     </div>
   );
 };

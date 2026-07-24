@@ -201,7 +201,7 @@ export const HomeParkSearch = () => {
         />
       </div>
 
-      {isOpen && (
+      {isOpen === true && (
         <div
           id="home-park-search-results"
           className={cn(
@@ -209,7 +209,7 @@ export const HomeParkSearch = () => {
             isMobileOpen && MOBILE_SEARCH_RESULTS_PANEL_CLASS_NAME,
           )}
         >
-          {isMobileOpen && (
+          {isMobileOpen === true && (
             <div className="border-b border-white/35 bg-white/96 p-2 dark:border-white/10 dark:bg-slate-950/96 md:hidden">
               <label htmlFor="home-park-search-mobile" className="sr-only">
                 {t("label")}

@@ -43,7 +43,7 @@ export const HomeAboutSection = ({
         <BackToStartLink label={backToStartLabel} />
       </div>
 
-      {children ? <div className="mt-5">{children}</div> : null}
+      {!!children && <div className="mt-5">{children}</div>}
     </div>
   </section>
 );

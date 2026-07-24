@@ -79,11 +79,14 @@ export const AdminTableFilters = ({
 
       <div className="flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
         <p className="text-muted-foreground">{resultCountLabel}</p>
-        {hasActiveFilters && onReset && resetLabel ? (
-          <Button type="button" variant="ghost" size="sm" onClick={onReset} className="w-fit">
-            {resetLabel}
-          </Button>
-        ) : null}
+        {hasActiveFilters &&
+          onReset !== undefined &&
+          resetLabel !== undefined &&
+          resetLabel.length > 0 && (
+            <Button type="button" variant="ghost" size="sm" onClick={onReset} className="w-fit">
+              {resetLabel}
+            </Button>
+          )}
       </div>
     </section>
   );

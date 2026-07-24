@@ -119,6 +119,8 @@ export const VisitImageSection = ({
   const [uploadErrors, setUploadErrors] = useState<string[]>([]);
   const [actionError, setActionError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const hasActionError = actionError !== null;
+  const hasStatusMessage = statusMessage !== null;
   const [activeDrag, setActiveDrag] = useState<ActiveDrag | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const activeDragRef = useRef<ActiveDrag | null>(null);
@@ -743,7 +745,7 @@ export const VisitImageSection = ({
         </div>
       )}
 
-      {actionError && (
+      {hasActionError && (
         <p
           className="rounded-[1.3rem] border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
           role="alert"
@@ -752,7 +754,7 @@ export const VisitImageSection = ({
         </p>
       )}
 
-      {statusMessage && (
+      {hasStatusMessage && (
         <output
           aria-live="polite"
           className="block rounded-[1.3rem] border border-emerald-600/20 bg-[linear-gradient(118deg,rgba(22,101,52,0.14),rgba(15,118,110,0.08))] px-4 py-3 text-sm text-emerald-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.38)] dark:border-emerald-300/18 dark:text-emerald-200 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
@@ -782,7 +784,7 @@ export const VisitImageSection = ({
             className="sr-only"
             aria-label={t("selectFiles")}
           />
-          {isPreparingImages && (
+          {isPreparingImages === true && (
             <span className="text-sm text-muted-foreground">{t("preparing")}</span>
           )}
           {pendingImages.length > 0 && (

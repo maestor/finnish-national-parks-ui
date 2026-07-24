@@ -87,6 +87,12 @@ export const ParkForm = ({ park }: ParkFormProps) => {
   const handleBack = () => {
     router.push(appRoutes.controlPanel.parks);
   };
+  const hasNameError = errors.name !== undefined;
+  const hasSlugError = errors.slug !== undefined;
+  const hasAreaKm2Error = errors.areaKm2 !== undefined;
+  const hasEstablishmentYearError = errors.establishmentYear !== undefined;
+  const hasLocationLabelError = errors.locationLabel !== undefined;
+  const hasSubmitError = submitError !== null;
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -196,7 +202,7 @@ export const ParkForm = ({ park }: ParkFormProps) => {
             onChange={(event) => setFieldValue("name", event.target.value)}
             className={`${INPUT_CLASS_NAME} h-10`}
           />
-          {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
+          {hasNameError && <p className="text-sm text-destructive">{errors.name}</p>}
         </div>
 
         <div className="space-y-2">
@@ -210,7 +216,7 @@ export const ParkForm = ({ park }: ParkFormProps) => {
             onChange={(event) => setFieldValue("slug", event.target.value)}
             className={`${INPUT_CLASS_NAME} h-10`}
           />
-          {errors.slug && <p className="text-sm text-destructive">{errors.slug}</p>}
+          {hasSlugError && <p className="text-sm text-destructive">{errors.slug}</p>}
         </div>
 
         <div className="space-y-2">
@@ -248,7 +254,7 @@ export const ParkForm = ({ park }: ParkFormProps) => {
             onChange={(event) => setFieldValue("areaKm2", event.target.value)}
             className={`${INPUT_CLASS_NAME} h-10`}
           />
-          {errors.areaKm2 && <p className="text-sm text-destructive">{errors.areaKm2}</p>}
+          {hasAreaKm2Error && <p className="text-sm text-destructive">{errors.areaKm2}</p>}
         </div>
 
         <div className="space-y-2">
@@ -262,7 +268,7 @@ export const ParkForm = ({ park }: ParkFormProps) => {
             onChange={(event) => setFieldValue("establishmentYear", event.target.value)}
             className={`${INPUT_CLASS_NAME} h-10`}
           />
-          {errors.establishmentYear && (
+          {hasEstablishmentYearError && (
             <p className="text-sm text-destructive">{errors.establishmentYear}</p>
           )}
         </div>
@@ -278,7 +284,7 @@ export const ParkForm = ({ park }: ParkFormProps) => {
             onChange={(event) => setFieldValue("locationLabel", event.target.value)}
             className={`${INPUT_CLASS_NAME} h-10`}
           />
-          {errors.locationLabel && (
+          {hasLocationLabelError && (
             <p className="text-sm text-destructive">{errors.locationLabel}</p>
           )}
         </div>
@@ -308,7 +314,7 @@ export const ParkForm = ({ park }: ParkFormProps) => {
         </div>
       </div>
 
-      {submitError && <p className="text-sm text-destructive">{submitError}</p>}
+      {hasSubmitError && <p className="text-sm text-destructive">{submitError}</p>}
 
       <div className="flex flex-wrap items-center gap-4">
         <Button type="submit" disabled={isPending || !isDirty}>

@@ -999,14 +999,14 @@ export const ParkMap = ({
         aria-label={t("ariaLabel")}
       />
       <div className="pointer-events-none absolute bottom-4 left-4 z-10 flex max-w-56 flex-col items-start gap-2">
-        {locationStatusMessage ? (
+        {locationStatusMessage !== null && (
           <output
             className="rounded-2xl border border-white/55 bg-white/88 px-3 py-2 text-xs font-medium text-foreground shadow-[0_10px_24px_rgba(148,163,184,0.18)] backdrop-blur-md dark:border-white/10 dark:bg-slate-950/78 dark:shadow-[0_16px_32px_rgba(2,6,23,0.28)]"
             aria-live="polite"
           >
             {locationStatusMessage}
           </output>
-        ) : null}
+        )}
         <Button
           type="button"
           variant="outline"

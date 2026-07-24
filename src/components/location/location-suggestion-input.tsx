@@ -91,11 +91,17 @@ export const LocationSuggestionInput = ({
     ? getSuggestionQueryKey(selectedLocation.label)
     : null;
   const hasSuggestionQuery = normalizedValue.length >= MIN_SUGGESTION_QUERY_LENGTH;
+  const showRequiredError = required && hasBeenTouched && normalizedValue.length === 0;
+  const shouldShowLocateButton =
+    onLocate !== undefined && locateButtonLabel !== undefined && locateButtonLabel.length > 0;
+  const shouldShowErrorMessage =
+    showRequiredError && errorMessage !== undefined && errorMessage.length > 0;
+  const shouldShowAssistiveMessage = assistiveMessage !== undefined && assistiveMessage.length > 0;
+  const shouldShowSuggestions = isOpen === true;
   const activeSuggestionId =
     highlightedIndex >= 0
       ? `${listboxId}-option-${getTripPlannerSuggestionKey(suggestions[highlightedIndex])}`
       : undefined;
-  const showRequiredError = required && hasBeenTouched && normalizedValue.length === 0;
   const describedBy = [
     showRequiredError ? errorId : null,
     assistiveMessage ? assistiveMessageId : null,
@@ -306,7 +312,7 @@ export const LocationSuggestionInput = ({
           aria-expanded={isOpen}
         />
 
-        {onLocate && locateButtonLabel ? (
+        {shouldShowLocateButton === true && (
           <button
             type="button"
             className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white/72 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-60 dark:hover:bg-slate-900/72"
@@ -321,16 +327,16 @@ export const LocationSuggestionInput = ({
               <LocateFixed className="h-4 w-4" aria-hidden="true" />
             )}
           </button>
-        ) : null}
+        )}
       </div>
 
-      {showRequiredError && errorMessage ? (
+      {shouldShowErrorMessage === true && (
         <p id={errorId} className="text-sm text-destructive" aria-live="polite">
           {errorMessage}
         </p>
-      ) : null}
+      )}
 
-      {assistiveMessage ? (
+      {shouldShowAssistiveMessage === true && (
         <p
           id={assistiveMessageId}
           className={cn(
@@ -341,9 +347,9 @@ export const LocationSuggestionInput = ({
         >
           {assistiveMessage}
         </p>
-      ) : null}
+      )}
 
-      {isOpen ? (
+      {shouldShowSuggestions === true && (
         <div id={listboxId} role="listbox" tabIndex={-1} className={SUGGESTION_LIST_CLASS_NAME}>
           {suggestions.map((suggestion, index) => (
             <div
@@ -378,7 +384,7 @@ export const LocationSuggestionInput = ({
             </div>
           ))}
         </div>
-      ) : null}
+      )}
     </div>
   );
 };

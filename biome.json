@@ -36,6 +36,7 @@
       },
       "suspicious": {
         "noVar": "error",
+        "noLeakedRender": "error",
         "noConsole": { "level": "warn", "options": { "allow": ["log"] } }
       }
     }

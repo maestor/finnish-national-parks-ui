@@ -62,6 +62,10 @@ export const VisitForm = ({
     author !== savedSnapshot.author ||
     note !== savedSnapshot.note;
   const isSubmitDisabled = isSubmitting || (isEditing && !isEditDirty);
+  const hasParkSlugError = errors.parkSlug !== undefined;
+  const hasVisitedOnError = errors.visitedOn !== undefined;
+  const hasSubmitError = submitError !== null;
+  const hasStatusMessage = statusMessage !== null;
 
   const handleBack = () => {
     router.back();
@@ -224,7 +228,7 @@ export const VisitForm = ({
             ))}
           </Select>
         )}
-        {errors.parkSlug && <p className="text-sm text-destructive">{errors.parkSlug}</p>}
+        {hasParkSlugError && <p className="text-sm text-destructive">{errors.parkSlug}</p>}
       </div>
 
       <div className="space-y-2">
@@ -265,7 +269,7 @@ export const VisitForm = ({
           onChange={(e) => setVisitedOn(e.target.value)}
           className={`${inputClassName} h-10 max-w-56`}
         />
-        {errors.visitedOn && <p className="text-sm text-destructive">{errors.visitedOn}</p>}
+        {hasVisitedOnError && <p className="text-sm text-destructive">{errors.visitedOn}</p>}
       </div>
 
       <div className="space-y-2">
@@ -329,8 +333,8 @@ export const VisitForm = ({
         )}
       </div>
 
-      {submitError && <p className="text-sm text-destructive">{submitError}</p>}
-      {statusMessage && (
+      {hasSubmitError && <p className="text-sm text-destructive">{submitError}</p>}
+      {hasStatusMessage && (
         <output
           aria-live="polite"
           className="block rounded-[1.3rem] border border-emerald-600/20 bg-[linear-gradient(118deg,rgba(22,101,52,0.14),rgba(15,118,110,0.08))] px-4 py-3 text-sm text-emerald-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.38)] dark:border-emerald-300/18 dark:text-emerald-200 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"

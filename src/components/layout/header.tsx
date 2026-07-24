@@ -273,7 +273,7 @@ export const Header = () => {
                     <Route className="h-4 w-4 shrink-0" aria-hidden="true" />
                     <span>{t("nav.tripPlanner")}</span>
                   </Link>
-                  {auth.isAuthenticated && (
+                  {auth.isAuthenticated === true && (
                     <Link
                       href={appRoutes.controlPanel.root}
                       className={MOBILE_SHEET_ITEM_CLASS}

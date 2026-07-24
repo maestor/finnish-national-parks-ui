@@ -282,29 +282,29 @@ export const Tooltip = ({
       }}
     >
       {children({ isOpen, tooltipId })}
-      {isOpen && canRenderPortal
-        ? createPortal(
-            <span
-              ref={tooltipRef}
-              id={tooltipId}
-              role={role}
-              aria-live={live}
-              data-side={position?.resolvedSide ?? side}
-              className={cn(
-                "pointer-events-none fixed z-[500] w-max max-w-[min(calc(100vw-1rem),20rem)] whitespace-normal break-words rounded-xl border px-3 py-1.5 text-center text-xs leading-tight font-medium backdrop-blur-sm",
-                toneClassNames[tone],
-              )}
-              style={{
-                left: position?.left ?? 0,
-                top: position?.top ?? 0,
-                visibility: position ? "visible" : "hidden",
-              }}
-            >
-              {content}
-            </span>,
-            document.body,
-          )
-        : null}
+      {!!isOpen &&
+        canRenderPortal &&
+        createPortal(
+          <span
+            ref={tooltipRef}
+            id={tooltipId}
+            role={role}
+            aria-live={live}
+            data-side={position?.resolvedSide ?? side}
+            className={cn(
+              "pointer-events-none fixed z-[500] w-max max-w-[min(calc(100vw-1rem),20rem)] whitespace-normal break-words rounded-xl border px-3 py-1.5 text-center text-xs leading-tight font-medium backdrop-blur-sm",
+              toneClassNames[tone],
+            )}
+            style={{
+              left: position?.left ?? 0,
+              top: position?.top ?? 0,
+              visibility: position ? "visible" : "hidden",
+            }}
+          >
+            {content}
+          </span>,
+          document.body,
+        )}
     </span>
   );
 };

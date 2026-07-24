@@ -16,7 +16,7 @@ export const Label = ({ className, children, required, ...props }: LabelProps) =
       {...props}
     >
       {children}
-      {required && <span aria-hidden="true"> *</span>}
+      {required === true && <span aria-hidden="true"> *</span>}
     </label>
   );
 };
