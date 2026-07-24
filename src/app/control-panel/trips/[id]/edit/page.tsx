@@ -53,14 +53,14 @@ const EditTripPage = async ({ params, searchParams }: EditTripPageProps) => {
       >
         {t("viewTripPage")}
       </Link>
-      {created === "1" ? (
+      {created === "1" && (
         <output
           aria-live="polite"
           className="mt-4 block rounded-lg border border-emerald-600/20 bg-emerald-600/10 px-4 py-3 text-sm text-emerald-900 dark:text-emerald-200"
         >
           {t("createdNotice")}
         </output>
-      ) : null}
+      )}
       <TripForm tripToEdit={tripToEdit} />
       <TripVisitAssignments trip={tripToEdit} visits={visits} />
     </div>

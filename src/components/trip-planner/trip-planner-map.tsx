@@ -641,7 +641,7 @@ export const TripPlannerMap = ({
         aria-label={mode === "route" ? t("map.ariaLabel") : t("map.ariaLabelNearby")}
       />
 
-      {!isMapLoaded ? (
+      {!isMapLoaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/65 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-2">
             <ThreeDotPulse size="lg" />
@@ -650,7 +650,7 @@ export const TripPlannerMap = ({
             </span>
           </div>
         </div>
-      ) : null}
+      )}
     </div>
   );
 };

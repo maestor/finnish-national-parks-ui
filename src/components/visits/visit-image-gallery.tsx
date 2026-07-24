@@ -47,6 +47,8 @@ export const VisitImageGallery = ({
   const [canScrollThumbnails, setCanScrollThumbnails] = useState(false);
   const hasMultipleImages = images.length > 1;
   const usesCarouselLayout = thumbnailLayout === "carousel";
+  const shouldShowCarouselButtons = usesCarouselLayout === true && canScrollThumbnails === true;
+  const hasThumbnailOverlay = renderThumbnailOverlay !== undefined;
   const thumbnailsRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
@@ -327,7 +329,7 @@ export const VisitImageGallery = ({
     <>
       <div className={cn("space-y-3", className)}>
         <div className="relative">
-          {usesCarouselLayout && canScrollThumbnails && (
+          {shouldShowCarouselButtons === true && (
             <>
               <button
                 type="button"
@@ -411,7 +413,7 @@ export const VisitImageGallery = ({
                       />
                     </div>
                   </button>
-                  {renderThumbnailOverlay && (
+                  {hasThumbnailOverlay && (
                     <div className="pointer-events-none absolute inset-0">
                       {renderThumbnailOverlay(image, index)}
                     </div>

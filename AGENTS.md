@@ -80,6 +80,7 @@ This is the Finnish National Parks UI, a Next.js 16 App Router application consu
 ## Coding Conventions
 - All function definitions must use `const` arrow functions. Pure `function` declarations are not allowed.
 - TypeScript strict mode is enabled. No `any` without explicit justification. All env vars are Zod-validated.
+- For render-or-nothing JSX, prefer boolean-safe `&&` rendering over `condition ? <Thing /> : null`. If the source value is not already a true boolean, compute an explicit boolean first so Biome `noLeakedRender` stays happy.
 - Page components may use default exports; everything else should use named exports.
 
 ## Styling

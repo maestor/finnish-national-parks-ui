@@ -127,16 +127,22 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
   ];
 
   const visits = parkVisits?.visits ?? [];
+  const logoUrl = publicPark.logo?.url ?? null;
+  const mapUrl = publicPark.map?.url ?? null;
+  const parkUrl = publicPark.parkUrl ?? null;
+  const boundaryGeoJson = publicPark.boundaryGeoJson ?? null;
+  const hasAboutLinks = parkUrl !== null || mapUrl !== null;
+  const hasBoundaryGeoJson = boundaryGeoJson !== null;
 
   return (
     <ParkAdminControlsProvider parkSlug={slug}>
       <article className="mx-auto max-w-5xl px-4 py-8">
         <section className="rounded-[2rem] border border-white/45 bg-white/65 px-6 py-6 shadow-[0_24px_48px_rgba(148,163,184,0.16)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/45 dark:shadow-[0_28px_56px_rgba(2,6,23,0.34)]">
           <div className="flex flex-wrap items-center justify-center gap-3">
-            {publicPark.logo?.url && (
+            {logoUrl !== null && (
               <div className="relative h-28 w-48 shrink-0">
                 <AppImage
-                  src={publicPark.logo.url}
+                  src={logoUrl}
                   alt={publicPark.name}
                   fill
                   sizes="192px"
@@ -168,13 +174,13 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
                 <p className="mt-3 text-sm font-medium">{fact.value}</p>
               </div>
             ))}
-            {(publicPark.parkUrl || publicPark.map?.url) && (
+            {hasAboutLinks === true && (
               <div className="flex h-full min-h-[5.75rem] flex-col rounded-2xl border border-sky-200/45 bg-[linear-gradient(145deg,rgba(255,255,255,0.82),rgba(237,245,249,0.92))] px-4 py-3 shadow-[0_14px_28px_rgba(148,163,184,0.12),inset_0_1px_0_rgba(255,255,255,0.58)] dark:border-white/8 dark:bg-[linear-gradient(145deg,rgba(15,23,42,0.72),rgba(2,6,23,0.52))] dark:shadow-[0_18px_34px_rgba(2,6,23,0.2),inset_0_1px_0_rgba(255,255,255,0.06)]">
                 <p className="text-xs text-muted-foreground">{t("aboutTitle")}</p>
                 <div className="mt-2 flex flex-col gap-1">
-                  {publicPark.parkUrl && (
+                  {parkUrl !== null && (
                     <a
-                      href={publicPark.parkUrl}
+                      href={parkUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 text-sm font-medium text-primary transition-colors hover:text-primary/80"
@@ -184,9 +190,9 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
                       <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                     </a>
                   )}
-                  {publicPark.map?.url && (
+                  {mapUrl !== null && (
                     <a
-                      href={publicPark.map.url}
+                      href={mapUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 text-sm font-medium text-primary transition-colors hover:text-primary/80"
@@ -202,7 +208,7 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
           </div>
         </section>
 
-        {publicPark.boundaryGeoJson && (
+        {hasBoundaryGeoJson && (
           <section className="mt-8 rounded-[2rem] border border-white/45 bg-white/58 p-5 shadow-[0_24px_48px_rgba(148,163,184,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/42 dark:shadow-[0_28px_56px_rgba(2,6,23,0.3)]">
             <div className="mb-3 flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-2">
@@ -218,7 +224,7 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
               </Link>
             </div>
             <LazyParkBoundaryMap
-              boundaryGeoJson={publicPark.boundaryGeoJson}
+              boundaryGeoJson={boundaryGeoJson}
               boundingBox={publicPark.boundingBox}
               markerPoint={publicPark.markerPoint}
               parkName={publicPark.name}

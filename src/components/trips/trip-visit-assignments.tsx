@@ -236,7 +236,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
   const stopLocationStatusMessage = getLocationStatusMessage(stopLocationStatus, t);
   const isBusy = pendingKey !== null;
   const isEditingStop = editingStopId !== null;
-  const isStopFormVisible = isStopFormOpen || isEditingStop;
+  const isStopFormVisible = Boolean(isStopFormOpen || isEditingStop);
   const activeEditingStop =
     editingStopId === null
       ? null
@@ -871,10 +871,10 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
         ]}
       />
 
-      {statusMessage ? (
+      {statusMessage !== null && (
         <p className="text-sm text-emerald-700 dark:text-emerald-300">{statusMessage}</p>
-      ) : null}
-      {actionError ? <p className="text-sm text-destructive">{actionError}</p> : null}
+      )}
+      {actionError !== null && <p className="text-sm text-destructive">{actionError}</p>}
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         <section className="min-w-0 space-y-4 rounded-[1.6rem] border border-white/45 bg-white/56 p-4 shadow-[0_18px_36px_rgba(148,163,184,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/38 dark:shadow-[0_22px_40px_rgba(2,6,23,0.28)]">
@@ -899,7 +899,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                   {t("assignedDescription", { count: itinerary.length })}
                 </p>
               </div>
-              {!isStopFormVisible && !isEditingStop ? (
+              {!isStopFormVisible && !isEditingStop && (
                 <Button
                   type="button"
                   size="sm"
@@ -911,17 +911,17 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                 >
                   {t("addStopAction")}
                 </Button>
-              ) : null}
+              )}
             </div>
             <p id="trip-itinerary-reorder-hint" className="mt-2 text-sm text-muted-foreground">
               {t("reorderHint")}
             </p>
-            {!isStopFormVisible && stopAddBlockedMessage ? (
+            {!isStopFormVisible && stopAddBlockedMessage !== null && (
               <p className="mt-2 text-sm text-muted-foreground">{stopAddBlockedMessage}</p>
-            ) : null}
+            )}
           </div>
 
-          {isStopFormVisible ? (
+          {isStopFormVisible && (
             <section
               id="trip-stop-editor"
               className="space-y-4 rounded-[1.3rem] border border-white/35 bg-white/40 p-4 dark:border-white/8 dark:bg-slate-950/28"
@@ -955,9 +955,9 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                     </option>
                   ))}
                 </select>
-                {stopErrors.visitedOn ? (
+                {stopErrors.visitedOn !== undefined && (
                   <p className="text-sm text-destructive">{stopErrors.visitedOn}</p>
-                ) : null}
+                )}
               </div>
 
               <div className="space-y-2">
@@ -982,9 +982,9 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                   selectedLocation={stopLocation}
                   value={stopLocationQuery}
                 />
-                {stopErrors.location ? (
+                {stopErrors.location !== undefined && (
                   <p className="text-sm text-destructive">{stopErrors.location}</p>
-                ) : null}
+                )}
               </div>
 
               <div className="space-y-2">
@@ -1003,12 +1003,10 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
 
               <div className="flex flex-wrap items-center gap-3">
                 <Button type="button" disabled={isBusy} onClick={() => void handleSubmitStop()}>
-                  {pendingKey === "stop-create" || pendingKey?.startsWith("stop-") ? "..." : null}
-                  {pendingKey === "stop-create" || pendingKey?.startsWith("stop-")
-                    ? null
-                    : isEditingStop
-                      ? t("saveStopChanges")
-                      : t("addStopAction")}
+                  {(pendingKey === "stop-create" || pendingKey?.startsWith("stop-") === true) &&
+                    "..."}
+                  {!(pendingKey === "stop-create" || pendingKey?.startsWith("stop-") === true) &&
+                    (isEditingStop ? t("saveStopChanges") : t("addStopAction"))}
                 </Button>
                 <button
                   type="button"
@@ -1019,7 +1017,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                 </button>
               </div>
             </section>
-          ) : null}
+          )}
 
           {itinerary.length === 0 ? (
             <div className="rounded-[1.3rem] border border-dashed border-white/45 bg-white/40 p-6 text-center text-sm text-muted-foreground dark:border-white/10 dark:bg-slate-950/28">
@@ -1100,13 +1098,15 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                               </span>
                               <p className="font-medium">{itemLabel}</p>
                             </div>
-                            {isVisit ? (
-                              item.visit.route ? (
-                                <p className="text-sm text-muted-foreground">{item.visit.route}</p>
-                              ) : null
-                            ) : item.stop.note ? (
-                              <p className="text-sm text-muted-foreground">{item.stop.note}</p>
-                            ) : null}
+                            {isVisit
+                              ? item.visit.route !== null && (
+                                  <p className="text-sm text-muted-foreground">
+                                    {item.visit.route}
+                                  </p>
+                                )
+                              : item.stop.note !== null && (
+                                  <p className="text-sm text-muted-foreground">{item.stop.note}</p>
+                                )}
                           </div>
                         </td>
                         <td className="px-4 py-3 align-top text-muted-foreground">
@@ -1198,9 +1198,9 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                         <td className="px-4 py-3">
                           <div className="space-y-1">
                             <p className="font-medium">{visit.park.name}</p>
-                            {visit.route ? (
+                            {visit.route !== null && (
                               <p className="text-sm text-muted-foreground">{visit.route}</p>
-                            ) : null}
+                            )}
                           </div>
                         </td>
                         <td className="w-28 px-4 py-3 align-top whitespace-nowrap text-muted-foreground">

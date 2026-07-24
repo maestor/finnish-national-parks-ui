@@ -110,6 +110,7 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
   });
   const notice = activeTab === "visible" ? t("visibleNotice") : t("hiddenNotice");
   const resultCountLabel = t("filters.results", { count: filteredParks.length });
+  const hasActionError = actionError !== null;
 
   if (sortedParks.length === 0 && sortedRemovedParks.length === 0) {
     return (
@@ -180,7 +181,7 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
         ]}
       />
 
-      {actionError && (
+      {hasActionError && (
         <p
           className="rounded-[1.3rem] border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
           role="alert"

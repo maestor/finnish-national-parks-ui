@@ -302,7 +302,7 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
             placeholder={t("namePlaceholder")}
             className={`${INPUT_CLASS_NAME} h-10`}
           />
-          {errors.name ? <p className="text-sm text-destructive">{errors.name}</p> : null}
+          {!!errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
         </div>
 
         <div className="space-y-2">
@@ -327,11 +327,11 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
             selectedLocation={startingPoint}
             value={startingPointQuery}
           />
-          {errors.startingPoint ? (
+          {!!errors.startingPoint && (
             <p className="text-sm text-destructive">{errors.startingPoint}</p>
-          ) : null}
+          )}
           <div className="flex flex-wrap items-center justify-between gap-3">
-            {startingPoint || normalizedStartingPointQuery ? (
+            {(startingPoint !== null || normalizedStartingPointQuery.length > 0) && (
               <button
                 type="button"
                 onClick={handleClearStartingPoint}
@@ -339,7 +339,7 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
               >
                 {t("clearStartingPoint")}
               </button>
-            ) : null}
+            )}
           </div>
         </div>
       </div>
@@ -358,8 +358,8 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
         />
       </div>
 
-      {submitError ? <p className="text-sm text-destructive">{submitError}</p> : null}
-      {statusMessage ? (
+      {submitError !== null && <p className="text-sm text-destructive">{submitError}</p>}
+      {statusMessage !== null && (
         <output
           aria-live="polite"
           className="block rounded-[1.3rem] border border-emerald-600/20 bg-[linear-gradient(118deg,rgba(22,101,52,0.14),rgba(15,118,110,0.08))] px-4 py-3 text-sm text-emerald-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.38)] dark:border-emerald-300/18 dark:text-emerald-200 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
@@ -372,13 +372,13 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
             {t("viewAllTrips")}
           </Link>
         </output>
-      ) : null}
+      )}
 
       <div className="flex flex-wrap items-center gap-4">
         <Button type="submit" disabled={isSubmitDisabled}>
           {isSubmitting ? "..." : t("submit")}
         </Button>
-        {tripToEdit ? (
+        {tripToEdit !== undefined && (
           <>
             <Link
               href={createPathWithSearchParams(appRoutes.controlPanel.newVisit, {
@@ -397,7 +397,7 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
               {t("delete")}
             </Button>
           </>
-        ) : null}
+        )}
         <button
           type="button"
           onClick={handleBack}

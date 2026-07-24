@@ -372,7 +372,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
         >
           <span className="block w-full text-center">{activeVisitStatusOption.label}</span>
         </Button>
-        {isVisitStatusSelectorOpen ? (
+        {!!isVisitStatusSelectorOpen && (
           <div id={visitStatusListId} className="mt-2 space-y-1">
             {visitStatusOptions.map((option) => (
               <Button
@@ -394,7 +394,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
               </Button>
             ))}
           </div>
-        ) : null}
+        )}
       </fieldset>
       <span className="pt-1 text-center text-xs font-medium text-foreground/70 dark:text-sky-100/82">
         {t("results", { count: filteredParks.length })}

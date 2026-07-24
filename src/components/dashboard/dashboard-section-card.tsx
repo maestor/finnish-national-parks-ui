@@ -37,7 +37,7 @@ export const DashboardSectionCard = ({
         </h2>
       </div>
       <div className="mt-5">{children}</div>
-      {footer ? <div className="mt-5">{footer}</div> : null}
+      {footer != null && <div className="mt-5">{footer}</div>}
     </section>
   );
 };

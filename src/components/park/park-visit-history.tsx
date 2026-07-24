@@ -36,7 +36,7 @@ export const ParkVisitHistory = ({
           <NotebookPen className="h-4 w-4 text-primary" aria-hidden="true" />
           <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
         </div>
-        {auth.isAuthenticated ? (
+        {!!auth.isAuthenticated && (
           <Link
             href={createPathWithSearchParams(appRoutes.controlPanel.newVisit, {
               park: parkSlug,
@@ -59,7 +59,7 @@ export const ParkVisitHistory = ({
             </svg>
             {addVisitLabel}
           </Link>
-        ) : null}
+        )}
       </div>
 
       {visits.length > 0 ? (

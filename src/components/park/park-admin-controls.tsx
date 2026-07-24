@@ -199,6 +199,7 @@ export const ParkAdminSection = () => {
   }
 
   const isVisible = visibility === "visible";
+  const hasActionError = actionError !== null;
 
   return (
     <section className="mt-8 rounded-[2rem] border border-white/45 bg-white/60 p-5 shadow-[0_24px_48px_rgba(148,163,184,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/42 dark:shadow-[0_28px_56px_rgba(2,6,23,0.3)]">
@@ -210,7 +211,7 @@ export const ParkAdminSection = () => {
         <ParkVisibilityBadge />
       </div>
 
-      {actionError && (
+      {hasActionError === true && (
         <p
           role="alert"
           className="mt-4 rounded-[1.3rem] border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"

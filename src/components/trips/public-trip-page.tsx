@@ -42,9 +42,13 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
   const routeStatus = trip.route;
   const route = routeStatus.data;
   const startingPoint = trip.startingPoint;
-  const shouldShowRouteSection = !routeStatus.success || (routeStatus.success && route !== null);
-  const hasRouteMap = routeStatus.success && route !== null && startingPoint !== null;
-  const hasRouteError = !routeStatus.success;
+  const shouldShowEditTripLink = auth.isAuthenticated === true;
+  const shouldShowStopCount = trip.stopCount > 0;
+  const shouldShowImageCount = trip.imageCount > 0;
+  const shouldShowRouteContent = routeStatus.success && route !== null;
+  const shouldShowRouteSection = shouldShowRouteContent || routeStatus.success === false;
+  const shouldShowRouteMap = shouldShowRouteContent && startingPoint !== null;
+  const shouldShowRouteError = routeStatus.success === false;
 
   return (
     <div className={PUBLIC_PAGE_SHELL_CLASS_NAME}>
@@ -55,16 +59,16 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
             <span>{t("eyebrow")}</span>
           </div>
           <h1 className={PUBLIC_HERO_TITLE_CLASS_NAME}>{trip.name}</h1>
-          {trip.dateRange ? (
+          {trip.dateRange !== null && (
             <p className="text-sm font-medium text-primary">
               {formatFinnishDateRange(trip.dateRange.start, trip.dateRange.end)}
             </p>
-          ) : null}
-          {trip.description ? (
+          )}
+          {trip.description !== null && (
             <p className={`mt-3 whitespace-pre-line ${PUBLIC_HERO_DESCRIPTION_CLASS_NAME}`}>
               {trip.description}
             </p>
-          ) : null}
+          )}
         </div>
 
         <div className="mt-5 flex flex-wrap items-center gap-2">
@@ -72,30 +76,30 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
             <CalendarRange className="h-3.5 w-3.5" aria-hidden="true" />
             {trip.visitCount} {t("visitCount", { count: trip.visitCount })}
           </span>
-          {trip.stopCount > 0 ? (
+          {shouldShowStopCount === true && (
             <span className={META_PILL_CLASS_NAME}>
               <Signpost className="h-3.5 w-3.5" aria-hidden="true" />
               {trip.stopCount} {t("stopCount", { count: trip.stopCount })}
             </span>
-          ) : null}
-          {trip.imageCount > 0 ? (
+          )}
+          {shouldShowImageCount === true && (
             <span className={META_PILL_CLASS_NAME}>
               <Camera className="h-3.5 w-3.5" aria-hidden="true" />
               {trip.imageCount} {t("imageCount", { count: trip.imageCount })}
             </span>
-          ) : null}
-          {auth.isAuthenticated ? (
+          )}
+          {shouldShowEditTripLink === true && (
             <EditIconLink
               href={appRoutes.controlPanel.editTrip(trip.id)}
               label={t("editTrip")}
               className="inline-flex items-center justify-center rounded-full border border-white/45 bg-white/76 p-2 text-foreground/72 shadow-[0_8px_20px_rgba(148,163,184,0.18)] backdrop-blur-sm transition-colors hover:bg-white/92 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/56 dark:text-sky-100/72 dark:shadow-[0_12px_24px_rgba(2,6,23,0.24)] dark:hover:bg-slate-950/72"
               iconClassName="h-3.5 w-3.5"
             />
-          ) : null}
+          )}
         </div>
       </section>
 
-      {shouldShowRouteSection ? (
+      {shouldShowRouteSection === true && (
         <section className={PUBLIC_PANEL_CLASS_NAME} aria-labelledby="trip-route-title">
           <div className="flex items-center gap-2">
             <Route className="h-4 w-4 text-primary" aria-hidden="true" />
@@ -103,9 +107,9 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
               {t("routeTitle")}
             </h2>
           </div>
-          {routeStatus.success && route !== null ? (
+          {shouldShowRouteContent === true && (
             <>
-              {hasRouteMap ? (
+              {shouldShowRouteMap === true && (
                 <div className="mt-4">
                   <LazyPublicTripMap
                     route={route}
@@ -114,7 +118,7 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
                     tripStops={trip.itinerary}
                   />
                 </div>
-              ) : null}
+              )}
               <div className="mt-4 flex flex-wrap gap-2">
                 <span className={META_PILL_CLASS_NAME}>
                   <Route className="h-3.5 w-3.5" aria-hidden="true" />
@@ -125,12 +129,12 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
                 </span>
               </div>
             </>
-          ) : null}
-          {hasRouteError ? (
+          )}
+          {shouldShowRouteError === true && (
             <p className="mt-4 text-sm font-medium text-destructive">{t("routeError")}</p>
-          ) : null}
+          )}
         </section>
-      ) : null}
+      )}
 
       <section className={PUBLIC_PANEL_CLASS_NAME} aria-labelledby="trip-itinerary-title">
         <div className="flex items-center gap-2">
@@ -179,19 +183,19 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
                       </Link>
                     </div>
                     <div className="mt-3 flex flex-wrap gap-2">
-                      {item.visit.route ? (
+                      {item.visit.route !== null && (
                         <span className={ROUTE_BADGE_CLASS_NAME}>
                           <Route className="h-3.5 w-3.5" aria-hidden="true" />
                           {item.visit.route}
                         </span>
-                      ) : null}
-                      {item.visit.imageCount > 0 ? (
+                      )}
+                      {item.visit.imageCount > 0 && (
                         <span className={IMAGE_BADGE_CLASS_NAME}>
                           <Camera className="h-3.5 w-3.5" aria-hidden="true" />
                           {item.visit.imageCount}{" "}
                           {t("imageCount", { count: item.visit.imageCount })}
                         </span>
-                      ) : null}
+                      )}
                     </div>
                   </div>
                 </div>
@@ -211,11 +215,11 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
                       {item.stop.location.displayName}
                     </h3>
                     <p className="mt-1 text-sm text-muted-foreground">{t("stopLabel")}</p>
-                    {item.stop.note ? (
+                    {item.stop.note !== null && (
                       <p className="mt-3 text-sm text-foreground/82 dark:text-sky-100/82">
                         {item.stop.note}
                       </p>
-                    ) : null}
+                    )}
                   </div>
                 </div>
               </li>

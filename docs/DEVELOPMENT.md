@@ -308,6 +308,7 @@ See `AGENTS.md` for the full convention list. Key rules:
 
 - **Arrow functions only** — no `function` declarations
 - **Strict TypeScript** — no `any` without justification
+- **Prefer boolean-safe JSX short-circuit rendering** — when rendering something or nothing, prefer `isVisible && <Panel />` over `isVisible ? <Panel /> : null`; if the condition is not already a real boolean, hoist or compute an explicit boolean first so `lint/nursery/noLeakedRender` stays satisfied
 - **Finnish UI copy** — all user-facing text in `messages/fi.json`
 - **Accessible by default** — semantic HTML, `aria-label` on icon buttons, visible focus
 - **Fix clearly off-pattern code in touched areas** — when a task brings you into code that obviously conflicts with current repo conventions, fold the nearby refactor into the same change instead of preserving the mismatch
