@@ -100,6 +100,8 @@ const reindexItinerary = (items: TripItineraryItem[]) =>
 const getItineraryItemKey = (item: TripItineraryItem) =>
   item.kind === "visit" ? `visit-${item.visit.id}` : `stop-${item.stop.id}`;
 
+const getItineraryOrderKeys = (items: TripItineraryItem[]) => items.map(getItineraryItemKey);
+
 const getItineraryItemLabel = (item: TripItineraryItem) =>
   item.kind === "visit" ? item.visit.park.name : item.stop.location.label;
 
@@ -117,12 +119,17 @@ const reorderItineraryItems = (items: TripItineraryItem[], activeKey: string, ov
   return reindexItinerary(nextItems);
 };
 
-const doItineraryOrdersMatch = (left: TripItineraryItem[], right: TripItineraryItem[]) =>
-  left.length === right.length &&
-  left.every((item, index) => {
-    const comparedItem = right[index];
-    return comparedItem ? getItineraryItemKey(item) === getItineraryItemKey(comparedItem) : false;
+const doItineraryOrdersMatch = (left: string[], right: string[]) =>
+  left.length === right.length && left.every((itemKey, index) => itemKey === right[index]);
+
+const restoreItineraryOrder = (items: TripItineraryItem[], savedOrder: string[]) => {
+  const itemByKey = new Map(items.map((item) => [getItineraryItemKey(item), item]));
+
+  return savedOrder.flatMap((itemKey) => {
+    const item = itemByKey.get(itemKey);
+    return item ? [item] : [];
   });
+};
 
 const createTripReference = (trip: TripDetail) => ({
   id: trip.id,
@@ -188,6 +195,9 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
   const [selectedParkSlug, setSelectedParkSlug] = useState("");
   const [visitsState, setVisitsState] = useState(visits);
   const [itinerary, setItinerary] = useState(() => normalizeItinerary(trip.itinerary));
+  const [savedItineraryOrder, setSavedItineraryOrder] = useState(() =>
+    getItineraryOrderKeys(normalizeItinerary(trip.itinerary)),
+  );
   const [editingStopId, setEditingStopId] = useState<number | null>(null);
   const [isStopFormOpen, setIsStopFormOpen] = useState(false);
   const [stopLocationQuery, setStopLocationQuery] = useState("");
@@ -202,6 +212,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
   const [activeItineraryDrag, setActiveItineraryDrag] = useState<ActiveItineraryDrag | null>(null);
   const [dragOverItemKey, setDragOverItemKey] = useState<string | null>(null);
   const itineraryRef = useRef(itinerary);
+  const pendingKeyRef = useRef<string | null>(null);
   const activeItineraryDragRef = useRef<ActiveItineraryDrag | null>(null);
   const dragOverItemKeyRef = useRef<string | null>(null);
   const dragStartItineraryRef = useRef<TripItineraryItem[] | null>(null);
@@ -214,6 +225,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     const nextItinerary = normalizeItinerary(trip.itinerary);
     itineraryRef.current = nextItinerary;
     setItinerary(nextItinerary);
+    setSavedItineraryOrder(getItineraryOrderKeys(nextItinerary));
   }, [trip.itinerary]);
 
   useEffect(() => {
@@ -249,9 +261,17 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     .sort(compareAvailableVisits);
 
   const stopLocationStatusMessage = getLocationStatusMessage(stopLocationStatus, t);
+  const currentItineraryOrder = getItineraryOrderKeys(itinerary);
+  const hasUnsavedItineraryOrder = !doItineraryOrdersMatch(
+    savedItineraryOrder,
+    currentItineraryOrder,
+  );
   const isBusy = pendingKey !== null;
+  const isActionLocked = isBusy || hasUnsavedItineraryOrder;
   const isEditingStop = editingStopId !== null;
   const isStopFormVisible = Boolean(isStopFormOpen || isEditingStop);
+  const isReorderDisabled = isBusy || isStopFormVisible;
+  const isSaveOrderDisabled = isBusy || activeItineraryDrag?.isDragging === true;
   const activeEditingStop =
     editingStopId === null
       ? null
@@ -288,7 +308,12 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     });
   };
 
-  const resetStopForm = () => {
+  const setPendingAction = (nextPendingKey: string | null) => {
+    pendingKeyRef.current = nextPendingKey;
+    setPendingKey(nextPendingKey);
+  };
+
+  const clearStopForm = () => {
     setIsStopFormOpen(false);
     setEditingStopId(null);
     setStopLocationQuery("");
@@ -299,7 +324,19 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     setStopErrors({});
   };
 
+  const resetStopForm = () => {
+    if (pendingKeyRef.current !== null) {
+      return;
+    }
+
+    clearStopForm();
+  };
+
   const openStopForm = () => {
+    if (pendingKeyRef.current !== null || hasUnsavedItineraryOrder) {
+      return;
+    }
+
     setIsStopFormOpen(true);
     setEditingStopId(null);
     setStopLocationQuery("");
@@ -321,6 +358,10 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
   };
 
   const handleLocateStop = () => {
+    if (pendingKeyRef.current !== null || hasUnsavedItineraryOrder) {
+      return;
+    }
+
     const geolocation = window.navigator.geolocation;
 
     if (!geolocation) {
@@ -350,6 +391,10 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
   };
 
   const handleStartStopEdit = (stop: TripStop) => {
+    if (pendingKeyRef.current !== null || hasUnsavedItineraryOrder) {
+      return;
+    }
+
     setIsStopFormOpen(true);
     setEditingStopId(stop.id);
     setStopLocationQuery(stop.location.label);
@@ -362,57 +407,65 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     setStatusMessage(null);
   };
 
-  const persistItineraryOrder = useEffectEvent(
-    async (previousItinerary: TripItineraryItem[], nextItinerary: TripItineraryItem[]) => {
-      const changedItems = nextItinerary.filter((item, index) => {
-        const previousItem = previousItinerary[index];
-        return (
-          previousItem?.tripStopOrder !== item.tripStopOrder ||
-          previousItem?.kind !== item.kind ||
-          getItineraryItemKey(previousItem) !== getItineraryItemKey(item)
-        );
-      });
+  const persistItineraryOrder = useEffectEvent(async (nextItinerary: TripItineraryItem[]) => {
+    if (pendingKeyRef.current !== null || !hasUnsavedItineraryOrder) {
+      return;
+    }
 
-      if (changedItems.length === 0) {
-        return;
-      }
+    const changedItems = nextItinerary.filter((item, index) => {
+      return savedItineraryOrder[index] !== getItineraryItemKey(item);
+    });
 
-      setPendingKey("reorder");
-      setActionError(null);
-      setStatusMessage(null);
+    if (changedItems.length === 0) {
+      return;
+    }
 
-      try {
-        for (const item of changedItems) {
-          if (item.kind === "visit") {
-            await apiFetch(`/api/visits/${item.visit.id}`, {
-              method: "PATCH",
-              body: JSON.stringify({
-                tripId: trip.id,
-                tripStopOrder: item.tripStopOrder,
-              }),
-            });
-          } else {
-            await apiFetch(`/api/trip-stops/${item.stop.id}`, {
-              method: "PATCH",
-              body: JSON.stringify({
-                tripStopOrder: item.tripStopOrder,
-              } satisfies TripStopUpdateRequest),
-            });
-          }
+    setPendingAction("reorder-save");
+    setActionError(null);
+    setStatusMessage(null);
+
+    try {
+      for (const item of changedItems) {
+        if (item.kind === "visit") {
+          await apiFetch(`/api/visits/${item.visit.id}`, {
+            method: "PATCH",
+            body: JSON.stringify({
+              tripId: trip.id,
+              tripStopOrder: item.tripStopOrder,
+            }),
+          });
+        } else {
+          await apiFetch(`/api/trip-stops/${item.stop.id}`, {
+            method: "PATCH",
+            body: JSON.stringify({
+              tripStopOrder: item.tripStopOrder,
+            } satisfies TripStopUpdateRequest),
+          });
         }
-
-        await revalidatePublicCache({ tripSlug: trip.slug });
-        setStatusMessage(t("reorderSuccess"));
-        router.refresh();
-      } catch (error) {
-        itineraryRef.current = previousItinerary;
-        setItinerary(previousItinerary);
-        setActionError(error instanceof Error ? error.message : String(error));
-      } finally {
-        setPendingKey(null);
       }
-    },
-  );
+
+      await revalidatePublicCache({ tripSlug: trip.slug });
+      setSavedItineraryOrder(getItineraryOrderKeys(nextItinerary));
+      setStatusMessage(t("reorderSuccess"));
+      router.refresh();
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : t("reorderFailed"));
+    } finally {
+      setPendingAction(null);
+    }
+  });
+
+  const handleRestoreItineraryOrder = () => {
+    if (pendingKeyRef.current !== null || activeItineraryDrag?.isDragging === true) {
+      return;
+    }
+
+    setActionError(null);
+    setStatusMessage(null);
+    setItineraryWithRef((currentItinerary) =>
+      restoreItineraryOrder(currentItinerary, savedItineraryOrder),
+    );
+  };
 
   const previewItineraryMove = useEffectEvent((activeKey: string, overKey: string) => {
     setActionError(null);
@@ -489,11 +542,14 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
         return;
       }
 
-      if (doItineraryOrdersMatch(previousItinerary, nextItinerary)) {
+      if (
+        doItineraryOrdersMatch(
+          getItineraryOrderKeys(previousItinerary),
+          getItineraryOrderKeys(nextItinerary),
+        )
+      ) {
         return;
       }
-
-      void persistItineraryOrder(previousItinerary, nextItinerary);
     };
 
     const handleWindowPointerCancel = (event: globalThis.PointerEvent) => {
@@ -525,7 +581,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
   }, []);
 
   const moveItineraryItemByStep = async (itemKey: string, step: number) => {
-    if (isBusy) {
+    if (pendingKeyRef.current !== null || isStopFormVisible) {
       return;
     }
 
@@ -546,12 +602,11 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     );
 
     setItineraryWithRef(nextItinerary);
-    await persistItineraryOrder(previousItinerary, nextItinerary);
   };
 
   const handleItineraryDragStart =
     (itemKey: string) => (event: PointerEvent<HTMLButtonElement>) => {
-      if (isBusy) {
+      if (pendingKeyRef.current !== null || isStopFormVisible) {
         return;
       }
 
@@ -586,6 +641,10 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     };
 
   const handleAttachVisit = async (visit: VisitWithPark) => {
+    if (pendingKeyRef.current !== null || hasUnsavedItineraryOrder) {
+      return;
+    }
+
     const previousItinerary = itineraryRef.current;
     const previousVisitsState = visitsState;
     const nextOrder = previousItinerary.length + 1;
@@ -613,7 +672,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       },
     ] satisfies TripItineraryItem[];
 
-    setPendingKey(`visit-${visit.id}-attach`);
+    setPendingAction(`visit-${visit.id}-attach`);
     setActionError(null);
     setStatusMessage(null);
     setItineraryWithRef(nextItinerary);
@@ -632,6 +691,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
         }),
       });
       await revalidatePublicCache({ parkSlug: visit.park.slug, tripSlug: trip.slug });
+      setSavedItineraryOrder(getItineraryOrderKeys(nextItinerary));
       setStatusMessage(t("attachSuccess"));
       router.refresh();
     } catch (error) {
@@ -640,11 +700,15 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       setVisitsState(previousVisitsState);
       setActionError(error instanceof Error ? error.message : String(error));
     } finally {
-      setPendingKey(null);
+      setPendingAction(null);
     }
   };
 
   const handleToggleVisitExcludeFromRoute = async (visitId: number, excludeFromRoute: boolean) => {
+    if (pendingKeyRef.current !== null || hasUnsavedItineraryOrder) {
+      return;
+    }
+
     const previousItinerary = itineraryRef.current;
     const previousVisitsState = visitsState;
     const visit = visitsState.find((currentVisit) => currentVisit.id === visitId);
@@ -653,7 +717,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       return;
     }
 
-    setPendingKey(`visit-${visitId}-exclude`);
+    setPendingAction(`visit-${visitId}-exclude`);
     setActionError(null);
     setStatusMessage(null);
     setItineraryWithRef((currentItinerary) =>
@@ -690,11 +754,15 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       setVisitsState(previousVisitsState);
       setActionError(error instanceof Error ? error.message : String(error));
     } finally {
-      setPendingKey(null);
+      setPendingAction(null);
     }
   };
 
   const handleRemoveVisit = async (visitId: number) => {
+    if (pendingKeyRef.current !== null || hasUnsavedItineraryOrder) {
+      return;
+    }
+
     const previousItinerary = itineraryRef.current;
     const previousVisitsState = visitsState;
     const visit = visitsState.find((currentVisit) => currentVisit.id === visitId);
@@ -703,14 +771,14 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       return;
     }
 
-    setPendingKey(`visit-${visitId}-remove`);
+    const nextItinerary = reindexItinerary(
+      previousItinerary.filter((item) => !(item.kind === "visit" && item.visit.id === visitId)),
+    );
+
+    setPendingAction(`visit-${visitId}-remove`);
     setActionError(null);
     setStatusMessage(null);
-    setItineraryWithRef(
-      reindexItinerary(
-        previousItinerary.filter((item) => !(item.kind === "visit" && item.visit.id === visitId)),
-      ),
-    );
+    setItineraryWithRef(nextItinerary);
     setVisitsState((currentVisits) =>
       currentVisits.map((currentVisit) =>
         currentVisit.id === visitId
@@ -731,6 +799,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
         }),
       });
       await revalidatePublicCache({ parkSlug: visit.park.slug, tripSlug: trip.slug });
+      setSavedItineraryOrder(getItineraryOrderKeys(nextItinerary));
       setStatusMessage(t("detachSuccess"));
       router.refresh();
     } catch (error) {
@@ -739,11 +808,15 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       setVisitsState(previousVisitsState);
       setActionError(error instanceof Error ? error.message : String(error));
     } finally {
-      setPendingKey(null);
+      setPendingAction(null);
     }
   };
 
   const handleSubmitStop = async () => {
+    if (pendingKeyRef.current !== null || hasUnsavedItineraryOrder) {
+      return;
+    }
+
     const normalizedStopLocationQuery = stopLocationQuery.trim();
     const nextErrors: Record<string, string> = {};
 
@@ -789,7 +862,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
           : item,
       );
 
-      setPendingKey(`stop-${editingStopId}-update`);
+      setPendingAction(`stop-${editingStopId}-update`);
       setItineraryWithRef(nextItinerary);
 
       try {
@@ -815,14 +888,14 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
         );
         await revalidatePublicCache({ tripSlug: trip.slug });
         setStatusMessage(t("stopUpdateSuccess"));
-        resetStopForm();
+        clearStopForm();
         router.refresh();
       } catch (error) {
         itineraryRef.current = previousItinerary;
         setItinerary(previousItinerary);
         setActionError(error instanceof Error ? error.message : String(error));
       } finally {
-        setPendingKey(null);
+        setPendingAction(null);
       }
 
       return;
@@ -835,7 +908,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       return;
     }
 
-    setPendingKey("stop-create");
+    setPendingAction("stop-create");
 
     try {
       const createdStop = await apiFetch<TripStop>(`/api/trips/${trip.id}/stops`, {
@@ -848,52 +921,58 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
         } satisfies TripStopCreateRequest),
       });
 
-      setItineraryWithRef((currentItinerary) =>
-        normalizeItinerary([
-          ...currentItinerary,
-          {
-            kind: "stop",
-            stop: createdStop,
-            tripStopOrder: createdStop.tripStopOrder,
-          } satisfies TripItineraryStopItem,
-        ]),
-      );
+      const nextItinerary = normalizeItinerary([
+        ...previousItinerary,
+        {
+          kind: "stop",
+          stop: createdStop,
+          tripStopOrder: createdStop.tripStopOrder,
+        } satisfies TripItineraryStopItem,
+      ]);
+
+      setItineraryWithRef(nextItinerary);
       await revalidatePublicCache({ tripSlug: trip.slug });
+      setSavedItineraryOrder(getItineraryOrderKeys(nextItinerary));
       setStatusMessage(t("stopCreateSuccess"));
-      resetStopForm();
+      clearStopForm();
       router.refresh();
     } catch (error) {
       itineraryRef.current = previousItinerary;
       setItinerary(previousItinerary);
       setActionError(error instanceof Error ? error.message : String(error));
     } finally {
-      setPendingKey(null);
+      setPendingAction(null);
     }
   };
 
   const handleDeleteStop = async (stop: TripStop) => {
+    if (pendingKeyRef.current !== null || hasUnsavedItineraryOrder) {
+      return;
+    }
+
     if (!window.confirm(t("deleteStopConfirm", { locationLabel: stop.location.label }))) {
       return;
     }
 
     const previousItinerary = itineraryRef.current;
-    setPendingKey(`stop-${stop.id}-delete`);
+    const nextItinerary = reindexItinerary(
+      previousItinerary.filter((item) => !(item.kind === "stop" && item.stop.id === stop.id)),
+    );
+
+    setPendingAction(`stop-${stop.id}-delete`);
     setActionError(null);
     setStatusMessage(null);
-    setItineraryWithRef(
-      reindexItinerary(
-        previousItinerary.filter((item) => !(item.kind === "stop" && item.stop.id === stop.id)),
-      ),
-    );
+    setItineraryWithRef(nextItinerary);
 
     try {
       await apiFetch(`/api/trip-stops/${stop.id}`, {
         method: "DELETE",
       });
       await revalidatePublicCache({ tripSlug: trip.slug });
+      setSavedItineraryOrder(getItineraryOrderKeys(nextItinerary));
       setStatusMessage(t("stopDeleteSuccess"));
       if (editingStopId === stop.id) {
-        resetStopForm();
+        clearStopForm();
       }
       router.refresh();
     } catch (error) {
@@ -901,7 +980,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       setItinerary(previousItinerary);
       setActionError(error instanceof Error ? error.message : String(error));
     } finally {
-      setPendingKey(null);
+      setPendingAction(null);
     }
   };
 
@@ -972,7 +1051,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                   variant="outline"
                   aria-controls="trip-stop-editor"
                   aria-expanded="false"
-                  disabled={isBusy || !canOpenStopForm}
+                  disabled={isActionLocked || !canOpenStopForm}
                   onClick={openStopForm}
                 >
                   {t("addStopAction")}
@@ -982,6 +1061,27 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
             <p id="trip-itinerary-reorder-hint" className="mt-2 text-sm text-muted-foreground">
               {t("reorderHint")}
             </p>
+            {hasUnsavedItineraryOrder && (
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <Button
+                  type="button"
+                  onClick={() => void persistItineraryOrder(itineraryRef.current)}
+                  disabled={isSaveOrderDisabled}
+                  className="w-fit"
+                >
+                  {pendingKey === "reorder-save" ? t("savingOrder") : t("saveOrder")}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={handleRestoreItineraryOrder}
+                  disabled={isSaveOrderDisabled}
+                  className="w-fit"
+                >
+                  {t("restoreOrder")}
+                </Button>
+              </div>
+            )}
             {!isStopFormVisible && stopAddBlockedMessage !== null && (
               <p className="mt-2 text-sm text-muted-foreground">{stopAddBlockedMessage}</p>
             )}
@@ -1012,6 +1112,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                   id="trip-stop-visited-on"
                   value={stopVisitedOn}
                   onChange={(event) => setStopVisitedOn(event.target.value)}
+                  disabled={isBusy}
                   className="flex h-10 w-full rounded-xl border border-white/45 bg-white/78 px-3 py-2 text-sm ring-offset-background shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
                 >
                   <option value="">{t("stopVisitedOnPlaceholder")}</option>
@@ -1062,13 +1163,18 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                   rows={4}
                   value={stopNote}
                   onChange={(event) => setStopNote(event.target.value)}
+                  disabled={isBusy}
                   placeholder={t("stopNotePlaceholder")}
                   className="flex w-full resize-y rounded-xl border border-white/45 bg-white/78 px-3 py-2 text-sm ring-offset-background shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
                 />
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
-                <Button type="button" disabled={isBusy} onClick={() => void handleSubmitStop()}>
+                <Button
+                  type="button"
+                  disabled={isActionLocked}
+                  onClick={() => void handleSubmitStop()}
+                >
                   {(pendingKey === "stop-create" || pendingKey?.startsWith("stop-") === true) &&
                     "..."}
                   {!(pendingKey === "stop-create" || pendingKey?.startsWith("stop-") === true) &&
@@ -1077,6 +1183,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                 <button
                   type="button"
                   onClick={resetStopForm}
+                  disabled={isBusy}
                   className="text-sm text-muted-foreground underline hover:text-foreground"
                 >
                   {isEditingStop ? t("cancelStopEdit") : t("cancelStopAdd")}
@@ -1103,7 +1210,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                 <tbody className="divide-y divide-white/30 dark:divide-white/8">
                   {itinerary.map((item) => {
                     const itemKey = getItineraryItemKey(item);
-                    const isPending = pendingKey?.includes(itemKey) ?? false;
+                    const isPending = pendingKey?.startsWith(`${itemKey}-`) ?? false;
                     const isVisit = item.kind === "visit";
                     const itemLabel = getItineraryItemLabel(item);
                     const isDragging =
@@ -1132,7 +1239,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                               aria-label={t("table.reorderItem", { targetName: itemLabel })}
                               aria-describedby="trip-itinerary-reorder-hint"
                               className="h-8 w-8 cursor-grab rounded-full border border-white/35 bg-white/72 text-foreground/70 hover:bg-white/92 active:cursor-grabbing dark:border-white/10 dark:bg-slate-950/48 dark:text-sky-100/72 dark:hover:bg-slate-950/68"
-                              disabled={isBusy}
+                              disabled={isReorderDisabled}
                               onPointerDown={handleItineraryDragStart(itemKey)}
                               onKeyDown={(event) => {
                                 void handleItineraryKeyDown(itemKey)(event);
@@ -1195,7 +1302,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                                   type="button"
                                   size="sm"
                                   variant="outline"
-                                  disabled={isBusy}
+                                  disabled={isActionLocked}
                                   onClick={() =>
                                     void handleToggleVisitExcludeFromRoute(
                                       item.visit.id,
@@ -1213,7 +1320,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                                   type="button"
                                   size="sm"
                                   variant="outline"
-                                  disabled={isBusy}
+                                  disabled={isActionLocked}
                                   onClick={() => void handleRemoveVisit(item.visit.id)}
                                 >
                                   {isPending ? "..." : t("removeVisitAction")}
@@ -1225,7 +1332,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                                   type="button"
                                   size="sm"
                                   variant="outline"
-                                  disabled={isBusy}
+                                  disabled={isActionLocked}
                                   onClick={() => handleStartStopEdit(item.stop)}
                                 >
                                   <Pencil className="mr-2 h-4 w-4" aria-hidden="true" />
@@ -1235,7 +1342,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                                   type="button"
                                   size="sm"
                                   variant="outline"
-                                  disabled={isBusy}
+                                  disabled={isActionLocked}
                                   onClick={() => void handleDeleteStop(item.stop)}
                                 >
                                   {isPending ? "..." : t("deleteStopAction")}
@@ -1307,7 +1414,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                             size="sm"
                             variant="outline"
                             className="whitespace-nowrap"
-                            disabled={isBusy}
+                            disabled={isActionLocked}
                             onClick={() => void handleAttachVisit(visit)}
                           >
                             {pendingKey === `visit-${visit.id}-attach` ? "..." : t("attachAction")}
