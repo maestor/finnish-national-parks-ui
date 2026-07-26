@@ -348,18 +348,13 @@ vi.mock("@/components/visits/visit-form", () => ({
     parks,
     visitToEdit,
     defaultParkSlug,
-    trips,
-    defaultTripId,
   }: {
     parks: Park[];
     visitToEdit?: { id: number } | undefined;
     defaultParkSlug?: string;
-    trips?: { id: number }[];
-    defaultTripId?: string;
   }) => (
     <div data-testid="visit-form">
-      parks:{parks.length}|trips:{trips?.length ?? 0}|edit:{visitToEdit?.id ?? "new"}|default:
-      {defaultParkSlug ?? "none"}|trip:{defaultTripId ?? "none"}
+      parks:{parks.length}|edit:{visitToEdit?.id ?? "new"}|default:{defaultParkSlug ?? "none"}
     </div>
   ),
 }));
@@ -1311,22 +1306,18 @@ describe("App pages", () => {
   });
 
   it("renders the new visit page with the selected park preset", async () => {
-    vi.mocked(apiFetch)
-      .mockResolvedValueOnce({ parks: [publicPark] })
-      .mockResolvedValueOnce({ trips: [trip] });
+    vi.mocked(apiFetch).mockResolvedValueOnce({ parks: [publicPark] });
 
     await renderControlPanelRoute(
       await NewVisitPage({
-        searchParams: Promise.resolve({ park: "pallas", trip: "7" }),
+        searchParams: Promise.resolve({ park: "pallas" }),
       }),
     );
 
     expect(
       screen.getByRole("heading", { name: "controlPanel.visits.newVisit.title" }),
     ).toBeInTheDocument();
-    expect(screen.getByTestId("visit-form")).toHaveTextContent(
-      "parks:1|trips:1|edit:new|default:pallas|trip:7",
-    );
+    expect(screen.getByTestId("visit-form")).toHaveTextContent("parks:1|edit:new|default:pallas");
   });
 
   it("builds metadata for the new visit page", async () => {
@@ -1336,9 +1327,7 @@ describe("App pages", () => {
   });
 
   it("renders the edit visit page with the created notice and edit helpers", async () => {
-    vi.mocked(apiFetch)
-      .mockResolvedValueOnce({ trips: [trip] })
-      .mockResolvedValueOnce(visitWithPark);
+    vi.mocked(apiFetch).mockResolvedValueOnce(visitWithPark);
 
     await renderControlPanelRoute(
       await EditVisitPage({
@@ -1354,13 +1343,10 @@ describe("App pages", () => {
       screen.getByRole("link", { name: "controlPanel.visits.editVisit.viewParkPage" }),
     ).toHaveAttribute("href", "/paikka/pallas");
     expect(screen.getByText("controlPanel.visits.editVisit.createdNotice")).toBeInTheDocument();
-    expect(screen.getByTestId("visit-form")).toHaveTextContent(
-      "parks:0|trips:1|edit:10|default:none|trip:none",
-    );
+    expect(screen.getByTestId("visit-form")).toHaveTextContent("parks:0|edit:10|default:none");
     expect(screen.getByTestId("visit-image-section")).toHaveTextContent("visit:10|images:1");
-    expect(apiFetch).toHaveBeenNthCalledWith(1, "/api/trips");
-    expect(apiFetch).toHaveBeenNthCalledWith(2, "/api/visits/10");
-    expect(apiFetch).toHaveBeenCalledTimes(2);
+    expect(apiFetch).toHaveBeenCalledWith("/api/visits/10");
+    expect(apiFetch).toHaveBeenCalledTimes(1);
   });
 
   it("builds metadata for the edit visit page", async () => {
@@ -1370,9 +1356,7 @@ describe("App pages", () => {
   });
 
   it("calls notFound when the edit visit page cannot find the requested visit", async () => {
-    vi.mocked(apiFetch)
-      .mockResolvedValueOnce({ trips: [trip] })
-      .mockResolvedValueOnce(null);
+    vi.mocked(apiFetch).mockResolvedValueOnce(null);
 
     await expect(
       EditVisitPage({

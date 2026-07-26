@@ -381,9 +381,7 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
         {tripToEdit !== undefined && (
           <>
             <Link
-              href={createPathWithSearchParams(appRoutes.controlPanel.newVisit, {
-                trip: tripToEdit.id,
-              })}
+              href={appRoutes.controlPanel.newVisit}
               className="inline-flex h-10 items-center justify-center rounded-md border border-white/45 bg-white/78 px-4 py-2 text-sm font-medium text-foreground shadow-[0_10px_24px_rgba(148,163,184,0.18)] backdrop-blur-md transition-colors hover:bg-white/92 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[0_16px_32px_rgba(2,6,23,0.28)] dark:hover:bg-slate-950/74"
             >
               {t("addVisitToTrip")}

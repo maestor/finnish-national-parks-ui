@@ -13,34 +13,21 @@ import { apiFetch } from "@/lib/api";
 import type { Park, Visit, VisitWithPark } from "@/lib/parks";
 import { revalidatePublicCache } from "@/lib/public-cache";
 import { appRoutes, createPathWithSearchParams } from "@/lib/routes";
-import { sortTrips, type Trip } from "@/lib/trips";
 
 interface VisitFormProps {
   parks: Park[];
   visitToEdit?: VisitWithPark;
   defaultParkSlug?: string;
-  trips?: Trip[];
-  defaultTripId?: string;
 }
 
-export const VisitForm = ({
-  parks,
-  visitToEdit,
-  defaultParkSlug,
-  trips = [],
-  defaultTripId,
-}: VisitFormProps) => {
+export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProps) => {
   const t = useTranslations("controlPanel.visits.form");
   const router = useRouter();
   const isEditing = !!visitToEdit;
 
   const [parkSlug, setParkSlug] = useState(visitToEdit?.park.slug ?? defaultParkSlug ?? "");
-  const [tripId, setTripId] = useState(
-    visitToEdit?.trip?.id ? String(visitToEdit.trip.id) : (defaultTripId ?? ""),
-  );
   const [visitedOn, setVisitedOn] = useState(visitToEdit?.visitedOn ?? "");
   const [route, setRoute] = useState(visitToEdit?.route ?? "");
-  const [excludeFromRoute, setExcludeFromRoute] = useState(visitToEdit?.excludeFromRoute ?? false);
   const [author, setAuthor] = useState(visitToEdit?.author ?? "");
   const [note, setNote] = useState(visitToEdit?.note ?? "");
   const [isPreview, setIsPreview] = useState(false);
@@ -49,19 +36,15 @@ export const VisitForm = ({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [savedSnapshot, setSavedSnapshot] = useState({
-    tripId: visitToEdit?.trip?.id ? String(visitToEdit.trip.id) : "",
     visitedOn: visitToEdit?.visitedOn ?? "",
     route: visitToEdit?.route ?? "",
-    excludeFromRoute: visitToEdit?.excludeFromRoute ?? false,
     author: visitToEdit?.author ?? "",
     note: visitToEdit?.note ?? "",
   });
   const isEditDirty =
     !visitToEdit ||
-    tripId !== savedSnapshot.tripId ||
     visitedOn !== savedSnapshot.visitedOn ||
     route !== savedSnapshot.route ||
-    excludeFromRoute !== savedSnapshot.excludeFromRoute ||
     author !== savedSnapshot.author ||
     note !== savedSnapshot.note;
   const isSubmitDisabled = isSubmitting || (isEditing && !isEditDirty);
@@ -73,9 +56,6 @@ export const VisitForm = ({
   const handleBack = () => {
     router.back();
   };
-
-  const getTripSlugById = (value: string) =>
-    trips.find((trip) => String(trip.id) === value)?.slug ?? null;
 
   const revalidateVisitPublicViews = async ({
     parkSlug,
@@ -132,10 +112,8 @@ export const VisitForm = ({
         await apiFetch(`/api/visits/${visitToEdit.id}`, {
           method: "PATCH",
           body: JSON.stringify({
-            tripId: tripId ? Number(tripId) : null,
             visitedOn,
             route: route || null,
-            excludeFromRoute,
             author: author || null,
             note: note || null,
           }),
@@ -143,13 +121,11 @@ export const VisitForm = ({
         await revalidateVisitPublicViews({
           parkSlug: visitToEdit.park.slug,
           previousTripSlug: visitToEdit.trip?.slug ?? null,
-          nextTripSlug: getTripSlugById(tripId),
+          nextTripSlug: visitToEdit.trip?.slug ?? null,
         });
         setSavedSnapshot({
-          tripId,
           visitedOn,
           route: route || "",
-          excludeFromRoute,
           author: author || "",
           note: note || "",
         });
@@ -159,17 +135,14 @@ export const VisitForm = ({
         const createdVisit = await apiFetch<Visit>(`/api/parks/${parkSlug}/visits`, {
           method: "POST",
           body: JSON.stringify({
-            tripId: tripId ? Number(tripId) : null,
             visitedOn,
             route: route || null,
-            excludeFromRoute,
             author: author || null,
             note: note || null,
           }),
         });
         await revalidateVisitPublicViews({
           parkSlug,
-          nextTripSlug: getTripSlugById(tripId),
         });
         shouldResetSubmittingState = false;
         router.push(
@@ -238,32 +211,6 @@ export const VisitForm = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="trip">{t("tripLabel")}</Label>
-        <Select
-          id="trip"
-          value={tripId}
-          onChange={(e) => setTripId(e.target.value)}
-          className="h-10"
-        >
-          <option value="">{t("tripPlaceholder")}</option>
-          {sortTrips(trips).map((trip) => (
-            <option key={trip.id} value={trip.id}>
-              {trip.name}
-            </option>
-          ))}
-        </Select>
-        <p className="text-sm text-muted-foreground">
-          {t("tripHint")}{" "}
-          <Link
-            href={appRoutes.controlPanel.trips}
-            className="font-medium underline underline-offset-4 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          >
-            {t("manageTrips")}
-          </Link>
-        </p>
-      </div>
-
-      <div className="space-y-2">
         <Label htmlFor="visitedOn" required>
           {t("dateLabel")}
         </Label>
@@ -288,22 +235,6 @@ export const VisitForm = ({
           placeholder={t("routePlaceholder")}
           className={`${inputClassName} h-10`}
         />
-      </div>
-
-      <div className="rounded-3xl border border-white/45 bg-white/68 p-4 shadow-[0_12px_24px_rgba(148,163,184,0.12)] dark:border-white/10 dark:bg-slate-950/44 dark:shadow-[0_18px_36px_rgba(2,6,23,0.24)]">
-        <div className="flex items-start gap-3">
-          <input
-            id="excludeFromRoute"
-            type="checkbox"
-            checked={excludeFromRoute}
-            onChange={(event) => setExcludeFromRoute(event.target.checked)}
-            className="mt-1 h-4 w-4 rounded border-border text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          />
-          <div className="space-y-1">
-            <Label htmlFor="excludeFromRoute">{t("excludeFromRouteLabel")}</Label>
-            <p className="text-sm text-muted-foreground">{t("excludeFromRouteHint")}</p>
-          </div>
-        </div>
       </div>
 
       <div className="space-y-2">
