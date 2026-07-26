@@ -151,6 +151,27 @@ const visits = [
   },
 ] satisfies VisitWithPark[];
 
+const visitsWithTwoAvailable = [
+  ...visits,
+  {
+    id: 13,
+    park: {
+      slug: "liesjarvi",
+      name: "Liesjarvi",
+    },
+    trip: null,
+    visitedOn: "2024-06-12",
+    route: "Kyynarharju",
+    excludeFromRoute: false,
+    author: "Liisa",
+    note: null,
+    createdAt: "2024-06-12T00:00:00Z",
+    tripStopOrder: null,
+    updatedAt: "2024-06-12T00:00:00Z",
+    images: [],
+  },
+] satisfies VisitWithPark[];
+
 const emptyTrip = {
   ...currentTrip,
   startingPoint: null,
@@ -352,6 +373,43 @@ describe("TripVisitAssignments", () => {
     });
   });
 
+  it("locks other trip actions while a visit attach is still pending", async () => {
+    const { apiFetch } = await import("@/lib/api");
+    let resolveAttach!: () => void;
+    const attachPromise = new Promise<void>((resolve) => {
+      resolveAttach = resolve;
+    });
+    vi.mocked(apiFetch).mockImplementationOnce(() => attachPromise);
+
+    render(<TripVisitAssignments trip={currentTrip} visits={visitsWithTwoAvailable} />);
+
+    const attachButtonsBeforeClick = screen.getAllByRole("button", {
+      name: "controlPanel.trips.assignments.attachAction",
+    });
+
+    await userEvent.click(attachButtonsBeforeClick[0]);
+
+    const remainingAttachButton = screen.getByRole("button", {
+      name: "controlPanel.trips.assignments.attachAction",
+    });
+    const removeVisitButton = screen.getByRole("button", {
+      name: "controlPanel.trips.assignments.removeVisitAction",
+    });
+    const addStopButton = screen.getByRole("button", {
+      name: "controlPanel.trips.assignments.addStopAction",
+    });
+
+    expect(remainingAttachButton).toBeDisabled();
+    expect(removeVisitButton).toBeDisabled();
+    expect(addStopButton).toBeDisabled();
+
+    resolveAttach();
+
+    await waitFor(() => {
+      expect(mockRefresh).toHaveBeenCalled();
+    });
+  });
+
   it("resets the visit filters", async () => {
     render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
 
@@ -377,7 +435,7 @@ describe("TripVisitAssignments", () => {
     );
   });
 
-  it("reorders a stop before a visit with drag and drop and saves both updated orders", async () => {
+  it("keeps itinerary reorders local until saving and disables other actions while the new order is unsaved", async () => {
     const { apiFetch } = await import("@/lib/api");
     vi.mocked(apiFetch).mockResolvedValue(undefined);
     const user = userEvent.setup();
@@ -423,20 +481,46 @@ describe("TripVisitAssignments", () => {
 
     await user.pointer([{ target: reorderButton, keys: "[/MouseLeft]" }]);
 
-    await waitFor(() => {
-      expect(apiFetch).toHaveBeenNthCalledWith(1, "/api/trip-stops/21", {
-        method: "PATCH",
-        body: JSON.stringify({
-          tripStopOrder: 1,
-        }),
-      });
-      expect(apiFetch).toHaveBeenNthCalledWith(2, "/api/visits/11", {
-        method: "PATCH",
-        body: JSON.stringify({
-          tripId: 7,
-          tripStopOrder: 2,
-        }),
-      });
+    expect(apiFetch).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.saveOrder",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.restoreOrder",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      within(itinerarySection).getByRole("button", {
+        name: "controlPanel.trips.assignments.removeVisitAction",
+      }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.attachAction",
+      }),
+    ).toBeDisabled();
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.saveOrder",
+      }),
+    );
+
+    expect(apiFetch).toHaveBeenNthCalledWith(1, "/api/trip-stops/21", {
+      method: "PATCH",
+      body: JSON.stringify({
+        tripStopOrder: 1,
+      }),
+    });
+    expect(apiFetch).toHaveBeenNthCalledWith(2, "/api/visits/11", {
+      method: "PATCH",
+      body: JSON.stringify({
+        tripId: 7,
+        tripStopOrder: 2,
+      }),
     });
 
     expect(mockRevalidatePublicCache).toHaveBeenCalledWith({
@@ -948,8 +1032,21 @@ describe("TripVisitAssignments", () => {
     reorderButton.focus();
     await userEvent.keyboard("{ArrowDown}");
 
+    expect(getItineraryOrder(itinerarySection)).toEqual(["stop-21", "visit-11"]);
+    expect(apiFetch).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.saveOrder",
+      }),
+    ).toBeInTheDocument();
+
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.saveOrder",
+      }),
+    );
+
     await waitFor(() => {
-      expect(getItineraryOrder(itinerarySection)).toEqual(["stop-21", "visit-11"]);
       expect(apiFetch).toHaveBeenCalledTimes(2);
     });
   });
