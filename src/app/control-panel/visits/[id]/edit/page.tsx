@@ -7,7 +7,6 @@ import { apiFetch } from "@/lib/api";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import type { VisitWithPark } from "@/lib/parks";
 import { appRoutes } from "@/lib/routes";
-import type { Trip } from "@/lib/trips";
 
 export const dynamic = "force-dynamic";
 
@@ -30,10 +29,7 @@ const EditVisitPage = async ({ params, searchParams }: EditVisitPageProps) => {
   const { created } = await searchParams;
   const visitId = Number(id);
 
-  const [{ trips }, visitToEdit] = await Promise.all([
-    apiFetch<{ trips: Trip[] }>("/api/trips"),
-    apiFetch<VisitWithPark>(`/api/visits/${visitId}`).catch(() => null),
-  ]);
+  const visitToEdit = await apiFetch<VisitWithPark>(`/api/visits/${visitId}`).catch(() => null);
 
   if (visitToEdit === null) {
     notFound();
@@ -57,7 +53,7 @@ const EditVisitPage = async ({ params, searchParams }: EditVisitPageProps) => {
           {t("createdNotice")}
         </output>
       )}
-      <VisitForm parks={[]} trips={trips} visitToEdit={visitToEdit} />
+      <VisitForm parks={[]} visitToEdit={visitToEdit} />
       <VisitImageSection
         visitId={visitToEdit.id}
         images={visitToEdit.images}

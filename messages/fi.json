@@ -442,7 +442,7 @@
         "startingPointPlaceholder": "Hae osoitetta, paikkaa tai kuntaa",
         "clearStartingPoint": "Tyhjennä aloituspiste",
         "useCurrentLocation": "Käytä nykyistä sijaintia",
-        "addVisitToTrip": "Kirjaa käynti tähän retkeen",
+        "addVisitToTrip": "Kirjaa uusi käynti",
         "submit": "Tallenna",
         "updateSuccess": "Retken tiedot päivitettiin onnistuneesti.",
         "viewAllTrips": "Siirry retkilistaan",
@@ -483,12 +483,12 @@
       "addVisit": "Lisää käynti",
       "newVisit": {
         "title": "Uusi käynti",
-        "description": "Kirjaa uusi käynti paikkaan ja liitä se halutessasi retkeen."
+        "description": "Kirjaa uusi käynti paikkaan."
       },
       "edit": "Muokkaa",
       "editVisit": {
         "title": "Muokkaa käyntiä",
-        "description": "Päivitä käynnin tietoja tai vaihda sen retkiliitosta.",
+        "description": "Päivitä käynnin tietoja.",
         "createdNotice": "Käynti tallennettiin. Voit jatkaa sen muokkaamista täällä.",
         "viewParkPage": "Siirry paikan sivulle",
         "manageImages": "Kuvien hallinta"
@@ -496,15 +496,9 @@
       "form": {
         "parkLabel": "Paikka",
         "parkPlaceholder": "Valitse paikka",
-        "tripLabel": "Retki",
-        "tripPlaceholder": "Ei retkeä",
-        "tripHint": "Voit liittää käynnin olemassa olevaan retkeen tai jättää sen ilman retkeä.",
-        "manageTrips": "Hallitse retkiä",
         "dateLabel": "Käyntipäivä",
         "routeLabel": "Reitti",
         "routePlaceholder": "Esim. Pallas-Yllästunturin reitti",
-        "excludeFromRouteLabel": "Jätä käynti pois retken ajoreitistä",
-        "excludeFromRouteHint": "Käynti näkyy retken sivulla ja kartalla, mutta sitä ei käytetä ajoreitin laskentaan.",
         "authorLabel": "Kirjoittaja",
         "authorPlaceholder": "Esim. Maija Meikäläinen",
         "noteLabel": "Muistiinpanot",
@@ -525,8 +519,6 @@
       },
       "list": {
         "parkName": "Paikka",
-        "trip": "Retki",
-        "noTrip": "Ei retkeä",
         "route": "Reitti",
         "visitDate": "Käyntipäivä",
         "noteStatus": "Muistiinpanot",
@@ -535,12 +527,9 @@
         "missing": "Puuttuu",
         "filters": {
           "searchLabel": "Haku",
-          "searchPlaceholder": "Hae paikkaa, retkeä tai reittiä",
+          "searchPlaceholder": "Hae paikkaa tai reittiä",
           "parkLabel": "Paikka",
-          "tripLabel": "Retki",
           "allParks": "Kaikki paikat",
-          "allTrips": "Kaikki retket",
-          "unassignedTrips": "Ilman retkeä",
           "results": "{count} käyntiä",
           "reset": "Tyhjennä suodattimet"
         },

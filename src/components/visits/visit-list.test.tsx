@@ -75,6 +75,9 @@ describe("VisitList", () => {
     expect(
       screen.getByRole("columnheader", { name: "controlPanel.visits.list.imageStatus" }),
     ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("columnheader", { name: "controlPanel.visits.list.trip" }),
+    ).not.toBeInTheDocument();
   });
 
   it("shows note and image status badges for each visit", () => {
