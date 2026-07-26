@@ -16,7 +16,7 @@ interface PublicTripMapProps {
   tripStops: PublicTripDetail["itinerary"];
 }
 
-interface TripMapPoint {
+interface TripMapPointEntry {
   coordinate: {
     lat: number;
     lon: number;
@@ -30,6 +30,14 @@ interface TripMapPoint {
   visitedOn: string;
 }
 
+interface TripMapPointGroup {
+  coordinate: {
+    lat: number;
+    lon: number;
+  };
+  entries: TripMapPointEntry[];
+}
+
 interface PopupLabels {
   excludedFromRoute: string;
   openVisit: string;
@@ -37,6 +45,7 @@ interface PopupLabels {
 
 const HOVER_CLOSE_DELAY = 250;
 const MAP_PADDING = 44;
+const TRIP_POINT_COORDINATE_PRECISION = 5;
 const POPUP_DETAIL_ROW_CLASS_NAME =
   "rounded-xl border border-sky-200/45 bg-[linear-gradient(145deg,rgba(255,255,255,0.84),rgba(237,245,249,0.92))] px-3 py-2 shadow-[0_10px_20px_rgba(148,163,184,0.1),inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-white/10 dark:bg-[linear-gradient(145deg,rgba(15,23,42,0.76),rgba(2,6,23,0.58))] dark:shadow-[0_14px_24px_rgba(2,6,23,0.22),inset_0_1px_0_rgba(255,255,255,0.06)]";
 const ROUTE_LINE_LAYER_ID = "public-trip-route-line";
@@ -51,17 +60,33 @@ const createEndpointMarkerElement = (label: string) => {
   return marker;
 };
 
-const createWaypointMarkerElement = (point: TripMapPoint) => {
+const getTripPointGroupMarkerText = (pointGroup: TripMapPointGroup) =>
+  pointGroup.entries.map((entry) => entry.index).join("•");
+
+const getTripPointGroupAriaLabel = (pointGroup: TripMapPointGroup) =>
+  pointGroup.entries.map((entry) => `${entry.index}. ${entry.label}`).join("; ");
+
+const getTripPointGroupToneClassName = (pointGroup: TripMapPointGroup) => {
+  const kinds = new Set(pointGroup.entries.map((entry) => entry.kind));
+
+  if (kinds.size > 1) {
+    return "bg-sky-500";
+  }
+
+  return pointGroup.entries[0]?.kind === "stop" ? "bg-amber-500" : "bg-emerald-600";
+};
+
+const createWaypointMarkerElement = (pointGroup: TripMapPointGroup) => {
   const button = document.createElement("button");
   button.type = "button";
   button.className =
-    "flex h-8 min-w-8 cursor-pointer items-center justify-center rounded-full border border-white/85 px-2 text-xs font-semibold text-white shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
-  button.classList.add(point.kind === "stop" ? "bg-amber-500" : "bg-emerald-600");
-  button.setAttribute("aria-label", `${point.index}. ${point.label}`);
-  if (point.excludeFromRoute) {
+    "flex h-8 min-w-8 cursor-pointer items-center justify-center rounded-full border border-white/85 px-2 text-[11px] font-semibold tracking-tight text-white shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+  button.classList.add(getTripPointGroupToneClassName(pointGroup));
+  button.setAttribute("aria-label", getTripPointGroupAriaLabel(pointGroup));
+  if (pointGroup.entries.some((entry) => entry.excludeFromRoute)) {
     button.setAttribute("data-route-excluded", "true");
   }
-  button.textContent = String(point.index);
+  button.textContent = getTripPointGroupMarkerText(pointGroup);
   return button;
 };
 
@@ -72,9 +97,9 @@ const createPopupDetailRow = (text: string) => {
   return row;
 };
 
-const createPopupNode = (point: TripMapPoint, labels: PopupLabels) => {
-  const container = document.createElement("div");
-  container.className = "max-w-[280px] p-3 text-foreground";
+const createPopupEntryNode = (point: TripMapPointEntry, labels: PopupLabels) => {
+  const entry = document.createElement("article");
+  entry.className = "space-y-3";
 
   const header = document.createElement("header");
   header.className = "flex items-start gap-3";
@@ -97,7 +122,7 @@ const createPopupNode = (point: TripMapPoint, labels: PopupLabels) => {
 
   titleGroup.append(title, subtitle);
   header.append(numberBadge, titleGroup);
-  container.appendChild(header);
+  entry.appendChild(header);
 
   const details = document.createElement("div");
   details.className = "mt-3 space-y-2 text-xs text-muted-foreground";
@@ -105,7 +130,7 @@ const createPopupNode = (point: TripMapPoint, labels: PopupLabels) => {
   if (point.excludeFromRoute) {
     details.appendChild(createPopupDetailRow(labels.excludedFromRoute));
   }
-  container.appendChild(details);
+  entry.appendChild(details);
 
   if (point.href) {
     const actionRow = document.createElement("div");
@@ -119,8 +144,25 @@ const createPopupNode = (point: TripMapPoint, labels: PopupLabels) => {
     link.addEventListener("click", (event) => event.stopPropagation());
 
     actionRow.appendChild(link);
-    container.appendChild(actionRow);
+    entry.appendChild(actionRow);
   }
+
+  return entry;
+};
+
+const createPopupNode = (pointGroup: TripMapPointGroup, labels: PopupLabels) => {
+  const container = document.createElement("div");
+  container.className = "max-w-[280px] p-3 text-foreground";
+
+  pointGroup.entries.forEach((entry, index) => {
+    if (index > 0) {
+      const separator = document.createElement("div");
+      separator.className = "my-3 h-px bg-sky-100/80 dark:bg-white/10";
+      container.appendChild(separator);
+    }
+
+    container.appendChild(createPopupEntryNode(entry, labels));
+  });
 
   return container;
 };
@@ -154,6 +196,30 @@ const getBoundsFromRouteAndCoordinates = (
       lon,
     })),
   ]);
+
+const getTripPointCoordinateGroupKey = ({ lat, lon }: { lat: number; lon: number }) =>
+  `${lat.toFixed(TRIP_POINT_COORDINATE_PRECISION)}:${lon.toFixed(TRIP_POINT_COORDINATE_PRECISION)}`;
+
+const groupTripPointEntries = (tripPointEntries: TripMapPointEntry[]) => {
+  const groupedTripPoints = new Map<string, TripMapPointGroup>();
+
+  for (const tripPointEntry of tripPointEntries) {
+    const groupKey = getTripPointCoordinateGroupKey(tripPointEntry.coordinate);
+    const existingGroup = groupedTripPoints.get(groupKey);
+
+    if (existingGroup) {
+      existingGroup.entries.push(tripPointEntry);
+      continue;
+    }
+
+    groupedTripPoints.set(groupKey, {
+      coordinate: tripPointEntry.coordinate,
+      entries: [tripPointEntry],
+    });
+  }
+
+  return [...groupedTripPoints.values()];
+};
 
 export const PublicTripMap = ({
   route,
@@ -298,7 +364,7 @@ export const PublicTripMap = ({
 
     popupRefs.current = [];
 
-    const tripPoints: TripMapPoint[] = tripStops.map((item) =>
+    const tripPointEntries: TripMapPointEntry[] = tripStops.map((item) =>
       item.kind === "visit"
         ? {
             coordinate: item.visit.park.markerPoint,
@@ -323,16 +389,17 @@ export const PublicTripMap = ({
             visitedOn: item.stop.visitedOn,
           },
     );
+    const groupedTripPoints = groupTripPointEntries(tripPointEntries);
     const pointBounds = getBoundsFromCoordinates([
       startingPoint.coordinate,
-      ...tripPoints.map((point) => point.coordinate),
+      ...tripPointEntries.map((point) => point.coordinate),
     ]);
 
     map.fitBounds(
       route
         ? getBoundsFromRouteAndCoordinates(route, [
             startingPoint.coordinate,
-            ...tripPoints.map((point) => point.coordinate),
+            ...tripPointEntries.map((point) => point.coordinate),
           ])
         : pointBounds,
       {
@@ -406,9 +473,9 @@ export const PublicTripMap = ({
       lockedPopup = popup;
     };
 
-    for (const point of tripPoints) {
-      const element = createWaypointMarkerElement(point);
-      const popupContent = createPopupNode(point, {
+    for (const pointGroup of groupedTripPoints) {
+      const element = createWaypointMarkerElement(pointGroup);
+      const popupContent = createPopupNode(pointGroup, {
         excludedFromRoute: t("excludedFromRoute"),
         openVisit: t("openVisit"),
       });
@@ -417,7 +484,7 @@ export const PublicTripMap = ({
         closeOnClick: false,
         maxWidth: "240px",
         offset: 20,
-      }).setLngLat([point.coordinate.lon, point.coordinate.lat]);
+      }).setLngLat([pointGroup.coordinate.lon, pointGroup.coordinate.lat]);
       popup.setDOMContent(popupContent);
       popupRefs.current.push(popup);
 
@@ -456,7 +523,7 @@ export const PublicTripMap = ({
       const marker = new maplibregl.Marker({
         element,
         anchor: "center",
-      }).setLngLat([point.coordinate.lon, point.coordinate.lat]);
+      }).setLngLat([pointGroup.coordinate.lon, pointGroup.coordinate.lat]);
 
       nextMarkers.push(marker);
     }

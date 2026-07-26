@@ -235,6 +235,30 @@ const tripStops: PublicTripDetail["itinerary"] = [
   },
 ];
 
+const tripStopsWithSharedLocation: PublicTripDetail["itinerary"] = [
+  ...tripStops,
+  {
+    kind: "stop",
+    tripStopOrder: 4,
+    stop: {
+      id: 32,
+      createdAt: "2024-06-16T20:00:00Z",
+      location: {
+        displayName: "Paluu Oulun mökille",
+        label: "Yöpyminen Oulussa, Osoitekatu 1, Oulu, Finland",
+        coordinate: {
+          lat: 65.0121,
+          lon: 25.4651,
+        },
+      },
+      note: null,
+      tripStopOrder: 4,
+      updatedAt: "2024-06-16T20:00:00Z",
+      visitedOn: "2024-06-16",
+    },
+  },
+];
+
 describe("PublicTripMap", () => {
   beforeEach(() => {
     markerInstances.length = 0;
@@ -412,6 +436,41 @@ describe("PublicTripMap", () => {
     }
 
     expect(popup).toHaveTextContent("tripPage.excludedFromRoute");
+  });
+
+  it("groups itinerary points that share the same coordinate into one marker and lists them in the popup", async () => {
+    render(
+      <PublicTripMap
+        route={route}
+        startingPoint={startingPoint}
+        tripName="Kesaretki"
+        tripStops={tripStopsWithSharedLocation}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(markerInstances).toHaveLength(4);
+    });
+
+    expect(markerInstances[3]?.element).toHaveTextContent("3•4");
+    expect(markerInstances[3]?.element).toHaveAttribute(
+      "aria-label",
+      "3. Yöpyminen Oulussa; 4. Paluu Oulun mökille",
+    );
+
+    fireEvent.click(markerInstances[3].element);
+
+    const popup = document.querySelector(".maplibregl-popup");
+
+    if (!(popup instanceof HTMLElement)) {
+      throw new Error("Expected an open grouped popup");
+    }
+
+    expect(within(popup).getAllByText("tripPage.stopLabel")).toHaveLength(2);
+    expect(within(popup).getByText("Yöpyminen Oulussa")).toBeInTheDocument();
+    expect(within(popup).getByText("Paluu Oulun mökille")).toBeInTheDocument();
+    expect(within(popup).getByText("3")).toBeInTheDocument();
+    expect(within(popup).getByText("4")).toBeInTheDocument();
   });
 
   it("reuses an existing route source and layer when they are already present", async () => {
