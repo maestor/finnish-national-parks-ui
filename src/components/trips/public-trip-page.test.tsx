@@ -224,14 +224,20 @@ const createRect = (top: number, height = 100) =>
 
 const setSectionScrollPositions = ({
   descriptionTop,
+  descriptionHeight = 240,
   itineraryTop,
+  itineraryHeight = 240,
   navBottom,
   routeTop,
+  routeHeight = 240,
 }: {
   descriptionTop: number;
+  descriptionHeight?: number;
   itineraryTop: number;
+  itineraryHeight?: number;
   navBottom: number;
   routeTop: number;
+  routeHeight?: number;
 }) => {
   const navigation = screen.getByRole("navigation", {
     name: "tripPage.sectionNavigationLabel",
@@ -247,9 +253,9 @@ const setSectionScrollPositions = ({
   });
 
   navigation.getBoundingClientRect = () => createRect(navBottom - 40, 40);
-  descriptionSection.getBoundingClientRect = () => createRect(descriptionTop, 240);
-  routeSection.getBoundingClientRect = () => createRect(routeTop, 240);
-  itinerarySection.getBoundingClientRect = () => createRect(itineraryTop, 240);
+  descriptionSection.getBoundingClientRect = () => createRect(descriptionTop, descriptionHeight);
+  routeSection.getBoundingClientRect = () => createRect(routeTop, routeHeight);
+  itinerarySection.getBoundingClientRect = () => createRect(itineraryTop, itineraryHeight);
 };
 
 const setStickyNavigationHeight = (height: number) => {
@@ -471,6 +477,44 @@ describe("PublicTripPage", () => {
 
     act(() => {
       setWindowScrollY(1360);
+      fireEvent.scroll(window);
+    });
+
+    expect(itineraryLink).toHaveAttribute("aria-current", "location");
+    expect(routeLink).not.toHaveAttribute("aria-current");
+  });
+
+  it("switches to the itinerary chip on small screens when the itinerary occupies more of the viewport", () => {
+    Object.defineProperty(window, "innerHeight", {
+      configurable: true,
+      value: 640,
+      writable: true,
+    });
+
+    render(<PublicTripPage trip={trip} />);
+
+    const sectionNavigation = screen.getByRole("navigation", {
+      name: "tripPage.sectionNavigationLabel",
+    });
+    const routeLink = within(sectionNavigation).getByRole("link", {
+      name: "tripPage.sectionNav.route",
+    });
+    const itineraryLink = within(sectionNavigation).getByRole("link", {
+      name: "tripPage.sectionNav.itinerary",
+    });
+
+    setSectionScrollPositions({
+      descriptionTop: -1200,
+      descriptionHeight: 240,
+      itineraryTop: 520,
+      itineraryHeight: 520,
+      navBottom: 40,
+      routeTop: -80,
+      routeHeight: 220,
+    });
+
+    act(() => {
+      setWindowScrollY(980);
       fireEvent.scroll(window);
     });
 
