@@ -55,6 +55,15 @@ interface ActiveItineraryDrag {
   startY: number;
 }
 
+interface ItineraryDragLayoutItem {
+  bottom: number;
+  centerY: number;
+  itemKey: string;
+  left: number;
+  right: number;
+  top: number;
+}
+
 const DRAG_START_DISTANCE = 6;
 
 const compareAvailableVisits = (left: VisitWithPark, right: VisitWithPark) =>
@@ -137,11 +146,67 @@ const createTripReference = (trip: TripDetail) => ({
   slug: trip.slug,
 });
 
-const getItineraryDropTargetKey = (clientX: number, clientY: number) =>
-  document
-    .elementFromPoint(clientX, clientY)
-    ?.closest("[data-itinerary-item-key]")
-    ?.getAttribute("data-itinerary-item-key") ?? null;
+const captureItineraryDragLayout = (container: ParentNode) =>
+  Array.from(container.querySelectorAll<HTMLElement>("[data-itinerary-item-key]")).flatMap(
+    (itemElement) => {
+      const itemKey = itemElement.getAttribute("data-itinerary-item-key");
+
+      if (!itemKey) {
+        return [];
+      }
+
+      const { bottom, height, left, right, top } = itemElement.getBoundingClientRect();
+
+      return [
+        {
+          itemKey,
+          top,
+          bottom,
+          centerY: top + height / 2,
+          left,
+          right,
+        } satisfies ItineraryDragLayoutItem,
+      ];
+    },
+  );
+
+const getItineraryDropTargetKey = (
+  dragLayout: ItineraryDragLayoutItem[],
+  clientX: number,
+  clientY: number,
+  activeKey: string,
+) => {
+  if (dragLayout.length === 0) {
+    return activeKey;
+  }
+
+  const hoveredItem = dragLayout.find(
+    (item) =>
+      clientX >= item.left &&
+      clientX <= item.right &&
+      clientY >= item.top &&
+      clientY <= item.bottom,
+  );
+
+  if (hoveredItem) {
+    return hoveredItem.itemKey;
+  }
+
+  const listLeft = Math.min(...dragLayout.map((item) => item.left));
+  const listRight = Math.max(...dragLayout.map((item) => item.right));
+
+  if (clientX < listLeft || clientX > listRight) {
+    return activeKey;
+  }
+
+  for (const item of dragLayout) {
+    if (clientY <= item.centerY) {
+      return item.itemKey;
+    }
+  }
+
+  return dragLayout.at(-1)?.itemKey ?? activeKey;
+};
 
 const getLocationStatusMessage = (
   status: UserLocationStatus,
@@ -215,6 +280,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
   const pendingKeyRef = useRef<string | null>(null);
   const activeItineraryDragRef = useRef<ActiveItineraryDrag | null>(null);
   const dragOverItemKeyRef = useRef<string | null>(null);
+  const itineraryDragLayoutRef = useRef<ItineraryDragLayoutItem[] | null>(null);
   const dragStartItineraryRef = useRef<TripItineraryItem[] | null>(null);
 
   useEffect(() => {
@@ -479,6 +545,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     const clearItineraryDragState = () => {
       activeItineraryDragRef.current = null;
       dragOverItemKeyRef.current = null;
+      itineraryDragLayoutRef.current = null;
       dragStartItineraryRef.current = null;
       setActiveItineraryDrag(null);
       setDragOverItemKey(null);
@@ -511,8 +578,12 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       }
 
       const previousTargetKey = dragOverItemKeyRef.current;
-      const targetKey =
-        getItineraryDropTargetKey(event.clientX, event.clientY) ?? currentDrag.itemKey;
+      const targetKey = getItineraryDropTargetKey(
+        itineraryDragLayoutRef.current ?? [],
+        event.clientX,
+        event.clientY,
+        currentDrag.itemKey,
+      );
 
       dragOverItemKeyRef.current = targetKey;
       setDragOverItemKey(targetKey);
@@ -619,6 +690,9 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       } satisfies ActiveItineraryDrag;
 
       dragStartItineraryRef.current = itineraryRef.current;
+      itineraryDragLayoutRef.current = captureItineraryDragLayout(
+        event.currentTarget.closest("table") ?? document,
+      );
       activeItineraryDragRef.current = nextDrag;
       dragOverItemKeyRef.current = itemKey;
       setActiveItineraryDrag(nextDrag);
