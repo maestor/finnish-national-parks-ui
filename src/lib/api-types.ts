@@ -1055,6 +1055,11 @@ export interface paths {
                             /** Format: date-time */
                             updatedAt: string | null;
                             version: number;
+                            latestTrips: {
+                                name: string;
+                                slug: string;
+                                startDate: string | null;
+                            }[];
                             progressByCategory: {
                                 category: {
                                     name: string;
