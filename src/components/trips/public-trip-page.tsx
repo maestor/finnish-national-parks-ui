@@ -54,6 +54,12 @@ interface TripSectionNavigationItem {
   label: string;
 }
 
+interface VisibleTripSection {
+  id: string;
+  top: number;
+  visibleHeight: number;
+}
+
 const META_PILL_CLASS_NAME =
   "inline-flex items-center gap-1.5 rounded-full border border-slate-300/75 bg-white/78 px-3 py-1 text-xs font-medium text-foreground/80 shadow-[0_1px_2px_rgba(148,163,184,0.12),inset_0_1px_0_rgba(255,255,255,0.48)] dark:border-white/10 dark:bg-slate-950/56 dark:text-sky-100/72 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
 const ROUTE_BADGE_CLASS_NAME =
@@ -94,6 +100,47 @@ const TRIP_ITINERARY_SECTION_ID = "trip-itinerary";
 const getTripVisitDetailsPath = (slug: string) => `/api/trips/slug/${slug}/visit-details`;
 
 const getItineraryDetailsPanelId = (itemKey: string) => `trip-itinerary-details-${itemKey}`;
+
+const getActiveTripSectionIdFromViewport = (
+  sectionElements: HTMLElement[],
+  stickyNavBottom: number,
+  viewportHeight: number,
+) => {
+  const viewportTop = stickyNavBottom + 8;
+  const viewportBottom = viewportHeight;
+  let mostVisibleSection: VisibleTripSection | null = null;
+
+  for (const sectionElement of sectionElements) {
+    const { bottom, top } = sectionElement.getBoundingClientRect();
+    const visibleHeight = Math.max(
+      0,
+      Math.min(bottom, viewportBottom) - Math.max(top, viewportTop),
+    );
+
+    if (
+      mostVisibleSection === null ||
+      visibleHeight > mostVisibleSection.visibleHeight ||
+      (visibleHeight === mostVisibleSection.visibleHeight && top > mostVisibleSection.top)
+    ) {
+      mostVisibleSection = {
+        id: sectionElement.id,
+        top,
+        visibleHeight,
+      };
+    }
+  }
+
+  if (mostVisibleSection !== null && mostVisibleSection.visibleHeight > 0) {
+    return mostVisibleSection.id;
+  }
+
+  return (
+    [...sectionElements]
+      .reverse()
+      .find((sectionElement) => sectionElement.getBoundingClientRect().top <= viewportTop)?.id ??
+    sectionElements[0]?.id
+  );
+};
 
 export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
   const t = useTranslations("tripPage");
@@ -250,12 +297,11 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
 
     const updateActiveSectionFromScroll = () => {
       const stickyNavBottom = sectionNavigationRef.current?.getBoundingClientRect().bottom ?? 0;
-      const activeThreshold = Math.max(stickyNavBottom + 8, window.innerHeight * 0.8);
-      const nextActiveSection =
-        [...sectionElements]
-          .reverse()
-          .find((sectionElement) => sectionElement.getBoundingClientRect().top <= activeThreshold)
-          ?.id ?? sectionElements[0]?.id;
+      const nextActiveSection = getActiveTripSectionIdFromViewport(
+        sectionElements,
+        stickyNavBottom,
+        window.innerHeight,
+      );
 
       if (nextActiveSection !== undefined) {
         setActiveSectionId((currentActiveSectionId) =>
