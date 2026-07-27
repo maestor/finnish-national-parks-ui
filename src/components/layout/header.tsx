@@ -173,11 +173,6 @@ export const Header = () => {
   const desktopNavItems = useMemo(
     () => [
       {
-        href: appRoutes.home,
-        label: t("nav.home"),
-        isCurrent: normalizedPathname === appRoutes.home,
-      },
-      {
         href: appRoutes.parks,
         label: t("nav.map"),
         isCurrent: normalizedPathname === appRoutes.parks,
@@ -351,7 +346,7 @@ export const Header = () => {
         />
         <div className="relative container mx-auto flex h-14 items-center gap-2 px-4 md:gap-3">
           <Link
-            href={appRoutes.parks}
+            href={appRoutes.home}
             className="flex min-w-0 items-center gap-3 rounded-full border border-white/35 bg-white/70 py-1 pl-2 pr-3 text-foreground shadow-sm backdrop-blur-sm transition-colors hover:bg-white/85 dark:border-white/10 dark:bg-slate-950/30 dark:hover:bg-slate-950/45"
           >
             <HeaderBrandMark testId="header-brand-mark" />
