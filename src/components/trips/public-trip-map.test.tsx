@@ -173,6 +173,7 @@ const tripStops: PublicTripDetail["itinerary"] = [
       author: null,
       createdAt: "2024-06-15T10:00:00Z",
       excludeFromRoute: false,
+      location: null,
       note: null,
       park: {
         name: "Nuuksio",
@@ -197,6 +198,7 @@ const tripStops: PublicTripDetail["itinerary"] = [
       author: null,
       createdAt: "2024-06-15T18:00:00Z",
       excludeFromRoute: true,
+      location: null,
       note: null,
       park: {
         name: "Ulko-Tammio",

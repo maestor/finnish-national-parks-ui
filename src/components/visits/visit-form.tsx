@@ -6,11 +6,23 @@ import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { CoordinateOverrideFields } from "@/components/location/coordinate-override-fields";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { apiFetch } from "@/lib/api";
-import type { Park, Visit, VisitWithPark } from "@/lib/parks";
+import {
+  type CoordinateInputValue,
+  formatCoordinateInputValue,
+  parseOptionalCoordinateInput,
+} from "@/lib/location";
+import type {
+  Park,
+  Visit,
+  VisitCreateRequest,
+  VisitUpdateRequest,
+  VisitWithPark,
+} from "@/lib/parks";
 import { revalidatePublicCache } from "@/lib/public-cache";
 import { appRoutes, createPathWithSearchParams } from "@/lib/routes";
 
@@ -29,6 +41,9 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
   const [visitedOn, setVisitedOn] = useState(visitToEdit?.visitedOn ?? "");
   const [route, setRoute] = useState(visitToEdit?.route ?? "");
   const [author, setAuthor] = useState(visitToEdit?.author ?? "");
+  const [location, setLocation] = useState<CoordinateInputValue>(
+    formatCoordinateInputValue(visitToEdit?.location ?? null),
+  );
   const [note, setNote] = useState(visitToEdit?.note ?? "");
   const [isPreview, setIsPreview] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -39,6 +54,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
     visitedOn: visitToEdit?.visitedOn ?? "",
     route: visitToEdit?.route ?? "",
     author: visitToEdit?.author ?? "",
+    location: formatCoordinateInputValue(visitToEdit?.location ?? null),
     note: visitToEdit?.note ?? "",
   });
   const isEditDirty =
@@ -46,10 +62,13 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
     visitedOn !== savedSnapshot.visitedOn ||
     route !== savedSnapshot.route ||
     author !== savedSnapshot.author ||
+    location.lat !== savedSnapshot.location.lat ||
+    location.lon !== savedSnapshot.location.lon ||
     note !== savedSnapshot.note;
   const isSubmitDisabled = isSubmitting || (isEditing && !isEditDirty);
   const hasParkSlugError = errors.parkSlug !== undefined;
   const hasVisitedOnError = errors.visitedOn !== undefined;
+  const hasLocationError = errors.location !== undefined;
   const hasSubmitError = submitError !== null;
   const hasStatusMessage = statusMessage !== null;
 
@@ -96,6 +115,12 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
     if (!visitedOn) {
       validationErrors.visitedOn = t("validation.dateRequired");
     }
+
+    const parsedLocation = parseOptionalCoordinateInput(location);
+    if (parsedLocation.kind === "invalid") {
+      validationErrors.location = t("validation.locationInvalid");
+    }
+
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
@@ -109,14 +134,16 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
     setIsSubmitting(true);
     try {
       if (isEditing && visitToEdit) {
+        const payload: VisitUpdateRequest = {
+          visitedOn,
+          route: route || null,
+          author: author || null,
+          location: parsedLocation.kind === "value" ? parsedLocation.value : null,
+          note: note || null,
+        };
         await apiFetch(`/api/visits/${visitToEdit.id}`, {
           method: "PATCH",
-          body: JSON.stringify({
-            visitedOn,
-            route: route || null,
-            author: author || null,
-            note: note || null,
-          }),
+          body: JSON.stringify(payload),
         });
         await revalidateVisitPublicViews({
           parkSlug: visitToEdit.park.slug,
@@ -127,19 +154,24 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
           visitedOn,
           route: route || "",
           author: author || "",
+          location: formatCoordinateInputValue(
+            parsedLocation.kind === "value" ? parsedLocation.value : null,
+          ),
           note: note || "",
         });
         setStatusMessage(t("updateSuccess"));
         router.refresh();
       } else {
+        const payload: VisitCreateRequest = {
+          visitedOn,
+          route: route || null,
+          author: author || null,
+          location: parsedLocation.kind === "value" ? parsedLocation.value : null,
+          note: note || null,
+        };
         const createdVisit = await apiFetch<Visit>(`/api/parks/${parkSlug}/visits`, {
           method: "POST",
-          body: JSON.stringify({
-            visitedOn,
-            route: route || null,
-            author: author || null,
-            note: note || null,
-          }),
+          body: JSON.stringify(payload),
         });
         await revalidateVisitPublicViews({
           parkSlug,
@@ -234,6 +266,24 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
           onChange={(e) => setRoute(e.target.value)}
           placeholder={t("routePlaceholder")}
           className={`${inputClassName} h-10`}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <CoordinateOverrideFields
+          clearButtonLabel={t("clearLocation")}
+          coordinate={location}
+          description={t("locationDescription")}
+          errorMessage={hasLocationError ? errors.location : undefined}
+          inputClassName={inputClassName}
+          latitudeInputId="visit-location-lat"
+          latitudeLabel={t("locationLatitudeLabel")}
+          longitudeInputId="visit-location-lon"
+          longitudeLabel={t("locationLongitudeLabel")}
+          onCoordinateChange={setLocation}
+          searchInputId="visit-location-search"
+          searchLabel={t("locationSearchLabel")}
+          searchPlaceholder={t("locationSearchPlaceholder")}
         />
       </div>
 

@@ -78,6 +78,7 @@ const trip: PublicTripDetail = {
         author: null,
         createdAt: "2024-06-15T10:00:00Z",
         excludeFromRoute: false,
+        location: null,
         note: "Aamupäivän kierros",
         park: {
           name: "Nuuksio",
@@ -122,6 +123,7 @@ const trip: PublicTripDetail = {
         author: null,
         createdAt: "2024-06-18T10:00:00Z",
         excludeFromRoute: true,
+        location: null,
         note: null,
         park: {
           name: "Pallas-Yllästunturi",

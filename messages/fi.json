@@ -321,6 +321,12 @@
           "nameLabel": "Nimi",
           "slugLabel": "Slug",
           "locationLabel": "Osoite",
+          "markerPointSearchLabel": "Karttapisteen haku",
+          "markerPointSearchPlaceholder": "Hae osoitetta, paikkaa tai kuntaa",
+          "markerPointDescription": "Valitse hakuehdotus tai muokkaa koordinaatteja käsin. Tyhjentäminen poistaa paikan oman karttapisteen.",
+          "markerPointLatitudeLabel": "Leveysaste",
+          "markerPointLongitudeLabel": "Pituusaste",
+          "clearMarkerPoint": "Tyhjennä paikan karttapiste",
           "displayTypeNameLabel": "Näytettävä tyyppinimi",
           "displayTypeNamePlaceholder": "Jätä tyhjäksi käyttääksesi oletustyyppiä",
           "parkUrlLabel": "URL-osoite lisätietoihin",
@@ -335,6 +341,7 @@
             "nameRequired": "Anna paikan nimi",
             "slugRequired": "Anna paikan slug",
             "locationRequired": "Anna paikan osoite",
+            "markerPointInvalid": "Anna karttapisteelle sekä leveys- että pituusaste kelvollisina numeroina tai tyhjennä molemmat kentät",
             "areaInvalid": "Anna kelvollinen pinta-ala",
             "establishedInvalid": "Anna kelvollinen perustamisvuosi"
           }
@@ -503,6 +510,12 @@
         "dateLabel": "Käyntipäivä",
         "routeLabel": "Reitti",
         "routePlaceholder": "Esim. Pallas-Yllästunturin reitti",
+        "locationSearchLabel": "Karttapisteen haku",
+        "locationSearchPlaceholder": "Hae osoitetta, paikkaa tai kuntaa",
+        "locationDescription": "Valitse hakuehdotus tai muokkaa koordinaatteja käsin. Tyhjentäminen poistaa käynnin oman karttapisteen.",
+        "locationLatitudeLabel": "Leveysaste",
+        "locationLongitudeLabel": "Pituusaste",
+        "clearLocation": "Tyhjennä käynnin karttapiste",
         "authorLabel": "Kirjoittaja",
         "authorPlaceholder": "Esim. Maija Meikäläinen",
         "noteLabel": "Muistiinpanot",
@@ -518,7 +531,8 @@
         "back": "Palaa takaisin",
         "validation": {
           "parkRequired": "Valitse paikka",
-          "dateRequired": "Anna käyntipäivä"
+          "dateRequired": "Anna käyntipäivä",
+          "locationInvalid": "Anna karttapisteelle sekä leveys- että pituusaste kelvollisina numeroina tai tyhjennä molemmat kentät"
         }
       },
       "list": {

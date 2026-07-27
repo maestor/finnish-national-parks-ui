@@ -246,6 +246,62 @@ describe("ParkForm", () => {
     });
   });
 
+  it("sends a changed marker point in the update payload", async () => {
+    const user = userEvent.setup();
+
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ...park,
+      markerPoint: { lat: 68.1111, lon: 24.2222 },
+    });
+
+    render(<ParkForm park={park} />);
+
+    await user.clear(
+      screen.getByLabelText(/controlPanel\.parks\.edit\.form\.markerPointLatitudeLabel/),
+    );
+    await user.type(
+      screen.getByLabelText(/controlPanel\.parks\.edit\.form\.markerPointLatitudeLabel/),
+      "68.1111",
+    );
+    await user.clear(
+      screen.getByLabelText(/controlPanel\.parks\.edit\.form\.markerPointLongitudeLabel/),
+    );
+    await user.type(
+      screen.getByLabelText(/controlPanel\.parks\.edit\.form\.markerPointLongitudeLabel/),
+      "24.2222",
+    );
+
+    await user.click(screen.getByRole("button", { name: "controlPanel.parks.edit.form.submit" }));
+
+    await waitFor(() => {
+      expect(apiFetch).toHaveBeenCalledWith("/api/parks/pallas", {
+        method: "PATCH",
+        body: JSON.stringify({
+          markerPoint: {
+            lat: 68.1111,
+            lon: 24.2222,
+          },
+        }),
+      });
+    });
+  });
+
+  it("shows a validation error when marker point coordinates are incomplete", async () => {
+    const user = userEvent.setup();
+
+    render(<ParkForm park={park} />);
+
+    await user.clear(
+      screen.getByLabelText(/controlPanel\.parks\.edit\.form\.markerPointLongitudeLabel/),
+    );
+    await user.click(screen.getByRole("button", { name: "controlPanel.parks.edit.form.submit" }));
+
+    expect(
+      await screen.findByText("controlPanel.parks.edit.form.validation.markerPointInvalid"),
+    ).toBeInTheDocument();
+    expect(apiFetch).not.toHaveBeenCalled();
+  });
+
   it("round-trips postal fields independently without rebuilding the location label", async () => {
     const user = userEvent.setup();
 

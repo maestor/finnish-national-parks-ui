@@ -31,8 +31,16 @@ export type VisitedSummary = ParkVisits["visitedSummary"];
 
 export type Visit = ParkVisits["visits"][number];
 
+export type VisitCreateRequest = NonNullable<
+  paths["/api/parks/{slug}/visits"]["post"]["requestBody"]
+>["content"]["application/json"];
+
 export type VisitWithPark =
   paths["/api/visits"]["get"]["responses"][200]["content"]["application/json"]["visits"][number];
+
+export type VisitUpdateRequest = NonNullable<
+  paths["/api/visits/{id}"]["patch"]["requestBody"]
+>["content"]["application/json"];
 
 export type VisitImage = Visit["images"][number];
 

@@ -665,6 +665,10 @@ export interface paths {
                         displayTypeName?: string | null;
                         establishmentYear?: number | null;
                         locationLabel?: string;
+                        markerPoint?: {
+                            lat: number;
+                            lon: number;
+                        } | null;
                         parkUrl?: string | null;
                         name?: string;
                         postalCode?: string | null;
@@ -867,6 +871,10 @@ export interface paths {
                                     displayOrder: number;
                                     createdAt: string;
                                 }[];
+                                location: {
+                                    lat: number;
+                                    lon: number;
+                                } | null;
                                 note: string | null;
                                 route: string | null;
                                 trip: {
@@ -910,6 +918,10 @@ export interface paths {
                     "application/json": {
                         author?: string | null;
                         excludeFromRoute?: boolean;
+                        location?: {
+                            lat: number;
+                            lon: number;
+                        } | null;
                         note?: string | null;
                         route?: string | null;
                         tripId?: number | null;
@@ -944,6 +956,10 @@ export interface paths {
                                 displayOrder: number;
                                 createdAt: string;
                             }[];
+                            location: {
+                                lat: number;
+                                lon: number;
+                            } | null;
                             note: string | null;
                             route: string | null;
                             trip: {
@@ -1485,6 +1501,10 @@ export interface paths {
                                     createdAt: string;
                                     excludeFromRoute: boolean;
                                     id: number;
+                                    location: {
+                                        lat: number;
+                                        lon: number;
+                                    } | null;
                                     note: string | null;
                                     park: {
                                         name: string;
@@ -1644,6 +1664,10 @@ export interface paths {
                                     createdAt: string;
                                     excludeFromRoute: boolean;
                                     id: number;
+                                    location: {
+                                        lat: number;
+                                        lon: number;
+                                    } | null;
                                     note: string | null;
                                     park: {
                                         name: string;
@@ -2365,6 +2389,10 @@ export interface paths {
                                     displayOrder: number;
                                     createdAt: string;
                                 }[];
+                                location: {
+                                    lat: number;
+                                    lon: number;
+                                } | null;
                                 note: string | null;
                                 route: string | null;
                                 trip: {
@@ -2436,6 +2464,10 @@ export interface paths {
                                 displayOrder: number;
                                 createdAt: string;
                             }[];
+                            location: {
+                                lat: number;
+                                lon: number;
+                            } | null;
                             note: string | null;
                             route: string | null;
                             trip: {
@@ -2541,6 +2573,10 @@ export interface paths {
                     "application/json": {
                         author?: string | null;
                         excludeFromRoute?: boolean;
+                        location?: {
+                            lat: number;
+                            lon: number;
+                        } | null;
                         note?: string | null;
                         route?: string | null;
                         tripId?: number | null;
@@ -2575,6 +2611,10 @@ export interface paths {
                                 displayOrder: number;
                                 createdAt: string;
                             }[];
+                            location: {
+                                lat: number;
+                                lon: number;
+                            } | null;
                             note: string | null;
                             route: string | null;
                             trip: {
