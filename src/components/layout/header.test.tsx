@@ -66,12 +66,12 @@ describe("Header", () => {
     document.documentElement.style.removeProperty("--page-sticky-nav-top");
   });
 
-  it("renders the site title link to the parks map", () => {
+  it("renders the site title link to the home page", () => {
     render(<Header />);
 
     const siteTitleLink = screen.getByRole("link", { name: "layout.siteTitle" });
 
-    expect(siteTitleLink).toHaveAttribute("href", "/paikat");
+    expect(siteTitleLink).toHaveAttribute("href", "/");
     expect(within(siteTitleLink).getByTestId("header-brand-mark")).toBeInTheDocument();
   });
 
@@ -172,12 +172,12 @@ describe("Header", () => {
     expect(screen.queryByRole("button", { name: "layout.nav.filters" })).not.toBeInTheDocument();
   });
 
-  it("shows desktop navigation links for home and map", () => {
+  it("shows desktop navigation links without the home entry", () => {
     pathnameState.value = "/parks";
 
     render(<Header />);
 
-    expect(screen.getByRole("link", { name: "layout.nav.home" })).toHaveAttribute("href", "/");
+    expect(screen.queryByRole("link", { name: "layout.nav.home" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "layout.nav.map" })).toHaveAttribute("href", "/paikat");
     expect(screen.getByRole("link", { name: "layout.nav.visits" })).toHaveAttribute(
       "href",
