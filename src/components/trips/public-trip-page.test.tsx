@@ -1,5 +1,7 @@
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { VisitImage } from "@/lib/parks";
 import type { PublicTripDetail } from "@/lib/trips";
 import { PublicTripPage } from "./public-trip-page";
 
@@ -10,23 +12,46 @@ const authState = {
   user: null,
 };
 const mockWriteText = vi.fn().mockResolvedValue(undefined);
+const mockFetch = vi.fn<typeof fetch>();
+const mockScrollIntoView = vi.fn();
+
+vi.stubGlobal("fetch", mockFetch);
 
 vi.mock("./lazy-public-trip-map", () => ({
   LazyPublicTripMap: ({
     route,
     tripName,
+    tripStops,
+    onVisitAction,
   }: {
     route: { distanceMeters: number } | null;
     tripName: string;
+    tripStops: PublicTripDetail["itinerary"];
+    onVisitAction: (visitId: number) => void;
   }) => (
     <div data-testid="public-trip-map">
-      trip:{tripName}|distance:{route?.distanceMeters ?? "none"}
+      <div>
+        trip:{tripName}|distance:{route?.distanceMeters ?? "none"}
+      </div>
+      {tripStops.map((item) =>
+        item.kind === "visit" ? (
+          <button key={item.visit.id} type="button" onClick={() => onVisitAction(item.visit.id)}>
+            map-open-{item.visit.id}
+          </button>
+        ) : null,
+      )}
     </div>
   ),
 }));
 
 vi.mock("@/hooks/use-auth", () => ({
   useAuth: () => authState,
+}));
+
+vi.mock("@/components/visits/visit-image-gallery", () => ({
+  VisitImageGallery: ({ images }: { images: VisitImage[] }) => (
+    <div data-testid="visit-image-gallery">images:{images.length}</div>
+  ),
 }));
 
 const trip: PublicTripDetail = {
@@ -147,6 +172,70 @@ describe("PublicTripPage", () => {
   beforeEach(() => {
     authState.isAuthenticated = false;
     mockWriteText.mockReset();
+    mockFetch.mockReset();
+    mockFetch.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          visits: {
+            "11": {
+              images: [
+                {
+                  id: 501,
+                  fullUrl: "https://images.example.com/nuuksio.jpg",
+                  thumbUrl: "https://images.example.com/nuuksio-thumb.jpg",
+                  fullWidth: 1600,
+                  fullHeight: 900,
+                  thumbWidth: 640,
+                  thumbHeight: 360,
+                  originalName: "nuuksio.jpg",
+                  displayOrder: 1,
+                  createdAt: "2024-06-15T12:00:00Z",
+                },
+              ],
+            },
+            "12": {
+              images: [
+                {
+                  id: 601,
+                  fullUrl: "https://images.example.com/pallas.jpg",
+                  thumbUrl: "https://images.example.com/pallas-thumb.jpg",
+                  fullWidth: 1600,
+                  fullHeight: 900,
+                  thumbWidth: 640,
+                  thumbHeight: 360,
+                  originalName: "pallas.jpg",
+                  displayOrder: 1,
+                  createdAt: "2024-06-18T12:00:00Z",
+                },
+                {
+                  id: 602,
+                  fullUrl: "https://images.example.com/pallas-2.jpg",
+                  thumbUrl: "https://images.example.com/pallas-2-thumb.jpg",
+                  fullWidth: 1600,
+                  fullHeight: 900,
+                  thumbWidth: 640,
+                  thumbHeight: 360,
+                  originalName: "pallas-2.jpg",
+                  displayOrder: 2,
+                  createdAt: "2024-06-18T12:05:00Z",
+                },
+              ],
+            },
+          },
+        }),
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          status: 200,
+        },
+      ),
+    );
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      configurable: true,
+      value: mockScrollIntoView,
+    });
+    mockScrollIntoView.mockReset();
     Object.defineProperty(window.navigator, "clipboard", {
       configurable: true,
       value: {
@@ -172,6 +261,11 @@ describe("PublicTripPage", () => {
     expect(screen.getByText("1 tripPage.imageCount")).toHaveClass("text-primary");
     expect(screen.queryByText("Helsinki")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "tripPage.copyTripPageLink" })).toBeInTheDocument();
+    const visitToggleButtons = screen.getAllByRole("button", { name: "tripPage.showVisit" });
+    expect(visitToggleButtons).toHaveLength(2);
+    expect(visitToggleButtons[0]).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getAllByText("tripPage.visitLabel")).toHaveLength(2);
+    expect(screen.getByText("tripPage.stopLabel")).toBeInTheDocument();
 
     const itinerary = screen.getByRole("list", { name: "tripPage.itineraryTitle" });
     expect(within(itinerary).getByRole("link", { name: "Nuuksio" })).toHaveAttribute(
@@ -184,6 +278,45 @@ describe("PublicTripPage", () => {
       "/paikka/pallas-yllastunturi?visit=12#visit-history",
     );
     expect(within(itinerary).queryByText("tripPage.excludedFromRoute")).not.toBeInTheDocument();
+  });
+
+  it("opens trip visit details inline and loads image galleries without leaving the page", async () => {
+    const user = userEvent.setup();
+
+    render(<PublicTripPage trip={trip} />);
+
+    await user.click(screen.getAllByRole("button", { name: "tripPage.showVisit" })[0]);
+
+    expect(screen.getByText("Aamupäivän kierros")).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalled();
+    });
+    expect(mockFetch.mock.calls[0]?.[0]).toBe("/api/trips/slug/kesaretki/visit-details");
+
+    const nuuksioVisitCard = screen.getByRole("link", { name: "Nuuksio" }).closest("li");
+
+    if (!(nuuksioVisitCard instanceof HTMLElement)) {
+      throw new Error("Expected Nuuksio visit card");
+    }
+
+    await waitFor(() => {
+      expect(within(nuuksioVisitCard).getByTestId("visit-image-gallery")).toHaveTextContent(
+        "images:1",
+      );
+    });
+  });
+
+  it("reveals and scrolls to the requested visit when the trip map action is used", async () => {
+    const user = userEvent.setup();
+
+    render(<PublicTripPage trip={trip} />);
+
+    await user.click(screen.getByRole("button", { name: "map-open-11" }));
+
+    expect(mockScrollIntoView).toHaveBeenCalled();
+    expect(screen.getByText("Aamupäivän kierros")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "tripPage.hideVisit" })).toBeInTheDocument();
   });
 
   it("renders the trip map without a route line when route geometry is unavailable", () => {

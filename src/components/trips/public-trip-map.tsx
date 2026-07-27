@@ -4,12 +4,13 @@ import * as maplibregl from "maplibre-gl";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { formatFinnishDate } from "@/lib/fi-date";
-import { createParkVisitHref } from "@/lib/public-visits";
+import { tripVisitHasExpandableDetails } from "@/lib/public-trip-visit-details";
 import type { PublicTripDetail, PublicTripRoute } from "@/lib/trips";
 import { getMapStyle } from "../map/map-style";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 interface PublicTripMapProps {
+  onVisitAction: (visitId: number) => void;
   route: PublicTripRoute | null;
   startingPoint: NonNullable<PublicTripDetail["startingPoint"]>;
   tripName: string;
@@ -17,16 +18,17 @@ interface PublicTripMapProps {
 }
 
 interface TripMapPointEntry {
+  canToggleVisit: boolean;
   coordinate: {
     lat: number;
     lon: number;
   };
   excludeFromRoute: boolean;
-  href?: string;
   index: number;
   kind: "stop" | "visit";
   label: string;
   subtitle: string;
+  visitId?: number;
   visitedOn: string;
 }
 
@@ -40,7 +42,7 @@ interface TripMapPointGroup {
 
 interface PopupLabels {
   excludedFromRoute: string;
-  openVisit: string;
+  showVisit: string;
 }
 
 const HOVER_CLOSE_DELAY = 250;
@@ -97,7 +99,11 @@ const createPopupDetailRow = (text: string) => {
   return row;
 };
 
-const createPopupEntryNode = (point: TripMapPointEntry, labels: PopupLabels) => {
+const createPopupEntryNode = (
+  point: TripMapPointEntry,
+  labels: PopupLabels,
+  onVisitAction: (visitId: number) => void,
+) => {
   const entry = document.createElement("article");
   entry.className = "space-y-3";
 
@@ -132,25 +138,34 @@ const createPopupEntryNode = (point: TripMapPointEntry, labels: PopupLabels) => 
   }
   entry.appendChild(details);
 
-  if (point.href) {
+  const visitId = point.visitId;
+
+  if (visitId !== undefined && point.canToggleVisit) {
     const actionRow = document.createElement("div");
     actionRow.className = "mt-3 flex justify-center";
 
-    const link = document.createElement("a");
-    link.href = point.href;
-    link.className =
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className =
       "inline-flex items-center rounded-full border border-sky-200/70 bg-white/74 px-3 py-1.5 text-xs font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 dark:border-sky-300/15 dark:bg-slate-950/62 dark:hover:bg-slate-950/78";
-    link.textContent = labels.openVisit;
-    link.addEventListener("click", (event) => event.stopPropagation());
+    button.textContent = labels.showVisit;
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      onVisitAction(visitId);
+    });
 
-    actionRow.appendChild(link);
+    actionRow.appendChild(button);
     entry.appendChild(actionRow);
   }
 
   return entry;
 };
 
-const createPopupNode = (pointGroup: TripMapPointGroup, labels: PopupLabels) => {
+const createPopupNode = (
+  pointGroup: TripMapPointGroup,
+  labels: PopupLabels,
+  onVisitAction: (visitId: number) => void,
+) => {
   const container = document.createElement("div");
   container.className = "max-w-[280px] p-3 text-foreground";
 
@@ -161,7 +176,7 @@ const createPopupNode = (pointGroup: TripMapPointGroup, labels: PopupLabels) => 
       container.appendChild(separator);
     }
 
-    container.appendChild(createPopupEntryNode(entry, labels));
+    container.appendChild(createPopupEntryNode(entry, labels, onVisitAction));
   });
 
   return container;
@@ -222,6 +237,7 @@ const groupTripPointEntries = (tripPointEntries: TripMapPointEntry[]) => {
 };
 
 export const PublicTripMap = ({
+  onVisitAction,
   route,
   startingPoint,
   tripName,
@@ -367,19 +383,18 @@ export const PublicTripMap = ({
     const tripPointEntries: TripMapPointEntry[] = tripStops.map((item) =>
       item.kind === "visit"
         ? {
+            canToggleVisit: tripVisitHasExpandableDetails(item.visit),
             coordinate: item.visit.park.markerPoint,
             excludeFromRoute: item.visit.excludeFromRoute,
-            href: createParkVisitHref({
-              parkSlug: item.visit.park.slug,
-              visitId: item.visit.id,
-            }),
             index: item.tripStopOrder,
             kind: "visit",
             label: item.visit.park.name,
             subtitle: item.visit.park.typeLabel,
+            visitId: item.visit.id,
             visitedOn: item.visit.visitedOn,
           }
         : {
+            canToggleVisit: false,
             coordinate: item.stop.location.coordinate,
             excludeFromRoute: false,
             index: item.tripStopOrder,
@@ -475,10 +490,14 @@ export const PublicTripMap = ({
 
     for (const pointGroup of groupedTripPoints) {
       const element = createWaypointMarkerElement(pointGroup);
-      const popupContent = createPopupNode(pointGroup, {
-        excludedFromRoute: t("excludedFromRoute"),
-        openVisit: t("openVisit"),
-      });
+      const popupContent = createPopupNode(
+        pointGroup,
+        {
+          excludedFromRoute: t("excludedFromRoute"),
+          showVisit: t("showVisit"),
+        },
+        onVisitAction,
+      );
       const popup = new maplibregl.Popup({
         closeButton: false,
         closeOnClick: false,
@@ -558,7 +577,7 @@ export const PublicTripMap = ({
       document.removeEventListener("mousedown", handleDocumentClick);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isMapLoaded, route, startingPoint, t, tripStops]);
+  }, [isMapLoaded, onVisitAction, route, startingPoint, t, tripStops]);
 
   return (
     <div
