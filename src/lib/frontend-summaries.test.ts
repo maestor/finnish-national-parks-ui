@@ -385,6 +385,21 @@ describe("createHomeProgressItems", () => {
     ]);
   });
 
+  it("falls back to empty home summary arrays when a stale cached response is missing newer fields", () => {
+    const staleSummary = {
+      ...buildSummary(),
+      latestTrips: undefined,
+      latestVisitEntries: undefined,
+      mostVisitedParks: undefined,
+      recentVisits: undefined,
+    } as unknown as HomeSummary;
+
+    expect(createHomeMostVisitedParks(staleSummary)).toEqual([]);
+    expect(createHomeRecentVisitsFromSummary(staleSummary)).toEqual([]);
+    expect(createHomeLatestVisitEntriesFromSummary(staleSummary)).toEqual([]);
+    expect(createHomeLatestTripsFromSummary(staleSummary)).toEqual([]);
+  });
+
   it("sorts recent visits from the visit list by newest visited date", () => {
     expect(
       createHomeRecentVisitsFromVisitList([
