@@ -411,6 +411,13 @@
         "stopCreateSuccess": "Pysähdys lisättiin retkeen.",
         "stopUpdateSuccess": "Pysähdys päivitettiin.",
         "stopDeleteSuccess": "Pysähdys poistettiin retkestä.",
+        "closeStopDialog": "Sulje pysähdyksen muokkaus",
+        "saveStopBeforeImages": "Tallenna pysähdys ensin, niin voit lisätä sille kuvia.",
+        "stopOrderLabel": "Lisää kohtaan",
+        "stopOrderHint": "Valitse, mihin kohtaan retken etenemisjärjestystä pysähdys lisätään. Oletuksena se lisätään viimeiseksi.",
+        "stopOrderFirst": "Ensimmäiseksi",
+        "stopOrderAfter": "{targetKind} {targetName} jälkeen",
+        "stopOrderLast": "Viimeiseksi",
         "stopVisitedOnLabel": "Päivä",
         "stopVisitedOnPlaceholder": "Valitse päivä",
         "stopLocationLabel": "Pysähdyksen sijainti",
@@ -450,6 +457,12 @@
           "stopVisitedOnRequired": "Valitse pysähdykselle päivä",
           "stopLocationRequired": "Anna pysähdykselle sijainti",
           "stopLocationSelectionRequired": "Valitse pysähdyksen sijainti ehdotuksista tai käytä nykyistä sijaintia"
+        },
+        "stopImages": {
+          "title": "Pysähdyksen kuvat",
+          "description": "Lisää pysähdykselle kuvia, poista tarpeettomat ja järjestä ne haluamaasi järjestykseen.",
+          "maxImagesSummary": "{current} / {max} kuvaa käytössä",
+          "maxImagesReached": "Pysähdykselle voi lisätä enintään {count} kuvaa."
         },
         "useCurrentLocation": "Käytä nykyistä sijaintia",
         "locationLocating": "Nykyistä sijaintia haetaan…",

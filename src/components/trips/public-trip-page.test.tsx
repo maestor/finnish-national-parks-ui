@@ -142,6 +142,7 @@ const trip: PublicTripDetail = {
       tripStopOrder: 2,
       stop: {
         id: 31,
+        images: [],
         createdAt: "2024-06-16T10:00:00Z",
         location: {
           displayName: "Yöpyminen Oulussa",
@@ -194,6 +195,35 @@ const createTripWithoutExpandableThirdVisit = (): PublicTripDetail => ({
           visit: {
             ...item.visit,
             imageCount: 0,
+            note: null,
+          },
+        }
+      : item,
+  ),
+});
+
+const createTripWithImageOnlyStop = (): PublicTripDetail => ({
+  ...trip,
+  itinerary: trip.itinerary.map((item) =>
+    item.kind === "stop"
+      ? {
+          ...item,
+          stop: {
+            ...item.stop,
+            images: [
+              {
+                id: 41,
+                createdAt: "2024-06-16T10:00:00Z",
+                displayOrder: 1,
+                fullHeight: null,
+                fullUrl: "https://images.example.com/stop.jpg",
+                fullWidth: null,
+                originalName: "stop.jpg",
+                thumbHeight: null,
+                thumbUrl: "https://images.example.com/stop-thumb.jpg",
+                thumbWidth: null,
+              },
+            ],
             note: null,
           },
         }
@@ -663,6 +693,24 @@ describe("PublicTripPage", () => {
       "true",
     );
     expect(screen.getByText("Hotelli keskustassa")).toBeInTheDocument();
+  });
+
+  it("shows a stop image section only when the stop has images", async () => {
+    const user = userEvent.setup();
+
+    render(<PublicTripPage trip={createTripWithImageOnlyStop()} />);
+
+    await user.click(screen.getByRole("button", { name: "tripPage.showStop" }));
+
+    const stopCard = screen.getByText("Yöpyminen Oulussa").closest("li");
+
+    if (!(stopCard instanceof HTMLElement)) {
+      throw new Error("Expected stop card");
+    }
+
+    expect(within(stopCard).getByText("1 tripPage.imageCount")).toBeInTheDocument();
+    expect(screen.getByTestId("visit-image-gallery")).toHaveTextContent("images:1");
+    expect(screen.queryByText("Hotelli keskustassa")).not.toBeInTheDocument();
   });
 
   it("reveals and scrolls to the requested visit when the trip map action is used", async () => {
