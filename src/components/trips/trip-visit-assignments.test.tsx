@@ -189,20 +189,60 @@ const tripWithoutDateRange = {
   dateRange: null,
 } satisfies TripDetail;
 
+const tripWithThreeAssignedItems = {
+  ...currentTrip,
+  itinerary: [
+    ...currentTrip.itinerary,
+    {
+      kind: "visit",
+      tripStopOrder: 3,
+      visit: {
+        id: 14,
+        park: {
+          slug: "pallas",
+          name: "Pallas-Yllästunturi",
+        },
+        visitedOn: "2024-06-15",
+        route: "Huippupolku",
+        excludeFromRoute: false,
+        author: "Maija",
+        location: null,
+        note: null,
+        createdAt: "2024-06-15T00:00:00Z",
+        updatedAt: "2024-06-15T00:00:00Z",
+      },
+    },
+  ],
+  visitCount: 2,
+} satisfies TripDetail;
+
 const getItineraryOrder = (section: HTMLElement) =>
   Array.from(section.querySelectorAll("[data-itinerary-item-key]")).map((row) =>
     row.getAttribute("data-itinerary-item-key"),
   );
 
-const mockElementFromPoint = (element: Element) => {
-  const elementFromPoint = vi.fn(() => element);
+const mockItineraryRowLayout = (section: HTMLElement) => {
+  const rows = Array.from(section.querySelectorAll<HTMLElement>("[data-itinerary-item-key]"));
 
-  Object.defineProperty(document, "elementFromPoint", {
-    configurable: true,
-    value: elementFromPoint,
+  rows.forEach((row, index) => {
+    const top = 100 + index * 48;
+    const height = 40;
+
+    Object.defineProperty(row, "getBoundingClientRect", {
+      configurable: true,
+      value: () => ({
+        x: 0,
+        y: top,
+        width: 400,
+        height,
+        top,
+        bottom: top + height,
+        left: 0,
+        right: 400,
+        toJSON: () => null,
+      }),
+    });
   });
-
-  return elementFromPoint;
 };
 
 describe("TripVisitAssignments", () => {
@@ -461,7 +501,7 @@ describe("TripVisitAssignments", () => {
       throw new Error("Expected itinerary row");
     }
 
-    mockElementFromPoint(stopRow);
+    mockItineraryRowLayout(itinerarySection);
 
     const visitRow = within(itinerarySection).getByText("Nuuksio").closest("tr");
 
@@ -476,8 +516,8 @@ describe("TripVisitAssignments", () => {
     expect(getItineraryOrder(itinerarySection)).toEqual(["visit-11", "stop-21"]);
 
     await user.pointer([
-      { target: reorderButton, keys: "[MouseLeft>]", coords: { x: 10, y: 10 } },
-      { target: reorderButton, coords: { x: 22, y: 20 } },
+      { target: reorderButton, keys: "[MouseLeft>]", coords: { x: 10, y: 120 } },
+      { target: reorderButton, coords: { x: 10, y: 168 } },
     ]);
 
     await waitFor(() => {
@@ -534,6 +574,57 @@ describe("TripVisitAssignments", () => {
     expect(mockRefresh).toHaveBeenCalled();
   });
 
+  it("keeps the first drag from cascading to the bottom when later pointer events hit shifted rows", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <TripVisitAssignments trip={tripWithThreeAssignedItems} visits={visitsWithTwoAvailable} />,
+    );
+
+    const itinerarySection = screen
+      .getByRole("heading", {
+        name: "controlPanel.trips.assignments.assignedTitle",
+      })
+      .closest("section");
+    const stopRow =
+      itinerarySection instanceof HTMLElement
+        ? within(itinerarySection).getByText("Lounaspaikka Jyvaskyla").closest("tr")
+        : null;
+    const thirdRow =
+      itinerarySection instanceof HTMLElement
+        ? within(itinerarySection).getByText("Pallas-Yllästunturi").closest("tr")
+        : null;
+    const visitRow =
+      itinerarySection instanceof HTMLElement
+        ? within(itinerarySection).getByText("Nuuksio").closest("tr")
+        : null;
+
+    if (
+      !(itinerarySection instanceof HTMLElement) ||
+      !(stopRow instanceof HTMLTableRowElement) ||
+      !(thirdRow instanceof HTMLTableRowElement) ||
+      !(visitRow instanceof HTMLTableRowElement)
+    ) {
+      throw new Error("Expected itinerary rows");
+    }
+
+    mockItineraryRowLayout(itinerarySection);
+
+    const reorderButton = within(visitRow).getByRole("button", {
+      name: "controlPanel.trips.assignments.table.reorderItem",
+    });
+
+    await user.pointer([
+      { target: reorderButton, keys: "[MouseLeft>]", coords: { x: 10, y: 120 } },
+      { target: reorderButton, coords: { x: 10, y: 168 } },
+      { target: reorderButton, coords: { x: 10, y: 170 } },
+    ]);
+
+    await waitFor(() => {
+      expect(getItineraryOrder(itinerarySection)).toEqual(["stop-21", "visit-11", "visit-14"]);
+    });
+  });
+
   it("restores the previous itinerary order when a drag is canceled", async () => {
     render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
 
@@ -559,14 +650,14 @@ describe("TripVisitAssignments", () => {
       throw new Error("Expected itinerary rows");
     }
 
-    mockElementFromPoint(stopRow);
+    mockItineraryRowLayout(itinerarySection);
 
     const reorderButton = within(visitRow).getByRole("button", {
       name: "controlPanel.trips.assignments.table.reorderItem",
     });
 
-    fireEvent.pointerDown(reorderButton, { pointerId: 1, clientX: 10, clientY: 10 });
-    fireEvent.pointerMove(window, { pointerId: 1, clientX: 24, clientY: 24 });
+    fireEvent.pointerDown(reorderButton, { pointerId: 1, clientX: 10, clientY: 120 });
+    fireEvent.pointerMove(window, { pointerId: 1, clientX: 10, clientY: 168 });
 
     await waitFor(() => {
       expect(getItineraryOrder(itinerarySection)).toEqual(["stop-21", "visit-11"]);
