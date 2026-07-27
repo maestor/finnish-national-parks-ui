@@ -275,6 +275,7 @@ describe("PublicTripMap", () => {
   it("renders an accessible map, draws the route, and places a starting point plus numbered itinerary markers", async () => {
     const { unmount } = render(
       <PublicTripMap
+        onItineraryItemAction={vi.fn()}
         route={route}
         startingPoint={startingPoint}
         tripName="Kesaretki"
@@ -330,9 +331,12 @@ describe("PublicTripMap", () => {
     expect(markerInstances.every((marker) => marker.remove.mock.calls.length > 0)).toBe(true);
   });
 
-  it("opens a visit popup with the visit link when a numbered marker is clicked", async () => {
+  it("renders a popup visit action button that reveals the matching itinerary card", async () => {
+    const onItineraryItemAction = vi.fn();
+
     render(
       <PublicTripMap
+        onItineraryItemAction={onItineraryItemAction}
         route={route}
         startingPoint={startingPoint}
         tripName="Kesaretki"
@@ -354,10 +358,43 @@ describe("PublicTripMap", () => {
 
     expect(within(popup).getByRole("heading", { name: "Nuuksio" })).toBeInTheDocument();
     expect(popup).toHaveTextContent("Kansallispuisto");
-    expect(within(popup).getByRole("link", { name: "tripPage.openVisit" })).toHaveAttribute(
-      "href",
-      "/paikka/nuuksio?visit=11#visit-history",
+
+    fireEvent.click(within(popup).getByRole("button", { name: "tripPage.showVisit" }));
+
+    expect(onItineraryItemAction).toHaveBeenCalledWith("visit:11");
+  });
+
+  it("renders a popup stop action button that reveals the matching itinerary stop", async () => {
+    const onItineraryItemAction = vi.fn();
+
+    render(
+      <PublicTripMap
+        onItineraryItemAction={onItineraryItemAction}
+        route={route}
+        startingPoint={startingPoint}
+        tripName="Kesaretki"
+        tripStops={tripStops}
+      />,
     );
+
+    await waitFor(() => {
+      expect(markerInstances).toHaveLength(4);
+    });
+
+    fireEvent.click(markerInstances[3].element);
+
+    const popup = document.querySelector(".maplibregl-popup");
+
+    if (!(popup instanceof HTMLElement)) {
+      throw new Error("Expected an open map popup");
+    }
+
+    expect(within(popup).getByRole("heading", { name: "Yöpyminen Oulussa" })).toBeInTheDocument();
+    expect(popup).toHaveTextContent("tripPage.stopLabel");
+
+    fireEvent.click(within(popup).getByRole("button", { name: "tripPage.showStop" }));
+
+    expect(onItineraryItemAction).toHaveBeenCalledWith("stop:31");
   });
 
   it("opens a popup on hover and closes it after the leave delay", async () => {
@@ -365,6 +402,7 @@ describe("PublicTripMap", () => {
 
     render(
       <PublicTripMap
+        onItineraryItemAction={vi.fn()}
         route={route}
         startingPoint={startingPoint}
         tripName="Kesaretki"
@@ -393,6 +431,7 @@ describe("PublicTripMap", () => {
   it("renders only the starting point and itinerary markers when no route geometry is available", async () => {
     render(
       <PublicTripMap
+        onItineraryItemAction={vi.fn()}
         route={null}
         startingPoint={startingPoint}
         tripName="Kesaretki"
@@ -418,6 +457,7 @@ describe("PublicTripMap", () => {
   it("shows excluded visits as non-route markers in the popup", async () => {
     render(
       <PublicTripMap
+        onItineraryItemAction={vi.fn()}
         route={route}
         startingPoint={startingPoint}
         tripName="Kesaretki"
@@ -443,6 +483,7 @@ describe("PublicTripMap", () => {
   it("groups itinerary points that share the same coordinate into one marker and lists them in the popup", async () => {
     render(
       <PublicTripMap
+        onItineraryItemAction={vi.fn()}
         route={route}
         startingPoint={startingPoint}
         tripName="Kesaretki"
@@ -483,6 +524,7 @@ describe("PublicTripMap", () => {
 
     render(
       <PublicTripMap
+        onItineraryItemAction={vi.fn()}
         route={route}
         startingPoint={startingPoint}
         tripName="Kesaretki"
@@ -507,6 +549,7 @@ describe("PublicTripMap", () => {
 
     render(
       <PublicTripMap
+        onItineraryItemAction={vi.fn()}
         route={route}
         startingPoint={startingPoint}
         tripName="Kesaretki"
