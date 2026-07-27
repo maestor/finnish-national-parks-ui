@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useEffect, useEffectEvent, useRef, useState, useTransition } from "react";
+import { useEffect, useEffectEvent, useMemo, useRef, useState, useTransition } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { EditIconLink } from "@/components/admin/edit-icon-link";
@@ -49,6 +49,11 @@ interface ItineraryItemTarget {
   kind: "stop" | "visit";
 }
 
+interface TripSectionNavigationItem {
+  id: string;
+  label: string;
+}
+
 const META_PILL_CLASS_NAME =
   "inline-flex items-center gap-1.5 rounded-full border border-slate-300/75 bg-white/78 px-3 py-1 text-xs font-medium text-foreground/80 shadow-[0_1px_2px_rgba(148,163,184,0.12),inset_0_1px_0_rgba(255,255,255,0.48)] dark:border-white/10 dark:bg-slate-950/56 dark:text-sky-100/72 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
 const ROUTE_BADGE_CLASS_NAME =
@@ -69,11 +74,22 @@ const VISIT_KIND_BADGE_CLASS_NAME =
   "inline-flex items-center rounded-full border border-emerald-200/70 bg-emerald-50 px-2.5 py-1 text-xs font-semibold tracking-wide text-emerald-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] dark:border-emerald-300/20 dark:bg-emerald-400/10 dark:text-emerald-200";
 const STOP_KIND_BADGE_CLASS_NAME =
   "inline-flex items-center rounded-full border border-amber-200/70 bg-amber-50 px-2.5 py-1 text-xs font-semibold tracking-wide text-amber-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] dark:border-amber-300/20 dark:bg-amber-300/10 dark:text-amber-200";
+const SECTION_NAV_CONTAINER_CLASS_NAME =
+  "rounded-full border border-white/45 bg-white/76 p-1 shadow-[0_14px_30px_rgba(15,23,42,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/72 dark:shadow-[0_16px_32px_rgba(2,6,23,0.28)]";
+const SECTION_NAV_LINK_CLASS_NAME =
+  "inline-flex min-w-0 items-center justify-center rounded-full px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:text-sm";
+const ACTIVE_SECTION_NAV_LINK_CLASS_NAME =
+  "bg-white text-foreground shadow-[0_10px_22px_rgba(148,163,184,0.2)] dark:bg-slate-900 dark:text-white";
+const HEADER_VISIBLE_OFFSET_PX = 56;
+const HEADER_HIDDEN_OFFSET_PX = 0;
 
 const ROUTE_KM_FORMATTER = new Intl.NumberFormat("fi-FI", {
   maximumFractionDigits: 0,
 });
 const TRIP_VISIT_DETAILS_LOAD_DELAY_MS = 150;
+const TRIP_DESCRIPTION_SECTION_ID = "trip-description";
+const TRIP_ROUTE_SECTION_ID = "trip-route";
+const TRIP_ITINERARY_SECTION_ID = "trip-itinerary";
 
 const getTripVisitDetailsPath = (slug: string) => `/api/trips/slug/${slug}/visit-details`;
 
@@ -96,6 +112,35 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
   const hasDeferredVisitDetails = trip.itinerary.some(
     (item) => item.kind === "visit" && item.visit.imageCount > 0,
   );
+  const sectionNavigationItems = useMemo(() => {
+    const items: TripSectionNavigationItem[] = [];
+
+    if (trip.description !== null) {
+      items.push({
+        id: TRIP_DESCRIPTION_SECTION_ID,
+        label: t("sectionNav.description"),
+      });
+    }
+
+    if (shouldShowRouteSection === true) {
+      items.push({
+        id: TRIP_ROUTE_SECTION_ID,
+        label: t("sectionNav.route"),
+      });
+    }
+
+    if (trip.itinerary.length > 0) {
+      items.push({
+        id: TRIP_ITINERARY_SECTION_ID,
+        label: t("sectionNav.itinerary"),
+      });
+    }
+
+    return items;
+  }, [shouldShowRouteSection, t, trip.description, trip.itinerary.length]);
+
+  const firstSectionNavigationItemId = sectionNavigationItems[0]?.id ?? null;
+
   const itineraryItemTargets = new Map<string, ItineraryItemTarget>(
     trip.itinerary.map((item) =>
       item.kind === "visit"
@@ -122,7 +167,12 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
   const [visitDetailsStatus, setVisitDetailsStatus] = useState<
     "idle" | "loading" | "ready" | "error"
   >(hasDeferredVisitDetails ? "idle" : "ready");
+  const [activeSectionId, setActiveSectionId] = useState<string | null>(
+    sectionNavigationItems[0]?.id ?? null,
+  );
+  const [stickySectionNavHeight, setStickySectionNavHeight] = useState(0);
   const [, startVisitDetailsTransition] = useTransition();
+  const sectionNavigationRef = useRef<HTMLElement | null>(null);
   const itineraryItemRefs = useRef(new Map<string, HTMLLIElement>());
   const itineraryToggleButtonRefs = useRef(new Map<string, HTMLButtonElement>());
   const pendingScrollItemKeyRef = useRef<string | null>(null);
@@ -165,6 +215,79 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
       window.clearTimeout(timeoutId);
     };
   }, [hasDeferredVisitDetails]);
+
+  useEffect(() => {
+    setActiveSectionId(firstSectionNavigationItemId);
+  }, [firstSectionNavigationItemId]);
+
+  useEffect(() => {
+    const updateStickySectionNavHeight = () => {
+      setStickySectionNavHeight(sectionNavigationRef.current?.offsetHeight ?? 0);
+    };
+
+    updateStickySectionNavHeight();
+    window.addEventListener("resize", updateStickySectionNavHeight);
+
+    return () => {
+      window.removeEventListener("resize", updateStickySectionNavHeight);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (sectionNavigationItems.length < 2) {
+      return;
+    }
+
+    const sectionElements = sectionNavigationItems
+      .map((item) => document.getElementById(item.id))
+      .filter((element): element is HTMLElement => element !== null);
+
+    if (sectionElements.length === 0) {
+      return;
+    }
+
+    let animationFrameId: number | null = null;
+
+    const updateActiveSectionFromScroll = () => {
+      const stickyNavBottom = sectionNavigationRef.current?.getBoundingClientRect().bottom ?? 0;
+      const activeThreshold = Math.max(stickyNavBottom + 8, window.innerHeight * 0.8);
+      const nextActiveSection =
+        [...sectionElements]
+          .reverse()
+          .find((sectionElement) => sectionElement.getBoundingClientRect().top <= activeThreshold)
+          ?.id ?? sectionElements[0]?.id;
+
+      if (nextActiveSection !== undefined) {
+        setActiveSectionId((currentActiveSectionId) =>
+          currentActiveSectionId === nextActiveSection ? currentActiveSectionId : nextActiveSection,
+        );
+      }
+    };
+
+    const scheduleActiveSectionUpdate = () => {
+      if (animationFrameId !== null) {
+        window.cancelAnimationFrame(animationFrameId);
+      }
+
+      animationFrameId = window.requestAnimationFrame(() => {
+        updateActiveSectionFromScroll();
+        animationFrameId = null;
+      });
+    };
+
+    updateActiveSectionFromScroll();
+    window.addEventListener("scroll", scheduleActiveSectionUpdate, { passive: true });
+    window.addEventListener("resize", scheduleActiveSectionUpdate);
+
+    return () => {
+      if (animationFrameId !== null) {
+        window.cancelAnimationFrame(animationFrameId);
+      }
+
+      window.removeEventListener("scroll", scheduleActiveSectionUpdate);
+      window.removeEventListener("resize", scheduleActiveSectionUpdate);
+    };
+  }, [sectionNavigationItems]);
 
   useEffect(() => {
     const pendingScrollItemKey = pendingScrollItemKeyRef.current;
@@ -240,6 +363,37 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
     setOpenItemKey((currentOpenItemKey) => (currentOpenItemKey === itemKey ? null : itemKey));
   };
 
+  const handleSectionNavigationClick = (
+    event: React.MouseEvent<HTMLAnchorElement>,
+    sectionId: string,
+  ) => {
+    const targetSection = document.getElementById(sectionId);
+
+    if (targetSection === null) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const targetSectionTop = window.scrollY + targetSection.getBoundingClientRect().top;
+    const isScrollingUp = targetSectionTop < window.scrollY;
+    const headerOffsetPx =
+      isScrollingUp || targetSectionTop <= HEADER_VISIBLE_OFFSET_PX
+        ? HEADER_VISIBLE_OFFSET_PX
+        : HEADER_HIDDEN_OFFSET_PX;
+    const nextScrollTop = Math.max(targetSectionTop - headerOffsetPx - stickySectionNavHeight, 0);
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    window.history.pushState(null, "", `#${sectionId}`);
+    window.scrollTo({
+      top: nextScrollTop,
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+    });
+    setActiveSectionId(sectionId);
+  };
+
+  const tripSectionScrollMarginTop = `calc(var(--page-sticky-nav-top, 0rem) + ${stickySectionNavHeight}px)`;
+
   return (
     <div className={PUBLIC_PAGE_SHELL_CLASS_NAME}>
       <section className={PUBLIC_PANEL_CLASS_NAME}>
@@ -252,13 +406,6 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
           {trip.dateRange !== null && (
             <p className="text-sm font-medium text-primary">
               {formatFinnishDateRange(trip.dateRange.start, trip.dateRange.end)}
-            </p>
-          )}
-          {trip.description !== null && (
-            <p
-              className={`mt-3 whitespace-pre-line ${PUBLIC_HERO_DESCRIPTION_CLASS_NAME} max-w-none!`}
-            >
-              {trip.description}
             </p>
           )}
         </div>
@@ -299,8 +446,70 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
         </div>
       </section>
 
+      {sectionNavigationItems.length > 1 && (
+        <nav
+          aria-label={t("sectionNavigationLabel")}
+          className="sticky z-40 -my-2 px-1"
+          style={{ top: "var(--page-sticky-nav-top, 0.5rem)" }}
+          ref={sectionNavigationRef}
+        >
+          <div className={SECTION_NAV_CONTAINER_CLASS_NAME}>
+            <div
+              className="grid gap-1"
+              style={{
+                gridTemplateColumns: `repeat(${sectionNavigationItems.length}, minmax(0, 1fr))`,
+              }}
+            >
+              {sectionNavigationItems.map((item) => {
+                const isActive = activeSectionId === item.id;
+
+                return (
+                  <Link
+                    key={item.id}
+                    href={`#${item.id}`}
+                    aria-current={isActive ? "location" : undefined}
+                    onClick={(event) => {
+                      handleSectionNavigationClick(event, item.id);
+                    }}
+                    className={`${SECTION_NAV_LINK_CLASS_NAME} ${isActive ? ACTIVE_SECTION_NAV_LINK_CLASS_NAME : "hover:bg-white/72 hover:text-foreground dark:hover:bg-slate-900/72 dark:hover:text-white"}`}
+                  >
+                    <span className="truncate">{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </nav>
+      )}
+
+      {trip.description !== null && (
+        <section
+          id={TRIP_DESCRIPTION_SECTION_ID}
+          className={PUBLIC_PANEL_CLASS_NAME}
+          style={{ scrollMarginTop: tripSectionScrollMarginTop }}
+          aria-labelledby="trip-description-title"
+        >
+          <div className="flex items-center gap-2">
+            <FileText className="h-4 w-4 text-primary" aria-hidden="true" />
+            <h2 id="trip-description-title" className="text-lg font-semibold tracking-tight">
+              {t("descriptionTitle")}
+            </h2>
+          </div>
+          <p
+            className={`mt-4 whitespace-pre-line ${PUBLIC_HERO_DESCRIPTION_CLASS_NAME} max-w-none!`}
+          >
+            {trip.description}
+          </p>
+        </section>
+      )}
+
       {shouldShowRouteSection === true && (
-        <section className={PUBLIC_PANEL_CLASS_NAME} aria-labelledby="trip-route-title">
+        <section
+          id={TRIP_ROUTE_SECTION_ID}
+          className={PUBLIC_PANEL_CLASS_NAME}
+          style={{ scrollMarginTop: tripSectionScrollMarginTop }}
+          aria-labelledby="trip-route-title"
+        >
           <div className="flex items-center gap-2">
             <Route className="h-4 w-4 text-primary" aria-hidden="true" />
             <h2 id="trip-route-title" className="text-lg font-semibold tracking-tight">
@@ -332,7 +541,12 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
         </section>
       )}
 
-      <section className={PUBLIC_PANEL_CLASS_NAME} aria-labelledby="trip-itinerary-title">
+      <section
+        id={TRIP_ITINERARY_SECTION_ID}
+        className={PUBLIC_PANEL_CLASS_NAME}
+        style={{ scrollMarginTop: tripSectionScrollMarginTop }}
+        aria-labelledby="trip-itinerary-title"
+      >
         <div className="flex items-center gap-2">
           <Signpost className="h-4 w-4 text-primary" aria-hidden="true" />
           <h2 id="trip-itinerary-title" className="text-lg font-semibold tracking-tight">

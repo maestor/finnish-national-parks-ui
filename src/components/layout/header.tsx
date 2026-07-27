@@ -38,6 +38,8 @@ const MOBILE_TOPBAR_ICON_BUTTON_CLASS =
 const MOBILE_MENU_ANIMATION_MS = 180;
 const HEADER_HIDE_SCROLL_THRESHOLD_PX = 96;
 const HEADER_SCROLL_DELTA_THRESHOLD_PX = 12;
+const PAGE_STICKY_NAV_TOP_VISIBLE = "3.5rem";
+const PAGE_STICKY_NAV_TOP_HIDDEN = "0rem";
 
 export const Header = () => {
   const t = useTranslations("layout");
@@ -156,6 +158,17 @@ export const Header = () => {
       window.removeEventListener("scroll", handleScroll);
     };
   }, [isMobileMenuVisible]);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--page-sticky-nav-top",
+      isHeaderVisible ? PAGE_STICKY_NAV_TOP_VISIBLE : PAGE_STICKY_NAV_TOP_HIDDEN,
+    );
+
+    return () => {
+      document.documentElement.style.removeProperty("--page-sticky-nav-top");
+    };
+  }, [isHeaderVisible]);
 
   const desktopNavItems = useMemo(
     () => [

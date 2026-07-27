@@ -207,6 +207,13 @@
     "copyTripPageLink": "Kopioi retken sivun linkki",
     "tripPageLinkCopied": "Retken sivun linkki kopioitu",
     "editTrip": "Muokkaa retkeä",
+    "descriptionTitle": "Retken kuvaus",
+    "sectionNavigationLabel": "Retken osiot",
+    "sectionNav": {
+      "description": "Kuvaus",
+      "route": "Reitti",
+      "itinerary": "Kohteet"
+    },
     "mapAriaLabel": "Retken {trip} kartta",
     "excludedFromRoute": "Ei mukana ajoreitissä",
     "routeDistanceLabel": "Reitin pituus",
