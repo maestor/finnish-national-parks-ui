@@ -625,6 +625,54 @@ describe("TripVisitAssignments", () => {
     });
   });
 
+  it("keeps an unsaved itinerary reorder when the same trip props refresh", async () => {
+    const user = userEvent.setup();
+    const refreshedTrip = {
+      ...currentTrip,
+      itinerary: [...currentTrip.itinerary],
+    } satisfies TripDetail;
+
+    const { rerender } = render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
+
+    const itinerarySection = screen
+      .getByRole("heading", {
+        name: "controlPanel.trips.assignments.assignedTitle",
+      })
+      .closest("section");
+    const visitRow =
+      itinerarySection instanceof HTMLElement
+        ? within(itinerarySection).getByText("Nuuksio").closest("tr")
+        : null;
+
+    if (!(itinerarySection instanceof HTMLElement) || !(visitRow instanceof HTMLTableRowElement)) {
+      throw new Error("Expected itinerary row");
+    }
+
+    mockItineraryRowLayout(itinerarySection);
+
+    const reorderButton = within(visitRow).getByRole("button", {
+      name: "controlPanel.trips.assignments.table.reorderItem",
+    });
+
+    await user.pointer([
+      { target: reorderButton, keys: "[MouseLeft>]", coords: { x: 10, y: 120 } },
+      { target: reorderButton, coords: { x: 10, y: 168 } },
+    ]);
+
+    await waitFor(() => {
+      expect(getItineraryOrder(itinerarySection)).toEqual(["stop-21", "visit-11"]);
+    });
+
+    rerender(<TripVisitAssignments trip={refreshedTrip} visits={visits} />);
+
+    expect(getItineraryOrder(itinerarySection)).toEqual(["stop-21", "visit-11"]);
+    expect(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.saveOrder",
+      }),
+    ).toBeInTheDocument();
+  });
+
   it("restores the previous itinerary order when a drag is canceled", async () => {
     render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
 

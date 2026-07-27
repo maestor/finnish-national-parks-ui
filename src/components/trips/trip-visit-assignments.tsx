@@ -256,6 +256,7 @@ const buildTripDateOptions = (startDate: string, endDate: string) => {
 export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps) => {
   const t = useTranslations("controlPanel.trips.assignments");
   const router = useRouter();
+  const tripIdRef = useRef(trip.id);
   const [query, setQuery] = useState("");
   const [selectedParkSlug, setSelectedParkSlug] = useState("");
   const [visitsState, setVisitsState] = useState(visits);
@@ -277,6 +278,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
   const [activeItineraryDrag, setActiveItineraryDrag] = useState<ActiveItineraryDrag | null>(null);
   const [dragOverItemKey, setDragOverItemKey] = useState<string | null>(null);
   const itineraryRef = useRef(itinerary);
+  const savedItineraryOrderRef = useRef(savedItineraryOrder);
   const pendingKeyRef = useRef<string | null>(null);
   const activeItineraryDragRef = useRef<ActiveItineraryDrag | null>(null);
   const dragOverItemKeyRef = useRef<string | null>(null);
@@ -289,14 +291,42 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
 
   useEffect(() => {
     const nextItinerary = normalizeItinerary(trip.itinerary);
+    const nextSavedOrder = getItineraryOrderKeys(nextItinerary);
+    const currentItineraryOrder = getItineraryOrderKeys(itineraryRef.current);
+    const currentSavedOrder = savedItineraryOrderRef.current;
+    const hasUnsavedLocalOrder = !doItineraryOrdersMatch(currentSavedOrder, currentItineraryOrder);
+    const isSameTrip = tripIdRef.current === trip.id;
+
+    tripIdRef.current = trip.id;
+
+    if (
+      isSameTrip &&
+      hasUnsavedLocalOrder &&
+      doItineraryOrdersMatch(nextSavedOrder, currentSavedOrder)
+    ) {
+      return;
+    }
+
+    if (
+      doItineraryOrdersMatch(nextSavedOrder, currentItineraryOrder) &&
+      doItineraryOrdersMatch(nextSavedOrder, currentSavedOrder)
+    ) {
+      return;
+    }
+
     itineraryRef.current = nextItinerary;
+    savedItineraryOrderRef.current = nextSavedOrder;
     setItinerary(nextItinerary);
-    setSavedItineraryOrder(getItineraryOrderKeys(nextItinerary));
-  }, [trip.itinerary]);
+    setSavedItineraryOrder(nextSavedOrder);
+  }, [trip.id, trip.itinerary]);
 
   useEffect(() => {
     itineraryRef.current = itinerary;
   }, [itinerary]);
+
+  useEffect(() => {
+    savedItineraryOrderRef.current = savedItineraryOrder;
+  }, [savedItineraryOrder]);
 
   const parkOptions = [
     { label: t("filters.allParks"), value: "" },
