@@ -63,6 +63,7 @@ describe("Header", () => {
     themeState.value = "light";
     setThemeMock.mockReset();
     setWindowScrollY(0);
+    document.documentElement.style.removeProperty("--page-sticky-nav-top");
   });
 
   it("renders the site title link to the parks map", () => {
@@ -85,6 +86,7 @@ describe("Header", () => {
     const header = container.querySelector("header");
 
     expect(header).toHaveClass("translate-y-0");
+    expect(document.documentElement.style.getPropertyValue("--page-sticky-nav-top")).toBe("3.5rem");
 
     setWindowScrollY(140);
     fireEvent.scroll(window);
@@ -92,6 +94,7 @@ describe("Header", () => {
     await waitFor(() => {
       expect(header).toHaveClass("-translate-y-full");
     });
+    expect(document.documentElement.style.getPropertyValue("--page-sticky-nav-top")).toBe("0rem");
 
     setWindowScrollY(88);
     fireEvent.scroll(window);
@@ -99,6 +102,7 @@ describe("Header", () => {
     await waitFor(() => {
       expect(header).toHaveClass("translate-y-0");
     });
+    expect(document.documentElement.style.getPropertyValue("--page-sticky-nav-top")).toBe("3.5rem");
   });
 
   it("keeps the header visible while the mobile menu is open", async () => {

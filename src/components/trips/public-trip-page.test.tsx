@@ -15,6 +15,8 @@ const authState = {
 const mockWriteText = vi.fn().mockResolvedValue(undefined);
 const mockFetch = vi.fn<typeof fetch>();
 const mockScrollIntoView = vi.fn();
+const mockScrollTo = vi.fn();
+const mockPushState = vi.fn();
 
 vi.stubGlobal("fetch", mockFetch);
 
@@ -199,9 +201,72 @@ const createTripWithoutExpandableThirdVisit = (): PublicTripDetail => ({
   ),
 });
 
+const setWindowScrollY = (value: number) => {
+  Object.defineProperty(window, "scrollY", {
+    configurable: true,
+    value,
+    writable: true,
+  });
+};
+
+const createRect = (top: number, height = 100) =>
+  ({
+    bottom: top + height,
+    height,
+    left: 0,
+    right: 0,
+    toJSON: () => ({}),
+    top,
+    width: 0,
+    x: 0,
+    y: top,
+  }) satisfies DOMRect;
+
+const setSectionScrollPositions = ({
+  descriptionTop,
+  itineraryTop,
+  navBottom,
+  routeTop,
+}: {
+  descriptionTop: number;
+  itineraryTop: number;
+  navBottom: number;
+  routeTop: number;
+}) => {
+  const navigation = screen.getByRole("navigation", {
+    name: "tripPage.sectionNavigationLabel",
+  });
+  const descriptionSection = screen.getByRole("region", {
+    name: "tripPage.descriptionTitle",
+  });
+  const routeSection = screen.getByRole("region", {
+    name: "tripPage.routeTitle",
+  });
+  const itinerarySection = screen.getByRole("region", {
+    name: "tripPage.itineraryTitle",
+  });
+
+  navigation.getBoundingClientRect = () => createRect(navBottom - 40, 40);
+  descriptionSection.getBoundingClientRect = () => createRect(descriptionTop, 240);
+  routeSection.getBoundingClientRect = () => createRect(routeTop, 240);
+  itinerarySection.getBoundingClientRect = () => createRect(itineraryTop, 240);
+};
+
+const setStickyNavigationHeight = (height: number) => {
+  const navigation = screen.getByRole("navigation", {
+    name: "tripPage.sectionNavigationLabel",
+  });
+
+  Object.defineProperty(navigation, "offsetHeight", {
+    configurable: true,
+    value: height,
+  });
+};
+
 describe("PublicTripPage", () => {
   beforeEach(() => {
     authState.isAuthenticated = false;
+    setWindowScrollY(0);
     mockWriteText.mockReset();
     mockFetch.mockReset();
     mockFetch.mockResolvedValue(
@@ -273,12 +338,52 @@ describe("PublicTripPage", () => {
         writeText: mockWriteText,
       },
     });
+    Object.defineProperty(window, "scrollTo", {
+      configurable: true,
+      writable: true,
+      value: mockScrollTo,
+    });
+    mockScrollTo.mockReset();
+    Object.defineProperty(window.history, "pushState", {
+      configurable: true,
+      writable: true,
+      value: mockPushState,
+    });
+    mockPushState.mockReset();
+    Object.defineProperty(window, "matchMedia", {
+      configurable: true,
+      writable: true,
+      value: vi.fn().mockImplementation(() => ({
+        addEventListener: vi.fn(),
+        addListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+        matches: false,
+        media: "",
+        onchange: null,
+        removeEventListener: vi.fn(),
+        removeListener: vi.fn(),
+      })),
+    });
+    Object.defineProperty(window, "requestAnimationFrame", {
+      configurable: true,
+      writable: true,
+      value: (callback: FrameRequestCallback) => {
+        callback(0);
+        return 1;
+      },
+    });
+    Object.defineProperty(window, "cancelAnimationFrame", {
+      configurable: true,
+      writable: true,
+      value: vi.fn(),
+    });
   });
 
   it("renders the trip summary, route section, and itinerary", () => {
     render(<PublicTripPage trip={trip} />);
 
     expect(screen.getByRole("heading", { name: "Kesaretki" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "tripPage.descriptionTitle" })).toBeInTheDocument();
     expect(screen.getByText("Kesäinen kierros pohjoiseen.")).toHaveClass("max-w-none!");
     expect(screen.getByText("2 tripPage.visitCount")).toBeInTheDocument();
     expect(screen.getByText("1 tripPage.stopCount")).toBeInTheDocument();
@@ -311,6 +416,165 @@ describe("PublicTripPage", () => {
       "/paikka/pallas-yllastunturi?visit=12#visit-history",
     );
     expect(within(itinerary).queryByText("tripPage.excludedFromRoute")).not.toBeInTheDocument();
+  });
+
+  it("renders a compact section navigation and updates the active chip by scroll position", () => {
+    render(<PublicTripPage trip={trip} />);
+
+    const sectionNavigation = screen.getByRole("navigation", {
+      name: "tripPage.sectionNavigationLabel",
+    });
+    const descriptionLink = within(sectionNavigation).getByRole("link", {
+      name: "tripPage.sectionNav.description",
+    });
+    const routeLink = within(sectionNavigation).getByRole("link", {
+      name: "tripPage.sectionNav.route",
+    });
+    const itineraryLink = within(sectionNavigation).getByRole("link", {
+      name: "tripPage.sectionNav.itinerary",
+    });
+
+    expect(descriptionLink).toHaveAttribute("href", "#trip-description");
+    expect(routeLink).toHaveAttribute("href", "#trip-route");
+    expect(itineraryLink).toHaveAttribute("href", "#trip-itinerary");
+    expect(
+      sectionNavigation.compareDocumentPosition(
+        screen.getByRole("heading", { name: "tripPage.descriptionTitle" }),
+      ),
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+
+    setSectionScrollPositions({
+      descriptionTop: -320,
+      itineraryTop: 1200,
+      navBottom: 40,
+      routeTop: 44,
+    });
+
+    act(() => {
+      fireEvent.scroll(window);
+    });
+
+    act(() => {
+      setWindowScrollY(420);
+      fireEvent.scroll(window);
+    });
+
+    expect(routeLink).toHaveAttribute("aria-current", "location");
+    expect(descriptionLink).not.toHaveAttribute("aria-current");
+
+    setSectionScrollPositions({
+      descriptionTop: -920,
+      itineraryTop: 44,
+      navBottom: 40,
+      routeTop: -280,
+    });
+
+    act(() => {
+      setWindowScrollY(1360);
+      fireEvent.scroll(window);
+    });
+
+    expect(itineraryLink).toHaveAttribute("aria-current", "location");
+    expect(routeLink).not.toHaveAttribute("aria-current");
+  });
+
+  it("scrolls downward to a section using the hidden-header offset", async () => {
+    const user = userEvent.setup();
+
+    render(<PublicTripPage trip={trip} />);
+
+    setStickyNavigationHeight(40);
+    act(() => {
+      fireEvent.resize(window);
+    });
+    setWindowScrollY(0);
+    setSectionScrollPositions({
+      descriptionTop: 48,
+      itineraryTop: 1200,
+      navBottom: 40,
+      routeTop: 600,
+    });
+
+    await user.click(
+      screen.getByRole("link", {
+        name: "tripPage.sectionNav.route",
+      }),
+    );
+
+    expect(mockPushState).toHaveBeenCalledWith(null, "", "#trip-route");
+    expect(mockScrollTo).toHaveBeenCalledWith({
+      behavior: "smooth",
+      top: 560,
+    });
+  });
+
+  it("scrolls upward to a section using the visible-header offset and reduced motion behavior", async () => {
+    const user = userEvent.setup();
+
+    Object.defineProperty(window, "matchMedia", {
+      configurable: true,
+      writable: true,
+      value: vi.fn().mockImplementation(() => ({
+        addEventListener: vi.fn(),
+        addListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+        matches: true,
+        media: "(prefers-reduced-motion: reduce)",
+        onchange: null,
+        removeEventListener: vi.fn(),
+        removeListener: vi.fn(),
+      })),
+    });
+
+    render(<PublicTripPage trip={trip} />);
+
+    setStickyNavigationHeight(40);
+    act(() => {
+      fireEvent.resize(window);
+    });
+    setWindowScrollY(1400);
+    setSectionScrollPositions({
+      descriptionTop: -1200,
+      itineraryTop: 100,
+      navBottom: 40,
+      routeTop: -500,
+    });
+
+    await user.click(
+      screen.getByRole("link", {
+        name: "tripPage.sectionNav.route",
+      }),
+    );
+
+    expect(mockPushState).toHaveBeenCalledWith(null, "", "#trip-route");
+    expect(mockScrollTo).toHaveBeenCalledWith({
+      behavior: "auto",
+      top: 804,
+    });
+  });
+
+  it("does not scroll when the requested navigation target is missing", async () => {
+    const user = userEvent.setup();
+
+    render(<PublicTripPage trip={trip} />);
+
+    const originalGetElementById = document.getElementById.bind(document);
+    const getElementByIdSpy = vi
+      .spyOn(document, "getElementById")
+      .mockImplementation((elementId) =>
+        elementId === "trip-route" ? null : originalGetElementById(elementId),
+      );
+
+    await user.click(
+      screen.getByRole("link", {
+        name: "tripPage.sectionNav.route",
+      }),
+    );
+
+    expect(mockPushState).not.toHaveBeenCalled();
+    expect(mockScrollTo).not.toHaveBeenCalled();
+
+    getElementByIdSpy.mockRestore();
   });
 
   it("opens trip visit details inline and loads image galleries without leaving the page", async () => {
@@ -471,6 +735,18 @@ describe("PublicTripPage", () => {
     expect(screen.queryByText("Helsinki")).not.toBeInTheDocument();
     expect(screen.queryByTestId("public-trip-map")).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "tripPage.routeTitle" })).not.toBeInTheDocument();
+    const sectionNavigation = screen.getByRole("navigation", {
+      name: "tripPage.sectionNavigationLabel",
+    });
+    expect(
+      within(sectionNavigation).queryByRole("link", { name: "tripPage.sectionNav.route" }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(sectionNavigation).getByRole("link", { name: "tripPage.sectionNav.description" }),
+    ).toHaveAttribute("href", "#trip-description");
+    expect(
+      within(sectionNavigation).getByRole("link", { name: "tripPage.sectionNav.itinerary" }),
+    ).toHaveAttribute("href", "#trip-itinerary");
   });
 
   it("copies the trip page link from the hero", async () => {
