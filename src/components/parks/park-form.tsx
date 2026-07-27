@@ -3,9 +3,15 @@
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useMemo, useState, useTransition } from "react";
+import { CoordinateOverrideFields } from "@/components/location/coordinate-override-fields";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { apiFetch } from "@/lib/api";
+import {
+  type CoordinateInputValue,
+  formatCoordinateInputValue,
+  parseOptionalCoordinateInput,
+} from "@/lib/location";
 import type { ParkDetail, ParkUpdateRequest, ParkUpdateResponse } from "@/lib/parks";
 import { revalidatePublicCache } from "@/lib/public-cache";
 import { appRoutes, createPathWithSearchParams } from "@/lib/routes";
@@ -19,6 +25,7 @@ interface ParkFormState {
   displayTypeName: string;
   establishmentYear: string;
   locationLabel: string;
+  markerPoint: CoordinateInputValue;
   parkUrl: string;
   name: string;
   postalCode: string;
@@ -34,6 +41,7 @@ const createInitialState = (park: ParkDetail): ParkFormState => ({
   displayTypeName: park.displayTypeName ?? "",
   establishmentYear: park.establishmentYear === null ? "" : String(park.establishmentYear),
   locationLabel: park.locationLabel,
+  markerPoint: formatCoordinateInputValue(park.markerPoint),
   parkUrl: park.parkUrl ?? "",
   name: park.name,
   postalCode: park.postalCode ?? "",
@@ -69,10 +77,18 @@ export const ParkForm = ({ park }: ParkFormProps) => {
   const [isNavigationPending, startTransition] = useTransition();
   const isPending = isSubmitting || isNavigationPending;
 
-  const isDirty = Object.entries(formState).some(([key, value]) => {
-    const initialValue = initialState[key as keyof ParkFormState];
-    return value !== initialValue;
-  });
+  const isDirty =
+    formState.areaKm2 !== initialState.areaKm2 ||
+    formState.displayTypeName !== initialState.displayTypeName ||
+    formState.establishmentYear !== initialState.establishmentYear ||
+    formState.locationLabel !== initialState.locationLabel ||
+    formState.markerPoint.lat !== initialState.markerPoint.lat ||
+    formState.markerPoint.lon !== initialState.markerPoint.lon ||
+    formState.parkUrl !== initialState.parkUrl ||
+    formState.name !== initialState.name ||
+    formState.postalCode !== initialState.postalCode ||
+    formState.postalOffice !== initialState.postalOffice ||
+    formState.slug !== initialState.slug;
 
   const setFieldValue = <Key extends keyof ParkFormState>(
     field: Key,
@@ -92,6 +108,7 @@ export const ParkForm = ({ park }: ParkFormProps) => {
   const hasAreaKm2Error = errors.areaKm2 !== undefined;
   const hasEstablishmentYearError = errors.establishmentYear !== undefined;
   const hasLocationLabelError = errors.locationLabel !== undefined;
+  const hasMarkerPointError = errors.markerPoint !== undefined;
   const hasSubmitError = submitError !== null;
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -118,6 +135,11 @@ export const ParkForm = ({ park }: ParkFormProps) => {
     const parsedEstablishmentYear = parseOptionalNumber(formState.establishmentYear);
     if (formState.establishmentYear.trim() !== "" && !Number.isInteger(parsedEstablishmentYear)) {
       nextErrors.establishmentYear = t("validation.establishedInvalid");
+    }
+
+    const parsedMarkerPoint = parseOptionalCoordinateInput(formState.markerPoint);
+    if (parsedMarkerPoint.kind === "invalid") {
+      nextErrors.markerPoint = t("validation.markerPointInvalid");
     }
 
     if (Object.keys(nextErrors).length > 0) {
@@ -156,6 +178,12 @@ export const ParkForm = ({ park }: ParkFormProps) => {
     }
     if (formState.establishmentYear !== initialState.establishmentYear) {
       payload.establishmentYear = parsedEstablishmentYear;
+    }
+    if (
+      formState.markerPoint.lat !== initialState.markerPoint.lat ||
+      formState.markerPoint.lon !== initialState.markerPoint.lon
+    ) {
+      payload.markerPoint = parsedMarkerPoint.kind === "value" ? parsedMarkerPoint.value : null;
     }
 
     setIsSubmitting(true);
@@ -310,6 +338,24 @@ export const ParkForm = ({ park }: ParkFormProps) => {
             value={formState.postalOffice}
             onChange={(event) => setFieldValue("postalOffice", event.target.value)}
             className={`${INPUT_CLASS_NAME} h-10`}
+          />
+        </div>
+
+        <div className="space-y-2 md:col-span-2">
+          <CoordinateOverrideFields
+            clearButtonLabel={t("clearMarkerPoint")}
+            coordinate={formState.markerPoint}
+            description={t("markerPointDescription")}
+            errorMessage={hasMarkerPointError ? errors.markerPoint : undefined}
+            inputClassName={INPUT_CLASS_NAME}
+            latitudeInputId="park-marker-point-lat"
+            latitudeLabel={t("markerPointLatitudeLabel")}
+            longitudeInputId="park-marker-point-lon"
+            longitudeLabel={t("markerPointLongitudeLabel")}
+            onCoordinateChange={(markerPoint) => setFieldValue("markerPoint", markerPoint)}
+            searchInputId="park-marker-point-search"
+            searchLabel={t("markerPointSearchLabel")}
+            searchPlaceholder={t("markerPointSearchPlaceholder")}
           />
         </div>
       </div>

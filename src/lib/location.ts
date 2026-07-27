@@ -14,6 +14,16 @@ export interface LocationCoordinate {
   lon: number;
 }
 
+export interface CoordinateInputValue {
+  lat: string;
+  lon: string;
+}
+
+export type ParsedCoordinateInput =
+  | { kind: "empty" }
+  | { kind: "invalid" }
+  | { kind: "value"; value: LocationCoordinate };
+
 export const LOCATION_REQUEST_OPTIONS = {
   enableHighAccuracy: false,
   maximumAge: 300000,
@@ -22,6 +32,44 @@ export const LOCATION_REQUEST_OPTIONS = {
 
 export const formatCoordinateQuery = (coordinate: LocationCoordinate) =>
   `${coordinate.lat.toFixed(6)},${coordinate.lon.toFixed(6)}`;
+
+export const formatCoordinateInputValue = (
+  coordinate: LocationCoordinate | null,
+): CoordinateInputValue => ({
+  lat: coordinate === null ? "" : String(coordinate.lat),
+  lon: coordinate === null ? "" : String(coordinate.lon),
+});
+
+export const parseOptionalCoordinateInput = (
+  coordinate: CoordinateInputValue,
+): ParsedCoordinateInput => {
+  const lat = coordinate.lat.trim();
+  const lon = coordinate.lon.trim();
+
+  if (lat === "" && lon === "") {
+    return { kind: "empty" };
+  }
+
+  const parsedLat = Number(lat);
+  const parsedLon = Number(lon);
+
+  if (
+    lat === "" ||
+    lon === "" ||
+    Number.isFinite(parsedLat) === false ||
+    Number.isFinite(parsedLon) === false
+  ) {
+    return { kind: "invalid" };
+  }
+
+  return {
+    kind: "value",
+    value: {
+      lat: parsedLat,
+      lon: parsedLon,
+    },
+  };
+};
 
 export const buildFallbackResolvedLocation = (
   coordinate: LocationCoordinate,

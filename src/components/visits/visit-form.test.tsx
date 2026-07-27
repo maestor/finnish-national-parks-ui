@@ -34,6 +34,7 @@ const visitToEdit = {
     slug: "pallas",
     name: "Pallas-Yllästunturi",
   },
+  location: { lat: 67.55, lon: 24.12 },
   trip: {
     id: 7,
     name: "Keski-Suomen kesaretki",
@@ -67,6 +68,7 @@ describe("VisitForm", () => {
       route: null,
       excludeFromRoute: false,
       author: null,
+      location: null,
       note: null,
       tripStopOrder: null,
       createdAt: "2024-06-15T00:00:00Z",
@@ -89,6 +91,7 @@ describe("VisitForm", () => {
         visitedOn: "2024-06-15",
         route: null,
         author: null,
+        location: null,
         note: null,
       }),
     });
@@ -107,6 +110,7 @@ describe("VisitForm", () => {
       route: null,
       excludeFromRoute: false,
       author: null,
+      location: null,
       note: null,
       tripStopOrder: null,
       createdAt: "2024-06-15T00:00:00Z",
@@ -182,6 +186,12 @@ describe("VisitForm", () => {
     expect(screen.getByDisplayValue("Pallas-Yllästunturin reitti")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Maija Meikäläinen")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Great hike")).toBeInTheDocument();
+    expect(screen.getByLabelText(/controlPanel.visits.form.locationLatitudeLabel/i)).toHaveValue(
+      67.55,
+    );
+    expect(screen.getByLabelText(/controlPanel.visits.form.locationLongitudeLabel/i)).toHaveValue(
+      24.12,
+    );
     expect(
       screen.getByRole("button", { name: /controlPanel.visits.form.delete/i }),
     ).toBeInTheDocument();
@@ -225,6 +235,7 @@ describe("VisitForm", () => {
         visitedOn: "2024-06-15",
         route: "Hetta",
         author: "Maija Meikäläinen",
+        location: { lat: 67.55, lon: 24.12 },
         note: "Great hike",
       }),
     });
@@ -262,6 +273,81 @@ describe("VisitForm", () => {
 
     expect(await screen.findByText("create failed")).toBeInTheDocument();
     expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it("includes a created visit location override in the payload", async () => {
+    const { apiFetch } = await import("@/lib/api");
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      id: 42,
+      visitedOn: "2024-06-15",
+      route: null,
+      excludeFromRoute: false,
+      author: null,
+      location: { lat: 68.1, lon: 24.9 },
+      note: null,
+      tripStopOrder: null,
+      createdAt: "2024-06-15T00:00:00Z",
+      updatedAt: "2024-06-15T00:00:00Z",
+    });
+
+    render(<VisitForm parks={parks} />);
+
+    await userEvent.selectOptions(
+      screen.getByLabelText(/controlPanel.visits.form.parkLabel/i),
+      "pallas",
+    );
+    await userEvent.type(
+      screen.getByLabelText(/controlPanel.visits.form.dateLabel/i),
+      "2024-06-15",
+    );
+    await userEvent.clear(screen.getByLabelText(/controlPanel.visits.form.locationLatitudeLabel/i));
+    await userEvent.type(
+      screen.getByLabelText(/controlPanel.visits.form.locationLatitudeLabel/i),
+      "68.1",
+    );
+    await userEvent.clear(
+      screen.getByLabelText(/controlPanel.visits.form.locationLongitudeLabel/i),
+    );
+    await userEvent.type(
+      screen.getByLabelText(/controlPanel.visits.form.locationLongitudeLabel/i),
+      "24.9",
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.submit/i }));
+
+    expect(apiFetch).toHaveBeenCalledWith("/api/parks/pallas/visits", {
+      method: "POST",
+      body: JSON.stringify({
+        visitedOn: "2024-06-15",
+        route: null,
+        author: null,
+        location: { lat: 68.1, lon: 24.9 },
+        note: null,
+      }),
+    });
+  });
+
+  it("shows a validation error when visit location coordinates are incomplete", async () => {
+    render(<VisitForm parks={parks} />);
+
+    await userEvent.selectOptions(
+      screen.getByLabelText(/controlPanel.visits.form.parkLabel/i),
+      "pallas",
+    );
+    await userEvent.type(
+      screen.getByLabelText(/controlPanel.visits.form.dateLabel/i),
+      "2024-06-15",
+    );
+    await userEvent.type(
+      screen.getByLabelText(/controlPanel.visits.form.locationLatitudeLabel/i),
+      "68.1",
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.submit/i }));
+
+    expect(
+      await screen.findByText("controlPanel.visits.form.validation.locationInvalid"),
+    ).toBeInTheDocument();
   });
 
   it("toggles markdown preview", async () => {

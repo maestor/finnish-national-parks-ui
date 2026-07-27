@@ -661,11 +661,12 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
         visit: {
           author: visit.author,
           createdAt: visit.createdAt,
+          excludeFromRoute: visit.excludeFromRoute,
           id: visit.id,
+          location: visit.location,
           note: visit.note,
           park: visit.park,
           route: visit.route,
-          excludeFromRoute: visit.excludeFromRoute,
           updatedAt: visit.updatedAt,
           visitedOn: visit.visitedOn,
         },
