@@ -354,12 +354,6 @@ const PublicVisitsTimeline = ({
                 <Footprints className="h-3.5 w-3.5" aria-hidden="true" />
                 {t("trip.visitCount", { count: trip.visitCount })}
               </span>
-              {trip.imageCount > 0 && (
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/45 bg-white/72 px-3 py-1 text-xs font-medium text-foreground/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.48)] dark:border-white/10 dark:bg-slate-950/56 dark:text-sky-100/72 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                  <Images className="h-3.5 w-3.5" aria-hidden="true" />
-                  {t("trip.imageCount", { count: trip.imageCount })}
-                </span>
-              )}
               <Link
                 href={appRoutes.trip(trip.slug)}
                 className="inline-flex items-center rounded-full border border-sky-200/70 bg-white/76 px-3 py-1 text-xs font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-sky-300/15 dark:bg-slate-950/56 dark:hover:bg-slate-950/72"

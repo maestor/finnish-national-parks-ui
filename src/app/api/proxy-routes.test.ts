@@ -17,6 +17,11 @@ import { GET as getParkSearch } from "./parks/search/route";
 import { POST as postTripPlannerNearby } from "./trip-planner/nearby/route";
 import { POST as postTripPlannerSearch } from "./trip-planner/search/route";
 import { POST as postTripPlannerSuggestions } from "./trip-planner/suggestions/route";
+import { DELETE as deleteTripStopImage } from "./trip-stops/[id]/images/[imageId]/route";
+import { POST as postTripStopImageComplete } from "./trip-stops/[id]/images/complete/route";
+import { PATCH as patchTripStopImageOrder } from "./trip-stops/[id]/images/reorder/route";
+import { POST as postTripStopImage } from "./trip-stops/[id]/images/route";
+import { POST as postTripStopImageUploadUrl } from "./trip-stops/[id]/images/upload-url/route";
 import { DELETE as deleteTripStop, PATCH as patchTripStop } from "./trip-stops/[id]/route";
 import { DELETE as deleteTrip, GET as getTrip, PATCH as patchTrip } from "./trips/[id]/route";
 import { POST as postTripStop } from "./trips/[id]/stops/route";
@@ -169,6 +174,74 @@ describe("api proxy routes", () => {
     expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/trip-stops/11", {
       requireAdmin: true,
     });
+  });
+
+  it("proxies trip stop image uploads", async () => {
+    const request = new Request("https://frontend.example/api/trip-stops/11/images", {
+      method: "POST",
+    });
+
+    await postTripStopImage(request, { params: Promise.resolve({ id: "11" }) });
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/trip-stops/11/images", {
+      requireAdmin: true,
+    });
+  });
+
+  it("proxies trip stop image upload-url requests", async () => {
+    const request = new Request("https://frontend.example/api/trip-stops/11/images/upload-url", {
+      method: "POST",
+    });
+
+    await postTripStopImageUploadUrl(request, { params: Promise.resolve({ id: "11" }) });
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(
+      request,
+      "/api/trip-stops/11/images/upload-url",
+      { requireAdmin: true },
+    );
+  });
+
+  it("proxies trip stop image completion requests", async () => {
+    const request = new Request("https://frontend.example/api/trip-stops/11/images/complete", {
+      method: "POST",
+    });
+
+    await postTripStopImageComplete(request, { params: Promise.resolve({ id: "11" }) });
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(
+      request,
+      "/api/trip-stops/11/images/complete",
+      { requireAdmin: true },
+    );
+  });
+
+  it("proxies trip stop image deletion", async () => {
+    const request = new Request("https://frontend.example/api/trip-stops/11/images/5", {
+      method: "DELETE",
+    });
+
+    await deleteTripStopImage(request, {
+      params: Promise.resolve({ id: "11", imageId: "5" }),
+    });
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/trip-stops/11/images/5", {
+      requireAdmin: true,
+    });
+  });
+
+  it("proxies trip stop image reorder", async () => {
+    const request = new Request("https://frontend.example/api/trip-stops/11/images/reorder", {
+      method: "PATCH",
+    });
+
+    await patchTripStopImageOrder(request, { params: Promise.resolve({ id: "11" }) });
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(
+      request,
+      "/api/trip-stops/11/images/reorder",
+      { requireAdmin: true },
+    );
   });
 
   it("proxies trip planner search requests", async () => {

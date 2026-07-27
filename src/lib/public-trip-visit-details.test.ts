@@ -60,6 +60,7 @@ const trip: PublicTripDetail = {
       tripStopOrder: 2,
       stop: {
         id: 31,
+        images: [],
         createdAt: "2024-06-16T10:00:00Z",
         location: {
           displayName: "Yöpyminen Oulussa",
@@ -220,9 +221,30 @@ describe("public-trip-visit-details", () => {
     expect(
       tripStopHasExpandableDetails({
         ...stopItem.stop,
+        images: [],
         note: "   ",
       }),
     ).toBe(false);
+    expect(
+      tripStopHasExpandableDetails({
+        ...stopItem.stop,
+        images: [
+          {
+            id: 9,
+            createdAt: "2024-06-16T10:00:00Z",
+            displayOrder: 1,
+            fullHeight: null,
+            fullUrl: "https://images.example.com/stop.jpg",
+            fullWidth: null,
+            originalName: "stop.jpg",
+            thumbHeight: null,
+            thumbUrl: "https://images.example.com/stop-thumb.jpg",
+            thumbWidth: null,
+          },
+        ],
+        note: "   ",
+      }),
+    ).toBe(true);
   });
 
   it("creates stable itinerary item keys for visits and stops", () => {

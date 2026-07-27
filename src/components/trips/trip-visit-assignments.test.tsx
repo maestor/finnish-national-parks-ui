@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { apiFetch } from "@/lib/api";
 import type { VisitWithPark } from "@/lib/parks";
 import type { TripDetail } from "@/lib/trips";
 import { TripVisitAssignments } from "./trip-visit-assignments";
@@ -75,6 +76,7 @@ const currentTrip = {
       tripStopOrder: 2,
       stop: {
         id: 21,
+        images: [],
         location: {
           coordinate: { lat: 61.92411, lon: 25.74815 },
           displayName: "Lounaspaikka Jyvaskyla",
@@ -216,6 +218,21 @@ const tripWithThreeAssignedItems = {
   visitCount: 2,
 } satisfies TripDetail;
 
+const tripWithLongStopNote = {
+  ...currentTrip,
+  itinerary: currentTrip.itinerary.map((item) =>
+    item.kind === "stop"
+      ? {
+          ...item,
+          stop: {
+            ...item.stop,
+            note: "Tulimme ajoissa paikalle ja farmi avautui klo 11, sopivasti pizzaa tuntia aiemmin...",
+          },
+        }
+      : item,
+  ),
+} satisfies TripDetail;
+
 const getItineraryOrder = (section: HTMLElement) =>
   Array.from(section.querySelectorAll("[data-itinerary-item-key]")).map((row) =>
     row.getAttribute("data-itinerary-item-key"),
@@ -248,7 +265,11 @@ const mockItineraryRowLayout = (section: HTMLElement) => {
 describe("TripVisitAssignments", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(apiFetch).mockReset();
     mockResolveLocationFromCoordinate.mockReset();
+    mockRevalidatePublicCache.mockReset();
+    mockRevalidatePublicCache.mockResolvedValue(true);
+    mockRefresh.mockReset();
     vi.stubGlobal(
       "confirm",
       vi.fn(() => true),
@@ -275,6 +296,14 @@ describe("TripVisitAssignments", () => {
     expect(screen.getByText("Lounaspaikka Jyvaskyla")).toBeInTheDocument();
     expect(screen.getAllByText("Pallas-Yllästunturi").length).toBeGreaterThan(0);
     expect(within(availableSection).queryByText("Repovesi")).not.toBeInTheDocument();
+  });
+
+  it("truncates long stop notes in the itinerary table preview", () => {
+    render(<TripVisitAssignments trip={tripWithLongStopNote} visits={visits} />);
+
+    expect(
+      screen.getByText("Tulimme ajoissa paikalle ja farmi avautui klo 11, ..."),
+    ).toBeInTheDocument();
   });
 
   it("toggles route exclusion for an assigned visit", async () => {
@@ -333,12 +362,12 @@ describe("TripVisitAssignments", () => {
     await userEvent.click(openStopButton);
 
     expect(
-      within(itinerarySection).getByRole("combobox", {
+      screen.getByRole("combobox", {
         name: "controlPanel.trips.assignments.stopLocationLabel",
       }),
     ).toBeInTheDocument();
     expect(
-      within(itinerarySection).getByRole("button", {
+      screen.getByRole("button", {
         name: "controlPanel.trips.assignments.cancelStopAdd",
       }),
     ).toBeInTheDocument();
@@ -848,8 +877,10 @@ describe("TripVisitAssignments", () => {
     });
     vi.mocked(apiFetch).mockResolvedValueOnce({
       id: 33,
+      images: [],
       location: {
         coordinate: { lat: 61.6886, lon: 27.2736 },
+        displayName: "Mikkeli",
         label: "Mikkeli",
       },
       note: "Yopyminen",
@@ -921,6 +952,97 @@ describe("TripVisitAssignments", () => {
     });
     await waitFor(() => {
       expect(mockRefresh).toHaveBeenCalled();
+    });
+  });
+
+  it("lets a new stop choose its insertion order", async () => {
+    mockResolveLocationFromCoordinate.mockResolvedValueOnce({
+      coordinate: { lat: 61.6886, lon: 27.2736 },
+      label: "Mikkeli",
+    });
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      id: 33,
+      images: [],
+      location: {
+        coordinate: { lat: 61.6886, lon: 27.2736 },
+        displayName: "Mikkeli",
+        label: "Mikkeli",
+      },
+      note: null,
+      createdAt: "2024-06-15T18:00:00Z",
+      updatedAt: "2024-06-15T18:00:00Z",
+      tripStopOrder: 1,
+      visitedOn: "2024-06-15",
+    });
+
+    Object.defineProperty(window.navigator, "geolocation", {
+      configurable: true,
+      value: {
+        getCurrentPosition: vi.fn((success: PositionCallback) =>
+          success({
+            coords: {
+              latitude: 61.6886,
+              longitude: 27.2736,
+            },
+          } as GeolocationPosition),
+        ),
+      },
+    });
+
+    render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
+
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.addStopAction",
+      }),
+    );
+
+    expect(screen.getByLabelText("controlPanel.trips.assignments.stopOrderLabel")).toHaveValue("3");
+    const orderSelect = screen.getByLabelText("controlPanel.trips.assignments.stopOrderLabel");
+    const optionLabels = within(orderSelect)
+      .getAllByRole("option")
+      .map((option) => option.textContent);
+    expect(optionLabels).toEqual([
+      "1 - controlPanel.trips.assignments.stopOrderFirst",
+      "2 - controlPanel.trips.assignments.stopOrderAfter",
+      "3 - controlPanel.trips.assignments.stopOrderLast",
+    ]);
+
+    await userEvent.selectOptions(orderSelect, "1");
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.useCurrentLocation",
+      }),
+    );
+    await waitFor(() => {
+      expect(
+        screen.getByRole("combobox", {
+          name: "controlPanel.trips.assignments.stopLocationLabel",
+        }),
+      ).toHaveValue("Mikkeli");
+    });
+    await userEvent.selectOptions(
+      screen.getByLabelText("controlPanel.trips.assignments.stopVisitedOnLabel"),
+      "2024-06-15",
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.addStopAction",
+      }),
+    );
+
+    expect(apiFetch).toHaveBeenCalledWith("/api/trips/7/stops", {
+      method: "POST",
+      body: JSON.stringify({
+        location: {
+          coordinate: { lat: 61.6886, lon: 27.2736 },
+          label: "Mikkeli",
+        },
+        note: null,
+        tripStopOrder: 1,
+        visitedOn: "2024-06-15",
+      }),
     });
   });
 

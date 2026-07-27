@@ -831,6 +831,15 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
                                 </button>
                               )}
                             </div>
+                            {item.stop.images.length > 0 && (
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                <span className={IMAGE_BADGE_CLASS_NAME}>
+                                  <Camera className="h-3.5 w-3.5" aria-hidden="true" />
+                                  {item.stop.images.length}{" "}
+                                  {t("imageCount", { count: item.stop.images.length })}
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -862,6 +871,18 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
                                       {item.stop.note}
                                     </ReactMarkdown>
                                   </div>
+                                </section>
+                              )}
+                              {item.stop.images.length > 0 && (
+                                <section className="space-y-3">
+                                  <h4 className={DETAIL_SECTION_HEADING_CLASS_NAME}>
+                                    <Images
+                                      className="h-4 w-4 text-muted-foreground"
+                                      aria-hidden="true"
+                                    />
+                                    {t("imagesTitle")}
+                                  </h4>
+                                  <VisitImageGallery images={item.stop.images} />
                                 </section>
                               )}
                             </div>
