@@ -3,6 +3,8 @@ import type { ParkVisits } from "./parks";
 import {
   buildPublicTripVisitDetailsResponse,
   collectTripVisitDetailTargets,
+  createTripItineraryItemKey,
+  tripStopHasExpandableDetails,
   tripVisitHasExpandableDetails,
 } from "./public-trip-visit-details";
 import type { PublicTripDetail } from "./trips";
@@ -205,6 +207,27 @@ describe("public-trip-visit-details", () => {
         note: null,
       }),
     ).toBe(false);
+  });
+
+  it("marks stop notes as expandable content", () => {
+    const [, stopItem] = trip.itinerary;
+
+    if (stopItem?.kind !== "stop") {
+      throw new Error("Expected trip stop fixture");
+    }
+
+    expect(tripStopHasExpandableDetails(stopItem.stop)).toBe(true);
+    expect(
+      tripStopHasExpandableDetails({
+        ...stopItem.stop,
+        note: "   ",
+      }),
+    ).toBe(false);
+  });
+
+  it("creates stable itinerary item keys for visits and stops", () => {
+    expect(createTripItineraryItemKey("visit", 11)).toBe("visit:11");
+    expect(createTripItineraryItemKey("stop", 31)).toBe("stop:31");
   });
 
   it("collects only the park slugs whose trip visits need deferred image details", () => {

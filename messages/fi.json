@@ -198,6 +198,8 @@
     "startLabel": "Lähtöpiste",
     "showVisit": "Näytä käynti",
     "hideVisit": "Piilota käynti",
+    "showStop": "Näytä pysähdys",
+    "hideStop": "Piilota pysähdys",
     "detailsTitle": "Kuvaus",
     "imagesTitle": "Kuvat",
     "loadingVisitDetails": "Ladataan kuvia...",

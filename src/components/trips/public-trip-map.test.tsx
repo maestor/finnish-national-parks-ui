@@ -275,7 +275,7 @@ describe("PublicTripMap", () => {
   it("renders an accessible map, draws the route, and places a starting point plus numbered itinerary markers", async () => {
     const { unmount } = render(
       <PublicTripMap
-        onVisitAction={vi.fn()}
+        onItineraryItemAction={vi.fn()}
         route={route}
         startingPoint={startingPoint}
         tripName="Kesaretki"
@@ -332,11 +332,11 @@ describe("PublicTripMap", () => {
   });
 
   it("renders a popup visit action button that reveals the matching itinerary card", async () => {
-    const onVisitAction = vi.fn();
+    const onItineraryItemAction = vi.fn();
 
     render(
       <PublicTripMap
-        onVisitAction={onVisitAction}
+        onItineraryItemAction={onItineraryItemAction}
         route={route}
         startingPoint={startingPoint}
         tripName="Kesaretki"
@@ -361,7 +361,40 @@ describe("PublicTripMap", () => {
 
     fireEvent.click(within(popup).getByRole("button", { name: "tripPage.showVisit" }));
 
-    expect(onVisitAction).toHaveBeenCalledWith(11);
+    expect(onItineraryItemAction).toHaveBeenCalledWith("visit:11");
+  });
+
+  it("renders a popup stop action button that reveals the matching itinerary stop", async () => {
+    const onItineraryItemAction = vi.fn();
+
+    render(
+      <PublicTripMap
+        onItineraryItemAction={onItineraryItemAction}
+        route={route}
+        startingPoint={startingPoint}
+        tripName="Kesaretki"
+        tripStops={tripStops}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(markerInstances).toHaveLength(4);
+    });
+
+    fireEvent.click(markerInstances[3].element);
+
+    const popup = document.querySelector(".maplibregl-popup");
+
+    if (!(popup instanceof HTMLElement)) {
+      throw new Error("Expected an open map popup");
+    }
+
+    expect(within(popup).getByRole("heading", { name: "Yöpyminen Oulussa" })).toBeInTheDocument();
+    expect(popup).toHaveTextContent("tripPage.stopLabel");
+
+    fireEvent.click(within(popup).getByRole("button", { name: "tripPage.showStop" }));
+
+    expect(onItineraryItemAction).toHaveBeenCalledWith("stop:31");
   });
 
   it("opens a popup on hover and closes it after the leave delay", async () => {
@@ -369,7 +402,7 @@ describe("PublicTripMap", () => {
 
     render(
       <PublicTripMap
-        onVisitAction={vi.fn()}
+        onItineraryItemAction={vi.fn()}
         route={route}
         startingPoint={startingPoint}
         tripName="Kesaretki"
@@ -398,7 +431,7 @@ describe("PublicTripMap", () => {
   it("renders only the starting point and itinerary markers when no route geometry is available", async () => {
     render(
       <PublicTripMap
-        onVisitAction={vi.fn()}
+        onItineraryItemAction={vi.fn()}
         route={null}
         startingPoint={startingPoint}
         tripName="Kesaretki"
@@ -424,7 +457,7 @@ describe("PublicTripMap", () => {
   it("shows excluded visits as non-route markers in the popup", async () => {
     render(
       <PublicTripMap
-        onVisitAction={vi.fn()}
+        onItineraryItemAction={vi.fn()}
         route={route}
         startingPoint={startingPoint}
         tripName="Kesaretki"
@@ -450,7 +483,7 @@ describe("PublicTripMap", () => {
   it("groups itinerary points that share the same coordinate into one marker and lists them in the popup", async () => {
     render(
       <PublicTripMap
-        onVisitAction={vi.fn()}
+        onItineraryItemAction={vi.fn()}
         route={route}
         startingPoint={startingPoint}
         tripName="Kesaretki"
@@ -491,7 +524,7 @@ describe("PublicTripMap", () => {
 
     render(
       <PublicTripMap
-        onVisitAction={vi.fn()}
+        onItineraryItemAction={vi.fn()}
         route={route}
         startingPoint={startingPoint}
         tripName="Kesaretki"
@@ -516,7 +549,7 @@ describe("PublicTripMap", () => {
 
     render(
       <PublicTripMap
-        onVisitAction={vi.fn()}
+        onItineraryItemAction={vi.fn()}
         route={route}
         startingPoint={startingPoint}
         tripName="Kesaretki"

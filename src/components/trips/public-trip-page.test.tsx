@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor, within } from "@testing-librar
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { VisitImage } from "@/lib/parks";
+import { createTripItineraryItemKey } from "@/lib/public-trip-visit-details";
 import type { PublicTripDetail } from "@/lib/trips";
 import { PublicTripPage } from "./public-trip-page";
 
@@ -22,12 +23,12 @@ vi.mock("./lazy-public-trip-map", () => ({
     route,
     tripName,
     tripStops,
-    onVisitAction,
+    onItineraryItemAction,
   }: {
     route: { distanceMeters: number } | null;
     tripName: string;
     tripStops: PublicTripDetail["itinerary"];
-    onVisitAction: (visitId: number) => void;
+    onItineraryItemAction: (itemKey: string) => void;
   }) => (
     <div data-testid="public-trip-map">
       <div>
@@ -35,10 +36,24 @@ vi.mock("./lazy-public-trip-map", () => ({
       </div>
       {tripStops.map((item) =>
         item.kind === "visit" ? (
-          <button key={item.visit.id} type="button" onClick={() => onVisitAction(item.visit.id)}>
-            map-open-{item.visit.id}
+          <button
+            key={item.visit.id}
+            type="button"
+            onClick={() =>
+              onItineraryItemAction(createTripItineraryItemKey("visit", item.visit.id))
+            }
+          >
+            map-open-{createTripItineraryItemKey("visit", item.visit.id)}
           </button>
-        ) : null,
+        ) : (
+          <button
+            key={item.stop.id}
+            type="button"
+            onClick={() => onItineraryItemAction(createTripItineraryItemKey("stop", item.stop.id))}
+          >
+            map-open-{createTripItineraryItemKey("stop", item.stop.id)}
+          </button>
+        ),
       )}
     </div>
   ),
@@ -168,6 +183,22 @@ const trip: PublicTripDetail = {
   ],
 };
 
+const createTripWithoutExpandableThirdVisit = (): PublicTripDetail => ({
+  ...trip,
+  itinerary: trip.itinerary.map((item) =>
+    item.kind === "visit" && item.visit.id === 12
+      ? {
+          ...item,
+          visit: {
+            ...item.visit,
+            imageCount: 0,
+            note: null,
+          },
+        }
+      : item,
+  ),
+});
+
 describe("PublicTripPage", () => {
   beforeEach(() => {
     authState.isAuthenticated = false;
@@ -261,9 +292,11 @@ describe("PublicTripPage", () => {
     expect(screen.getByText("1 tripPage.imageCount")).toHaveClass("text-primary");
     expect(screen.queryByText("Helsinki")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "tripPage.copyTripPageLink" })).toBeInTheDocument();
-    const visitToggleButtons = screen.getAllByRole("button", { name: "tripPage.showVisit" });
-    expect(visitToggleButtons).toHaveLength(2);
-    expect(visitToggleButtons[0]).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getAllByRole("button", { name: "tripPage.showVisit" })).toHaveLength(2);
+    expect(screen.getByRole("button", { name: "tripPage.showStop" })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
     expect(screen.getAllByText("tripPage.visitLabel")).toHaveLength(2);
     expect(screen.getByText("tripPage.stopLabel")).toBeInTheDocument();
 
@@ -307,16 +340,66 @@ describe("PublicTripPage", () => {
     });
   });
 
+  it("opens stop details inline with the same toggle treatment", async () => {
+    const user = userEvent.setup();
+
+    render(<PublicTripPage trip={trip} />);
+
+    const stopToggleButton = screen.getByRole("button", { name: "tripPage.showStop" });
+    expect(stopToggleButton).toHaveAttribute("aria-expanded", "false");
+
+    await user.click(stopToggleButton);
+
+    expect(screen.getByRole("button", { name: "tripPage.hideStop" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    expect(screen.getByText("Hotelli keskustassa")).toBeInTheDocument();
+  });
+
   it("reveals and scrolls to the requested visit when the trip map action is used", async () => {
     const user = userEvent.setup();
 
     render(<PublicTripPage trip={trip} />);
 
-    await user.click(screen.getByRole("button", { name: "map-open-11" }));
+    await user.click(screen.getByRole("button", { name: "map-open-visit:11" }));
 
     expect(mockScrollIntoView).toHaveBeenCalled();
-    expect(screen.getByText("Aamupäivän kierros")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "tripPage.hideVisit" })).toBeInTheDocument();
+  });
+
+  it("reveals and scrolls to the requested stop when the trip map action is used", async () => {
+    const user = userEvent.setup();
+
+    render(<PublicTripPage trip={trip} />);
+
+    await user.click(screen.getByRole("button", { name: "map-open-stop:31" }));
+
+    expect(mockScrollIntoView).toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "tripPage.hideStop" })).toBeInTheDocument();
+  });
+
+  it("hides the visit toggle when a visit has no expandable content but still allows map scrolling", async () => {
+    const user = userEvent.setup();
+
+    render(<PublicTripPage trip={createTripWithoutExpandableThirdVisit()} />);
+
+    expect(screen.getAllByRole("button", { name: "tripPage.showVisit" })).toHaveLength(1);
+
+    const thirdVisitCard = screen.getByRole("link", { name: "Pallas-Yllästunturi" }).closest("li");
+
+    if (!(thirdVisitCard instanceof HTMLElement)) {
+      throw new Error("Expected Pallas-Yllästunturi visit card");
+    }
+
+    expect(
+      within(thirdVisitCard).queryByRole("button", { name: "tripPage.showVisit" }),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "map-open-visit:12" }));
+
+    expect(mockScrollIntoView).toHaveBeenCalled();
+    expect(screen.queryByRole("button", { name: "tripPage.hideVisit" })).not.toBeInTheDocument();
   });
 
   it("renders the trip map without a route line when route geometry is unavailable", () => {

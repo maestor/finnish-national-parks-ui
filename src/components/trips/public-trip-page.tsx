@@ -30,7 +30,11 @@ import { useAuth } from "@/hooks/use-auth";
 import { apiPublicFetch } from "@/lib/api";
 import { formatFinnishDate, formatFinnishDateRange } from "@/lib/fi-date";
 import type { PublicTripVisitDetailsResponse } from "@/lib/public-trip-visit-details";
-import { tripVisitHasExpandableDetails } from "@/lib/public-trip-visit-details";
+import {
+  createTripItineraryItemKey,
+  tripStopHasExpandableDetails,
+  tripVisitHasExpandableDetails,
+} from "@/lib/public-trip-visit-details";
 import { createParkVisitHref } from "@/lib/public-visits";
 import { appRoutes } from "@/lib/routes";
 import type { PublicTripDetail } from "@/lib/trips";
@@ -38,6 +42,11 @@ import { LazyPublicTripMap } from "./lazy-public-trip-map";
 
 interface PublicTripPageProps {
   trip: PublicTripDetail;
+}
+
+interface ItineraryItemTarget {
+  isExpandable: boolean;
+  kind: "stop" | "visit";
 }
 
 const META_PILL_CLASS_NAME =
@@ -68,7 +77,7 @@ const TRIP_VISIT_DETAILS_LOAD_DELAY_MS = 150;
 
 const getTripVisitDetailsPath = (slug: string) => `/api/trips/slug/${slug}/visit-details`;
 
-const getVisitDetailsPanelId = (visitId: number) => `trip-visit-details-${visitId}`;
+const getItineraryDetailsPanelId = (itemKey: string) => `trip-itinerary-details-${itemKey}`;
 
 export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
   const t = useTranslations("tripPage");
@@ -87,7 +96,26 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
   const hasDeferredVisitDetails = trip.itinerary.some(
     (item) => item.kind === "visit" && item.visit.imageCount > 0,
   );
-  const [openVisitId, setOpenVisitId] = useState<number | null>(null);
+  const itineraryItemTargets = new Map<string, ItineraryItemTarget>(
+    trip.itinerary.map((item) =>
+      item.kind === "visit"
+        ? [
+            createTripItineraryItemKey("visit", item.visit.id),
+            {
+              isExpandable: tripVisitHasExpandableDetails(item.visit),
+              kind: "visit" as const,
+            },
+          ]
+        : [
+            createTripItineraryItemKey("stop", item.stop.id),
+            {
+              isExpandable: tripStopHasExpandableDetails(item.stop),
+              kind: "stop" as const,
+            },
+          ],
+    ),
+  );
+  const [openItemKey, setOpenItemKey] = useState<string | null>(null);
   const [visitDetailsById, setVisitDetailsById] = useState<
     PublicTripVisitDetailsResponse["visits"]
   >({});
@@ -95,9 +123,9 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
     "idle" | "loading" | "ready" | "error"
   >(hasDeferredVisitDetails ? "idle" : "ready");
   const [, startVisitDetailsTransition] = useTransition();
-  const visitCardRefs = useRef(new Map<number, HTMLLIElement>());
-  const visitToggleButtonRefs = useRef(new Map<number, HTMLButtonElement>());
-  const pendingScrollVisitIdRef = useRef<number | null>(null);
+  const itineraryItemRefs = useRef(new Map<string, HTMLLIElement>());
+  const itineraryToggleButtonRefs = useRef(new Map<string, HTMLButtonElement>());
+  const pendingScrollItemKeyRef = useRef<string | null>(null);
 
   const loadVisitDetails = useEffectEvent(async () => {
     if (hasDeferredVisitDetails === false || visitDetailsStatus === "loading") {
@@ -139,23 +167,23 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
   }, [hasDeferredVisitDetails]);
 
   useEffect(() => {
-    const pendingScrollVisitId = pendingScrollVisitIdRef.current;
+    const pendingScrollItemKey = pendingScrollItemKeyRef.current;
 
-    if (pendingScrollVisitId === null) {
+    if (pendingScrollItemKey === null) {
       return;
     }
 
-    const visitCard = visitCardRefs.current.get(pendingScrollVisitId);
-    const toggleButton = visitToggleButtonRefs.current.get(pendingScrollVisitId);
+    const itineraryItem = itineraryItemRefs.current.get(pendingScrollItemKey);
+    const toggleButton = itineraryToggleButtonRefs.current.get(pendingScrollItemKey);
 
-    visitCard?.scrollIntoView({
+    itineraryItem?.scrollIntoView({
       behavior: "smooth",
       block: "start",
     });
     toggleButton?.focus({
       preventScroll: true,
     });
-    pendingScrollVisitIdRef.current = null;
+    pendingScrollItemKeyRef.current = null;
   });
 
   const ensureVisitDetailsLoaded = () => {
@@ -164,30 +192,52 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
     }
   };
 
-  const openVisitFromMap = (visitId: number) => {
-    ensureVisitDetailsLoaded();
+  const scrollToItineraryItem = (itemKey: string) => {
+    const itineraryItem = itineraryItemRefs.current.get(itemKey);
+    const toggleButton = itineraryToggleButtonRefs.current.get(itemKey);
 
-    if (openVisitId === visitId) {
-      const visitCard = visitCardRefs.current.get(visitId);
-      const toggleButton = visitToggleButtonRefs.current.get(visitId);
+    itineraryItem?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+    toggleButton?.focus({
+      preventScroll: true,
+    });
+  };
 
-      visitCard?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-      toggleButton?.focus({
-        preventScroll: true,
-      });
+  const openItineraryItemFromMap = (itemKey: string) => {
+    const itemTarget = itineraryItemTargets.get(itemKey);
+
+    if (!itemTarget) {
       return;
     }
 
-    pendingScrollVisitIdRef.current = visitId;
-    setOpenVisitId(visitId);
+    if (itemTarget.kind === "visit") {
+      ensureVisitDetailsLoaded();
+    }
+
+    if (itemTarget.isExpandable === false) {
+      scrollToItineraryItem(itemKey);
+      return;
+    }
+
+    if (openItemKey === itemKey) {
+      scrollToItineraryItem(itemKey);
+      return;
+    }
+
+    pendingScrollItemKeyRef.current = itemKey;
+    setOpenItemKey(itemKey);
   };
 
-  const toggleVisit = (visitId: number) => {
-    ensureVisitDetailsLoaded();
-    setOpenVisitId((currentOpenVisitId) => (currentOpenVisitId === visitId ? null : visitId));
+  const toggleItineraryItem = (itemKey: string) => {
+    const itemTarget = itineraryItemTargets.get(itemKey);
+
+    if (itemTarget?.kind === "visit") {
+      ensureVisitDetailsLoaded();
+    }
+
+    setOpenItemKey((currentOpenItemKey) => (currentOpenItemKey === itemKey ? null : itemKey));
   };
 
   return (
@@ -260,7 +310,7 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
           {shouldShowRouteMap === true && (
             <div className="mt-4">
               <LazyPublicTripMap
-                onVisitAction={openVisitFromMap}
+                onItineraryItemAction={openItineraryItemFromMap}
                 route={route}
                 startingPoint={startingPoint}
                 tripName={trip.name}
@@ -293,195 +343,274 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
 
         <ol aria-label={t("itineraryTitle")} className="mt-5 space-y-4">
           {trip.itinerary.map((item) =>
-            item.kind === "visit" ? (
-              (() => {
-                const isOpen = openVisitId === item.visit.id;
-                const visitHasExpandableDetails = tripVisitHasExpandableDetails(item.visit);
-                const visitDetails = visitDetailsById[String(item.visit.id)];
-                const images = visitDetails?.images ?? [];
-                const shouldShowImageLoadingState =
-                  item.visit.imageCount > 0 &&
-                  images.length === 0 &&
-                  visitDetailsStatus !== "error" &&
-                  visitDetailsStatus !== "ready";
-                const shouldShowImageErrorState =
-                  item.visit.imageCount > 0 &&
-                  images.length === 0 &&
-                  visitDetailsStatus === "error";
+            item.kind === "visit"
+              ? (() => {
+                  const itemKey = createTripItineraryItemKey("visit", item.visit.id);
+                  const isOpen = openItemKey === itemKey;
+                  const visitHasExpandableDetails = tripVisitHasExpandableDetails(item.visit);
+                  const visitDetails = visitDetailsById[String(item.visit.id)];
+                  const images = visitDetails?.images ?? [];
+                  const shouldShowImageLoadingState =
+                    item.visit.imageCount > 0 &&
+                    images.length === 0 &&
+                    visitDetailsStatus !== "error" &&
+                    visitDetailsStatus !== "ready";
+                  const shouldShowImageErrorState =
+                    item.visit.imageCount > 0 &&
+                    images.length === 0 &&
+                    visitDetailsStatus === "error";
 
-                return (
-                  <li
-                    key={`visit-${item.visit.id}`}
-                    ref={(node) => {
-                      if (node) {
-                        visitCardRefs.current.set(item.visit.id, node);
-                        return;
-                      }
+                  return (
+                    <li
+                      key={`visit-${item.visit.id}`}
+                      ref={(node) => {
+                        if (node) {
+                          itineraryItemRefs.current.set(itemKey, node);
+                          return;
+                        }
 
-                      visitCardRefs.current.delete(item.visit.id);
-                    }}
-                    className={VISIT_CARD_CLASS_NAME}
-                  >
-                    <div className="px-5 py-4">
-                      <div className="flex items-start gap-3">
-                        <span className={ITINERARY_NUMBER_BADGE_CLASS_NAME}>
-                          {item.tripStopOrder}
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-start justify-between gap-3">
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium text-primary">
-                                {formatFinnishDate(item.visit.visitedOn)}
-                              </p>
-                              <div className="mt-2">
-                                <span className={VISIT_KIND_BADGE_CLASS_NAME}>
-                                  {t("visitLabel")}
-                                </span>
+                        itineraryItemRefs.current.delete(itemKey);
+                      }}
+                      className={VISIT_CARD_CLASS_NAME}
+                    >
+                      <div className="px-5 py-4">
+                        <div className="flex items-start gap-3">
+                          <span className={ITINERARY_NUMBER_BADGE_CLASS_NAME}>
+                            {item.tripStopOrder}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium text-primary">
+                                  {formatFinnishDate(item.visit.visitedOn)}
+                                </p>
+                                <div className="mt-2">
+                                  <span className={VISIT_KIND_BADGE_CLASS_NAME}>
+                                    {t("visitLabel")}
+                                  </span>
+                                </div>
+                                <h3 className="mt-2 text-lg font-semibold tracking-tight">
+                                  <Link
+                                    href={createParkVisitHref({
+                                      parkSlug: item.visit.park.slug,
+                                      visitId: item.visit.id,
+                                    })}
+                                    className="rounded-sm underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                  >
+                                    {item.visit.park.name}
+                                  </Link>
+                                </h3>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                  {item.visit.park.typeLabel}
+                                </p>
                               </div>
-                              <h3 className="mt-2 text-lg font-semibold tracking-tight">
-                                <Link
-                                  href={createParkVisitHref({
-                                    parkSlug: item.visit.park.slug,
-                                    visitId: item.visit.id,
-                                  })}
-                                  className="rounded-sm underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                >
-                                  {item.visit.park.name}
-                                </Link>
-                              </h3>
-                              <p className="mt-1 text-sm text-muted-foreground">
-                                {item.visit.park.typeLabel}
-                              </p>
-                            </div>
-                            {visitHasExpandableDetails === true && (
-                              <button
-                                ref={(node) => {
-                                  if (node) {
-                                    visitToggleButtonRefs.current.set(item.visit.id, node);
-                                    return;
-                                  }
+                              {visitHasExpandableDetails === true && (
+                                <button
+                                  ref={(node) => {
+                                    if (node) {
+                                      itineraryToggleButtonRefs.current.set(itemKey, node);
+                                      return;
+                                    }
 
-                                  visitToggleButtonRefs.current.delete(item.visit.id);
-                                }}
-                                type="button"
-                                onClick={() => {
-                                  toggleVisit(item.visit.id);
-                                }}
-                                className={VISIT_TOGGLE_BUTTON_CLASS_NAME}
-                                aria-controls={getVisitDetailsPanelId(item.visit.id)}
-                                aria-expanded={isOpen}
-                              >
-                                <span>{isOpen ? t("hideVisit") : t("showVisit")}</span>
-                                <ChevronDown
-                                  className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
-                                  aria-hidden="true"
-                                />
-                              </button>
-                            )}
-                          </div>
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            {item.visit.route !== null && (
-                              <span className={ROUTE_BADGE_CLASS_NAME}>
-                                <Route className="h-3.5 w-3.5" aria-hidden="true" />
-                                {item.visit.route}
-                              </span>
-                            )}
-                            {item.visit.imageCount > 0 && (
-                              <span className={IMAGE_BADGE_CLASS_NAME}>
-                                <Camera className="h-3.5 w-3.5" aria-hidden="true" />
-                                {item.visit.imageCount}{" "}
-                                {t("imageCount", { count: item.visit.imageCount })}
-                              </span>
-                            )}
+                                    itineraryToggleButtonRefs.current.delete(itemKey);
+                                  }}
+                                  type="button"
+                                  onClick={() => {
+                                    toggleItineraryItem(itemKey);
+                                  }}
+                                  className={VISIT_TOGGLE_BUTTON_CLASS_NAME}
+                                  aria-controls={getItineraryDetailsPanelId(itemKey)}
+                                  aria-expanded={isOpen}
+                                >
+                                  <span>{isOpen ? t("hideVisit") : t("showVisit")}</span>
+                                  <ChevronDown
+                                    className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
+                                    aria-hidden="true"
+                                  />
+                                </button>
+                              )}
+                            </div>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {item.visit.route !== null && (
+                                <span className={ROUTE_BADGE_CLASS_NAME}>
+                                  <Route className="h-3.5 w-3.5" aria-hidden="true" />
+                                  {item.visit.route}
+                                </span>
+                              )}
+                              {item.visit.imageCount > 0 && (
+                                <span className={IMAGE_BADGE_CLASS_NAME}>
+                                  <Camera className="h-3.5 w-3.5" aria-hidden="true" />
+                                  {item.visit.imageCount}{" "}
+                                  {t("imageCount", { count: item.visit.imageCount })}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                    {visitHasExpandableDetails === true && (
-                      <div
-                        className="grid transition-[grid-template-rows] duration-300 ease-in-out"
-                        style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
-                      >
+                      {visitHasExpandableDetails === true && (
                         <div
-                          className="min-h-0 overflow-hidden"
-                          aria-hidden={!isOpen}
-                          inert={!isOpen}
+                          className="grid transition-[grid-template-rows] duration-300 ease-in-out"
+                          style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
                         >
                           <div
-                            id={getVisitDetailsPanelId(item.visit.id)}
-                            className={`space-y-3 border-t border-emerald-200/70 bg-white/45 px-5 py-4 transition-opacity duration-300 dark:border-emerald-300/15 dark:bg-slate-950/28 ${isOpen ? "opacity-100" : "opacity-0"}`}
+                            className="min-h-0 overflow-hidden"
+                            aria-hidden={!isOpen}
+                            inert={!isOpen}
                           >
-                            {item.visit.note !== null && (
-                              <section className="space-y-3">
-                                <h4 className={DETAIL_SECTION_HEADING_CLASS_NAME}>
-                                  <FileText
-                                    className="h-4 w-4 text-muted-foreground"
-                                    aria-hidden="true"
-                                  />
-                                  {t("detailsTitle")}
-                                </h4>
-                                <div className="prose prose-sm text-foreground dark:prose-invert max-w-none">
-                                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                    {item.visit.note}
-                                  </ReactMarkdown>
+                            <div
+                              id={getItineraryDetailsPanelId(itemKey)}
+                              className={`space-y-3 border-t border-emerald-200/70 bg-white/45 px-5 py-4 transition-opacity duration-300 dark:border-emerald-300/15 dark:bg-slate-950/28 ${isOpen ? "opacity-100" : "opacity-0"}`}
+                            >
+                              {item.visit.note !== null && (
+                                <section className="space-y-3">
+                                  <h4 className={DETAIL_SECTION_HEADING_CLASS_NAME}>
+                                    <FileText
+                                      className="h-4 w-4 text-muted-foreground"
+                                      aria-hidden="true"
+                                    />
+                                    {t("detailsTitle")}
+                                  </h4>
+                                  <div className="prose prose-sm text-foreground dark:prose-invert max-w-none">
+                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                      {item.visit.note}
+                                    </ReactMarkdown>
+                                  </div>
+                                </section>
+                              )}
+                              {item.visit.imageCount > 0 && (
+                                <section className="space-y-3">
+                                  <h4 className={DETAIL_SECTION_HEADING_CLASS_NAME}>
+                                    <Images
+                                      className="h-4 w-4 text-muted-foreground"
+                                      aria-hidden="true"
+                                    />
+                                    {t("imagesTitle")}
+                                  </h4>
+                                  {shouldShowImageLoadingState === true && (
+                                    <p className="text-sm text-muted-foreground">
+                                      {t("loadingVisitDetails")}
+                                    </p>
+                                  )}
+                                  {shouldShowImageErrorState === true && (
+                                    <p className="text-sm text-muted-foreground">
+                                      {t("visitDetailsLoadFailed")}
+                                    </p>
+                                  )}
+                                  {images.length > 0 && <VisitImageGallery images={images} />}
+                                </section>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </li>
+                  );
+                })()
+              : (() => {
+                  const itemKey = createTripItineraryItemKey("stop", item.stop.id);
+                  const isOpen = openItemKey === itemKey;
+                  const stopHasExpandableDetails = tripStopHasExpandableDetails(item.stop);
+
+                  return (
+                    <li
+                      key={`stop-${item.stop.id}`}
+                      ref={(node) => {
+                        if (node) {
+                          itineraryItemRefs.current.set(itemKey, node);
+                          return;
+                        }
+
+                        itineraryItemRefs.current.delete(itemKey);
+                      }}
+                      className="rounded-3xl border border-white/45 bg-white/60 shadow-[0_12px_24px_rgba(148,163,184,0.12)] dark:border-white/10 dark:bg-slate-950/38 dark:shadow-[0_16px_28px_rgba(2,6,23,0.24)]"
+                    >
+                      <div className="px-5 py-4">
+                        <div className="flex items-start gap-3">
+                          <span className={ITINERARY_NUMBER_BADGE_CLASS_NAME}>
+                            {item.tripStopOrder}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium text-primary">
+                                  {formatFinnishDate(item.stop.visitedOn)}
+                                </p>
+                                <div className="mt-2">
+                                  <span className={STOP_KIND_BADGE_CLASS_NAME}>
+                                    {t("stopLabel")}
+                                  </span>
                                 </div>
-                              </section>
-                            )}
-                            {item.visit.imageCount > 0 && (
-                              <section className="space-y-3">
-                                <h4 className={DETAIL_SECTION_HEADING_CLASS_NAME}>
-                                  <Images
-                                    className="h-4 w-4 text-muted-foreground"
+                                <h3 className="mt-2 text-lg font-semibold tracking-tight">
+                                  {item.stop.location.displayName}
+                                </h3>
+                              </div>
+                              {stopHasExpandableDetails === true && (
+                                <button
+                                  ref={(node) => {
+                                    if (node) {
+                                      itineraryToggleButtonRefs.current.set(itemKey, node);
+                                      return;
+                                    }
+
+                                    itineraryToggleButtonRefs.current.delete(itemKey);
+                                  }}
+                                  type="button"
+                                  onClick={() => {
+                                    toggleItineraryItem(itemKey);
+                                  }}
+                                  className={VISIT_TOGGLE_BUTTON_CLASS_NAME}
+                                  aria-controls={getItineraryDetailsPanelId(itemKey)}
+                                  aria-expanded={isOpen}
+                                >
+                                  <span>{isOpen ? t("hideStop") : t("showStop")}</span>
+                                  <ChevronDown
+                                    className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
                                     aria-hidden="true"
                                   />
-                                  {t("imagesTitle")}
-                                </h4>
-                                {shouldShowImageLoadingState === true && (
-                                  <p className="text-sm text-muted-foreground">
-                                    {t("loadingVisitDetails")}
-                                  </p>
-                                )}
-                                {shouldShowImageErrorState === true && (
-                                  <p className="text-sm text-muted-foreground">
-                                    {t("visitDetailsLoadFailed")}
-                                  </p>
-                                )}
-                                {images.length > 0 && <VisitImageGallery images={images} />}
-                              </section>
-                            )}
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    )}
-                  </li>
-                );
-              })()
-            ) : (
-              <li
-                key={`stop-${item.stop.id}`}
-                className="rounded-3xl border border-white/45 bg-white/60 px-5 py-4 shadow-[0_12px_24px_rgba(148,163,184,0.12)] dark:border-white/10 dark:bg-slate-950/38 dark:shadow-[0_16px_28px_rgba(2,6,23,0.24)]"
-              >
-                <div className="flex items-start gap-3">
-                  <span className={ITINERARY_NUMBER_BADGE_CLASS_NAME}>{item.tripStopOrder}</span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-primary">
-                      {formatFinnishDate(item.stop.visitedOn)}
-                    </p>
-                    <div className="mt-2">
-                      <span className={STOP_KIND_BADGE_CLASS_NAME}>{t("stopLabel")}</span>
-                    </div>
-                    <h3 className="mt-2 text-lg font-semibold tracking-tight">
-                      {item.stop.location.displayName}
-                    </h3>
-                    {item.stop.note !== null && (
-                      <p className="mt-3 text-sm text-foreground/82 dark:text-sky-100/82">
-                        {item.stop.note}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </li>
-            ),
+                      {stopHasExpandableDetails === true && (
+                        <div
+                          className="grid transition-[grid-template-rows] duration-300 ease-in-out"
+                          style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
+                        >
+                          <div
+                            className="min-h-0 overflow-hidden"
+                            aria-hidden={!isOpen}
+                            inert={!isOpen}
+                          >
+                            <div
+                              id={getItineraryDetailsPanelId(itemKey)}
+                              className={`space-y-3 border-t border-white/35 bg-white/30 px-5 py-4 transition-opacity duration-300 dark:border-white/10 dark:bg-slate-950/22 ${isOpen ? "opacity-100" : "opacity-0"}`}
+                            >
+                              {item.stop.note !== null && (
+                                <section className="space-y-3">
+                                  <h4 className={DETAIL_SECTION_HEADING_CLASS_NAME}>
+                                    <FileText
+                                      className="h-4 w-4 text-muted-foreground"
+                                      aria-hidden="true"
+                                    />
+                                    {t("detailsTitle")}
+                                  </h4>
+                                  <div className="prose prose-sm text-foreground dark:prose-invert max-w-none">
+                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                      {item.stop.note}
+                                    </ReactMarkdown>
+                                  </div>
+                                </section>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </li>
+                  );
+                })(),
           )}
         </ol>
       </section>
