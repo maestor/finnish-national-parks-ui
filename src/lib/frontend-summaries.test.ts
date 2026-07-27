@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { apiFetch, apiPublicFetch } from "./api";
 import type { HomeSummary } from "./frontend-summaries";
 import {
+  createHomeLatestTripsFromSummary,
   createHomeLatestVisitEntriesFromSummary,
   createHomeLatestVisitEntriesFromVisitList,
   createHomeMostVisitedParks,
@@ -185,6 +186,7 @@ const buildSummary = (): HomeSummary => ({
   mostVisitedParks: [],
   recentVisits: [],
   latestVisitEntries: [],
+  latestTrips: [],
   updatedAt: "2024-06-15T12:00:00.000Z",
   version: 1,
 });
@@ -289,62 +291,39 @@ describe("createHomeProgressItems", () => {
     ]);
   });
 
-  it("sorts latest visit entries from the home summary by newest creation time", () => {
+  it("keeps the backend-provided latest visit entry order without extra sorting or truncation", () => {
     const summary = buildSummary();
-    summary.latestVisitEntries = [
-      {
-        id: 2,
-        createdAt: "2024-06-15T10:00:00.000Z",
-        updatedAt: "2024-06-15T10:00:00.000Z",
-        visitedOn: "2024-06-15",
-        park: {
-          name: "Nuuksio",
-          slug: "nuuksio",
-        },
+    summary.latestVisitEntries = Array.from({ length: 12 }, (_, index) => ({
+      id: index + 1,
+      createdAt: `2024-06-${String(index + 10).padStart(2, "0")}T10:00:00.000Z`,
+      updatedAt: `2024-06-${String(index + 10).padStart(2, "0")}T10:00:00.000Z`,
+      visitedOn: `2024-06-${String(index + 10).padStart(2, "0")}`,
+      park: {
+        name: `Park ${index + 1}`,
+        slug: `park-${index + 1}`,
       },
-      {
-        id: 5,
-        createdAt: "2024-06-16T10:00:00.000Z",
-        updatedAt: "2024-06-16T10:00:00.000Z",
-        visitedOn: "2024-06-16",
-        park: {
-          name: "Pallas",
-          slug: "pallas",
-        },
-      },
-      {
-        id: 4,
-        createdAt: "2024-06-16T10:00:00.000Z",
-        updatedAt: "2024-06-16T10:00:00.000Z",
-        visitedOn: "2024-06-16",
-        park: {
-          name: "Oulanka",
-          slug: "oulanka",
-        },
-      },
-      {
-        id: 1,
-        createdAt: "2024-06-14T10:00:00.000Z",
-        updatedAt: "2024-06-14T10:00:00.000Z",
-        visitedOn: "2024-06-14",
-        park: {
-          name: "Riisitunturi",
-          slug: "riisitunturi",
-        },
-      },
-    ];
+    }));
 
     const latestVisitEntries = createHomeLatestVisitEntriesFromSummary(summary);
 
+    expect(latestVisitEntries).toHaveLength(12);
     expect(latestVisitEntries.map((visit) => visit.parkSlug)).toEqual([
-      "pallas",
-      "oulanka",
-      "nuuksio",
-      "riisitunturi",
+      "park-1",
+      "park-2",
+      "park-3",
+      "park-4",
+      "park-5",
+      "park-6",
+      "park-7",
+      "park-8",
+      "park-9",
+      "park-10",
+      "park-11",
+      "park-12",
     ]);
   });
 
-  it("limits public recent visits to the first ten items", () => {
+  it("keeps the backend-provided recent visit order without extra truncation", () => {
     const summary = buildSummary();
     summary.recentVisits = Array.from({ length: 12 }, (_, index) => ({
       park: {
@@ -360,7 +339,7 @@ describe("createHomeProgressItems", () => {
 
     const recentVisits = createHomeRecentVisitsFromSummary(summary);
 
-    expect(recentVisits).toHaveLength(10);
+    expect(recentVisits).toHaveLength(12);
     expect(recentVisits.map((visit) => visit.parkSlug)).toEqual([
       "park-1",
       "park-2",
@@ -372,6 +351,37 @@ describe("createHomeProgressItems", () => {
       "park-8",
       "park-9",
       "park-10",
+      "park-11",
+      "park-12",
+    ]);
+  });
+
+  it("maps latest trips from the home summary", () => {
+    const summary = buildSummary();
+    summary.latestTrips = [
+      {
+        name: "Keski-Suomen kesaretki",
+        slug: "keski-suomen-kesaretki",
+        startDate: "2024-07-20",
+      },
+      {
+        name: "Lapin ruska",
+        slug: "lapin-ruska",
+        startDate: "2024-09-14",
+      },
+    ];
+
+    expect(createHomeLatestTripsFromSummary(summary)).toEqual([
+      {
+        tripName: "Keski-Suomen kesaretki",
+        tripSlug: "keski-suomen-kesaretki",
+        startDate: "2024-07-20",
+      },
+      {
+        tripName: "Lapin ruska",
+        tripSlug: "lapin-ruska",
+        startDate: "2024-09-14",
+      },
     ]);
   });
 

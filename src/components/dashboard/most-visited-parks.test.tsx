@@ -65,7 +65,7 @@ describe("MostVisitedParks", () => {
     ).not.toHaveClass("truncate");
   });
 
-  it("vertically centers the mobile rank and park name row", () => {
+  it("renders the park name without a separate rank bubble", () => {
     render(
       <MostVisitedParks
         title="Eniten käydyt puistot"
@@ -76,6 +76,7 @@ describe("MostVisitedParks", () => {
       />,
     );
 
-    expect(screen.getByRole("link", { name: "Pallas" }).parentElement).toHaveClass("items-center");
+    expect(screen.getByRole("link", { name: "Pallas" })).toHaveClass("flex-1");
+    expect(screen.queryByText("1")).not.toBeInTheDocument();
   });
 });

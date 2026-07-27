@@ -1,12 +1,12 @@
 import { getTranslations } from "next-intl/server";
 import { HomeVisitStats } from "@/components/dashboard/home-visit-stats";
-import { MostVisitedParks } from "@/components/dashboard/most-visited-parks";
 import { HomeAboutSection } from "@/components/home/home-about-section";
-import { HomeActivityPanels } from "@/components/home/home-activity-panels";
 import { HomeIntro } from "@/components/home/home-intro";
 import { HomeSocialLinks } from "@/components/home/home-social-links";
+import { HomeSummaryPanels } from "@/components/home/home-summary-panels";
 import { PUBLIC_PAGE_SHELL_CLASS_NAME } from "@/components/layout/public-page-styles";
 import {
+  createHomeLatestTripsFromSummary,
   createHomeLatestVisitEntriesFromSummary,
   createHomeMostVisitedParks,
   createHomeProgressItems,
@@ -32,6 +32,7 @@ const HomePage = async () => {
   const mostVisitedParks = createHomeMostVisitedParks(summary);
   const recentVisits = createHomeRecentVisitsFromSummary(summary);
   const latestVisitEntries = createHomeLatestVisitEntriesFromSummary(summary);
+  const latestTrips = createHomeLatestTripsFromSummary(summary);
 
   const descriptionParagraphs = t("description")
     .split("\n\n")
@@ -60,24 +61,22 @@ const HomePage = async () => {
         autumnLabel={t("statistics.seasons.autumn")}
         winterLabel={t("statistics.seasons.winter")}
       />
-      <div className="space-y-6">
-        <HomeActivityPanels
-          recentVisitsTitle={t("recentVisits.title")}
-          recentVisitsEmptyMessage={t("recentVisits.empty")}
-          latestEntriesTitle={t("latestEntries.title")}
-          latestEntriesEmptyMessage={t("latestEntries.empty")}
-          backToStartLabel={t("backToStart")}
-          fallbackRecentVisits={recentVisits}
-          fallbackLatestVisitEntries={latestVisitEntries}
-        />
-        <MostVisitedParks
-          title={t("mostVisitedParks.title")}
-          emptyMessage={t("mostVisitedParks.empty")}
-          visitCountLabel={t("mostVisitedParks.visitCount")}
-          backToStartLabel={t("backToStart")}
-          parks={mostVisitedParks}
-        />
-      </div>
+      <HomeSummaryPanels
+        recentVisitsTitle={t("recentVisits.title")}
+        recentVisitsEmptyMessage={t("recentVisits.empty")}
+        latestEntriesTitle={t("latestEntries.title")}
+        latestEntriesEmptyMessage={t("latestEntries.empty")}
+        mostVisitedParksTitle={t("mostVisitedParks.title")}
+        mostVisitedParksEmptyMessage={t("mostVisitedParks.empty")}
+        mostVisitedParksVisitCountLabel={t("mostVisitedParks.visitCount")}
+        latestTripsTitle={t("latestTrips.title")}
+        latestTripsEmptyMessage={t("latestTrips.empty")}
+        backToStartLabel={t("backToStart")}
+        fallbackRecentVisits={recentVisits}
+        fallbackLatestVisitEntries={latestVisitEntries}
+        fallbackMostVisitedParks={mostVisitedParks}
+        fallbackLatestTrips={latestTrips}
+      />
 
       <HomeAboutSection
         title={t("aboutTitle")}

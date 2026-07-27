@@ -229,19 +229,23 @@ vi.mock("@/components/dashboard/latest-visit-entries", () => ({
   ),
 }));
 
-vi.mock("@/components/home/home-activity-panels", () => ({
-  HomeActivityPanels: ({
+vi.mock("@/components/home/home-summary-panels", () => ({
+  HomeSummaryPanels: ({
     fallbackRecentVisits,
     fallbackLatestVisitEntries,
+    fallbackMostVisitedParks,
+    fallbackLatestTrips,
     backToStartLabel,
   }: {
     fallbackRecentVisits: { parkName: string }[];
     fallbackLatestVisitEntries: { parkName: string }[];
+    fallbackMostVisitedParks: { parkName: string }[];
+    fallbackLatestTrips: { tripName: string }[];
     backToStartLabel: string;
   }) => (
-    <div data-testid="home-activity-panels">
-      recent:{fallbackRecentVisits.length}|latest:{fallbackLatestVisitEntries.length}|back:
-      {backToStartLabel}
+    <div data-testid="home-summary-panels">
+      recent:{fallbackRecentVisits.length}|latest:{fallbackLatestVisitEntries.length}|parks:
+      {fallbackMostVisitedParks.length}|trips:{fallbackLatestTrips.length}|back:{backToStartLabel}
     </div>
   ),
 }));
@@ -622,6 +626,13 @@ describe("App pages", () => {
           updatedAt: visitWithPark.updatedAt,
         },
       ],
+      latestTrips: [
+        {
+          name: "Keski-Suomen kesaretki",
+          slug: "keski-suomen-kesaretki",
+          startDate: "2024-07-20",
+        },
+      ],
       updatedAt: visitWithPark.updatedAt,
       version: 3,
     });
@@ -637,11 +648,8 @@ describe("App pages", () => {
     expect(screen.getByTestId("home-visit-stats")).toHaveTextContent(
       "total:1|items:2|first:home.statistics.allParks",
     );
-    expect(screen.getByTestId("most-visited-parks")).toHaveTextContent(
-      "parks:1|top:Pallas-Yllästunturi:1",
-    );
-    expect(screen.getByTestId("home-activity-panels")).toHaveTextContent(
-      "recent:1|latest:1|back:home.backToStart",
+    expect(screen.getByTestId("home-summary-panels")).toHaveTextContent(
+      "recent:1|latest:1|parks:1|trips:1|back:home.backToStart",
     );
     expect(screen.getByTestId("home-social-links")).toHaveTextContent(
       "linkedin:home.social.linkedin|ui:home.social.githubUi|api:home.social.githubApi|copyright:home.social.copyright",
@@ -651,12 +659,7 @@ describe("App pages", () => {
     );
     expect(
       screen
-        .getByTestId("home-activity-panels")
-        .compareDocumentPosition(screen.getByTestId("most-visited-parks")),
-    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
-    expect(
-      screen
-        .getByTestId("most-visited-parks")
+        .getByTestId("home-summary-panels")
         .compareDocumentPosition(screen.getByTestId("home-about-section")),
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
@@ -782,6 +785,7 @@ describe("App pages", () => {
         mostVisitedParks: [],
         recentVisits: [],
         latestVisitEntries: [],
+        latestTrips: [],
         updatedAt: visitWithPark.updatedAt,
         version: 3,
       })
