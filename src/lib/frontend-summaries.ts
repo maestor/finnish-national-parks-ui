@@ -61,6 +61,8 @@ export interface HomeLatestTripItem {
 }
 
 const HOME_VISIT_LIST_ITEM_LIMIT = 10;
+const getSummaryItems = <Item>(items: Item[] | null | undefined): Item[] =>
+  Array.isArray(items) ? items : [];
 
 export const fetchHomeSummary = async (): Promise<HomeSummary> =>
   apiPublicFetch<HomeSummary>("/api/home-summary", {
@@ -106,7 +108,10 @@ export const createHomeProgressItems = (
   summary: HomeSummary,
   allParksLabel: string,
 ): HomeProgressItem[] => {
-  const visibleTypeItems = summary.progressByType
+  const progressByType = getSummaryItems(summary.progressByType);
+  const progressByCategory = getSummaryItems(summary.progressByCategory);
+
+  const visibleTypeItems = progressByType
     .filter((item) => item.visible && !isHikingAndWildernessAreaTypeSlug(item.type.slug))
     .map((item) => ({
       label: item.type.name,
@@ -115,7 +120,7 @@ export const createHomeProgressItems = (
       total: item.totalParks,
     }));
 
-  const hikingAndWildernessCategoryItems = summary.progressByCategory
+  const hikingAndWildernessCategoryItems = progressByCategory
     .filter((item) => item.category.slug === HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG)
     .map((item) => ({
       label: item.category.name,
@@ -124,7 +129,7 @@ export const createHomeProgressItems = (
       total: item.totalParks,
     }));
 
-  const trailCategoryItems = summary.progressByCategory
+  const trailCategoryItems = progressByCategory
     .filter((item) => item.category.slug === TRAILS_AND_ROUTES_CATEGORY_SLUG)
     .map((item) => ({
       label: item.category.name,
@@ -156,9 +161,9 @@ export const createHomeProgressItems = (
   }
 
   const totalParks =
-    summary.progressByCategory.length > 0
-      ? summary.progressByCategory.reduce((sum, item) => sum + item.totalParks, 0)
-      : summary.progressByType.reduce((sum, item) => sum + item.totalParks, 0);
+    progressByCategory.length > 0
+      ? progressByCategory.reduce((sum, item) => sum + item.totalParks, 0)
+      : progressByType.reduce((sum, item) => sum + item.totalParks, 0);
 
   return [
     {
@@ -176,14 +181,14 @@ export const createHomeProgressItems = (
 };
 
 export const createHomeMostVisitedParks = (summary: HomeSummary): HomeMostVisitedPark[] =>
-  summary.mostVisitedParks.map((park) => ({
+  getSummaryItems(summary.mostVisitedParks).map((park) => ({
     parkName: park.park.name,
     parkSlug: park.park.slug,
     visitCount: park.visitCount,
   }));
 
 export const createHomeRecentVisitsFromSummary = (summary: HomeSummary): HomeRecentVisitItem[] =>
-  summary.recentVisits.map((visit) => ({
+  getSummaryItems(summary.recentVisits).map((visit) => ({
     parkName: visit.park.name,
     parkSlug: visit.park.slug,
     visitedOn: visit.visitedSummary.lastVisitedOn,
@@ -192,7 +197,7 @@ export const createHomeRecentVisitsFromSummary = (summary: HomeSummary): HomeRec
 export const createHomeLatestVisitEntriesFromSummary = (
   summary: HomeSummary,
 ): HomeLatestVisitEntryItem[] =>
-  summary.latestVisitEntries.map((visit) => ({
+  getSummaryItems(summary.latestVisitEntries).map((visit) => ({
     id: visit.id,
     parkName: visit.park.name,
     parkSlug: visit.park.slug,
@@ -200,7 +205,7 @@ export const createHomeLatestVisitEntriesFromSummary = (
   }));
 
 export const createHomeLatestTripsFromSummary = (summary: HomeSummary): HomeLatestTripItem[] =>
-  summary.latestTrips.map((trip) => ({
+  getSummaryItems(summary.latestTrips).map((trip) => ({
     tripName: trip.name,
     tripSlug: trip.slug,
     startDate: trip.startDate,
