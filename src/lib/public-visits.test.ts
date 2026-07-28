@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   buildPublicVisitsMapModel,
   buildPublicVisitsTimelineModel,
+  buildVisitedNationalParksModel,
   createPublicVisitsHref,
   type FrontendTimelineVisit,
   type PublicVisitsMapPark,
+  type PublicVisitsNationalParkSummaryPark,
   resolvePublicVisitsView,
 } from "./public-visits";
 
@@ -38,6 +40,43 @@ const mapParks: PublicVisitsMapPark[] = [
   },
 ];
 
+const nationalParkSummaryParks: PublicVisitsNationalParkSummaryPark[] = [
+  {
+    slug: "nuuksio",
+    name: "Nuuksio",
+    category: { name: "Kansallispuistot", slug: "national-park" },
+    logo: {
+      key: "nuuksio-logo",
+      updatedAt: "2024-01-01T00:00:00Z",
+      url: "https://example.com/nuuksio-logo.png",
+    },
+  },
+  {
+    slug: "pallas-yllastunturi",
+    name: "Pallas-Yllästunturi",
+    category: { name: "Kansallispuistot", slug: "national-park" },
+    logo: null,
+  },
+  {
+    slug: "kolovesi",
+    name: "Kolovesi",
+    category: { name: "Kansallispuistot", slug: "national-park" },
+    logo: null,
+  },
+  {
+    slug: "repovesi",
+    name: "Repovesi",
+    category: { name: "Kansallispuistot", slug: "national-park" },
+    logo: null,
+  },
+  {
+    slug: "sipoonkorpi-trail",
+    name: "Sipoonkorven reitti",
+    category: { name: "Polut ja reitit", slug: "trails-and-routes" },
+    logo: null,
+  },
+];
+
 describe("resolvePublicVisitsView", () => {
   it("defaults to the timeline view for missing, unknown, or empty params", () => {
     expect(resolvePublicVisitsView(undefined)).toBe("timeline");
@@ -48,6 +87,7 @@ describe("resolvePublicVisitsView", () => {
 
   it("resolves the map view only for the explicit map param", () => {
     expect(resolvePublicVisitsView("map")).toBe("map");
+    expect(resolvePublicVisitsView("parks")).toBe("parks");
     expect(resolvePublicVisitsView(["map", "timeline"])).toBe("map");
     expect(resolvePublicVisitsView(["bogus", "map"])).toBe("timeline");
   });
@@ -67,6 +107,14 @@ describe("createPublicVisitsHref", () => {
     expect(createPublicVisitsHref({ year: 2024, view: "map" })).toBe("/kaynnit?year=2024&view=map");
     expect(createPublicVisitsHref({ year: 2024, month: 6, view: "map" })).toBe(
       "/kaynnit?year=2024&view=map",
+    );
+  });
+
+  it("keeps the national parks view free of year and month filters", () => {
+    expect(createPublicVisitsHref({ view: "parks" })).toBe("/kaynnit?view=parks");
+    expect(createPublicVisitsHref({ year: 2024, view: "parks" })).toBe("/kaynnit?view=parks");
+    expect(createPublicVisitsHref({ year: 2024, month: 6, view: "parks" })).toBe(
+      "/kaynnit?view=parks",
     );
   });
 });
@@ -360,5 +408,100 @@ describe("buildPublicVisitsTimelineModel", () => {
     }
 
     expect(groupedTrip.visits.map((visit) => visit.id)).toEqual([2]);
+  });
+});
+
+describe("buildVisitedNationalParksModel", () => {
+  it("orders national parks by the first earned magnet and groups later visits under each park", () => {
+    const model = buildVisitedNationalParksModel(
+      [
+        createTimelineVisit({
+          id: 1,
+          visitedOn: "2018-06-10",
+          createdAt: "2018-06-10T10:00:00Z",
+        }),
+        createTimelineVisit({
+          id: 2,
+          visitedOn: "2021-07-12",
+          createdAt: "2021-07-12T10:00:00Z",
+        }),
+        createTimelineVisit({
+          id: 3,
+          visitedOn: "2019-08-20",
+          createdAt: "2019-08-20T10:00:00Z",
+          park: {
+            name: "Pallas-Yllästunturi",
+            slug: "pallas-yllastunturi",
+            typeLabel: "Kansallispuisto",
+          },
+        }),
+        createTimelineVisit({
+          id: 4,
+          visitedOn: "2020-09-01",
+          createdAt: "2020-09-01T10:00:00Z",
+          park: {
+            name: "Piilotettu",
+            slug: "piilotettu",
+            typeLabel: "Kansallispuisto",
+          },
+        }),
+        createTimelineVisit({
+          id: 5,
+          visitedOn: "2022-06-15",
+          createdAt: "2022-06-15T10:00:00Z",
+          park: {
+            name: "Sipoonkorven reitti",
+            slug: "sipoonkorpi-trail",
+            typeLabel: "Retkeilyreitti",
+          },
+        }),
+      ],
+      nationalParkSummaryParks,
+    );
+
+    expect(model.totalNationalParks).toBe(4);
+    expect(model.visitedNationalParkCount).toBe(3);
+    expect(model.progressPercent).toBe(75);
+    expect(model.firstMagnetEarnedOn).toBe("2018-06-10");
+    expect(model.latestMagnetEarnedOn).toBe("2020-09-01");
+    expect(model.visitedParks.map((park) => park.park.slug)).toEqual([
+      "nuuksio",
+      "pallas-yllastunturi",
+      "piilotettu",
+    ]);
+
+    expect(model.visitedParks[0]).toMatchObject({
+      order: 1,
+      park: {
+        slug: "nuuksio",
+        logoUrl: "https://example.com/nuuksio-logo.png",
+      },
+      firstVisit: {
+        id: 1,
+      },
+      latestVisit: {
+        id: 2,
+      },
+      totalVisits: 2,
+    });
+    expect(model.visitedParks[0]?.laterVisits.map((visit) => visit.id)).toEqual([2]);
+
+    expect(model.visitedParks[1]).toMatchObject({
+      order: 2,
+      park: {
+        slug: "pallas-yllastunturi",
+        logoUrl: null,
+      },
+      totalVisits: 1,
+    });
+
+    expect(model.visitedParks[2]).toMatchObject({
+      order: 3,
+      park: {
+        slug: "piilotettu",
+        logoUrl: null,
+      },
+      totalVisits: 1,
+    });
   });
 });

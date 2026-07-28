@@ -22,6 +22,7 @@ import { formatFinnishDate, formatFinnishDateRange } from "@/lib/fi-date";
 import {
   createParkVisitHref,
   createPublicVisitsHref,
+  type PublicVisitedNationalParksModel,
   type PublicVisitMonthOption,
   type PublicVisitsMapMarker,
   type PublicVisitsView,
@@ -31,6 +32,7 @@ import {
 } from "@/lib/public-visits";
 import { appRoutes } from "@/lib/routes";
 import { LazyVisitsMap } from "./lazy-visits-map";
+import { PublicVisitedNationalParks } from "./public-visited-national-parks";
 
 interface PublicVisitsTimelineProps {
   availableYears: number[];
@@ -38,6 +40,7 @@ interface PublicVisitsTimelineProps {
   filteredCount: number;
   mapMarkers?: PublicVisitsMapMarker[];
   monthOptions: PublicVisitMonthOption[];
+  nationalParksModel?: PublicVisitedNationalParksModel;
   sections: PublicVisitYearSection[];
   selectedMonth: number | null;
   selectedYear: number | null;
@@ -62,6 +65,7 @@ const PublicVisitsTimeline = ({
   filteredCount,
   mapMarkers = [],
   monthOptions,
+  nationalParksModel,
   sections,
   selectedMonth,
   selectedYear,
@@ -71,6 +75,7 @@ const PublicVisitsTimeline = ({
   const router = useRouter();
   const t = useTranslations("visits");
   const isMapView = view === "map";
+  const isParksView = view === "parks";
   const mobileMonthOptions = monthOptions.filter((month) => month.hasVisits);
   const yearRefs = useRef<Array<HTMLAnchorElement | null>>([]);
   const monthRefs = useRef<Array<HTMLAnchorElement | null>>([]);
@@ -454,6 +459,19 @@ const PublicVisitsTimeline = ({
             >
               {t("views.map")}
             </Link>
+            <Link
+              href={createPublicVisitsHref({
+                view: "parks",
+              })}
+              scroll={false}
+              aria-current={view === "parks" ? "page" : undefined}
+              className={cn(
+                FILTER_LINK_CLASS_NAME,
+                view === "parks" ? ACTIVE_FILTER_LINK_CLASS_NAME : INACTIVE_FILTER_LINK_CLASS_NAME,
+              )}
+            >
+              {t("views.parks")}
+            </Link>
           </nav>
         </div>
       </section>
@@ -468,165 +486,167 @@ const PublicVisitsTimeline = ({
         </section>
       )}
 
-      <section className={PUBLIC_PANEL_CLASS_NAME}>
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-2">
-          <CalendarRange className="h-4 w-4 text-primary" aria-hidden="true" />
-          <h2 className="text-lg font-semibold tracking-tight">{t("filters.title")}</h2>
-          <p className="text-sm text-muted-foreground">
-            ({filteredCount} {t("filters.visibleCount")})
-          </p>
-        </div>
-
-        <div className="mt-4 grid gap-3 md:hidden">
-          <div className="space-y-2">
-            <Label htmlFor="visits-year-filter-mobile">{t("filters.yearSelectLabel")}</Label>
-            <Select
-              id="visits-year-filter-mobile"
-              value={selectedYear?.toString() ?? ""}
-              onChange={handleYearSelectChange}
-            >
-              <option value="">{t("filters.allYearsLabel")}</option>
-              {availableYears.map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </Select>
+      {!isParksView && (
+        <section className={PUBLIC_PANEL_CLASS_NAME}>
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-2">
+            <CalendarRange className="h-4 w-4 text-primary" aria-hidden="true" />
+            <h2 className="text-lg font-semibold tracking-tight">{t("filters.title")}</h2>
+            <p className="text-sm text-muted-foreground">
+              ({filteredCount} {t("filters.visibleCount")})
+            </p>
           </div>
 
-          {!isMapView && (
+          <div className="mt-4 grid gap-3 md:hidden">
             <div className="space-y-2">
-              <Label htmlFor="visits-month-filter-mobile">{t("filters.monthSelectLabel")}</Label>
+              <Label htmlFor="visits-year-filter-mobile">{t("filters.yearSelectLabel")}</Label>
               <Select
-                id="visits-month-filter-mobile"
-                disabled={selectedYear === null}
-                value={selectedMonth?.toString() ?? ""}
-                onChange={handleMonthSelectChange}
+                id="visits-year-filter-mobile"
+                value={selectedYear?.toString() ?? ""}
+                onChange={handleYearSelectChange}
               >
-                <option value="">
-                  {selectedYear === null
-                    ? t("filters.monthSelectPlaceholder")
-                    : t("filters.allMonthsLabel")}
-                </option>
-                {mobileMonthOptions.map((month) => (
-                  <option key={month.value} value={month.value}>
-                    {month.longLabel}
+                <option value="">{t("filters.allYearsLabel")}</option>
+                {availableYears.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
                   </option>
                 ))}
               </Select>
             </div>
-          )}
-        </div>
 
-        <nav aria-label={t("filters.yearsLabel")} className="mt-4 hidden flex-wrap gap-2 md:flex">
-          <Link
-            href={createPublicVisitsHref({ year: null, month: null, view })}
-            scroll={false}
-            aria-label={t("filters.allYearsLabel")}
-            aria-current={selectedYear === null ? "page" : undefined}
-            className={cn(
-              FILTER_LINK_CLASS_NAME,
-              selectedYear === null
-                ? ACTIVE_FILTER_LINK_CLASS_NAME
-                : INACTIVE_FILTER_LINK_CLASS_NAME,
+            {!isMapView && (
+              <div className="space-y-2">
+                <Label htmlFor="visits-month-filter-mobile">{t("filters.monthSelectLabel")}</Label>
+                <Select
+                  id="visits-month-filter-mobile"
+                  disabled={selectedYear === null}
+                  value={selectedMonth?.toString() ?? ""}
+                  onChange={handleMonthSelectChange}
+                >
+                  <option value="">
+                    {selectedYear === null
+                      ? t("filters.monthSelectPlaceholder")
+                      : t("filters.allMonthsLabel")}
+                  </option>
+                  {mobileMonthOptions.map((month) => (
+                    <option key={month.value} value={month.value}>
+                      {month.longLabel}
+                    </option>
+                  ))}
+                </Select>
+              </div>
             )}
-            ref={(element) => {
-              yearRefs.current[0] = element;
-            }}
-            onKeyDown={(event) => handleYearKeyDown(event, 0)}
-          >
-            {t("filters.all")}
-          </Link>
-          {availableYears.map((year, index) => (
-            <Link
-              key={year}
-              href={createPublicVisitsHref({ year, month: null, view })}
-              scroll={false}
-              aria-current={selectedYear === year ? "page" : undefined}
-              className={cn(
-                FILTER_LINK_CLASS_NAME,
-                selectedYear === year
-                  ? ACTIVE_FILTER_LINK_CLASS_NAME
-                  : INACTIVE_FILTER_LINK_CLASS_NAME,
-              )}
-              ref={(element) => {
-                yearRefs.current[index + 1] = element;
-              }}
-              onKeyDown={(event) => handleYearKeyDown(event, index + 1)}
-            >
-              {year}
-            </Link>
-          ))}
-        </nav>
+          </div>
 
-        {selectedYear !== null && !isMapView && (
-          <nav
-            aria-label={t("filters.monthsLabel")}
-            className="mt-4 hidden flex-wrap gap-2 md:flex"
-          >
+          <nav aria-label={t("filters.yearsLabel")} className="mt-4 hidden flex-wrap gap-2 md:flex">
             <Link
-              href={createPublicVisitsHref({ year: selectedYear, month: null, view })}
+              href={createPublicVisitsHref({ year: null, month: null, view })}
               scroll={false}
-              aria-label={t("filters.allMonthsLabel")}
-              aria-current={selectedMonth === null ? "page" : undefined}
+              aria-label={t("filters.allYearsLabel")}
+              aria-current={selectedYear === null ? "page" : undefined}
               className={cn(
                 FILTER_LINK_CLASS_NAME,
-                selectedMonth === null
+                selectedYear === null
                   ? ACTIVE_FILTER_LINK_CLASS_NAME
                   : INACTIVE_FILTER_LINK_CLASS_NAME,
               )}
               ref={(element) => {
-                monthRefs.current[0] = element;
+                yearRefs.current[0] = element;
               }}
-              onKeyDown={(event) => handleMonthKeyDown(event, 0)}
+              onKeyDown={(event) => handleYearKeyDown(event, 0)}
             >
               {t("filters.all")}
             </Link>
-            {monthOptions.map((month, index) =>
-              month.hasVisits ? (
-                <Link
-                  key={month.value}
-                  href={createPublicVisitsHref({ year: selectedYear, month: month.value, view })}
-                  scroll={false}
-                  aria-current={selectedMonth === month.value ? "page" : undefined}
-                  className={cn(
-                    FILTER_LINK_CLASS_NAME,
-                    selectedMonth === month.value
-                      ? ACTIVE_FILTER_LINK_CLASS_NAME
-                      : INACTIVE_FILTER_LINK_CLASS_NAME,
-                  )}
-                  ref={(element) => {
-                    monthRefs.current[index + 1] = element;
-                  }}
-                  onKeyDown={(event) => handleMonthKeyDown(event, index + 1)}
-                >
-                  {month.label}
-                </Link>
-              ) : (
-                <span
-                  key={month.value}
-                  className={cn(FILTER_LINK_CLASS_NAME, DISABLED_FILTER_PILL_CLASS_NAME)}
-                  ref={() => {
-                    monthRefs.current[index + 1] = null;
-                  }}
-                  title={t("filters.noVisitsInMonth")}
-                >
-                  <span aria-hidden="true">{month.label}</span>
-                  <span className="sr-only">{` ${t("filters.noVisitsInMonth")}`}</span>
-                </span>
-              ),
-            )}
+            {availableYears.map((year, index) => (
+              <Link
+                key={year}
+                href={createPublicVisitsHref({ year, month: null, view })}
+                scroll={false}
+                aria-current={selectedYear === year ? "page" : undefined}
+                className={cn(
+                  FILTER_LINK_CLASS_NAME,
+                  selectedYear === year
+                    ? ACTIVE_FILTER_LINK_CLASS_NAME
+                    : INACTIVE_FILTER_LINK_CLASS_NAME,
+                )}
+                ref={(element) => {
+                  yearRefs.current[index + 1] = element;
+                }}
+                onKeyDown={(event) => handleYearKeyDown(event, index + 1)}
+              >
+                {year}
+              </Link>
+            ))}
           </nav>
-        )}
-      </section>
 
-      {totalCount === 0 && !error && (
+          {selectedYear !== null && !isMapView && (
+            <nav
+              aria-label={t("filters.monthsLabel")}
+              className="mt-4 hidden flex-wrap gap-2 md:flex"
+            >
+              <Link
+                href={createPublicVisitsHref({ year: selectedYear, month: null, view })}
+                scroll={false}
+                aria-label={t("filters.allMonthsLabel")}
+                aria-current={selectedMonth === null ? "page" : undefined}
+                className={cn(
+                  FILTER_LINK_CLASS_NAME,
+                  selectedMonth === null
+                    ? ACTIVE_FILTER_LINK_CLASS_NAME
+                    : INACTIVE_FILTER_LINK_CLASS_NAME,
+                )}
+                ref={(element) => {
+                  monthRefs.current[0] = element;
+                }}
+                onKeyDown={(event) => handleMonthKeyDown(event, 0)}
+              >
+                {t("filters.all")}
+              </Link>
+              {monthOptions.map((month, index) =>
+                month.hasVisits ? (
+                  <Link
+                    key={month.value}
+                    href={createPublicVisitsHref({ year: selectedYear, month: month.value, view })}
+                    scroll={false}
+                    aria-current={selectedMonth === month.value ? "page" : undefined}
+                    className={cn(
+                      FILTER_LINK_CLASS_NAME,
+                      selectedMonth === month.value
+                        ? ACTIVE_FILTER_LINK_CLASS_NAME
+                        : INACTIVE_FILTER_LINK_CLASS_NAME,
+                    )}
+                    ref={(element) => {
+                      monthRefs.current[index + 1] = element;
+                    }}
+                    onKeyDown={(event) => handleMonthKeyDown(event, index + 1)}
+                  >
+                    {month.label}
+                  </Link>
+                ) : (
+                  <span
+                    key={month.value}
+                    className={cn(FILTER_LINK_CLASS_NAME, DISABLED_FILTER_PILL_CLASS_NAME)}
+                    ref={() => {
+                      monthRefs.current[index + 1] = null;
+                    }}
+                    title={t("filters.noVisitsInMonth")}
+                  >
+                    <span aria-hidden="true">{month.label}</span>
+                    <span className="sr-only">{` ${t("filters.noVisitsInMonth")}`}</span>
+                  </span>
+                ),
+              )}
+            </nav>
+          )}
+        </section>
+      )}
+
+      {totalCount === 0 && !error && !isParksView && (
         <section className={PUBLIC_EMPTY_STATE_PANEL_CLASS_NAME}>
           <p className="text-muted-foreground">{t("empty.all")}</p>
         </section>
       )}
 
-      {totalCount > 0 && filteredCount === 0 && (
+      {totalCount > 0 && filteredCount === 0 && !isParksView && (
         <section className={PUBLIC_EMPTY_STATE_PANEL_CLASS_NAME}>
           <p className="text-muted-foreground">{t("empty.filtered")}</p>
           <Link
@@ -638,6 +658,10 @@ const PublicVisitsTimeline = ({
           </Link>
         </section>
       )}
+
+      {isParksView && nationalParksModel ? (
+        <PublicVisitedNationalParks model={nationalParksModel} />
+      ) : null}
 
       {filteredCount > 0 && view === "map" && (
         <LazyVisitsMap markers={mapMarkers} selectedYear={selectedYear} />
