@@ -446,10 +446,7 @@ describe("createHomeProgressItems", () => {
     await fetchPublicParkDetail("riisitunturi", { includeBoundary: true });
 
     expect(apiFetch).toHaveBeenCalledWith("/api/parks/riisitunturi?includeBoundary=true", {
-      cache: "force-cache",
-      next: {
-        tags: ["public-park:riisitunturi"],
-      },
+      cache: "no-store",
     });
   });
 
@@ -459,10 +456,7 @@ describe("createHomeProgressItems", () => {
     await fetchPublicParkVisits("riisitunturi");
 
     expect(apiFetch).toHaveBeenCalledWith("/api/parks/riisitunturi/visits", {
-      cache: "force-cache",
-      next: {
-        tags: ["public-park:riisitunturi"],
-      },
+      cache: "no-store",
     });
   });
 

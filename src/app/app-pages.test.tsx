@@ -704,10 +704,7 @@ describe("App pages", () => {
       "slug:keski-suomen-kesaretki|visits:2",
     );
     expect(apiPublicFetch).toHaveBeenCalledWith("/api/trips/slug/keski-suomen-kesaretki", {
-      cache: "force-cache",
-      next: {
-        tags: ["public-trip:keski-suomen-kesaretki"],
-      },
+      cache: "no-store",
     });
   });
 
