@@ -24,10 +24,11 @@ interface ParkFormState {
   areaKm2: string;
   displayTypeName: string;
   establishmentYear: string;
+  hasMagnet: boolean;
   locationLabel: string;
   markerPoint: CoordinateInputValue;
-  parkUrl: string;
   name: string;
+  parkUrl: string;
   postalCode: string;
   postalOffice: string;
   slug: string;
@@ -40,10 +41,11 @@ const createInitialState = (park: ParkDetail): ParkFormState => ({
   areaKm2: park.areaKm2 === null ? "" : String(park.areaKm2),
   displayTypeName: park.displayTypeName ?? "",
   establishmentYear: park.establishmentYear === null ? "" : String(park.establishmentYear),
+  hasMagnet: park.hasMagnet,
   locationLabel: park.locationLabel,
   markerPoint: formatCoordinateInputValue(park.markerPoint),
-  parkUrl: park.parkUrl ?? "",
   name: park.name,
+  parkUrl: park.parkUrl ?? "",
   postalCode: park.postalCode ?? "",
   postalOffice: park.postalOffice ?? "",
   slug: park.slug,
@@ -70,6 +72,7 @@ export const ParkForm = ({ park }: ParkFormProps) => {
   const t = useTranslations("controlPanel.parks.edit.form");
   const router = useRouter();
   const initialState = useMemo(() => createInitialState(park), [park]);
+  const isNationalPark = park.category.slug === "national-park";
   const [formState, setFormState] = useState(initialState);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -81,6 +84,7 @@ export const ParkForm = ({ park }: ParkFormProps) => {
     formState.areaKm2 !== initialState.areaKm2 ||
     formState.displayTypeName !== initialState.displayTypeName ||
     formState.establishmentYear !== initialState.establishmentYear ||
+    formState.hasMagnet !== initialState.hasMagnet ||
     formState.locationLabel !== initialState.locationLabel ||
     formState.markerPoint.lat !== initialState.markerPoint.lat ||
     formState.markerPoint.lon !== initialState.markerPoint.lon ||
@@ -178,6 +182,9 @@ export const ParkForm = ({ park }: ParkFormProps) => {
     }
     if (formState.establishmentYear !== initialState.establishmentYear) {
       payload.establishmentYear = parsedEstablishmentYear;
+    }
+    if (!isNationalPark && formState.hasMagnet !== initialState.hasMagnet) {
+      payload.hasMagnet = formState.hasMagnet;
     }
     if (
       formState.markerPoint.lat !== initialState.markerPoint.lat ||
@@ -299,6 +306,27 @@ export const ParkForm = ({ park }: ParkFormProps) => {
           {hasEstablishmentYearError && (
             <p className="text-sm text-destructive">{errors.establishmentYear}</p>
           )}
+        </div>
+
+        <div className="space-y-3 md:col-span-2">
+          <div className="rounded-3xl border border-white/45 bg-white/70 px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] dark:border-white/10 dark:bg-slate-950/50 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+            <div className="flex items-start gap-3">
+              <input
+                id="park-has-magnet"
+                type="checkbox"
+                checked={isNationalPark ? true : formState.hasMagnet}
+                disabled={isPending || isNationalPark}
+                onChange={(event) => setFieldValue("hasMagnet", event.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-white/45 text-primary focus-visible:ring-2 focus-visible:ring-ring dark:border-white/20"
+              />
+              <div className="space-y-1">
+                <Label htmlFor="park-has-magnet">{t("hasMagnetLabel")}</Label>
+                {isNationalPark && (
+                  <p className="text-sm text-muted-foreground">{t("hasMagnetNationalParkHint")}</p>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="space-y-2 md:col-span-2">

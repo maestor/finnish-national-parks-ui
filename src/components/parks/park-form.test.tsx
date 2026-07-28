@@ -35,6 +35,7 @@ const park = {
   logo: null,
   parkUrl: "https://example.com/pallas",
   map: null,
+  hasMagnet: true,
   establishmentYear: 1938,
   boundingBox: { minLat: 67, minLon: 23, maxLat: 68, maxLon: 25 },
   markerPoint: { lat: 67.5, lon: 24 },
@@ -47,6 +48,15 @@ const park = {
   postalOffice: "Muonio",
   sourceEventDate: null,
   updatedAt: "2024-01-01T00:00:00.000Z",
+} satisfies ParkDetail;
+
+const otherMagnetPlace = {
+  ...park,
+  slug: "seurasaari",
+  name: "Seurasaari",
+  category: { name: "Historia-alueet", slug: "cultural-history-area" as const },
+  type: { code: 2, id: 2, name: "Historiakohde", slug: "cultural-history-area" as const },
+  hasMagnet: false,
 } satisfies ParkDetail;
 
 describe("ParkForm", () => {
@@ -380,5 +390,49 @@ describe("ParkForm", () => {
       screen.getByRole("button", { name: "controlPanel.parks.edit.form.submit" }),
     ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "..." })).not.toBeInTheDocument();
+  });
+
+  it("submits a changed magnet flag for a non-national-park place", async () => {
+    const user = userEvent.setup();
+
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ...otherMagnetPlace,
+      hasMagnet: true,
+    });
+
+    render(<ParkForm park={otherMagnetPlace} />);
+
+    const magnetCheckbox = screen.getByRole("checkbox", {
+      name: "controlPanel.parks.edit.form.hasMagnetLabel",
+    });
+
+    expect(magnetCheckbox).not.toBeChecked();
+    expect(magnetCheckbox).toBeEnabled();
+
+    await user.click(magnetCheckbox);
+    await user.click(screen.getByRole("button", { name: "controlPanel.parks.edit.form.submit" }));
+
+    await waitFor(() => {
+      expect(apiFetch).toHaveBeenCalledWith("/api/parks/seurasaari", {
+        method: "PATCH",
+        body: JSON.stringify({
+          hasMagnet: true,
+        }),
+      });
+    });
+  });
+
+  it("shows national parks as always having a magnet and prevents editing that flag", () => {
+    render(<ParkForm park={park} />);
+
+    const magnetCheckbox = screen.getByRole("checkbox", {
+      name: "controlPanel.parks.edit.form.hasMagnetLabel",
+    });
+
+    expect(magnetCheckbox).toBeChecked();
+    expect(magnetCheckbox).toBeDisabled();
+    expect(
+      screen.getByText("controlPanel.parks.edit.form.hasMagnetNationalParkHint"),
+    ).toBeInTheDocument();
   });
 });

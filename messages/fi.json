@@ -148,7 +148,7 @@
       "label": "Käyntinäkymät",
       "timeline": "Aikajana",
       "map": "Kartta",
-      "parks": "Kansallispuistot"
+      "parks": "Magneettijahti"
     },
     "filters": {
       "title": "Rajaa käyntejä",
@@ -191,16 +191,27 @@
     },
     "parks": {
       "empty": "Yhtään kansallispuistoa ei ole vielä kirjattu tähän näkymään.",
+      "sectionNavigationLabel": "Magneettijahdin osiot",
       "summary": {
-        "title": "Käydyt kansallispuistot",
-        "description": "Täällä listataan käymämme kansallispuistot järjestyksessä. Hankimme magneetin jokaisesta kansallispuistosta, ja ne on kiinnitetty sähkökaapin oveen muistoksi retkistä.",
-        "progressLabel": "Käydyt kansallispuistot",
+        "title": "Kansallispuistot",
+        "description": "Täällä listaamme käymämme kansallispuistot järjestyksessä ja lisäksi muut paikat joista tunnusmagneetteja on tarjolla. Hankimme magneetin jokaisesta paikasta mistä mahdollista, ja ne on kiinnitetty sähkökaapin oveen muistoksi retkistä.",
+        "progressLabel": "Kansallispuistot",
+        "totalProgressLabel": "Ansaitut magneetit",
         "firstPark": "Ensimmäinen magneetti",
         "latestPark": "Uusin magneetti"
+      },
+      "otherPlaces": {
+        "title": "Muut paikat",
+        "progressLabel": "Muut paikat"
       },
       "item": {
         "firstVisit": "Magneetti ansaittu",
         "otherVisits": "Myöhemmät käynnit ({count})"
+      },
+      "sections": {
+        "nationalParks": "Kansallispuistot",
+        "otherPlaces": "Muut paikat",
+        "missing": "Puuttuvat"
       }
     }
   },
@@ -353,6 +364,8 @@
         "form": {
           "nameLabel": "Nimi",
           "slugLabel": "Slug",
+          "hasMagnetLabel": "Paikasta saa magneetin",
+          "hasMagnetNationalParkHint": "Kansallispuistoista saa aina magneetin, joten tätä tietoa ei voi muuttaa täällä.",
           "locationLabel": "Osoite",
           "markerPointSearchLabel": "Karttapisteen haku",
           "markerPointSearchPlaceholder": "Hae osoitetta, paikkaa tai kuntaa",

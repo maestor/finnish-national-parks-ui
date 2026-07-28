@@ -56,6 +56,7 @@ type ParkMapRequiredFields = Pick<
   | "displayTypeName"
   | "markerPoint"
   | "boundingBox"
+  | "hasMagnet"
 >;
 
 type OptionalParkMapFields = Pick<
@@ -71,6 +72,7 @@ export type MapPark = ParkMapRequiredFields &
 export type FilterableMapPark = MapPark & Pick<Park, "category">;
 
 export type AdminMapPark = AdminVisibilityPark &
+  Pick<Park, "hasMagnet"> &
   Partial<OptionalParkMapFields> & {
     removed: boolean;
     visitedSummary: VisitedSummary;
@@ -80,13 +82,18 @@ export const toAdminMapParks = (
   parks: AdminVisibilityPark[],
   removedParks: AdminVisibilityPark[],
 ): AdminMapPark[] => {
+  // The lightweight admin visibility endpoint does not include magnet metadata.
+  // National parks always have magnets; other places default to false here until
+  // the visibility payload is extended similarly.
   const visible = parks.map((park) => ({
     ...park,
+    hasMagnet: park.type.slug === "national-park",
     visitedSummary: createEmptyVisitedSummary(),
     removed: false,
   }));
   const removed = removedParks.map((park) => ({
     ...park,
+    hasMagnet: park.type.slug === "national-park",
     visitedSummary: createEmptyVisitedSummary(),
     removed: true,
   }));

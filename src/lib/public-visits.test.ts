@@ -2,11 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   buildPublicVisitsMapModel,
   buildPublicVisitsTimelineModel,
-  buildVisitedNationalParksModel,
+  buildVisitedMagnetParksModel,
   createPublicVisitsHref,
   type FrontendTimelineVisit,
+  type PublicVisitsMagnetSummaryPark,
   type PublicVisitsMapPark,
-  type PublicVisitsNationalParkSummaryPark,
   resolvePublicVisitsView,
 } from "./public-visits";
 
@@ -40,40 +40,77 @@ const mapParks: PublicVisitsMapPark[] = [
   },
 ];
 
-const nationalParkSummaryParks: PublicVisitsNationalParkSummaryPark[] = [
+const magnetSummaryParks: PublicVisitsMagnetSummaryPark[] = [
   {
     slug: "nuuksio",
     name: "Nuuksio",
     category: { name: "Kansallispuistot", slug: "national-park" },
+    displayTypeName: null,
+    hasMagnet: true,
     logo: {
       key: "nuuksio-logo",
       updatedAt: "2024-01-01T00:00:00Z",
       url: "https://example.com/nuuksio-logo.png",
     },
+    type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },
   },
   {
     slug: "pallas-yllastunturi",
     name: "Pallas-Yllästunturi",
     category: { name: "Kansallispuistot", slug: "national-park" },
+    displayTypeName: null,
+    hasMagnet: true,
     logo: null,
+    type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },
   },
   {
     slug: "kolovesi",
     name: "Kolovesi",
     category: { name: "Kansallispuistot", slug: "national-park" },
+    displayTypeName: null,
+    hasMagnet: true,
     logo: null,
+    type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },
   },
   {
     slug: "repovesi",
     name: "Repovesi",
     category: { name: "Kansallispuistot", slug: "national-park" },
+    displayTypeName: null,
+    hasMagnet: true,
     logo: null,
+    type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },
   },
   {
     slug: "sipoonkorpi-trail",
     name: "Sipoonkorven reitti",
     category: { name: "Polut ja reitit", slug: "trails-and-routes" },
+    displayTypeName: null,
+    hasMagnet: false,
     logo: null,
+    type: { code: 7, id: 7, name: "Retkeilyreitti", slug: "hiking-trail" },
+  },
+  {
+    slug: "seurasaari",
+    name: "Seurasaari",
+    category: { name: "Historia-alueet", slug: "cultural-history-area" },
+    displayTypeName: null,
+    hasMagnet: true,
+    logo: {
+      key: "seurasaari-logo",
+      updatedAt: "2024-01-01T00:00:00Z",
+      url: "https://example.com/seurasaari-logo.png",
+    },
+    type: { code: 2, id: 2, name: "Historiakohde", slug: "cultural-history-area" },
+  },
+  {
+    slug: "teijo",
+    name: "Teijo",
+    category: { name: "Retkeilyalueet", slug: "outdoor-recreation-area" },
+    displayTypeName: null,
+    hasMagnet: true,
+    logo: null,
+    type: { code: 3, id: 3, name: "Retkeilyalue", slug: "outdoor-recreation-area" },
   },
 ];
 
@@ -411,9 +448,9 @@ describe("buildPublicVisitsTimelineModel", () => {
   });
 });
 
-describe("buildVisitedNationalParksModel", () => {
-  it("orders national parks by the first earned magnet and groups later visits under each park", () => {
-    const model = buildVisitedNationalParksModel(
+describe("buildVisitedMagnetParksModel", () => {
+  it("groups visited parks into national parks and other magnet places", () => {
+    const model = buildVisitedMagnetParksModel(
       [
         createTimelineVisit({
           id: 1,
@@ -450,27 +487,57 @@ describe("buildVisitedNationalParksModel", () => {
           visitedOn: "2022-06-15",
           createdAt: "2022-06-15T10:00:00Z",
           park: {
+            name: "Seurasaari",
+            slug: "seurasaari",
+            typeLabel: "Historiakohde",
+          },
+        }),
+        createTimelineVisit({
+          id: 6,
+          visitedOn: "2023-04-04",
+          createdAt: "2023-04-04T10:00:00Z",
+          park: {
+            name: "Seurasaari",
+            slug: "seurasaari",
+            typeLabel: "Historiakohde",
+          },
+        }),
+        createTimelineVisit({
+          id: 7,
+          visitedOn: "2024-07-07",
+          createdAt: "2024-07-07T10:00:00Z",
+          park: {
             name: "Sipoonkorven reitti",
             slug: "sipoonkorpi-trail",
             typeLabel: "Retkeilyreitti",
           },
         }),
+        createTimelineVisit({
+          id: 8,
+          visitedOn: "2021-05-20",
+          createdAt: "2021-05-20T10:00:00Z",
+          park: {
+            name: "Piilotettu muu",
+            slug: "piilotettu-muu",
+            typeLabel: "Luontokohde",
+          },
+        }),
       ],
-      nationalParkSummaryParks,
+      magnetSummaryParks,
     );
 
-    expect(model.totalNationalParks).toBe(4);
-    expect(model.visitedNationalParkCount).toBe(3);
-    expect(model.progressPercent).toBe(75);
-    expect(model.firstMagnetEarnedOn).toBe("2018-06-10");
-    expect(model.latestMagnetEarnedOn).toBe("2020-09-01");
-    expect(model.visitedParks.map((park) => park.park.slug)).toEqual([
+    expect(model.nationalParks.totalParks).toBe(4);
+    expect(model.nationalParks.visitedParkCount).toBe(3);
+    expect(model.nationalParks.progressPercent).toBe(75);
+    expect(model.nationalParks.firstMagnetEarnedOn).toBe("2018-06-10");
+    expect(model.nationalParks.latestMagnetEarnedOn).toBe("2020-09-01");
+    expect(model.nationalParks.visitedParks.map((park) => park.park.slug)).toEqual([
       "nuuksio",
       "pallas-yllastunturi",
       "piilotettu",
     ]);
 
-    expect(model.visitedParks[0]).toMatchObject({
+    expect(model.nationalParks.visitedParks[0]).toMatchObject({
       order: 1,
       park: {
         slug: "nuuksio",
@@ -479,29 +546,52 @@ describe("buildVisitedNationalParksModel", () => {
       firstVisit: {
         id: 1,
       },
-      latestVisit: {
-        id: 2,
-      },
-      totalVisits: 2,
     });
-    expect(model.visitedParks[0]?.laterVisits.map((visit) => visit.id)).toEqual([2]);
+    expect(model.nationalParks.visitedParks[0]?.laterVisits.map((visit) => visit.id)).toEqual([2]);
 
-    expect(model.visitedParks[1]).toMatchObject({
+    expect(model.nationalParks.visitedParks[1]).toMatchObject({
       order: 2,
       park: {
         slug: "pallas-yllastunturi",
         logoUrl: null,
       },
-      totalVisits: 1,
     });
 
-    expect(model.visitedParks[2]).toMatchObject({
+    expect(model.nationalParks.visitedParks[2]).toMatchObject({
       order: 3,
       park: {
         slug: "piilotettu",
         logoUrl: null,
       },
-      totalVisits: 1,
     });
+
+    expect(model.otherMagnetPlaces.totalParks).toBe(2);
+    expect(model.otherMagnetPlaces.visitedParkCount).toBe(1);
+    expect(model.otherMagnetPlaces.progressPercent).toBe(50);
+    expect(model.otherMagnetPlaces.firstMagnetEarnedOn).toBe("2022-06-15");
+    expect(model.otherMagnetPlaces.latestMagnetEarnedOn).toBe("2022-06-15");
+    expect(model.otherMagnetPlaces.visitedParks.map((park) => park.park.slug)).toEqual([
+      "seurasaari",
+    ]);
+    expect(model.otherMagnetPlaces.visitedParks[0]).toMatchObject({
+      order: 1,
+      park: {
+        slug: "seurasaari",
+        logoUrl: "https://example.com/seurasaari-logo.png",
+      },
+    });
+    expect(model.otherMagnetPlaces.visitedParks[0]?.laterVisits.map((visit) => visit.id)).toEqual([
+      6,
+    ]);
+    expect(model.missingParks.map((park) => park.park.slug)).toEqual([
+      "kolovesi",
+      "repovesi",
+      "teijo",
+    ]);
+    expect(model.missingParks.map((park) => park.park.typeLabel)).toEqual([
+      "Kansallispuisto",
+      "Kansallispuisto",
+      "Retkeilyalue",
+    ]);
   });
 });

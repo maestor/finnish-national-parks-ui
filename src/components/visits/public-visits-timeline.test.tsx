@@ -2,10 +2,10 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   buildPublicVisitsTimelineModel,
-  buildVisitedNationalParksModel,
+  buildVisitedMagnetParksModel,
   type FrontendTimelineVisit,
+  type PublicVisitsMagnetSummaryPark,
   type PublicVisitsMapMarker,
-  type PublicVisitsNationalParkSummaryPark,
   type PublicVisitsView,
 } from "@/lib/public-visits";
 import { PublicVisitsTimeline } from "./public-visits-timeline";
@@ -32,12 +32,12 @@ const renderTimeline = (
   extras?: {
     view?: PublicVisitsView;
     mapMarkers?: PublicVisitsMapMarker[];
-    nationalParkSummaryParks?: PublicVisitsNationalParkSummaryPark[];
+    magnetSummaryParks?: PublicVisitsMagnetSummaryPark[];
   },
 ) => {
   const model = buildPublicVisitsTimelineModel(visits, selection);
-  const nationalParksModel = extras?.nationalParkSummaryParks
-    ? buildVisitedNationalParksModel(visits, extras.nationalParkSummaryParks)
+  const magnetParksModel = extras?.magnetSummaryParks
+    ? buildVisitedMagnetParksModel(visits, extras.magnetSummaryParks)
     : undefined;
 
   return render(
@@ -51,7 +51,7 @@ const renderTimeline = (
       totalCount={visits.length}
       view={extras?.view}
       mapMarkers={extras?.mapMarkers}
-      nationalParksModel={nationalParksModel}
+      magnetParksModel={magnetParksModel}
     />,
   );
 };
@@ -135,34 +135,64 @@ describe("PublicVisitsTimeline", () => {
     },
   ];
 
-  const nationalParkSummaryParks: PublicVisitsNationalParkSummaryPark[] = [
+  const magnetSummaryParks: PublicVisitsMagnetSummaryPark[] = [
     {
       slug: "nuuksio",
       name: "Nuuksio",
       category: { name: "Kansallispuistot", slug: "national-park" },
+      displayTypeName: null,
+      hasMagnet: true,
       logo: {
         key: "nuuksio-logo",
         updatedAt: "2024-01-01T00:00:00Z",
         url: "https://example.com/nuuksio-logo.png",
       },
+      type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },
     },
     {
       slug: "pallas-yllastunturi",
       name: "Pallas-Yllastunturi",
       category: { name: "Kansallispuistot", slug: "national-park" },
+      displayTypeName: null,
+      hasMagnet: true,
       logo: null,
+      type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },
     },
     {
       slug: "kolovesi",
       name: "Kolovesi",
       category: { name: "Kansallispuistot", slug: "national-park" },
+      displayTypeName: null,
+      hasMagnet: true,
       logo: null,
+      type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },
     },
     {
       slug: "oulanka",
       name: "Oulanka",
       category: { name: "Kansallispuistot", slug: "national-park" },
+      displayTypeName: null,
+      hasMagnet: true,
       logo: null,
+      type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },
+    },
+    {
+      slug: "seurasaari",
+      name: "Seurasaari",
+      category: { name: "Historia-alueet", slug: "cultural-history-area" },
+      displayTypeName: null,
+      hasMagnet: true,
+      logo: null,
+      type: { code: 2, id: 2, name: "Historiakohde", slug: "cultural-history-area" },
+    },
+    {
+      slug: "teijo",
+      name: "Teijo",
+      category: { name: "Retkeilyalueet", slug: "outdoor-recreation-area" },
+      displayTypeName: null,
+      hasMagnet: true,
+      logo: null,
+      type: { code: 3, id: 3, name: "Retkeilyalue", slug: "outdoor-recreation-area" },
     },
   ];
 
@@ -608,7 +638,7 @@ describe("PublicVisitsTimeline", () => {
     });
   });
 
-  it("renders the national parks view with a simplified summary and first-visit emphasis", () => {
+  it("renders the magnets view with national parks first and other magnet places below", () => {
     renderTimeline(
       [
         {
@@ -653,11 +683,25 @@ describe("PublicVisitsTimeline", () => {
             typeLabel: "Kansallispuisto",
           },
         },
+        {
+          id: 4,
+          visitedOn: "2026-01-05",
+          route: null,
+          createdAt: "2026-01-05T10:00:00Z",
+          imageCount: 0,
+          trip: null,
+          tripStopOrder: null,
+          park: {
+            name: "Seurasaari",
+            slug: "seurasaari",
+            typeLabel: "Historiakohde",
+          },
+        },
       ],
       { selectedYear: null, selectedMonth: null },
       {
         view: "parks",
-        nationalParkSummaryParks,
+        magnetSummaryParks,
       },
     );
 
@@ -682,13 +726,35 @@ describe("PublicVisitsTimeline", () => {
     expect(screen.queryByText("visits.filters.title")).not.toBeInTheDocument();
 
     expect(
-      screen.getByRole("progressbar", { name: "visits.parks.summary.progressLabel" }),
+      screen.getByRole("progressbar", { name: "visits.parks.summary.totalProgressLabel" }),
     ).toHaveAttribute("aria-valuenow", "50");
     expect(screen.getByText("2 / 4")).toBeInTheDocument();
+    expect(screen.getByText("1 / 2")).toBeInTheDocument();
+    expect(screen.getByText("3 / 6")).toBeInTheDocument();
     expect(screen.getByText("visits.parks.summary.firstPark")).toBeInTheDocument();
     expect(screen.getByText("visits.parks.summary.latestPark")).toBeInTheDocument();
+    expect(screen.getByText("visits.parks.otherPlaces.progressLabel")).toBeInTheDocument();
     expect(screen.queryByText("visits.parks.summary.progressSuffix")).not.toBeInTheDocument();
     expect(screen.queryByText("visits.parks.summary.progressMeta")).not.toBeInTheDocument();
+    expect(screen.getByText("visits.parks.summary.title")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "visits.parks.sections.nationalParks" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "visits.parks.sections.otherPlaces" }),
+    ).toBeInTheDocument();
+    const sectionNavigation = screen.getByRole("navigation", {
+      name: "visits.parks.sectionNavigationLabel",
+    });
+    expect(
+      within(sectionNavigation).getByRole("link", { name: "visits.parks.sections.nationalParks" }),
+    ).toHaveAttribute("href", "#magneettijahti-kansallispuistot");
+    expect(
+      within(sectionNavigation).getByRole("link", { name: "visits.parks.sections.otherPlaces" }),
+    ).toHaveAttribute("href", "#magneettijahti-muut-paikat");
+    expect(
+      within(sectionNavigation).getByRole("link", { name: "visits.parks.sections.missing" }),
+    ).toHaveAttribute("href", "#magneettijahti-puuttuvat");
 
     const nuuksioLogo = screen.getByRole("img", { name: "Nuuksio" });
     expect(nuuksioLogo).toHaveAttribute("src", "https://example.com/nuuksio-logo.png");
@@ -700,10 +766,24 @@ describe("PublicVisitsTimeline", () => {
 
     expect(nuuksioLogoWrapper).toHaveClass("h-14", "w-20", "sm:h-20", "sm:w-28");
     expect(nuuksioLogoWrapper).not.toHaveClass("hidden");
-    expect(screen.getByText("1.")).toBeInTheDocument();
+    expect(screen.getAllByText("1.")).toHaveLength(2);
     expect(screen.getByText("2.")).toBeInTheDocument();
-    expect(screen.getAllByText("visits.parks.item.firstVisit")).toHaveLength(2);
+    expect(screen.getAllByText("visits.parks.item.firstVisit")).toHaveLength(3);
     expect(screen.getByText("visits.parks.item.otherVisits")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "visits.parks.sections.missing" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Kolovesi/ })).toHaveAttribute(
+      "href",
+      "/paikka/kolovesi",
+    );
+    expect(screen.getByRole("link", { name: /Oulanka/ })).toHaveAttribute(
+      "href",
+      "/paikka/oulanka",
+    );
+    expect(screen.getByRole("link", { name: /Teijo/ })).toHaveAttribute("href", "/paikka/teijo");
+    expect(screen.getAllByText("Kansallispuisto")).toHaveLength(2);
+    expect(screen.getByText("Retkeilyalue")).toBeInTheDocument();
     const nuuksioLink = screen.getByRole("link", { name: /Nuuksio/ });
     expect(nuuksioLink).toHaveAttribute("href", "/paikka/nuuksio?visit=1#visit-history");
     const nuuksioCard = nuuksioLink.closest("article");
@@ -721,6 +801,10 @@ describe("PublicVisitsTimeline", () => {
 
     expect(nuuksioDetailsStack).toHaveClass("w-full", "space-y-5");
     expect(within(nuuksioCard).getByText("15.6.2024")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Seurasaari/ })).toHaveAttribute(
+      "href",
+      "/paikka/seurasaari?visit=4#visit-history",
+    );
 
     const pallasCard = screen.getByRole("link", { name: /Pallas-Yllastunturi/ }).closest("article");
 
@@ -729,6 +813,52 @@ describe("PublicVisitsTimeline", () => {
     }
 
     expect(within(pallasCard).queryByText("visits.parks.item.otherVisits")).not.toBeInTheDocument();
+  });
+
+  it("hides an empty magnet subsection when that group has no visited places", () => {
+    renderTimeline(
+      [
+        {
+          id: 1,
+          visitedOn: "2024-06-15",
+          route: "Punarinnankierros",
+          createdAt: "2024-06-15T10:00:00Z",
+          imageCount: 0,
+          trip: null,
+          tripStopOrder: null,
+          park: {
+            name: "Nuuksio",
+            slug: "nuuksio",
+            typeLabel: "Kansallispuisto",
+          },
+        },
+      ],
+      { selectedYear: null, selectedMonth: null },
+      {
+        view: "parks",
+        magnetSummaryParks,
+      },
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "visits.parks.sections.nationalParks" }),
+    ).toBeInTheDocument();
+    const sectionNavigation = screen.getByRole("navigation", {
+      name: "visits.parks.sectionNavigationLabel",
+    });
+    expect(
+      screen.queryByRole("heading", { name: "visits.parks.sections.otherPlaces" }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(sectionNavigation).queryByRole("link", { name: "visits.parks.sections.otherPlaces" }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(sectionNavigation).getByRole("link", { name: "visits.parks.sections.nationalParks" }),
+    ).toHaveAttribute("href", "#magneettijahti-kansallispuistot");
+    expect(
+      within(sectionNavigation).getByRole("link", { name: "visits.parks.sections.missing" }),
+    ).toHaveAttribute("href", "#magneettijahti-puuttuvat");
+    expect(screen.getByText("0 / 2")).toBeInTheDocument();
   });
 
   it("renders grouped trip cards with summary badges and nested visit links", () => {

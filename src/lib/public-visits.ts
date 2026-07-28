@@ -1,6 +1,6 @@
 import { apiPublicFetch } from "./api";
 import type { paths } from "./api-types";
-import type { FilterableMapPark } from "./parks";
+import { type FilterableMapPark, getParkTypeDisplayName } from "./parks";
 import { PUBLIC_VISITS_TAG } from "./public-cache";
 import { appRoutes, createPathWithSearchParams } from "./routes";
 
@@ -46,9 +46,9 @@ export type PublicVisitsView = "timeline" | "map" | "parks";
 
 export type PublicVisitsMapPark = Pick<FilterableMapPark, "markerPoint" | "name" | "slug">;
 
-export type PublicVisitsNationalParkSummaryPark = Pick<
+export type PublicVisitsMagnetSummaryPark = Pick<
   FilterableMapPark,
-  "category" | "logo" | "name" | "slug"
+  "category" | "displayTypeName" | "hasMagnet" | "logo" | "name" | "slug" | "type"
 >;
 
 export interface PublicVisitsMapMarker {
@@ -62,26 +62,39 @@ export interface PublicVisitsMapMarker {
   years: number[];
 }
 
-export interface PublicVisitedNationalParkItem {
+export interface PublicVisitedMagnetParkItem {
   firstVisit: FrontendTimelineVisit;
   laterVisits: FrontendTimelineVisit[];
-  latestVisit: FrontendTimelineVisit;
   order: number;
   park: {
     logoUrl: string | null;
     name: string;
     slug: string;
   };
-  totalVisits: number;
 }
 
-export interface PublicVisitedNationalParksModel {
+export interface PublicVisitedMagnetParkGroup {
   firstMagnetEarnedOn: string | null;
   latestMagnetEarnedOn: string | null;
   progressPercent: number;
-  totalNationalParks: number;
-  visitedNationalParkCount: number;
-  visitedParks: PublicVisitedNationalParkItem[];
+  totalParks: number;
+  visitedParkCount: number;
+  visitedParks: PublicVisitedMagnetParkItem[];
+}
+
+export interface PublicMissingMagnetParkItem {
+  park: {
+    logoUrl: string | null;
+    name: string;
+    slug: string;
+    typeLabel: string;
+  };
+}
+
+export interface PublicVisitedMagnetParksModel {
+  missingParks: PublicMissingMagnetParkItem[];
+  nationalParks: PublicVisitedMagnetParkGroup;
+  otherMagnetPlaces: PublicVisitedMagnetParkGroup;
 }
 
 export type FrontendTimelineVisit =
@@ -552,21 +565,22 @@ const compareVisitsByFirstMagnet = (left: FrontendTimelineVisit, right: Frontend
   left.createdAt.localeCompare(right.createdAt) ||
   left.id - right.id;
 
-export const buildVisitedNationalParksModel = (
-  visits: FrontendTimelineVisit[],
-  parks: PublicVisitsNationalParkSummaryPark[],
-): PublicVisitedNationalParksModel => {
-  const nationalParks = parks.filter((park) => park.category.slug === NATIONAL_PARK_CATEGORY_SLUG);
-  const nationalParksBySlug = new Map(nationalParks.map((park) => [park.slug, park]));
+const compareParksAlphabetically = (
+  left: Pick<PublicVisitsMagnetSummaryPark, "name">,
+  right: Pick<PublicVisitsMagnetSummaryPark, "name">,
+) => left.name.localeCompare(right.name, "fi-FI");
+
+const buildVisitedMagnetParkGroup = ({
+  parks,
+  visits,
+}: {
+  parks: PublicVisitsMagnetSummaryPark[];
+  visits: FrontendTimelineVisit[];
+}): PublicVisitedMagnetParkGroup => {
+  const parksBySlug = new Map(parks.map((park) => [park.slug, park]));
   const visitsByParkSlug = new Map<string, FrontendTimelineVisit[]>();
 
   for (const visit of visits) {
-    const matchingNationalPark = nationalParksBySlug.get(visit.park.slug);
-
-    if (!matchingNationalPark && visit.park.typeLabel !== NATIONAL_PARK_TYPE_LABEL) {
-      continue;
-    }
-
     const groupedVisits = visitsByParkSlug.get(visit.park.slug) ?? [];
     groupedVisits.push(visit);
     visitsByParkSlug.set(visit.park.slug, groupedVisits);
@@ -576,28 +590,25 @@ export const buildVisitedNationalParksModel = (
     .map(([parkSlug, parkVisits]) => {
       const sortedVisits = [...parkVisits].sort(compareVisitsByFirstMagnet);
       const firstVisit = sortedVisits[0];
-      const latestVisit = sortedVisits[sortedVisits.length - 1];
 
-      if (!firstVisit || !latestVisit) {
+      if (!firstVisit) {
         return null;
       }
 
-      const parkSummary = nationalParksBySlug.get(parkSlug);
+      const parkSummary = parksBySlug.get(parkSlug);
 
       return {
         firstVisit,
         laterVisits: sortedVisits.slice(1),
-        latestVisit,
         order: 0,
         park: {
           logoUrl: parkSummary?.logo?.url ?? null,
           name: firstVisit.park.name,
           slug: parkSlug,
         },
-        totalVisits: sortedVisits.length,
-      } satisfies PublicVisitedNationalParkItem;
+      } satisfies PublicVisitedMagnetParkItem;
     })
-    .filter((park): park is PublicVisitedNationalParkItem => park !== null)
+    .filter((park): park is PublicVisitedMagnetParkItem => park !== null)
     .sort(
       (left, right) =>
         compareVisitsByFirstMagnet(left.firstVisit, right.firstVisit) ||
@@ -608,19 +619,78 @@ export const buildVisitedNationalParksModel = (
       order: index + 1,
     }));
 
-  const totalNationalParks = Math.max(nationalParks.length, visitedParks.length);
-  const visitedNationalParkCount = visitedParks.length;
+  const totalParks = Math.max(parks.length, visitedParks.length);
+  const visitedParkCount = visitedParks.length;
   const progressPercent =
-    totalNationalParks === 0
-      ? 0
-      : Math.min(100, Math.round((visitedNationalParkCount / totalNationalParks) * 100));
+    totalParks === 0 ? 0 : Math.min(100, Math.round((visitedParkCount / totalParks) * 100));
 
   return {
     firstMagnetEarnedOn: visitedParks[0]?.firstVisit.visitedOn ?? null,
     latestMagnetEarnedOn: visitedParks[visitedParks.length - 1]?.firstVisit.visitedOn ?? null,
     progressPercent,
-    totalNationalParks,
-    visitedNationalParkCount,
+    totalParks,
+    visitedParkCount,
     visitedParks,
+  };
+};
+
+export const buildVisitedMagnetParksModel = (
+  visits: FrontendTimelineVisit[],
+  parks: PublicVisitsMagnetSummaryPark[],
+): PublicVisitedMagnetParksModel => {
+  const nationalParks = parks.filter((park) => park.category.slug === NATIONAL_PARK_CATEGORY_SLUG);
+  const nationalParksBySlug = new Map(nationalParks.map((park) => [park.slug, park]));
+  const otherMagnetPlaces = parks.filter(
+    (park) => park.category.slug !== NATIONAL_PARK_CATEGORY_SLUG && park.hasMagnet,
+  );
+  const otherMagnetPlacesBySlug = new Map(otherMagnetPlaces.map((park) => [park.slug, park]));
+  const nationalParkVisits: FrontendTimelineVisit[] = [];
+  const otherMagnetPlaceVisits: FrontendTimelineVisit[] = [];
+
+  for (const visit of visits) {
+    const matchingNationalPark = nationalParksBySlug.get(visit.park.slug);
+
+    if (matchingNationalPark || visit.park.typeLabel === NATIONAL_PARK_TYPE_LABEL) {
+      nationalParkVisits.push(visit);
+      continue;
+    }
+
+    if (otherMagnetPlacesBySlug.has(visit.park.slug)) {
+      otherMagnetPlaceVisits.push(visit);
+    }
+  }
+
+  const nationalParksGroup = buildVisitedMagnetParkGroup({
+    parks: nationalParks,
+    visits: nationalParkVisits,
+  });
+  const otherMagnetPlacesGroup = buildVisitedMagnetParkGroup({
+    parks: otherMagnetPlaces,
+    visits: otherMagnetPlaceVisits,
+  });
+  const visitedParkSlugs = new Set([
+    ...nationalParksGroup.visitedParks.map((park) => park.park.slug),
+    ...otherMagnetPlacesGroup.visitedParks.map((park) => park.park.slug),
+  ]);
+  const missingParks = [
+    ...nationalParks
+      .filter((park) => !visitedParkSlugs.has(park.slug))
+      .sort(compareParksAlphabetically),
+    ...otherMagnetPlaces
+      .filter((park) => !visitedParkSlugs.has(park.slug))
+      .sort(compareParksAlphabetically),
+  ].map((park) => ({
+    park: {
+      logoUrl: park.logo?.url ?? null,
+      name: park.name,
+      slug: park.slug,
+      typeLabel: getParkTypeDisplayName(park),
+    },
+  }));
+
+  return {
+    missingParks,
+    nationalParks: nationalParksGroup,
+    otherMagnetPlaces: otherMagnetPlacesGroup,
   };
 };

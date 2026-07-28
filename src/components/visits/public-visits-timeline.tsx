@@ -22,7 +22,7 @@ import { formatFinnishDate, formatFinnishDateRange } from "@/lib/fi-date";
 import {
   createParkVisitHref,
   createPublicVisitsHref,
-  type PublicVisitedNationalParksModel,
+  type PublicVisitedMagnetParksModel,
   type PublicVisitMonthOption,
   type PublicVisitsMapMarker,
   type PublicVisitsView,
@@ -39,8 +39,8 @@ interface PublicVisitsTimelineProps {
   error?: string | null;
   filteredCount: number;
   mapMarkers?: PublicVisitsMapMarker[];
+  magnetParksModel?: PublicVisitedMagnetParksModel;
   monthOptions: PublicVisitMonthOption[];
-  nationalParksModel?: PublicVisitedNationalParksModel;
   sections: PublicVisitYearSection[];
   selectedMonth: number | null;
   selectedYear: number | null;
@@ -64,8 +64,8 @@ const PublicVisitsTimeline = ({
   error = null,
   filteredCount,
   mapMarkers = [],
+  magnetParksModel,
   monthOptions,
-  nationalParksModel,
   sections,
   selectedMonth,
   selectedYear,
@@ -659,8 +659,8 @@ const PublicVisitsTimeline = ({
         </section>
       )}
 
-      {isParksView && nationalParksModel ? (
-        <PublicVisitedNationalParks model={nationalParksModel} />
+      {isParksView && magnetParksModel ? (
+        <PublicVisitedNationalParks model={magnetParksModel} />
       ) : null}
 
       {filteredCount > 0 && view === "map" && (

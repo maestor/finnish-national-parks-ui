@@ -297,6 +297,7 @@ export interface paths {
                                 };
                                 displayTypeName?: string | null;
                                 establishmentYear: number | null;
+                                hasMagnet: boolean;
                                 locationLabel: string;
                                 logo: {
                                     key: string;
@@ -565,6 +566,7 @@ export interface paths {
                             };
                             displayTypeName?: string | null;
                             establishmentYear: number | null;
+                            hasMagnet: boolean;
                             locationLabel: string;
                             logo: {
                                 key: string;
@@ -664,6 +666,7 @@ export interface paths {
                         areaKm2?: number | null;
                         displayTypeName?: string | null;
                         establishmentYear?: number | null;
+                        hasMagnet?: boolean;
                         locationLabel?: string;
                         markerPoint?: {
                             lat: number;
@@ -700,6 +703,7 @@ export interface paths {
                             };
                             displayTypeName?: string | null;
                             establishmentYear: number | null;
+                            hasMagnet: boolean;
                             locationLabel: string;
                             logo: {
                                 key: string;
@@ -1184,6 +1188,7 @@ export interface paths {
                                 };
                                 displayTypeName?: string | null;
                                 establishmentYear: number | null;
+                                hasMagnet: boolean;
                                 locationLabel: string;
                                 logo: {
                                     key: string;
