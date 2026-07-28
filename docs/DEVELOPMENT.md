@@ -191,6 +191,8 @@ Route naming caveat:
 
 - Park logos and visit images are served from the backend's Cloudflare R2 bucket.
 - `next/image` optimization is enabled through the shared `AppImage` wrapper; the only allowed remote origin is the R2 host in `next.config.ts` `images.remotePatterns`.
+- `next.config.ts` keeps optimized-image cache entries alive for at least 31 days (`images.minimumCacheTTL = 2678400`) and constrains generated widths/qualities to the app's actual usage (`deviceSizes`, `imageSizes`, `qualities`, `formats`) so Vercel does not generate unnecessary variants.
+- Small local social icons, park logos, and backend-provided visit thumbnail URLs opt out of Vercel optimization with `unoptimized` because they are already tiny or pre-sized. Keep large lightbox images optimized unless the backend starts serving its own stable display-sized derivatives.
 - If the backend moves image hosting (for example to a custom R2 domain), update `next.config.ts` and this note in the same change. Do not widen the allowlist with wildcards.
 
 ### Public Page Data Strategy

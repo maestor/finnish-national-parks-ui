@@ -81,6 +81,7 @@ export const HomeSocialLinks = ({
                   aria-hidden="true"
                   width={iconWidth}
                   height={iconHeight}
+                  unoptimized
                   className="h-5 w-5 object-contain dark:hidden"
                 />
                 <AppImage
@@ -89,6 +90,7 @@ export const HomeSocialLinks = ({
                   aria-hidden="true"
                   width={iconWidth}
                   height={iconHeight}
+                  unoptimized
                   className="hidden h-5 w-5 object-contain dark:block"
                 />
               </span>

@@ -147,6 +147,7 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
                   fill
                   sizes="192px"
                   className="object-contain"
+                  unoptimized
                 />
               </div>
             )}

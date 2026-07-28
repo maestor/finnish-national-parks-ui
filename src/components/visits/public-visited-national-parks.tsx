@@ -104,6 +104,7 @@ const MagnetGroupCards = ({
                       fill
                       sizes="(max-width: 639px) 80px, 112px"
                       src={park.park.logoUrl}
+                      unoptimized
                     />
                   </div>
                 ) : null}
@@ -218,6 +219,7 @@ const MissingMagnetParks = ({
                       fill
                       sizes="64px"
                       src={park.park.logoUrl}
+                      unoptimized
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center">
