@@ -410,6 +410,7 @@ export const VisitImageGallery = ({
                         sizes="(max-width: 640px) 112px, 144px"
                         className="object-cover"
                         draggable={false}
+                        unoptimized
                       />
                     </div>
                   </button>

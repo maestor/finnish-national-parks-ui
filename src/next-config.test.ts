@@ -9,6 +9,14 @@ describe("next.config", () => {
   });
 
   it("allowlists only the Cloudflare R2 image host for next/image", () => {
+    expect(nextConfig.images).toMatchObject({
+      deviceSizes: [640, 750, 828, 1080, 1200, 1536],
+      formats: ["image/webp"],
+      imageSizes: [64, 80, 112, 144, 192],
+      minimumCacheTTL: 2_678_400,
+      qualities: [75],
+    });
+
     expect(nextConfig.images?.remotePatterns).toEqual([
       {
         protocol: "https",

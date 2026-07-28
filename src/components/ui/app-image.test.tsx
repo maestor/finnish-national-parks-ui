@@ -43,4 +43,26 @@ describe("AppImage", () => {
     expect(imageProps?.unoptimized).toBeUndefined();
     expect(imageProps?.loader).toBeUndefined();
   });
+
+  it("passes through explicit unoptimized opt-outs", () => {
+    render(
+      <AppImage
+        src="https://example.com/thumb.jpg"
+        alt="Nuuksio thumbnail"
+        width={112}
+        height={112}
+        unoptimized
+      />,
+    );
+
+    const imageProps = nextImageMock.mock.calls[1]?.[0] as
+      | {
+          loader?: unknown;
+          unoptimized?: boolean;
+        }
+      | undefined;
+
+    expect(imageProps?.unoptimized).toBe(true);
+    expect(imageProps?.loader).toBeUndefined();
+  });
 });
