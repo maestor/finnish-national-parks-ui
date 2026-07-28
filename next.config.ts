@@ -5,9 +5,9 @@ import { legacyAppRedirects } from "./src/lib/routes";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
-// All park logos and visit images are served from the backend's Cloudflare R2
-// bucket. The browser also PUTs directly to this origin during presigned
-// uploads, so it must stay allowed in both images.remotePatterns and the CSP.
+// Public park logos can now load through the backend origin before redirecting
+// to Cloudflare R2, while visit images and uploads still hit R2 directly.
+// Keep both origins allowlisted in the image policy and remote patterns.
 const R2_IMAGE_ORIGIN = "https://9a805f60ebd517a6d6ee33654b4f5a4d.r2.cloudflarestorage.com";
 const OSM_TILE_ORIGIN = "https://tile.openstreetmap.org";
 
@@ -24,11 +24,26 @@ const getMapStyleOrigin = () => {
   }
 };
 
+const getPublicApiOrigin = () => {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (!apiUrl) {
+    return null;
+  }
+
+  try {
+    return new URL(apiUrl).origin;
+  } catch {
+    return null;
+  }
+};
+
 const buildContentSecurityPolicy = (isProduction: boolean) => {
   const mapStyleOrigin = getMapStyleOrigin();
+  const publicApiOrigin = getPublicApiOrigin();
   const externalFetchOrigins = [
     R2_IMAGE_ORIGIN,
     OSM_TILE_ORIGIN,
+    ...(publicApiOrigin ? [publicApiOrigin] : []),
     ...(mapStyleOrigin ? [mapStyleOrigin] : []),
   ].join(" ");
 
@@ -59,6 +74,7 @@ const buildContentSecurityPolicy = (isProduction: boolean) => {
 };
 
 const isProduction = process.env.NODE_ENV === "production";
+const publicApiOrigin = getPublicApiOrigin();
 
 const nextConfig: NextConfig = {
   // The /serwist/* route is prerendered at build time, but if it is ever
@@ -68,8 +84,8 @@ const nextConfig: NextConfig = {
     "/serwist*": ["./next.config.*", "./node_modules/next/dist/server/config*.js"],
   },
   images: {
-    // Keep this allowlist to the single R2 origin; if the backend moves image
-    // hosting (for example to a custom R2 domain), update R2_IMAGE_ORIGIN and
+    // Public logos can load from the backend origin before redirecting to R2.
+    // If either image origin changes, update this allowlist and
     // docs/DEVELOPMENT.md in the same change.
     deviceSizes: [640, 750, 828, 1080, 1200, 1536],
     formats: ["image/webp"],
@@ -77,10 +93,8 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 2_678_400,
     qualities: [75],
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: new URL(R2_IMAGE_ORIGIN).hostname,
-      },
+      new URL(R2_IMAGE_ORIGIN),
+      ...(publicApiOrigin ? [new URL(publicApiOrigin)] : []),
     ],
   },
   headers: async () => [

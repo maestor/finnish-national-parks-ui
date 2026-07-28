@@ -189,18 +189,19 @@ Route naming caveat:
 
 ### Image Hosting
 
-- Park logos and visit images are served from the backend's Cloudflare R2 bucket.
-- `next/image` optimization is enabled through the shared `AppImage` wrapper; the only allowed remote origin is the R2 host in `next.config.ts` `images.remotePatterns`.
+- Park logos and visit images ultimately live in the backend's Cloudflare R2 bucket.
+- Public park logos may now load through the backend origin first (`NEXT_PUBLIC_API_URL`) before the API redirects to R2, so `next.config.ts` allowlists both the configured backend origin and the R2 host for image loading.
 - `next.config.ts` keeps optimized-image cache entries alive for at least 31 days (`images.minimumCacheTTL = 2678400`) and constrains generated widths/qualities to the app's actual usage (`deviceSizes`, `imageSizes`, `qualities`, `formats`) so Vercel does not generate unnecessary variants.
 - Small local social icons, park logos, and backend-provided visit thumbnail URLs opt out of Vercel optimization with `unoptimized` because they are already tiny or pre-sized. Keep large lightbox images optimized unless the backend starts serving its own stable display-sized derivatives.
-- If the backend moves image hosting (for example to a custom R2 domain), update `next.config.ts` and this note in the same change. Do not widen the allowlist with wildcards.
+- If the backend moves image hosting or its public origin, update `next.config.ts` and this note in the same change. Do not widen the allowlist with wildcards.
 
 ### Public Page Data Strategy
 
 - The public home page (`/`) reads `GET /api/home-summary`.
 - The public map page (`/paikat`) reads `GET /api/map-summary`.
 - The public visits page (`/kaynnit`) reads `GET /api/visits-timeline`; its optional map view (`?view=map`) additionally reads `GET /api/map-summary` for marker coordinates, and its visited national parks view (`?view=parks`) joins the same map summary to the visit timeline so park logos and the current total national park count stay available server-side.
-- Public park detail pages still read `GET /api/parks/{slug}` and `GET /api/parks/{slug}/visits`, but those reads now use cacheable public fetches by default and fall back to an authenticated request when the backend requires an admin session for a hidden park.
+- Public park detail pages still read `GET /api/parks/{slug}` and `GET /api/parks/{slug}/visits`, but those reads now use `cache: "no-store"` because the payload still contains expiring presigned asset URLs (for example visit images and brochure PDFs). Hidden parks still fall back to an authenticated request.
+- Public trip detail pages also use `cache: "no-store"` for the same reason until the backend serves stable public asset URLs for trip and visit media.
 - Admin-only quick links on public pages are resolved client-side with `useAuth`, so the page HTML can stay cache-friendly while signed-in users still see edit and add-visit affordances after hydration.
 - Visit and public park mutations call the local Next.js route `POST /api/revalidate-public-cache` so the frontend can invalidate cached public pages immediately after a successful write.
 
