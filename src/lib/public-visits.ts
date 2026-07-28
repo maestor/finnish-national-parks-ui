@@ -42,9 +42,14 @@ export interface PublicVisitsTimelineModel {
   selectedYear: number | null;
 }
 
-export type PublicVisitsView = "timeline" | "map";
+export type PublicVisitsView = "timeline" | "map" | "parks";
 
 export type PublicVisitsMapPark = Pick<FilterableMapPark, "markerPoint" | "name" | "slug">;
+
+export type PublicVisitsNationalParkSummaryPark = Pick<
+  FilterableMapPark,
+  "category" | "logo" | "name" | "slug"
+>;
 
 export interface PublicVisitsMapMarker {
   coordinates: {
@@ -55,6 +60,28 @@ export interface PublicVisitsMapMarker {
   slug: string;
   visitCount: number;
   years: number[];
+}
+
+export interface PublicVisitedNationalParkItem {
+  firstVisit: FrontendTimelineVisit;
+  laterVisits: FrontendTimelineVisit[];
+  latestVisit: FrontendTimelineVisit;
+  order: number;
+  park: {
+    logoUrl: string | null;
+    name: string;
+    slug: string;
+  };
+  totalVisits: number;
+}
+
+export interface PublicVisitedNationalParksModel {
+  firstMagnetEarnedOn: string | null;
+  latestMagnetEarnedOn: string | null;
+  progressPercent: number;
+  totalNationalParks: number;
+  visitedNationalParkCount: number;
+  visitedParks: PublicVisitedNationalParkItem[];
 }
 
 export type FrontendTimelineVisit =
@@ -81,6 +108,9 @@ export interface PublicVisitTimelineTripItem {
 }
 
 export type PublicVisitTimelineItem = PublicVisitTimelineTripItem | PublicVisitTimelineVisitItem;
+
+const NATIONAL_PARK_CATEGORY_SLUG = "national-park";
+const NATIONAL_PARK_TYPE_LABEL = "Kansallispuisto";
 
 const MONTH_FILTER_LABEL_FORMATTER = new Intl.DateTimeFormat("fi-FI", {
   month: "short",
@@ -203,8 +233,19 @@ export const fetchVisitsTimeline = async (): Promise<{ visits: FrontendTimelineV
     },
   });
 
-export const resolvePublicVisitsView = (value?: string | string[]): PublicVisitsView =>
-  normalizeSearchParam(value) === "map" ? "map" : "timeline";
+export const resolvePublicVisitsView = (value?: string | string[]): PublicVisitsView => {
+  const normalizedValue = normalizeSearchParam(value);
+
+  if (normalizedValue === "map") {
+    return "map";
+  }
+
+  if (normalizedValue === "parks") {
+    return "parks";
+  }
+
+  return "timeline";
+};
 
 export const createPublicVisitsHref = ({
   month,
@@ -217,16 +258,20 @@ export const createPublicVisitsHref = ({
 }) => {
   const searchParams = new URLSearchParams();
 
-  if (typeof year === "number") {
+  if (view !== "parks" && typeof year === "number") {
     searchParams.set("year", String(year));
   }
 
-  if (view !== "map" && typeof year === "number" && typeof month === "number") {
+  if (view !== "map" && view !== "parks" && typeof year === "number" && typeof month === "number") {
     searchParams.set("month", String(month));
   }
 
   if (view === "map") {
     searchParams.set("view", "map");
+  }
+
+  if (view === "parks") {
+    searchParams.set("view", "parks");
   }
 
   const query = searchParams.toString();
@@ -500,4 +545,82 @@ export const buildPublicVisitsMapModel = (
       (left, right) =>
         right.visitCount - left.visitCount || left.name.localeCompare(right.name, "fi-FI"),
     );
+};
+
+const compareVisitsByFirstMagnet = (left: FrontendTimelineVisit, right: FrontendTimelineVisit) =>
+  left.visitedOn.localeCompare(right.visitedOn) ||
+  left.createdAt.localeCompare(right.createdAt) ||
+  left.id - right.id;
+
+export const buildVisitedNationalParksModel = (
+  visits: FrontendTimelineVisit[],
+  parks: PublicVisitsNationalParkSummaryPark[],
+): PublicVisitedNationalParksModel => {
+  const nationalParks = parks.filter((park) => park.category.slug === NATIONAL_PARK_CATEGORY_SLUG);
+  const nationalParksBySlug = new Map(nationalParks.map((park) => [park.slug, park]));
+  const visitsByParkSlug = new Map<string, FrontendTimelineVisit[]>();
+
+  for (const visit of visits) {
+    const matchingNationalPark = nationalParksBySlug.get(visit.park.slug);
+
+    if (!matchingNationalPark && visit.park.typeLabel !== NATIONAL_PARK_TYPE_LABEL) {
+      continue;
+    }
+
+    const groupedVisits = visitsByParkSlug.get(visit.park.slug) ?? [];
+    groupedVisits.push(visit);
+    visitsByParkSlug.set(visit.park.slug, groupedVisits);
+  }
+
+  const visitedParks = [...visitsByParkSlug.entries()]
+    .map(([parkSlug, parkVisits]) => {
+      const sortedVisits = [...parkVisits].sort(compareVisitsByFirstMagnet);
+      const firstVisit = sortedVisits[0];
+      const latestVisit = sortedVisits[sortedVisits.length - 1];
+
+      if (!firstVisit || !latestVisit) {
+        return null;
+      }
+
+      const parkSummary = nationalParksBySlug.get(parkSlug);
+
+      return {
+        firstVisit,
+        laterVisits: sortedVisits.slice(1),
+        latestVisit,
+        order: 0,
+        park: {
+          logoUrl: parkSummary?.logo?.url ?? null,
+          name: firstVisit.park.name,
+          slug: parkSlug,
+        },
+        totalVisits: sortedVisits.length,
+      } satisfies PublicVisitedNationalParkItem;
+    })
+    .filter((park): park is PublicVisitedNationalParkItem => park !== null)
+    .sort(
+      (left, right) =>
+        compareVisitsByFirstMagnet(left.firstVisit, right.firstVisit) ||
+        left.park.name.localeCompare(right.park.name, "fi-FI"),
+    )
+    .map((park, index) => ({
+      ...park,
+      order: index + 1,
+    }));
+
+  const totalNationalParks = Math.max(nationalParks.length, visitedParks.length);
+  const visitedNationalParkCount = visitedParks.length;
+  const progressPercent =
+    totalNationalParks === 0
+      ? 0
+      : Math.min(100, Math.round((visitedNationalParkCount / totalNationalParks) * 100));
+
+  return {
+    firstMagnetEarnedOn: visitedParks[0]?.firstVisit.visitedOn ?? null,
+    latestMagnetEarnedOn: visitedParks[visitedParks.length - 1]?.firstVisit.visitedOn ?? null,
+    progressPercent,
+    totalNationalParks,
+    visitedNationalParkCount,
+    visitedParks,
+  };
 };

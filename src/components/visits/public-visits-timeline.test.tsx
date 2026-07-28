@@ -2,8 +2,10 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   buildPublicVisitsTimelineModel,
+  buildVisitedNationalParksModel,
   type FrontendTimelineVisit,
   type PublicVisitsMapMarker,
+  type PublicVisitsNationalParkSummaryPark,
   type PublicVisitsView,
 } from "@/lib/public-visits";
 import { PublicVisitsTimeline } from "./public-visits-timeline";
@@ -27,9 +29,16 @@ vi.mock("@/components/visits/lazy-visits-map", () => ({
 const renderTimeline = (
   visits: FrontendTimelineVisit[],
   selection: { selectedYear: number | null; selectedMonth: number | null },
-  extras?: { view?: PublicVisitsView; mapMarkers?: PublicVisitsMapMarker[] },
+  extras?: {
+    view?: PublicVisitsView;
+    mapMarkers?: PublicVisitsMapMarker[];
+    nationalParkSummaryParks?: PublicVisitsNationalParkSummaryPark[];
+  },
 ) => {
   const model = buildPublicVisitsTimelineModel(visits, selection);
+  const nationalParksModel = extras?.nationalParkSummaryParks
+    ? buildVisitedNationalParksModel(visits, extras.nationalParkSummaryParks)
+    : undefined;
 
   return render(
     <PublicVisitsTimeline
@@ -42,6 +51,7 @@ const renderTimeline = (
       totalCount={visits.length}
       view={extras?.view}
       mapMarkers={extras?.mapMarkers}
+      nationalParksModel={nationalParksModel}
     />,
   );
 };
@@ -122,6 +132,37 @@ describe("PublicVisitsTimeline", () => {
         slug: "oulanka",
         typeLabel: "Kansallispuisto",
       },
+    },
+  ];
+
+  const nationalParkSummaryParks: PublicVisitsNationalParkSummaryPark[] = [
+    {
+      slug: "nuuksio",
+      name: "Nuuksio",
+      category: { name: "Kansallispuistot", slug: "national-park" },
+      logo: {
+        key: "nuuksio-logo",
+        updatedAt: "2024-01-01T00:00:00Z",
+        url: "https://example.com/nuuksio-logo.png",
+      },
+    },
+    {
+      slug: "pallas-yllastunturi",
+      name: "Pallas-Yllastunturi",
+      category: { name: "Kansallispuistot", slug: "national-park" },
+      logo: null,
+    },
+    {
+      slug: "kolovesi",
+      name: "Kolovesi",
+      category: { name: "Kansallispuistot", slug: "national-park" },
+      logo: null,
+    },
+    {
+      slug: "oulanka",
+      name: "Oulanka",
+      category: { name: "Kansallispuistot", slug: "national-park" },
+      logo: null,
     },
   ];
 
@@ -565,6 +606,129 @@ describe("PublicVisitsTimeline", () => {
     expect(mockPush).toHaveBeenLastCalledWith("/kaynnit?year=2025&view=map", {
       scroll: false,
     });
+  });
+
+  it("renders the national parks view with a simplified summary and first-visit emphasis", () => {
+    renderTimeline(
+      [
+        {
+          id: 1,
+          visitedOn: "2024-06-15",
+          route: "Punarinnankierros",
+          createdAt: "2024-06-15T10:00:00Z",
+          imageCount: 0,
+          trip: null,
+          tripStopOrder: null,
+          park: {
+            name: "Nuuksio",
+            slug: "nuuksio",
+            typeLabel: "Kansallispuisto",
+          },
+        },
+        {
+          id: 2,
+          visitedOn: "2025-07-15",
+          route: null,
+          createdAt: "2025-07-15T10:00:00Z",
+          imageCount: 1,
+          trip: null,
+          tripStopOrder: null,
+          park: {
+            name: "Nuuksio",
+            slug: "nuuksio",
+            typeLabel: "Kansallispuisto",
+          },
+        },
+        {
+          id: 3,
+          visitedOn: "2024-08-10",
+          route: null,
+          createdAt: "2024-08-10T10:00:00Z",
+          imageCount: 1,
+          trip: null,
+          tripStopOrder: null,
+          park: {
+            name: "Pallas-Yllastunturi",
+            slug: "pallas-yllastunturi",
+            typeLabel: "Kansallispuisto",
+          },
+        },
+      ],
+      { selectedYear: null, selectedMonth: null },
+      {
+        view: "parks",
+        nationalParkSummaryParks,
+      },
+    );
+
+    const viewNav = screen.getByRole("navigation", { name: "visits.views.label" });
+    expect(within(viewNav).getByRole("link", { name: "visits.views.parks" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(within(viewNav).getByRole("link", { name: "visits.views.timeline" })).toHaveAttribute(
+      "href",
+      "/kaynnit",
+    );
+    expect(within(viewNav).getByRole("link", { name: "visits.views.map" })).toHaveAttribute(
+      "href",
+      "/kaynnit?view=map",
+    );
+
+    expect(
+      screen.queryByRole("navigation", { name: "visits.filters.yearsLabel" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("visits.filters.yearSelectLabel")).not.toBeInTheDocument();
+    expect(screen.queryByText("visits.filters.title")).not.toBeInTheDocument();
+
+    expect(
+      screen.getByRole("progressbar", { name: "visits.parks.summary.progressLabel" }),
+    ).toHaveAttribute("aria-valuenow", "50");
+    expect(screen.getByText("2 / 4")).toBeInTheDocument();
+    expect(screen.getByText("visits.parks.summary.firstPark")).toBeInTheDocument();
+    expect(screen.getByText("visits.parks.summary.latestPark")).toBeInTheDocument();
+    expect(screen.queryByText("visits.parks.summary.progressSuffix")).not.toBeInTheDocument();
+    expect(screen.queryByText("visits.parks.summary.progressMeta")).not.toBeInTheDocument();
+
+    const nuuksioLogo = screen.getByRole("img", { name: "Nuuksio" });
+    expect(nuuksioLogo).toHaveAttribute("src", "https://example.com/nuuksio-logo.png");
+    const nuuksioLogoWrapper = nuuksioLogo.parentElement;
+
+    if (!(nuuksioLogoWrapper instanceof HTMLElement)) {
+      throw new Error("Expected Nuuksio logo wrapper");
+    }
+
+    expect(nuuksioLogoWrapper).toHaveClass("h-14", "w-20", "sm:h-20", "sm:w-28");
+    expect(nuuksioLogoWrapper).not.toHaveClass("hidden");
+    expect(screen.getByText("1.")).toBeInTheDocument();
+    expect(screen.getByText("2.")).toBeInTheDocument();
+    expect(screen.getAllByText("visits.parks.item.firstVisit")).toHaveLength(2);
+    expect(screen.getByText("visits.parks.item.otherVisits")).toBeInTheDocument();
+    const nuuksioLink = screen.getByRole("link", { name: /Nuuksio/ });
+    expect(nuuksioLink).toHaveAttribute("href", "/paikka/nuuksio?visit=1#visit-history");
+    const nuuksioCard = nuuksioLink.closest("article");
+
+    if (!(nuuksioCard instanceof HTMLElement)) {
+      throw new Error("Expected Nuuksio park card");
+    }
+
+    const nuuksioDetailsStack =
+      within(nuuksioCard).getByText("15.6.2024").parentElement?.parentElement;
+
+    if (!(nuuksioDetailsStack instanceof HTMLElement)) {
+      throw new Error("Expected Nuuksio details stack");
+    }
+
+    expect(nuuksioDetailsStack).toHaveClass("w-full", "space-y-5");
+    expect(within(nuuksioCard).getByText("15.6.2024")).toBeInTheDocument();
+
+    const pallasCard = screen.getByRole("link", { name: /Pallas-Yllastunturi/ }).closest("article");
+
+    if (!(pallasCard instanceof HTMLElement)) {
+      throw new Error("Expected Pallas-Yllastunturi park card");
+    }
+
+    expect(within(pallasCard).queryByText("visits.parks.item.otherVisits")).not.toBeInTheDocument();
   });
 
   it("renders grouped trip cards with summary badges and nested visit links", () => {

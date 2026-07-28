@@ -6,6 +6,7 @@ import type { FilterableMapPark } from "@/lib/parks";
 import {
   buildPublicVisitsMapModel,
   buildPublicVisitsTimelineModel,
+  buildVisitedNationalParksModel,
   type FrontendTimelineVisit,
   fetchVisitsTimeline,
   resolvePublicVisitsFilters,
@@ -38,7 +39,7 @@ const PublicVisitsPage = async ({ searchParams }: PublicVisitsPageProps) => {
   let error: string | null = null;
 
   try {
-    if (view === "map") {
+    if (view === "map" || view === "parks") {
       const [timelineResponse, mapSummary] = await Promise.all([
         fetchVisitsTimeline(),
         fetchMapSummary(),
@@ -72,6 +73,8 @@ const PublicVisitsPage = async ({ searchParams }: PublicVisitsPageProps) => {
           selectedMonth: null,
         })
       : [];
+  const nationalParksModel =
+    view === "parks" ? buildVisitedNationalParksModel(visits, mapParks) : undefined;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -85,6 +88,7 @@ const PublicVisitsPage = async ({ searchParams }: PublicVisitsPageProps) => {
         totalCount={visits.length}
         view={view}
         mapMarkers={mapMarkers}
+        nationalParksModel={nationalParksModel}
         error={error}
       />
     </div>
