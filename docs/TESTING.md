@@ -96,6 +96,11 @@ npm run test:e2e:all
 
 Playwright automatically starts the dev server (`npm run dev`) if not already running.
 
+**Responsive verification note:**
+
+- Treat `354x708` CSS pixels as the smallest supported mobile viewport for this app. It matches the team's OnePlus Nord 3 baseline where small-screen layout issues tend to surface first.
+- When a change affects mobile layout, sticky navigation, text wrapping, spacing, or overflow, verify the affected route at `354x708` in addition to any larger mobile preset.
+
 ## Coverage Baseline
 
 Use `npm run test:coverage` when you want the current coverage baseline for the Vitest suite.
