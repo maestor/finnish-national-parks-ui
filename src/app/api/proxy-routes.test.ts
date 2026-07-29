@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { TRIP_PLANNER_REQUEST_TIMEOUT_MS } from "@/lib/trip-planner-timeout";
+import {
+  TRIP_PLANNER_NEARBY_REQUEST_TIMEOUT_MS,
+  TRIP_PLANNER_SEARCH_REQUEST_TIMEOUT_MS,
+} from "@/lib/trip-planner-timeout";
 
 const { proxyBackendRequestMock } = vi.hoisted(() => ({
   proxyBackendRequestMock: vi.fn(async () => new Response(null, { status: 204 })),
@@ -253,7 +256,7 @@ describe("api proxy routes", () => {
     await postTripPlannerSearch(request);
 
     expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/trip-planner/search", {
-      timeoutMs: TRIP_PLANNER_REQUEST_TIMEOUT_MS,
+      timeoutMs: TRIP_PLANNER_SEARCH_REQUEST_TIMEOUT_MS,
     });
   });
 
@@ -265,7 +268,7 @@ describe("api proxy routes", () => {
     await postTripPlannerNearby(request);
 
     expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/trip-planner/nearby", {
-      timeoutMs: TRIP_PLANNER_REQUEST_TIMEOUT_MS,
+      timeoutMs: TRIP_PLANNER_NEARBY_REQUEST_TIMEOUT_MS,
     });
   });
 

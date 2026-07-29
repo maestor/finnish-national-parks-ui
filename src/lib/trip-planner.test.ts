@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { TRIP_PLANNER_REQUEST_TIMEOUT_MS } from "./trip-planner-timeout";
+import {
+  TRIP_PLANNER_NEARBY_REQUEST_TIMEOUT_MS,
+  TRIP_PLANNER_SEARCH_REQUEST_TIMEOUT_MS,
+} from "./trip-planner-timeout";
 
 const { apiFetchMock } = vi.hoisted(() => ({
   apiFetchMock: vi.fn(),
@@ -33,7 +36,7 @@ describe("trip planner api helpers", () => {
       }),
     ).resolves.toBe(response);
 
-    expect(timeoutSpy).toHaveBeenCalledWith(TRIP_PLANNER_REQUEST_TIMEOUT_MS);
+    expect(timeoutSpy).toHaveBeenCalledWith(TRIP_PLANNER_SEARCH_REQUEST_TIMEOUT_MS);
     expect(apiFetchMock).toHaveBeenCalledWith("/api/trip-planner/search", {
       method: "POST",
       body: JSON.stringify({
@@ -58,7 +61,7 @@ describe("trip planner api helpers", () => {
       }),
     ).resolves.toBe(response);
 
-    expect(timeoutSpy).toHaveBeenCalledWith(TRIP_PLANNER_REQUEST_TIMEOUT_MS);
+    expect(timeoutSpy).toHaveBeenCalledWith(TRIP_PLANNER_NEARBY_REQUEST_TIMEOUT_MS);
     expect(apiFetchMock).toHaveBeenCalledWith("/api/trip-planner/nearby", {
       method: "POST",
       body: JSON.stringify({
