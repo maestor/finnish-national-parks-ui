@@ -2,6 +2,12 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { YearReviewStory } from "./year-review-story";
 
+vi.mock("@/components/ui/app-image", () => ({
+  AppImage: ({ alt, src }: { alt: string; src: string }) => (
+    <div aria-label={alt} data-src={src} role="img" />
+  ),
+}));
+
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string, values?: Record<string, string | number>) => {
     if (key === "story.introTitle") {
@@ -127,8 +133,27 @@ const fallbackStory = {
     },
     {
       kind: "photo-highlight" as const,
+      featuredImage: {
+        alt: "Kuva Repovedeltä",
+        fullHeight: 1200,
+        fullUrl: "https://images.example/repovesi-full.jpg",
+        fullWidth: 1600,
+        thumbHeight: 900,
+        thumbUrl: "https://images.example/repovesi-thumb.jpg",
+        thumbWidth: 1200,
+      },
       totalImageCount: 3,
-      visit: null,
+      visit: {
+        id: 7,
+        imageCount: 3,
+        park: {
+          name: "Repovesi",
+          slug: "repovesi",
+        },
+        route: null,
+        trip: null,
+        visitedOn: "2025-08-21",
+      },
     },
     {
       kind: "profile" as const,
@@ -200,6 +225,39 @@ const explorationStory = {
   ),
 };
 
+const visitOnlyPhotoStory = {
+  ...fallbackStory,
+  cards: fallbackStory.cards.map((card) =>
+    card.kind === "photo-highlight"
+      ? {
+          ...card,
+          featuredImage: null,
+        }
+      : card,
+  ),
+};
+
+const imageOnlyPhotoStory = {
+  ...fallbackStory,
+  cards: fallbackStory.cards.map((card) =>
+    card.kind === "photo-highlight"
+      ? {
+          ...card,
+          featuredImage: {
+            alt: null,
+            fullHeight: 1200,
+            fullUrl: "https://images.example/highlight-full.jpg",
+            fullWidth: 1600,
+            thumbHeight: 900,
+            thumbUrl: "https://images.example/highlight-thumb.jpg",
+            thumbWidth: 1200,
+          },
+          visit: null,
+        }
+      : card,
+  ),
+};
+
 describe("YearReviewStory", () => {
   it("renders the story cards with milestone and seasonal details", () => {
     render(
@@ -265,10 +323,25 @@ describe("YearReviewStory", () => {
   it("renders fallback text for cards with missing optional details", () => {
     render(<YearReviewStory story={fallbackStory} mode="preview" />);
 
-    expect(screen.getByText("Repovesi")).toBeInTheDocument();
+    expect(screen.getAllByText("Repovesi").length).toBeGreaterThan(0);
+    expect(screen.getByRole("img", { name: "Kuva Repovedeltä" })).toBeInTheDocument();
     expect(screen.getAllByText("story.notAvailable").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Loppukesän kierros").length).toBe(2);
     expect(screen.getByText("story.tripHighlightCaption")).toBeInTheDocument();
+  });
+
+  it("falls back to the visit details tile when the photo highlight has no featured image", () => {
+    render(<YearReviewStory story={visitOnlyPhotoStory} mode="preview" />);
+
+    expect(screen.getAllByText("story.photoVisitTitle").length).toBeGreaterThan(0);
+    expect(screen.queryByRole("img", { name: "Kuva Repovedeltä" })).not.toBeInTheDocument();
+  });
+
+  it("falls back to the photo title as image alt text when the hero image has no own alt", () => {
+    render(<YearReviewStory story={imageOnlyPhotoStory} mode="preview" />);
+
+    expect(screen.getByRole("img", { name: "story.photoTitle" })).toBeInTheDocument();
+    expect(screen.getAllByText("story.notAvailable").length).toBeGreaterThan(0);
   });
 
   it("highlights a returned place only when repeat visits are genuinely meaningful", () => {

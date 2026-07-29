@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createSocialPreviewImageResponse } from "@/lib/social-preview-image";
 import {
+  findYearReviewPhotoHighlightCard,
   findYearReviewProfileCard,
   isYearReviewShareId,
   readYearReviewShareOrNull,
@@ -34,6 +35,7 @@ const YearReviewOpenGraphImage = async ({ params }: { params: Promise<{ shareId:
   }
 
   const profileCard = findYearReviewProfileCard(share.story);
+  const photoHighlightCard = findYearReviewPhotoHighlightCard(share.story);
   const highlights = [
     `${share.story.summary.visitCount} ${messages.yearReview.stats.visits.toLowerCase()}`,
     `${share.story.summary.newParkCount} ${messages.yearReview.stats.newParks.toLowerCase()}`,
@@ -47,6 +49,7 @@ const YearReviewOpenGraphImage = async ({ params }: { params: Promise<{ shareId:
     title: withYear(messages.yearReview.shareTitle, share.year),
     description: withYear(messages.yearReview.shareDescription, share.year),
     highlights,
+    imageUrl: photoHighlightCard?.featuredImage?.fullUrl ?? null,
     variant: "landscape",
     width: size.width,
     height: size.height,

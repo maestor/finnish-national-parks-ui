@@ -7,6 +7,7 @@ export type SocialPreviewVariant = "square" | "landscape";
 type SocialPreviewImageProps = {
   title: string;
   description: string;
+  imageUrl?: string | null;
   variant: SocialPreviewVariant;
   highlights?: string[];
 };
@@ -160,8 +161,12 @@ const HighlightChips = ({ highlights }: { highlights: string[] }): ReactElement 
 const LandscapeSocialPreviewImage = ({
   title,
   description,
+  imageUrl,
   highlights,
-}: Pick<SocialPreviewImageProps, "title" | "description" | "highlights">): ReactElement => {
+}: Pick<
+  SocialPreviewImageProps,
+  "title" | "description" | "highlights" | "imageUrl"
+>): ReactElement => {
   return (
     <div
       style={{
@@ -186,16 +191,52 @@ const LandscapeSocialPreviewImage = ({
           border: "1px solid rgba(248,250,252,0.14)",
         }}
       />
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          minWidth: 320,
-        }}
-      >
-        <BrandIllustration compact />
-      </div>
+      {imageUrl ? (
+        <div
+          style={{
+            width: 360,
+            height: 486,
+            display: "flex",
+            position: "relative",
+            overflow: "hidden",
+            borderRadius: 40,
+            border: "1px solid rgba(248,250,252,0.18)",
+            boxShadow: "0 30px 70px rgba(15, 23, 42, 0.28)",
+            flexShrink: 0,
+          }}
+        >
+          <div
+            data-testid="social-preview-hero-image"
+            style={{
+              position: "absolute",
+              inset: 0,
+              backgroundImage: `url(${imageUrl})`,
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+              backgroundSize: "cover",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background:
+                "linear-gradient(180deg, rgba(15,23,42,0.06) 0%, rgba(15,23,42,0.18) 45%, rgba(15,23,42,0.74) 100%)",
+            }}
+          />
+        </div>
+      ) : (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            minWidth: 320,
+          }}
+        >
+          <BrandIllustration compact />
+        </div>
+      )}
       <div
         style={{
           display: "flex",
@@ -234,6 +275,7 @@ const LandscapeSocialPreviewImage = ({
 export const SocialPreviewImage = ({
   title,
   description,
+  imageUrl,
   variant,
   highlights,
 }: SocialPreviewImageProps): ReactElement => {
@@ -242,6 +284,7 @@ export const SocialPreviewImage = ({
       <LandscapeSocialPreviewImage
         title={title}
         description={description}
+        imageUrl={imageUrl}
         highlights={highlights}
       />
     );
@@ -253,6 +296,7 @@ export const SocialPreviewImage = ({
 export const createSocialPreviewImageResponse = ({
   title,
   description,
+  imageUrl,
   variant,
   highlights,
   width,
@@ -262,6 +306,7 @@ export const createSocialPreviewImageResponse = ({
     <SocialPreviewImage
       title={title}
       description={description}
+      imageUrl={imageUrl}
       variant={variant}
       highlights={highlights}
     />,

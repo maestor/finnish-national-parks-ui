@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError, apiFetch } from "./api";
 import {
   buildYearReviewShareDescription,
+  findYearReviewPhotoHighlightCard,
   findYearReviewProfileCard,
   findYearReviewSeasonalCard,
   isYearReviewShareId,
@@ -72,6 +73,31 @@ describe("year-review helpers", () => {
 
   it("returns null when the generated story has no profile card", () => {
     expect(findYearReviewProfileCard({ ...story, cards: [] })).toBeNull();
+  });
+
+  it("returns the photo highlight card when the generated story contains one", () => {
+    expect(
+      findYearReviewPhotoHighlightCard({
+        ...story,
+        cards: [
+          {
+            featuredImage: {
+              alt: "Kuva Nuuksiosta",
+              fullHeight: 1200,
+              fullUrl: "https://images.example/full.jpg",
+              fullWidth: 1600,
+              thumbHeight: 900,
+              thumbUrl: "https://images.example/thumb.jpg",
+              thumbWidth: 1200,
+            },
+            kind: "photo-highlight",
+            totalImageCount: 18,
+            visit: null,
+          },
+        ],
+      })?.featuredImage?.fullUrl,
+    ).toBe("https://images.example/full.jpg");
+    expect(findYearReviewPhotoHighlightCard(story)).toBeNull();
   });
 
   it("returns the seasonal card when the generated story contains one", () => {

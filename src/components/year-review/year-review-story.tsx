@@ -17,6 +17,7 @@ import {
   PUBLIC_HERO_DESCRIPTION_CLASS_NAME,
   PUBLIC_PANEL_CLASS_NAME,
 } from "@/components/layout/public-page-styles";
+import { AppImage } from "@/components/ui/app-image";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { appRoutes } from "@/lib/routes";
@@ -136,6 +137,21 @@ const getRepeatSpotlight = (
   }
 
   return mostVisitedPark;
+};
+
+const getPhotoHighlightImageAlt = (
+  card: Extract<YearReviewCard, { kind: "photo-highlight" }>,
+  photoTitle: string,
+) => {
+  if (card.featuredImage?.alt) {
+    return card.featuredImage.alt;
+  }
+
+  if (card.visit) {
+    return `${card.visit.park.name}, ${formatVisitDate(card.visit.visitedOn)}`;
+  }
+
+  return photoTitle;
 };
 
 const getCardKey = (card: RenderableYearReviewCard) => {
@@ -506,20 +522,55 @@ const YearReviewStory = ({
                     </div>
 
                     <div className="grid gap-3">
+                      {card.featuredImage ? (
+                        <div className="relative overflow-hidden rounded-3xl border border-white/24 bg-black/12 shadow-[0_24px_56px_rgba(15,23,42,0.24)]">
+                          <AppImage
+                            src={card.featuredImage.thumbUrl}
+                            alt={getPhotoHighlightImageAlt(card, t("story.photoTitle"))}
+                            width={card.featuredImage.thumbWidth ?? 1200}
+                            height={card.featuredImage.thumbHeight ?? 900}
+                            sizes="(min-width: 1024px) 32rem, 100vw"
+                            unoptimized
+                            className="h-80 w-full object-cover sm:h-96"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/88 via-slate-950/18 to-transparent" />
+                          {card.visit !== null && (
+                            <div className="absolute inset-x-0 bottom-0 space-y-2 p-5 sm:p-6">
+                              <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
+                                {t("story.photoVisitTitle")}
+                              </p>
+                              <p className="text-2xl font-semibold text-primary-foreground sm:text-3xl">
+                                {card.visit.park.name}
+                              </p>
+                              <p className="text-sm text-primary-foreground/82">
+                                {formatVisitDate(card.visit.visitedOn)}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      ) : null}
+
                       {card.visit ? (
                         <>
-                          <div className={METRIC_TILE_CLASS_NAME}>
-                            <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
-                              {t("story.photoVisitTitle")}
-                            </p>
-                            <p className="mt-2 text-2xl font-semibold text-primary-foreground">
-                              {card.visit.park.name}
-                            </p>
-                            <p className="mt-2 text-sm text-primary-foreground/78">
-                              {formatVisitDate(card.visit.visitedOn)}
-                            </p>
-                          </div>
-                          <div className={METRIC_TILE_CLASS_NAME}>
+                          {!card.featuredImage && (
+                            <div className={METRIC_TILE_CLASS_NAME}>
+                              <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
+                                {t("story.photoVisitTitle")}
+                              </p>
+                              <p className="mt-2 text-2xl font-semibold text-primary-foreground">
+                                {card.visit.park.name}
+                              </p>
+                              <p className="mt-2 text-sm text-primary-foreground/78">
+                                {formatVisitDate(card.visit.visitedOn)}
+                              </p>
+                            </div>
+                          )}
+                          <div
+                            className={cn(
+                              METRIC_TILE_CLASS_NAME,
+                              card.featuredImage && "sm:col-span-2",
+                            )}
+                          >
                             <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
                               {t("story.photoVisitCount")}
                             </p>

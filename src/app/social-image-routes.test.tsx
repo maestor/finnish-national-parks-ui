@@ -64,6 +64,30 @@ const yearReviewShare = {
     },
     cards: [
       {
+        featuredImage: {
+          alt: "Kuva Pallas-Yllästunturilta",
+          fullHeight: 1200,
+          fullUrl: "https://images.example/pallas-full.jpg",
+          fullWidth: 1600,
+          thumbHeight: 900,
+          thumbUrl: "https://images.example/pallas-thumb.jpg",
+          thumbWidth: 1200,
+        },
+        kind: "photo-highlight",
+        totalImageCount: 2,
+        visit: {
+          id: 1,
+          imageCount: 2,
+          park: {
+            name: "Pallas-Yllästunturi",
+            slug: "pallas",
+          },
+          route: "Huippupolku",
+          trip: null,
+          visitedOn: "2024-06-15",
+        },
+      },
+      {
         kind: "profile",
         busiestMonth: 6,
         busiestWeekday: 6,
@@ -130,6 +154,7 @@ describe("social image routes", () => {
       title: "Vuosikatsaus 2024",
       description: "Käynnit, uudet paikat ja kuvat vuodelta 2024 Reissuvihkossa.",
       highlights: ["1 käyntiä", "1 uutta paikkaa", "2 kuvaa", "Pallas-Yllästunturi x1"],
+      imageUrl: "https://images.example/pallas-full.jpg",
       variant: "landscape",
       width: 1200,
       height: 630,
@@ -141,6 +166,13 @@ describe("social image routes", () => {
 
     await expect(
       YearReviewOpenGraphImage({ params: Promise.resolve({ shareId }) }),
+    ).rejects.toThrow("NEXT_NOT_FOUND");
+    expect(mockNotFound).toHaveBeenCalled();
+  });
+
+  it("calls notFound for a malformed year review share id", async () => {
+    await expect(
+      YearReviewOpenGraphImage({ params: Promise.resolve({ shareId: "not-a-share-id" }) }),
     ).rejects.toThrow("NEXT_NOT_FOUND");
     expect(mockNotFound).toHaveBeenCalled();
   });

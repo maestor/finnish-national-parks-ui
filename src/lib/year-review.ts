@@ -15,6 +15,16 @@ export interface YearReviewTripReference {
   slug: string;
 }
 
+export interface YearReviewStoryImage {
+  alt: string | null;
+  fullHeight: number | null;
+  fullUrl: string;
+  fullWidth: number | null;
+  thumbHeight: number | null;
+  thumbUrl: string;
+  thumbWidth: number | null;
+}
+
 export interface YearReviewVisitReference {
   id: number;
   imageCount: number;
@@ -59,6 +69,7 @@ export interface YearReviewMilestoneCard {
 }
 
 export interface YearReviewPhotoHighlightCard {
+  featuredImage: YearReviewStoryImage | null;
   kind: "photo-highlight";
   totalImageCount: number;
   visit: YearReviewVisitReference | null;
@@ -174,6 +185,13 @@ export const readYearReviewShareOrNull = async (
 
 export const findYearReviewProfileCard = (story: YearReviewStory): YearReviewProfileCard | null =>
   story.cards.find((card): card is YearReviewProfileCard => card.kind === "profile") ?? null;
+
+export const findYearReviewPhotoHighlightCard = (
+  story: YearReviewStory,
+): YearReviewPhotoHighlightCard | null =>
+  story.cards.find(
+    (card): card is YearReviewPhotoHighlightCard => card.kind === "photo-highlight",
+  ) ?? null;
 
 export const findYearReviewSeasonalCard = (story: YearReviewStory): YearReviewSeasonalCard | null =>
   story.cards.find((card): card is YearReviewSeasonalCard => card.kind === "seasonal") ?? null;
