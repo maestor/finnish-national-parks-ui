@@ -227,21 +227,11 @@ describe("Header", () => {
     expect(authState.logout).toHaveBeenCalled();
   });
 
-  it("toggles the mobile filters button state on the parks map page", async () => {
-    render(
-      <HomeMapControlsProvider>
-        <Header />
-      </HomeMapControlsProvider>,
-    );
+  it("keeps the mobile parks-map controls out of the header", () => {
+    render(<Header />);
 
-    const toggle = screen.getByRole("button", { name: "layout.nav.filters" });
-
-    expect(toggle).toHaveAttribute("aria-expanded", "false");
-    expect(screen.getByText("home-park-search")).toBeInTheDocument();
-
-    await userEvent.click(toggle);
-
-    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(screen.queryByRole("button", { name: "layout.nav.filters" })).not.toBeInTheDocument();
+    expect(screen.getByText("home-park-search").parentElement).toHaveClass("hidden", "md:block");
   });
 
   it("opens a mobile menu sheet with navigation and session actions", async () => {

@@ -1,9 +1,11 @@
 "use client";
 
+import { SlidersHorizontal, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { HomeParkSearch } from "@/components/layout/home-park-search";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/cn";
@@ -18,6 +20,7 @@ import {
 import type { FilterableMapPark } from "@/lib/parks";
 import { appRoutes, normalizeAppPath } from "@/lib/routes";
 import { useHomeMapControls } from "../providers/home-map-controls-provider";
+import { MAP_FLOATING_CONTROL_BUTTON_CLASS_NAME } from "./map-floating-control-styles";
 import { MapLoadingFallback } from "./map-loading-fallback";
 
 const ParkMap = dynamic(() => import("./park-map").then((mod) => mod.ParkMap), {
@@ -105,6 +108,7 @@ interface ParkExplorerProps {
 
 export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
   const t = useTranslations("home.filters");
+  const navT = useTranslations("layout.nav");
   const auth = useAuth();
   const pathname = usePathname();
   const normalizedPathname = normalizeAppPath(pathname);
@@ -114,7 +118,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
   const [activeVisitStatus, setActiveVisitStatus] = useState<VisitStatusFilter>("visited");
   const [isVisitStatusSelectorOpen, setIsVisitStatusSelectorOpen] = useState(false);
   const [mapResetRequestId, setMapResetRequestId] = useState(0);
-  const { isMobileFiltersOpen, homeParkFocusRequest } = useHomeMapControls();
+  const { isMobileFiltersOpen, homeParkFocusRequest, toggleMobileFilters } = useHomeMapControls();
   const filterPanelRef = useRef<HTMLDivElement | null>(null);
   const lastHandledMapParamsRef = useRef<string | null>(null);
 
@@ -421,6 +425,30 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
         canManageVisits={auth.isAuthenticated}
         homeParkFocusRequest={homeParkFocusRequest}
         resetViewRequestId={mapResetRequestId}
+        floatingControls={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={toggleMobileFilters}
+              className={cn(MAP_FLOATING_CONTROL_BUTTON_CLASS_NAME, "md:hidden")}
+              aria-label={navT("filters")}
+              aria-expanded={isMobileFiltersOpen}
+              aria-controls="park-map-filters-mobile"
+              title={navT("filters")}
+            >
+              {isMobileFiltersOpen ? (
+                <X className="h-4 w-4" aria-hidden="true" />
+              ) : (
+                <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
+              )}
+            </Button>
+            <HomeParkSearch
+              mobileTriggerClassName={cn(MAP_FLOATING_CONTROL_BUTTON_CLASS_NAME, "md:hidden")}
+            />
+          </>
+        }
       />
     </div>
   );
