@@ -3,6 +3,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { FilterableMapPark } from "@/lib/parks";
 import { ParkMap } from "./park-map";
 
+const { homeMapControlsState } = vi.hoisted(() => ({
+  homeMapControlsState: {
+    value: {
+      clearHomeParkFocusRequest: vi.fn(),
+    },
+  },
+}));
+
 const loadHandlers: Array<() => void> = [];
 const mapEventHandlers = new Map<string, Array<() => void>>();
 const markerElements: HTMLElement[] = [];
@@ -181,6 +189,10 @@ class MockResizeObserver {
 
 global.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
 
+vi.mock("../providers/home-map-controls-provider", () => ({
+  useHomeMapControls: () => homeMapControlsState.value,
+}));
+
 vi.mock("maplibre-gl", () => ({
   // biome-ignore lint: Vitest v4 constructor mocks must be constructible.
   Map: vi.fn(function (options?: Record<string, unknown>) {
@@ -214,6 +226,9 @@ describe("ParkMap", () => {
     resizeObservers.length = 0;
     mapOptions = null;
     mapInstance = null;
+    homeMapControlsState.value = {
+      clearHomeParkFocusRequest: vi.fn(),
+    };
     fitBoundsMock.mockReset();
     easeToMock.mockReset();
     Object.defineProperty(window.navigator, "geolocation", {

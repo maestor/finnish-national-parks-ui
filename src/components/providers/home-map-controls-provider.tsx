@@ -44,13 +44,13 @@ export const HomeMapControlsProvider = ({
   const lastHandledParkParamRef = useRef<string | null>(null);
   const pendingParkParamCleanupRef = useRef<string | null>(null);
 
-  const toggleMobileFilters = () => {
-    setIsMobileFiltersOpen((current) => !current);
-  };
-
-  const closeMobileFilters = () => {
+  const closeMobileFilters = useCallback(() => {
     setIsMobileFiltersOpen(false);
-  };
+  }, []);
+
+  const toggleMobileFilters = useCallback(() => {
+    setIsMobileFiltersOpen((current) => !current);
+  }, []);
 
   const focusParkOnHome = useCallback((slug: string) => {
     nextHomeParkFocusRequestIdRef.current += 1;

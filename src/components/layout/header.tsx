@@ -35,7 +35,6 @@ export const Header = () => {
   const pathname = usePathname();
   const normalizedPathname = normalizeAppPath(pathname);
   const isControlPanel = appRoutePatterns.isControlPanelPath(pathname);
-  const isParksMapPage = normalizedPathname === appRoutes.parks;
   const isPublicVisitsPage = normalizedPathname === appRoutes.visits;
   const [isMobileMenuMounted, setIsMobileMenuMounted] = useState(false);
   const [isMobileMenuVisible, setIsMobileMenuVisible] = useState(false);
@@ -357,9 +356,7 @@ export const Header = () => {
           </div>
 
           <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
-            <div
-              className={cn("min-w-0 md:flex-1 md:max-w-md", isParksMapPage && "hidden md:block")}
-            >
+            <div className="min-w-0 md:flex-1 md:max-w-md">
               <HomeParkSearch />
             </div>
             <button
