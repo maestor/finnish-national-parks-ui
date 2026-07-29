@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { appRoutePatterns, appRoutes, normalizeAppPath } from "./routes";
+import {
+  appRoutePatterns,
+  appRoutes,
+  createPathWithSearchParams,
+  normalizeAppPath,
+} from "./routes";
 
 describe("routes", () => {
   it("defines canonical Finnish app routes", () => {
@@ -19,6 +24,10 @@ describe("routes", () => {
     expect(appRoutes.controlPanel.visits).toBe("/hallinta/kaynnit");
     expect(appRoutes.controlPanel.newVisit).toBe("/hallinta/kaynnit/uusi");
     expect(appRoutes.controlPanel.editVisit("42")).toBe("/hallinta/kaynnit/42/muokkaa");
+    expect(appRoutes.controlPanel.yearReview).toBe("/hallinta/vuosikatsaus");
+    expect(appRoutes.yearReviewShare("93d27350-b7a4-48ba-a93f-16f38d44aa03")).toBe(
+      "/vuosikatsaus/jako/93d27350-b7a4-48ba-a93f-16f38d44aa03",
+    );
   });
 
   it("normalizes legacy English routes to the canonical Finnish paths", () => {
@@ -43,6 +52,10 @@ describe("routes", () => {
       "/hallinta/kaynnit/uusi?park=pallas",
     );
     expect(normalizeAppPath("/control-panel/visits/42/edit")).toBe("/hallinta/kaynnit/42/muokkaa");
+    expect(normalizeAppPath("/control-panel/year-review")).toBe("/hallinta/vuosikatsaus");
+    expect(normalizeAppPath("/year-review/share/93d27350-b7a4-48ba-a93f-16f38d44aa03")).toBe(
+      "/vuosikatsaus/jako/93d27350-b7a4-48ba-a93f-16f38d44aa03",
+    );
   });
 
   it("detects canonical and legacy control-panel paths", () => {
@@ -53,5 +66,30 @@ describe("routes", () => {
     expect(appRoutePatterns.isControlPanelPath("/control-panel/parks")).toBe(true);
     expect(appRoutePatterns.isControlPanelPath("/control-panel/trips")).toBe(true);
     expect(appRoutePatterns.isControlPanelPath("/paikat")).toBe(false);
+  });
+
+  it("detects year-review share routes after normalization", () => {
+    expect(appRoutePatterns.isYearReviewSharePath("/vuosikatsaus/jako/share-123")).toBe(true);
+    expect(appRoutePatterns.isYearReviewSharePath("/year-review/share/share-123")).toBe(true);
+    expect(appRoutePatterns.isYearReviewSharePath("/paikat")).toBe(false);
+  });
+
+  it("builds a path with only defined search params", () => {
+    expect(
+      createPathWithSearchParams(appRoutes.visits, {
+        featured: false,
+        month: null,
+        year: 2026,
+      }),
+    ).toBe("/kaynnit?featured=false&year=2026");
+  });
+
+  it("returns the plain path when every search param is empty", () => {
+    expect(
+      createPathWithSearchParams(appRoutes.visits, {
+        month: undefined,
+        year: null,
+      }),
+    ).toBe("/kaynnit");
   });
 });

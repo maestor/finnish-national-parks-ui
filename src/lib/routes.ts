@@ -8,6 +8,7 @@ export const appRoutes = {
   trip: (slug: string) => `/retki/${slug}`,
   visits: "/kaynnit",
   tripPlanner: "/reissusuunnittelu",
+  yearReviewShare: (shareId: string) => `/vuosikatsaus/jako/${shareId}`,
   controlPanel: {
     root: CONTROL_PANEL_ROOT,
     parks: `${CONTROL_PANEL_ROOT}/paikat`,
@@ -18,6 +19,7 @@ export const appRoutes = {
     visits: `${CONTROL_PANEL_ROOT}/kaynnit`,
     newVisit: `${CONTROL_PANEL_ROOT}/kaynnit/uusi`,
     editVisit: (visitId: string | number) => `${CONTROL_PANEL_ROOT}/kaynnit/${visitId}/muokkaa`,
+    yearReview: `${CONTROL_PANEL_ROOT}/vuosikatsaus`,
   },
 } as const;
 
@@ -67,6 +69,16 @@ export const legacyAppRedirects = [
   {
     source: "/control-panel/visits/:id/edit",
     destination: "/hallinta/kaynnit/:id/muokkaa",
+    permanent: true,
+  },
+  {
+    source: "/control-panel/year-review",
+    destination: appRoutes.controlPanel.yearReview,
+    permanent: true,
+  },
+  {
+    source: "/year-review/share/:shareId",
+    destination: "/vuosikatsaus/jako/:shareId",
     permanent: true,
   },
 ] as const;
@@ -128,6 +140,10 @@ const normalizePathname = (pathname: string) => {
     return appRoutes.controlPanel.newVisit;
   }
 
+  if (pathname === "/control-panel/year-review") {
+    return appRoutes.controlPanel.yearReview;
+  }
+
   const parkMatch = /^\/park\/([^/]+)$/.exec(pathname);
   if (parkMatch) {
     return appRoutes.park(parkMatch[1]);
@@ -136,6 +152,11 @@ const normalizePathname = (pathname: string) => {
   const tripMatch = /^\/trip\/([^/]+)$/.exec(pathname);
   if (tripMatch) {
     return appRoutes.trip(tripMatch[1]);
+  }
+
+  const yearReviewShareMatch = /^\/year-review\/share\/([^/]+)$/.exec(pathname);
+  if (yearReviewShareMatch) {
+    return appRoutes.yearReviewShare(yearReviewShareMatch[1]);
   }
 
   const controlPanelParkEditMatch = /^\/control-panel\/parks\/([^/]+)\/edit$/.exec(pathname);
@@ -171,6 +192,8 @@ export const appRoutePatterns = {
   isParksPath: (path: string) => normalizePathname(path) === appRoutes.parks,
   isTripPlannerPath: (path: string) => normalizePathname(path) === appRoutes.tripPlanner,
   isVisitsPath: (path: string) => normalizePathname(path) === appRoutes.visits,
+  isYearReviewSharePath: (path: string) =>
+    /^\/vuosikatsaus\/jako\/[^/]+$/.test(normalizePathname(path)),
 } as const;
 
 export const createPathWithSearchParams = (

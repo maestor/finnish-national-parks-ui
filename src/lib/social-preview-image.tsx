@@ -7,7 +7,9 @@ export type SocialPreviewVariant = "square" | "landscape";
 type SocialPreviewImageProps = {
   title: string;
   description: string;
+  imageUrl?: string | null;
   variant: SocialPreviewVariant;
+  highlights?: string[];
 };
 
 type CreateSocialPreviewImageResponseOptions = SocialPreviewImageProps & {
@@ -125,10 +127,46 @@ const SquareSocialPreviewImage = ({
   );
 };
 
+const HighlightChips = ({ highlights }: { highlights: string[] }): ReactElement => {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 20,
+        flexWrap: "wrap",
+      }}
+    >
+      {highlights.map((highlight) => (
+        <div
+          key={highlight}
+          style={{
+            borderRadius: 999,
+            border: "1px solid rgba(248,250,252,0.32)",
+            background: "rgba(248,250,252,0.12)",
+            padding: "14px 28px",
+            fontSize: 34,
+            fontWeight: 700,
+            letterSpacing: "-0.01em",
+          }}
+        >
+          {highlight}
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const LandscapeSocialPreviewImage = ({
   title,
   description,
-}: Pick<SocialPreviewImageProps, "title" | "description">): ReactElement => {
+  imageUrl,
+  highlights,
+}: Pick<
+  SocialPreviewImageProps,
+  "title" | "description" | "highlights" | "imageUrl"
+>): ReactElement => {
   return (
     <div
       style={{
@@ -153,16 +191,52 @@ const LandscapeSocialPreviewImage = ({
           border: "1px solid rgba(248,250,252,0.14)",
         }}
       />
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          minWidth: 320,
-        }}
-      >
-        <BrandIllustration compact />
-      </div>
+      {imageUrl ? (
+        <div
+          style={{
+            width: 360,
+            height: 486,
+            display: "flex",
+            position: "relative",
+            overflow: "hidden",
+            borderRadius: 40,
+            border: "1px solid rgba(248,250,252,0.18)",
+            boxShadow: "0 30px 70px rgba(15, 23, 42, 0.28)",
+            flexShrink: 0,
+          }}
+        >
+          <div
+            data-testid="social-preview-hero-image"
+            style={{
+              position: "absolute",
+              inset: 0,
+              backgroundImage: `url(${imageUrl})`,
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+              backgroundSize: "cover",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background:
+                "linear-gradient(180deg, rgba(15,23,42,0.06) 0%, rgba(15,23,42,0.18) 45%, rgba(15,23,42,0.74) 100%)",
+            }}
+          />
+        </div>
+      ) : (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            minWidth: 320,
+          }}
+        >
+          <BrandIllustration compact />
+        </div>
+      )}
       <div
         style={{
           display: "flex",
@@ -192,6 +266,7 @@ const LandscapeSocialPreviewImage = ({
         >
           {description}
         </div>
+        {highlights && highlights.length > 0 ? <HighlightChips highlights={highlights} /> : null}
       </div>
     </div>
   );
@@ -200,10 +275,19 @@ const LandscapeSocialPreviewImage = ({
 export const SocialPreviewImage = ({
   title,
   description,
+  imageUrl,
   variant,
+  highlights,
 }: SocialPreviewImageProps): ReactElement => {
   if (variant === "landscape") {
-    return <LandscapeSocialPreviewImage title={title} description={description} />;
+    return (
+      <LandscapeSocialPreviewImage
+        title={title}
+        description={description}
+        imageUrl={imageUrl}
+        highlights={highlights}
+      />
+    );
   }
 
   return <SquareSocialPreviewImage title={title} description={description} />;
@@ -212,12 +296,20 @@ export const SocialPreviewImage = ({
 export const createSocialPreviewImageResponse = ({
   title,
   description,
+  imageUrl,
   variant,
+  highlights,
   width,
   height,
 }: CreateSocialPreviewImageResponseOptions): ImageResponse => {
   return new ImageResponse(
-    <SocialPreviewImage title={title} description={description} variant={variant} />,
+    <SocialPreviewImage
+      title={title}
+      description={description}
+      imageUrl={imageUrl}
+      variant={variant}
+      highlights={highlights}
+    />,
     {
       width,
       height,

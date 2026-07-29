@@ -36,6 +36,35 @@ describe("social preview image", () => {
     expect(screen.getByTestId("social-preview-icon")).toHaveAttribute("viewBox", "0 0 512 512");
   });
 
+  it("renders an optional hero image in the landscape preview", () => {
+    render(
+      <SocialPreviewImage
+        title={testTitle}
+        description={testDescription}
+        variant="landscape"
+        imageUrl="https://images.example/year-review.jpg"
+      />,
+    );
+
+    expect(screen.getByTestId("social-preview-hero-image")).toHaveStyle({
+      backgroundImage: 'url("https://images.example/year-review.jpg")',
+    });
+  });
+
+  it("renders highlight chips in the landscape preview when they are provided", () => {
+    render(
+      <SocialPreviewImage
+        title={testTitle}
+        description={testDescription}
+        variant="landscape"
+        highlights={["7 käyntiä", "2 uutta paikkaa"]}
+      />,
+    );
+
+    expect(screen.getByText("7 käyntiä")).toBeInTheDocument();
+    expect(screen.getByText("2 uutta paikkaa")).toBeInTheDocument();
+  });
+
   it.each([
     ["square", 1200, 1200],
     ["landscape", 1200, 630],

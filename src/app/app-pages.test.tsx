@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError, apiAuthFetch, apiFetch, apiPublicFetch } from "@/lib/api";
 import type { AdminVisibilityPark, Park, Visit, VisitWithPark } from "@/lib/parks";
@@ -18,6 +18,9 @@ import TripPlannerRoutePage, {
 import PublicVisitsPage, {
   generateMetadata as generatePublicVisitsMetadata,
 } from "./(user)/visits/page";
+import PublicYearReviewPage, {
+  generateMetadata as generatePublicYearReviewMetadata,
+} from "./(user)/year-review/share/[shareId]/page";
 import OfflinePage from "./~offline/page";
 import ControlPanelLayout from "./control-panel/layout";
 import ControlPanelPage, {
@@ -43,6 +46,9 @@ import NewVisitPage, {
 import VisitsPage, {
   generateMetadata as generateVisitsMetadata,
 } from "./control-panel/visits/page";
+import ControlPanelYearReviewPage, {
+  generateMetadata as generateControlPanelYearReviewMetadata,
+} from "./control-panel/year-review/page";
 import LoginPage from "./login/page";
 import NotFoundPage from "./not-found";
 
@@ -166,6 +172,24 @@ vi.mock("@/components/trips/public-trip-page", () => ({
   ),
 }));
 
+vi.mock("@/components/year-review/year-review-story", () => ({
+  YearReviewStory: ({
+    mode,
+    publishedAt,
+    story,
+  }: {
+    mode: "preview" | "public";
+    publishedAt?: string | null;
+    story: { cards: { kind: string }[]; summary: { visitCount: number }; year: number };
+  }) => (
+    <div data-testid="year-review-story">
+      mode:{mode}|year:{story.year}|visits:{story.summary.visitCount}|cards:{story.cards.length}
+      |published:
+      {publishedAt ?? "none"}
+    </div>
+  ),
+}));
+
 vi.mock("@/hooks/use-auth", () => ({
   useAuth: () => ({
     isAuthenticated: false,
@@ -174,7 +198,6 @@ vi.mock("@/hooks/use-auth", () => ({
     user: null,
   }),
 }));
-
 vi.mock("@/components/dashboard/home-visit-stats", () => ({
   HomeVisitStats: ({
     totalVisits,
@@ -534,6 +557,115 @@ const timelineVisit = {
     typeLabel: "Maailmanperintökohde",
   },
 } satisfies FrontendTimelineVisit;
+
+const yearReviewShareId = "93d27350-b7a4-48ba-a93f-16f38d44aa03";
+
+const yearReviewStory = {
+  year: 2024,
+  summary: {
+    activeMonthCount: 1,
+    distinctParkCount: 1,
+    imageCount: 2,
+    newParkCount: 1,
+    revisitedParkCount: 0,
+    visitCount: 1,
+    visitsBySeason: {
+      autumn: 0,
+      spring: 1,
+      summer: 0,
+      winter: 0,
+    },
+  },
+  cards: [
+    {
+      kind: "intro",
+      primaryStat: {
+        key: "visitCount",
+        value: 1,
+      },
+      year: 2024,
+    },
+    {
+      busiestMonth: 6,
+      busiestWeekday: 6,
+      kind: "profile",
+      mostVisitedPark: {
+        name: "Pallas-Yllästunturi",
+        slug: "pallas-yllastunturi",
+        visitCount: 1,
+      },
+      topRoute: "Huippupolku",
+      topTypeLabel: "Maailmanperintökohde",
+    },
+    {
+      highlights: ["1 visits"],
+      kind: "summary",
+    },
+  ],
+} as const;
+
+const yearReviewPreview = {
+  generatedAt: "2024-12-31T10:00:00Z",
+  publishInfo: {
+    publicUrl: `https://frontend.example/vuosikatsaus/jako/${yearReviewShareId}`,
+    publishedAt: "2024-12-31T11:00:00Z",
+    publishedShareId: yearReviewShareId,
+    sharePath: `/vuosikatsaus/jako/${yearReviewShareId}`,
+  },
+  status: "published",
+  story: yearReviewStory,
+  year: 2024,
+} as const;
+
+const emptyYearReviewPreview = {
+  generatedAt: "2026-01-05T10:00:00Z",
+  publishInfo: {
+    publicUrl: null,
+    publishedAt: null,
+    publishedShareId: null,
+    sharePath: null,
+  },
+  status: "draft",
+  story: {
+    year: 2026,
+    summary: {
+      activeMonthCount: 0,
+      distinctParkCount: 0,
+      imageCount: 0,
+      newParkCount: 0,
+      revisitedParkCount: 0,
+      visitCount: 0,
+      visitsBySeason: {
+        autumn: 0,
+        spring: 0,
+        summer: 0,
+        winter: 0,
+      },
+    },
+    cards: [
+      {
+        kind: "intro",
+        primaryStat: {
+          key: "visitCount",
+          value: 0,
+        },
+        year: 2026,
+      },
+      {
+        highlights: [],
+        kind: "summary",
+      },
+    ],
+  },
+  year: 2026,
+} as const;
+
+const yearReviewShare = {
+  publishedAt: "2024-12-31T11:00:00Z",
+  shareId: yearReviewShareId,
+  story: yearReviewStory,
+  year: 2024,
+} as const;
 
 const renderPublicRoute = async (page: React.ReactNode) => {
   return render(UserLayout({ children: page }));
@@ -1087,6 +1219,87 @@ describe("App pages", () => {
   it("builds translated metadata for the public visits page", async () => {
     await expect(generatePublicVisitsMetadata()).resolves.toEqual(
       createExpectedShareMetadata("visits.title"),
+    );
+  });
+
+  it("calls notFound for malformed or missing year review shares", async () => {
+    await expect(
+      PublicYearReviewPage({ params: Promise.resolve({ shareId: "not-a-share-id" }) }),
+    ).rejects.toThrow("NEXT_NOT_FOUND");
+
+    vi.mocked(apiFetch).mockRejectedValueOnce(new ApiError(404, "missing"));
+
+    await expect(
+      PublicYearReviewPage({ params: Promise.resolve({ shareId: yearReviewShareId }) }),
+    ).rejects.toThrow("NEXT_NOT_FOUND");
+
+    expect(mockNotFound).toHaveBeenCalledTimes(2);
+  });
+
+  it("renders a published year review share from the backend snapshot", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce(yearReviewShare);
+
+    await renderPublicRoute(
+      await PublicYearReviewPage({ params: Promise.resolve({ shareId: yearReviewShareId }) }),
+    );
+
+    expect(screen.getByTestId("year-review-story")).toHaveTextContent(
+      "mode:public|year:2024|visits:1|cards:3|published:2024-12-31T11:00:00Z",
+    );
+  });
+
+  it("builds translated metadata for the public year review page", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce(yearReviewShare);
+
+    await expect(
+      generatePublicYearReviewMetadata({ params: Promise.resolve({ shareId: yearReviewShareId }) }),
+    ).resolves.toEqual(
+      createExpectedShareMetadata("yearReview.shareTitle", {
+        description: "yearReview.shareDescription",
+      }),
+    );
+  });
+
+  it("renders the admin year review preview with year links and share actions", async () => {
+    vi.mocked(apiPublicFetch).mockResolvedValueOnce({ visits: [timelineVisit] });
+    vi.mocked(apiAuthFetch).mockResolvedValueOnce(yearReviewPreview);
+
+    await renderControlPanelRoute(
+      await ControlPanelYearReviewPage({ searchParams: Promise.resolve({}) }),
+    );
+
+    expect(screen.getByTestId("year-review-story")).toHaveTextContent(
+      "mode:preview|year:2024|visits:1|cards:3|published:none",
+    );
+    const yearNav = screen.getByRole("navigation", { name: "yearReview.selectYear" });
+    expect(within(yearNav).getByRole("link", { name: "2024" })).toHaveAttribute(
+      "href",
+      "/hallinta/vuosikatsaus?year=2024",
+    );
+    expect(
+      screen.getByRole("button", { name: "controlPanel.yearReview.copyShareLink" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "controlPanel.yearReview.openSharePage" }),
+    ).toHaveAttribute("href", `/vuosikatsaus/jako/${yearReviewShareId}`);
+  });
+
+  it("renders the current year draft preview even when there are no visits yet", async () => {
+    vi.mocked(apiPublicFetch).mockResolvedValueOnce({ visits: [] });
+    vi.mocked(apiAuthFetch).mockResolvedValueOnce(emptyYearReviewPreview);
+
+    await renderControlPanelRoute(
+      await ControlPanelYearReviewPage({ searchParams: Promise.resolve({}) }),
+    );
+
+    expect(screen.getByTestId("year-review-story")).toHaveTextContent(
+      "mode:preview|year:2026|visits:0|cards:2|published:none",
+    );
+  });
+
+  it("builds translated metadata for the admin year review page", async () => {
+    await expect(generateControlPanelYearReviewMetadata()).resolves.toEqual(
+      createExpectedShareMetadata("controlPanel.yearReview.title"),
     );
   });
 
