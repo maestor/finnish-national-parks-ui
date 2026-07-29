@@ -5,6 +5,7 @@ import { isAdminSession, readSessionToken, verifySessionToken } from "@/lib/sess
 interface ProxyRequestOptions {
   includeApiKey?: boolean;
   requireAdmin?: boolean;
+  timeoutMs?: number;
 }
 
 const getBackendOrigin = (): string => new URL(env.NEXT_PUBLIC_API_URL).origin;
@@ -120,7 +121,11 @@ const isTimeoutError = (error: unknown) =>
 export const proxyBackendRequest = async (
   request: Request,
   backendPath: string,
-  { includeApiKey = true, requireAdmin = false }: ProxyRequestOptions = {},
+  {
+    includeApiKey = true,
+    requireAdmin = false,
+    timeoutMs = BACKEND_TIMEOUT_MS,
+  }: ProxyRequestOptions = {},
 ): Promise<Response> => {
   if (hasMismatchedOrigin(request)) {
     return jsonError(403, "Forbidden");
@@ -150,7 +155,7 @@ export const proxyBackendRequest = async (
       body,
       redirect: "manual",
       // A hung backend must not pin the route handler indefinitely.
-      signal: AbortSignal.timeout(BACKEND_TIMEOUT_MS),
+      signal: AbortSignal.timeout(timeoutMs),
     });
   } catch (error) {
     if (isTimeoutError(error)) {
