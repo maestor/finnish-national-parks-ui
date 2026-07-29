@@ -62,6 +62,39 @@ const getFallbackFilterForFocusedPark = (park: FilterableMapPark): ParkTypeMapFi
 const getVisitStatusFilterForPark = (park: FilterableMapPark): VisitStatusFilter =>
   park.visitedSummary.visited ? "visited" : "not-visited";
 
+const getFilteredParks = (
+  parks: FilterableMapPark[],
+  activeFilter: ParkTypeMapFilter,
+  activeVisitStatus: VisitStatusFilter,
+) => {
+  const parksWithSelectedVisitStatus =
+    activeVisitStatus === "all"
+      ? parks
+      : parks.filter((park) =>
+          activeVisitStatus === "visited"
+            ? park.visitedSummary.visited
+            : !park.visitedSummary.visited,
+        );
+
+  switch (activeFilter) {
+    case "all":
+      return parksWithSelectedVisitStatus;
+    case "areas":
+      return parksWithSelectedVisitStatus.filter((park) => isAreaPark(park));
+    case HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG:
+      return parksWithSelectedVisitStatus.filter((park) => isHikingAndWildernessPark(park));
+    case TRAILS_AND_ROUTES_CATEGORY_SLUG:
+      return parksWithSelectedVisitStatus.filter((park) => isTrailPark(park));
+    case "national-park":
+    case "nature-reserve-area":
+    case "outdoor-recreation-area":
+    case "cultural-history-area":
+      return parksWithSelectedVisitStatus.filter((park) => park.type.slug === activeFilter);
+    default:
+      return parksWithSelectedVisitStatus;
+  }
+};
+
 type LegacyMapFilter =
   | Extract<FilterableMapPark["type"]["slug"], "hiking-area" | "wilderness-area">
   | "factory-village";
@@ -116,9 +149,18 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
   const [activeVisitStatus, setActiveVisitStatus] = useState<VisitStatusFilter>("visited");
   const [isVisitStatusSelectorOpen, setIsVisitStatusSelectorOpen] = useState(false);
   const [mapResetRequestId, setMapResetRequestId] = useState(0);
-  const { isMobileFiltersOpen, homeParkFocusRequest, toggleMobileFilters } = useHomeMapControls();
+  const [mobileDraftFilter, setMobileDraftFilter] = useState<ParkTypeMapFilter>("all");
+  const [mobileDraftVisitStatus, setMobileDraftVisitStatus] =
+    useState<VisitStatusFilter>("visited");
+  const [mobileFilterOpenState, setMobileFilterOpenState] = useState<{
+    filter: ParkTypeMapFilter;
+    visitStatus: VisitStatusFilter;
+  } | null>(null);
+  const { closeMobileFilters, isMobileFiltersOpen, homeParkFocusRequest, toggleMobileFilters } =
+    useHomeMapControls();
   const filterPanelRef = useRef<HTMLDivElement | null>(null);
   const lastHandledMapParamsRef = useRef<string | null>(null);
+  const wasMobileFiltersOpenRef = useRef(isMobileFiltersOpen);
 
   const filterOptions = useMemo(() => {
     const parkTypeFilterOptionsById = new Map(
@@ -157,33 +199,17 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
   }, [t]);
 
   const filteredParks = useMemo(() => {
-    const parksWithSelectedVisitStatus =
-      activeVisitStatus === "all"
-        ? parks
-        : parks.filter((park) =>
-            activeVisitStatus === "visited"
-              ? park.visitedSummary.visited
-              : !park.visitedSummary.visited,
-          );
-
-    switch (activeFilter) {
-      case "all":
-        return parksWithSelectedVisitStatus;
-      case "areas":
-        return parksWithSelectedVisitStatus.filter((park) => isAreaPark(park));
-      case HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG:
-        return parksWithSelectedVisitStatus.filter((park) => isHikingAndWildernessPark(park));
-      case TRAILS_AND_ROUTES_CATEGORY_SLUG:
-        return parksWithSelectedVisitStatus.filter((park) => isTrailPark(park));
-      case "national-park":
-      case "nature-reserve-area":
-      case "outdoor-recreation-area":
-      case "cultural-history-area":
-        return parksWithSelectedVisitStatus.filter((park) => park.type.slug === activeFilter);
-      default:
-        return parksWithSelectedVisitStatus;
-    }
+    return getFilteredParks(parks, activeFilter, activeVisitStatus);
   }, [activeFilter, activeVisitStatus, parks]);
+
+  const filterSelection = isMobileFiltersOpen
+    ? { filter: mobileDraftFilter, visitStatus: mobileDraftVisitStatus }
+    : { filter: activeFilter, visitStatus: activeVisitStatus };
+
+  const previewFilteredParks = useMemo(
+    () => getFilteredParks(parks, filterSelection.filter, filterSelection.visitStatus),
+    [filterSelection.filter, filterSelection.visitStatus, parks],
+  );
 
   const requestMapReset = useCallback(() => {
     setMapResetRequestId((current) => current + 1);
@@ -218,6 +244,11 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
   const selectFilter = useCallback(
     (filter: ParkTypeMapFilter) => {
       setIsVisitStatusSelectorOpen(false);
+      if (isMobileFiltersOpen) {
+        setMobileDraftFilter(filter);
+        return;
+      }
+
       if (filter === activeFilter) {
         requestMapReset();
         return;
@@ -225,15 +256,20 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
 
       applyFilters({ nextFilter: filter });
     },
-    [activeFilter, applyFilters, requestMapReset],
+    [activeFilter, applyFilters, isMobileFiltersOpen, requestMapReset],
   );
 
   const selectVisitStatus = useCallback(
     (visitStatus: VisitStatusFilter) => {
       setIsVisitStatusSelectorOpen(false);
+      if (isMobileFiltersOpen) {
+        setMobileDraftVisitStatus(visitStatus);
+        return;
+      }
+
       applyFilters({ nextVisitStatus: visitStatus });
     },
-    [applyFilters],
+    [applyFilters, isMobileFiltersOpen],
   );
 
   useEffect(() => {
@@ -321,6 +357,25 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
     }
   }, [filteredParks, homeParkFocusRequest, parks]);
 
+  useEffect(() => {
+    if (!wasMobileFiltersOpenRef.current && isMobileFiltersOpen) {
+      setMobileDraftFilter(activeFilter);
+      setMobileDraftVisitStatus(activeVisitStatus);
+      setMobileFilterOpenState({
+        filter: activeFilter,
+        visitStatus: activeVisitStatus,
+      });
+      setIsVisitStatusSelectorOpen(false);
+    }
+
+    if (wasMobileFiltersOpenRef.current && !isMobileFiltersOpen) {
+      setMobileFilterOpenState(null);
+      setIsVisitStatusSelectorOpen(false);
+    }
+
+    wasMobileFiltersOpenRef.current = isMobileFiltersOpen;
+  }, [activeFilter, activeVisitStatus, isMobileFiltersOpen]);
+
   const visitStatusOptions = useMemo(
     () =>
       [
@@ -332,7 +387,38 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
   );
 
   const activeVisitStatusOption =
-    visitStatusOptions.find((option) => option.id === activeVisitStatus) ?? visitStatusOptions[0];
+    visitStatusOptions.find((option) => option.id === filterSelection.visitStatus) ??
+    visitStatusOptions[0];
+  const inactiveVisitStatusOptions = visitStatusOptions.filter(
+    (option) => option.id !== filterSelection.visitStatus,
+  );
+
+  const hasPendingMobileFilterChanges =
+    !!mobileFilterOpenState &&
+    (mobileDraftFilter !== mobileFilterOpenState.filter ||
+      mobileDraftVisitStatus !== mobileFilterOpenState.visitStatus);
+
+  const handleMobileFilterAction = useCallback(() => {
+    setIsVisitStatusSelectorOpen(false);
+
+    if (!hasPendingMobileFilterChanges) {
+      closeMobileFilters();
+      return;
+    }
+
+    applyFilters({
+      nextFilter: mobileDraftFilter,
+      nextVisitStatus: mobileDraftVisitStatus,
+      resetViewOnChange: true,
+    });
+    closeMobileFilters();
+  }, [
+    applyFilters,
+    closeMobileFilters,
+    hasPendingMobileFilterChanges,
+    mobileDraftFilter,
+    mobileDraftVisitStatus,
+  ]);
 
   const visitStatusListId = "park-map-visit-status-options";
 
@@ -342,12 +428,12 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
         <Button
           key={option.id}
           type="button"
-          variant={activeFilter === option.id ? "default" : "outline"}
+          variant={filterSelection.filter === option.id ? "default" : "outline"}
           size="sm"
           onClick={() => selectFilter(option.id)}
           className={cn(
             FILTER_BUTTON_CLASS_NAME,
-            activeFilter === option.id
+            filterSelection.filter === option.id
               ? ACTIVE_FILTER_BUTTON_CLASS_NAME
               : INACTIVE_FILTER_BUTTON_CLASS_NAME,
           )}
@@ -376,18 +462,18 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
         </Button>
         {!!isVisitStatusSelectorOpen && (
           <div id={visitStatusListId} className="mt-2 space-y-1">
-            {visitStatusOptions.map((option) => (
+            {inactiveVisitStatusOptions.map((option) => (
               <Button
                 key={option.id}
                 type="button"
-                variant={activeVisitStatus === option.id ? "default" : "outline"}
+                variant={filterSelection.visitStatus === option.id ? "default" : "outline"}
                 size="sm"
-                aria-pressed={activeVisitStatus === option.id}
+                aria-pressed={filterSelection.visitStatus === option.id}
                 onClick={() => selectVisitStatus(option.id)}
                 className={cn(
                   FILTER_BUTTON_CLASS_NAME,
                   "min-h-10 rounded-[1.2rem]",
-                  activeVisitStatus === option.id
+                  filterSelection.visitStatus === option.id
                     ? ACTIVE_FILTER_BUTTON_CLASS_NAME
                     : INACTIVE_FILTER_BUTTON_CLASS_NAME,
                 )}
@@ -398,8 +484,25 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
           </div>
         )}
       </fieldset>
+      {isMobileFiltersOpen ? (
+        <Button
+          type="button"
+          variant={hasPendingMobileFilterChanges ? "default" : "outline"}
+          size="sm"
+          onClick={handleMobileFilterAction}
+          className={cn(
+            FILTER_BUTTON_CLASS_NAME,
+            "rounded-[1.2rem]",
+            hasPendingMobileFilterChanges
+              ? ACTIVE_FILTER_BUTTON_CLASS_NAME
+              : INACTIVE_FILTER_BUTTON_CLASS_NAME,
+          )}
+        >
+          {hasPendingMobileFilterChanges ? t("saveAndClose") : t("close")}
+        </Button>
+      ) : null}
       <span className="pt-1 text-center text-xs font-medium text-foreground/70 dark:text-sky-100/82">
-        {t("results", { count: filteredParks.length })}
+        {t("results", { count: previewFilteredParks.length })}
       </span>
     </div>
   );

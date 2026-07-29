@@ -98,6 +98,8 @@
       "visitStatusAll": "Kaikki",
       "visited": "Käydyt",
       "notVisited": "Käymättömät",
+      "close": "Sulje",
+      "saveAndClose": "Tallenna ja sulje",
       "results": "{count} kohdetta"
     }
   },
