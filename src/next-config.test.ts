@@ -1,3 +1,4 @@
+import { hasRemoteMatch } from "next/dist/shared/lib/match-remote-pattern";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const ORIGINAL_API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -32,6 +33,10 @@ describe("next.config", () => {
 
   it("allowlists the R2 image host and the configured backend origin for next/image", async () => {
     const nextConfig = await loadNextConfig("https://reissuvihko-api.vercel.app");
+    const remotePatterns = nextConfig.images?.remotePatterns ?? [];
+    const signedVisitImageUrl = new URL(
+      "https://9a805f60ebd517a6d6ee33654b4f5a4d.r2.cloudflarestorage.com/finnish-parks-images/visits/178/de149480-9616-42e4-939e-d70748f0ffd2.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260729T163249Z&X-Amz-Expires=3600&X-Amz-Signature=8fdc4db982e0d7d48cca03dd5f47fc7eb5012d9e38b9241442c74f4860368b72&X-Amz-SignedHeaders=host&x-id=GetObject",
+    );
 
     expect(nextConfig.images).toMatchObject({
       deviceSizes: [640, 750, 828, 1080, 1200, 1536],
@@ -41,10 +46,19 @@ describe("next.config", () => {
       qualities: [75],
     });
 
-    expect(nextConfig.images?.remotePatterns).toEqual([
-      new URL("https://9a805f60ebd517a6d6ee33654b4f5a4d.r2.cloudflarestorage.com"),
-      new URL("https://reissuvihko-api.vercel.app"),
+    expect(remotePatterns).toEqual([
+      {
+        protocol: "https",
+        hostname: "9a805f60ebd517a6d6ee33654b4f5a4d.r2.cloudflarestorage.com",
+        port: "",
+      },
+      {
+        protocol: "https",
+        hostname: "reissuvihko-api.vercel.app",
+        port: "",
+      },
     ]);
+    expect(hasRemoteMatch([], remotePatterns, signedVisitImageUrl)).toBe(true);
   });
 
   it("applies baseline security headers to all routes", async () => {
