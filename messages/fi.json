@@ -727,6 +727,8 @@
       "previewBadge": "Esikatselu",
       "shareBadge": "Jaettava linkki",
       "progress": "Kortti {current}/{total}",
+      "progressNavigator": "Korttinavigaatio",
+      "goToCard": "Siirry korttiin {current}/{total}",
       "previous": "Edellinen",
       "next": "Seuraava",
       "emptyTitle": "Vuosi odottaa ensimmäistä retkeä",
@@ -752,6 +754,10 @@
       "busiestWeekday": "Viikonpäivä",
       "tripHighlightTitle": "Vuoden retki",
       "tripHighlightCaption": "Eniten käyntejä ja kuvamuistoja sisältävä retki.",
+      "newParksTitle": "Uudet kansallispuistot",
+      "newParksHeading": "{count} uutta kansallispuistoa",
+      "newParksCaption": "Näissä kansallispuistoissa kävimme ensimmäistä kertaa tämän vuoden aikana.",
+      "newParkVisitedOn": "Ensikäynti {date}",
       "seasonalTitle": "Kausittain",
       "seasonalCaption": "Käynnit vuodenajoittain",
       "strongestSeasonValue": "Vahvin vuodenaika: {season}",
@@ -759,6 +765,7 @@
       "summaryCaption": "Siinäpä se, kiitos kun katsoit ja me suuntaamme kohti uusia retkiä!",
       "publishedOn": "Julkaistu {date}",
       "notAvailable": "Ei vielä dataa",
+      "browseApp": "Selaa Reissuvihkoa",
       "footer": "Vuosikatsaus rakentuu automaattisesti käynti- ja retkidatasta.",
       "footerHint": "Julkaistu linkki näyttää tämän saman tarinan myös julkisessa näkymässä."
     }

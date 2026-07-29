@@ -36,6 +36,7 @@ export const Header = () => {
   const normalizedPathname = normalizeAppPath(pathname);
   const isControlPanel = appRoutePatterns.isControlPanelPath(pathname);
   const isPublicVisitsPage = normalizedPathname === appRoutes.visits;
+  const isYearReviewSharePage = appRoutePatterns.isYearReviewSharePath(pathname);
   const [isMobileMenuMounted, setIsMobileMenuMounted] = useState(false);
   const [isMobileMenuVisible, setIsMobileMenuVisible] = useState(false);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
@@ -113,11 +114,16 @@ export const Header = () => {
 
   useEffect(() => {
     void pathname;
-    setIsHeaderVisible(true);
+    setIsHeaderVisible(!isYearReviewSharePage);
     lastScrollYRef.current = window.scrollY;
-  }, [pathname]);
+  }, [isYearReviewSharePage, pathname]);
 
   useEffect(() => {
+    if (isYearReviewSharePage) {
+      setIsHeaderVisible(false);
+      return;
+    }
+
     if (isMobileMenuVisible) {
       setIsHeaderVisible(true);
       return;
@@ -143,18 +149,22 @@ export const Header = () => {
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
-  }, [isMobileMenuVisible]);
+  }, [isMobileMenuVisible, isYearReviewSharePage]);
 
   useEffect(() => {
     document.documentElement.style.setProperty(
       "--page-sticky-nav-top",
-      isHeaderVisible ? PAGE_STICKY_NAV_TOP_VISIBLE : PAGE_STICKY_NAV_TOP_HIDDEN,
+      isYearReviewSharePage
+        ? PAGE_STICKY_NAV_TOP_HIDDEN
+        : isHeaderVisible
+          ? PAGE_STICKY_NAV_TOP_VISIBLE
+          : PAGE_STICKY_NAV_TOP_HIDDEN,
     );
 
     return () => {
       document.documentElement.style.removeProperty("--page-sticky-nav-top");
     };
-  }, [isHeaderVisible]);
+  }, [isHeaderVisible, isYearReviewSharePage]);
 
   const desktopNavItems = useMemo(
     () => [
@@ -185,6 +195,10 @@ export const Header = () => {
     ],
     [auth.isAuthenticated, isControlPanel, isPublicVisitsPage, normalizedPathname, t],
   );
+
+  if (isYearReviewSharePage) {
+    return null;
+  }
 
   const mobileMenu =
     isMobileMenuMounted && typeof document !== "undefined"

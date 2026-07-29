@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { PUBLIC_PAGE_SHELL_CLASS_NAME } from "@/components/layout/public-page-styles";
 import { YearReviewStory } from "@/components/year-review/year-review-story";
+import { cn } from "@/lib/cn";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import {
   buildYearReviewShareDescription,
@@ -55,7 +56,7 @@ const PublicYearReviewSharePage = async ({ params }: PublicYearReviewSharePagePr
   const share = await readShareOrNotFound(shareId);
 
   return (
-    <div className={PUBLIC_PAGE_SHELL_CLASS_NAME}>
+    <div className={cn(PUBLIC_PAGE_SHELL_CLASS_NAME, "pb-6 pt-0")}>
       <YearReviewStory
         story={share.story}
         mode="public"

@@ -192,6 +192,8 @@ export const appRoutePatterns = {
   isParksPath: (path: string) => normalizePathname(path) === appRoutes.parks,
   isTripPlannerPath: (path: string) => normalizePathname(path) === appRoutes.tripPlanner,
   isVisitsPath: (path: string) => normalizePathname(path) === appRoutes.visits,
+  isYearReviewSharePath: (path: string) =>
+    /^\/vuosikatsaus\/jako\/[^/]+$/.test(normalizePathname(path)),
 } as const;
 
 export const createPathWithSearchParams = (

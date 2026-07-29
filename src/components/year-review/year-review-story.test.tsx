@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { YearReviewStory } from "./year-review-story";
 
@@ -56,6 +57,7 @@ const story = {
       year: 2024,
     },
     {
+      featuredImage: null,
       kind: "milestone" as const,
       milestone: "first-visit" as const,
       visit: {
@@ -117,6 +119,7 @@ const fallbackStory = {
       year: 2025,
     },
     {
+      featuredImage: null,
       kind: "milestone" as const,
       milestone: "last-visit" as const,
       visit: {
@@ -165,6 +168,7 @@ const fallbackStory = {
     },
     {
       kind: "trip-highlight" as const,
+      featuredImage: null,
       trip: {
         dateRange: null,
         id: 99,
@@ -173,6 +177,19 @@ const fallbackStory = {
         slug: "loppukesan-kierros",
         visitCount: 2,
       },
+    },
+    {
+      kind: "new-parks" as const,
+      parks: [
+        {
+          featuredImage: null,
+          park: {
+            name: "Lauhanvuori",
+            slug: "lauhanvuori",
+          },
+          visitedOn: "2025-06-12",
+        },
+      ],
     },
     {
       kind: "seasonal" as const,
@@ -280,6 +297,11 @@ describe("YearReviewStory", () => {
     expect(screen.getByText("seasons.spring").parentElement).toHaveTextContent("🌱");
     expect(screen.getByText("seasons.summer").parentElement).toHaveTextContent("☀️");
     expect(screen.getByText(/Julkaistu/)).toBeInTheDocument();
+    expect(screen.getByText("story.footer")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "story.browseApp" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "siteTitle" })).toHaveAttribute("href", "/");
+    expect(screen.queryByText("story.shareBadge")).not.toBeInTheDocument();
+    expect(screen.queryByText("story.footerHint")).not.toBeInTheDocument();
   });
 
   it("falls back to an empty story card when there are no visits", () => {
@@ -328,6 +350,8 @@ describe("YearReviewStory", () => {
     expect(screen.getAllByText("story.notAvailable").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Loppukesän kierros").length).toBe(2);
     expect(screen.getByText("story.tripHighlightCaption")).toBeInTheDocument();
+    expect(screen.getByText("story.newParksTitle")).toBeInTheDocument();
+    expect(screen.getByText("Lauhanvuori")).toBeInTheDocument();
   });
 
   it("falls back to the visit details tile when the photo highlight has no featured image", () => {
@@ -378,6 +402,100 @@ describe("YearReviewStory", () => {
     unmount();
 
     expect(disconnect).toHaveBeenCalled();
+    vi.unstubAllGlobals();
+  });
+
+  it("lets people jump straight to a story card from the progress bars", async () => {
+    const user = userEvent.setup();
+    const scrollTo = vi.fn();
+    const matchMedia = vi.fn().mockReturnValue({
+      addEventListener: vi.fn(),
+      addListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+      matches: false,
+      media: "(prefers-reduced-motion: reduce)",
+      onchange: null,
+      removeEventListener: vi.fn(),
+      removeListener: vi.fn(),
+    });
+
+    Object.defineProperty(window, "scrollTo", {
+      configurable: true,
+      value: scrollTo,
+      writable: true,
+    });
+    Object.defineProperty(document.documentElement, "scrollHeight", {
+      configurable: true,
+      value: 3200,
+    });
+    Object.defineProperty(window, "innerHeight", {
+      configurable: true,
+      value: 900,
+      writable: true,
+    });
+    vi.stubGlobal("matchMedia", matchMedia);
+
+    render(<YearReviewStory story={fallbackStory} mode="public" />);
+
+    const cardJumpButtons = screen.getAllByRole("button", { name: "story.goToCard" });
+    const firstCardButton = cardJumpButtons[0];
+
+    if (!firstCardButton) {
+      throw new Error("Expected the first card jump button to exist.");
+    }
+
+    await user.click(firstCardButton);
+
+    expect(scrollTo).toHaveBeenCalledWith({
+      behavior: "auto",
+      top: 0,
+    });
+    vi.clearAllMocks();
+
+    const navigationPanel = screen.getByLabelText("story.progressNavigator").closest("div");
+    const targetSection = screen.getByTestId("year-review-story-card-2");
+
+    if (!(navigationPanel && targetSection)) {
+      throw new Error("Expected the navigation panel and target section to exist.");
+    }
+
+    vi.spyOn(navigationPanel, "getBoundingClientRect").mockReturnValue({
+      bottom: 108,
+      height: 96,
+      left: 0,
+      right: 0,
+      toJSON: () => ({}),
+      top: 12,
+      width: 0,
+      x: 0,
+      y: 12,
+    });
+    vi.spyOn(targetSection, "getBoundingClientRect").mockReturnValue({
+      bottom: 1840,
+      height: 520,
+      left: 0,
+      right: 0,
+      toJSON: () => ({}),
+      top: 1320,
+      width: 0,
+      x: 0,
+      y: 1320,
+    });
+
+    const targetButton = cardJumpButtons[2];
+
+    expect(targetButton).toBeDefined();
+
+    if (!targetButton) {
+      throw new Error("Expected a third card jump button to exist.");
+    }
+
+    await user.click(targetButton);
+
+    expect(scrollTo).toHaveBeenCalledWith({
+      behavior: "auto",
+      top: 1192,
+    });
     vi.unstubAllGlobals();
   });
 });

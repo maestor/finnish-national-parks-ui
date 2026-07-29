@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { appRoutePatterns, appRoutes, normalizeAppPath } from "./routes";
+import {
+  appRoutePatterns,
+  appRoutes,
+  createPathWithSearchParams,
+  normalizeAppPath,
+} from "./routes";
 
 describe("routes", () => {
   it("defines canonical Finnish app routes", () => {
@@ -61,5 +66,30 @@ describe("routes", () => {
     expect(appRoutePatterns.isControlPanelPath("/control-panel/parks")).toBe(true);
     expect(appRoutePatterns.isControlPanelPath("/control-panel/trips")).toBe(true);
     expect(appRoutePatterns.isControlPanelPath("/paikat")).toBe(false);
+  });
+
+  it("detects year-review share routes after normalization", () => {
+    expect(appRoutePatterns.isYearReviewSharePath("/vuosikatsaus/jako/share-123")).toBe(true);
+    expect(appRoutePatterns.isYearReviewSharePath("/year-review/share/share-123")).toBe(true);
+    expect(appRoutePatterns.isYearReviewSharePath("/paikat")).toBe(false);
+  });
+
+  it("builds a path with only defined search params", () => {
+    expect(
+      createPathWithSearchParams(appRoutes.visits, {
+        featured: false,
+        month: null,
+        year: 2026,
+      }),
+    ).toBe("/kaynnit?featured=false&year=2026");
+  });
+
+  it("returns the plain path when every search param is empty", () => {
+    expect(
+      createPathWithSearchParams(appRoutes.visits, {
+        month: undefined,
+        year: null,
+      }),
+    ).toBe("/kaynnit");
   });
 });

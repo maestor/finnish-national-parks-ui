@@ -13,6 +13,7 @@ import {
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
+import { HeaderBrandMark } from "@/components/layout/header-brand-mark";
 import {
   PUBLIC_HERO_DESCRIPTION_CLASS_NAME,
   PUBLIC_PANEL_CLASS_NAME,
@@ -55,13 +56,7 @@ const WEEKDAY_FORMATTER = new Intl.DateTimeFormat("fi-FI", {
   weekday: "long",
 });
 
-const resolveScrollBehavior = () => {
-  if (typeof window === "undefined") {
-    return "smooth" as const;
-  }
-
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
-};
+const CARD_SCROLL_GAP_PX = 20;
 
 const formatVisitDate = (value: string) => DATE_FORMATTER.format(new Date(`${value}T12:00:00Z`));
 
@@ -129,6 +124,11 @@ const getSummaryHighlights = (story: YearReviewStoryData) => [
   },
 ];
 
+const getIntroHighlights = (story: YearReviewStoryData) =>
+  getSummaryHighlights(story)
+    .filter((item) => item.labelKey !== "stats.visits")
+    .slice(0, 3);
+
 const getRepeatSpotlight = (
   mostVisitedPark: YearReviewMostVisitedPark | null,
 ): YearReviewMostVisitedPark | null => {
@@ -168,6 +168,8 @@ const getCardKey = (card: RenderableYearReviewCard) => {
       return "profile";
     case "trip-highlight":
       return `trip-${card.trip.id}`;
+    case "new-parks":
+      return `new-parks-${card.parks.map((parkMoment) => parkMoment.park.slug).join("-")}`;
     case "seasonal":
       return "seasonal";
     case "summary":
@@ -208,6 +210,8 @@ const CARD_THEME_CLASS_NAMES: Record<RenderableYearReviewCard["kind"], string> =
     "bg-[linear-gradient(145deg,rgba(30,41,59,0.98),rgba(12,74,110,0.88),rgba(21,128,61,0.84))] text-primary-foreground",
   "trip-highlight":
     "bg-[linear-gradient(145deg,rgba(68,64,60,0.98),rgba(22,101,52,0.84),rgba(14,116,144,0.82))] text-primary-foreground",
+  "new-parks":
+    "bg-[linear-gradient(145deg,rgba(20,83,45,0.98),rgba(64,94,16,0.86),rgba(12,74,110,0.8))] text-primary-foreground",
   seasonal:
     "bg-[linear-gradient(145deg,rgba(30,41,59,0.98),rgba(14,116,144,0.82),rgba(22,101,52,0.8))] text-primary-foreground",
   summary:
@@ -221,7 +225,11 @@ const YearReviewStory = ({
   story,
 }: YearReviewStoryProps) => {
   const t = useTranslations("yearReview");
+  const layoutT = useTranslations("layout");
   const [activeIndex, setActiveIndex] = useState(0);
+  const progressButtonRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const storyRef = useRef<HTMLDivElement | null>(null);
+  const navigationRef = useRef<HTMLDivElement | null>(null);
   const sectionRefs = useRef<Array<HTMLElement | null>>([]);
   const profileCard = findProfileCard(story);
   const repeatSpotlight = getRepeatSpotlight(profileCard?.mostVisitedPark ?? null);
@@ -271,28 +279,81 @@ const YearReviewStory = ({
   }, []);
 
   useEffect(() => {
+    progressButtonRefs.current = progressButtonRefs.current.slice(0, cards.length);
     sectionRefs.current = sectionRefs.current.slice(0, cards.length);
     setActiveIndex(0);
   }, [cards.length]);
 
-  const scrollToCard = (index: number) => {
-    const nextSection = sectionRefs.current[index];
-
-    nextSection?.scrollIntoView({
-      behavior: resolveScrollBehavior(),
-      block: "start",
+  const scrollToPosition = (top: number) => {
+    window.scrollTo({
+      behavior: "auto",
+      top,
     });
   };
 
+  const scrollToCard = (index: number) => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const nextSection = sectionRefs.current[index];
+    const navigation = navigationRef.current;
+
+    if (!(nextSection && navigation)) {
+      return;
+    }
+
+    if (index === 0) {
+      const storyTop = storyRef.current?.getBoundingClientRect().top ?? 0;
+
+      scrollToPosition(Math.max(storyTop + window.scrollY, 0));
+      return;
+    }
+
+    const navigationRect = navigation.getBoundingClientRect();
+    const sectionTop = nextSection.getBoundingClientRect().top + window.scrollY;
+    const maxScrollTop = Math.max(document.documentElement.scrollHeight - window.innerHeight, 0);
+    const scrollTarget = Math.min(
+      Math.max(sectionTop - (navigationRect.top + navigationRect.height + CARD_SCROLL_GAP_PX), 0),
+      maxScrollTop,
+    );
+
+    scrollToPosition(scrollTarget);
+  };
+
+  const handleStepButtonNavigation = (targetIndex: number, button: HTMLButtonElement | null) => {
+    button?.blur();
+
+    const targetButton = progressButtonRefs.current[targetIndex];
+
+    if (targetButton) {
+      targetButton.focus({ preventScroll: true });
+      targetButton.click();
+      return;
+    }
+
+    scrollToCard(targetIndex);
+  };
+
   return (
-    <div data-testid="year-review-story" className="space-y-5">
-      <div className={cn(PUBLIC_PANEL_CLASS_NAME, "sticky top-3 z-20 px-4 py-4 sm:px-5")}>
+    <div
+      ref={storyRef}
+      data-testid="year-review-story"
+      className={cn("space-y-5", mode === "public" && "pb-24 sm:pb-32")}
+    >
+      <div
+        ref={navigationRef}
+        className={cn(PUBLIC_PANEL_CLASS_NAME, "sticky z-20 px-4 py-4 sm:px-5")}
+        style={{ top: "var(--page-sticky-nav-top, 0rem)" }}
+      >
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
-              {mode === "preview" ? t("story.previewBadge") : t("story.shareBadge")}
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
+              {mode === "preview" && (
+                <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.22em] text-primary">
+                  {t("story.previewBadge")}
+                </span>
+              )}
               {t("story.progress", { current: activeIndex + 1, total: cards.length })}
             </p>
           </div>
@@ -302,7 +363,9 @@ const YearReviewStory = ({
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => scrollToCard(Math.max(0, activeIndex - 1))}
+              onClick={(event) => {
+                handleStepButtonNavigation(Math.max(0, activeIndex - 1), event.currentTarget);
+              }}
               disabled={activeIndex === 0}
             >
               {t("story.previous")}
@@ -310,7 +373,12 @@ const YearReviewStory = ({
             <Button
               type="button"
               size="sm"
-              onClick={() => scrollToCard(Math.min(cards.length - 1, activeIndex + 1))}
+              onClick={(event) => {
+                handleStepButtonNavigation(
+                  Math.min(cards.length - 1, activeIndex + 1),
+                  event.currentTarget,
+                );
+              }}
               disabled={activeIndex === cards.length - 1}
             >
               {t("story.next")}
@@ -318,17 +386,26 @@ const YearReviewStory = ({
           </div>
         </div>
 
-        <div className="mt-4 flex gap-2" aria-hidden="true">
-          {cards.map((card, index) => (
-            <span
-              key={getCardKey(card)}
-              className={cn(
-                "h-1.5 flex-1 rounded-full bg-muted transition-all duration-300",
-                index === activeIndex && "bg-primary",
-              )}
-            />
-          ))}
-        </div>
+        <nav className="mt-4" aria-label={t("story.progressNavigator")}>
+          <div className="flex gap-2">
+            {cards.map((card, index) => (
+              <button
+                key={getCardKey(card)}
+                ref={(element) => {
+                  progressButtonRefs.current[index] = element;
+                }}
+                type="button"
+                onClick={() => scrollToCard(index)}
+                aria-label={t("story.goToCard", { current: index + 1, total: cards.length })}
+                aria-current={index === activeIndex ? "step" : undefined}
+                className={cn(
+                  "h-1.5 flex-1 rounded-full bg-muted transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                  index === activeIndex && "bg-primary",
+                )}
+              />
+            ))}
+          </div>
+        </nav>
       </div>
 
       <div className="space-y-5">
@@ -427,18 +504,16 @@ const YearReviewStory = ({
                       </div>
 
                       <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-                        {getSummaryHighlights(story)
-                          .slice(0, 3)
-                          .map((item) => (
-                            <div key={item.labelKey} className={METRIC_TILE_CLASS_NAME}>
-                              <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
-                                {t(item.labelKey)}
-                              </p>
-                              <p className="mt-2 text-3xl font-black tracking-tight text-primary-foreground">
-                                {item.value}
-                              </p>
-                            </div>
-                          ))}
+                        {getIntroHighlights(story).map((item) => (
+                          <div key={item.labelKey} className={METRIC_TILE_CLASS_NAME}>
+                            <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
+                              {t(item.labelKey)}
+                            </p>
+                            <p className="mt-2 text-3xl font-black tracking-tight text-primary-foreground">
+                              {item.value}
+                            </p>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </>
@@ -465,7 +540,14 @@ const YearReviewStory = ({
                       </div>
                     </div>
 
-                    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.82fr)]">
+                    <div
+                      className={cn(
+                        "grid gap-4",
+                        card.featuredImage
+                          ? "lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]"
+                          : "lg:grid-cols-[minmax(0,1fr)_minmax(0,0.82fr)]",
+                      )}
+                    >
                       <div className="grid gap-3 sm:grid-cols-2">
                         {card.visit.route !== null && (
                           <div className={METRIC_TILE_CLASS_NAME}>
@@ -500,6 +582,24 @@ const YearReviewStory = ({
                           {card.visit.imageCount}
                         </p>
                       </div>
+
+                      {card.featuredImage ? (
+                        <div className="relative overflow-hidden rounded-3xl border border-white/24 bg-black/12 shadow-[0_24px_56px_rgba(15,23,42,0.24)]">
+                          <AppImage
+                            src={card.featuredImage.thumbUrl}
+                            alt={
+                              card.featuredImage.alt ??
+                              `${card.visit.park.name}, ${formatVisitDate(card.visit.visitedOn)}`
+                            }
+                            width={card.featuredImage.thumbWidth ?? 1200}
+                            height={card.featuredImage.thumbHeight ?? 900}
+                            sizes="(min-width: 1024px) 28rem, 100vw"
+                            unoptimized
+                            className="h-72 w-full object-cover sm:h-80"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/84 via-slate-950/16 to-transparent" />
+                        </div>
+                      ) : null}
                     </div>
                   </>
                 )}
@@ -680,7 +780,14 @@ const YearReviewStory = ({
                       </div>
                     </div>
 
-                    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]">
+                    <div
+                      className={cn(
+                        "grid gap-3",
+                        card.featuredImage
+                          ? "lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]"
+                          : "lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]",
+                      )}
+                    >
                       <div className="grid gap-3 sm:grid-cols-2">
                         <div className={METRIC_TILE_CLASS_NAME}>
                           <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
@@ -719,6 +826,79 @@ const YearReviewStory = ({
                           </p>
                         )}
                       </div>
+
+                      {card.featuredImage ? (
+                        <div className="relative overflow-hidden rounded-3xl border border-white/24 bg-black/12 shadow-[0_24px_56px_rgba(15,23,42,0.24)]">
+                          <AppImage
+                            src={card.featuredImage.thumbUrl}
+                            alt={card.featuredImage.alt ?? card.trip.name}
+                            width={card.featuredImage.thumbWidth ?? 1200}
+                            height={card.featuredImage.thumbHeight ?? 900}
+                            sizes="(min-width: 1024px) 28rem, 100vw"
+                            unoptimized
+                            className="h-80 w-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/84 via-slate-950/16 to-transparent" />
+                        </div>
+                      ) : null}
+                    </div>
+                  </>
+                )}
+
+                {card.kind === "new-parks" && (
+                  <>
+                    <div className="space-y-4">
+                      <div className={STORY_ICON_SURFACE_CLASS_NAME}>
+                        <Trees className="h-5 w-5" aria-hidden="true" />
+                      </div>
+                      <div className="space-y-3">
+                        <p className={MICRO_BADGE_CLASS_NAME}>{t("story.newParksTitle")}</p>
+                        <h3 className="text-3xl font-black tracking-tight text-primary-foreground sm:text-5xl">
+                          {t("story.newParksHeading", { count: card.parks.length })}
+                        </h3>
+                        <p className={CARD_COPY_CLASS_NAME}>{t("story.newParksCaption")}</p>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                      {card.parks.map((parkMoment) => (
+                        <article
+                          key={parkMoment.park.slug}
+                          className="overflow-hidden rounded-3xl border border-white/24 bg-black/14 shadow-[0_24px_56px_rgba(15,23,42,0.2)]"
+                        >
+                          {parkMoment.featuredImage ? (
+                            <div className="relative">
+                              <AppImage
+                                src={parkMoment.featuredImage.thumbUrl}
+                                alt={
+                                  parkMoment.featuredImage.alt ??
+                                  `${parkMoment.park.name}, ${formatVisitDate(parkMoment.visitedOn)}`
+                                }
+                                width={parkMoment.featuredImage.thumbWidth ?? 1200}
+                                height={parkMoment.featuredImage.thumbHeight ?? 900}
+                                sizes="(min-width: 1280px) 20rem, (min-width: 768px) 24rem, 100vw"
+                                unoptimized
+                                className="h-56 w-full object-cover"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/82 via-transparent to-transparent" />
+                            </div>
+                          ) : null}
+
+                          <div className="space-y-3 p-5">
+                            <Link
+                              href={appRoutes.park(parkMoment.park.slug)}
+                              className="inline-flex text-xl font-semibold text-primary-foreground underline decoration-white/32 underline-offset-4 transition-colors hover:text-white"
+                            >
+                              {parkMoment.park.name}
+                            </Link>
+                            <p className="text-sm text-primary-foreground/82">
+                              {t("story.newParkVisitedOn", {
+                                date: formatVisitDate(parkMoment.visitedOn),
+                              })}
+                            </p>
+                          </div>
+                        </article>
+                      ))}
                     </div>
                   </>
                 )}
@@ -827,14 +1007,41 @@ const YearReviewStory = ({
       </div>
 
       <div className={cn(PUBLIC_PANEL_CLASS_NAME, "px-5 py-5")}>
-        <p className="text-sm text-muted-foreground">{t("story.footer")}</p>
-        <p className={`mt-2 ${PUBLIC_HERO_DESCRIPTION_CLASS_NAME}`}>
-          <Route
-            className="mr-2 inline h-4 w-4 align-text-bottom text-primary"
-            aria-hidden="true"
-          />
-          {t("story.footerHint")}
-        </p>
+        {mode === "public" ? (
+          <div className="flex flex-col gap-4 sm:grid sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center">
+            <Link
+              href={appRoutes.home}
+              className="inline-flex items-center gap-3 self-start rounded-full border border-white/45 bg-white/82 px-3 py-2 text-foreground shadow-[0_12px_28px_rgba(148,163,184,0.22)] backdrop-blur-md transition-colors hover:bg-white/94 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/56 dark:hover:bg-slate-950/76 dark:shadow-[0_16px_32px_rgba(2,6,23,0.38)] sm:justify-self-start"
+            >
+              <HeaderBrandMark className="h-10 w-10" />
+              <span className="text-base font-semibold">{layoutT("siteTitle")}</span>
+            </Link>
+            <p className={cn(PUBLIC_HERO_DESCRIPTION_CLASS_NAME, "sm:text-center")}>
+              <Route
+                className="mr-2 inline h-4 w-4 align-text-bottom text-primary"
+                aria-hidden="true"
+              />
+              {t("story.footer")}
+            </p>
+            <Link
+              href={appRoutes.home}
+              className="inline-flex items-center justify-center rounded-full border border-border/60 px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-primary/45 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:justify-self-end"
+            >
+              {t("story.browseApp")}
+            </Link>
+          </div>
+        ) : (
+          <>
+            <p className="text-sm text-muted-foreground">{t("story.footer")}</p>
+            <p className={`mt-2 ${PUBLIC_HERO_DESCRIPTION_CLASS_NAME}`}>
+              <Route
+                className="mr-2 inline h-4 w-4 align-text-bottom text-primary"
+                aria-hidden="true"
+              />
+              {t("story.footerHint")}
+            </p>
+          </>
+        )}
       </div>
     </div>
   );

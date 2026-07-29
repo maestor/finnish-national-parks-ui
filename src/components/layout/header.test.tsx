@@ -75,6 +75,15 @@ describe("Header", () => {
     expect(within(siteTitleLink).getByTestId("header-brand-mark")).toBeInTheDocument();
   });
 
+  it("does not render on the public year-review share route", () => {
+    pathnameState.value = "/vuosikatsaus/jako/93d27350-b7a4-48ba-a93f-16f38d44aa03";
+
+    const { container } = render(<Header />);
+
+    expect(container).toBeEmptyDOMElement();
+    expect(document.documentElement.style.getPropertyValue("--page-sticky-nav-top")).toBe("0rem");
+  });
+
   it("keeps the sticky header overflow visible for layered search and menus", () => {
     const { container } = render(<Header />);
 
@@ -103,6 +112,35 @@ describe("Header", () => {
       expect(header).toHaveClass("translate-y-0");
     });
     expect(document.documentElement.style.getPropertyValue("--page-sticky-nav-top")).toBe("3.5rem");
+  });
+
+  it("ignores tiny scroll deltas so the header does not flicker", () => {
+    const { container } = render(<Header />);
+    const header = container.querySelector("header");
+
+    setWindowScrollY(8);
+    fireEvent.scroll(window);
+
+    expect(header).toHaveClass("translate-y-0");
+    expect(document.documentElement.style.getPropertyValue("--page-sticky-nav-top")).toBe("3.5rem");
+  });
+
+  it("keeps the header hidden while downward scrolling continues after it has collapsed", async () => {
+    const { container } = render(<Header />);
+    const header = container.querySelector("header");
+
+    setWindowScrollY(140);
+    fireEvent.scroll(window);
+
+    await waitFor(() => {
+      expect(header).toHaveClass("-translate-y-full");
+    });
+
+    setWindowScrollY(176);
+    fireEvent.scroll(window);
+
+    expect(header).toHaveClass("-translate-y-full");
+    expect(document.documentElement.style.getPropertyValue("--page-sticky-nav-top")).toBe("0rem");
   });
 
   it("keeps the header visible while the mobile menu is open", async () => {

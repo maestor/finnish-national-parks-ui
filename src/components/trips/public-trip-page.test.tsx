@@ -709,7 +709,7 @@ describe("PublicTripPage", () => {
     }
 
     expect(within(stopCard).getByText("1 tripPage.imageCount")).toBeInTheDocument();
-    expect(screen.getByTestId("visit-image-gallery")).toHaveTextContent("images:1");
+    expect(within(stopCard).getByTestId("visit-image-gallery")).toHaveTextContent("images:1");
     expect(screen.queryByText("Hotelli keskustassa")).not.toBeInTheDocument();
   });
 

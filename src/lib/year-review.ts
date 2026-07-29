@@ -63,6 +63,7 @@ export interface YearReviewIntroCard {
 }
 
 export interface YearReviewMilestoneCard {
+  featuredImage: YearReviewStoryImage | null;
   kind: "milestone";
   milestone: "first-visit" | "last-visit";
   visit: YearReviewVisitReference;
@@ -85,6 +86,7 @@ export interface YearReviewProfileCard {
 }
 
 export interface YearReviewTripHighlightCard {
+  featuredImage: YearReviewStoryImage | null;
   kind: "trip-highlight";
   trip: {
     dateRange: {
@@ -97,6 +99,18 @@ export interface YearReviewTripHighlightCard {
     slug: string;
     visitCount: number;
   };
+}
+
+export interface YearReviewNewParksCard {
+  kind: "new-parks";
+  parks: Array<{
+    featuredImage: YearReviewStoryImage | null;
+    park: {
+      name: string;
+      slug: string;
+    };
+    visitedOn: string;
+  }>;
 }
 
 export interface YearReviewSeasonalCard {
@@ -116,6 +130,7 @@ export type YearReviewCard =
   | YearReviewPhotoHighlightCard
   | YearReviewProfileCard
   | YearReviewTripHighlightCard
+  | YearReviewNewParksCard
   | YearReviewSeasonalCard
   | YearReviewSummaryCard;
 
