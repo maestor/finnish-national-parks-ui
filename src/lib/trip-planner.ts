@@ -1,5 +1,6 @@
 import { apiFetch } from "./api";
 import type { paths } from "./api-types";
+import { TRIP_PLANNER_REQUEST_TIMEOUT_MS } from "./trip-planner-timeout";
 
 export type TripPlannerSuggestionsRequest = NonNullable<
   paths["/api/trip-planner/suggestions"]["post"]["requestBody"]
@@ -72,6 +73,7 @@ export const searchTripPlanner = async (
       ...request,
       mode: "drive",
     } satisfies TripPlannerSearchRequest),
+    signal: AbortSignal.timeout(TRIP_PLANNER_REQUEST_TIMEOUT_MS),
   });
 
 export const searchTripPlannerNearby = async (
@@ -80,6 +82,7 @@ export const searchTripPlannerNearby = async (
   apiFetch<TripPlannerNearbyResponse>("/api/trip-planner/nearby", {
     method: "POST",
     body: JSON.stringify(request),
+    signal: AbortSignal.timeout(TRIP_PLANNER_REQUEST_TIMEOUT_MS),
   });
 
 const toUiParkResult = (

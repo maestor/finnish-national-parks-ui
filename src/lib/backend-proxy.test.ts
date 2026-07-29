@@ -110,6 +110,22 @@ describe("proxyBackendRequest", () => {
     expect(options?.signal).toBeInstanceOf(AbortSignal);
   });
 
+  it("uses a caller-provided timeout override when one is configured", async () => {
+    const timeoutSignal = new AbortController().signal;
+    const timeoutSpy = vi.spyOn(AbortSignal, "timeout").mockReturnValue(timeoutSignal);
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    const request = new Request("https://frontend.example/api/trip-planner/search");
+
+    await proxyBackendRequest(request, "/api/trip-planner/search", {
+      timeoutMs: 30_000,
+    });
+
+    const [, options] = vi.mocked(globalThis.fetch).mock.calls[0] ?? [];
+    expect(timeoutSpy).toHaveBeenCalledWith(30_000);
+    expect(options?.signal).toBe(timeoutSignal);
+  });
+
   it("returns 504 when the backend request times out", async () => {
     vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(
       new DOMException("The operation timed out", "TimeoutError"),

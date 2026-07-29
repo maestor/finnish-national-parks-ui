@@ -1,0 +1,1 @@
+export const TRIP_PLANNER_REQUEST_TIMEOUT_MS = 30_000;

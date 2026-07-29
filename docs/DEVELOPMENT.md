@@ -167,6 +167,11 @@ Browser → Next.js App
                         Control-panel routes protected
 ```
 
+Backend request timeout policy:
+
+- `src/lib/api.ts` and `src/lib/backend-proxy.ts` default backend-facing requests to a `10s` timeout so hung reads do not pin pages or route handlers.
+- Trip planner route and nearby searches opt into a longer `30s` timeout because Geoapify-backed route planning can legitimately take longer than the generic default.
+
 The backend handles:
 
 - Google OAuth flow (`/auth/google`, `/auth/google/callback`)
