@@ -3,7 +3,7 @@
 import { LoaderCircle, LocateFixed } from "lucide-react";
 import * as maplibregl from "maplibre-gl";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import type { MapPark } from "@/lib/parks";
 import { getParkTypeDisplayName, getVisitStatusColor } from "@/lib/parks";
 import { appRoutes, createPathWithSearchParams } from "@/lib/routes";
@@ -13,6 +13,7 @@ import {
 } from "../providers/home-map-controls-provider";
 import { Button } from "../ui/button";
 import { ThreeDotPulse } from "../ui/three-dot-pulse";
+import { MAP_FLOATING_CONTROL_BUTTON_CLASS_NAME } from "./map-floating-control-styles";
 import { getMapStyle } from "./map-style";
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -26,6 +27,7 @@ interface ParkMapProps {
   removedSlugs?: Set<string>;
   onToggleRemoved?: (slug: string, removed: boolean) => void;
   toggleLabels?: { hide: string; show: string };
+  floatingControls?: ReactNode;
 }
 
 const FINLAND_BOUNDS: maplibregl.LngLatBoundsLike = [
@@ -56,6 +58,7 @@ const LOCATION_REQUEST_OPTIONS = {
 const GEOLOCATION_PERMISSION_DENIED = 1;
 const GEOLOCATION_POSITION_UNAVAILABLE = 2;
 const GEOLOCATION_TIMEOUT = 3;
+const MAPLIBRE_ATTRIBUTION_HTML = '<a href="https://maplibre.org/" target="_blank">MapLibre</a>';
 
 type UserLocationStatus =
   | "idle"
@@ -152,6 +155,50 @@ const getBoundsForVisibleParks = (parks: MapPark[]): maplibregl.LngLatBoundsLike
     [combinedBounds.minLon, combinedBounds.minLat],
     [combinedBounds.maxLon, combinedBounds.maxLat],
   ];
+};
+
+const collapseCompactAttribution = (container: HTMLElement) => {
+  const attributionControl = container.querySelector<HTMLElement>(
+    ".maplibregl-ctrl-attrib.maplibregl-compact",
+  );
+
+  if (!attributionControl) {
+    return;
+  }
+
+  attributionControl.classList.remove("maplibregl-compact-show");
+  attributionControl.removeAttribute("open");
+};
+
+const initializeCompactAttribution = (map: maplibregl.Map, container: HTMLElement) => {
+  let hasBeenOpened = false;
+
+  const keepCollapsedUntilOpened = () => {
+    if (hasBeenOpened) {
+      return;
+    }
+
+    collapseCompactAttribution(container);
+  };
+
+  const attributionButton = container.querySelector<HTMLElement>(".maplibregl-ctrl-attrib-button");
+  const handleAttributionOpen = () => {
+    hasBeenOpened = true;
+  };
+
+  attributionButton?.addEventListener("click", handleAttributionOpen, { once: true });
+
+  keepCollapsedUntilOpened();
+  map.on("resize", keepCollapsedUntilOpened);
+  map.on("styledata", keepCollapsedUntilOpened);
+  map.on("sourcedata", keepCollapsedUntilOpened);
+
+  return () => {
+    attributionButton?.removeEventListener("click", handleAttributionOpen);
+    map.off("resize", keepCollapsedUntilOpened);
+    map.off("styledata", keepCollapsedUntilOpened);
+    map.off("sourcedata", keepCollapsedUntilOpened);
+  };
 };
 
 const createMarkerElement = (park: MapPark, colorOverride?: string) => {
@@ -482,6 +529,7 @@ export const ParkMap = ({
   removedSlugs,
   onToggleRemoved,
   toggleLabels,
+  floatingControls,
 }: ParkMapProps) => {
   const initialBoundsRef = useRef<maplibregl.LngLatBoundsLike>(
     parks.length > 0 ? getBoundsForVisibleParks(parks) : FINLAND_BOUNDS,
@@ -725,6 +773,7 @@ export const ParkMap = ({
     const map = new maplibregl.Map({
       container,
       style: getMapStyle(),
+      attributionControl: false,
       bounds: initialBoundsRef.current,
       fitBoundsOptions: {
         duration: 0,
@@ -739,6 +788,13 @@ export const ParkMap = ({
     });
 
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+    map.addControl(
+      new maplibregl.AttributionControl({
+        compact: true,
+        customAttribution: MAPLIBRE_ATTRIBUTION_HTML,
+      }),
+    );
+    const cleanupCompactAttribution = initializeCompactAttribution(map, container);
 
     map.on("load", () => {
       setIsMapLoaded(true);
@@ -766,6 +822,7 @@ export const ParkMap = ({
       popupContentFactoriesRef.current.clear();
       userLocationMarkerRef.current?.remove();
       userLocationMarkerRef.current = null;
+      cleanupCompactAttribution();
       map.remove();
       mapRef.current = null;
       setIsUserLocationActive(false);
@@ -998,7 +1055,7 @@ export const ParkMap = ({
         role="application"
         aria-label={t("ariaLabel")}
       />
-      <div className="pointer-events-none absolute bottom-4 left-4 z-10 flex max-w-56 flex-col items-start gap-2">
+      <div className="pointer-events-none absolute bottom-8 left-2 z-10 flex max-w-56 flex-col items-start md:bottom-4">
         {locationStatusMessage !== null && (
           <output
             className="rounded-2xl border border-white/55 bg-white/88 px-3 py-2 text-xs font-medium text-foreground shadow-[0_10px_24px_rgba(148,163,184,0.18)] backdrop-blur-md dark:border-white/10 dark:bg-slate-950/78 dark:shadow-[0_16px_32px_rgba(2,6,23,0.28)]"
@@ -1007,23 +1064,28 @@ export const ParkMap = ({
             {locationStatusMessage}
           </output>
         )}
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          className="pointer-events-auto h-11 w-11 rounded-full border-white/60 bg-white/88 text-foreground shadow-[0_14px_28px_rgba(148,163,184,0.2)] backdrop-blur-md dark:border-white/10 dark:bg-slate-950/70 dark:shadow-[0_18px_36px_rgba(2,6,23,0.32)]"
-          onClick={handleLocateUser}
-          aria-label={locationButtonLabel}
-          aria-pressed={isUserLocationActive}
-          title={locationButtonLabel}
-          disabled={!isMapLoaded || userLocationStatus === "locating"}
-        >
-          {userLocationStatus === "locating" ? (
-            <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
-          ) : (
-            <LocateFixed className="h-4 w-4" aria-hidden="true" />
-          )}
-        </Button>
+        <div className="flex items-center gap-2">
+          {floatingControls ? (
+            <div className="flex items-center gap-2 md:hidden">{floatingControls}</div>
+          ) : null}
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className={MAP_FLOATING_CONTROL_BUTTON_CLASS_NAME}
+            onClick={handleLocateUser}
+            aria-label={locationButtonLabel}
+            aria-pressed={isUserLocationActive}
+            title={locationButtonLabel}
+            disabled={!isMapLoaded || userLocationStatus === "locating"}
+          >
+            {userLocationStatus === "locating" ? (
+              <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <LocateFixed className="h-4 w-4" aria-hidden="true" />
+            )}
+          </Button>
+        </div>
       </div>
       {!isMapLoaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-muted/50">

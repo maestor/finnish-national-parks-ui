@@ -1,17 +1,6 @@
 "use client";
 
-import {
-  Footprints,
-  House,
-  LogIn,
-  LogOut,
-  MapPin,
-  Menu,
-  Route,
-  Settings,
-  SlidersHorizontal,
-  X,
-} from "lucide-react";
+import { Footprints, House, LogIn, LogOut, MapPin, Menu, Route, Settings, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -22,7 +11,6 @@ import { HeaderBrandMark } from "@/components/layout/header-brand-mark";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/cn";
 import { appRoutePatterns, appRoutes, normalizeAppPath } from "@/lib/routes";
-import { useHomeMapControls } from "../providers/home-map-controls-provider";
 import { HomeParkSearch } from "./home-park-search";
 import { ThemeToggle } from "./theme-toggle";
 
@@ -49,7 +37,6 @@ export const Header = () => {
   const isControlPanel = appRoutePatterns.isControlPanelPath(pathname);
   const isParksMapPage = normalizedPathname === appRoutes.parks;
   const isPublicVisitsPage = normalizedPathname === appRoutes.visits;
-  const { isMobileFiltersOpen, toggleMobileFilters } = useHomeMapControls();
   const [isMobileMenuMounted, setIsMobileMenuMounted] = useState(false);
   const [isMobileMenuVisible, setIsMobileMenuVisible] = useState(false);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
@@ -370,25 +357,11 @@ export const Header = () => {
           </div>
 
           <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
-            <div className="min-w-0 md:flex-1 md:max-w-md">
+            <div
+              className={cn("min-w-0 md:flex-1 md:max-w-md", isParksMapPage && "hidden md:block")}
+            >
               <HomeParkSearch />
             </div>
-            {isParksMapPage && (
-              <button
-                type="button"
-                onClick={toggleMobileFilters}
-                className={cn(MOBILE_TOPBAR_ICON_BUTTON_CLASS, "md:hidden")}
-                aria-label={t("nav.filters")}
-                aria-expanded={isMobileFiltersOpen}
-                aria-controls="park-map-filters-mobile"
-              >
-                {isMobileFiltersOpen ? (
-                  <X className="h-4 w-4" aria-hidden="true" />
-                ) : (
-                  <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
-                )}
-              </button>
-            )}
             <button
               type="button"
               onClick={openMobileMenu}

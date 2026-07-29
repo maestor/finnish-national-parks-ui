@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { AnchorHTMLAttributes } from "react";
+import type { AnchorHTMLAttributes, ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   HomeMapControlsProvider,
@@ -88,10 +88,10 @@ const FocusRequestProbe = () => {
   return <div data-testid="focus-request">{homeParkFocusRequest?.slug ?? "none"}</div>;
 };
 
-const renderSearch = () =>
+const renderSearch = (props: ComponentProps<typeof HomeParkSearch> = {}) =>
   render(
     <HomeMapControlsProvider>
-      <HomeParkSearch />
+      <HomeParkSearch {...props} />
       <FocusRequestProbe />
     </HomeMapControlsProvider>,
   );
@@ -260,6 +260,16 @@ describe("HomeParkSearch", () => {
     await userEvent.click(screen.getByRole("button", { name: "layout.parkSearch.label" }));
 
     expect(screen.getByRole("searchbox")).toBeInTheDocument();
+  });
+
+  it("supports a map-sized mobile trigger button class for floating map controls", () => {
+    renderSearch({ mobileTriggerClassName: "h-11 w-11 border-red-500" });
+
+    expect(screen.getByRole("button", { name: "layout.parkSearch.label" })).toHaveClass(
+      "h-11",
+      "w-11",
+      "border-red-500",
+    );
   });
 
   it("filters in the mobile search field and closes on escape", async () => {

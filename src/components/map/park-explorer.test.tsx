@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { FilterableMapPark } from "@/lib/parks";
 import {
@@ -35,17 +36,20 @@ vi.mock("./park-map", () => ({
     canManageVisits,
     homeParkFocusRequest,
     resetViewRequestId,
+    floatingControls,
   }: {
     parks: FilterableMapPark[];
     canManageVisits?: boolean;
     homeParkFocusRequest?: { slug: string } | null;
     resetViewRequestId?: number;
+    floatingControls?: ReactNode;
   }) => (
     <div>
       <p>count:{parks.length}</p>
       <p>admin:{String(canManageVisits)}</p>
       <p>focus:{homeParkFocusRequest?.slug ?? "none"}</p>
       <p>reset:{resetViewRequestId ?? 0}</p>
+      <div data-testid="floating-controls">{floatingControls}</div>
       <ul>
         {parks.map((park) => (
           <li key={park.slug}>{park.name}</li>
@@ -492,6 +496,31 @@ describe("ParkExplorer", () => {
 
     expect(toggle).toHaveAttribute("aria-expanded", "false");
     expect(mobileFilters).toHaveClass("z-10");
+  });
+
+  it("renders the mobile filter toggle and search trigger inside the map control row", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <HomeMapControlsProvider>
+        <ParkExplorer parks={parks} />
+      </HomeMapControlsProvider>,
+    );
+
+    const floatingControls = screen.getByTestId("floating-controls");
+    const filterToggle = within(floatingControls).getByRole("button", {
+      name: "layout.nav.filters",
+    });
+
+    expect(filterToggle).toHaveAttribute("aria-controls", "park-map-filters-mobile");
+    expect(filterToggle).toHaveAttribute("aria-expanded", "false");
+    expect(
+      within(floatingControls).getByRole("button", { name: "layout.parkSearch.label" }),
+    ).toHaveClass("h-11", "w-11");
+
+    await user.click(filterToggle);
+
+    expect(filterToggle).toHaveAttribute("aria-expanded", "true");
   });
 
   it("resets filters so a focused park from the header search stays visible on the map", () => {

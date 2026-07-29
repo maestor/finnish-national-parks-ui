@@ -22,8 +22,15 @@ const SEARCH_RESULTS_PANEL_CLASS_NAME =
   "fixed left-2 right-2 top-16 z-[70] flex min-h-0 max-h-[calc(100dvh-5rem)] flex-col overflow-hidden rounded-[1.75rem] border border-white/55 bg-white/88 text-popover-foreground shadow-[0_28px_60px_rgba(148,163,184,0.28)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/88 dark:shadow-[0_32px_64px_rgba(2,6,23,0.44)] md:absolute md:left-0 md:right-0 md:top-[calc(100%+0.75rem)] md:max-h-none";
 const MOBILE_SEARCH_RESULTS_PANEL_CLASS_NAME =
   "bg-white/98 shadow-[0_32px_72px_rgba(148,163,184,0.32)] dark:bg-slate-950/97 dark:shadow-[0_36px_76px_rgba(2,6,23,0.52)]";
+const MOBILE_TRIGGER_BASE_CLASS_NAME =
+  "inline-flex items-center justify-center rounded-full text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden";
+const DEFAULT_MOBILE_TRIGGER_CLASS_NAME = `h-9 w-9 ${SEARCH_SURFACE_CLASS_NAME}`;
 
-export const HomeParkSearch = () => {
+interface HomeParkSearchProps {
+  mobileTriggerClassName?: string;
+}
+
+export const HomeParkSearch = ({ mobileTriggerClassName }: HomeParkSearchProps) => {
   const t = useTranslations("layout.parkSearch");
   const router = useRouter();
   const pathname = usePathname();
@@ -157,8 +164,8 @@ export const HomeParkSearch = () => {
           setIsMobileOpen((current) => !current);
         }}
         className={cn(
-          "inline-flex h-9 w-9 items-center justify-center rounded-full text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden",
-          SEARCH_SURFACE_CLASS_NAME,
+          MOBILE_TRIGGER_BASE_CLASS_NAME,
+          mobileTriggerClassName ?? DEFAULT_MOBILE_TRIGGER_CLASS_NAME,
         )}
         aria-label={t("label")}
         aria-expanded={isMobileOpen}

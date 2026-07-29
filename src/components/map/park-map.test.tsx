@@ -4,6 +4,7 @@ import type { FilterableMapPark } from "@/lib/parks";
 import { ParkMap } from "./park-map";
 
 const loadHandlers: Array<() => void> = [];
+const mapEventHandlers = new Map<string, Array<() => void>>();
 const markerElements: HTMLElement[] = [];
 const resizeObservers: MockResizeObserver[] = [];
 const popupInstances: Array<{
@@ -12,6 +13,7 @@ const popupInstances: Array<{
   setDOMContent: ReturnType<typeof vi.fn>;
 }> = [];
 let mapOptions: Record<string, unknown> | null = null;
+let mapInstance: ReturnType<typeof createMockMap> | null = null;
 const fitBoundsMock = vi.fn();
 const easeToMock = vi.fn();
 
@@ -73,6 +75,14 @@ const triggerMapLoad = () => {
   });
 };
 
+const triggerMapEvent = (event: string) => {
+  act(() => {
+    for (const handler of mapEventHandlers.get(event) ?? []) {
+      handler();
+    }
+  });
+};
+
 const createMockPopup = () => {
   const content = document.createElement("div");
   content.className = "maplibregl-popup-content";
@@ -117,15 +127,45 @@ const createMockMarker = (options?: { element?: HTMLElement }) => {
   return marker;
 };
 
-const createMockMap = () => ({
+const createMockMap = (container: HTMLElement) => ({
   on: vi.fn((event: string, handler: () => void) => {
+    const handlers = mapEventHandlers.get(event) ?? [];
+    handlers.push(handler);
+    mapEventHandlers.set(event, handlers);
+
     if (event === "load") {
       loadHandlers.push(handler);
     }
   }),
+  off: vi.fn((event: string, handler: () => void) => {
+    const handlers = mapEventHandlers.get(event) ?? [];
+    mapEventHandlers.set(
+      event,
+      handlers.filter((registeredHandler) => registeredHandler !== handler),
+    );
+  }),
   remove: vi.fn(),
   resize: vi.fn(),
-  addControl: vi.fn(),
+  addControl: vi.fn((control: { __kind?: string }) => {
+    if (control.__kind === "attribution") {
+      const attribution = document.createElement("details");
+      attribution.className =
+        "maplibregl-ctrl maplibregl-ctrl-attrib maplibregl-compact maplibregl-compact-show";
+      attribution.setAttribute("open", "");
+
+      const button = document.createElement("summary");
+      button.className = "maplibregl-ctrl-attrib-button";
+      attribution.appendChild(button);
+
+      const inner = document.createElement("div");
+      inner.className = "maplibregl-ctrl-attrib-inner";
+      inner.textContent = "MapLibre | © OpenStreetMap contributors | Improve this map";
+      attribution.appendChild(inner);
+
+      container.appendChild(attribution);
+    }
+  }),
+  getContainer: vi.fn(() => container),
   fitBounds: fitBoundsMock,
   easeTo: easeToMock,
 });
@@ -145,7 +185,9 @@ vi.mock("maplibre-gl", () => ({
   // biome-ignore lint: Vitest v4 constructor mocks must be constructible.
   Map: vi.fn(function (options?: Record<string, unknown>) {
     mapOptions = options ?? null;
-    return createMockMap();
+    const container = options?.container as HTMLElement;
+    mapInstance = createMockMap(container);
+    return mapInstance;
   }),
   // biome-ignore lint: Vitest v4 constructor mocks must be constructible.
   Marker: vi.fn(function (options?: { element?: HTMLElement }) {
@@ -155,6 +197,10 @@ vi.mock("maplibre-gl", () => ({
   Popup: vi.fn(function () {
     return createMockPopup();
   }),
+  // biome-ignore lint: Vitest v4 constructor mocks must be constructible.
+  AttributionControl: vi.fn(function (options?: Record<string, unknown>) {
+    return { __kind: "attribution", options };
+  }),
   NavigationControl: vi.fn(),
   setWorkerUrl: vi.fn(),
 }));
@@ -162,10 +208,12 @@ vi.mock("maplibre-gl", () => ({
 describe("ParkMap", () => {
   beforeEach(() => {
     loadHandlers.length = 0;
+    mapEventHandlers.clear();
     markerElements.length = 0;
     popupInstances.length = 0;
     resizeObservers.length = 0;
     mapOptions = null;
+    mapInstance = null;
     fitBoundsMock.mockReset();
     easeToMock.mockReset();
     Object.defineProperty(window.navigator, "geolocation", {
@@ -195,6 +243,7 @@ describe("ParkMap", () => {
     render(<ParkMap parks={[]} />);
 
     expect(mapOptions).toMatchObject({
+      attributionControl: false,
       bounds: [
         [19.0, 59.5],
         [32.0, 70.5],
@@ -206,6 +255,33 @@ describe("ParkMap", () => {
     });
     expect(resizeObservers).toHaveLength(1);
     expect(resizeObservers[0]?.observe).toHaveBeenCalledTimes(1);
+  });
+
+  it("adds a compact attribution control that starts collapsed behind the info button", async () => {
+    const maplibregl = await import("maplibre-gl");
+
+    render(<ParkMap parks={[]} />);
+
+    expect(maplibregl.AttributionControl).toHaveBeenCalledWith({
+      compact: true,
+      customAttribution: '<a href="https://maplibre.org/" target="_blank">MapLibre</a>',
+    });
+    expect(mapInstance?.addControl).toHaveBeenCalledTimes(2);
+    expect(document.querySelectorAll(".maplibregl-compact-show")).toHaveLength(0);
+    expect(document.querySelector(".maplibregl-ctrl-attrib")).not.toHaveAttribute("open");
+    expect(document.querySelector(".maplibregl-ctrl-attrib-button")).toBeInTheDocument();
+    expect(document.querySelector(".maplibregl-ctrl-attrib-inner")).toHaveTextContent(
+      "MapLibre | © OpenStreetMap contributors | Improve this map",
+    );
+  });
+
+  it("keeps the compact attribution collapsed through the initial resize cycle", () => {
+    render(<ParkMap parks={[]} />);
+
+    triggerMapEvent("resize");
+
+    expect(document.querySelectorAll(".maplibregl-compact-show")).toHaveLength(0);
+    expect(document.querySelector(".maplibregl-ctrl-attrib")).not.toHaveAttribute("open");
   });
 
   it("initializes the map against the current filtered park bounds on first load", () => {
@@ -247,6 +323,15 @@ describe("ParkMap", () => {
     triggerMapLoad();
 
     expect(screen.getByRole("button", { name: "map.locateUser" })).toBeEnabled();
+  });
+
+  it("renders additional floating controls next to the location button", () => {
+    render(
+      <ParkMap parks={[]} floatingControls={<button type="button">custom-map-control</button>} />,
+    );
+
+    expect(screen.getByRole("button", { name: "custom-map-control" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "map.locateUser" })).toBeInTheDocument();
   });
 
   it("shows the park logo in the popup when a logo exists", () => {
