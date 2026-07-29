@@ -383,8 +383,24 @@ describe("ParkExplorer", () => {
     expect(screen.getByText("Nuuksion vaellusreitti")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "home.filters.visited" }));
-    expect(screen.getByRole("button", { name: "home.filters.notVisited" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "home.filters.visitStatusAll" })).toBeInTheDocument();
+    const visitStatusList = document.querySelector("#park-map-visit-status-options");
+
+    expect(visitStatusList).not.toBeNull();
+    expect(
+      within(visitStatusList as HTMLElement).queryByRole("button", {
+        name: "home.filters.visited",
+      }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(visitStatusList as HTMLElement).getByRole("button", {
+        name: "home.filters.notVisited",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      within(visitStatusList as HTMLElement).getByRole("button", {
+        name: "home.filters.visitStatusAll",
+      }),
+    ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "home.filters.notVisited" }));
     expect(screen.getByText("count:5")).toBeInTheDocument();
@@ -454,7 +470,7 @@ describe("ParkExplorer", () => {
     document.removeEventListener("mousedown", mousedownSpy);
   });
 
-  it("keeps mobile filters open across selections until the close control is pressed", async () => {
+  it("closes the mobile filters without resetting the map when nothing changed", async () => {
     const user = userEvent.setup();
 
     render(
@@ -476,7 +492,80 @@ describe("ParkExplorer", () => {
 
     expect(toggle).toHaveAttribute("aria-expanded", "true");
     expect(mobileFilters).toHaveClass("z-30");
+    expect(
+      within(mobileFilters).getByRole("button", {
+        name: "home.filters.close",
+      }),
+    ).toHaveClass("text-cyan-950");
 
+    await user.click(
+      within(mobileFilters).getByRole("button", {
+        name: "home.filters.close",
+      }),
+    );
+
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(mobileFilters).toHaveClass("z-10");
+    expect(screen.getByText("count:2")).toBeInTheDocument();
+    expect(screen.getByText("reset:0")).toBeInTheDocument();
+  });
+
+  it("keeps mobile filter changes pending until save and close is pressed", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <HomeMapControlsProvider>
+        <MobileFilterToggleHarness />
+        <ParkExplorer parks={parks} />
+      </HomeMapControlsProvider>,
+    );
+
+    const toggle = screen.getByRole("button", { name: "toggle-mobile-filters" });
+    const mobileFilters = screen.getByRole("complementary", {
+      name: "home.filters.panelLabel",
+    });
+
+    await user.click(toggle);
+    await user.click(
+      within(mobileFilters).getByRole("button", {
+        name: "home.filters.areas",
+      }),
+    );
+
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByText("count:2")).toBeInTheDocument();
+    expect(screen.getByText("reset:0")).toBeInTheDocument();
+
+    const saveAndCloseButton = within(mobileFilters).getByRole("button", {
+      name: "home.filters.saveAndClose",
+    });
+
+    expect(saveAndCloseButton).toHaveClass("text-primary-foreground");
+
+    await user.click(saveAndCloseButton);
+
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(mobileFilters).toHaveClass("z-10");
+    expect(screen.getByText("count:1")).toBeInTheDocument();
+    expect(screen.getByText("reset:1")).toBeInTheDocument();
+  });
+
+  it("applies pending mobile visit status changes only after save and close", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <HomeMapControlsProvider>
+        <MobileFilterToggleHarness />
+        <ParkExplorer parks={parks} />
+      </HomeMapControlsProvider>,
+    );
+
+    const toggle = screen.getByRole("button", { name: "toggle-mobile-filters" });
+    const mobileFilters = screen.getByRole("complementary", {
+      name: "home.filters.panelLabel",
+    });
+
+    await user.click(toggle);
     await user.click(
       within(mobileFilters).getByRole("button", {
         name: "home.filters.visited",
@@ -488,14 +577,18 @@ describe("ParkExplorer", () => {
       }),
     );
 
-    expect(toggle).toHaveAttribute("aria-expanded", "true");
-    expect(screen.getByText("count:5")).toBeInTheDocument();
+    expect(screen.getByText("count:2")).toBeInTheDocument();
     expect(screen.getByText("reset:0")).toBeInTheDocument();
 
-    await user.click(toggle);
+    await user.click(
+      within(mobileFilters).getByRole("button", {
+        name: "home.filters.saveAndClose",
+      }),
+    );
 
     expect(toggle).toHaveAttribute("aria-expanded", "false");
-    expect(mobileFilters).toHaveClass("z-10");
+    expect(screen.getByText("count:5")).toBeInTheDocument();
+    expect(screen.getByText("reset:1")).toBeInTheDocument();
   });
 
   it("keeps the mobile filter toggle wired to the shared filter panel state", async () => {
