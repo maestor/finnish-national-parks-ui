@@ -498,7 +498,7 @@ describe("ParkExplorer", () => {
     expect(mobileFilters).toHaveClass("z-10");
   });
 
-  it("renders the mobile filter toggle and search trigger inside the map control row", async () => {
+  it("keeps the mobile filter toggle wired to the shared filter panel state", async () => {
     const user = userEvent.setup();
 
     render(
@@ -507,16 +507,12 @@ describe("ParkExplorer", () => {
       </HomeMapControlsProvider>,
     );
 
-    const floatingControls = screen.getByTestId("floating-controls");
-    const filterToggle = within(floatingControls).getByRole("button", {
-      name: "layout.nav.filters",
+    const filterToggle = within(screen.getByTestId("floating-controls")).getByRole("button", {
+      name: "home.filters.panelLabel",
     });
 
     expect(filterToggle).toHaveAttribute("aria-controls", "park-map-filters-mobile");
     expect(filterToggle).toHaveAttribute("aria-expanded", "false");
-    expect(
-      within(floatingControls).getByRole("button", { name: "layout.parkSearch.label" }),
-    ).toHaveClass("h-11", "w-11");
 
     await user.click(filterToggle);
 

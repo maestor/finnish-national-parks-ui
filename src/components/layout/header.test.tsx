@@ -231,7 +231,8 @@ describe("Header", () => {
     render(<Header />);
 
     expect(screen.queryByRole("button", { name: "layout.nav.filters" })).not.toBeInTheDocument();
-    expect(screen.getByText("home-park-search").parentElement).toHaveClass("hidden", "md:block");
+    expect(screen.getByText("home-park-search")).toBeInTheDocument();
+    expect(screen.getByText("home-park-search").parentElement).not.toHaveClass("hidden");
   });
 
   it("opens a mobile menu sheet with navigation and session actions", async () => {
