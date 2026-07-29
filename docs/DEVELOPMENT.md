@@ -170,7 +170,8 @@ Browser → Next.js App
 Backend request timeout policy:
 
 - `src/lib/api.ts` and `src/lib/backend-proxy.ts` default backend-facing requests to a `10s` timeout so hung reads do not pin pages or route handlers.
-- Trip planner route and nearby searches opt into a longer `30s` timeout because Geoapify-backed route planning can legitimately take longer than the generic default.
+- Trip planner nearby searches opt into a `30s` timeout because Geoapify-backed point lookups can legitimately take longer than the generic default.
+- Trip planner route searches opt into a `60s` timeout because cold Geoapify-backed long-route planning can exceed the nearby budget while still returning valid results.
 
 The backend handles:
 
