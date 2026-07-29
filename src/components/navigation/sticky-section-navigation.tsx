@@ -10,6 +10,7 @@ export interface StickySectionNavigationItem {
 
 interface StickySectionNavigationProps {
   ariaLabel: string;
+  className?: string;
   items: StickySectionNavigationItem[];
   onHeightChange?: (height: number) => void;
   topOffset?: string;
@@ -73,6 +74,7 @@ const getActiveSectionIdFromViewport = (
 
 export const StickySectionNavigation = ({
   ariaLabel,
+  className,
   items,
   onHeightChange,
   topOffset = "var(--page-sticky-nav-top, 0.5rem)",
@@ -165,7 +167,7 @@ export const StickySectionNavigation = ({
   return (
     <nav
       aria-label={ariaLabel}
-      className="sticky z-40 px-1"
+      className={`sticky z-40 px-1 ${className ?? ""}`}
       ref={sectionNavigationRef}
       style={{ top: topOffset }}
     >

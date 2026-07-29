@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   buildPublicVisitsTimelineModel,
@@ -62,6 +62,64 @@ const { mockPush } = vi.hoisted(() => ({
 
 const mockScrollTo = vi.fn();
 
+const setWindowScrollY = (value: number) => {
+  Object.defineProperty(window, "scrollY", {
+    configurable: true,
+    value,
+    writable: true,
+  });
+};
+
+const createRect = (top: number, height = 100) =>
+  ({
+    bottom: top + height,
+    height,
+    left: 0,
+    right: 0,
+    toJSON: () => ({}),
+    top,
+    width: 0,
+    x: 0,
+    y: top,
+  }) satisfies DOMRect;
+
+const setMagnetSectionScrollPositions = ({
+  missingTop,
+  missingHeight = 240,
+  nationalParksTop,
+  nationalParksHeight = 240,
+  navBottom,
+  otherPlacesTop,
+  otherPlacesHeight = 240,
+}: {
+  missingTop: number;
+  missingHeight?: number;
+  nationalParksTop: number;
+  nationalParksHeight?: number;
+  navBottom: number;
+  otherPlacesTop: number;
+  otherPlacesHeight?: number;
+}) => {
+  const navigation = screen.getByRole("navigation", {
+    name: "visits.parks.sectionNavigationLabel",
+  });
+  const nationalParksSection = screen.getByRole("region", {
+    name: "visits.parks.sections.nationalParks",
+  });
+  const otherPlacesSection = screen.getByRole("region", {
+    name: "visits.parks.sections.otherPlaces",
+  });
+  const missingSection = screen.getByRole("region", {
+    name: "visits.parks.sections.missing",
+  });
+
+  navigation.getBoundingClientRect = () => createRect(navBottom - 40, 40);
+  nationalParksSection.getBoundingClientRect = () =>
+    createRect(nationalParksTop, nationalParksHeight);
+  otherPlacesSection.getBoundingClientRect = () => createRect(otherPlacesTop, otherPlacesHeight);
+  missingSection.getBoundingClientRect = () => createRect(missingTop, missingHeight);
+};
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
 }));
@@ -72,6 +130,7 @@ describe("PublicVisitsTimeline", () => {
     vi.setSystemTime(new Date("2026-06-04T09:00:00Z"));
     mockPush.mockReset();
     mockScrollTo.mockReset();
+    setWindowScrollY(0);
 
     Object.defineProperty(window, "scrollTo", {
       configurable: true,
@@ -87,6 +146,21 @@ describe("PublicVisitsTimeline", () => {
         removeEventListener: vi.fn(),
       })),
       writable: true,
+    });
+
+    Object.defineProperty(window, "requestAnimationFrame", {
+      configurable: true,
+      writable: true,
+      value: (callback: FrameRequestCallback) => {
+        callback(0);
+        return 1;
+      },
+    });
+
+    Object.defineProperty(window, "cancelAnimationFrame", {
+      configurable: true,
+      writable: true,
+      value: vi.fn(),
     });
   });
 
@@ -792,6 +866,12 @@ describe("PublicVisitsTimeline", () => {
       throw new Error("Expected Nuuksio park card");
     }
 
+    expect(
+      within(nuuksioCard).getByRole("heading", {
+        name: "Nuuksio",
+      }),
+    ).toHaveClass("text-base", "sm:text-2xl");
+
     const nuuksioDetailsStack =
       within(nuuksioCard).getByText("15.6.2024").parentElement?.parentElement;
 
@@ -813,6 +893,99 @@ describe("PublicVisitsTimeline", () => {
     }
 
     expect(within(pallasCard).queryByText("visits.parks.item.otherVisits")).not.toBeInTheDocument();
+  });
+
+  it("keeps the magnet section navigation ahead of the cards and updates the active chip by scroll position", () => {
+    renderTimeline(
+      [
+        {
+          id: 1,
+          visitedOn: "2024-06-15",
+          route: "Punarinnankierros",
+          createdAt: "2024-06-15T10:00:00Z",
+          imageCount: 0,
+          trip: null,
+          tripStopOrder: null,
+          park: {
+            name: "Nuuksio",
+            slug: "nuuksio",
+            typeLabel: "Kansallispuisto",
+          },
+        },
+        {
+          id: 2,
+          visitedOn: "2024-08-10",
+          route: null,
+          createdAt: "2024-08-10T10:00:00Z",
+          imageCount: 1,
+          trip: null,
+          tripStopOrder: null,
+          park: {
+            name: "Seurasaari",
+            slug: "seurasaari",
+            typeLabel: "Historiakohde",
+          },
+        },
+      ],
+      { selectedYear: null, selectedMonth: null },
+      {
+        view: "parks",
+        magnetSummaryParks,
+      },
+    );
+
+    const sectionNavigation = screen.getByRole("navigation", {
+      name: "visits.parks.sectionNavigationLabel",
+    });
+    const nationalParksLink = within(sectionNavigation).getByRole("link", {
+      name: "visits.parks.sections.nationalParks",
+    });
+    const otherPlacesLink = within(sectionNavigation).getByRole("link", {
+      name: "visits.parks.sections.otherPlaces",
+    });
+    const missingLink = within(sectionNavigation).getByRole("link", {
+      name: "visits.parks.sections.missing",
+    });
+
+    expect(
+      sectionNavigation.compareDocumentPosition(
+        screen.getByRole("heading", { name: "visits.parks.sections.nationalParks" }),
+      ),
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+
+    setMagnetSectionScrollPositions({
+      missingTop: 1200,
+      nationalParksTop: -320,
+      navBottom: 40,
+      otherPlacesTop: 44,
+    });
+
+    act(() => {
+      fireEvent.scroll(window);
+    });
+
+    act(() => {
+      setWindowScrollY(420);
+      fireEvent.scroll(window);
+    });
+
+    expect(otherPlacesLink).toHaveAttribute("aria-current", "location");
+    expect(nationalParksLink).not.toHaveAttribute("aria-current");
+
+    setMagnetSectionScrollPositions({
+      missingTop: 44,
+      nationalParksTop: -920,
+      navBottom: 40,
+      otherPlacesTop: -280,
+    });
+
+    act(() => {
+      setWindowScrollY(1360);
+      fireEvent.scroll(window);
+    });
+
+    expect(missingLink).toHaveAttribute("aria-current", "location");
+    expect(otherPlacesLink).not.toHaveAttribute("aria-current");
   });
 
   it("hides an empty magnet subsection when that group has no visited places", () => {

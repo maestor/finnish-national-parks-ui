@@ -23,9 +23,9 @@ interface PublicVisitedNationalParksProps {
 
 const SUMMARY_STAT_CARD_CLASS_NAME =
   "rounded-3xl border border-white/45 bg-white/72 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-white/10 dark:bg-slate-950/56 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
-const MAGNET_NATIONAL_PARKS_SECTION_ID = "magneettijahti-kansallispuistot";
-const MAGNET_OTHER_PLACES_SECTION_ID = "magneettijahti-muut-paikat";
-const MAGNET_MISSING_SECTION_ID = "magneettijahti-puuttuvat";
+export const MAGNET_NATIONAL_PARKS_SECTION_ID = "magneettijahti-kansallispuistot";
+export const MAGNET_OTHER_PLACES_SECTION_ID = "magneettijahti-muut-paikat";
+export const MAGNET_MISSING_SECTION_ID = "magneettijahti-puuttuvat";
 
 const findEarlierDate = (left: string | null, right: string | null) => {
   if (!left) {
@@ -74,7 +74,7 @@ const MagnetGroupCards = ({
     <section
       id={sectionId}
       aria-labelledby={headingId}
-      className="space-y-6"
+      className="mt-6 space-y-6"
       style={{ scrollMarginTop: sectionScrollMarginTop }}
     >
       <div className="flex items-center gap-2 px-1">
@@ -91,7 +91,7 @@ const MagnetGroupCards = ({
             className="rounded-[2rem] border border-white/50 bg-white/70 p-5 shadow-[0_20px_48px_rgba(148,163,184,0.16)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/50 dark:shadow-[0_24px_52px_rgba(2,6,23,0.32)]"
           >
             <div className="space-y-4">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 sm:gap-4">
                 <div className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.2rem] border border-emerald-700/15 bg-[linear-gradient(145deg,#166534_0%,#0f766e_55%,#2563eb_100%)] text-lg font-semibold text-primary-foreground shadow-[0_10px_24px_rgba(37,99,235,0.24)]">
                   {park.order}.
                 </div>
@@ -117,7 +117,7 @@ const MagnetGroupCards = ({
                     })}
                     className="inline-flex rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
-                    <h3 className="text-xl font-semibold tracking-tight sm:text-2xl">
+                    <h3 className="text-base font-semibold tracking-tight sm:text-2xl">
                       {park.park.name}
                     </h3>
                   </Link>
@@ -191,7 +191,7 @@ const MissingMagnetParks = ({
     <section
       id={sectionId}
       aria-labelledby={headingId}
-      className="space-y-4"
+      className="mt-6 space-y-4"
       style={{ scrollMarginTop: sectionScrollMarginTop }}
     >
       <div className="flex items-center gap-2 px-1">
@@ -301,7 +301,7 @@ export const PublicVisitedNationalParks = ({ model }: PublicVisitedNationalParks
   const magnetSectionScrollMarginTop = `calc(var(--page-sticky-nav-top, 0rem) + ${stickySectionNavHeight}px)`;
 
   return (
-    <div className="space-y-6">
+    <>
       <section className="rounded-[2rem] border border-white/55 bg-[linear-gradient(145deg,rgba(255,255,255,0.82),rgba(219,234,254,0.66),rgba(220,252,231,0.72))] p-5 shadow-[0_24px_60px_rgba(59,130,246,0.16)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(145deg,rgba(2,6,23,0.76),rgba(15,23,42,0.86),rgba(6,78,59,0.38))] dark:shadow-[0_28px_64px_rgba(2,6,23,0.34)] sm:p-6">
         <div className="flex flex-col gap-5">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -398,6 +398,7 @@ export const PublicVisitedNationalParks = ({ model }: PublicVisitedNationalParks
 
       <StickySectionNavigation
         ariaLabel={t("parks.sectionNavigationLabel")}
+        className="mt-6"
         items={sectionNavigationItems}
         onHeightChange={setStickySectionNavHeight}
       />
@@ -426,6 +427,6 @@ export const PublicVisitedNationalParks = ({ model }: PublicVisitedNationalParks
         sectionId={MAGNET_MISSING_SECTION_ID}
         sectionScrollMarginTop={magnetSectionScrollMarginTop}
       />
-    </div>
+    </>
   );
 };
