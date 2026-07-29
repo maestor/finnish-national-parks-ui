@@ -8,7 +8,7 @@ export const appRoutes = {
   trip: (slug: string) => `/retki/${slug}`,
   visits: "/kaynnit",
   tripPlanner: "/reissusuunnittelu",
-  yearReview: (year: number) => `/vuosikatsaus/${year}`,
+  yearReviewShare: (shareId: string) => `/vuosikatsaus/jako/${shareId}`,
   controlPanel: {
     root: CONTROL_PANEL_ROOT,
     parks: `${CONTROL_PANEL_ROOT}/paikat`,
@@ -76,7 +76,11 @@ export const legacyAppRedirects = [
     destination: appRoutes.controlPanel.yearReview,
     permanent: true,
   },
-  { source: "/year-review/:year", destination: "/vuosikatsaus/:year", permanent: true },
+  {
+    source: "/year-review/share/:shareId",
+    destination: "/vuosikatsaus/jako/:shareId",
+    permanent: true,
+  },
 ] as const;
 
 const splitPathAndSuffix = (path: string) => {
@@ -150,9 +154,9 @@ const normalizePathname = (pathname: string) => {
     return appRoutes.trip(tripMatch[1]);
   }
 
-  const yearReviewMatch = /^\/year-review\/(\d+)$/.exec(pathname);
-  if (yearReviewMatch) {
-    return appRoutes.yearReview(Number.parseInt(yearReviewMatch[1], 10));
+  const yearReviewShareMatch = /^\/year-review\/share\/([^/]+)$/.exec(pathname);
+  if (yearReviewShareMatch) {
+    return appRoutes.yearReviewShare(yearReviewShareMatch[1]);
   }
 
   const controlPanelParkEditMatch = /^\/control-panel\/parks\/([^/]+)\/edit$/.exec(pathname);

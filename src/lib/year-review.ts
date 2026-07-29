@@ -1,4 +1,31 @@
-import type { FrontendTimelineVisit } from "./public-visits";
+import { ApiError, apiAuthFetch, apiFetch } from "./api";
+
+export type YearReviewSeason = "autumn" | "spring" | "summer" | "winter";
+
+export interface YearReviewVisitsBySeason {
+  autumn: number;
+  spring: number;
+  summer: number;
+  winter: number;
+}
+
+export interface YearReviewTripReference {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+export interface YearReviewVisitReference {
+  id: number;
+  imageCount: number;
+  park: {
+    name: string;
+    slug: string;
+  };
+  route: string | null;
+  trip: YearReviewTripReference | null;
+  visitedOn: string;
+}
 
 export interface YearReviewMostVisitedPark {
   name: string;
@@ -6,114 +33,167 @@ export interface YearReviewMostVisitedPark {
   visitCount: number;
 }
 
-export interface YearReviewSeasonalVisits {
-  autumn: number;
-  spring: number;
-  summer: number;
-  winter: number;
-}
-
-export interface YearReviewStats {
+export interface YearReviewSummary {
   activeMonthCount: number;
   distinctParkCount: number;
   imageCount: number;
-  mostVisitedPark: YearReviewMostVisitedPark | null;
   newParkCount: number;
   revisitedParkCount: number;
-  seasonalVisits: YearReviewSeasonalVisits;
   visitCount: number;
+  visitsBySeason: YearReviewVisitsBySeason;
+}
+
+export interface YearReviewIntroCard {
+  kind: "intro";
+  primaryStat: {
+    key: "visitCount";
+    value: number;
+  };
   year: number;
 }
 
-const getVisitMonth = (visitedOn: string) => Number.parseInt(visitedOn.slice(5, 7), 10);
+export interface YearReviewMilestoneCard {
+  kind: "milestone";
+  milestone: "first-visit" | "last-visit";
+  visit: YearReviewVisitReference;
+}
 
-const getSeasonKey = (month: number): keyof YearReviewSeasonalVisits => {
-  if (month >= 3 && month <= 5) {
-    return "spring";
-  }
+export interface YearReviewPhotoHighlightCard {
+  kind: "photo-highlight";
+  totalImageCount: number;
+  visit: YearReviewVisitReference | null;
+}
 
-  if (month >= 6 && month <= 8) {
-    return "summer";
-  }
+export interface YearReviewProfileCard {
+  busiestMonth: number | null;
+  busiestWeekday: number | null;
+  kind: "profile";
+  mostVisitedPark: YearReviewMostVisitedPark | null;
+  topRoute: string | null;
+  topTypeLabel: string | null;
+}
 
-  if (month >= 9 && month <= 11) {
-    return "autumn";
-  }
-
-  return "winter";
-};
-
-// A park is "new" in the review year when its earliest-ever visit falls in that
-// year; visited before that means the year's visits were revisits.
-const getEarliestVisitYearByPark = (visits: FrontendTimelineVisit[]) => {
-  const earliestBySlug = new Map<string, number>();
-
-  for (const visit of visits) {
-    const visitYear = Number.parseInt(visit.visitedOn.slice(0, 4), 10);
-    const earliest = earliestBySlug.get(visit.park.slug);
-
-    if (earliest === undefined || visitYear < earliest) {
-      earliestBySlug.set(visit.park.slug, visitYear);
-    }
-  }
-
-  return earliestBySlug;
-};
-
-export const buildYearReviewStats = (
-  visits: FrontendTimelineVisit[],
-  year: number,
-): YearReviewStats => {
-  const earliestVisitYearByPark = getEarliestVisitYearByPark(visits);
-  const yearVisits = visits.filter(
-    (visit) => Number.parseInt(visit.visitedOn.slice(0, 4), 10) === year,
-  );
-
-  const seasonalVisits: YearReviewSeasonalVisits = { spring: 0, summer: 0, autumn: 0, winter: 0 };
-  const activeMonths = new Set<number>();
-  const visitsByPark = new Map<string, YearReviewMostVisitedPark>();
-  let imageCount = 0;
-
-  for (const visit of yearVisits) {
-    const month = getVisitMonth(visit.visitedOn);
-    seasonalVisits[getSeasonKey(month)] += 1;
-    activeMonths.add(month);
-    imageCount += visit.imageCount;
-
-    const parkEntry = visitsByPark.get(visit.park.slug) ?? {
-      name: visit.park.name,
-      slug: visit.park.slug,
-      visitCount: 0,
-    };
-    parkEntry.visitCount += 1;
-    visitsByPark.set(visit.park.slug, parkEntry);
-  }
-
-  let newParkCount = 0;
-  let revisitedParkCount = 0;
-
-  for (const slug of visitsByPark.keys()) {
-    if (earliestVisitYearByPark.get(slug) === year) {
-      newParkCount += 1;
-    } else {
-      revisitedParkCount += 1;
-    }
-  }
-
-  const mostVisitedPark =
-    [...visitsByPark.values()].sort(
-      (left, right) => right.visitCount - left.visitCount || left.name.localeCompare(right.name),
-    )[0] ?? null;
-
-  return {
-    year,
-    visitCount: yearVisits.length,
-    distinctParkCount: visitsByPark.size,
-    newParkCount,
-    revisitedParkCount,
-    mostVisitedPark,
-    activeMonthCount: activeMonths.size,
-    imageCount,
-    seasonalVisits,
+export interface YearReviewTripHighlightCard {
+  kind: "trip-highlight";
+  trip: {
+    dateRange: {
+      end: string;
+      start: string;
+    } | null;
+    id: number;
+    imageCount: number;
+    name: string;
+    slug: string;
+    visitCount: number;
   };
+}
+
+export interface YearReviewSeasonalCard {
+  kind: "seasonal";
+  strongestSeason: YearReviewSeason | null;
+  visitsBySeason: YearReviewVisitsBySeason;
+}
+
+export interface YearReviewSummaryCard {
+  highlights: string[];
+  kind: "summary";
+}
+
+export type YearReviewCard =
+  | YearReviewIntroCard
+  | YearReviewMilestoneCard
+  | YearReviewPhotoHighlightCard
+  | YearReviewProfileCard
+  | YearReviewTripHighlightCard
+  | YearReviewSeasonalCard
+  | YearReviewSummaryCard;
+
+export interface YearReviewStory {
+  cards: YearReviewCard[];
+  summary: YearReviewSummary;
+  year: number;
+}
+
+export interface YearReviewPublishInfo {
+  publicUrl: string | null;
+  publishedAt: string | null;
+  publishedShareId: string | null;
+  sharePath: string | null;
+}
+
+export interface YearReviewPreview {
+  generatedAt: string;
+  publishInfo: YearReviewPublishInfo;
+  status: "draft" | "published";
+  story: YearReviewStory;
+  year: number;
+}
+
+export interface YearReviewPublishResponse {
+  publicUrl: string;
+  publishedAt: string;
+  shareId: string;
+  sharePath: string;
+}
+
+export interface YearReviewShare {
+  publishedAt: string;
+  shareId: string;
+  story: YearReviewStory;
+  year: number;
+}
+
+const YEAR_REVIEW_SHARE_ID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export const isYearReviewShareId = (value: string) => YEAR_REVIEW_SHARE_ID_PATTERN.test(value);
+
+export const fetchYearReviewPreview = async (year: number): Promise<YearReviewPreview> =>
+  apiAuthFetch<YearReviewPreview>(`/api/year-review/${year}/preview`, {
+    cache: "no-store",
+  });
+
+export const fetchYearReviewShare = async (shareId: string): Promise<YearReviewShare> =>
+  apiFetch<YearReviewShare>(`/api/year-review/shares/${shareId}`, {
+    cache: "no-store",
+  });
+
+export const readYearReviewShareOrNull = async (
+  shareId: string,
+): Promise<YearReviewShare | null> => {
+  try {
+    return await fetchYearReviewShare(shareId);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) {
+      return null;
+    }
+
+    throw error;
+  }
 };
+
+export const findYearReviewProfileCard = (story: YearReviewStory): YearReviewProfileCard | null =>
+  story.cards.find((card): card is YearReviewProfileCard => card.kind === "profile") ?? null;
+
+export const findYearReviewSeasonalCard = (story: YearReviewStory): YearReviewSeasonalCard | null =>
+  story.cards.find((card): card is YearReviewSeasonalCard => card.kind === "seasonal") ?? null;
+
+export const buildYearReviewShareDescription = ({
+  imageCount,
+  newParkCount,
+  t,
+  visitCount,
+  year,
+}: {
+  imageCount: number;
+  newParkCount: number;
+  t: (key: string, values?: Record<string, string | number>) => string;
+  visitCount: number;
+  year: number;
+}) =>
+  t("shareDescription", {
+    year,
+    visitCount,
+    newParkCount,
+    imageCount,
+  });

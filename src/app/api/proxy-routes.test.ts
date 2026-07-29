@@ -36,6 +36,10 @@ import { PATCH as patchVisitImageOrder } from "./visits/[id]/images/reorder/rout
 import { POST as postVisitImage } from "./visits/[id]/images/route";
 import { POST as postVisitImageUploadUrl } from "./visits/[id]/images/upload-url/route";
 import { DELETE as deleteVisit, PATCH as patchVisit } from "./visits/[id]/route";
+import {
+  DELETE as deleteYearReviewPublish,
+  POST as postYearReviewPublish,
+} from "./year-review/[year]/publish/route";
 
 describe("api proxy routes", () => {
   beforeEach(() => {
@@ -108,6 +112,30 @@ describe("api proxy routes", () => {
     await postTrip(request);
 
     expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/trips", {
+      requireAdmin: true,
+    });
+  });
+
+  it("proxies year review publishing", async () => {
+    const request = new Request("https://frontend.example/api/year-review/2024/publish", {
+      method: "POST",
+    });
+
+    await postYearReviewPublish(request, { params: Promise.resolve({ year: "2024" }) });
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/year-review/2024/publish", {
+      requireAdmin: true,
+    });
+  });
+
+  it("proxies year review unpublishing", async () => {
+    const request = new Request("https://frontend.example/api/year-review/2024/publish", {
+      method: "DELETE",
+    });
+
+    await deleteYearReviewPublish(request, { params: Promise.resolve({ year: "2024" }) });
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/year-review/2024/publish", {
       requireAdmin: true,
     });
   });

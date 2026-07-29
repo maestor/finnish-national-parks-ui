@@ -31,6 +31,8 @@
   --animate-dot-pulse-1: dot-pulse 1.2s ease-in-out 0ms infinite;
   --animate-dot-pulse-2: dot-pulse 1.2s ease-in-out 150ms infinite;
   --animate-dot-pulse-3: dot-pulse 1.2s ease-in-out 300ms infinite;
+  --animate-year-review-float: year-review-float 11s ease-in-out infinite;
+  --animate-year-review-glow: year-review-glow 9s ease-in-out infinite;
 }
 
 @keyframes dot-pulse {
@@ -42,6 +44,28 @@
   50% {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+@keyframes year-review-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-10px, 16px, 0) scale(1.08);
+  }
+}
+
+@keyframes year-review-glow {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 0.92;
+    transform: scale(1.08);
   }
 }
 
