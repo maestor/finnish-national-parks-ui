@@ -5,11 +5,27 @@ import { legacyAppRedirects } from "./src/lib/routes";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
+type RemoteImagePattern = Exclude<
+  NonNullable<NonNullable<NextConfig["images"]>["remotePatterns"]>[number],
+  URL
+>;
+
 // Public park logos can now load through the backend origin before redirecting
 // to Cloudflare R2, while visit images and uploads still hit R2 directly.
 // Keep both origins allowlisted in the image policy and remote patterns.
 const R2_IMAGE_ORIGIN = "https://9a805f60ebd517a6d6ee33654b4f5a4d.r2.cloudflarestorage.com";
 const OSM_TILE_ORIGIN = "https://tile.openstreetmap.org";
+
+const toRemotePattern = (origin: string): RemoteImagePattern => {
+  const { protocol, hostname, port } = new URL(origin);
+  const normalizedProtocol = protocol.replace(/:$/, "") as RemoteImagePattern["protocol"];
+
+  return {
+    protocol: normalizedProtocol,
+    hostname,
+    port,
+  };
+};
 
 const getMapStyleOrigin = () => {
   const mapStyleUrl = process.env.NEXT_PUBLIC_MAP_STYLE_URL;
@@ -93,8 +109,8 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 2_678_400,
     qualities: [75],
     remotePatterns: [
-      new URL(R2_IMAGE_ORIGIN),
-      ...(publicApiOrigin ? [new URL(publicApiOrigin)] : []),
+      toRemotePattern(R2_IMAGE_ORIGIN),
+      ...(publicApiOrigin ? [toRemotePattern(publicApiOrigin)] : []),
     ],
   },
   headers: async () => [
