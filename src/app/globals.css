@@ -99,6 +99,18 @@
   }
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  [data-story-entry-state="upcoming"] .year-review-reveal {
+    opacity: 0;
+    transform: translate3d(0, 24px, 0);
+  }
+
+  [data-story-entry-state="upcoming"] .year-review-media-reveal {
+    opacity: 0;
+    transform: translate3d(0, 28px, 0) scale(1.04);
+  }
+}
+
 :root {
   --background: 0 0% 100%;
   --background-image:

@@ -507,6 +507,29 @@ describe("YearReviewStory", () => {
     vi.unstubAllGlobals();
   });
 
+  it("does not replay the card entry state after a card has already been seen once", () => {
+    vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
+
+    render(<YearReviewStory story={fallbackStory} mode="public" />);
+
+    const firstCard = screen.getByTestId("year-review-story-card-0");
+    const secondCard = screen.getByTestId("year-review-story-card-1");
+
+    expect(firstCard).toHaveAttribute("data-story-entry-state", "entry");
+    expect(secondCard).toHaveAttribute("data-story-entry-state", "upcoming");
+
+    triggerIntersection(secondCard);
+
+    expect(firstCard).toHaveAttribute("data-story-entry-state", "seen");
+    expect(secondCard).toHaveAttribute("data-story-entry-state", "entry");
+
+    triggerIntersection(firstCard);
+
+    expect(firstCard).toHaveAttribute("data-story-entry-state", "seen");
+    expect(secondCard).toHaveAttribute("data-story-entry-state", "seen");
+    vi.unstubAllGlobals();
+  });
+
   it("lets people move between cards with the previous and next buttons", async () => {
     const user = userEvent.setup();
     const scrollTo = vi.fn();
