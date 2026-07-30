@@ -727,4 +727,72 @@ describe("YearReviewStory", () => {
     });
     vi.unstubAllGlobals();
   });
+
+  it("activates the selected story card immediately when progress navigation scrolls to it", async () => {
+    const user = userEvent.setup();
+    const scrollTo = vi.fn();
+
+    Object.defineProperty(window, "scrollTo", {
+      configurable: true,
+      value: scrollTo,
+      writable: true,
+    });
+    Object.defineProperty(document.documentElement, "scrollHeight", {
+      configurable: true,
+      value: 3200,
+    });
+    Object.defineProperty(window, "innerHeight", {
+      configurable: true,
+      value: 708,
+      writable: true,
+    });
+
+    render(<YearReviewStory story={fallbackStory} mode="public" />);
+
+    const navigationPanel = screen.getByLabelText("story.progressNavigator").closest("div");
+    const targetSection = screen.getByTestId("year-review-story-card-6");
+
+    if (!(navigationPanel && targetSection)) {
+      throw new Error("Expected the navigation panel and target section to exist.");
+    }
+
+    const cardJumpButtons = screen.getAllByRole("button", { name: "story.goToCard" });
+    const targetButton = cardJumpButtons[6];
+
+    if (!targetButton) {
+      throw new Error("Expected a seventh story progress button to exist.");
+    }
+
+    vi.spyOn(navigationPanel, "getBoundingClientRect").mockReturnValue({
+      bottom: 128,
+      height: 128,
+      left: 0,
+      right: 0,
+      toJSON: () => ({}),
+      top: 0,
+      width: 0,
+      x: 0,
+      y: 0,
+    });
+    vi.spyOn(targetSection, "getBoundingClientRect").mockReturnValue({
+      bottom: 1663,
+      height: 1515,
+      left: 0,
+      right: 0,
+      toJSON: () => ({}),
+      top: 148,
+      width: 0,
+      x: 0,
+      y: 148,
+    });
+
+    await user.click(targetButton);
+
+    expect(screen.getByText("Kortti 7/8")).toBeInTheDocument();
+    expect(targetSection).toHaveAttribute("data-story-entry-state", "entry");
+    expect(scrollTo).toHaveBeenLastCalledWith({
+      behavior: "auto",
+      top: 0,
+    });
+  });
 });

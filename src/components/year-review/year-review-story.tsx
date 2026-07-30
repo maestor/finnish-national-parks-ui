@@ -369,7 +369,7 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
       },
       {
         rootMargin: "-12% 0px -18% 0px",
-        threshold: [0.45, 0.65, 0.85],
+        threshold: [0.15, 0.35, 0.55, 0.75],
       },
     );
 
@@ -427,6 +427,8 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
     if (!(nextSection && navigation)) {
       return;
     }
+
+    setActiveIndex(index);
 
     if (index === 0) {
       const storyTop = storyRef.current?.getBoundingClientRect().top ?? 0;
