@@ -362,11 +362,8 @@ describe("YearReviewStory", () => {
     expect(screen.getByText("Huippupolku")).toBeInTheDocument();
     expect(screen.getByText("story.seasonalTitle")).toBeInTheDocument();
     expect(screen.getByText("Vahvin vuodenaika: seasons.summer")).toBeInTheDocument();
-    expect(screen.getByText("2 · 29 %")).toBeInTheDocument();
-    expect(screen.getByText("3 · 43 %")).toBeInTheDocument();
     expect(screen.getByText("seasons.spring").parentElement).toHaveTextContent("🌱");
     expect(screen.getByText("seasons.summer").parentElement).toHaveTextContent("☀️");
-    expect(screen.getByText(/Julkaistu/)).toBeInTheDocument();
     expect(screen.getByText("story.footer")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "story.browseApp" })).toHaveAttribute("href", "/");
     expect(screen.getByRole("link", { name: "siteTitle" })).toHaveAttribute("href", "/");

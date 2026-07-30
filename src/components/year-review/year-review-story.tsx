@@ -324,12 +324,7 @@ const StoryFeaturedImagePanel = ({
   );
 };
 
-const YearReviewStory = ({
-  headingLevel = 2,
-  mode,
-  publishedAt = null,
-  story,
-}: YearReviewStoryProps) => {
+const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps) => {
   const t = useTranslations("yearReview");
   const layoutT = useTranslations("layout");
   const cards: RenderableYearReviewCard[] =
@@ -1216,7 +1211,7 @@ const YearReviewStory = ({
                                   {t(getSeasonLabelKey(season))}
                                 </p>
                                 <p className="text-sm text-primary-foreground/78">
-                                  {value} · {widthPercent} %
+                                  {`${value} ${t("stats.visitCount")} (${widthPercent}%)`}
                                 </p>
                               </div>
                               <div className="mt-3 h-3 rounded-full bg-white/12">
@@ -1256,13 +1251,6 @@ const YearReviewStory = ({
                           {story.year}
                         </h3>
                         <p className={CARD_COPY_CLASS_NAME}>{t("story.summaryCaption")}</p>
-                        {mode === "public" && publishedAt !== null && (
-                          <p className="text-sm text-primary-foreground/78">
-                            {t("story.publishedOn", {
-                              date: formatVisitDate(publishedAt.slice(0, 10)),
-                            })}
-                          </p>
-                        )}
                       </div>
                     </div>
 
