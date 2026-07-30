@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { type CSSProperties, useEffect, useRef, useState } from "react";
+import { type CSSProperties, type ReactNode, useEffect, useRef, useState } from "react";
 import { HeaderBrandMark } from "@/components/layout/header-brand-mark";
 import {
   PUBLIC_HERO_DESCRIPTION_CLASS_NAME,
@@ -28,6 +28,7 @@ import type {
   YearReviewProfileCard,
   YearReviewSeason,
   YearReviewStory as YearReviewStoryData,
+  YearReviewStoryImage,
 } from "@/lib/year-review";
 
 interface YearReviewStoryProps {
@@ -230,6 +231,81 @@ const getRevealClassName = (isActive: boolean) => (isActive ? STORY_BLOCK_REVEAL
 const getMediaRevealClassName = (isActive: boolean) =>
   isActive ? STORY_MEDIA_REVEAL_CLASS_NAME : "";
 
+const getStoryImageDimensions = (image: YearReviewStoryImage) => ({
+  height: image.fullHeight ?? image.thumbHeight ?? 900,
+  width: image.fullWidth ?? image.thumbWidth ?? 1200,
+});
+
+const getStoryThumbDimensions = (image: YearReviewStoryImage) => ({
+  height: image.thumbHeight ?? image.fullHeight ?? 900,
+  width: image.thumbWidth ?? image.fullWidth ?? 1200,
+});
+
+const isPortraitStoryImage = (image: YearReviewStoryImage) => {
+  const { height, width } = getStoryImageDimensions(image);
+  return height > width;
+};
+
+interface StoryFeaturedImagePanelProps {
+  active: boolean;
+  alt: string;
+  children?: ReactNode;
+  delayMs: number;
+  image: YearReviewStoryImage;
+  landscapeImageClassName: string;
+  portraitImageClassName?: string;
+  resolution?: "full" | "thumb";
+  sizes: string;
+  wrapperClassName?: string;
+}
+
+const StoryFeaturedImagePanel = ({
+  active,
+  alt,
+  children,
+  delayMs,
+  image,
+  landscapeImageClassName,
+  portraitImageClassName,
+  resolution = "full",
+  sizes,
+  wrapperClassName,
+}: StoryFeaturedImagePanelProps) => {
+  const isPortrait = isPortraitStoryImage(image);
+  const dimensions =
+    resolution === "thumb" ? getStoryThumbDimensions(image) : getStoryImageDimensions(image);
+
+  return (
+    <div
+      className={cn(
+        "relative overflow-hidden rounded-3xl border border-white/24 bg-black/12 shadow-[0_24px_56px_rgba(15,23,42,0.24)]",
+        getMediaRevealClassName(active),
+        isPortrait && "mx-auto w-full max-w-96 bg-slate-950/34",
+        wrapperClassName,
+      )}
+      style={getRevealStyle(active, delayMs)}
+    >
+      <AppImage
+        src={resolution === "thumb" ? image.thumbUrl : image.fullUrl}
+        alt={alt}
+        width={dimensions.width}
+        height={dimensions.height}
+        sizes={sizes}
+        unoptimized
+        className={cn(
+          "w-full motion-safe:transition-transform motion-safe:duration-1000 motion-safe:ease-out",
+          isPortrait
+            ? (portraitImageClassName ?? "h-112 object-contain p-3")
+            : landscapeImageClassName,
+          !isPortrait && (active ? "motion-safe:scale-100" : "motion-safe:scale-105"),
+        )}
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/84 via-slate-950/16 to-transparent" />
+      {children}
+    </div>
+  );
+};
+
 const YearReviewStory = ({
   headingLevel = 2,
   mode,
@@ -431,6 +507,14 @@ const YearReviewStory = ({
       <div className="space-y-5">
         {cards.map((card, index) => {
           const isActive = index === activeIndex;
+          const milestoneHasPortraitFeaturedImage =
+            card.kind === "milestone" &&
+            card.featuredImage !== null &&
+            isPortraitStoryImage(card.featuredImage);
+          const tripHasPortraitFeaturedImage =
+            card.kind === "trip-highlight" &&
+            card.featuredImage !== null &&
+            isPortraitStoryImage(card.featuredImage);
 
           return (
             <section
@@ -593,13 +677,34 @@ const YearReviewStory = ({
                       className={cn(
                         "grid gap-4",
                         getRevealClassName(isActive),
-                        card.featuredImage
-                          ? "lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]"
-                          : "lg:grid-cols-[minmax(0,1fr)_minmax(0,0.82fr)]",
+                        milestoneHasPortraitFeaturedImage
+                          ? "lg:grid-cols-[minmax(0,0.78fr)_minmax(0,1.22fr)] lg:items-start"
+                          : card.featuredImage
+                            ? "lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]"
+                            : "lg:grid-cols-[minmax(0,1fr)_minmax(0,0.82fr)]",
                       )}
+                      data-story-layout={
+                        milestoneHasPortraitFeaturedImage ? "portrait-split" : undefined
+                      }
                       style={getRevealStyle(isActive, 180)}
                     >
-                      <div className="grid gap-3 sm:grid-cols-2">
+                      {milestoneHasPortraitFeaturedImage && card.featuredImage ? (
+                        <StoryFeaturedImagePanel
+                          active={isActive}
+                          alt={
+                            card.featuredImage.alt ??
+                            `${card.visit.park.name}, ${formatVisitDate(card.visit.visitedOn)}`
+                          }
+                          delayMs={300}
+                          image={card.featuredImage}
+                          landscapeImageClassName="h-72 object-cover sm:h-80"
+                          portraitImageClassName="h-104 object-contain p-3"
+                          sizes="(min-width: 1024px) 28rem, 100vw"
+                          wrapperClassName="lg:max-w-none"
+                        />
+                      ) : null}
+
+                      <div className="grid gap-3 sm:grid-cols-2 lg:content-start">
                         {card.visit.route !== null && (
                           <div className={METRIC_TILE_CLASS_NAME}>
                             <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
@@ -623,42 +728,37 @@ const YearReviewStory = ({
                             </Link>
                           </div>
                         )}
-                      </div>
 
-                      <div className={METRIC_TILE_CLASS_NAME}>
-                        <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
-                          {t("stats.images")}
-                        </p>
-                        <p className="mt-2 text-4xl font-black tracking-tight text-primary-foreground">
-                          {card.visit.imageCount}
-                        </p>
-                      </div>
-
-                      {card.featuredImage ? (
                         <div
                           className={cn(
-                            "relative overflow-hidden rounded-3xl border border-white/24 bg-black/12 shadow-[0_24px_56px_rgba(15,23,42,0.24)]",
-                            getMediaRevealClassName(isActive),
+                            METRIC_TILE_CLASS_NAME,
+                            milestoneHasPortraitFeaturedImage &&
+                              card.visit.route !== null &&
+                              card.visit.trip !== null &&
+                              "sm:col-span-2",
                           )}
-                          style={getRevealStyle(isActive, 300)}
                         >
-                          <AppImage
-                            src={card.featuredImage.thumbUrl}
-                            alt={
-                              card.featuredImage.alt ??
-                              `${card.visit.park.name}, ${formatVisitDate(card.visit.visitedOn)}`
-                            }
-                            width={card.featuredImage.thumbWidth ?? 1200}
-                            height={card.featuredImage.thumbHeight ?? 900}
-                            sizes="(min-width: 1024px) 28rem, 100vw"
-                            unoptimized
-                            className={cn(
-                              "h-72 w-full object-cover motion-safe:transition-transform motion-safe:duration-1000 motion-safe:ease-out sm:h-80",
-                              isActive ? "motion-safe:scale-100" : "motion-safe:scale-105",
-                            )}
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/84 via-slate-950/16 to-transparent" />
+                          <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
+                            {t("stats.images")}
+                          </p>
+                          <p className="mt-2 text-4xl font-black tracking-tight text-primary-foreground">
+                            {card.visit.imageCount}
+                          </p>
                         </div>
+                      </div>
+
+                      {card.featuredImage && !milestoneHasPortraitFeaturedImage ? (
+                        <StoryFeaturedImagePanel
+                          active={isActive}
+                          alt={
+                            card.featuredImage.alt ??
+                            `${card.visit.park.name}, ${formatVisitDate(card.visit.visitedOn)}`
+                          }
+                          delayMs={300}
+                          image={card.featuredImage}
+                          landscapeImageClassName="h-72 object-cover sm:h-80"
+                          sizes="(min-width: 1024px) 28rem, 100vw"
+                        />
                       ) : null}
                     </div>
                   </>
@@ -689,26 +789,15 @@ const YearReviewStory = ({
                       style={getRevealStyle(isActive, 180)}
                     >
                       {card.featuredImage ? (
-                        <div
-                          className={cn(
-                            "relative overflow-hidden rounded-3xl border border-white/24 bg-black/12 shadow-[0_24px_56px_rgba(15,23,42,0.24)]",
-                            getMediaRevealClassName(isActive),
-                          )}
-                          style={getRevealStyle(isActive, 260)}
+                        <StoryFeaturedImagePanel
+                          active={isActive}
+                          alt={getPhotoHighlightImageAlt(card, t("story.photoTitle"))}
+                          delayMs={260}
+                          image={card.featuredImage}
+                          landscapeImageClassName="h-80 object-cover sm:h-96"
+                          portraitImageClassName="h-112 object-contain p-3 sm:h-120"
+                          sizes="(min-width: 1024px) 32rem, 100vw"
                         >
-                          <AppImage
-                            src={card.featuredImage.thumbUrl}
-                            alt={getPhotoHighlightImageAlt(card, t("story.photoTitle"))}
-                            width={card.featuredImage.thumbWidth ?? 1200}
-                            height={card.featuredImage.thumbHeight ?? 900}
-                            sizes="(min-width: 1024px) 32rem, 100vw"
-                            unoptimized
-                            className={cn(
-                              "h-80 w-full object-cover motion-safe:transition-transform motion-safe:duration-1000 motion-safe:ease-out sm:h-96",
-                              isActive ? "motion-safe:scale-100" : "motion-safe:scale-105",
-                            )}
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/88 via-slate-950/18 to-transparent" />
                           {card.visit !== null && (
                             <div className="absolute inset-x-0 bottom-0 space-y-2 p-5 sm:p-6">
                               <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
@@ -722,7 +811,7 @@ const YearReviewStory = ({
                               </p>
                             </div>
                           )}
-                        </div>
+                        </StoryFeaturedImagePanel>
                       ) : null}
 
                       {card.visit ? (
@@ -871,13 +960,18 @@ const YearReviewStory = ({
                       className={cn(
                         "grid gap-3",
                         getRevealClassName(isActive),
-                        card.featuredImage
-                          ? "lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]"
-                          : "lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]",
+                        tripHasPortraitFeaturedImage
+                          ? "lg:grid-cols-[minmax(0,0.78fr)_minmax(0,1.22fr)] lg:items-start"
+                          : card.featuredImage
+                            ? "lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]"
+                            : "lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]",
                       )}
+                      data-story-layout={
+                        tripHasPortraitFeaturedImage ? "portrait-media-right" : undefined
+                      }
                       style={getRevealStyle(isActive, 180)}
                     >
-                      <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="grid gap-3 sm:grid-cols-2 lg:content-start">
                         <div className={METRIC_TILE_CLASS_NAME}>
                           <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
                             {t("stats.visits")}
@@ -894,50 +988,56 @@ const YearReviewStory = ({
                             {card.trip.imageCount}
                           </p>
                         </div>
-                      </div>
 
-                      <div className={METRIC_TILE_CLASS_NAME}>
-                        <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
-                          {t("story.tripLabel")}
-                        </p>
-                        <Link
-                          href={appRoutes.trip(card.trip.slug)}
-                          className="mt-2 inline-flex text-2xl font-semibold text-primary-foreground underline decoration-white/32 underline-offset-4 transition-colors hover:text-white"
-                        >
-                          {card.trip.name}
-                        </Link>
-                        {card.trip.dateRange !== null && (
-                          <p className="mt-2 text-sm text-primary-foreground/78">
-                            {formatTripDateRange(
-                              card.trip.dateRange.start,
-                              card.trip.dateRange.end,
-                            )}
-                          </p>
-                        )}
-                      </div>
-
-                      {card.featuredImage ? (
                         <div
                           className={cn(
-                            "relative overflow-hidden rounded-3xl border border-white/24 bg-black/12 shadow-[0_24px_56px_rgba(15,23,42,0.24)]",
-                            getMediaRevealClassName(isActive),
+                            METRIC_TILE_CLASS_NAME,
+                            tripHasPortraitFeaturedImage && "sm:col-span-2",
                           )}
-                          style={getRevealStyle(isActive, 300)}
                         >
-                          <AppImage
-                            src={card.featuredImage.thumbUrl}
-                            alt={card.featuredImage.alt ?? card.trip.name}
-                            width={card.featuredImage.thumbWidth ?? 1200}
-                            height={card.featuredImage.thumbHeight ?? 900}
-                            sizes="(min-width: 1024px) 28rem, 100vw"
-                            unoptimized
-                            className={cn(
-                              "h-80 w-full object-cover motion-safe:transition-transform motion-safe:duration-1000 motion-safe:ease-out",
-                              isActive ? "motion-safe:scale-100" : "motion-safe:scale-105",
-                            )}
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/84 via-slate-950/16 to-transparent" />
+                          <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
+                            {t("story.tripLabel")}
+                          </p>
+                          <Link
+                            href={appRoutes.trip(card.trip.slug)}
+                            className="mt-2 inline-flex text-2xl font-semibold text-primary-foreground underline decoration-white/32 underline-offset-4 transition-colors hover:text-white"
+                          >
+                            {card.trip.name}
+                          </Link>
+                          {card.trip.dateRange !== null && (
+                            <p className="mt-2 text-sm text-primary-foreground/78">
+                              {formatTripDateRange(
+                                card.trip.dateRange.start,
+                                card.trip.dateRange.end,
+                              )}
+                            </p>
+                          )}
                         </div>
+                      </div>
+
+                      {tripHasPortraitFeaturedImage && card.featuredImage ? (
+                        <StoryFeaturedImagePanel
+                          active={isActive}
+                          alt={card.featuredImage.alt ?? card.trip.name}
+                          delayMs={300}
+                          image={card.featuredImage}
+                          landscapeImageClassName="h-80 object-cover"
+                          portraitImageClassName="h-104 object-contain p-3"
+                          sizes="(min-width: 1024px) 28rem, 100vw"
+                          wrapperClassName="lg:max-w-none"
+                        />
+                      ) : null}
+
+                      {card.featuredImage && !tripHasPortraitFeaturedImage ? (
+                        <StoryFeaturedImagePanel
+                          active={isActive}
+                          alt={card.featuredImage.alt ?? card.trip.name}
+                          delayMs={300}
+                          image={card.featuredImage}
+                          landscapeImageClassName="h-80 object-cover"
+                          portraitImageClassName="h-112 object-contain p-3"
+                          sizes="(min-width: 1024px) 28rem, 100vw"
+                        />
                       ) : null}
                     </div>
                   </>
@@ -972,24 +1072,20 @@ const YearReviewStory = ({
                           style={getRevealStyle(isActive, 180 + parkIndex * 90)}
                         >
                           {parkMoment.featuredImage ? (
-                            <div className="relative">
-                              <AppImage
-                                src={parkMoment.featuredImage.thumbUrl}
-                                alt={
-                                  parkMoment.featuredImage.alt ??
-                                  `${parkMoment.park.name}, ${formatVisitDate(parkMoment.visitedOn)}`
-                                }
-                                width={parkMoment.featuredImage.thumbWidth ?? 1200}
-                                height={parkMoment.featuredImage.thumbHeight ?? 900}
-                                sizes="(min-width: 1280px) 20rem, (min-width: 768px) 24rem, 100vw"
-                                unoptimized
-                                className={cn(
-                                  "h-56 w-full object-cover motion-safe:transition-transform motion-safe:duration-1000 motion-safe:ease-out",
-                                  isActive ? "motion-safe:scale-100" : "motion-safe:scale-105",
-                                )}
-                              />
-                              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/82 via-transparent to-transparent" />
-                            </div>
+                            <StoryFeaturedImagePanel
+                              active={isActive}
+                              alt={
+                                parkMoment.featuredImage.alt ??
+                                `${parkMoment.park.name}, ${formatVisitDate(parkMoment.visitedOn)}`
+                              }
+                              delayMs={180 + parkIndex * 90}
+                              image={parkMoment.featuredImage}
+                              landscapeImageClassName="h-56 object-cover"
+                              portraitImageClassName="h-72 object-contain p-3"
+                              resolution="thumb"
+                              sizes="(min-width: 1280px) 20rem, (min-width: 768px) 24rem, 100vw"
+                              wrapperClassName="rounded-none border-0 bg-transparent shadow-none"
+                            />
                           ) : null}
 
                           <div className="space-y-3 p-5">

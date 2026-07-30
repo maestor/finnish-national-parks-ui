@@ -4,8 +4,8 @@ import { describe, expect, it, vi } from "vitest";
 import { YearReviewStory } from "./year-review-story";
 
 vi.mock("@/components/ui/app-image", () => ({
-  AppImage: ({ alt, src }: { alt: string; src: string }) => (
-    <div aria-label={alt} data-src={src} role="img" />
+  AppImage: ({ alt, className, src }: { alt: string; className?: string; src: string }) => (
+    <div aria-label={alt} data-class-name={className} data-src={src} role="img" />
   ),
 }));
 
@@ -275,6 +275,46 @@ const imageOnlyPhotoStory = {
   ),
 };
 
+const portraitMilestoneStory = {
+  ...fallbackStory,
+  cards: fallbackStory.cards.map((card) =>
+    card.kind === "milestone"
+      ? {
+          ...card,
+          featuredImage: {
+            alt: "Pystysuuntainen kuva",
+            fullHeight: 1600,
+            fullUrl: "https://images.example/portrait-full.jpg",
+            fullWidth: 900,
+            thumbHeight: 400,
+            thumbUrl: "https://images.example/portrait-thumb.jpg",
+            thumbWidth: 300,
+          },
+        }
+      : card,
+  ),
+};
+
+const portraitTripStory = {
+  ...fallbackStory,
+  cards: fallbackStory.cards.map((card) =>
+    card.kind === "trip-highlight"
+      ? {
+          ...card,
+          featuredImage: {
+            alt: "Pystysuuntainen retkikuva",
+            fullHeight: 1600,
+            fullUrl: "https://images.example/trip-portrait-full.jpg",
+            fullWidth: 900,
+            thumbHeight: 400,
+            thumbUrl: "https://images.example/trip-portrait-thumb.jpg",
+            thumbWidth: 300,
+          },
+        }
+      : card,
+  ),
+};
+
 let latestIntersectionCallback: IntersectionObserverCallback | null = null;
 
 class MockIntersectionObserver {
@@ -377,11 +417,43 @@ describe("YearReviewStory", () => {
 
     expect(screen.getAllByText("Repovesi").length).toBeGreaterThan(0);
     expect(screen.getByRole("img", { name: "Kuva Repovedeltä" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Kuva Repovedeltä" })).toHaveAttribute(
+      "data-src",
+      "https://images.example/repovesi-full.jpg",
+    );
     expect(screen.getAllByText("story.notAvailable").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Loppukesän kierros").length).toBe(2);
     expect(screen.getByText("story.tripHighlightCaption")).toBeInTheDocument();
     expect(screen.getByText("story.newParksTitle")).toBeInTheDocument();
     expect(screen.getByText("Lauhanvuori")).toBeInTheDocument();
+  });
+
+  it("uses a portrait-friendly image treatment for tall featured photos", () => {
+    render(<YearReviewStory story={portraitMilestoneStory} mode="preview" />);
+
+    expect(
+      screen.getByRole("img", { name: "Pystysuuntainen kuva" }).closest("[data-story-layout]"),
+    ).toHaveAttribute("data-story-layout", "portrait-split");
+    expect(screen.getByRole("img", { name: "Pystysuuntainen kuva" })).toHaveAttribute(
+      "data-class-name",
+      expect.stringContaining("object-contain"),
+    );
+    expect(screen.getByRole("img", { name: "Pystysuuntainen kuva" })).toHaveAttribute(
+      "data-src",
+      "https://images.example/portrait-full.jpg",
+    );
+  });
+
+  it("places portrait trip highlight imagery to the right of the details column", () => {
+    render(<YearReviewStory story={portraitTripStory} mode="preview" />);
+
+    expect(
+      screen.getByRole("img", { name: "Pystysuuntainen retkikuva" }).closest("[data-story-layout]"),
+    ).toHaveAttribute("data-story-layout", "portrait-media-right");
+    expect(screen.getByRole("img", { name: "Pystysuuntainen retkikuva" })).toHaveAttribute(
+      "data-src",
+      "https://images.example/trip-portrait-full.jpg",
+    );
   });
 
   it("falls back to the visit details tile when the photo highlight has no featured image", () => {
