@@ -757,7 +757,7 @@
       "newParksTitle": "Uudet kansallispuistot",
       "newParksHeading": "{count} uutta kansallispuistoa",
       "newParksCaption": "Näissä kansallispuistoissa kävimme ensimmäistä kertaa tämän vuoden aikana.",
-      "newParkVisitedOn": "Ensikäynti {date}",
+      "newParkVisitedOn": "Käynti {date}",
       "seasonalTitle": "Kausittain",
       "seasonalCaption": "Käynnit vuodenajoittain",
       "strongestSeasonValue": "Vahvin vuodenaika: {season}",
