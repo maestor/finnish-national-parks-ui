@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { type CSSProperties, useEffect, useRef, useState } from "react";
 import { HeaderBrandMark } from "@/components/layout/header-brand-mark";
 import {
   PUBLIC_HERO_DESCRIPTION_CLASS_NAME,
@@ -197,6 +197,10 @@ const STORY_EYEBROW_BADGE_CLASS_NAME =
 const STORY_ICON_SURFACE_CLASS_NAME =
   "inline-flex h-11 w-11 items-center justify-center rounded-[1.1rem] border border-white/24 bg-black/18 text-primary-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-sm";
 
+const STORY_BLOCK_REVEAL_CLASS_NAME = "motion-safe:animate-year-review-enter";
+
+const STORY_MEDIA_REVEAL_CLASS_NAME = "motion-safe:animate-year-review-media";
+
 const CARD_THEME_CLASS_NAMES: Record<RenderableYearReviewCard["kind"], string> = {
   empty:
     "bg-[linear-gradient(145deg,rgba(15,23,42,0.98),rgba(12,74,110,0.92),rgba(21,128,61,0.86))] text-primary-foreground",
@@ -217,6 +221,14 @@ const CARD_THEME_CLASS_NAMES: Record<RenderableYearReviewCard["kind"], string> =
   summary:
     "bg-[linear-gradient(145deg,rgba(20,83,45,0.98),rgba(12,74,110,0.86),rgba(15,23,42,0.94))] text-primary-foreground",
 };
+
+const getRevealStyle = (isActive: boolean, delayMs: number): CSSProperties | undefined =>
+  isActive ? { animationDelay: `${delayMs}ms` } : undefined;
+
+const getRevealClassName = (isActive: boolean) => (isActive ? STORY_BLOCK_REVEAL_CLASS_NAME : "");
+
+const getMediaRevealClassName = (isActive: boolean) =>
+  isActive ? STORY_MEDIA_REVEAL_CLASS_NAME : "";
 
 const YearReviewStory = ({
   headingLevel = 2,
@@ -399,10 +411,18 @@ const YearReviewStory = ({
                 aria-label={t("story.goToCard", { current: index + 1, total: cards.length })}
                 aria-current={index === activeIndex ? "step" : undefined}
                 className={cn(
-                  "h-1.5 flex-1 rounded-full bg-muted transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                  index === activeIndex && "bg-primary",
+                  "relative h-1.5 flex-1 overflow-hidden rounded-full bg-white/16 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                  index === activeIndex && "shadow-[0_0_18px_rgba(74,222,128,0.32)]",
                 )}
-              />
+              >
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "absolute inset-y-0 left-0 rounded-full bg-linear-to-r from-emerald-300 via-primary to-emerald-100 transition-all duration-500 motion-safe:duration-700",
+                    index === activeIndex ? "w-full" : "w-0",
+                  )}
+                />
+              </button>
             ))}
           </div>
         </nav>
@@ -424,21 +444,35 @@ const YearReviewStory = ({
               className={cn(
                 CARD_CONTAINER_CLASS_NAME,
                 CARD_THEME_CLASS_NAMES[card.kind],
+                "motion-safe:transition-[transform,opacity,box-shadow] motion-safe:duration-500 motion-safe:ease-out",
                 isActive
                   ? "opacity-100 motion-safe:translate-y-0"
-                  : "opacity-88 motion-safe:translate-y-2",
+                  : "opacity-90 motion-safe:translate-y-2",
               )}
             >
               <div className="pointer-events-none absolute inset-0 overflow-hidden">
-                <div className="absolute -top-12 right-0 h-44 w-44 rounded-full bg-white/12 blur-3xl motion-safe:animate-year-review-float" />
-                <div className="absolute bottom-0 left-0 h-52 w-52 rounded-full bg-emerald-300/18 blur-3xl motion-safe:animate-year-review-glow" />
+                <div
+                  className={cn(
+                    "absolute -top-12 right-0 h-44 w-44 rounded-full bg-white/12 blur-3xl transition-opacity duration-500",
+                    isActive ? "opacity-100 motion-safe:animate-year-review-float" : "opacity-55",
+                  )}
+                />
+                <div
+                  className={cn(
+                    "absolute bottom-0 left-0 h-52 w-52 rounded-full bg-emerald-300/18 blur-3xl transition-opacity duration-500",
+                    isActive ? "opacity-100 motion-safe:animate-year-review-glow" : "opacity-45",
+                  )}
+                />
                 <div className="absolute inset-x-0 top-0 h-px bg-white/45" />
               </div>
 
               <div className={CARD_INNER_GRID_CLASS_NAME}>
                 {card.kind === "empty" && (
                   <>
-                    <div className="space-y-4">
+                    <div
+                      className={cn("space-y-4", getRevealClassName(isActive))}
+                      style={getRevealStyle(isActive, 0)}
+                    >
                       <div className={STORY_EYEBROW_BADGE_CLASS_NAME}>
                         <Sparkles className="h-4 w-4" aria-hidden="true" />
                         <span>{t("eyebrow")}</span>
@@ -456,7 +490,10 @@ const YearReviewStory = ({
                       </div>
                     </div>
 
-                    <div className="grid gap-3 sm:grid-cols-3">
+                    <div
+                      className={cn("grid gap-3 sm:grid-cols-3", getRevealClassName(isActive))}
+                      style={getRevealStyle(isActive, 160)}
+                    >
                       {getSummaryHighlights(story)
                         .slice(0, 3)
                         .map((item) => (
@@ -475,7 +512,10 @@ const YearReviewStory = ({
 
                 {card.kind === "intro" && (
                   <>
-                    <div className="space-y-4">
+                    <div
+                      className={cn("space-y-4", getRevealClassName(isActive))}
+                      style={getRevealStyle(isActive, 0)}
+                    >
                       <div className={STORY_EYEBROW_BADGE_CLASS_NAME}>
                         <Sparkles className="h-4 w-4" aria-hidden="true" />
                         <span>{t("eyebrow")}</span>
@@ -488,7 +528,13 @@ const YearReviewStory = ({
                       </p>
                     </div>
 
-                    <div className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)] lg:items-end">
+                    <div
+                      className={cn(
+                        "grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)] lg:items-end",
+                        getRevealClassName(isActive),
+                      )}
+                      style={getRevealStyle(isActive, 160)}
+                    >
                       <div>
                         <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary-foreground/70">
                           {t("story.primaryStatLabel")}
@@ -521,7 +567,10 @@ const YearReviewStory = ({
 
                 {card.kind === "milestone" && (
                   <>
-                    <div className="space-y-4">
+                    <div
+                      className={cn("space-y-4", getRevealClassName(isActive))}
+                      style={getRevealStyle(isActive, 0)}
+                    >
                       <div className={STORY_ICON_SURFACE_CLASS_NAME}>
                         <CalendarDays className="h-5 w-5" aria-hidden="true" />
                       </div>
@@ -543,10 +592,12 @@ const YearReviewStory = ({
                     <div
                       className={cn(
                         "grid gap-4",
+                        getRevealClassName(isActive),
                         card.featuredImage
                           ? "lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]"
                           : "lg:grid-cols-[minmax(0,1fr)_minmax(0,0.82fr)]",
                       )}
+                      style={getRevealStyle(isActive, 180)}
                     >
                       <div className="grid gap-3 sm:grid-cols-2">
                         {card.visit.route !== null && (
@@ -584,7 +635,13 @@ const YearReviewStory = ({
                       </div>
 
                       {card.featuredImage ? (
-                        <div className="relative overflow-hidden rounded-3xl border border-white/24 bg-black/12 shadow-[0_24px_56px_rgba(15,23,42,0.24)]">
+                        <div
+                          className={cn(
+                            "relative overflow-hidden rounded-3xl border border-white/24 bg-black/12 shadow-[0_24px_56px_rgba(15,23,42,0.24)]",
+                            getMediaRevealClassName(isActive),
+                          )}
+                          style={getRevealStyle(isActive, 300)}
+                        >
                           <AppImage
                             src={card.featuredImage.thumbUrl}
                             alt={
@@ -595,7 +652,10 @@ const YearReviewStory = ({
                             height={card.featuredImage.thumbHeight ?? 900}
                             sizes="(min-width: 1024px) 28rem, 100vw"
                             unoptimized
-                            className="h-72 w-full object-cover sm:h-80"
+                            className={cn(
+                              "h-72 w-full object-cover motion-safe:transition-transform motion-safe:duration-1000 motion-safe:ease-out sm:h-80",
+                              isActive ? "motion-safe:scale-100" : "motion-safe:scale-105",
+                            )}
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/84 via-slate-950/16 to-transparent" />
                         </div>
@@ -606,7 +666,10 @@ const YearReviewStory = ({
 
                 {card.kind === "photo-highlight" && (
                   <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-                    <div className="space-y-4">
+                    <div
+                      className={cn("space-y-4", getRevealClassName(isActive))}
+                      style={getRevealStyle(isActive, 0)}
+                    >
                       <div className={STORY_ICON_SURFACE_CLASS_NAME}>
                         <Camera className="h-5 w-5" aria-hidden="true" />
                       </div>
@@ -621,9 +684,18 @@ const YearReviewStory = ({
                       </div>
                     </div>
 
-                    <div className="grid gap-3">
+                    <div
+                      className={cn("grid gap-3", getRevealClassName(isActive))}
+                      style={getRevealStyle(isActive, 180)}
+                    >
                       {card.featuredImage ? (
-                        <div className="relative overflow-hidden rounded-3xl border border-white/24 bg-black/12 shadow-[0_24px_56px_rgba(15,23,42,0.24)]">
+                        <div
+                          className={cn(
+                            "relative overflow-hidden rounded-3xl border border-white/24 bg-black/12 shadow-[0_24px_56px_rgba(15,23,42,0.24)]",
+                            getMediaRevealClassName(isActive),
+                          )}
+                          style={getRevealStyle(isActive, 260)}
+                        >
                           <AppImage
                             src={card.featuredImage.thumbUrl}
                             alt={getPhotoHighlightImageAlt(card, t("story.photoTitle"))}
@@ -631,7 +703,10 @@ const YearReviewStory = ({
                             height={card.featuredImage.thumbHeight ?? 900}
                             sizes="(min-width: 1024px) 32rem, 100vw"
                             unoptimized
-                            className="h-80 w-full object-cover sm:h-96"
+                            className={cn(
+                              "h-80 w-full object-cover motion-safe:transition-transform motion-safe:duration-1000 motion-safe:ease-out sm:h-96",
+                              isActive ? "motion-safe:scale-100" : "motion-safe:scale-105",
+                            )}
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/88 via-slate-950/18 to-transparent" />
                           {card.visit !== null && (
@@ -692,7 +767,10 @@ const YearReviewStory = ({
 
                 {card.kind === "profile" && (
                   <>
-                    <div className="space-y-4">
+                    <div
+                      className={cn("space-y-4", getRevealClassName(isActive))}
+                      style={getRevealStyle(isActive, 0)}
+                    >
                       <div className={STORY_ICON_SURFACE_CLASS_NAME}>
                         <Compass className="h-5 w-5" aria-hidden="true" />
                       </div>
@@ -704,7 +782,13 @@ const YearReviewStory = ({
                       </div>
                     </div>
 
-                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <div
+                      className={cn(
+                        "grid gap-3 sm:grid-cols-2 xl:grid-cols-4",
+                        getRevealClassName(isActive),
+                      )}
+                      style={getRevealStyle(isActive, 180)}
+                    >
                       <div className={METRIC_TILE_CLASS_NAME}>
                         <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
                           {t("stats.newParks")}
@@ -767,7 +851,10 @@ const YearReviewStory = ({
 
                 {card.kind === "trip-highlight" && (
                   <>
-                    <div className="space-y-4">
+                    <div
+                      className={cn("space-y-4", getRevealClassName(isActive))}
+                      style={getRevealStyle(isActive, 0)}
+                    >
                       <div className={STORY_ICON_SURFACE_CLASS_NAME}>
                         <MapPinned className="h-5 w-5" aria-hidden="true" />
                       </div>
@@ -783,10 +870,12 @@ const YearReviewStory = ({
                     <div
                       className={cn(
                         "grid gap-3",
+                        getRevealClassName(isActive),
                         card.featuredImage
                           ? "lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]"
                           : "lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]",
                       )}
+                      style={getRevealStyle(isActive, 180)}
                     >
                       <div className="grid gap-3 sm:grid-cols-2">
                         <div className={METRIC_TILE_CLASS_NAME}>
@@ -828,7 +917,13 @@ const YearReviewStory = ({
                       </div>
 
                       {card.featuredImage ? (
-                        <div className="relative overflow-hidden rounded-3xl border border-white/24 bg-black/12 shadow-[0_24px_56px_rgba(15,23,42,0.24)]">
+                        <div
+                          className={cn(
+                            "relative overflow-hidden rounded-3xl border border-white/24 bg-black/12 shadow-[0_24px_56px_rgba(15,23,42,0.24)]",
+                            getMediaRevealClassName(isActive),
+                          )}
+                          style={getRevealStyle(isActive, 300)}
+                        >
                           <AppImage
                             src={card.featuredImage.thumbUrl}
                             alt={card.featuredImage.alt ?? card.trip.name}
@@ -836,7 +931,10 @@ const YearReviewStory = ({
                             height={card.featuredImage.thumbHeight ?? 900}
                             sizes="(min-width: 1024px) 28rem, 100vw"
                             unoptimized
-                            className="h-80 w-full object-cover"
+                            className={cn(
+                              "h-80 w-full object-cover motion-safe:transition-transform motion-safe:duration-1000 motion-safe:ease-out",
+                              isActive ? "motion-safe:scale-100" : "motion-safe:scale-105",
+                            )}
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/84 via-slate-950/16 to-transparent" />
                         </div>
@@ -847,7 +945,10 @@ const YearReviewStory = ({
 
                 {card.kind === "new-parks" && (
                   <>
-                    <div className="space-y-4">
+                    <div
+                      className={cn("space-y-4", getRevealClassName(isActive))}
+                      style={getRevealStyle(isActive, 0)}
+                    >
                       <div className={STORY_ICON_SURFACE_CLASS_NAME}>
                         <Trees className="h-5 w-5" aria-hidden="true" />
                       </div>
@@ -861,10 +962,14 @@ const YearReviewStory = ({
                     </div>
 
                     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                      {card.parks.map((parkMoment) => (
+                      {card.parks.map((parkMoment, parkIndex) => (
                         <article
                           key={parkMoment.park.slug}
-                          className="overflow-hidden rounded-3xl border border-white/24 bg-black/14 shadow-[0_24px_56px_rgba(15,23,42,0.2)]"
+                          className={cn(
+                            "overflow-hidden rounded-3xl border border-white/24 bg-black/14 shadow-[0_24px_56px_rgba(15,23,42,0.2)]",
+                            getMediaRevealClassName(isActive),
+                          )}
+                          style={getRevealStyle(isActive, 180 + parkIndex * 90)}
                         >
                           {parkMoment.featuredImage ? (
                             <div className="relative">
@@ -878,7 +983,10 @@ const YearReviewStory = ({
                                 height={parkMoment.featuredImage.thumbHeight ?? 900}
                                 sizes="(min-width: 1280px) 20rem, (min-width: 768px) 24rem, 100vw"
                                 unoptimized
-                                className="h-56 w-full object-cover"
+                                className={cn(
+                                  "h-56 w-full object-cover motion-safe:transition-transform motion-safe:duration-1000 motion-safe:ease-out",
+                                  isActive ? "motion-safe:scale-100" : "motion-safe:scale-105",
+                                )}
                               />
                               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/82 via-transparent to-transparent" />
                             </div>
@@ -905,7 +1013,10 @@ const YearReviewStory = ({
 
                 {card.kind === "seasonal" && (
                   <>
-                    <div className="space-y-4">
+                    <div
+                      className={cn("space-y-4", getRevealClassName(isActive))}
+                      style={getRevealStyle(isActive, 0)}
+                    >
                       <div className={STORY_ICON_SURFACE_CLASS_NAME}>
                         <Trees className="h-5 w-5" aria-hidden="true" />
                       </div>
@@ -926,7 +1037,7 @@ const YearReviewStory = ({
 
                     <div className="grid gap-3">
                       {(["spring", "summer", "autumn", "winter"] as YearReviewSeason[]).map(
-                        (season) => {
+                        (season, seasonIndex) => {
                           const value = card.visitsBySeason[season];
                           const seasonMeta = SEASON_CARD_META[season];
                           const widthPercent =
@@ -935,7 +1046,11 @@ const YearReviewStory = ({
                               : 0;
 
                           return (
-                            <div key={season} className={METRIC_TILE_CLASS_NAME}>
+                            <div
+                              key={season}
+                              className={cn(METRIC_TILE_CLASS_NAME, getRevealClassName(isActive))}
+                              style={getRevealStyle(isActive, 150 + seasonIndex * 90)}
+                            >
                               <div className="flex items-center justify-between gap-4">
                                 <p className="flex items-center gap-2 font-semibold text-primary-foreground">
                                   <span aria-hidden="true" className="text-base leading-none">
@@ -953,7 +1068,12 @@ const YearReviewStory = ({
                                     "h-3 rounded-full transition-[width] duration-700",
                                     seasonMeta.barClassName,
                                   )}
-                                  style={{ width: `${widthPercent}%` }}
+                                  style={{
+                                    transitionDelay: isActive
+                                      ? `${240 + seasonIndex * 90}ms`
+                                      : undefined,
+                                    width: `${isActive ? widthPercent : 0}%`,
+                                  }}
                                 />
                               </div>
                             </div>
@@ -966,7 +1086,10 @@ const YearReviewStory = ({
 
                 {card.kind === "summary" && (
                   <>
-                    <div className="space-y-4">
+                    <div
+                      className={cn("space-y-4", getRevealClassName(isActive))}
+                      style={getRevealStyle(isActive, 0)}
+                    >
                       <div className={STORY_ICON_SURFACE_CLASS_NAME}>
                         <Trophy className="h-5 w-5" aria-hidden="true" />
                       </div>
@@ -986,7 +1109,13 @@ const YearReviewStory = ({
                       </div>
                     </div>
 
-                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                    <div
+                      className={cn(
+                        "grid gap-3 sm:grid-cols-2 xl:grid-cols-5",
+                        getRevealClassName(isActive),
+                      )}
+                      style={getRevealStyle(isActive, 180)}
+                    >
                       {getSummaryHighlights(story).map((item) => (
                         <div key={item.labelKey} className={METRIC_TILE_CLASS_NAME}>
                           <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
