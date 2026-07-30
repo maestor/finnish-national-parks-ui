@@ -1,11 +1,11 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { YearReviewStory } from "./year-review-story";
 
 vi.mock("@/components/ui/app-image", () => ({
-  AppImage: ({ alt, src }: { alt: string; src: string }) => (
-    <div aria-label={alt} data-src={src} role="img" />
+  AppImage: ({ alt, className, src }: { alt: string; className?: string; src: string }) => (
+    <div aria-label={alt} data-class-name={className} data-src={src} role="img" />
   ),
 }));
 
@@ -275,6 +275,76 @@ const imageOnlyPhotoStory = {
   ),
 };
 
+const portraitMilestoneStory = {
+  ...fallbackStory,
+  cards: fallbackStory.cards.map((card) =>
+    card.kind === "milestone"
+      ? {
+          ...card,
+          featuredImage: {
+            alt: "Pystysuuntainen kuva",
+            fullHeight: 1600,
+            fullUrl: "https://images.example/portrait-full.jpg",
+            fullWidth: 900,
+            thumbHeight: 400,
+            thumbUrl: "https://images.example/portrait-thumb.jpg",
+            thumbWidth: 300,
+          },
+        }
+      : card,
+  ),
+};
+
+const portraitTripStory = {
+  ...fallbackStory,
+  cards: fallbackStory.cards.map((card) =>
+    card.kind === "trip-highlight"
+      ? {
+          ...card,
+          featuredImage: {
+            alt: "Pystysuuntainen retkikuva",
+            fullHeight: 1600,
+            fullUrl: "https://images.example/trip-portrait-full.jpg",
+            fullWidth: 900,
+            thumbHeight: 400,
+            thumbUrl: "https://images.example/trip-portrait-thumb.jpg",
+            thumbWidth: 300,
+          },
+        }
+      : card,
+  ),
+};
+
+let latestIntersectionCallback: IntersectionObserverCallback | null = null;
+
+class MockIntersectionObserver {
+  observe = vi.fn();
+  disconnect = vi.fn();
+
+  constructor(callback: IntersectionObserverCallback) {
+    latestIntersectionCallback = callback;
+  }
+}
+
+const triggerIntersection = (target: Element, intersectionRatio = 0.85) => {
+  if (latestIntersectionCallback === null) {
+    throw new Error("Expected an intersection observer callback to be registered.");
+  }
+
+  act(() => {
+    latestIntersectionCallback?.(
+      [
+        {
+          intersectionRatio,
+          isIntersecting: true,
+          target,
+        } as IntersectionObserverEntry,
+      ],
+      {} as IntersectionObserver,
+    );
+  });
+};
+
 describe("YearReviewStory", () => {
   it("renders the story cards with milestone and seasonal details", () => {
     render(
@@ -292,11 +362,8 @@ describe("YearReviewStory", () => {
     expect(screen.getByText("Huippupolku")).toBeInTheDocument();
     expect(screen.getByText("story.seasonalTitle")).toBeInTheDocument();
     expect(screen.getByText("Vahvin vuodenaika: seasons.summer")).toBeInTheDocument();
-    expect(screen.getByText("2 · 29 %")).toBeInTheDocument();
-    expect(screen.getByText("3 · 43 %")).toBeInTheDocument();
     expect(screen.getByText("seasons.spring").parentElement).toHaveTextContent("🌱");
     expect(screen.getByText("seasons.summer").parentElement).toHaveTextContent("☀️");
-    expect(screen.getByText(/Julkaistu/)).toBeInTheDocument();
     expect(screen.getByText("story.footer")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "story.browseApp" })).toHaveAttribute("href", "/");
     expect(screen.getByRole("link", { name: "siteTitle" })).toHaveAttribute("href", "/");
@@ -347,11 +414,43 @@ describe("YearReviewStory", () => {
 
     expect(screen.getAllByText("Repovesi").length).toBeGreaterThan(0);
     expect(screen.getByRole("img", { name: "Kuva Repovedeltä" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Kuva Repovedeltä" })).toHaveAttribute(
+      "data-src",
+      "https://images.example/repovesi-full.jpg",
+    );
     expect(screen.getAllByText("story.notAvailable").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Loppukesän kierros").length).toBe(2);
     expect(screen.getByText("story.tripHighlightCaption")).toBeInTheDocument();
     expect(screen.getByText("story.newParksTitle")).toBeInTheDocument();
     expect(screen.getByText("Lauhanvuori")).toBeInTheDocument();
+  });
+
+  it("uses a portrait-friendly image treatment for tall featured photos", () => {
+    render(<YearReviewStory story={portraitMilestoneStory} mode="preview" />);
+
+    expect(
+      screen.getByRole("img", { name: "Pystysuuntainen kuva" }).closest("[data-story-layout]"),
+    ).toHaveAttribute("data-story-layout", "portrait-split");
+    expect(screen.getByRole("img", { name: "Pystysuuntainen kuva" })).toHaveAttribute(
+      "data-class-name",
+      expect.stringContaining("object-contain"),
+    );
+    expect(screen.getByRole("img", { name: "Pystysuuntainen kuva" })).toHaveAttribute(
+      "data-src",
+      "https://images.example/portrait-full.jpg",
+    );
+  });
+
+  it("places portrait trip highlight imagery to the right of the details column", () => {
+    render(<YearReviewStory story={portraitTripStory} mode="preview" />);
+
+    expect(
+      screen.getByRole("img", { name: "Pystysuuntainen retkikuva" }).closest("[data-story-layout]"),
+    ).toHaveAttribute("data-story-layout", "portrait-media-right");
+    expect(screen.getByRole("img", { name: "Pystysuuntainen retkikuva" })).toHaveAttribute(
+      "data-src",
+      "https://images.example/trip-portrait-full.jpg",
+    );
   });
 
   it("falls back to the visit details tile when the photo highlight has no featured image", () => {
@@ -402,6 +501,136 @@ describe("YearReviewStory", () => {
     unmount();
 
     expect(disconnect).toHaveBeenCalled();
+    vi.unstubAllGlobals();
+  });
+
+  it("does not replay the card entry state after a card has already been seen once", () => {
+    vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
+
+    render(<YearReviewStory story={fallbackStory} mode="public" />);
+
+    const firstCard = screen.getByTestId("year-review-story-card-0");
+    const secondCard = screen.getByTestId("year-review-story-card-1");
+
+    expect(firstCard).toHaveAttribute("data-story-entry-state", "entry");
+    expect(secondCard).toHaveAttribute("data-story-entry-state", "upcoming");
+
+    triggerIntersection(secondCard);
+
+    expect(firstCard).toHaveAttribute("data-story-entry-state", "seen");
+    expect(secondCard).toHaveAttribute("data-story-entry-state", "entry");
+
+    triggerIntersection(firstCard);
+
+    expect(firstCard).toHaveAttribute("data-story-entry-state", "seen");
+    expect(secondCard).toHaveAttribute("data-story-entry-state", "seen");
+    vi.unstubAllGlobals();
+  });
+
+  it("lets people move between cards with the previous and next buttons", async () => {
+    const user = userEvent.setup();
+    const scrollTo = vi.fn();
+
+    Object.defineProperty(window, "scrollTo", {
+      configurable: true,
+      value: scrollTo,
+      writable: true,
+    });
+    Object.defineProperty(document.documentElement, "scrollHeight", {
+      configurable: true,
+      value: 3200,
+    });
+    Object.defineProperty(window, "innerHeight", {
+      configurable: true,
+      value: 900,
+      writable: true,
+    });
+    vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
+
+    render(<YearReviewStory story={fallbackStory} mode="public" />);
+
+    const storyElement = screen.getByTestId("year-review-story");
+    const navigationPanel = screen.getByLabelText("story.progressNavigator").closest("div");
+    const secondCard = screen.getByTestId("year-review-story-card-1");
+    const seasonalCard = screen.getByTestId("year-review-story-card-6");
+    const summaryCard = screen.getByTestId("year-review-story-card-7");
+
+    if (!(navigationPanel && secondCard && seasonalCard && summaryCard)) {
+      throw new Error("Expected the navigation panel and story cards to exist.");
+    }
+
+    vi.spyOn(storyElement, "getBoundingClientRect").mockReturnValue({
+      bottom: 960,
+      height: 960,
+      left: 0,
+      right: 0,
+      toJSON: () => ({}),
+      top: 48,
+      width: 0,
+      x: 0,
+      y: 48,
+    });
+    vi.spyOn(navigationPanel, "getBoundingClientRect").mockReturnValue({
+      bottom: 108,
+      height: 96,
+      left: 0,
+      right: 0,
+      toJSON: () => ({}),
+      top: 12,
+      width: 0,
+      x: 0,
+      y: 12,
+    });
+    vi.spyOn(summaryCard, "getBoundingClientRect").mockReturnValue({
+      bottom: 2560,
+      height: 560,
+      left: 0,
+      right: 0,
+      toJSON: () => ({}),
+      top: 2180,
+      width: 0,
+      x: 0,
+      y: 2180,
+    });
+
+    triggerIntersection(secondCard);
+
+    await user.click(screen.getByRole("button", { name: "story.previous" }));
+
+    expect(scrollTo).toHaveBeenCalledWith({
+      behavior: "auto",
+      top: 48,
+    });
+
+    vi.clearAllMocks();
+
+    triggerIntersection(seasonalCard);
+
+    await user.click(screen.getByRole("button", { name: "story.next" }));
+
+    expect(scrollTo).toHaveBeenCalledWith({
+      behavior: "auto",
+      top: 2052,
+    });
+    vi.unstubAllGlobals();
+  });
+
+  it("updates the previous and next button disabled states with the active card", () => {
+    vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
+
+    render(<YearReviewStory story={fallbackStory} mode="public" />);
+
+    const previousButton = screen.getByRole("button", { name: "story.previous" });
+    const nextButton = screen.getByRole("button", { name: "story.next" });
+    const summaryCard = screen.getByTestId("year-review-story-card-7");
+
+    expect(previousButton).toBeDisabled();
+    expect(nextButton).toBeEnabled();
+
+    triggerIntersection(summaryCard);
+
+    expect(previousButton).toBeEnabled();
+    expect(nextButton).toBeDisabled();
     vi.unstubAllGlobals();
   });
 

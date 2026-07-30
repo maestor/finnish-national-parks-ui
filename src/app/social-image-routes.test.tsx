@@ -98,6 +98,29 @@ const yearReviewShare = {
         topRoute: "Huippupolku",
         topTypeLabel: "Kansallispuisto",
       },
+      {
+        featuredImage: {
+          alt: "Kesäretken näkymä",
+          fullHeight: 1200,
+          fullUrl: "https://images.example/trip-full.jpg",
+          fullWidth: 1600,
+          thumbHeight: 900,
+          thumbUrl: "https://images.example/trip-thumb.jpg",
+          thumbWidth: 1200,
+        },
+        kind: "trip-highlight",
+        trip: {
+          dateRange: {
+            end: "2024-06-16",
+            start: "2024-06-15",
+          },
+          id: 55,
+          imageCount: 2,
+          name: "Kesäretki",
+          slug: "kesaretki",
+          visitCount: 1,
+        },
+      },
     ],
   },
   year: 2024,
@@ -162,6 +185,27 @@ describe("social image routes", () => {
         result.highlights[2]?.startsWith("2 ") === true &&
         result.highlights[3] === "Pallas-Yllästunturi x1",
     );
+  });
+
+  it("falls back to the trip highlight image when the photo highlight has no image", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ...yearReviewShare,
+      story: {
+        ...yearReviewShare.story,
+        cards: yearReviewShare.story.cards.map((card) =>
+          card.kind === "photo-highlight"
+            ? {
+                ...card,
+                featuredImage: null,
+              }
+            : card,
+        ),
+      },
+    });
+
+    await expect(
+      YearReviewOpenGraphImage({ params: Promise.resolve({ shareId }) }),
+    ).resolves.toSatisfy((result) => result.imageUrl === "https://images.example/trip-full.jpg");
   });
 
   it("calls notFound for a year review image with an unknown share", async () => {

@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { type CSSProperties, type ReactNode, useEffect, useRef, useState } from "react";
 import { HeaderBrandMark } from "@/components/layout/header-brand-mark";
 import {
   PUBLIC_HERO_DESCRIPTION_CLASS_NAME,
@@ -28,6 +28,7 @@ import type {
   YearReviewProfileCard,
   YearReviewSeason,
   YearReviewStory as YearReviewStoryData,
+  YearReviewStoryImage,
 } from "@/lib/year-review";
 
 interface YearReviewStoryProps {
@@ -197,6 +198,15 @@ const STORY_EYEBROW_BADGE_CLASS_NAME =
 const STORY_ICON_SURFACE_CLASS_NAME =
   "inline-flex h-11 w-11 items-center justify-center rounded-[1.1rem] border border-white/24 bg-black/18 text-primary-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-sm";
 
+const STORY_BLOCK_REVEAL_CLASS_NAME = "year-review-reveal motion-safe:animate-year-review-enter";
+
+const STORY_MEDIA_REVEAL_CLASS_NAME =
+  "year-review-media-reveal motion-safe:animate-year-review-media";
+
+const STORY_BLOCK_PENDING_CLASS_NAME = "year-review-reveal";
+
+const STORY_MEDIA_PENDING_CLASS_NAME = "year-review-media-reveal";
+
 const CARD_THEME_CLASS_NAMES: Record<RenderableYearReviewCard["kind"], string> = {
   empty:
     "bg-[linear-gradient(145deg,rgba(15,23,42,0.98),rgba(12,74,110,0.92),rgba(21,128,61,0.86))] text-primary-foreground",
@@ -218,24 +228,120 @@ const CARD_THEME_CLASS_NAMES: Record<RenderableYearReviewCard["kind"], string> =
     "bg-[linear-gradient(145deg,rgba(20,83,45,0.98),rgba(12,74,110,0.86),rgba(15,23,42,0.94))] text-primary-foreground",
 };
 
-const YearReviewStory = ({
-  headingLevel = 2,
-  mode,
-  publishedAt = null,
-  story,
-}: YearReviewStoryProps) => {
+const getRevealStyle = (shouldAnimate: boolean, delayMs: number): CSSProperties | undefined =>
+  shouldAnimate ? { animationDelay: `${delayMs}ms` } : undefined;
+
+const getRevealClassName = (shouldAnimate: boolean) => {
+  if (shouldAnimate) {
+    return STORY_BLOCK_REVEAL_CLASS_NAME;
+  }
+
+  return STORY_BLOCK_PENDING_CLASS_NAME;
+};
+
+const getMediaRevealClassName = (shouldAnimate: boolean) => {
+  if (shouldAnimate) {
+    return STORY_MEDIA_REVEAL_CLASS_NAME;
+  }
+
+  return STORY_MEDIA_PENDING_CLASS_NAME;
+};
+
+const getStoryImageDimensions = (image: YearReviewStoryImage) => ({
+  height: image.fullHeight ?? image.thumbHeight ?? 900,
+  width: image.fullWidth ?? image.thumbWidth ?? 1200,
+});
+
+const getStoryThumbDimensions = (image: YearReviewStoryImage) => ({
+  height: image.thumbHeight ?? image.fullHeight ?? 900,
+  width: image.thumbWidth ?? image.fullWidth ?? 1200,
+});
+
+const isPortraitStoryImage = (image: YearReviewStoryImage) => {
+  const { height, width } = getStoryImageDimensions(image);
+  return height > width;
+};
+
+interface StoryFeaturedImagePanelProps {
+  active: boolean;
+  alt: string;
+  children?: ReactNode;
+  delayMs: number;
+  image: YearReviewStoryImage;
+  landscapeImageClassName: string;
+  portraitImageClassName?: string;
+  resolution?: "full" | "thumb";
+  sizes: string;
+  shouldAnimateEntry: boolean;
+  wrapperClassName?: string;
+}
+
+const StoryFeaturedImagePanel = ({
+  active,
+  alt,
+  children,
+  delayMs,
+  image,
+  landscapeImageClassName,
+  portraitImageClassName,
+  resolution = "full",
+  sizes,
+  shouldAnimateEntry,
+  wrapperClassName,
+}: StoryFeaturedImagePanelProps) => {
+  const isPortrait = isPortraitStoryImage(image);
+  const dimensions =
+    resolution === "thumb" ? getStoryThumbDimensions(image) : getStoryImageDimensions(image);
+
+  return (
+    <div
+      className={cn(
+        "relative overflow-hidden rounded-3xl border border-white/24 bg-black/12 shadow-[0_24px_56px_rgba(15,23,42,0.24)]",
+        getMediaRevealClassName(shouldAnimateEntry),
+        isPortrait && "mx-auto w-full max-w-96 bg-slate-950/34",
+        wrapperClassName,
+      )}
+      style={getRevealStyle(shouldAnimateEntry, delayMs)}
+    >
+      <AppImage
+        src={resolution === "thumb" ? image.thumbUrl : image.fullUrl}
+        alt={alt}
+        width={dimensions.width}
+        height={dimensions.height}
+        sizes={sizes}
+        unoptimized
+        className={cn(
+          "w-full motion-safe:transition-transform motion-safe:duration-1000 motion-safe:ease-out",
+          isPortrait
+            ? (portraitImageClassName ?? "h-112 object-contain p-3")
+            : landscapeImageClassName,
+          !isPortrait && (active ? "motion-safe:scale-100" : "motion-safe:scale-105"),
+        )}
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/84 via-slate-950/16 to-transparent" />
+      {children}
+    </div>
+  );
+};
+
+const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps) => {
   const t = useTranslations("yearReview");
   const layoutT = useTranslations("layout");
+  const cards: RenderableYearReviewCard[] =
+    story.summary.visitCount === 0 ? [{ kind: "empty", year: story.year }] : story.cards;
+  const cardKeys = cards.map((card) => getCardKey(card));
+  const firstCardKey = cardKeys[0] ?? null;
   const [activeIndex, setActiveIndex] = useState(0);
+  const [entryAnimationCardKey, setEntryAnimationCardKey] = useState<string | null>(firstCardKey);
   const progressButtonRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const seenCardKeysRef = useRef<Set<string>>(new Set());
   const storyRef = useRef<HTMLDivElement | null>(null);
   const navigationRef = useRef<HTMLDivElement | null>(null);
   const sectionRefs = useRef<Array<HTMLElement | null>>([]);
   const profileCard = findProfileCard(story);
   const repeatSpotlight = getRepeatSpotlight(profileCard?.mostVisitedPark ?? null);
-  const cards: RenderableYearReviewCard[] =
-    story.summary.visitCount === 0 ? [{ kind: "empty", year: story.year }] : story.cards;
   const HeadingTag = headingLevel === 1 ? "h1" : "h2";
+  const currentActiveCardKey = cardKeys[activeIndex] ?? null;
 
   useEffect(() => {
     if (typeof IntersectionObserver === "undefined") {
@@ -282,7 +388,26 @@ const YearReviewStory = ({
     progressButtonRefs.current = progressButtonRefs.current.slice(0, cards.length);
     sectionRefs.current = sectionRefs.current.slice(0, cards.length);
     setActiveIndex(0);
-  }, [cards.length]);
+    seenCardKeysRef.current = new Set();
+    setEntryAnimationCardKey(firstCardKey);
+  }, [cards.length, firstCardKey]);
+
+  useEffect(() => {
+    if (!currentActiveCardKey) {
+      setEntryAnimationCardKey(null);
+      return;
+    }
+
+    if (!seenCardKeysRef.current.has(currentActiveCardKey)) {
+      seenCardKeysRef.current.add(currentActiveCardKey);
+      setEntryAnimationCardKey(currentActiveCardKey);
+      return;
+    }
+
+    setEntryAnimationCardKey((previousKey) =>
+      previousKey === currentActiveCardKey ? previousKey : null,
+    );
+  }, [currentActiveCardKey]);
 
   const scrollToPosition = (top: number) => {
     window.scrollTo({
@@ -399,10 +524,18 @@ const YearReviewStory = ({
                 aria-label={t("story.goToCard", { current: index + 1, total: cards.length })}
                 aria-current={index === activeIndex ? "step" : undefined}
                 className={cn(
-                  "h-1.5 flex-1 rounded-full bg-muted transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                  index === activeIndex && "bg-primary",
+                  "relative h-1.5 flex-1 overflow-hidden rounded-full bg-white/16 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                  index === activeIndex && "shadow-[0_0_18px_rgba(74,222,128,0.32)]",
                 )}
-              />
+              >
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "absolute inset-y-0 left-0 rounded-full bg-linear-to-r from-emerald-300 via-primary to-emerald-100 transition-all duration-500 motion-safe:duration-700",
+                    index === activeIndex ? "w-full" : "w-0",
+                  )}
+                />
+              </button>
             ))}
           </div>
         </nav>
@@ -411,6 +544,17 @@ const YearReviewStory = ({
       <div className="space-y-5">
         {cards.map((card, index) => {
           const isActive = index === activeIndex;
+          const cardKey = cardKeys[index];
+          const shouldAnimateCardEntry = entryAnimationCardKey === cardKey;
+          const hasCardBeenSeen = shouldAnimateCardEntry || seenCardKeysRef.current.has(cardKey);
+          const milestoneHasPortraitFeaturedImage =
+            card.kind === "milestone" &&
+            card.featuredImage !== null &&
+            isPortraitStoryImage(card.featuredImage);
+          const tripHasPortraitFeaturedImage =
+            card.kind === "trip-highlight" &&
+            card.featuredImage !== null &&
+            isPortraitStoryImage(card.featuredImage);
 
           return (
             <section
@@ -420,25 +564,42 @@ const YearReviewStory = ({
               }}
               data-card-index={index}
               data-testid={`year-review-story-card-${index}`}
+              data-story-entry-state={
+                shouldAnimateCardEntry ? "entry" : hasCardBeenSeen ? "seen" : "upcoming"
+              }
               aria-label={t("story.progress", { current: index + 1, total: cards.length })}
               className={cn(
                 CARD_CONTAINER_CLASS_NAME,
                 CARD_THEME_CLASS_NAMES[card.kind],
+                "motion-safe:transition-[transform,opacity,box-shadow] motion-safe:duration-500 motion-safe:ease-out",
                 isActive
                   ? "opacity-100 motion-safe:translate-y-0"
-                  : "opacity-88 motion-safe:translate-y-2",
+                  : "opacity-90 motion-safe:translate-y-2",
               )}
             >
               <div className="pointer-events-none absolute inset-0 overflow-hidden">
-                <div className="absolute -top-12 right-0 h-44 w-44 rounded-full bg-white/12 blur-3xl motion-safe:animate-year-review-float" />
-                <div className="absolute bottom-0 left-0 h-52 w-52 rounded-full bg-emerald-300/18 blur-3xl motion-safe:animate-year-review-glow" />
+                <div
+                  className={cn(
+                    "absolute -top-12 right-0 h-44 w-44 rounded-full bg-white/12 blur-3xl transition-opacity duration-500",
+                    isActive ? "opacity-100 motion-safe:animate-year-review-float" : "opacity-55",
+                  )}
+                />
+                <div
+                  className={cn(
+                    "absolute bottom-0 left-0 h-52 w-52 rounded-full bg-emerald-300/18 blur-3xl transition-opacity duration-500",
+                    isActive ? "opacity-100 motion-safe:animate-year-review-glow" : "opacity-45",
+                  )}
+                />
                 <div className="absolute inset-x-0 top-0 h-px bg-white/45" />
               </div>
 
               <div className={CARD_INNER_GRID_CLASS_NAME}>
                 {card.kind === "empty" && (
                   <>
-                    <div className="space-y-4">
+                    <div
+                      className={cn("space-y-4", getRevealClassName(shouldAnimateCardEntry))}
+                      style={getRevealStyle(shouldAnimateCardEntry, 0)}
+                    >
                       <div className={STORY_EYEBROW_BADGE_CLASS_NAME}>
                         <Sparkles className="h-4 w-4" aria-hidden="true" />
                         <span>{t("eyebrow")}</span>
@@ -456,7 +617,13 @@ const YearReviewStory = ({
                       </div>
                     </div>
 
-                    <div className="grid gap-3 sm:grid-cols-3">
+                    <div
+                      className={cn(
+                        "grid gap-3 sm:grid-cols-3",
+                        getRevealClassName(shouldAnimateCardEntry),
+                      )}
+                      style={getRevealStyle(shouldAnimateCardEntry, 160)}
+                    >
                       {getSummaryHighlights(story)
                         .slice(0, 3)
                         .map((item) => (
@@ -475,7 +642,10 @@ const YearReviewStory = ({
 
                 {card.kind === "intro" && (
                   <>
-                    <div className="space-y-4">
+                    <div
+                      className={cn("space-y-4", getRevealClassName(shouldAnimateCardEntry))}
+                      style={getRevealStyle(shouldAnimateCardEntry, 0)}
+                    >
                       <div className={STORY_EYEBROW_BADGE_CLASS_NAME}>
                         <Sparkles className="h-4 w-4" aria-hidden="true" />
                         <span>{t("eyebrow")}</span>
@@ -488,7 +658,13 @@ const YearReviewStory = ({
                       </p>
                     </div>
 
-                    <div className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)] lg:items-end">
+                    <div
+                      className={cn(
+                        "grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)] lg:items-end",
+                        getRevealClassName(shouldAnimateCardEntry),
+                      )}
+                      style={getRevealStyle(shouldAnimateCardEntry, 160)}
+                    >
                       <div>
                         <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary-foreground/70">
                           {t("story.primaryStatLabel")}
@@ -521,7 +697,10 @@ const YearReviewStory = ({
 
                 {card.kind === "milestone" && (
                   <>
-                    <div className="space-y-4">
+                    <div
+                      className={cn("space-y-4", getRevealClassName(shouldAnimateCardEntry))}
+                      style={getRevealStyle(shouldAnimateCardEntry, 0)}
+                    >
                       <div className={STORY_ICON_SURFACE_CLASS_NAME}>
                         <CalendarDays className="h-5 w-5" aria-hidden="true" />
                       </div>
@@ -543,12 +722,37 @@ const YearReviewStory = ({
                     <div
                       className={cn(
                         "grid gap-4",
-                        card.featuredImage
-                          ? "lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]"
-                          : "lg:grid-cols-[minmax(0,1fr)_minmax(0,0.82fr)]",
+                        getRevealClassName(shouldAnimateCardEntry),
+                        milestoneHasPortraitFeaturedImage
+                          ? "lg:grid-cols-[minmax(0,0.78fr)_minmax(0,1.22fr)] lg:items-start"
+                          : card.featuredImage
+                            ? "lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]"
+                            : "lg:grid-cols-[minmax(0,1fr)_minmax(0,0.82fr)]",
                       )}
+                      data-story-layout={
+                        milestoneHasPortraitFeaturedImage ? "portrait-split" : undefined
+                      }
+                      style={getRevealStyle(shouldAnimateCardEntry, 180)}
                     >
-                      <div className="grid gap-3 sm:grid-cols-2">
+                      {milestoneHasPortraitFeaturedImage && card.featuredImage ? (
+                        <StoryFeaturedImagePanel
+                          active={isActive}
+                          alt={
+                            card.featuredImage.alt ??
+                            `${card.visit.park.name}, ${formatVisitDate(card.visit.visitedOn)}`
+                          }
+                          delayMs={300}
+                          image={card.featuredImage}
+                          landscapeImageClassName="h-72 object-cover sm:h-80"
+                          portraitImageClassName="h-104 object-contain p-3"
+                          sizes="(min-width: 1024px) 28rem, 100vw"
+                          resolution="full"
+                          shouldAnimateEntry={shouldAnimateCardEntry}
+                          wrapperClassName="lg:max-w-none"
+                        />
+                      ) : null}
+
+                      <div className="grid gap-3 sm:grid-cols-2 lg:content-start">
                         {card.visit.route !== null && (
                           <div className={METRIC_TILE_CLASS_NAME}>
                             <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
@@ -572,33 +776,38 @@ const YearReviewStory = ({
                             </Link>
                           </div>
                         )}
-                      </div>
 
-                      <div className={METRIC_TILE_CLASS_NAME}>
-                        <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
-                          {t("stats.images")}
-                        </p>
-                        <p className="mt-2 text-4xl font-black tracking-tight text-primary-foreground">
-                          {card.visit.imageCount}
-                        </p>
-                      </div>
-
-                      {card.featuredImage ? (
-                        <div className="relative overflow-hidden rounded-3xl border border-white/24 bg-black/12 shadow-[0_24px_56px_rgba(15,23,42,0.24)]">
-                          <AppImage
-                            src={card.featuredImage.thumbUrl}
-                            alt={
-                              card.featuredImage.alt ??
-                              `${card.visit.park.name}, ${formatVisitDate(card.visit.visitedOn)}`
-                            }
-                            width={card.featuredImage.thumbWidth ?? 1200}
-                            height={card.featuredImage.thumbHeight ?? 900}
-                            sizes="(min-width: 1024px) 28rem, 100vw"
-                            unoptimized
-                            className="h-72 w-full object-cover sm:h-80"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/84 via-slate-950/16 to-transparent" />
+                        <div
+                          className={cn(
+                            METRIC_TILE_CLASS_NAME,
+                            milestoneHasPortraitFeaturedImage &&
+                              card.visit.route !== null &&
+                              card.visit.trip !== null &&
+                              "sm:col-span-2",
+                          )}
+                        >
+                          <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
+                            {t("stats.images")}
+                          </p>
+                          <p className="mt-2 text-4xl font-black tracking-tight text-primary-foreground">
+                            {card.visit.imageCount}
+                          </p>
                         </div>
+                      </div>
+
+                      {card.featuredImage && !milestoneHasPortraitFeaturedImage ? (
+                        <StoryFeaturedImagePanel
+                          active={isActive}
+                          alt={
+                            card.featuredImage.alt ??
+                            `${card.visit.park.name}, ${formatVisitDate(card.visit.visitedOn)}`
+                          }
+                          delayMs={300}
+                          image={card.featuredImage}
+                          landscapeImageClassName="h-72 object-cover sm:h-80"
+                          sizes="(min-width: 1024px) 28rem, 100vw"
+                          shouldAnimateEntry={shouldAnimateCardEntry}
+                        />
                       ) : null}
                     </div>
                   </>
@@ -606,7 +815,10 @@ const YearReviewStory = ({
 
                 {card.kind === "photo-highlight" && (
                   <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-                    <div className="space-y-4">
+                    <div
+                      className={cn("space-y-4", getRevealClassName(shouldAnimateCardEntry))}
+                      style={getRevealStyle(shouldAnimateCardEntry, 0)}
+                    >
                       <div className={STORY_ICON_SURFACE_CLASS_NAME}>
                         <Camera className="h-5 w-5" aria-hidden="true" />
                       </div>
@@ -621,19 +833,21 @@ const YearReviewStory = ({
                       </div>
                     </div>
 
-                    <div className="grid gap-3">
+                    <div
+                      className={cn("grid gap-3", getRevealClassName(shouldAnimateCardEntry))}
+                      style={getRevealStyle(shouldAnimateCardEntry, 180)}
+                    >
                       {card.featuredImage ? (
-                        <div className="relative overflow-hidden rounded-3xl border border-white/24 bg-black/12 shadow-[0_24px_56px_rgba(15,23,42,0.24)]">
-                          <AppImage
-                            src={card.featuredImage.thumbUrl}
-                            alt={getPhotoHighlightImageAlt(card, t("story.photoTitle"))}
-                            width={card.featuredImage.thumbWidth ?? 1200}
-                            height={card.featuredImage.thumbHeight ?? 900}
-                            sizes="(min-width: 1024px) 32rem, 100vw"
-                            unoptimized
-                            className="h-80 w-full object-cover sm:h-96"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/88 via-slate-950/18 to-transparent" />
+                        <StoryFeaturedImagePanel
+                          active={isActive}
+                          alt={getPhotoHighlightImageAlt(card, t("story.photoTitle"))}
+                          delayMs={260}
+                          image={card.featuredImage}
+                          landscapeImageClassName="h-80 object-cover sm:h-96"
+                          portraitImageClassName="h-112 object-contain p-3 sm:h-120"
+                          sizes="(min-width: 1024px) 32rem, 100vw"
+                          shouldAnimateEntry={shouldAnimateCardEntry}
+                        >
                           {card.visit !== null && (
                             <div className="absolute inset-x-0 bottom-0 space-y-2 p-5 sm:p-6">
                               <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
@@ -647,7 +861,7 @@ const YearReviewStory = ({
                               </p>
                             </div>
                           )}
-                        </div>
+                        </StoryFeaturedImagePanel>
                       ) : null}
 
                       {card.visit ? (
@@ -692,7 +906,10 @@ const YearReviewStory = ({
 
                 {card.kind === "profile" && (
                   <>
-                    <div className="space-y-4">
+                    <div
+                      className={cn("space-y-4", getRevealClassName(shouldAnimateCardEntry))}
+                      style={getRevealStyle(shouldAnimateCardEntry, 0)}
+                    >
                       <div className={STORY_ICON_SURFACE_CLASS_NAME}>
                         <Compass className="h-5 w-5" aria-hidden="true" />
                       </div>
@@ -704,7 +921,13 @@ const YearReviewStory = ({
                       </div>
                     </div>
 
-                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <div
+                      className={cn(
+                        "grid gap-3 sm:grid-cols-2 xl:grid-cols-4",
+                        getRevealClassName(shouldAnimateCardEntry),
+                      )}
+                      style={getRevealStyle(shouldAnimateCardEntry, 180)}
+                    >
                       <div className={METRIC_TILE_CLASS_NAME}>
                         <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
                           {t("stats.newParks")}
@@ -767,7 +990,10 @@ const YearReviewStory = ({
 
                 {card.kind === "trip-highlight" && (
                   <>
-                    <div className="space-y-4">
+                    <div
+                      className={cn("space-y-4", getRevealClassName(shouldAnimateCardEntry))}
+                      style={getRevealStyle(shouldAnimateCardEntry, 0)}
+                    >
                       <div className={STORY_ICON_SURFACE_CLASS_NAME}>
                         <MapPinned className="h-5 w-5" aria-hidden="true" />
                       </div>
@@ -783,12 +1009,19 @@ const YearReviewStory = ({
                     <div
                       className={cn(
                         "grid gap-3",
-                        card.featuredImage
-                          ? "lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]"
-                          : "lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]",
+                        getRevealClassName(shouldAnimateCardEntry),
+                        tripHasPortraitFeaturedImage
+                          ? "lg:grid-cols-[minmax(0,0.78fr)_minmax(0,1.22fr)] lg:items-start"
+                          : card.featuredImage
+                            ? "lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]"
+                            : "lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]",
                       )}
+                      data-story-layout={
+                        tripHasPortraitFeaturedImage ? "portrait-media-right" : undefined
+                      }
+                      style={getRevealStyle(shouldAnimateCardEntry, 180)}
                     >
-                      <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="grid gap-3 sm:grid-cols-2 lg:content-start">
                         <div className={METRIC_TILE_CLASS_NAME}>
                           <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
                             {t("stats.visits")}
@@ -805,41 +1038,58 @@ const YearReviewStory = ({
                             {card.trip.imageCount}
                           </p>
                         </div>
-                      </div>
 
-                      <div className={METRIC_TILE_CLASS_NAME}>
-                        <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
-                          {t("story.tripLabel")}
-                        </p>
-                        <Link
-                          href={appRoutes.trip(card.trip.slug)}
-                          className="mt-2 inline-flex text-2xl font-semibold text-primary-foreground underline decoration-white/32 underline-offset-4 transition-colors hover:text-white"
+                        <div
+                          className={cn(
+                            METRIC_TILE_CLASS_NAME,
+                            tripHasPortraitFeaturedImage && "sm:col-span-2",
+                          )}
                         >
-                          {card.trip.name}
-                        </Link>
-                        {card.trip.dateRange !== null && (
-                          <p className="mt-2 text-sm text-primary-foreground/78">
-                            {formatTripDateRange(
-                              card.trip.dateRange.start,
-                              card.trip.dateRange.end,
-                            )}
+                          <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
+                            {t("story.tripLabel")}
                           </p>
-                        )}
+                          <Link
+                            href={appRoutes.trip(card.trip.slug)}
+                            className="mt-2 inline-flex text-2xl font-semibold text-primary-foreground underline decoration-white/32 underline-offset-4 transition-colors hover:text-white"
+                          >
+                            {card.trip.name}
+                          </Link>
+                          {card.trip.dateRange !== null && (
+                            <p className="mt-2 text-sm text-primary-foreground/78">
+                              {formatTripDateRange(
+                                card.trip.dateRange.start,
+                                card.trip.dateRange.end,
+                              )}
+                            </p>
+                          )}
+                        </div>
                       </div>
 
-                      {card.featuredImage ? (
-                        <div className="relative overflow-hidden rounded-3xl border border-white/24 bg-black/12 shadow-[0_24px_56px_rgba(15,23,42,0.24)]">
-                          <AppImage
-                            src={card.featuredImage.thumbUrl}
-                            alt={card.featuredImage.alt ?? card.trip.name}
-                            width={card.featuredImage.thumbWidth ?? 1200}
-                            height={card.featuredImage.thumbHeight ?? 900}
-                            sizes="(min-width: 1024px) 28rem, 100vw"
-                            unoptimized
-                            className="h-80 w-full object-cover"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/84 via-slate-950/16 to-transparent" />
-                        </div>
+                      {tripHasPortraitFeaturedImage && card.featuredImage ? (
+                        <StoryFeaturedImagePanel
+                          active={isActive}
+                          alt={card.featuredImage.alt ?? card.trip.name}
+                          delayMs={300}
+                          image={card.featuredImage}
+                          landscapeImageClassName="h-80 object-cover"
+                          portraitImageClassName="h-104 object-contain p-3"
+                          sizes="(min-width: 1024px) 28rem, 100vw"
+                          shouldAnimateEntry={shouldAnimateCardEntry}
+                          wrapperClassName="lg:max-w-none"
+                        />
+                      ) : null}
+
+                      {card.featuredImage && !tripHasPortraitFeaturedImage ? (
+                        <StoryFeaturedImagePanel
+                          active={isActive}
+                          alt={card.featuredImage.alt ?? card.trip.name}
+                          delayMs={300}
+                          image={card.featuredImage}
+                          landscapeImageClassName="h-80 object-cover"
+                          portraitImageClassName="h-112 object-contain p-3"
+                          sizes="(min-width: 1024px) 28rem, 100vw"
+                          shouldAnimateEntry={shouldAnimateCardEntry}
+                        />
                       ) : null}
                     </div>
                   </>
@@ -847,7 +1097,10 @@ const YearReviewStory = ({
 
                 {card.kind === "new-parks" && (
                   <>
-                    <div className="space-y-4">
+                    <div
+                      className={cn("space-y-4", getRevealClassName(shouldAnimateCardEntry))}
+                      style={getRevealStyle(shouldAnimateCardEntry, 0)}
+                    >
                       <div className={STORY_ICON_SURFACE_CLASS_NAME}>
                         <Trees className="h-5 w-5" aria-hidden="true" />
                       </div>
@@ -861,27 +1114,31 @@ const YearReviewStory = ({
                     </div>
 
                     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                      {card.parks.map((parkMoment) => (
+                      {card.parks.map((parkMoment, parkIndex) => (
                         <article
                           key={parkMoment.park.slug}
-                          className="overflow-hidden rounded-3xl border border-white/24 bg-black/14 shadow-[0_24px_56px_rgba(15,23,42,0.2)]"
+                          className={cn(
+                            "overflow-hidden rounded-3xl border border-white/24 bg-black/14 shadow-[0_24px_56px_rgba(15,23,42,0.2)]",
+                            getMediaRevealClassName(shouldAnimateCardEntry),
+                          )}
+                          style={getRevealStyle(shouldAnimateCardEntry, 180 + parkIndex * 90)}
                         >
                           {parkMoment.featuredImage ? (
-                            <div className="relative">
-                              <AppImage
-                                src={parkMoment.featuredImage.thumbUrl}
-                                alt={
-                                  parkMoment.featuredImage.alt ??
-                                  `${parkMoment.park.name}, ${formatVisitDate(parkMoment.visitedOn)}`
-                                }
-                                width={parkMoment.featuredImage.thumbWidth ?? 1200}
-                                height={parkMoment.featuredImage.thumbHeight ?? 900}
-                                sizes="(min-width: 1280px) 20rem, (min-width: 768px) 24rem, 100vw"
-                                unoptimized
-                                className="h-56 w-full object-cover"
-                              />
-                              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/82 via-transparent to-transparent" />
-                            </div>
+                            <StoryFeaturedImagePanel
+                              active={isActive}
+                              alt={
+                                parkMoment.featuredImage.alt ??
+                                `${parkMoment.park.name}, ${formatVisitDate(parkMoment.visitedOn)}`
+                              }
+                              delayMs={180 + parkIndex * 90}
+                              image={parkMoment.featuredImage}
+                              landscapeImageClassName="h-56 object-cover"
+                              portraitImageClassName="h-72 object-contain p-3"
+                              resolution="thumb"
+                              sizes="(min-width: 1280px) 20rem, (min-width: 768px) 24rem, 100vw"
+                              shouldAnimateEntry={shouldAnimateCardEntry}
+                              wrapperClassName="rounded-none border-0 bg-transparent shadow-none"
+                            />
                           ) : null}
 
                           <div className="space-y-3 p-5">
@@ -905,7 +1162,10 @@ const YearReviewStory = ({
 
                 {card.kind === "seasonal" && (
                   <>
-                    <div className="space-y-4">
+                    <div
+                      className={cn("space-y-4", getRevealClassName(shouldAnimateCardEntry))}
+                      style={getRevealStyle(shouldAnimateCardEntry, 0)}
+                    >
                       <div className={STORY_ICON_SURFACE_CLASS_NAME}>
                         <Trees className="h-5 w-5" aria-hidden="true" />
                       </div>
@@ -926,7 +1186,7 @@ const YearReviewStory = ({
 
                     <div className="grid gap-3">
                       {(["spring", "summer", "autumn", "winter"] as YearReviewSeason[]).map(
-                        (season) => {
+                        (season, seasonIndex) => {
                           const value = card.visitsBySeason[season];
                           const seasonMeta = SEASON_CARD_META[season];
                           const widthPercent =
@@ -935,7 +1195,14 @@ const YearReviewStory = ({
                               : 0;
 
                           return (
-                            <div key={season} className={METRIC_TILE_CLASS_NAME}>
+                            <div
+                              key={season}
+                              className={cn(
+                                METRIC_TILE_CLASS_NAME,
+                                getRevealClassName(shouldAnimateCardEntry),
+                              )}
+                              style={getRevealStyle(shouldAnimateCardEntry, 150 + seasonIndex * 90)}
+                            >
                               <div className="flex items-center justify-between gap-4">
                                 <p className="flex items-center gap-2 font-semibold text-primary-foreground">
                                   <span aria-hidden="true" className="text-base leading-none">
@@ -944,7 +1211,7 @@ const YearReviewStory = ({
                                   {t(getSeasonLabelKey(season))}
                                 </p>
                                 <p className="text-sm text-primary-foreground/78">
-                                  {value} · {widthPercent} %
+                                  {`${value} ${t("stats.visitCount")} (${widthPercent}%)`}
                                 </p>
                               </div>
                               <div className="mt-3 h-3 rounded-full bg-white/12">
@@ -953,7 +1220,12 @@ const YearReviewStory = ({
                                     "h-3 rounded-full transition-[width] duration-700",
                                     seasonMeta.barClassName,
                                   )}
-                                  style={{ width: `${widthPercent}%` }}
+                                  style={{
+                                    transitionDelay: shouldAnimateCardEntry
+                                      ? `${240 + seasonIndex * 90}ms`
+                                      : undefined,
+                                    width: `${hasCardBeenSeen ? widthPercent : 0}%`,
+                                  }}
                                 />
                               </div>
                             </div>
@@ -966,7 +1238,10 @@ const YearReviewStory = ({
 
                 {card.kind === "summary" && (
                   <>
-                    <div className="space-y-4">
+                    <div
+                      className={cn("space-y-4", getRevealClassName(shouldAnimateCardEntry))}
+                      style={getRevealStyle(shouldAnimateCardEntry, 0)}
+                    >
                       <div className={STORY_ICON_SURFACE_CLASS_NAME}>
                         <Trophy className="h-5 w-5" aria-hidden="true" />
                       </div>
@@ -976,17 +1251,16 @@ const YearReviewStory = ({
                           {story.year}
                         </h3>
                         <p className={CARD_COPY_CLASS_NAME}>{t("story.summaryCaption")}</p>
-                        {mode === "public" && publishedAt !== null && (
-                          <p className="text-sm text-primary-foreground/78">
-                            {t("story.publishedOn", {
-                              date: formatVisitDate(publishedAt.slice(0, 10)),
-                            })}
-                          </p>
-                        )}
                       </div>
                     </div>
 
-                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                    <div
+                      className={cn(
+                        "grid gap-3 sm:grid-cols-2 xl:grid-cols-5",
+                        getRevealClassName(shouldAnimateCardEntry),
+                      )}
+                      style={getRevealStyle(shouldAnimateCardEntry, 180)}
+                    >
                       {getSummaryHighlights(story).map((item) => (
                         <div key={item.labelKey} className={METRIC_TILE_CLASS_NAME}>
                           <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">

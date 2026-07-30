@@ -208,6 +208,12 @@ export const findYearReviewPhotoHighlightCard = (
     (card): card is YearReviewPhotoHighlightCard => card.kind === "photo-highlight",
   ) ?? null;
 
+export const findYearReviewTripHighlightCard = (
+  story: YearReviewStory,
+): YearReviewTripHighlightCard | null =>
+  story.cards.find((card): card is YearReviewTripHighlightCard => card.kind === "trip-highlight") ??
+  null;
+
 export const findYearReviewSeasonalCard = (story: YearReviewStory): YearReviewSeasonalCard | null =>
   story.cards.find((card): card is YearReviewSeasonalCard => card.kind === "seasonal") ?? null;
 
