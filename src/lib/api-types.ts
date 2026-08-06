@@ -1454,6 +1454,595 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/year-review/{year}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    year: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Generated admin preview for a year review */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: date-time */
+                            generatedAt: string;
+                            publishInfo: {
+                                /** Format: uri */
+                                publicUrl: string | null;
+                                /** Format: date-time */
+                                publishedAt: string | null;
+                                /** Format: uuid */
+                                publishedShareId: string | null;
+                                sharePath: string | null;
+                            };
+                            /** @enum {string} */
+                            status: "draft" | "published";
+                            story: {
+                                cards: ({
+                                    /** @enum {string} */
+                                    kind: "intro";
+                                    primaryStat: {
+                                        /** @enum {string} */
+                                        key: "visitCount";
+                                        value: number;
+                                    };
+                                    year: number;
+                                } | {
+                                    featuredImage: {
+                                        alt: string | null;
+                                        fullHeight: number | null;
+                                        /** Format: uri */
+                                        fullUrl: string;
+                                        fullWidth: number | null;
+                                        thumbHeight: number | null;
+                                        /** Format: uri */
+                                        thumbUrl: string;
+                                        thumbWidth: number | null;
+                                    } | null;
+                                    /** @enum {string} */
+                                    kind: "milestone";
+                                    /** @enum {string} */
+                                    milestone: "first-visit" | "last-visit";
+                                    visit: {
+                                        id: number;
+                                        imageCount: number;
+                                        park: {
+                                            name: string;
+                                            slug: string;
+                                        };
+                                        route: string | null;
+                                        trip: {
+                                            id: number;
+                                            name: string;
+                                            slug: string;
+                                        } | null;
+                                        visitedOn: string;
+                                    };
+                                } | {
+                                    featuredImage: {
+                                        alt: string | null;
+                                        fullHeight: number | null;
+                                        /** Format: uri */
+                                        fullUrl: string;
+                                        fullWidth: number | null;
+                                        thumbHeight: number | null;
+                                        /** Format: uri */
+                                        thumbUrl: string;
+                                        thumbWidth: number | null;
+                                    } | null;
+                                    /** @enum {string} */
+                                    kind: "photo-highlight";
+                                    totalImageCount: number;
+                                    visit: {
+                                        id: number;
+                                        imageCount: number;
+                                        park: {
+                                            name: string;
+                                            slug: string;
+                                        };
+                                        route: string | null;
+                                        trip: {
+                                            id: number;
+                                            name: string;
+                                            slug: string;
+                                        } | null;
+                                        visitedOn: string;
+                                    } | null;
+                                } | {
+                                    busiestMonth: number | null;
+                                    busiestWeekday: number | null;
+                                    /** @enum {string} */
+                                    kind: "profile";
+                                    mostVisitedPark: {
+                                        name: string;
+                                        slug: string;
+                                        visitCount: number;
+                                    } | null;
+                                    topRoute: string | null;
+                                    topTypeLabel: string | null;
+                                } | {
+                                    featuredImage: {
+                                        alt: string | null;
+                                        fullHeight: number | null;
+                                        /** Format: uri */
+                                        fullUrl: string;
+                                        fullWidth: number | null;
+                                        thumbHeight: number | null;
+                                        /** Format: uri */
+                                        thumbUrl: string;
+                                        thumbWidth: number | null;
+                                    } | null;
+                                    /** @enum {string} */
+                                    kind: "trip-highlight";
+                                    trip: {
+                                        dateRange: {
+                                            end: string;
+                                            start: string;
+                                        } | null;
+                                        id: number;
+                                        imageCount: number;
+                                        name: string;
+                                        slug: string;
+                                        visitCount: number;
+                                    };
+                                } | {
+                                    /** @enum {string} */
+                                    kind: "new-parks";
+                                    parks: {
+                                        featuredImage: {
+                                            alt: string | null;
+                                            fullHeight: number | null;
+                                            /** Format: uri */
+                                            fullUrl: string;
+                                            fullWidth: number | null;
+                                            thumbHeight: number | null;
+                                            /** Format: uri */
+                                            thumbUrl: string;
+                                            thumbWidth: number | null;
+                                        } | null;
+                                        park: {
+                                            name: string;
+                                            slug: string;
+                                        };
+                                        visitedOn: string;
+                                    }[];
+                                } | {
+                                    /** @enum {string} */
+                                    kind: "seasonal";
+                                    /** @enum {string|null} */
+                                    strongestSeason: "autumn" | "spring" | "summer" | "winter" | null;
+                                    visitsBySeason: {
+                                        autumn: number;
+                                        spring: number;
+                                        summer: number;
+                                        winter: number;
+                                    };
+                                } | {
+                                    highlights: string[];
+                                    /** @enum {string} */
+                                    kind: "summary";
+                                })[];
+                                summary: {
+                                    activeMonthCount: number;
+                                    distinctParkCount: number;
+                                    imageCount: number;
+                                    newParkCount: number;
+                                    revisitedParkCount: number;
+                                    visitCount: number;
+                                    visitsBySeason: {
+                                        autumn: number;
+                                        spring: number;
+                                        summer: number;
+                                        winter: number;
+                                    };
+                                };
+                                year: number;
+                            };
+                            year: number;
+                        };
+                    };
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/year-review/{year}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    year: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Published year review share snapshot */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uri */
+                            publicUrl: string;
+                            /** Format: date-time */
+                            publishedAt: string;
+                            /** Format: uuid */
+                            shareId: string;
+                            sharePath: string;
+                        };
+                    };
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    year: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Removed the published year review share */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Published year review share was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/year-review/shares/{shareId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    shareId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Published year review share snapshot for trusted callers */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: date-time */
+                            publishedAt: string;
+                            /** Format: uuid */
+                            shareId: string;
+                            story: {
+                                cards: ({
+                                    /** @enum {string} */
+                                    kind: "intro";
+                                    primaryStat: {
+                                        /** @enum {string} */
+                                        key: "visitCount";
+                                        value: number;
+                                    };
+                                    year: number;
+                                } | {
+                                    featuredImage: {
+                                        alt: string | null;
+                                        fullHeight: number | null;
+                                        /** Format: uri */
+                                        fullUrl: string;
+                                        fullWidth: number | null;
+                                        thumbHeight: number | null;
+                                        /** Format: uri */
+                                        thumbUrl: string;
+                                        thumbWidth: number | null;
+                                    } | null;
+                                    /** @enum {string} */
+                                    kind: "milestone";
+                                    /** @enum {string} */
+                                    milestone: "first-visit" | "last-visit";
+                                    visit: {
+                                        id: number;
+                                        imageCount: number;
+                                        park: {
+                                            name: string;
+                                            slug: string;
+                                        };
+                                        route: string | null;
+                                        trip: {
+                                            id: number;
+                                            name: string;
+                                            slug: string;
+                                        } | null;
+                                        visitedOn: string;
+                                    };
+                                } | {
+                                    featuredImage: {
+                                        alt: string | null;
+                                        fullHeight: number | null;
+                                        /** Format: uri */
+                                        fullUrl: string;
+                                        fullWidth: number | null;
+                                        thumbHeight: number | null;
+                                        /** Format: uri */
+                                        thumbUrl: string;
+                                        thumbWidth: number | null;
+                                    } | null;
+                                    /** @enum {string} */
+                                    kind: "photo-highlight";
+                                    totalImageCount: number;
+                                    visit: {
+                                        id: number;
+                                        imageCount: number;
+                                        park: {
+                                            name: string;
+                                            slug: string;
+                                        };
+                                        route: string | null;
+                                        trip: {
+                                            id: number;
+                                            name: string;
+                                            slug: string;
+                                        } | null;
+                                        visitedOn: string;
+                                    } | null;
+                                } | {
+                                    busiestMonth: number | null;
+                                    busiestWeekday: number | null;
+                                    /** @enum {string} */
+                                    kind: "profile";
+                                    mostVisitedPark: {
+                                        name: string;
+                                        slug: string;
+                                        visitCount: number;
+                                    } | null;
+                                    topRoute: string | null;
+                                    topTypeLabel: string | null;
+                                } | {
+                                    featuredImage: {
+                                        alt: string | null;
+                                        fullHeight: number | null;
+                                        /** Format: uri */
+                                        fullUrl: string;
+                                        fullWidth: number | null;
+                                        thumbHeight: number | null;
+                                        /** Format: uri */
+                                        thumbUrl: string;
+                                        thumbWidth: number | null;
+                                    } | null;
+                                    /** @enum {string} */
+                                    kind: "trip-highlight";
+                                    trip: {
+                                        dateRange: {
+                                            end: string;
+                                            start: string;
+                                        } | null;
+                                        id: number;
+                                        imageCount: number;
+                                        name: string;
+                                        slug: string;
+                                        visitCount: number;
+                                    };
+                                } | {
+                                    /** @enum {string} */
+                                    kind: "new-parks";
+                                    parks: {
+                                        featuredImage: {
+                                            alt: string | null;
+                                            fullHeight: number | null;
+                                            /** Format: uri */
+                                            fullUrl: string;
+                                            fullWidth: number | null;
+                                            thumbHeight: number | null;
+                                            /** Format: uri */
+                                            thumbUrl: string;
+                                            thumbWidth: number | null;
+                                        } | null;
+                                        park: {
+                                            name: string;
+                                            slug: string;
+                                        };
+                                        visitedOn: string;
+                                    }[];
+                                } | {
+                                    /** @enum {string} */
+                                    kind: "seasonal";
+                                    /** @enum {string|null} */
+                                    strongestSeason: "autumn" | "spring" | "summer" | "winter" | null;
+                                    visitsBySeason: {
+                                        autumn: number;
+                                        spring: number;
+                                        summer: number;
+                                        winter: number;
+                                    };
+                                } | {
+                                    highlights: string[];
+                                    /** @enum {string} */
+                                    kind: "summary";
+                                })[];
+                                summary: {
+                                    activeMonthCount: number;
+                                    distinctParkCount: number;
+                                    imageCount: number;
+                                    newParkCount: number;
+                                    revisitedParkCount: number;
+                                    visitCount: number;
+                                    visitsBySeason: {
+                                        autumn: number;
+                                        spring: number;
+                                        summer: number;
+                                        winter: number;
+                                    };
+                                };
+                                year: number;
+                            };
+                            year: number;
+                        };
+                    };
+                };
+                /** @description API key required for non-localhost callers */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Published year review share was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/trips/slug/{slug}": {
         parameters: {
             query?: never;
