@@ -62,7 +62,7 @@ Canonical URLs are Finnish-only (`/paikat`, `/kaynnit`, `/paikka/[slug]`, `/reis
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 24+
 - Backend API running at `http://localhost:3004`
 
 ### Installation
