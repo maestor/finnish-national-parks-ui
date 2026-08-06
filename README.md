@@ -15,7 +15,7 @@ The app serves two audiences:
 
 | Layer         | Choice                                        |
 | ------------- | --------------------------------------------- |
-| Framework     | Next.js 16 (App Router; Turbopack dev, webpack production builds) |
+| Framework     | Next.js 16 (App Router, Turbopack)            |
 | Language      | TypeScript (strict mode)                      |
 | Styling       | Tailwind CSS v4                               |
 | UI Primitives | Custom components with Radix-style patterns   |
@@ -140,7 +140,7 @@ Vercel deployment notes live in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## PWA
 
-The app includes Progressive Web App infrastructure using `@serwist/turbopack`, which is compatible with the app's Turbopack-based development workflow. Production builds currently run through webpack on purpose because Next.js 16.3's Turbopack production build panics on this app's `maplibre-gl.css` pipeline under Node 24. Production builds still register the service worker, while development keeps registration disabled to avoid cache interference during local iteration.
+The app includes Progressive Web App infrastructure using `@serwist/turbopack`, which is compatible with Next.js 16's default Turbopack bundler. Production builds register the service worker, while development keeps registration disabled to avoid cache interference during local iteration.
 
 Current PWA support includes:
 
