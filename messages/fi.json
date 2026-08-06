@@ -457,7 +457,7 @@
         "addStopRequiresVisit": "Lisää retkeen ensin vähintään yksi käynti ennen pysähdyksen lisäämistä.",
         "addStopRequiresDateRange": "Aseta retkelle päivämääräväli perustiedoissa ennen pysähdyksen lisäämistä.",
         "editStopTitle": "Muokkaa pysähdystä",
-        "editStopDescription": "Päivitä pysähdyksen sijaintia tai muistiinpanoa.",
+        "editStopDescription": "Päivitä pysähdyksen sijaintia tai muistiinpanoa. Kuvien lisäys, poisto ja järjestys tallennetaan erikseen alla.",
         "stopCreateSuccess": "Pysähdys lisättiin retkeen.",
         "stopUpdateSuccess": "Pysähdys päivitettiin.",
         "stopDeleteSuccess": "Pysähdys poistettiin retkestä.",
@@ -477,6 +477,7 @@
         "addStopAction": "Lisää pysähdys",
         "cancelStopAdd": "Peruuta lisäys",
         "saveStopChanges": "Tallenna muutokset",
+        "closeStopEdit": "Sulje",
         "cancelStopEdit": "Peruuta muokkaus",
         "editStopAction": "Muokkaa",
         "deleteStopAction": "Poista",
@@ -510,7 +511,7 @@
         },
         "stopImages": {
           "title": "Pysähdyksen kuvat",
-          "description": "Lisää pysähdykselle kuvia, poista tarpeettomat ja järjestä ne haluamaasi järjestykseen.",
+          "description": "Lisää pysähdykselle kuvia, poista tarpeettomat ja järjestä ne haluamaasi järjestykseen. Kuvat tallentuvat tämän osion omilla toiminnoilla.",
           "maxImagesSummary": "{current} / {max} kuvaa käytössä",
           "maxImagesReached": "Pysähdykselle voi lisätä enintään {count} kuvaa."
         },

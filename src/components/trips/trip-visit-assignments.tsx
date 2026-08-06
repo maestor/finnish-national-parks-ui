@@ -235,6 +235,23 @@ const trimToNull = (value: string) => {
   return trimmed === "" ? null : trimmed;
 };
 
+const doTripLocationsMatch = (left: TripLocation | null, right: TripLocation | null) => {
+  if (left === right) {
+    return true;
+  }
+
+  if (left === null || right === null) {
+    return left === right;
+  }
+
+  return (
+    left.label === right.label &&
+    left.displayName === right.displayName &&
+    left.coordinate.lat === right.coordinate.lat &&
+    left.coordinate.lon === right.coordinate.lon
+  );
+};
+
 const createPreviewText = (value: string, maxLength: number) => {
   if (value.length <= maxLength) {
     return value;
@@ -334,13 +351,6 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     if (
       isSameTrip &&
       hasUnsavedLocalOrder &&
-      doItineraryOrdersMatch(nextSavedOrder, currentSavedOrder)
-    ) {
-      return;
-    }
-
-    if (
-      doItineraryOrdersMatch(nextSavedOrder, currentItineraryOrder) &&
       doItineraryOrdersMatch(nextSavedOrder, currentSavedOrder)
     ) {
       return;
@@ -450,6 +460,15 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     : tripDateOptions.length === 0
       ? t("addStopRequiresDateRange")
       : null;
+  const normalizedStopLocationQuery = stopLocationQuery.trim();
+  const normalizedStopNote = trimToNull(stopNote);
+  const hasStopDetailChanges =
+    isEditingStop &&
+    activeEditingStop !== null &&
+    (stopVisitedOn !== activeEditingStop.visitedOn ||
+      normalizedStopNote !== (activeEditingStop.note ?? null) ||
+      normalizedStopLocationQuery !== activeEditingStop.location.label ||
+      !doTripLocationsMatch(stopLocation, activeEditingStop.location));
 
   const setItineraryWithRef = (
     updater: TripItineraryItem[] | ((currentItinerary: TripItineraryItem[]) => TripItineraryItem[]),
@@ -464,6 +483,22 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
   const setPendingAction = (nextPendingKey: string | null) => {
     pendingKeyRef.current = nextPendingKey;
     setPendingKey(nextPendingKey);
+  };
+
+  const updateStopImages = (stopId: number, images: TripStop["images"]) => {
+    setItineraryWithRef((currentItinerary) =>
+      currentItinerary.map((item) =>
+        item.kind === "stop" && item.stop.id === stopId
+          ? {
+              ...item,
+              stop: {
+                ...item.stop,
+                images,
+              },
+            }
+          : item,
+      ),
+    );
   };
 
   const clearStopForm = () => {
@@ -1020,8 +1055,12 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       return;
     }
 
-    const normalizedStopLocationQuery = stopLocationQuery.trim();
     const nextErrors: Record<string, string> = {};
+
+    if (editingStopId !== null && !hasStopDetailChanges) {
+      clearStopForm();
+      return;
+    }
 
     if (!stopVisitedOn) {
       nextErrors.visitedOn = t("validation.stopVisitedOnRequired");
@@ -1037,8 +1076,6 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       setStopErrors(nextErrors);
       return;
     }
-
-    const note = trimToNull(stopNote);
 
     setStopErrors({});
     setActionError(null);
@@ -1059,7 +1096,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
               stop: {
                 ...item.stop,
                 location: selectedStopLocation,
-                note,
+                note: normalizedStopNote,
                 visitedOn: stopVisitedOn,
               },
             }
@@ -1074,7 +1111,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
           method: "PATCH",
           body: JSON.stringify({
             location: selectedStopLocation,
-            note,
+            note: normalizedStopNote,
             visitedOn: stopVisitedOn,
           } satisfies TripStopUpdateRequest),
         });
@@ -1084,7 +1121,10 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
             item.kind === "stop" && item.stop.id === editingStopId
               ? {
                   ...item,
-                  stop: updatedStop,
+                  stop: {
+                    ...updatedStop,
+                    images: item.stop.images,
+                  },
                   tripStopOrder: updatedStop.tripStopOrder,
                 }
               : item,
@@ -1121,7 +1161,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
         method: "POST",
         body: JSON.stringify({
           location: selectedStopLocation,
-          note,
+          note: normalizedStopNote,
           tripStopOrder: requestedTripStopOrder,
           visitedOn: stopVisitedOn,
         } satisfies TripStopCreateRequest),
@@ -1340,6 +1380,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                       <TripStopImageSection
                         stopId={activeEditingStop.id}
                         images={activeEditingStop.images}
+                        onImagesChange={(images) => updateStopImages(activeEditingStop.id, images)}
                         tripSlug={trip.slug}
                       />
                     ) : (
@@ -1360,12 +1401,20 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                   <Button
                     type="button"
                     disabled={isActionLocked}
-                    onClick={() => void handleSubmitStop()}
+                    onClick={() =>
+                      isEditingStop && !hasStopDetailChanges
+                        ? handleCloseStopForm()
+                        : void handleSubmitStop()
+                    }
                   >
                     {(pendingKey === "stop-create" || pendingKey?.startsWith("stop-") === true) &&
                       "..."}
                     {!(pendingKey === "stop-create" || pendingKey?.startsWith("stop-") === true) &&
-                      (isEditingStop ? t("saveStopChanges") : t("addStopAction"))}
+                      (isEditingStop
+                        ? hasStopDetailChanges
+                          ? t("saveStopChanges")
+                          : t("closeStopEdit")
+                        : t("addStopAction"))}
                   </Button>
                 </div>
               </section>

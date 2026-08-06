@@ -2,15 +2,18 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { apiFetch } from "@/lib/api";
+import { prepareImageFileForUpload } from "@/lib/image-upload";
 import type { VisitWithPark } from "@/lib/parks";
 import type { TripDetail } from "@/lib/trips";
 import { TripVisitAssignments } from "./trip-visit-assignments";
 
 const mockRefresh = vi.fn();
-const { mockResolveLocationFromCoordinate, mockRevalidatePublicCache } = vi.hoisted(() => ({
-  mockResolveLocationFromCoordinate: vi.fn(),
-  mockRevalidatePublicCache: vi.fn(async () => true),
-}));
+const { mockIsLocalImageUploadMode, mockResolveLocationFromCoordinate, mockRevalidatePublicCache } =
+  vi.hoisted(() => ({
+    mockIsLocalImageUploadMode: vi.fn(() => true),
+    mockResolveLocationFromCoordinate: vi.fn(),
+    mockRevalidatePublicCache: vi.fn(async () => true),
+  }));
 
 vi.mock("@/lib/api", () => ({
   apiFetch: vi.fn(),
@@ -18,6 +21,11 @@ vi.mock("@/lib/api", () => ({
 
 vi.mock("@/lib/public-cache", () => ({
   revalidatePublicCache: mockRevalidatePublicCache,
+}));
+
+vi.mock("@/lib/image-upload", () => ({
+  prepareImageFileForUpload: vi.fn(async (file: File) => file),
+  isLocalImageUploadMode: mockIsLocalImageUploadMode,
 }));
 
 vi.mock("@/lib/location", async () => {
@@ -33,6 +41,14 @@ vi.mock("@/lib/location", async () => {
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: mockRefresh }),
 }));
+
+Object.defineProperty(globalThis, "URL", {
+  value: {
+    createObjectURL: vi.fn(() => "blob:mock-url"),
+    revokeObjectURL: vi.fn(),
+  },
+  writable: true,
+});
 
 const currentTrip = {
   id: 7,
@@ -233,6 +249,19 @@ const tripWithLongStopNote = {
   ),
 } satisfies TripDetail;
 
+const createImage = (id: number) => ({
+  id,
+  fullUrl: `https://example.com/full-${id}.jpg`,
+  thumbUrl: `https://example.com/thumb-${id}.jpg`,
+  fullWidth: 1920,
+  fullHeight: 1080,
+  thumbWidth: 400,
+  thumbHeight: 225,
+  originalName: `image-${id}.jpg`,
+  displayOrder: id - 1,
+  createdAt: "2024-06-15T10:00:00Z",
+});
+
 const getItineraryOrder = (section: HTMLElement) =>
   Array.from(section.querySelectorAll("[data-itinerary-item-key]")).map((row) =>
     row.getAttribute("data-itinerary-item-key"),
@@ -266,6 +295,8 @@ describe("TripVisitAssignments", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(apiFetch).mockReset();
+    vi.mocked(prepareImageFileForUpload).mockImplementation(async (file: File) => file);
+    mockIsLocalImageUploadMode.mockReturnValue(true);
     mockResolveLocationFromCoordinate.mockReset();
     mockRevalidatePublicCache.mockReset();
     mockRevalidatePublicCache.mockResolvedValue(true);
@@ -1271,6 +1302,132 @@ describe("TripVisitAssignments", () => {
     });
   });
 
+  it("syncs refreshed stop images even when the itinerary order stays the same", async () => {
+    const refreshedTrip = {
+      ...currentTrip,
+      itinerary: currentTrip.itinerary.map((item) =>
+        item.kind === "stop"
+          ? {
+              ...item,
+              stop: {
+                ...item.stop,
+                images: [createImage(41)],
+              },
+            }
+          : item,
+      ),
+    } satisfies TripDetail;
+
+    const { rerender } = render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
+
+    const stopRow = screen.getByText("Lounaspaikka Jyvaskyla").closest("tr");
+
+    if (!(stopRow instanceof HTMLTableRowElement)) {
+      throw new Error("Expected stop row");
+    }
+
+    await userEvent.click(
+      within(stopRow).getByRole("button", {
+        name: "controlPanel.trips.assignments.editStopAction",
+      }),
+    );
+
+    expect(
+      screen.queryByRole("button", {
+        name: "controlPanel.visits.images.deleteImage",
+      }),
+    ).not.toBeInTheDocument();
+
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.cancelStopEdit",
+      }),
+    );
+
+    rerender(<TripVisitAssignments trip={refreshedTrip} visits={visits} />);
+
+    await userEvent.click(
+      within(stopRow).getByRole("button", {
+        name: "controlPanel.trips.assignments.editStopAction",
+      }),
+    );
+
+    expect(
+      screen.getByRole("button", {
+        name: "controlPanel.visits.images.deleteImage",
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps uploaded stop images visible when reopening the editor without a full page refresh", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      images: [createImage(51)],
+      errors: [],
+    });
+
+    render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
+
+    const stopRow = screen.getByText("Lounaspaikka Jyvaskyla").closest("tr");
+
+    if (!(stopRow instanceof HTMLTableRowElement)) {
+      throw new Error("Expected stop row");
+    }
+
+    await userEvent.click(
+      within(stopRow).getByRole("button", {
+        name: "controlPanel.trips.assignments.editStopAction",
+      }),
+    );
+
+    const fileInput = document.body.querySelector('input[type="file"]');
+
+    if (!(fileInput instanceof HTMLInputElement)) {
+      throw new Error("Expected file input");
+    }
+
+    fireEvent.change(fileInput, {
+      target: {
+        files: [new File(["dummy"], "stop.jpg", { type: "image/jpeg" })],
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("controlPanel.visits.images.selectedCount")).toBeInTheDocument();
+    });
+
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "controlPanel.visits.images.upload",
+      }),
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", {
+          name: "controlPanel.visits.images.deleteImage",
+        }),
+      ).toBeInTheDocument();
+    });
+
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.cancelStopEdit",
+      }),
+    );
+
+    await userEvent.click(
+      within(stopRow).getByRole("button", {
+        name: "controlPanel.trips.assignments.editStopAction",
+      }),
+    );
+
+    expect(
+      screen.getByRole("button", {
+        name: "controlPanel.visits.images.deleteImage",
+      }),
+    ).toBeInTheDocument();
+  });
+
   it("reorders itinerary items with the keyboard handle", async () => {
     const { apiFetch } = await import("@/lib/api");
     vi.mocked(apiFetch).mockResolvedValue(undefined);
@@ -1315,6 +1472,35 @@ describe("TripVisitAssignments", () => {
     await waitFor(() => {
       expect(apiFetch).toHaveBeenCalledTimes(2);
     });
+  });
+
+  it("uses the primary edit action as close when stop details have not changed", async () => {
+    render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
+
+    const stopRow = screen.getByText("Lounaspaikka Jyvaskyla").closest("tr");
+
+    if (!(stopRow instanceof HTMLTableRowElement)) {
+      throw new Error("Expected stop row");
+    }
+
+    await userEvent.click(
+      within(stopRow).getByRole("button", {
+        name: "controlPanel.trips.assignments.editStopAction",
+      }),
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.closeStopEdit",
+      }),
+    );
+
+    expect(apiFetch).not.toHaveBeenCalled();
+    expect(
+      screen.queryByRole("button", {
+        name: "controlPanel.trips.assignments.cancelStopEdit",
+      }),
+    ).not.toBeInTheDocument();
   });
 
   it("edits an existing stop", async () => {
