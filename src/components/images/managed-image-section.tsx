@@ -95,6 +95,7 @@ interface ManagedImageSectionProps {
   images: VisitImage[];
   maxImageCount?: number;
   messages: ManagedImageMessages;
+  onSavedImagesChange?: (images: VisitImage[]) => void;
   reorderPath: string;
   revalidateTargets: {
     parkSlug?: string | null;
@@ -163,6 +164,7 @@ export const ManagedImageSection = ({
   images,
   maxImageCount,
   messages,
+  onSavedImagesChange,
   reorderPath,
   revalidateTargets,
   sectionTitle,
@@ -517,11 +519,13 @@ export const ManagedImageSection = ({
 
     pendingImagesRef.current = [];
     setPendingImages([]);
-    setLocalImages((currentImages) => [...currentImages, ...response.images]);
+    const nextImages = [...localImages, ...response.images];
+    setLocalImages(nextImages);
     setSavedImageOrder((currentOrder) => [
       ...currentOrder,
       ...response.images.map((image) => String(image.id)),
     ]);
+    onSavedImagesChange?.(nextImages);
 
     if (response.errors.length > 0) {
       setUploadErrors(response.errors.map((error) => `${error.originalName}: ${error.reason}`));
@@ -605,11 +609,13 @@ export const ManagedImageSection = ({
       setPendingImages((currentImages) =>
         currentImages.filter((image) => !uploadedPendingImageIds.has(image.id)),
       );
-      setLocalImages((currentImages) => [...currentImages, ...uploadedImages]);
+      const nextImages = [...localImages, ...uploadedImages];
+      setLocalImages(nextImages);
       setSavedImageOrder((currentOrder) => [
         ...currentOrder,
         ...uploadedImages.map((image) => String(image.id)),
       ]);
+      onSavedImagesChange?.(nextImages);
       await revalidatePublicCache(revalidateTargets);
       setStatusMessage(messages.uploadSuccess(uploadedImages.length));
       router.refresh();
@@ -650,9 +656,10 @@ export const ManagedImageSection = ({
 
     const previousImages = localImages;
     const previousSavedImageOrder = savedImageOrder;
+    const nextImages = localImages.filter((image) => image.id !== imageId);
     setActionError(null);
     setStatusMessage(null);
-    setLocalImages((currentImages) => currentImages.filter((image) => image.id !== imageId));
+    setLocalImages(nextImages);
     setSavedImageOrder((currentOrder) =>
       currentOrder.filter((currentImageId) => currentImageId !== String(imageId)),
     );
@@ -662,6 +669,7 @@ export const ManagedImageSection = ({
         method: "DELETE",
       });
       await revalidatePublicCache(revalidateTargets);
+      onSavedImagesChange?.(nextImages);
       setStatusMessage(messages.deleteSuccess);
       router.refresh();
     } catch (error) {
@@ -689,6 +697,7 @@ export const ManagedImageSection = ({
       });
       await revalidatePublicCache(revalidateTargets);
       setSavedImageOrder(localImages.map((image) => String(image.id)));
+      onSavedImagesChange?.(localImages);
       setStatusMessage(messages.reorderSuccess);
       router.refresh();
     } catch (error) {

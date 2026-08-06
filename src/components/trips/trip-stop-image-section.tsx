@@ -7,12 +7,18 @@ import type { TripStop } from "@/lib/trips";
 interface TripStopImageSectionProps {
   stopId: number;
   images: TripStop["images"];
+  onImagesChange?: (images: TripStop["images"]) => void;
   tripSlug: string;
 }
 
 const MAX_TRIP_STOP_IMAGES = 6;
 
-export const TripStopImageSection = ({ stopId, images, tripSlug }: TripStopImageSectionProps) => {
+export const TripStopImageSection = ({
+  stopId,
+  images,
+  onImagesChange,
+  tripSlug,
+}: TripStopImageSectionProps) => {
   const commonT = useTranslations("controlPanel.visits.images");
   const t = useTranslations("controlPanel.trips.assignments.stopImages");
   const sectionTitle = t("title");
@@ -24,6 +30,7 @@ export const TripStopImageSection = ({ stopId, images, tripSlug }: TripStopImage
       dialogLabel={sectionTitle}
       helperText={t("description")}
       maxImageCount={MAX_TRIP_STOP_IMAGES}
+      onSavedImagesChange={onImagesChange}
       uploadLocalPath={`/api/trip-stops/${stopId}/images`}
       uploadPlanPath={`/api/trip-stops/${stopId}/images/upload-url`}
       uploadCompletePath={`/api/trip-stops/${stopId}/images/complete`}
