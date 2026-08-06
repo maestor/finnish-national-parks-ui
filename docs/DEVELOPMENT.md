@@ -15,7 +15,7 @@ Authentication is Google OAuth with an allowlist managed by the backend.
 
 | Layer       | Technology                                      |
 | ----------- | ----------------------------------------------- |
-| Framework   | Next.js 16 (App Router, Turbopack)              |
+| Framework   | Next.js 16 (App Router; Turbopack dev, webpack production builds) |
 | Language    | TypeScript 5 (strict mode)                      |
 | Styling     | Tailwind CSS v4 + CSS variables                 |
 | UI Icons    | Lucide React                                    |
@@ -66,7 +66,7 @@ The `AUTH_JWT_SECRET` must match the backend's `AUTH_JWT_SECRET` exactly. `AUTH_
 | Command                      | Purpose                                                 |
 | ---------------------------- | ------------------------------------------------------- |
 | `npm run dev`                | Start dev server on `http://localhost:4300`             |
-| `npm run build`              | Production build                                        |
+| `npm run build`              | Production build via webpack                            |
 | `npm run start`              | Start production server                                 |
 | `npm run typecheck`          | Clear and regenerate Next-generated route/page types, then run `tsc --noEmit` |
 | `npm run lint`               | Biome lint check + Tailwind canonical class check       |
@@ -83,6 +83,11 @@ The `AUTH_JWT_SECRET` must match the backend's `AUTH_JWT_SECRET` exactly. `AUTH_
 | `npm run copy:maplibre-worker` | Sync the MapLibre v6 worker files into `public/maplibre/` (runs automatically via `predev`/`prebuild`) |
 
 **Always run `npm run verify` before asking for review.** Pull requests targeting `main` also run the same `npm run verify` gate in GitHub Actions.
+
+Build bundler note:
+
+- Local development still uses Next.js 16's default Turbopack dev server.
+- Production builds are pinned to `next build --webpack` for now because Next.js 16.3's Turbopack production build panics on this app's `maplibre-gl.css` pipeline under Node 24.
 
 `npm run typecheck` intentionally clears `.next/types` and `.next/dev/types`, then rebuilds the current branch's route and App Router typings through `next typegen` before running `tsc`. This keeps local verification aligned with the checked-out implementation instead of stale generated artifacts from another branch.
 
