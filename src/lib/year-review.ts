@@ -1,173 +1,34 @@
 import { ApiError, apiAuthFetch, apiFetch } from "./api";
+import type { paths } from "./api-types";
 
-export type YearReviewSeason = "autumn" | "spring" | "summer" | "winter";
+type YearReviewPreviewResponse =
+  paths["/api/year-review/{year}/preview"]["get"]["responses"][200]["content"]["application/json"];
 
-export interface YearReviewVisitsBySeason {
-  autumn: number;
-  spring: number;
-  summer: number;
-  winter: number;
-}
+type YearReviewShareResponse =
+  paths["/api/year-review/shares/{shareId}"]["get"]["responses"][200]["content"]["application/json"];
 
-export interface YearReviewTripReference {
-  id: number;
-  name: string;
-  slug: string;
-}
-
-export interface YearReviewStoryImage {
-  alt: string | null;
-  fullHeight: number | null;
-  fullUrl: string;
-  fullWidth: number | null;
-  thumbHeight: number | null;
-  thumbUrl: string;
-  thumbWidth: number | null;
-}
-
-export interface YearReviewVisitReference {
-  id: number;
-  imageCount: number;
-  park: {
-    name: string;
-    slug: string;
-  };
-  route: string | null;
-  trip: YearReviewTripReference | null;
-  visitedOn: string;
-}
-
-export interface YearReviewMostVisitedPark {
-  name: string;
-  slug: string;
-  visitCount: number;
-}
-
-export interface YearReviewSummary {
-  activeMonthCount: number;
-  distinctParkCount: number;
-  imageCount: number;
-  newParkCount: number;
-  revisitedParkCount: number;
-  visitCount: number;
-  visitsBySeason: YearReviewVisitsBySeason;
-}
-
-export interface YearReviewIntroCard {
-  kind: "intro";
-  primaryStat: {
-    key: "visitCount";
-    value: number;
-  };
-  year: number;
-}
-
-export interface YearReviewMilestoneCard {
-  featuredImage: YearReviewStoryImage | null;
-  kind: "milestone";
-  milestone: "first-visit" | "last-visit";
-  visit: YearReviewVisitReference;
-}
-
-export interface YearReviewPhotoHighlightCard {
-  featuredImage: YearReviewStoryImage | null;
-  kind: "photo-highlight";
-  totalImageCount: number;
-  visit: YearReviewVisitReference | null;
-}
-
-export interface YearReviewProfileCard {
-  busiestMonth: number | null;
-  busiestWeekday: number | null;
-  kind: "profile";
-  mostVisitedPark: YearReviewMostVisitedPark | null;
-  topRoute: string | null;
-  topTypeLabel: string | null;
-}
-
-export interface YearReviewTripHighlightCard {
-  featuredImage: YearReviewStoryImage | null;
-  kind: "trip-highlight";
-  trip: {
-    dateRange: {
-      end: string;
-      start: string;
-    } | null;
-    id: number;
-    imageCount: number;
-    name: string;
-    slug: string;
-    visitCount: number;
-  };
-}
-
-export interface YearReviewNewParksCard {
-  kind: "new-parks";
-  parks: Array<{
-    featuredImage: YearReviewStoryImage | null;
-    park: {
-      name: string;
-      slug: string;
-    };
-    visitedOn: string;
-  }>;
-}
-
-export interface YearReviewSeasonalCard {
-  kind: "seasonal";
-  strongestSeason: YearReviewSeason | null;
-  visitsBySeason: YearReviewVisitsBySeason;
-}
-
-export interface YearReviewSummaryCard {
-  highlights: string[];
-  kind: "summary";
-}
-
-export type YearReviewCard =
-  | YearReviewIntroCard
-  | YearReviewMilestoneCard
-  | YearReviewPhotoHighlightCard
-  | YearReviewProfileCard
-  | YearReviewTripHighlightCard
-  | YearReviewNewParksCard
-  | YearReviewSeasonalCard
-  | YearReviewSummaryCard;
-
-export interface YearReviewStory {
-  cards: YearReviewCard[];
-  summary: YearReviewSummary;
-  year: number;
-}
-
-export interface YearReviewPublishInfo {
-  publicUrl: string | null;
-  publishedAt: string | null;
-  publishedShareId: string | null;
-  sharePath: string | null;
-}
-
-export interface YearReviewPreview {
-  generatedAt: string;
-  publishInfo: YearReviewPublishInfo;
-  status: "draft" | "published";
-  story: YearReviewStory;
-  year: number;
-}
-
-export interface YearReviewPublishResponse {
-  publicUrl: string;
-  publishedAt: string;
-  shareId: string;
-  sharePath: string;
-}
-
-export interface YearReviewShare {
-  publishedAt: string;
-  shareId: string;
-  story: YearReviewStory;
-  year: number;
-}
+export type YearReviewStory = YearReviewPreviewResponse["story"];
+export type YearReviewCard = YearReviewStory["cards"][number];
+export type YearReviewSummary = YearReviewStory["summary"];
+export type YearReviewVisitsBySeason = YearReviewSummary["visitsBySeason"];
+export type YearReviewIntroCard = Extract<YearReviewCard, { kind: "intro" }>;
+export type YearReviewMilestoneCard = Extract<YearReviewCard, { kind: "milestone" }>;
+export type YearReviewPhotoHighlightCard = Extract<YearReviewCard, { kind: "photo-highlight" }>;
+export type YearReviewProfileCard = Extract<YearReviewCard, { kind: "profile" }>;
+export type YearReviewTripHighlightCard = Extract<YearReviewCard, { kind: "trip-highlight" }>;
+export type YearReviewNewParksCard = Extract<YearReviewCard, { kind: "new-parks" }>;
+export type YearReviewSeasonalCard = Extract<YearReviewCard, { kind: "seasonal" }>;
+export type YearReviewSummaryCard = Extract<YearReviewCard, { kind: "summary" }>;
+export type YearReviewTripReference = NonNullable<YearReviewMilestoneCard["visit"]["trip"]>;
+export type YearReviewStoryImage = NonNullable<YearReviewMilestoneCard["featuredImage"]>;
+export type YearReviewVisitReference = YearReviewMilestoneCard["visit"];
+export type YearReviewMostVisitedPark = NonNullable<YearReviewProfileCard["mostVisitedPark"]>;
+export type YearReviewSeason = Exclude<YearReviewSeasonalCard["strongestSeason"], null>;
+export type YearReviewPublishInfo = YearReviewPreviewResponse["publishInfo"];
+export type YearReviewPreview = YearReviewPreviewResponse;
+export type YearReviewPublishResponse =
+  paths["/api/year-review/{year}/publish"]["post"]["responses"][200]["content"]["application/json"];
+export type YearReviewShare = YearReviewShareResponse;
 
 const YEAR_REVIEW_SHARE_ID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
