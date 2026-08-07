@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ApiError, apiFetch } from "./api";
+import { ApiError, apiAuthFetch, apiFetch } from "./api";
 import {
   buildDateRangeReviewShareDescription,
+  fetchDateRangeReviewPreview,
   isDateRangeReviewShareId,
   readDateRangeReviewShareOrNull,
 } from "./date-range-review";
@@ -41,6 +42,97 @@ describe("date-range-review helpers", () => {
     await expect(
       readDateRangeReviewShareOrNull("93d27350-b7a4-48ba-a93f-16f38d44aa03"),
     ).rejects.toThrow("boom");
+  });
+
+  it("normalizes missing visit arrays from preview responses", async () => {
+    vi.mocked(apiAuthFetch).mockResolvedValueOnce({
+      story: {
+        cards: [
+          {
+            featuredImage: null,
+            kind: "trip-summary",
+            trip: {
+              dateRange: null,
+              id: 5,
+              imageCount: 2,
+              name: "Kesaretki",
+              slug: "kesaretki",
+              visitCount: 2,
+            },
+          },
+          {
+            kind: "other-visits",
+          },
+        ],
+        summary: {
+          distinctParkCount: 2,
+          imageCount: 2,
+          newNationalParkCount: 0,
+          revisitedParkCount: 0,
+          tripCount: 1,
+          visitCount: 2,
+        },
+      },
+    } as never);
+
+    const preview = await fetchDateRangeReviewPreview({
+      endDate: "2026-08-06",
+      name: "Kesaretki",
+      startDate: "2026-08-05",
+    });
+
+    const tripCard = preview.story.cards.find((card) => card.kind === "trip-summary");
+    const otherVisitsCard = preview.story.cards.find((card) => card.kind === "other-visits");
+
+    expect(tripCard?.trip.visits).toEqual([]);
+    expect(otherVisitsCard?.visits).toEqual([]);
+  });
+
+  it("normalizes missing visit arrays from published share snapshots", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      overview: {
+        endDate: "2026-08-06",
+        name: "Kesaretki",
+        shareSlug: "kesaretki",
+        startDate: "2026-08-05",
+      },
+      publishedAt: "2026-08-07T08:00:00Z",
+      story: {
+        cards: [
+          {
+            featuredImage: null,
+            kind: "trip-summary",
+            trip: {
+              dateRange: null,
+              id: 5,
+              imageCount: 2,
+              name: "Kesaretki",
+              slug: "kesaretki",
+              visitCount: 2,
+            },
+          },
+          {
+            kind: "other-visits",
+          },
+        ],
+        summary: {
+          distinctParkCount: 2,
+          imageCount: 2,
+          newNationalParkCount: 0,
+          revisitedParkCount: 0,
+          tripCount: 1,
+          visitCount: 2,
+        },
+      },
+    } as never);
+
+    const share = await readDateRangeReviewShareOrNull("93d27350-b7a4-48ba-a93f-16f38d44aa03");
+
+    const tripCard = share?.story.cards.find((card) => card.kind === "trip-summary");
+    const otherVisitsCard = share?.story.cards.find((card) => card.kind === "other-visits");
+
+    expect(tripCard?.trip.visits).toEqual([]);
+    expect(otherVisitsCard?.visits).toEqual([]);
   });
 
   it("builds a metadata description through the provided translation callback", () => {

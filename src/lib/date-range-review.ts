@@ -36,6 +36,42 @@ export interface DateRangeReviewPreviewRequest {
   startDate: string;
 }
 
+const normalizeDateRangeReviewStory = (story: DateRangeReviewStory): DateRangeReviewStory => ({
+  ...story,
+  cards: story.cards.map((card) => {
+    if (card.kind === "trip-summary") {
+      return {
+        ...card,
+        trip: {
+          ...card.trip,
+          visits: card.trip.visits ?? [],
+        },
+      };
+    }
+
+    if (card.kind === "other-visits") {
+      return {
+        ...card,
+        visits: card.visits ?? [],
+      };
+    }
+
+    return card;
+  }),
+});
+
+const normalizeDateRangeReviewPreview = (
+  preview: DateRangeReviewPreview,
+): DateRangeReviewPreview => ({
+  ...preview,
+  story: normalizeDateRangeReviewStory(preview.story),
+});
+
+const normalizeDateRangeReviewShare = (share: DateRangeReviewShare): DateRangeReviewShare => ({
+  ...share,
+  story: normalizeDateRangeReviewStory(share.story),
+});
+
 const REVIEW_SHARE_ID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -51,17 +87,21 @@ export const isDateRangeReviewShareId = (value: string) => REVIEW_SHARE_ID_PATTE
 export const fetchDateRangeReviewPreview = async (
   request: DateRangeReviewPreviewRequest,
 ): Promise<DateRangeReviewPreview> =>
-  apiAuthFetch<DateRangeReviewPreview>(
-    `/api/date-range-review/preview?${createPreviewQuery(request)}`,
-    {
-      cache: "no-store",
-    },
+  normalizeDateRangeReviewPreview(
+    await apiAuthFetch<DateRangeReviewPreview>(
+      `/api/date-range-review/preview?${createPreviewQuery(request)}`,
+      {
+        cache: "no-store",
+      },
+    ),
   );
 
 export const fetchDateRangeReviewShare = async (shareId: string): Promise<DateRangeReviewShare> =>
-  apiFetch<DateRangeReviewShare>(`/api/date-range-review/shares/${shareId}`, {
-    cache: "no-store",
-  });
+  normalizeDateRangeReviewShare(
+    await apiFetch<DateRangeReviewShare>(`/api/date-range-review/shares/${shareId}`, {
+      cache: "no-store",
+    }),
+  );
 
 export const readDateRangeReviewShareOrNull = async (
   shareId: string,

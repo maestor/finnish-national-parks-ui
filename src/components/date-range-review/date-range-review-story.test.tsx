@@ -472,6 +472,35 @@ describe("DateRangeReviewStory", () => {
     expect(screen.queryByRole("button", { name: "story.next" })).not.toBeInTheDocument();
   });
 
+  it("renders legacy trip summary cards even when the visit list array is missing", () => {
+    const legacyTripSummaryStory = {
+      ...story,
+      cards: story.cards.map((card, index) =>
+        index === 4 && card.kind === "trip-summary"
+          ? {
+              ...card,
+              trip: {
+                ...card.trip,
+                visits: undefined,
+              },
+            }
+          : card,
+      ),
+    } as unknown as typeof story;
+
+    render(
+      <DateRangeReviewStory
+        mode="public"
+        overview={overview}
+        publishedAt="2026-08-07T09:00:00Z"
+        story={legacyTripSummaryStory}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "Saaristoretki" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Örön linnakesaari" })).not.toBeInTheDocument();
+  });
+
   it("renders photo, park, and trip detail branches when optional content exists", () => {
     render(
       <DateRangeReviewStory

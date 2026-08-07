@@ -179,42 +179,50 @@ const ReviewVisitList = ({
   visits,
 }: {
   title: string;
-  visits: DateRangeReviewStoryVisit[];
-}) => (
-  <div className="space-y-2.5">
-    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary-foreground/70">
-      {title}
-    </p>
-    <ul className="space-y-2.5" aria-label={title}>
-      {visits.map((visit) => (
-        <li
-          key={`${visit.park.slug}-${visit.visitedOn}`}
-          className="rounded-3xl border border-white/18 bg-white/10 px-3.5 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]"
-        >
-          <div className="flex flex-wrap items-start justify-between gap-2">
-            <div className="space-y-1.5">
-              <Link
-                href={appRoutes.park(visit.park.slug)}
-                className="text-base font-semibold tracking-tight hover:underline"
-              >
-                {visit.park.name}
-              </Link>
-              <div className="flex flex-wrap items-center gap-1.5">
-                <ParkTypeBadge
-                  className="border-white/28 bg-white/14 px-2 py-0.5 text-xs text-primary-foreground shadow-none dark:border-white/28 dark:bg-white/14"
-                  label={visit.park.typeLabel}
-                />
-                <span className="text-sm text-primary-foreground/78">
-                  {formatFinnishDate(visit.visitedOn)}
-                </span>
+  visits?: DateRangeReviewStoryVisit[];
+}) => {
+  const normalizedVisits = visits ?? [];
+
+  if (normalizedVisits.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="space-y-2.5">
+      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary-foreground/70">
+        {title}
+      </p>
+      <ul className="space-y-2.5" aria-label={title}>
+        {normalizedVisits.map((visit) => (
+          <li
+            key={`${visit.park.slug}-${visit.visitedOn}`}
+            className="rounded-3xl border border-white/18 bg-white/10 px-3.5 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]"
+          >
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div className="space-y-1.5">
+                <Link
+                  href={appRoutes.park(visit.park.slug)}
+                  className="text-base font-semibold tracking-tight hover:underline"
+                >
+                  {visit.park.name}
+                </Link>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <ParkTypeBadge
+                    className="border-white/28 bg-white/14 px-2 py-0.5 text-xs text-primary-foreground shadow-none dark:border-white/28 dark:bg-white/14"
+                    label={visit.park.typeLabel}
+                  />
+                  <span className="text-sm text-primary-foreground/78">
+                    {formatFinnishDate(visit.visitedOn)}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-        </li>
-      ))}
-    </ul>
-  </div>
-);
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
 
 const StoryCard = ({
   active,
@@ -821,7 +829,7 @@ export const DateRangeReviewStory = ({
                           value={card.trip.imageCount}
                         />
                       </div>
-                      {card.trip.visits.length > 0 && (
+                      {(card.trip.visits ?? []).length > 0 && (
                         <ReviewVisitList
                           title={t("story.tripSummaryVisitListTitle")}
                           visits={card.trip.visits}
