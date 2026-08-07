@@ -1660,6 +1660,18 @@ export interface paths {
                         };
                     };
                 };
+                /** @description Overview name is already bound to a different date range */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
                 /** @description Date range review request is not valid for generation */
                 422: {
                     headers: {
@@ -1755,6 +1767,18 @@ export interface paths {
                         };
                     };
                 };
+                /** @description Overview name is already bound to a different date range */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
                 /** @description Date range review request is not valid for generation */
                 422: {
                     headers: {
@@ -1840,6 +1864,279 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/admin/date-range-review/shares": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Listed published date range review shares for admin management */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            shares: {
+                                /** Format: date-time */
+                                generatedAt: string;
+                                overview: {
+                                    endDate: string;
+                                    name: string;
+                                    shareSlug: string;
+                                    startDate: string;
+                                };
+                                /** Format: uri */
+                                publicUrl: string;
+                                /** Format: date-time */
+                                publishedAt: string;
+                                /** Format: uuid */
+                                shareId: string;
+                                sharePath: string;
+                                storySummary: {
+                                    distinctParkCount: number;
+                                    imageCount: number;
+                                    newNationalParkCount: number;
+                                    revisitedParkCount: number;
+                                    tripCount: number;
+                                    visitCount: number;
+                                };
+                                /** Format: date-time */
+                                updatedAt: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/date-range-review/shares/{shareId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    shareId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Removed one published date range review share by share id */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Published date range review share was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    shareId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        endDate: string;
+                        name: string;
+                        startDate: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Updated one published date range review share for admin management */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: date-time */
+                            generatedAt: string;
+                            overview: {
+                                endDate: string;
+                                name: string;
+                                shareSlug: string;
+                                startDate: string;
+                            };
+                            /** Format: uri */
+                            publicUrl: string;
+                            /** Format: date-time */
+                            publishedAt: string;
+                            /** Format: uuid */
+                            shareId: string;
+                            sharePath: string;
+                            storySummary: {
+                                distinctParkCount: number;
+                                imageCount: number;
+                                newNationalParkCount: number;
+                                revisitedParkCount: number;
+                                tripCount: number;
+                                visitCount: number;
+                            };
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Published date range review share was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Overview name is already bound to a different published share */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Date range review request is not valid for generation */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
         trace?: never;
     };
     "/api/date-range-review/shares/{shareId}": {

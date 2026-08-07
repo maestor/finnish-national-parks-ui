@@ -216,6 +216,18 @@ vi.mock("@/components/date-range-review/date-range-review-story", () => ({
   ),
 }));
 
+vi.mock("@/components/date-range-review/date-range-review-share-list", () => ({
+  DateRangeReviewShareList: ({
+    shares,
+  }: {
+    shares: { shareId: string; overview: { name: string } }[];
+  }) => (
+    <div data-testid="date-range-review-share-list">
+      shares:{shares.length}|first:{shares[0]?.overview.name ?? "none"}
+    </div>
+  ),
+}));
+
 vi.mock("@/hooks/use-auth", () => ({
   useAuth: () => ({
     isAuthenticated: false,
@@ -802,6 +814,33 @@ const dateRangeReviewShare = {
   publishedAt: "2026-08-01T11:00:00Z",
   shareId: yearReviewShareId,
   story: dateRangeReviewStory,
+} as const;
+
+const adminDateRangeReviewShares = {
+  shares: [
+    {
+      generatedAt: "2026-08-01T10:00:00Z",
+      overview: {
+        endDate: "2026-07-28",
+        name: "Kesaloma 2026",
+        shareSlug: "kesaloma-2026",
+        startDate: "2026-06-14",
+      },
+      publicUrl: `https://frontend.example/ajanjaksokatsaus/jako/${yearReviewShareId}`,
+      publishedAt: "2026-08-01T11:00:00Z",
+      shareId: yearReviewShareId,
+      sharePath: `/ajanjaksokatsaus/jako/${yearReviewShareId}`,
+      storySummary: {
+        distinctParkCount: 3,
+        imageCount: 12,
+        newNationalParkCount: 2,
+        revisitedParkCount: 1,
+        tripCount: 2,
+        visitCount: 4,
+      },
+      updatedAt: "2026-08-01T11:00:00Z",
+    },
+  ],
 } as const;
 
 const renderPublicRoute = async (page: React.ReactNode) => {
@@ -1487,6 +1526,34 @@ describe("App pages", () => {
     expect(
       screen.getByRole("link", { name: "controlPanel.dateRangeReview.openSharePage" }),
     ).toHaveAttribute("href", `/ajanjaksokatsaus/jako/${yearReviewShareId}`);
+  });
+
+  it("renders the admin date-range review active shares tab", async () => {
+    vi.mocked(apiPublicFetch).mockResolvedValueOnce({
+      visits: [
+        { ...timelineVisit, id: 1, visitedOn: "2026-07-20", createdAt: "2026-07-20T12:00:00Z" },
+        { ...timelineVisit, id: 2, visitedOn: "2026-07-28", createdAt: "2026-07-28T12:00:00Z" },
+        { ...timelineVisit, id: 3, visitedOn: "2026-06-14", createdAt: "2026-06-14T12:00:00Z" },
+      ],
+    });
+    vi.mocked(apiAuthFetch).mockResolvedValueOnce(adminDateRangeReviewShares);
+
+    await renderControlPanelRoute(
+      await ControlPanelDateRangeReviewPage({
+        searchParams: Promise.resolve({ tab: "shares" }),
+      }),
+    );
+
+    expect(
+      screen.getByRole("link", { name: "controlPanel.dateRangeReview.tabs.preview" }),
+    ).toHaveAttribute("href", "/hallinta/ajanjaksokatsaus?tab=preview");
+    expect(
+      screen.getByRole("link", { name: "controlPanel.dateRangeReview.tabs.shares" }),
+    ).toHaveAttribute("aria-current", "page");
+    expect(screen.getByTestId("date-range-review-share-list")).toHaveTextContent(
+      "shares:1|first:Kesaloma 2026",
+    );
+    expect(screen.queryByTestId("date-range-review-story")).not.toBeInTheDocument();
   });
 
   it("renders the admin date-range review error state when preview generation fails", async () => {
