@@ -12,6 +12,8 @@ vi.mock("@/lib/backend-proxy", () => ({
   proxyBackendRequest: proxyBackendRequestMock,
 }));
 
+import { DELETE as deleteAdminDateRangeReviewShare } from "./admin/date-range-review/shares/[shareId]/route";
+import { GET as getAdminDateRangeReviewShares } from "./admin/date-range-review/shares/route";
 import { GET as getAdminParkVisibility } from "./admin/parks/visibility/route";
 import {
   DELETE as deleteDateRangeReviewPublish,
@@ -82,6 +84,41 @@ describe("api proxy routes", () => {
     expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/admin/parks/visibility", {
       requireAdmin: true,
     });
+  });
+
+  it("proxies admin date-range review share listing", async () => {
+    const request = new Request("https://frontend.example/api/admin/date-range-review/shares");
+
+    await getAdminDateRangeReviewShares(request);
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(
+      request,
+      "/api/admin/date-range-review/shares",
+      {
+        requireAdmin: true,
+      },
+    );
+  });
+
+  it("proxies admin date-range review share deletion", async () => {
+    const request = new Request(
+      "https://frontend.example/api/admin/date-range-review/shares/93d27350-b7a4-48ba-a93f-16f38d44aa03",
+      {
+        method: "DELETE",
+      },
+    );
+
+    await deleteAdminDateRangeReviewShare(request, {
+      params: Promise.resolve({ shareId: "93d27350-b7a4-48ba-a93f-16f38d44aa03" }),
+    });
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(
+      request,
+      "/api/admin/date-range-review/shares/93d27350-b7a4-48ba-a93f-16f38d44aa03",
+      {
+        requireAdmin: true,
+      },
+    );
   });
 
   it("proxies public park listing reads", async () => {

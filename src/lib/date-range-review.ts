@@ -6,6 +6,8 @@ type DateRangeReviewPreviewResponse =
 
 type DateRangeReviewShareResponse =
   paths["/api/date-range-review/shares/{shareId}"]["get"]["responses"][200]["content"]["application/json"];
+type AdminDateRangeReviewSharesResponse =
+  paths["/api/admin/date-range-review/shares"]["get"]["responses"][200]["content"]["application/json"];
 
 export type DateRangeReviewOverview = DateRangeReviewPreviewResponse["overview"];
 export type DateRangeReviewStory = DateRangeReviewPreviewResponse["story"];
@@ -29,6 +31,8 @@ export type DateRangeReviewPreview = DateRangeReviewPreviewResponse;
 export type DateRangeReviewPublishResponse =
   paths["/api/date-range-review/publish"]["post"]["responses"][200]["content"]["application/json"];
 export type DateRangeReviewShare = DateRangeReviewShareResponse;
+export type AdminDateRangeReviewShares = AdminDateRangeReviewSharesResponse;
+export type AdminDateRangeReviewShare = AdminDateRangeReviewSharesResponse["shares"][number];
 
 export interface DateRangeReviewPreviewRequest {
   endDate: string;
@@ -72,6 +76,14 @@ const normalizeDateRangeReviewShare = (share: DateRangeReviewShare): DateRangeRe
   story: normalizeDateRangeReviewStory(share.story),
 });
 
+const sortAdminDateRangeReviewShares = (shares: AdminDateRangeReviewShare[]) =>
+  [...shares].sort(
+    (left, right) =>
+      right.publishedAt.localeCompare(left.publishedAt) ||
+      right.updatedAt.localeCompare(left.updatedAt) ||
+      right.shareId.localeCompare(left.shareId),
+  );
+
 const REVIEW_SHARE_ID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -102,6 +114,20 @@ export const fetchDateRangeReviewShare = async (shareId: string): Promise<DateRa
       cache: "no-store",
     }),
   );
+
+export const fetchAdminDateRangeReviewShares = async (): Promise<AdminDateRangeReviewShares> => {
+  const response = await apiAuthFetch<AdminDateRangeReviewShares>(
+    "/api/admin/date-range-review/shares",
+    {
+      cache: "no-store",
+    },
+  );
+
+  return {
+    ...response,
+    shares: sortAdminDateRangeReviewShares(response.shares),
+  };
+};
 
 export const readDateRangeReviewShareOrNull = async (
   shareId: string,
