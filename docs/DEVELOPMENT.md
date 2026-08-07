@@ -111,11 +111,15 @@ src/app/
     kaynnit/page.tsx # Canonical public timeline route
     paikka/[slug]/  # Canonical public park detail pages
     reissusuunnittelu/page.tsx # Canonical public trip-planner route
+    ajanjaksokatsaus/jako/[shareId]/ # Canonical public date-range review share route
+    vuosikatsaus/jako/[shareId]/ # Canonical public year-review share route
   hallinta/         # Canonical admin routes (protected by proxy)
     layout.tsx      # Sidebar layout
     page.tsx        # Admin landing page
     paikat/         # Park visibility management + park detail editing
     kaynnit/        # Visit management
+    ajanjaksokatsaus/ # Named date-range review preview/publish page
+    vuosikatsaus/   # Year review preview/publish page
   kirjaudu/         # OAuth login page
   proxy.ts          # Route protection (Next.js 16 proxy convention)
 ```
@@ -126,11 +130,14 @@ Canonical end-user URLs are Finnish-only:
 - `/kaynnit`
 - `/paikka/[slug]`
 - `/reissusuunnittelu`
+- `/ajanjaksokatsaus/jako/[shareId]` (tokenized named date-range review share pages; intentionally not linked from public navigation)
 - `/vuosikatsaus/jako/[shareId]` (tokenized year-in-review share pages; intentionally not linked from public navigation)
 - `/hallinta`
+- `/hallinta/ajanjaksokatsaus`
+- `/hallinta/vuosikatsaus`
 - `/kirjaudu`
 
-Legacy English URLs such as `/parks`, `/visits`, `/park/[slug]`, `/trip-planner`, `/control-panel`, and `/login` still redirect to the Finnish canonical route.
+Legacy English URLs such as `/parks`, `/visits`, `/park/[slug]`, `/trip-planner`, `/control-panel`, `/control-panel/date-range-review`, `/control-panel/year-review`, `/date-range-review/share/[shareId]`, `/year-review/share/[shareId]`, and `/login` still redirect to the Finnish canonical route.
 
 **Shim convention:** page implementations live in English-named directories (`(user)/parks/`, `(user)/park/[slug]/`, `(user)/visits/`, `(user)/trip-planner/`, `control-panel/**`, `login/`). The canonical Finnish route directories hold one-line re-export shims (for example `src/app/hallinta/page.tsx` → `export { default } from "../control-panel/page"`). Keep this pattern when adding routes: implement in the English-named directory, expose the Finnish canonical route as a shim, and add a legacy redirect to `legacyAppRedirects` in `src/lib/routes.ts` when an English URL already exists.
 

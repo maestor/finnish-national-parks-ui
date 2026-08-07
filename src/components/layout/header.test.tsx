@@ -84,6 +84,15 @@ describe("Header", () => {
     expect(document.documentElement.style.getPropertyValue("--page-sticky-nav-top")).toBe("0rem");
   });
 
+  it("does not render on the public date-range-review share route", () => {
+    pathnameState.value = "/ajanjaksokatsaus/jako/93d27350-b7a4-48ba-a93f-16f38d44aa03";
+
+    const { container } = render(<Header />);
+
+    expect(container).toBeEmptyDOMElement();
+    expect(document.documentElement.style.getPropertyValue("--page-sticky-nav-top")).toBe("0rem");
+  });
+
   it("keeps the sticky header overflow visible for layered search and menus", () => {
     const { container } = render(<Header />);
 

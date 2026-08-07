@@ -8,6 +8,7 @@ export const appRoutes = {
   trip: (slug: string) => `/retki/${slug}`,
   visits: "/kaynnit",
   tripPlanner: "/reissusuunnittelu",
+  dateRangeReviewShare: (shareId: string) => `/ajanjaksokatsaus/jako/${shareId}`,
   yearReviewShare: (shareId: string) => `/vuosikatsaus/jako/${shareId}`,
   controlPanel: {
     root: CONTROL_PANEL_ROOT,
@@ -19,6 +20,7 @@ export const appRoutes = {
     visits: `${CONTROL_PANEL_ROOT}/kaynnit`,
     newVisit: `${CONTROL_PANEL_ROOT}/kaynnit/uusi`,
     editVisit: (visitId: string | number) => `${CONTROL_PANEL_ROOT}/kaynnit/${visitId}/muokkaa`,
+    dateRangeReview: `${CONTROL_PANEL_ROOT}/ajanjaksokatsaus`,
     yearReview: `${CONTROL_PANEL_ROOT}/vuosikatsaus`,
   },
 } as const;
@@ -72,8 +74,18 @@ export const legacyAppRedirects = [
     permanent: true,
   },
   {
+    source: "/control-panel/date-range-review",
+    destination: appRoutes.controlPanel.dateRangeReview,
+    permanent: true,
+  },
+  {
     source: "/control-panel/year-review",
     destination: appRoutes.controlPanel.yearReview,
+    permanent: true,
+  },
+  {
+    source: "/date-range-review/share/:shareId",
+    destination: "/ajanjaksokatsaus/jako/:shareId",
     permanent: true,
   },
   {
@@ -140,6 +152,10 @@ const normalizePathname = (pathname: string) => {
     return appRoutes.controlPanel.newVisit;
   }
 
+  if (pathname === "/control-panel/date-range-review") {
+    return appRoutes.controlPanel.dateRangeReview;
+  }
+
   if (pathname === "/control-panel/year-review") {
     return appRoutes.controlPanel.yearReview;
   }
@@ -152,6 +168,11 @@ const normalizePathname = (pathname: string) => {
   const tripMatch = /^\/trip\/([^/]+)$/.exec(pathname);
   if (tripMatch) {
     return appRoutes.trip(tripMatch[1]);
+  }
+
+  const dateRangeReviewShareMatch = /^\/date-range-review\/share\/([^/]+)$/.exec(pathname);
+  if (dateRangeReviewShareMatch) {
+    return appRoutes.dateRangeReviewShare(dateRangeReviewShareMatch[1]);
   }
 
   const yearReviewShareMatch = /^\/year-review\/share\/([^/]+)$/.exec(pathname);
@@ -192,6 +213,8 @@ export const appRoutePatterns = {
   isParksPath: (path: string) => normalizePathname(path) === appRoutes.parks,
   isTripPlannerPath: (path: string) => normalizePathname(path) === appRoutes.tripPlanner,
   isVisitsPath: (path: string) => normalizePathname(path) === appRoutes.visits,
+  isDateRangeReviewSharePath: (path: string) =>
+    /^\/ajanjaksokatsaus\/jako\/[^/]+$/.test(normalizePathname(path)),
   isYearReviewSharePath: (path: string) =>
     /^\/vuosikatsaus\/jako\/[^/]+$/.test(normalizePathname(path)),
 } as const;

@@ -345,6 +345,51 @@ const triggerIntersection = (target: Element, intersectionRatio = 0.85) => {
   });
 };
 
+const setScrollState = ({
+  innerHeight = 900,
+  scrollHeight = 3200,
+  scrollY = 0,
+}: {
+  innerHeight?: number;
+  scrollHeight?: number;
+  scrollY?: number;
+}) => {
+  Object.defineProperty(document.documentElement, "scrollHeight", {
+    configurable: true,
+    value: scrollHeight,
+  });
+  Object.defineProperty(window, "innerHeight", {
+    configurable: true,
+    value: innerHeight,
+    writable: true,
+  });
+  Object.defineProperty(window, "scrollY", {
+    configurable: true,
+    value: scrollY,
+    writable: true,
+  });
+};
+
+const dispatchScroll = () => {
+  act(() => {
+    window.dispatchEvent(new Event("scroll"));
+  });
+};
+
+const mockStoryPosition = (storyElement: HTMLElement, absoluteTop = 48, height = 960) => {
+  return vi.spyOn(storyElement, "getBoundingClientRect").mockImplementation(() => ({
+    bottom: absoluteTop + height - window.scrollY,
+    height,
+    left: 0,
+    right: 0,
+    toJSON: () => ({}),
+    top: absoluteTop - window.scrollY,
+    width: 0,
+    x: 0,
+    y: absoluteTop - window.scrollY,
+  }));
+};
+
 describe("YearReviewStory", () => {
   it("renders the story cards with milestone and seasonal details", () => {
     render(
@@ -506,11 +551,15 @@ describe("YearReviewStory", () => {
 
   it("does not replay the card entry state after a card has already been seen once", () => {
     vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
+    setScrollState({ scrollY: 400 });
 
     render(<YearReviewStory story={fallbackStory} mode="public" />);
 
+    const storyElement = screen.getByTestId("year-review-story");
     const firstCard = screen.getByTestId("year-review-story-card-0");
     const secondCard = screen.getByTestId("year-review-story-card-1");
+
+    mockStoryPosition(storyElement);
 
     expect(firstCard).toHaveAttribute("data-story-entry-state", "entry");
     expect(secondCard).toHaveAttribute("data-story-entry-state", "upcoming");
@@ -536,15 +585,7 @@ describe("YearReviewStory", () => {
       value: scrollTo,
       writable: true,
     });
-    Object.defineProperty(document.documentElement, "scrollHeight", {
-      configurable: true,
-      value: 3200,
-    });
-    Object.defineProperty(window, "innerHeight", {
-      configurable: true,
-      value: 900,
-      writable: true,
-    });
+    setScrollState({ scrollY: 400 });
     vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
 
     render(<YearReviewStory story={fallbackStory} mode="public" />);
@@ -559,17 +600,7 @@ describe("YearReviewStory", () => {
       throw new Error("Expected the navigation panel and story cards to exist.");
     }
 
-    vi.spyOn(storyElement, "getBoundingClientRect").mockReturnValue({
-      bottom: 960,
-      height: 960,
-      left: 0,
-      right: 0,
-      toJSON: () => ({}),
-      top: 48,
-      width: 0,
-      x: 0,
-      y: 48,
-    });
+    mockStoryPosition(storyElement);
     vi.spyOn(navigationPanel, "getBoundingClientRect").mockReturnValue({
       bottom: 108,
       height: 96,
@@ -582,15 +613,15 @@ describe("YearReviewStory", () => {
       y: 12,
     });
     vi.spyOn(summaryCard, "getBoundingClientRect").mockReturnValue({
-      bottom: 2560,
-      height: 560,
+      bottom: 2160,
+      height: 380,
       left: 0,
       right: 0,
       toJSON: () => ({}),
-      top: 2180,
+      top: 1780,
       width: 0,
       x: 0,
-      y: 2180,
+      y: 1780,
     });
 
     triggerIntersection(secondCard);
@@ -603,6 +634,9 @@ describe("YearReviewStory", () => {
     });
 
     vi.clearAllMocks();
+    setScrollState({ scrollY: 48 });
+    dispatchScroll();
+    setScrollState({ scrollY: 400 });
 
     triggerIntersection(seasonalCard);
 
@@ -617,12 +651,16 @@ describe("YearReviewStory", () => {
 
   it("updates the previous and next button disabled states with the active card", () => {
     vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
+    setScrollState({ scrollY: 400 });
 
     render(<YearReviewStory story={fallbackStory} mode="public" />);
 
+    const storyElement = screen.getByTestId("year-review-story");
     const previousButton = screen.getByRole("button", { name: "story.previous" });
     const nextButton = screen.getByRole("button", { name: "story.next" });
     const summaryCard = screen.getByTestId("year-review-story-card-7");
+
+    mockStoryPosition(storyElement);
 
     expect(previousButton).toBeDisabled();
     expect(nextButton).toBeEnabled();
@@ -653,31 +691,26 @@ describe("YearReviewStory", () => {
       value: scrollTo,
       writable: true,
     });
-    Object.defineProperty(document.documentElement, "scrollHeight", {
-      configurable: true,
-      value: 3200,
-    });
-    Object.defineProperty(window, "innerHeight", {
-      configurable: true,
-      value: 900,
-      writable: true,
-    });
+    setScrollState({ scrollY: 400 });
     vi.stubGlobal("matchMedia", matchMedia);
 
     render(<YearReviewStory story={fallbackStory} mode="public" />);
 
     const cardJumpButtons = screen.getAllByRole("button", { name: "story.goToCard" });
     const firstCardButton = cardJumpButtons[0];
+    const storyElement = screen.getByTestId("year-review-story");
 
-    if (!firstCardButton) {
-      throw new Error("Expected the first card jump button to exist.");
+    if (!(firstCardButton && storyElement)) {
+      throw new Error("Expected the first card jump button and story wrapper to exist.");
     }
+
+    mockStoryPosition(storyElement);
 
     await user.click(firstCardButton);
 
     expect(scrollTo).toHaveBeenCalledWith({
       behavior: "auto",
-      top: 0,
+      top: 48,
     });
     vi.clearAllMocks();
 
@@ -700,15 +733,15 @@ describe("YearReviewStory", () => {
       y: 12,
     });
     vi.spyOn(targetSection, "getBoundingClientRect").mockReturnValue({
-      bottom: 1840,
+      bottom: 1440,
       height: 520,
       left: 0,
       right: 0,
       toJSON: () => ({}),
-      top: 1320,
+      top: 920,
       width: 0,
       x: 0,
-      y: 1320,
+      y: 920,
     });
 
     const targetButton = cardJumpButtons[2];
@@ -737,15 +770,7 @@ describe("YearReviewStory", () => {
       value: scrollTo,
       writable: true,
     });
-    Object.defineProperty(document.documentElement, "scrollHeight", {
-      configurable: true,
-      value: 3200,
-    });
-    Object.defineProperty(window, "innerHeight", {
-      configurable: true,
-      value: 708,
-      writable: true,
-    });
+    setScrollState({ innerHeight: 708, scrollY: 0 });
 
     render(<YearReviewStory story={fallbackStory} mode="public" />);
 
@@ -790,9 +815,179 @@ describe("YearReviewStory", () => {
 
     expect(screen.getByText("Kortti 7/8")).toBeInTheDocument();
     expect(targetSection).toHaveAttribute("data-story-entry-state", "entry");
+    expect(scrollTo).not.toHaveBeenCalled();
+  });
+
+  it("keeps the progress state aligned at the top and bottom edges", () => {
+    vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
+    setScrollState({ scrollY: 400 });
+
+    render(<YearReviewStory story={fallbackStory} mode="public" />);
+
+    const storyElement = screen.getByTestId("year-review-story");
+    const secondCard = screen.getByTestId("year-review-story-card-1");
+    const previousButton = screen.getByRole("button", { name: "story.previous" });
+    const nextButton = screen.getByRole("button", { name: "story.next" });
+
+    mockStoryPosition(storyElement);
+
+    triggerIntersection(secondCard);
+    expect(screen.getByText("Kortti 2/8")).toBeInTheDocument();
+
+    setScrollState({ scrollY: 0 });
+    dispatchScroll();
+
+    expect(screen.getByText("Kortti 1/8")).toBeInTheDocument();
+    expect(previousButton).toBeDisabled();
+    expect(nextButton).toBeEnabled();
+
+    setScrollState({ scrollY: 2300 });
+    dispatchScroll();
+
+    expect(screen.getByText("Kortti 8/8")).toBeInTheDocument();
+    expect(previousButton).toBeEnabled();
+    expect(nextButton).toBeDisabled();
+  });
+
+  it("advances one card at a time from the initial next button presses", async () => {
+    const user = userEvent.setup();
+    const scrollTo = vi.fn();
+
+    Object.defineProperty(window, "scrollTo", {
+      configurable: true,
+      value: scrollTo,
+      writable: true,
+    });
+    setScrollState({ scrollY: 0 });
+    vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
+
+    render(<YearReviewStory story={fallbackStory} mode="public" />);
+
+    const navigationPanel = screen.getByLabelText("story.progressNavigator").closest("div");
+    const secondCard = screen.getByTestId("year-review-story-card-1");
+    const thirdCard = screen.getByTestId("year-review-story-card-2");
+
+    if (!(navigationPanel && secondCard && thirdCard)) {
+      throw new Error("Expected the navigation panel and consecutive story cards to exist.");
+    }
+
+    vi.spyOn(navigationPanel, "getBoundingClientRect").mockReturnValue({
+      bottom: 108,
+      height: 96,
+      left: 0,
+      right: 0,
+      toJSON: () => ({}),
+      top: 12,
+      width: 0,
+      x: 0,
+      y: 12,
+    });
+    vi.spyOn(secondCard, "getBoundingClientRect").mockReturnValue({
+      bottom: 1080,
+      height: 520,
+      left: 0,
+      right: 0,
+      toJSON: () => ({}),
+      top: 560,
+      width: 0,
+      x: 0,
+      y: 560,
+    });
+    vi.spyOn(thirdCard, "getBoundingClientRect").mockReturnValue({
+      bottom: 1620,
+      height: 520,
+      left: 0,
+      right: 0,
+      toJSON: () => ({}),
+      top: 1100,
+      width: 0,
+      x: 0,
+      y: 1100,
+    });
+
+    const nextButton = screen.getByRole("button", { name: "story.next" });
+
+    await user.click(nextButton);
+    expect(screen.getByText("Kortti 2/8")).toBeInTheDocument();
     expect(scrollTo).toHaveBeenLastCalledWith({
       behavior: "auto",
-      top: 0,
+      top: 432,
+    });
+
+    await user.click(nextButton);
+    expect(screen.getByText("Kortti 3/8")).toBeInTheDocument();
+    expect(scrollTo).toHaveBeenLastCalledWith({
+      behavior: "auto",
+      top: 972,
+    });
+  });
+
+  it("keeps the target card active while leaving the last card with the previous button", async () => {
+    const user = userEvent.setup();
+    const scrollTo = vi.fn();
+
+    Object.defineProperty(window, "scrollTo", {
+      configurable: true,
+      value: scrollTo,
+      writable: true,
+    });
+    setScrollState({ scrollY: 2300 });
+    vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
+
+    render(<YearReviewStory story={fallbackStory} mode="public" />);
+
+    const storyElement = screen.getByTestId("year-review-story");
+    const navigationPanel = screen.getByLabelText("story.progressNavigator").closest("div");
+    const previousTargetCard = screen.getByTestId("year-review-story-card-6");
+    const previousButton = screen.getByRole("button", { name: "story.previous" });
+    const nextButton = screen.getByRole("button", { name: "story.next" });
+
+    if (!(navigationPanel && previousTargetCard)) {
+      throw new Error("Expected the navigation panel and previous target card to exist.");
+    }
+
+    mockStoryPosition(storyElement);
+    dispatchScroll();
+
+    expect(screen.getByText("Kortti 8/8")).toBeInTheDocument();
+    expect(previousButton).toBeEnabled();
+    expect(nextButton).toBeDisabled();
+
+    vi.spyOn(navigationPanel, "getBoundingClientRect").mockReturnValue({
+      bottom: 108,
+      height: 96,
+      left: 0,
+      right: 0,
+      toJSON: () => ({}),
+      top: 12,
+      width: 0,
+      x: 0,
+      y: 12,
+    });
+    vi.spyOn(previousTargetCard, "getBoundingClientRect").mockReturnValue({
+      bottom: 360,
+      height: 260,
+      left: 0,
+      right: 0,
+      toJSON: () => ({}),
+      top: 100,
+      width: 0,
+      x: 0,
+      y: 100,
+    });
+
+    await user.click(previousButton);
+
+    expect(screen.getByText("Kortti 7/8")).toBeInTheDocument();
+    expect(nextButton).toBeEnabled();
+
+    dispatchScroll();
+
+    expect(screen.getByText("Kortti 7/8")).toBeInTheDocument();
+    expect(nextButton).toBeEnabled();
+    expect(scrollTo).toHaveBeenCalledWith({
+      behavior: "auto",
+      top: 2272,
     });
   });
 });

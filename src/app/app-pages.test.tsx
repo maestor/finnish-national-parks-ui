@@ -3,6 +3,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError, apiAuthFetch, apiFetch, apiPublicFetch } from "@/lib/api";
 import type { AdminVisibilityPark, Park, Visit, VisitWithPark } from "@/lib/parks";
 import type { FrontendTimelineVisit } from "@/lib/public-visits";
+import PublicDateRangeReviewPage, {
+  generateMetadata as generatePublicDateRangeReviewMetadata,
+} from "./(user)/date-range-review/share/[shareId]/page";
 import UserLayout from "./(user)/layout";
 import HomePage, { generateMetadata as generateHomeMetadata } from "./(user)/page";
 import ParkDetailPage, {
@@ -22,6 +25,9 @@ import PublicYearReviewPage, {
   generateMetadata as generatePublicYearReviewMetadata,
 } from "./(user)/year-review/share/[shareId]/page";
 import OfflinePage from "./~offline/page";
+import ControlPanelDateRangeReviewPage, {
+  generateMetadata as generateControlPanelDateRangeReviewMetadata,
+} from "./control-panel/date-range-review/page";
 import ControlPanelLayout from "./control-panel/layout";
 import ControlPanelPage, {
   generateMetadata as generateControlPanelMetadata,
@@ -184,6 +190,26 @@ vi.mock("@/components/year-review/year-review-story", () => ({
   }) => (
     <div data-testid="year-review-story">
       mode:{mode}|year:{story.year}|visits:{story.summary.visitCount}|cards:{story.cards.length}
+      |published:
+      {publishedAt ?? "none"}
+    </div>
+  ),
+}));
+
+vi.mock("@/components/date-range-review/date-range-review-story", () => ({
+  DateRangeReviewStory: ({
+    mode,
+    overview,
+    publishedAt,
+    story,
+  }: {
+    mode: "preview" | "public";
+    overview: { name: string };
+    publishedAt?: string | null;
+    story: { cards: { kind: string }[]; summary: { visitCount: number } };
+  }) => (
+    <div data-testid="date-range-review-story">
+      mode:{mode}|name:{overview.name}|visits:{story.summary.visitCount}|cards:{story.cards.length}
       |published:
       {publishedAt ?? "none"}
     </div>
@@ -665,6 +691,83 @@ const yearReviewShare = {
   shareId: yearReviewShareId,
   story: yearReviewStory,
   year: 2024,
+} as const;
+
+const dateRangeReviewStory = {
+  summary: {
+    distinctParkCount: 2,
+    imageCount: 3,
+    newNationalParkCount: 1,
+    revisitedParkCount: 1,
+    tripCount: 2,
+    visitCount: 4,
+  },
+  cards: [
+    {
+      dateRange: {
+        endDate: "2026-07-28",
+        startDate: "2026-06-14",
+      },
+      kind: "intro",
+      name: "Kesaloma 2026",
+      primaryStat: {
+        key: "visitCount",
+        value: 4,
+      },
+      tripCount: 2,
+    },
+    {
+      kind: "photo-highlight",
+      totalImageCount: 3,
+      visit: null,
+      featuredImage: null,
+    },
+    {
+      kind: "trip-summary",
+      featuredImage: null,
+      trip: {
+        dateRange: {
+          end: "2026-07-28",
+          start: "2026-07-26",
+        },
+        id: 7,
+        imageCount: 3,
+        name: "Kesaretki",
+        slug: "kesaretki",
+        visitCount: 2,
+      },
+    },
+  ],
+} as const;
+
+const dateRangeReviewPreview = {
+  generatedAt: "2026-08-01T10:00:00Z",
+  overview: {
+    endDate: "2026-07-28",
+    name: "Kesaloma 2026",
+    shareSlug: "kesaloma-2026",
+    startDate: "2026-06-14",
+  },
+  publishInfo: {
+    publicUrl: `https://frontend.example/ajanjaksokatsaus/jako/${yearReviewShareId}`,
+    publishedAt: "2026-08-01T11:00:00Z",
+    publishedShareId: yearReviewShareId,
+    sharePath: `/ajanjaksokatsaus/jako/${yearReviewShareId}`,
+  },
+  status: "published",
+  story: dateRangeReviewStory,
+} as const;
+
+const dateRangeReviewShare = {
+  overview: {
+    endDate: "2026-07-28",
+    name: "Kesaloma 2026",
+    shareSlug: "kesaloma-2026",
+    startDate: "2026-06-14",
+  },
+  publishedAt: "2026-08-01T11:00:00Z",
+  shareId: yearReviewShareId,
+  story: dateRangeReviewStory,
 } as const;
 
 const renderPublicRoute = async (page: React.ReactNode) => {
@@ -1222,6 +1325,46 @@ describe("App pages", () => {
     );
   });
 
+  it("calls notFound for malformed or missing date-range review shares", async () => {
+    await expect(
+      PublicDateRangeReviewPage({ params: Promise.resolve({ shareId: "not-a-share-id" }) }),
+    ).rejects.toThrow("NEXT_NOT_FOUND");
+
+    vi.mocked(apiFetch).mockRejectedValueOnce(new ApiError(404, "missing"));
+
+    await expect(
+      PublicDateRangeReviewPage({ params: Promise.resolve({ shareId: yearReviewShareId }) }),
+    ).rejects.toThrow("NEXT_NOT_FOUND");
+
+    expect(mockNotFound).toHaveBeenCalledTimes(2);
+  });
+
+  it("renders a published date-range review share from the backend snapshot", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce(dateRangeReviewShare);
+
+    await renderPublicRoute(
+      await PublicDateRangeReviewPage({ params: Promise.resolve({ shareId: yearReviewShareId }) }),
+    );
+
+    expect(screen.getByTestId("date-range-review-story")).toHaveTextContent(
+      "mode:public|name:Kesaloma 2026|visits:4|cards:3|published:2026-08-01T11:00:00Z",
+    );
+  });
+
+  it("builds translated metadata for the public date-range review page", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce(dateRangeReviewShare);
+
+    await expect(
+      generatePublicDateRangeReviewMetadata({
+        params: Promise.resolve({ shareId: yearReviewShareId }),
+      }),
+    ).resolves.toEqual(
+      createExpectedShareMetadata("dateRangeReview.shareTitle", {
+        description: "dateRangeReview.shareDescription",
+      }),
+    );
+  });
+
   it("calls notFound for malformed or missing year review shares", async () => {
     await expect(
       PublicYearReviewPage({ params: Promise.resolve({ shareId: "not-a-share-id" }) }),
@@ -1282,6 +1425,105 @@ describe("App pages", () => {
     expect(
       screen.getByRole("link", { name: "controlPanel.yearReview.openSharePage" }),
     ).toHaveAttribute("href", `/vuosikatsaus/jako/${yearReviewShareId}`);
+  });
+
+  it("renders the admin date-range review preview with publish actions", async () => {
+    vi.mocked(apiPublicFetch).mockResolvedValueOnce({
+      visits: [
+        { ...timelineVisit, id: 1, visitedOn: "2026-07-20", createdAt: "2026-07-20T12:00:00Z" },
+        { ...timelineVisit, id: 2, visitedOn: "2026-07-28", createdAt: "2026-07-28T12:00:00Z" },
+        { ...timelineVisit, id: 3, visitedOn: "2026-06-14", createdAt: "2026-06-14T12:00:00Z" },
+      ],
+    });
+    vi.mocked(apiAuthFetch).mockResolvedValueOnce(dateRangeReviewPreview);
+
+    await renderControlPanelRoute(
+      await ControlPanelDateRangeReviewPage({ searchParams: Promise.resolve({}) }),
+    );
+
+    expect(screen.getByLabelText("dateRangeReview.form.nameLabel")).toHaveValue(
+      "2026-06-14 - 2026-07-28",
+    );
+    expect(screen.getByTestId("date-range-review-story")).toHaveTextContent(
+      "mode:preview|name:Kesaloma 2026|visits:4|cards:3|published:none",
+    );
+    expect(
+      screen.getByRole("button", { name: "controlPanel.dateRangeReview.copyShareLink" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "controlPanel.dateRangeReview.openSharePage" }),
+    ).toHaveAttribute("href", `/ajanjaksokatsaus/jako/${yearReviewShareId}`);
+  });
+
+  it("renders the admin date-range review error state when preview generation fails", async () => {
+    vi.mocked(apiPublicFetch).mockResolvedValueOnce({
+      visits: [
+        { ...timelineVisit, id: 1, visitedOn: "2026-07-20", createdAt: "2026-07-20T12:00:00Z" },
+        { ...timelineVisit, id: 2, visitedOn: "2026-07-28", createdAt: "2026-07-28T12:00:00Z" },
+        { ...timelineVisit, id: 3, visitedOn: "2026-06-14", createdAt: "2026-06-14T12:00:00Z" },
+      ],
+    });
+    vi.mocked(apiAuthFetch).mockRejectedValueOnce(new ApiError(422, "Virheellinen ajanjakso"));
+
+    await renderControlPanelRoute(
+      await ControlPanelDateRangeReviewPage({
+        searchParams: Promise.resolve({
+          endDate: "2026-07-28",
+          name: "Kesaloma 2026",
+          startDate: "2026-06-14",
+        }),
+      }),
+    );
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Virheellinen ajanjakso");
+    expect(screen.queryByTestId("date-range-review-story")).not.toBeInTheDocument();
+  });
+
+  it("renders the not-enough-visits empty state for admin date-range review", async () => {
+    vi.mocked(apiPublicFetch).mockResolvedValueOnce({
+      visits: [
+        { ...timelineVisit, id: 1, visitedOn: "2026-07-20", createdAt: "2026-07-20T12:00:00Z" },
+        { ...timelineVisit, id: 2, visitedOn: "2026-07-28", createdAt: "2026-07-28T12:00:00Z" },
+      ],
+    });
+
+    await renderControlPanelRoute(
+      await ControlPanelDateRangeReviewPage({ searchParams: Promise.resolve({}) }),
+    );
+
+    expect(
+      screen.getByRole("heading", {
+        name: "controlPanel.dateRangeReview.notEnoughVisitsTitle",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId("date-range-review-story")).not.toBeInTheDocument();
+  });
+
+  it("renders the generic empty state when there are enough visits but no automatic preview range", async () => {
+    vi.mocked(apiPublicFetch).mockResolvedValueOnce({
+      visits: [
+        { ...timelineVisit, id: 1, visitedOn: "2026-08-01", createdAt: "2026-08-01T12:00:00Z" },
+        { ...timelineVisit, id: 2, visitedOn: "2025-12-01", createdAt: "2025-12-01T12:00:00Z" },
+        { ...timelineVisit, id: 3, visitedOn: "2025-01-01", createdAt: "2025-01-01T12:00:00Z" },
+      ],
+    });
+
+    await renderControlPanelRoute(
+      await ControlPanelDateRangeReviewPage({ searchParams: Promise.resolve({}) }),
+    );
+
+    expect(
+      screen.getByRole("heading", {
+        name: "dateRangeReview.emptyState.title",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId("date-range-review-story")).not.toBeInTheDocument();
+  });
+
+  it("builds translated metadata for the admin date-range review page", async () => {
+    await expect(generateControlPanelDateRangeReviewMetadata()).resolves.toEqual(
+      createExpectedShareMetadata("controlPanel.dateRangeReview.title"),
+    );
   });
 
   it("renders the current year draft preview even when there are no visits yet", async () => {

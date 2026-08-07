@@ -9,7 +9,7 @@ This is a Finnish-language, PWA-capable web application built with Next.js 16 Ap
 The app serves two audiences:
 
 - **Public view** — Visit-focused landing page at `/`, interactive map at `/paikat` with park filters, a visited/unvisited toggle, and current-location targeting, visit browsing at `/kaynnit` as a timeline, visit map, or visited national parks summary, persistent park search, park detail pages under `/paikka/[slug]`, route planning at `/reissusuunnittelu`, and public visit history
-- **Admin view** — Adding and editing visits, including excluding individual trip visits from route calculation, editing park details, and hiding parks from the catalog via `/hallinta`, including the shared map view with current-location targeting and admin-only access to hidden park detail pages
+- **Admin view** — Adding and editing visits, including excluding individual trip visits from route calculation, editing park details, hiding parks from the catalog via `/hallinta`, and generating both year reviews and shorter named date-range review share pages for moments like an active month or summer vacation
 
 ## Tech Stack
 
@@ -56,7 +56,7 @@ src/
 └── test/                       # Test setup & helpers
 ```
 
-Canonical URLs are Finnish-only (`/paikat`, `/kaynnit`, `/paikka/[slug]`, `/reissusuunnittelu`, `/hallinta`, `/kirjaudu`). Legacy English URLs redirect to the Finnish canonical routes via `legacyAppRedirects` in `src/lib/routes.ts`.
+Canonical URLs are Finnish-only (`/paikat`, `/kaynnit`, `/paikka/[slug]`, `/reissusuunnittelu`, `/hallinta`, `/kirjaudu`, `/hallinta/ajanjaksokatsaus`, `/hallinta/vuosikatsaus`, `/ajanjaksokatsaus/jako/[shareId]`, `/vuosikatsaus/jako/[shareId]`). Legacy English URLs redirect to the Finnish canonical routes via `legacyAppRedirects` in `src/lib/routes.ts`.
 
 ## Getting Started
 

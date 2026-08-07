@@ -37,6 +37,9 @@ describe("ControlPanelNav", () => {
       "/hallinta/kaynnit",
     );
     expect(
+      within(nav).getByRole("link", { name: "controlPanel.dateRangeReview.title" }),
+    ).toHaveAttribute("href", "/hallinta/ajanjaksokatsaus");
+    expect(
       within(nav).getByRole("link", { name: "controlPanel.yearReview.title" }),
     ).toHaveAttribute("href", "/hallinta/vuosikatsaus");
   });
