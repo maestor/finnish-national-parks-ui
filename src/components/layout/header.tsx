@@ -36,7 +36,9 @@ export const Header = () => {
   const normalizedPathname = normalizeAppPath(pathname);
   const isControlPanel = appRoutePatterns.isControlPanelPath(pathname);
   const isPublicVisitsPage = normalizedPathname === appRoutes.visits;
+  const isDateRangeReviewSharePage = appRoutePatterns.isDateRangeReviewSharePath(pathname);
   const isYearReviewSharePage = appRoutePatterns.isYearReviewSharePath(pathname);
+  const isImmersiveSharePage = isDateRangeReviewSharePage || isYearReviewSharePage;
   const [isMobileMenuMounted, setIsMobileMenuMounted] = useState(false);
   const [isMobileMenuVisible, setIsMobileMenuVisible] = useState(false);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
@@ -114,12 +116,12 @@ export const Header = () => {
 
   useEffect(() => {
     void pathname;
-    setIsHeaderVisible(!isYearReviewSharePage);
+    setIsHeaderVisible(!isImmersiveSharePage);
     lastScrollYRef.current = window.scrollY;
-  }, [isYearReviewSharePage, pathname]);
+  }, [isImmersiveSharePage, pathname]);
 
   useEffect(() => {
-    if (isYearReviewSharePage) {
+    if (isImmersiveSharePage) {
       setIsHeaderVisible(false);
       return;
     }
@@ -149,12 +151,12 @@ export const Header = () => {
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
-  }, [isMobileMenuVisible, isYearReviewSharePage]);
+  }, [isImmersiveSharePage, isMobileMenuVisible]);
 
   useEffect(() => {
     document.documentElement.style.setProperty(
       "--page-sticky-nav-top",
-      isYearReviewSharePage
+      isImmersiveSharePage
         ? PAGE_STICKY_NAV_TOP_HIDDEN
         : isHeaderVisible
           ? PAGE_STICKY_NAV_TOP_VISIBLE
@@ -164,7 +166,7 @@ export const Header = () => {
     return () => {
       document.documentElement.style.removeProperty("--page-sticky-nav-top");
     };
-  }, [isHeaderVisible, isYearReviewSharePage]);
+  }, [isHeaderVisible, isImmersiveSharePage]);
 
   const desktopNavItems = useMemo(
     () => [
@@ -196,7 +198,7 @@ export const Header = () => {
     [auth.isAuthenticated, isControlPanel, isPublicVisitsPage, normalizedPathname, t],
   );
 
-  if (isYearReviewSharePage) {
+  if (isImmersiveSharePage) {
     return null;
   }
 

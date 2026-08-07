@@ -24,7 +24,11 @@ describe("routes", () => {
     expect(appRoutes.controlPanel.visits).toBe("/hallinta/kaynnit");
     expect(appRoutes.controlPanel.newVisit).toBe("/hallinta/kaynnit/uusi");
     expect(appRoutes.controlPanel.editVisit("42")).toBe("/hallinta/kaynnit/42/muokkaa");
+    expect(appRoutes.controlPanel.dateRangeReview).toBe("/hallinta/ajanjaksokatsaus");
     expect(appRoutes.controlPanel.yearReview).toBe("/hallinta/vuosikatsaus");
+    expect(appRoutes.dateRangeReviewShare("93d27350-b7a4-48ba-a93f-16f38d44aa03")).toBe(
+      "/ajanjaksokatsaus/jako/93d27350-b7a4-48ba-a93f-16f38d44aa03",
+    );
     expect(appRoutes.yearReviewShare("93d27350-b7a4-48ba-a93f-16f38d44aa03")).toBe(
       "/vuosikatsaus/jako/93d27350-b7a4-48ba-a93f-16f38d44aa03",
     );
@@ -52,6 +56,10 @@ describe("routes", () => {
       "/hallinta/kaynnit/uusi?park=pallas",
     );
     expect(normalizeAppPath("/control-panel/visits/42/edit")).toBe("/hallinta/kaynnit/42/muokkaa");
+    expect(normalizeAppPath("/control-panel/date-range-review")).toBe("/hallinta/ajanjaksokatsaus");
+    expect(normalizeAppPath("/date-range-review/share/93d27350-b7a4-48ba-a93f-16f38d44aa03")).toBe(
+      "/ajanjaksokatsaus/jako/93d27350-b7a4-48ba-a93f-16f38d44aa03",
+    );
     expect(normalizeAppPath("/control-panel/year-review")).toBe("/hallinta/vuosikatsaus");
     expect(normalizeAppPath("/year-review/share/93d27350-b7a4-48ba-a93f-16f38d44aa03")).toBe(
       "/vuosikatsaus/jako/93d27350-b7a4-48ba-a93f-16f38d44aa03",
@@ -72,6 +80,16 @@ describe("routes", () => {
     expect(appRoutePatterns.isYearReviewSharePath("/vuosikatsaus/jako/share-123")).toBe(true);
     expect(appRoutePatterns.isYearReviewSharePath("/year-review/share/share-123")).toBe(true);
     expect(appRoutePatterns.isYearReviewSharePath("/paikat")).toBe(false);
+  });
+
+  it("detects date-range-review share routes after normalization", () => {
+    expect(appRoutePatterns.isDateRangeReviewSharePath("/ajanjaksokatsaus/jako/share-123")).toBe(
+      true,
+    );
+    expect(appRoutePatterns.isDateRangeReviewSharePath("/date-range-review/share/share-123")).toBe(
+      true,
+    );
+    expect(appRoutePatterns.isDateRangeReviewSharePath("/paikat")).toBe(false);
   });
 
   it("builds a path with only defined search params", () => {

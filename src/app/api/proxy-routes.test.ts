@@ -13,6 +13,10 @@ vi.mock("@/lib/backend-proxy", () => ({
 }));
 
 import { GET as getAdminParkVisibility } from "./admin/parks/visibility/route";
+import {
+  DELETE as deleteDateRangeReviewPublish,
+  POST as postDateRangeReviewPublish,
+} from "./date-range-review/publish/route";
 import { PATCH as patchParkRemoved } from "./parks/[slug]/removed/route";
 import { PATCH as patchPark } from "./parks/[slug]/route";
 import { POST as postParkVisit } from "./parks/[slug]/visits/route";
@@ -126,6 +130,46 @@ describe("api proxy routes", () => {
     expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/year-review/2024/publish", {
       requireAdmin: true,
     });
+  });
+
+  it("proxies date-range review publishing", async () => {
+    const request = new Request("https://frontend.example/api/date-range-review/publish", {
+      body: JSON.stringify({
+        endDate: "2026-07-28",
+        name: "Kesaloma 2026",
+        startDate: "2026-06-14",
+      }),
+      method: "POST",
+    });
+
+    await postDateRangeReviewPublish(request);
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(
+      request,
+      "/api/date-range-review/publish",
+      {
+        requireAdmin: true,
+      },
+    );
+  });
+
+  it("proxies date-range review unpublishing", async () => {
+    const request = new Request(
+      "https://frontend.example/api/date-range-review/publish?name=Kesaloma%202026",
+      {
+        method: "DELETE",
+      },
+    );
+
+    await deleteDateRangeReviewPublish(request);
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(
+      request,
+      "/api/date-range-review/publish",
+      {
+        requireAdmin: true,
+      },
+    );
   });
 
   it("proxies year review unpublishing", async () => {

@@ -18,6 +18,7 @@ import {
   PUBLIC_HERO_DESCRIPTION_CLASS_NAME,
   PUBLIC_PANEL_CLASS_NAME,
 } from "@/components/layout/public-page-styles";
+import { useStoryProgressNavigation } from "@/components/story/use-story-progress-navigation";
 import { AppImage } from "@/components/ui/app-image";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
@@ -56,8 +57,6 @@ const WEEKDAY_FORMATTER = new Intl.DateTimeFormat("fi-FI", {
   timeZone: "Europe/Helsinki",
   weekday: "long",
 });
-
-const CARD_SCROLL_GAP_PX = 20;
 
 const formatVisitDate = (value: string) => DATE_FORMATTER.format(new Date(`${value}T12:00:00Z`));
 
@@ -331,66 +330,28 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
     story.summary.visitCount === 0 ? [{ kind: "empty", year: story.year }] : story.cards;
   const cardKeys = cards.map((card) => getCardKey(card));
   const firstCardKey = cardKeys[0] ?? null;
-  const [activeIndex, setActiveIndex] = useState(0);
   const [entryAnimationCardKey, setEntryAnimationCardKey] = useState<string | null>(firstCardKey);
-  const progressButtonRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const seenCardKeysRef = useRef<Set<string>>(new Set());
-  const storyRef = useRef<HTMLDivElement | null>(null);
-  const navigationRef = useRef<HTMLDivElement | null>(null);
-  const sectionRefs = useRef<Array<HTMLElement | null>>([]);
+  const {
+    activeIndex,
+    handleStepButtonNavigation,
+    navigationRef,
+    progressButtonRefs,
+    scrollToCard,
+    sectionRefs,
+    storyRef,
+  } = useStoryProgressNavigation({
+    cardCount: cards.length,
+  });
   const profileCard = findProfileCard(story);
   const repeatSpotlight = getRepeatSpotlight(profileCard?.mostVisitedPark ?? null);
   const HeadingTag = headingLevel === 1 ? "h1" : "h2";
   const currentActiveCardKey = cardKeys[activeIndex] ?? null;
 
   useEffect(() => {
-    if (typeof IntersectionObserver === "undefined") {
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const nextEntry = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((left, right) => right.intersectionRatio - left.intersectionRatio)[0];
-
-        if (!nextEntry) {
-          return;
-        }
-
-        const nextIndex = Number.parseInt(
-          nextEntry.target.getAttribute("data-card-index") ?? "",
-          10,
-        );
-
-        if (Number.isInteger(nextIndex)) {
-          setActiveIndex(nextIndex);
-        }
-      },
-      {
-        rootMargin: "-12% 0px -18% 0px",
-        threshold: [0.15, 0.35, 0.55, 0.75],
-      },
-    );
-
-    for (const section of sectionRefs.current) {
-      if (section) {
-        observer.observe(section);
-      }
-    }
-
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
-
-  useEffect(() => {
-    progressButtonRefs.current = progressButtonRefs.current.slice(0, cards.length);
-    sectionRefs.current = sectionRefs.current.slice(0, cards.length);
-    setActiveIndex(0);
     seenCardKeysRef.current = new Set();
     setEntryAnimationCardKey(firstCardKey);
-  }, [cards.length, firstCardKey]);
+  }, [firstCardKey]);
 
   useEffect(() => {
     if (!currentActiveCardKey) {
@@ -408,59 +369,6 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
       previousKey === currentActiveCardKey ? previousKey : null,
     );
   }, [currentActiveCardKey]);
-
-  const scrollToPosition = (top: number) => {
-    window.scrollTo({
-      behavior: "auto",
-      top,
-    });
-  };
-
-  const scrollToCard = (index: number) => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    const nextSection = sectionRefs.current[index];
-    const navigation = navigationRef.current;
-
-    if (!(nextSection && navigation)) {
-      return;
-    }
-
-    setActiveIndex(index);
-
-    if (index === 0) {
-      const storyTop = storyRef.current?.getBoundingClientRect().top ?? 0;
-
-      scrollToPosition(Math.max(storyTop + window.scrollY, 0));
-      return;
-    }
-
-    const navigationRect = navigation.getBoundingClientRect();
-    const sectionTop = nextSection.getBoundingClientRect().top + window.scrollY;
-    const maxScrollTop = Math.max(document.documentElement.scrollHeight - window.innerHeight, 0);
-    const scrollTarget = Math.min(
-      Math.max(sectionTop - (navigationRect.top + navigationRect.height + CARD_SCROLL_GAP_PX), 0),
-      maxScrollTop,
-    );
-
-    scrollToPosition(scrollTarget);
-  };
-
-  const handleStepButtonNavigation = (targetIndex: number, button: HTMLButtonElement | null) => {
-    button?.blur();
-
-    const targetButton = progressButtonRefs.current[targetIndex];
-
-    if (targetButton) {
-      targetButton.focus({ preventScroll: true });
-      targetButton.click();
-      return;
-    }
-
-    scrollToCard(targetIndex);
-  };
 
   return (
     <div

@@ -320,6 +320,24 @@
       "title": "Hallinta",
       "description": "Täällä voit muokata paikkoja, hallita retkiä ja ylläpitää käyntikirjauksia."
     },
+    "dateRangeReview": {
+      "title": "Ajanjaksokatsaus",
+      "description": "Rakenna lyhyempi katsaus valitulle ajanjaksolle, esikatsele tarina ja julkaise siitä jaettava linkki.",
+      "generatedAt": "Generoitu {date}",
+      "publishedAt": "Julkaistu {date}",
+      "previewOnly": "Esikatselu näkyy vain hallinnassa. Julkinen ajanjaksokatsaus avautuu vasta julkaistusta jakolinkistä.",
+      "publish": "Julkaise linkki",
+      "republish": "Päivitä julkaisu",
+      "unpublish": "Poista julkaisu",
+      "draftStatus": "Luonnos",
+      "publishedStatus": "Julkaistu",
+      "actionFailed": "Ajanjaksokatsauksen päivittäminen ei onnistunut.",
+      "copyShareLink": "Kopioi jakolinkki",
+      "shareLinkCopied": "Jakolinkki kopioitu",
+      "openSharePage": "Avaa jaettava sivu",
+      "notEnoughVisitsTitle": "Ajanjaksokatsaus tarvitsee lisää käyntejä",
+      "notEnoughVisitsDescription": "Ajanjaksokatsaus voidaan rakentaa vasta, kun valitulta ajalta löytyy vähintään kolme käyntiä."
+    },
     "yearReview": {
       "title": "Vuosikatsaus",
       "description": "Esikatsele backendin generoima vuositarina, julkaise jaettava linkki ja päivitä julkaisu tarvittaessa.",
@@ -770,6 +788,65 @@
       "browseApp": "Selaa Reissuvihkoa",
       "footer": "Vuosikatsaus rakentuu automaattisesti käynti- ja retkidatasta.",
       "footerHint": "Julkaistu linkki näyttää tämän saman tarinan myös julkisessa näkymässä."
+    }
+  },
+  "dateRangeReview": {
+    "eyebrow": "Reissukatsaus",
+    "shareTitle": "{name}",
+    "shareDescription": "Ajanjakson {name} käynnit, retket ja kuvat Reissuvihkossa.",
+    "stats": {
+      "visits": "Käynnit",
+      "trips": "Retket",
+      "newNationalParks": "Uudet kansallispuistot",
+      "revisitedParks": "Uudelleenkäydyt paikat",
+      "parks": "Eri paikkoja",
+      "images": "Kuvat"
+    },
+    "form": {
+      "nameLabel": "Katsauksen nimi",
+      "namePlaceholder": "Esim. Kesäloma 2026",
+      "startDateLabel": "Alkupäivä",
+      "endDateLabel": "Loppupäivä",
+      "submit": "Näytä esikatselu",
+      "helper": "Valitse nimi ja päivämääräväli, joille haluat rakentaa jaettavan katsauksen.",
+      "validationHint": "Backend tarkistaa aidot kalenteripäivät, enintään 184 päivän pituuden ja sen, että ajalta löytyy vähintään kolme käyntiä."
+    },
+    "suggestedPeriod": "Esitäytimme viimeisimmän toimivan ajanjakson: {name}. Vaihda tietoja vapaasti ennen julkaisemista.",
+    "emptyState": {
+      "title": "Valitse ajanjakso esikatselua varten",
+      "description": "Ajanjaksokatsaus rakentuu, kun annat nimen sekä alku- ja loppupäivän. Samasta näkymästä voit julkaista valmiin tarinan jakolinkiksi."
+    },
+    "story": {
+      "progress": "{name} {current}/{total}",
+      "progressNavigator": "Korttinavigaatio",
+      "goToCard": "Siirry korttiin {current}/{total}",
+      "previous": "Edellinen",
+      "next": "Seuraava",
+      "emptyDescription": "Ajanjaksolle ei muodostunut vielä tarinaa.",
+      "introCaption": "Lyhyempi kooste valitun ajanjakson retkistä, kuvista ja tärkeimmistä pysähdyksistä.",
+      "primaryStatLabel": "Yhteensä",
+      "visitCountLabel": "käyntiä",
+      "tripCountLabel": "retkeä",
+      "routeLabel": "Reitti",
+      "tripLabel": "Retki",
+      "photoTitle": "Kuvamuisto",
+      "photoCaption": "Tälle ajanjaksolle tallentui yhteensä {count} kuvaa.",
+      "photoVisitTitle": "Kuvatuin käynti",
+      "photoVisitCount": "Kuvia käynniltä",
+      "photoTotalCount": "Kuvat yhteensä",
+      "photoFallback": "Ajanjakson kuvat olivat tarinan tärkein muisto, vaikka yksittäistä käyntiä ei nostettu esiin.",
+      "newParksTitle": "Uudet kansallispuistot",
+      "newParksCaption": "Näissä kansallispuistoissa kävimme ensimmäistä kertaa tällä ajanjaksolla.",
+      "newParkVisitedOn": "Käynti {date}",
+      "revisitedParksTitle": "Paluu tuttuihin paikkoihin",
+      "revisitedParksCaption": "Tällä ajanjaksolla palasimme näihin jo aiemmin tuttuihin paikkoihin.",
+      "revisitedParkPreviousVisit": "Edellinen käynti {date}",
+      "revisitedParkTotalVisits": "Käyntejä yhteensä {count}",
+      "tripSummaryTitle": "Retki: {name}",
+      "tripSummaryVisits": "Käynnit retkellä",
+      "tripSummaryImages": "Kuvat retkeltä",
+      "footer": "Ajanjaksokatsaus rakentuu automaattisesti käynti- ja retkidatasta.",
+      "footerHint": "Kun julkaiset katsauksen, sama tarina näkyy tällä linkillä myös julkisessa näkymässä."
     }
   },
   "errors": {
