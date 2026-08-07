@@ -18,10 +18,16 @@ import {
   PUBLIC_HERO_DESCRIPTION_CLASS_NAME,
   PUBLIC_PANEL_CLASS_NAME,
 } from "@/components/layout/public-page-styles";
+import {
+  getReviewStoryParkGridClassName,
+  ReviewStoryPlaceCard,
+  ReviewStorySectionHeader,
+} from "@/components/story/review-story-shared";
 import { useStoryProgressNavigation } from "@/components/story/use-story-progress-navigation";
 import { AppImage } from "@/components/ui/app-image";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
+import { formatFinnishDateRange, formatFinnishLongDate } from "@/lib/fi-date";
 import { appRoutes } from "@/lib/routes";
 import type {
   YearReviewCard,
@@ -41,13 +47,6 @@ interface YearReviewStoryProps {
 
 type RenderableYearReviewCard = YearReviewCard | { kind: "empty"; year: number };
 
-const DATE_FORMATTER = new Intl.DateTimeFormat("fi-FI", {
-  day: "numeric",
-  month: "long",
-  timeZone: "Europe/Helsinki",
-  year: "numeric",
-});
-
 const MONTH_FORMATTER = new Intl.DateTimeFormat("fi-FI", {
   month: "long",
   timeZone: "Europe/Helsinki",
@@ -58,10 +57,7 @@ const WEEKDAY_FORMATTER = new Intl.DateTimeFormat("fi-FI", {
   weekday: "long",
 });
 
-const formatVisitDate = (value: string) => DATE_FORMATTER.format(new Date(`${value}T12:00:00Z`));
-
-const formatTripDateRange = (start: string, end: string) =>
-  start === end ? formatVisitDate(start) : `${formatVisitDate(start)} - ${formatVisitDate(end)}`;
+const formatVisitDate = (value: string) => formatFinnishLongDate(value);
 
 const formatMonth = (month: number) =>
   MONTH_FORMATTER.format(new Date(Date.UTC(2024, month - 1, 1, 12)));
@@ -183,19 +179,11 @@ const CARD_CONTAINER_CLASS_NAME =
 const CARD_INNER_GRID_CLASS_NAME =
   "relative z-10 flex min-h-112 flex-col justify-between gap-8 sm:min-h-128";
 
-const CARD_COPY_CLASS_NAME = "max-w-3xl text-sm leading-6 text-primary-foreground/84 sm:text-base";
-
 const METRIC_TILE_CLASS_NAME =
   "rounded-2xl border border-white/26 bg-black/16 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-sm";
 
-const MICRO_BADGE_CLASS_NAME =
-  "inline-flex items-center gap-2 rounded-full border border-white/26 bg-black/16 px-3 py-1 text-xs font-medium tracking-[0.16em] text-primary-foreground/78 uppercase backdrop-blur-sm";
-
 const STORY_EYEBROW_BADGE_CLASS_NAME =
   "inline-flex items-center gap-2 rounded-full border border-white/28 bg-black/16 px-3 py-1 text-sm font-medium text-primary-foreground/84 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-sm";
-
-const STORY_ICON_SURFACE_CLASS_NAME =
-  "inline-flex h-11 w-11 items-center justify-center rounded-[1.1rem] border border-white/24 bg-black/18 text-primary-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-sm";
 
 const STORY_BLOCK_REVEAL_CLASS_NAME = "year-review-reveal motion-safe:animate-year-review-enter";
 
@@ -340,13 +328,14 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
     scrollToCard,
     sectionRefs,
     storyRef,
+    visibleIndex,
   } = useStoryProgressNavigation({
     cardCount: cards.length,
   });
   const profileCard = findProfileCard(story);
   const repeatSpotlight = getRepeatSpotlight(profileCard?.mostVisitedPark ?? null);
   const HeadingTag = headingLevel === 1 ? "h1" : "h2";
-  const currentActiveCardKey = cardKeys[activeIndex] ?? null;
+  const currentVisibleCardKey = cardKeys[visibleIndex] ?? null;
 
   useEffect(() => {
     seenCardKeysRef.current = new Set();
@@ -354,21 +343,21 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
   }, [firstCardKey]);
 
   useEffect(() => {
-    if (!currentActiveCardKey) {
+    if (!currentVisibleCardKey) {
       setEntryAnimationCardKey(null);
       return;
     }
 
-    if (!seenCardKeysRef.current.has(currentActiveCardKey)) {
-      seenCardKeysRef.current.add(currentActiveCardKey);
-      setEntryAnimationCardKey(currentActiveCardKey);
+    if (!seenCardKeysRef.current.has(currentVisibleCardKey)) {
+      seenCardKeysRef.current.add(currentVisibleCardKey);
+      setEntryAnimationCardKey(currentVisibleCardKey);
       return;
     }
 
     setEntryAnimationCardKey((previousKey) =>
-      previousKey === currentActiveCardKey ? previousKey : null,
+      previousKey === currentVisibleCardKey ? previousKey : null,
     );
-  }, [currentActiveCardKey]);
+  }, [currentVisibleCardKey]);
 
   return (
     <div
@@ -478,14 +467,7 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                 shouldAnimateCardEntry ? "entry" : hasCardBeenSeen ? "seen" : "upcoming"
               }
               aria-label={t("story.progress", { current: index + 1, total: cards.length })}
-              className={cn(
-                CARD_CONTAINER_CLASS_NAME,
-                CARD_THEME_CLASS_NAMES[card.kind],
-                "motion-safe:transition-[transform,opacity,box-shadow] motion-safe:duration-500 motion-safe:ease-out",
-                isActive
-                  ? "opacity-100 motion-safe:translate-y-0"
-                  : "opacity-90 motion-safe:translate-y-2",
-              )}
+              className={cn(CARD_CONTAINER_CLASS_NAME, CARD_THEME_CLASS_NAMES[card.kind])}
             >
               <div className="pointer-events-none absolute inset-0 overflow-hidden">
                 <div
@@ -584,7 +566,7 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                             {card.primaryStat.value}
                           </p>
                           <p className="pb-2 text-sm font-semibold uppercase tracking-[0.22em] text-primary-foreground/72 sm:text-base">
-                            {t("story.visitCountLabel")}
+                            {t("story.visitCountLabel", { count: card.primaryStat.value })}
                           </p>
                         </div>
                       </div>
@@ -608,25 +590,23 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                 {card.kind === "milestone" && (
                   <>
                     <div
-                      className={cn("space-y-4", getRevealClassName(shouldAnimateCardEntry))}
+                      className={getRevealClassName(shouldAnimateCardEntry)}
                       style={getRevealStyle(shouldAnimateCardEntry, 0)}
                     >
-                      <div className={STORY_ICON_SURFACE_CLASS_NAME}>
-                        <CalendarDays className="h-5 w-5" aria-hidden="true" />
-                      </div>
-                      <div className="space-y-3">
-                        <p className={MICRO_BADGE_CLASS_NAME}>
-                          {card.milestone === "first-visit"
+                      <ReviewStorySectionHeader
+                        badge={
+                          card.milestone === "first-visit"
                             ? t("story.firstVisitTitle")
-                            : t("story.lastVisitTitle")}
-                        </p>
-                        <h3 className="max-w-3xl text-3xl font-black tracking-tight text-primary-foreground sm:text-5xl">
-                          {card.visit.park.name}
-                        </h3>
-                        <p className={CARD_COPY_CLASS_NAME}>
-                          {formatVisitDate(card.visit.visitedOn)}
-                        </p>
-                      </div>
+                            : t("story.lastVisitTitle")
+                        }
+                        icon={<CalendarDays className="h-5 w-5" aria-hidden="true" />}
+                        title={
+                          <h3 className="max-w-3xl text-3xl font-black tracking-tight text-primary-foreground sm:text-5xl">
+                            {card.visit.park.name}
+                          </h3>
+                        }
+                        caption={formatVisitDate(card.visit.visitedOn)}
+                      />
                     </div>
 
                     <div
@@ -724,111 +704,123 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                 )}
 
                 {card.kind === "photo-highlight" && (
-                  <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+                  <>
                     <div
-                      className={cn("space-y-4", getRevealClassName(shouldAnimateCardEntry))}
+                      className={getRevealClassName(shouldAnimateCardEntry)}
                       style={getRevealStyle(shouldAnimateCardEntry, 0)}
                     >
-                      <div className={STORY_ICON_SURFACE_CLASS_NAME}>
-                        <Camera className="h-5 w-5" aria-hidden="true" />
-                      </div>
-                      <div className="space-y-3">
-                        <p className={MICRO_BADGE_CLASS_NAME}>{t("story.photoTitle")}</p>
-                        <h3 className="text-3xl font-black tracking-tight text-primary-foreground sm:text-5xl">
-                          {card.totalImageCount}
-                        </h3>
-                        <p className={CARD_COPY_CLASS_NAME}>
-                          {t("story.photoCaption", { count: card.totalImageCount })}
-                        </p>
-                      </div>
+                      <ReviewStorySectionHeader
+                        badge={t("story.photoTitle")}
+                        icon={<Camera className="h-5 w-5" aria-hidden="true" />}
+                        title={
+                          <h3 className="text-3xl font-black tracking-tight text-primary-foreground sm:text-5xl">
+                            {t("story.photoHeading")}
+                          </h3>
+                        }
+                        caption={t("story.photoCaption", { count: card.totalImageCount })}
+                      />
                     </div>
 
                     <div
-                      className={cn("grid gap-3", getRevealClassName(shouldAnimateCardEntry))}
+                      className={cn(
+                        "grid gap-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-start",
+                        getRevealClassName(shouldAnimateCardEntry),
+                      )}
                       style={getRevealStyle(shouldAnimateCardEntry, 180)}
                     >
                       {card.featuredImage ? (
                         <StoryFeaturedImagePanel
                           active={isActive}
-                          alt={getPhotoHighlightImageAlt(card, t("story.photoTitle"))}
+                          alt={getPhotoHighlightImageAlt(card, t("story.photoHeading"))}
                           delayMs={260}
                           image={card.featuredImage}
                           landscapeImageClassName="h-80 object-cover sm:h-96"
                           portraitImageClassName="h-112 object-contain p-3 sm:h-120"
                           sizes="(min-width: 1024px) 32rem, 100vw"
                           shouldAnimateEntry={shouldAnimateCardEntry}
-                        >
-                          {card.visit !== null && (
-                            <div className="absolute inset-x-0 bottom-0 space-y-2 p-5 sm:p-6">
-                              <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
-                                {t("story.photoVisitTitle")}
-                              </p>
-                              <p className="text-2xl font-semibold text-primary-foreground sm:text-3xl">
-                                {card.visit.park.name}
-                              </p>
-                              <p className="text-sm text-primary-foreground/82">
-                                {formatVisitDate(card.visit.visitedOn)}
-                              </p>
-                            </div>
-                          )}
-                        </StoryFeaturedImagePanel>
+                        />
                       ) : null}
 
-                      {card.visit ? (
-                        <>
-                          {!card.featuredImage && (
-                            <div className={METRIC_TILE_CLASS_NAME}>
-                              <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
-                                {t("story.photoVisitTitle")}
-                              </p>
-                              <p className="mt-2 text-2xl font-semibold text-primary-foreground">
+                      <div className="space-y-3">
+                        {card.visit ? (
+                          <>
+                            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary-foreground/70">
+                              {t("story.photoVisitTitle")}
+                            </p>
+                            <div className="space-y-2">
+                              <Link
+                                href={appRoutes.park(card.visit.park.slug)}
+                                className="text-2xl font-bold tracking-tight hover:underline"
+                              >
                                 {card.visit.park.name}
-                              </p>
-                              <p className="mt-2 text-sm text-primary-foreground/78">
+                              </Link>
+                              <p className="text-sm text-primary-foreground/78">
                                 {formatVisitDate(card.visit.visitedOn)}
                               </p>
                             </div>
-                          )}
-                          <div
-                            className={cn(
-                              METRIC_TILE_CLASS_NAME,
-                              card.featuredImage && "sm:col-span-2",
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <div className={METRIC_TILE_CLASS_NAME}>
+                                <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
+                                  {t("story.photoVisitCount")}
+                                </p>
+                                <p className="mt-2 text-4xl font-black tracking-tight text-primary-foreground">
+                                  {card.visit.imageCount}
+                                </p>
+                              </div>
+                              <div className={METRIC_TILE_CLASS_NAME}>
+                                <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
+                                  {t("stats.images")}
+                                </p>
+                                <p className="mt-2 text-4xl font-black tracking-tight text-primary-foreground">
+                                  {card.totalImageCount}
+                                </p>
+                              </div>
+                            </div>
+                            {card.visit.route !== null && (
+                              <p className="text-sm text-primary-foreground/78">
+                                <span className="font-semibold">{t("story.routeLabel")}:</span>{" "}
+                                {card.visit.route}
+                              </p>
                             )}
-                          >
-                            <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
-                              {t("story.photoVisitCount")}
-                            </p>
-                            <p className="mt-2 text-4xl font-black tracking-tight text-primary-foreground">
-                              {card.visit.imageCount}
+                            {card.visit.trip !== null && (
+                              <p className="text-sm text-primary-foreground/78">
+                                <span className="font-semibold">{t("story.tripLabel")}:</span>{" "}
+                                <Link
+                                  href={appRoutes.trip(card.visit.trip.slug)}
+                                  className="hover:underline"
+                                >
+                                  {card.visit.trip.name}
+                                </Link>
+                              </p>
+                            )}
+                          </>
+                        ) : (
+                          <div className={METRIC_TILE_CLASS_NAME}>
+                            <p className="text-sm text-primary-foreground/78">
+                              {t("story.notAvailable")}
                             </p>
                           </div>
-                        </>
-                      ) : (
-                        <div className={METRIC_TILE_CLASS_NAME}>
-                          <p className="text-sm text-primary-foreground/78">
-                            {t("story.notAvailable")}
-                          </p>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  </>
                 )}
 
                 {card.kind === "profile" && (
                   <>
                     <div
-                      className={cn("space-y-4", getRevealClassName(shouldAnimateCardEntry))}
+                      className={getRevealClassName(shouldAnimateCardEntry)}
                       style={getRevealStyle(shouldAnimateCardEntry, 0)}
                     >
-                      <div className={STORY_ICON_SURFACE_CLASS_NAME}>
-                        <Compass className="h-5 w-5" aria-hidden="true" />
-                      </div>
-                      <div className="space-y-3">
-                        <p className={MICRO_BADGE_CLASS_NAME}>{t("story.profileTitle")}</p>
-                        <h3 className="text-3xl font-black tracking-tight text-primary-foreground sm:text-5xl">
-                          {t("story.profileCaption")}
-                        </h3>
-                      </div>
+                      <ReviewStorySectionHeader
+                        badge={t("story.profileTitle")}
+                        icon={<Compass className="h-5 w-5" aria-hidden="true" />}
+                        title={
+                          <h3 className="text-3xl font-black tracking-tight text-primary-foreground sm:text-5xl">
+                            {t("story.profileCaption")}
+                          </h3>
+                        }
+                      />
                     </div>
 
                     <div
@@ -863,7 +855,8 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                         </p>
                         {repeatSpotlight && (
                           <p className="mt-2 text-sm text-primary-foreground/78">
-                            {repeatSpotlight.visitCount} {t("story.visitCountLabel")}
+                            {repeatSpotlight.visitCount}{" "}
+                            {t("story.visitCountLabel", { count: repeatSpotlight.visitCount })}
                           </p>
                         )}
                       </div>
@@ -901,19 +894,19 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                 {card.kind === "trip-highlight" && (
                   <>
                     <div
-                      className={cn("space-y-4", getRevealClassName(shouldAnimateCardEntry))}
+                      className={getRevealClassName(shouldAnimateCardEntry)}
                       style={getRevealStyle(shouldAnimateCardEntry, 0)}
                     >
-                      <div className={STORY_ICON_SURFACE_CLASS_NAME}>
-                        <MapPinned className="h-5 w-5" aria-hidden="true" />
-                      </div>
-                      <div className="space-y-3">
-                        <p className={MICRO_BADGE_CLASS_NAME}>{t("story.tripHighlightTitle")}</p>
-                        <h3 className="max-w-3xl text-3xl font-black tracking-tight text-primary-foreground sm:text-5xl">
-                          {card.trip.name}
-                        </h3>
-                        <p className={CARD_COPY_CLASS_NAME}>{t("story.tripHighlightCaption")}</p>
-                      </div>
+                      <ReviewStorySectionHeader
+                        badge={t("story.tripHighlightTitle")}
+                        icon={<MapPinned className="h-5 w-5" aria-hidden="true" />}
+                        title={
+                          <h3 className="max-w-3xl text-3xl font-black tracking-tight text-primary-foreground sm:text-5xl">
+                            {card.trip.name}
+                          </h3>
+                        }
+                        caption={t("story.tripHighlightCaption")}
+                      />
                     </div>
 
                     <div
@@ -949,12 +942,7 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                           </p>
                         </div>
 
-                        <div
-                          className={cn(
-                            METRIC_TILE_CLASS_NAME,
-                            tripHasPortraitFeaturedImage && "sm:col-span-2",
-                          )}
-                        >
+                        <div className={cn(METRIC_TILE_CLASS_NAME, "sm:col-span-2")}>
                           <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
                             {t("story.tripLabel")}
                           </p>
@@ -966,7 +954,7 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                           </Link>
                           {card.trip.dateRange !== null && (
                             <p className="mt-2 text-sm text-primary-foreground/78">
-                              {formatTripDateRange(
+                              {formatFinnishDateRange(
                                 card.trip.dateRange.start,
                                 card.trip.dateRange.end,
                               )}
@@ -1008,63 +996,53 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                 {card.kind === "new-parks" && (
                   <>
                     <div
-                      className={cn("space-y-4", getRevealClassName(shouldAnimateCardEntry))}
+                      className={getRevealClassName(shouldAnimateCardEntry)}
                       style={getRevealStyle(shouldAnimateCardEntry, 0)}
                     >
-                      <div className={STORY_ICON_SURFACE_CLASS_NAME}>
-                        <Trees className="h-5 w-5" aria-hidden="true" />
-                      </div>
-                      <div className="space-y-3">
-                        <p className={MICRO_BADGE_CLASS_NAME}>{t("story.newParksTitle")}</p>
-                        <h3 className="text-3xl font-black tracking-tight text-primary-foreground sm:text-5xl">
-                          {t("story.newParksHeading", { count: card.parks.length })}
-                        </h3>
-                        <p className={CARD_COPY_CLASS_NAME}>{t("story.newParksCaption")}</p>
-                      </div>
+                      <ReviewStorySectionHeader
+                        badge={t("story.newParksTitle")}
+                        icon={<Trees className="h-5 w-5" aria-hidden="true" />}
+                        title={
+                          <h3 className="text-3xl font-black tracking-tight text-primary-foreground sm:text-5xl">
+                            {t("story.newParksHeading", { count: card.parks.length })}
+                          </h3>
+                        }
+                        caption={t("story.newParksCaption")}
+                      />
                     </div>
 
-                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    <div className={getReviewStoryParkGridClassName(card.parks.length)}>
                       {card.parks.map((parkMoment, parkIndex) => (
-                        <article
+                        <ReviewStoryPlaceCard
                           key={parkMoment.park.slug}
                           className={cn(
                             "overflow-hidden rounded-3xl border border-white/24 bg-black/14 shadow-[0_24px_56px_rgba(15,23,42,0.2)]",
                             getMediaRevealClassName(shouldAnimateCardEntry),
                           )}
                           style={getRevealStyle(shouldAnimateCardEntry, 180 + parkIndex * 90)}
-                        >
-                          {parkMoment.featuredImage ? (
-                            <StoryFeaturedImagePanel
-                              active={isActive}
-                              alt={
-                                parkMoment.featuredImage.alt ??
-                                `${parkMoment.park.name}, ${formatVisitDate(parkMoment.visitedOn)}`
-                              }
-                              delayMs={180 + parkIndex * 90}
-                              image={parkMoment.featuredImage}
-                              landscapeImageClassName="h-56 object-cover"
-                              portraitImageClassName="h-72 object-contain p-3"
-                              resolution="thumb"
-                              sizes="(min-width: 1280px) 20rem, (min-width: 768px) 24rem, 100vw"
-                              shouldAnimateEntry={shouldAnimateCardEntry}
-                              wrapperClassName="rounded-none border-0 bg-transparent shadow-none"
-                            />
-                          ) : null}
-
-                          <div className="space-y-3 p-5">
-                            <Link
-                              href={appRoutes.park(parkMoment.park.slug)}
-                              className="inline-flex text-xl font-semibold text-primary-foreground underline decoration-white/32 underline-offset-4 transition-colors hover:text-white"
-                            >
-                              {parkMoment.park.name}
-                            </Link>
-                            <p className="text-sm text-primary-foreground/82">
-                              {t("story.newParkVisitedOn", {
-                                date: formatVisitDate(parkMoment.visitedOn),
-                              })}
-                            </p>
-                          </div>
-                        </article>
+                          href={appRoutes.park(parkMoment.park.slug)}
+                          image={
+                            parkMoment.featuredImage ? (
+                              <StoryFeaturedImagePanel
+                                active={isActive}
+                                alt={
+                                  parkMoment.featuredImage.alt ??
+                                  `${parkMoment.park.name}, ${formatVisitDate(parkMoment.visitedOn)}`
+                                }
+                                delayMs={180 + parkIndex * 90}
+                                image={parkMoment.featuredImage}
+                                landscapeImageClassName="h-56 object-cover"
+                                portraitImageClassName="h-72 object-contain p-3"
+                                resolution="thumb"
+                                sizes="(min-width: 1280px) 20rem, (min-width: 768px) 24rem, 100vw"
+                                shouldAnimateEntry={shouldAnimateCardEntry}
+                                wrapperClassName="rounded-none border-0 bg-transparent shadow-none"
+                              />
+                            ) : undefined
+                          }
+                          name={parkMoment.park.name}
+                          dateText={formatVisitDate(parkMoment.visitedOn)}
+                        />
                       ))}
                     </div>
                   </>
@@ -1073,25 +1051,25 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                 {card.kind === "seasonal" && (
                   <>
                     <div
-                      className={cn("space-y-4", getRevealClassName(shouldAnimateCardEntry))}
+                      className={getRevealClassName(shouldAnimateCardEntry)}
                       style={getRevealStyle(shouldAnimateCardEntry, 0)}
                     >
-                      <div className={STORY_ICON_SURFACE_CLASS_NAME}>
-                        <Trees className="h-5 w-5" aria-hidden="true" />
-                      </div>
-                      <div className="space-y-3">
-                        <p className={MICRO_BADGE_CLASS_NAME}>{t("story.seasonalTitle")}</p>
-                        <h3 className="text-3xl font-black tracking-tight text-primary-foreground sm:text-5xl">
-                          {t("story.seasonalCaption")}
-                        </h3>
-                        <p className={CARD_COPY_CLASS_NAME}>
-                          {card.strongestSeason
+                      <ReviewStorySectionHeader
+                        badge={t("story.seasonalTitle")}
+                        icon={<Trees className="h-5 w-5" aria-hidden="true" />}
+                        title={
+                          <h3 className="text-3xl font-black tracking-tight text-primary-foreground sm:text-5xl">
+                            {t("story.seasonalCaption")}
+                          </h3>
+                        }
+                        caption={
+                          card.strongestSeason
                             ? t("story.strongestSeasonValue", {
                                 season: t(getSeasonLabelKey(card.strongestSeason)),
                               })
-                            : t("story.notAvailable")}
-                        </p>
-                      </div>
+                            : t("story.notAvailable")
+                        }
+                      />
                     </div>
 
                     <div className="grid gap-3">
@@ -1149,19 +1127,19 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                 {card.kind === "summary" && (
                   <>
                     <div
-                      className={cn("space-y-4", getRevealClassName(shouldAnimateCardEntry))}
+                      className={getRevealClassName(shouldAnimateCardEntry)}
                       style={getRevealStyle(shouldAnimateCardEntry, 0)}
                     >
-                      <div className={STORY_ICON_SURFACE_CLASS_NAME}>
-                        <Trophy className="h-5 w-5" aria-hidden="true" />
-                      </div>
-                      <div className="space-y-3">
-                        <p className={MICRO_BADGE_CLASS_NAME}>{t("story.summaryTitle")}</p>
-                        <h3 className="text-3xl font-black tracking-tight text-primary-foreground sm:text-5xl">
-                          {story.year}
-                        </h3>
-                        <p className={CARD_COPY_CLASS_NAME}>{t("story.summaryCaption")}</p>
-                      </div>
+                      <ReviewStorySectionHeader
+                        badge={t("story.summaryTitle")}
+                        icon={<Trophy className="h-5 w-5" aria-hidden="true" />}
+                        title={
+                          <h3 className="text-3xl font-black tracking-tight text-primary-foreground sm:text-5xl">
+                            {story.year}
+                          </h3>
+                        }
+                        caption={t("story.summaryCaption")}
+                      />
                     </div>
 
                     <div

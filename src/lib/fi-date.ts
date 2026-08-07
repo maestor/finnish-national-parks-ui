@@ -2,6 +2,13 @@ const finnishDateFormatter = new Intl.DateTimeFormat("fi-FI", {
   timeZone: "Europe/Helsinki",
 });
 
+const finnishLongDateFormatter = new Intl.DateTimeFormat("fi-FI", {
+  day: "numeric",
+  month: "long",
+  timeZone: "Europe/Helsinki",
+  year: "numeric",
+});
+
 const getFinnishDateParts = (dateStr: string) => {
   const parts = finnishDateFormatter.formatToParts(new Date(dateStr));
 
@@ -18,6 +25,9 @@ const getFinnishDateParts = (dateStr: string) => {
 
 export const formatFinnishDate = (dateStr: string): string =>
   finnishDateFormatter.format(new Date(dateStr));
+
+export const formatFinnishLongDate = (dateStr: string): string =>
+  finnishLongDateFormatter.format(new Date(`${dateStr}T12:00:00Z`));
 
 export const formatFinnishDateRange = (startDateStr: string, endDateStr: string): string => {
   const start = getFinnishDateParts(startDateStr);

@@ -1,14 +1,28 @@
 "use client";
 
-import { CalendarRange, Camera, MapPinned, Mountain, Route, Sparkles } from "lucide-react";
+import {
+  CalendarRange,
+  Camera,
+  Footprints,
+  MapPinned,
+  Mountain,
+  Route,
+  Sparkles,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import type { ReactNode } from "react";
+import { type CSSProperties, type ReactNode, useEffect, useRef, useState } from "react";
 import {
   PUBLIC_EMPTY_STATE_PANEL_CLASS_NAME,
   PUBLIC_PANEL_CLASS_NAME,
 } from "@/components/layout/public-page-styles";
+import { ParkTypeBadge } from "@/components/park/park-type-badge";
+import {
+  getReviewStoryParkGridClassName,
+  ReviewStoryPlaceCard,
+  ReviewStorySectionHeader,
+} from "@/components/story/review-story-shared";
 import { useStoryProgressNavigation } from "@/components/story/use-story-progress-navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
@@ -16,8 +30,9 @@ import type {
   DateRangeReviewCard,
   DateRangeReviewOverview,
   DateRangeReviewStory as DateRangeReviewStoryData,
+  DateRangeReviewStoryVisit,
 } from "@/lib/date-range-review";
-import { formatFinnishDate, formatFinnishDateRange } from "@/lib/fi-date";
+import { formatFinnishDate, formatFinnishDateRange, formatFinnishLongDate } from "@/lib/fi-date";
 import { appRoutes } from "@/lib/routes";
 
 interface DateRangeReviewStoryProps {
@@ -47,6 +62,10 @@ const getCardKey = (card: DateRangeReviewCard) => {
         .join("-")}`;
     case "trip-summary":
       return `trip-${card.trip.id}`;
+    case "other-visits":
+      return `other-${card.visits
+        .map((visit) => `${visit.park.slug}-${visit.visitedOn}`)
+        .join("-")}`;
   }
 };
 
@@ -60,6 +79,24 @@ const getSummaryItems = (
   { label: t("stats.images"), value: summary.imageCount },
 ];
 
+const getTripSummaryBadge = (
+  cards: DateRangeReviewCard[],
+  currentIndex: number,
+  t: (key: string, values?: Record<string, string | number>) => string,
+) => {
+  const tripCount = cards.filter((card) => card.kind === "trip-summary").length;
+
+  if (tripCount <= 1) {
+    return t("story.tripLabel");
+  }
+
+  const tripNumber = cards
+    .slice(0, currentIndex + 1)
+    .filter((card) => card.kind === "trip-summary").length;
+
+  return `${tripNumber}. ${t("story.tripLabel")}`;
+};
+
 const CARD_THEME_CLASS_NAMES: Record<DateRangeReviewCard["kind"], string> = {
   intro: "bg-[linear-gradient(145deg,#14532d_0%,#0f766e_52%,#1d4ed8_100%)] text-primary-foreground",
   "new-parks":
@@ -70,6 +107,8 @@ const CARD_THEME_CLASS_NAMES: Record<DateRangeReviewCard["kind"], string> = {
     "bg-[linear-gradient(145deg,rgba(20,83,45,0.98),rgba(12,74,110,0.88),rgba(21,128,61,0.84))] text-primary-foreground",
   "trip-summary":
     "bg-[linear-gradient(145deg,rgba(68,64,60,0.98),rgba(22,101,52,0.84),rgba(14,116,144,0.82))] text-primary-foreground",
+  "other-visits":
+    "bg-[linear-gradient(145deg,rgba(49,46,129,0.98),rgba(21,94,117,0.9),rgba(20,83,45,0.82))] text-primary-foreground",
 };
 
 const MetricTile = ({ label, value }: { label: string; value: number }) => (
@@ -107,15 +146,111 @@ const ReviewImage = ({
   );
 };
 
+const STORY_BLOCK_REVEAL_CLASS_NAME = "year-review-reveal motion-safe:animate-year-review-enter";
+
+const STORY_MEDIA_REVEAL_CLASS_NAME =
+  "year-review-media-reveal motion-safe:animate-year-review-media";
+
+const STORY_BLOCK_PENDING_CLASS_NAME = "year-review-reveal";
+
+const STORY_MEDIA_PENDING_CLASS_NAME = "year-review-media-reveal";
+
+const getRevealStyle = (shouldAnimate: boolean, delayMs: number): CSSProperties | undefined =>
+  shouldAnimate ? { animationDelay: `${delayMs}ms` } : undefined;
+
+const getRevealClassName = (shouldAnimate: boolean) => {
+  if (shouldAnimate) {
+    return STORY_BLOCK_REVEAL_CLASS_NAME;
+  }
+
+  return STORY_BLOCK_PENDING_CLASS_NAME;
+};
+
+const getMediaRevealClassName = (shouldAnimate: boolean) => {
+  if (shouldAnimate) {
+    return STORY_MEDIA_REVEAL_CLASS_NAME;
+  }
+
+  return STORY_MEDIA_PENDING_CLASS_NAME;
+};
+
+const ReviewVisitList = ({
+  title,
+  visits,
+}: {
+  title: string;
+  visits: DateRangeReviewStoryVisit[];
+}) => (
+  <div className="space-y-2.5">
+    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary-foreground/70">
+      {title}
+    </p>
+    <ul className="space-y-2.5" aria-label={title}>
+      {visits.map((visit) => (
+        <li
+          key={`${visit.park.slug}-${visit.visitedOn}`}
+          className="rounded-3xl border border-white/18 bg-white/10 px-3.5 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div className="space-y-1.5">
+              <Link
+                href={appRoutes.park(visit.park.slug)}
+                className="text-base font-semibold tracking-tight hover:underline"
+              >
+                {visit.park.name}
+              </Link>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <ParkTypeBadge
+                  className="border-white/28 bg-white/14 px-2 py-0.5 text-xs text-primary-foreground shadow-none dark:border-white/28 dark:bg-white/14"
+                  label={visit.park.typeLabel}
+                />
+                <span className="text-sm text-primary-foreground/78">
+                  {formatFinnishDate(visit.visitedOn)}
+                </span>
+              </div>
+            </div>
+          </div>
+        </li>
+      ))}
+    </ul>
+  </div>
+);
+
 const StoryCard = ({
+  active,
   children,
+  entryState,
   kind,
 }: {
+  active: boolean;
   children: ReactNode;
+  entryState: "entry" | "seen" | "upcoming";
   kind: DateRangeReviewCard["kind"];
 }) => (
-  <section className={cn(PUBLIC_PANEL_CLASS_NAME, CARD_THEME_CLASS_NAMES[kind], "overflow-hidden")}>
-    <div className="space-y-6">{children}</div>
+  <section
+    data-story-entry-state={entryState}
+    className={cn(
+      PUBLIC_PANEL_CLASS_NAME,
+      CARD_THEME_CLASS_NAMES[kind],
+      "group relative isolate overflow-hidden",
+    )}
+  >
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      <div
+        className={cn(
+          "absolute -top-12 right-0 h-44 w-44 rounded-full bg-white/12 blur-3xl transition-opacity duration-500",
+          active ? "opacity-100 motion-safe:animate-year-review-float" : "opacity-55",
+        )}
+      />
+      <div
+        className={cn(
+          "absolute bottom-0 left-0 h-52 w-52 rounded-full bg-emerald-300/18 blur-3xl transition-opacity duration-500",
+          active ? "opacity-100 motion-safe:animate-year-review-glow" : "opacity-45",
+        )}
+      />
+      <div className="absolute inset-x-0 top-0 h-px bg-white/45" />
+    </div>
+    <div className="relative z-10 space-y-6">{children}</div>
   </section>
 );
 
@@ -137,6 +272,9 @@ export const DateRangeReviewStory = ({
   const HeadingTag = headingLevel === 1 ? "h1" : "h2";
   const cards = story.cards;
   const cardKeys = cards.map((card) => getCardKey(card));
+  const firstCardKey = cardKeys[0] ?? null;
+  const [entryAnimationCardKey, setEntryAnimationCardKey] = useState<string | null>(firstCardKey);
+  const seenCardKeysRef = useRef<Set<string>>(new Set());
   const {
     activeIndex,
     handleStepButtonNavigation,
@@ -145,10 +283,34 @@ export const DateRangeReviewStory = ({
     scrollToCard,
     sectionRefs,
     storyRef,
+    visibleIndex,
   } = useStoryProgressNavigation({
     cardCount: cards.length,
     getScrollBehavior,
   });
+  const currentVisibleCardKey = cardKeys[visibleIndex] ?? null;
+
+  useEffect(() => {
+    seenCardKeysRef.current = new Set();
+    setEntryAnimationCardKey(firstCardKey);
+  }, [firstCardKey]);
+
+  useEffect(() => {
+    if (!currentVisibleCardKey) {
+      setEntryAnimationCardKey(null);
+      return;
+    }
+
+    if (!seenCardKeysRef.current.has(currentVisibleCardKey)) {
+      seenCardKeysRef.current.add(currentVisibleCardKey);
+      setEntryAnimationCardKey(currentVisibleCardKey);
+      return;
+    }
+
+    setEntryAnimationCardKey((previousKey) =>
+      previousKey === currentVisibleCardKey ? previousKey : null,
+    );
+  }, [currentVisibleCardKey]);
 
   if (story.summary.visitCount === 0) {
     return (
@@ -248,17 +410,35 @@ export const DateRangeReviewStory = ({
 
       <div className="space-y-5">
         {cards.map((card, index) => {
+          const cardKey = cardKeys[index];
+          const shouldAnimateCardEntry = entryAnimationCardKey === cardKey;
+          const hasCardBeenSeen = shouldAnimateCardEntry || seenCardKeysRef.current.has(cardKey);
+          const entryState = shouldAnimateCardEntry
+            ? "entry"
+            : hasCardBeenSeen
+              ? "seen"
+              : "upcoming";
+
           if (card.kind === "intro") {
             return (
-              <StoryCard key={cardKeys[index]} kind={card.kind}>
+              <StoryCard
+                key={cardKeys[index]}
+                active={index === activeIndex}
+                entryState={entryState}
+                kind={card.kind}
+              >
                 <section
                   ref={(element) => {
                     sectionRefs.current[index] = element;
                   }}
                   data-card-index={index}
+                  data-story-entry-state={entryState}
                   data-testid={`date-range-review-story-card-${index}`}
                 >
-                  <div className="space-y-4">
+                  <div
+                    className={cn("space-y-4", getRevealClassName(shouldAnimateCardEntry))}
+                    style={getRevealStyle(shouldAnimateCardEntry, 0)}
+                  >
                     <div className="space-y-3">
                       <div className="inline-flex items-center gap-2 rounded-full border border-white/28 bg-black/16 px-3 py-1 text-sm font-medium text-primary-foreground/84 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-sm">
                         <Sparkles className="h-4 w-4" aria-hidden="true" />
@@ -279,7 +459,13 @@ export const DateRangeReviewStory = ({
                     </div>
                   </div>
 
-                  <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:items-end">
+                  <div
+                    className={cn(
+                      "mt-6 grid gap-4 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:items-end",
+                      getRevealClassName(shouldAnimateCardEntry),
+                    )}
+                    style={getRevealStyle(shouldAnimateCardEntry, 160)}
+                  >
                     <div className="rounded-[1.8rem] border border-white/16 bg-white/10 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
                       <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
                         {t("story.primaryStatLabel")}
@@ -289,7 +475,7 @@ export const DateRangeReviewStory = ({
                           {card.primaryStat.value}
                         </p>
                         <p className="pb-2 text-sm font-semibold uppercase tracking-[0.22em] text-primary-foreground/72">
-                          {t("story.visitCountLabel")}
+                          {t("story.visitCountLabel", { count: card.primaryStat.value })}
                         </p>
                       </div>
                       <div className="mt-5 border-t border-white/16 pt-4">
@@ -301,7 +487,7 @@ export const DateRangeReviewStory = ({
                             {card.tripCount}
                           </p>
                           <p className="pb-1 text-sm font-semibold uppercase tracking-[0.22em] text-primary-foreground/72">
-                            {t("story.tripCountLabel")}
+                            {t("story.tripCountLabel", { count: card.tripCount })}
                           </p>
                         </div>
                       </div>
@@ -320,38 +506,57 @@ export const DateRangeReviewStory = ({
 
           if (card.kind === "photo-highlight") {
             return (
-              <StoryCard key={cardKeys[index]} kind={card.kind}>
+              <StoryCard
+                key={cardKeys[index]}
+                active={index === activeIndex}
+                entryState={entryState}
+                kind={card.kind}
+              >
                 <section
                   ref={(element) => {
                     sectionRefs.current[index] = element;
                   }}
                   data-card-index={index}
+                  data-story-entry-state={entryState}
                   data-testid={`date-range-review-story-card-${index}`}
                 >
-                  <div className="space-y-3">
-                    <div className="inline-flex h-11 w-11 items-center justify-center rounded-[1.1rem] border border-white/18 bg-white/10">
-                      <Camera className="h-5 w-5" aria-hidden="true" />
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="text-3xl font-black tracking-tight sm:text-4xl">
-                        {t("story.photoTitle")}
-                      </h3>
-                      <p className="text-sm leading-6 text-primary-foreground/82 sm:text-base">
-                        {t("story.photoCaption", { count: card.totalImageCount })}
-                      </p>
-                    </div>
+                  <div
+                    className={getRevealClassName(shouldAnimateCardEntry)}
+                    style={getRevealStyle(shouldAnimateCardEntry, 0)}
+                  >
+                    <ReviewStorySectionHeader
+                      badge={t("story.photoTitle")}
+                      icon={<Camera className="h-5 w-5" aria-hidden="true" />}
+                      title={
+                        <h3 className="text-3xl font-black tracking-tight sm:text-4xl">
+                          {t("story.photoHeading")}
+                        </h3>
+                      }
+                      caption={t("story.photoCaption", { count: card.totalImageCount })}
+                    />
                   </div>
 
-                  <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-start">
+                  <div
+                    className={cn(
+                      "mt-6 grid gap-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-start",
+                      getRevealClassName(shouldAnimateCardEntry),
+                    )}
+                    style={getRevealStyle(shouldAnimateCardEntry, 180)}
+                  >
                     {card.featuredImage !== null && (
-                      <ReviewImage
-                        alt={
-                          card.visit
-                            ? `${card.visit.park.name}, ${formatFinnishDate(card.visit.visitedOn)}`
-                            : overview.name
-                        }
-                        image={card.featuredImage}
-                      />
+                      <div
+                        className={getMediaRevealClassName(shouldAnimateCardEntry)}
+                        style={getRevealStyle(shouldAnimateCardEntry, 260)}
+                      >
+                        <ReviewImage
+                          alt={
+                            card.visit
+                              ? `${card.visit.park.name}, ${formatFinnishDate(card.visit.visitedOn)}`
+                              : overview.name
+                          }
+                          image={card.featuredImage}
+                        />
+                      </div>
                     )}
 
                     <div className="space-y-3">
@@ -368,9 +573,7 @@ export const DateRangeReviewStory = ({
                               {card.visit.park.name}
                             </Link>
                             <p className="text-sm text-primary-foreground/78">
-                              {t("story.newParkVisitedOn", {
-                                date: formatFinnishDate(card.visit.visitedOn),
-                              })}
+                              {formatFinnishDate(card.visit.visitedOn)}
                             </p>
                           </div>
                           <div className="grid gap-3 sm:grid-cols-2">
@@ -415,54 +618,59 @@ export const DateRangeReviewStory = ({
 
           if (card.kind === "new-parks") {
             return (
-              <StoryCard key={cardKeys[index]} kind={card.kind}>
+              <StoryCard
+                key={cardKeys[index]}
+                active={index === activeIndex}
+                entryState={entryState}
+                kind={card.kind}
+              >
                 <section
                   ref={(element) => {
                     sectionRefs.current[index] = element;
                   }}
                   data-card-index={index}
+                  data-story-entry-state={entryState}
                   data-testid={`date-range-review-story-card-${index}`}
                 >
-                  <div className="space-y-3">
-                    <div className="inline-flex h-11 w-11 items-center justify-center rounded-[1.1rem] border border-white/18 bg-white/10">
-                      <Mountain className="h-5 w-5" aria-hidden="true" />
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="text-3xl font-black tracking-tight sm:text-4xl">
-                        {t("story.newParksTitle")}
-                      </h3>
-                      <p className="text-sm leading-6 text-primary-foreground/82 sm:text-base">
-                        {t("story.newParksCaption")}
-                      </p>
-                    </div>
+                  <div
+                    className={getRevealClassName(shouldAnimateCardEntry)}
+                    style={getRevealStyle(shouldAnimateCardEntry, 0)}
+                  >
+                    <ReviewStorySectionHeader
+                      badge={t("story.newParksTitle")}
+                      icon={<Mountain className="h-5 w-5" aria-hidden="true" />}
+                      title={
+                        <h3 className="text-3xl font-black tracking-tight sm:text-4xl">
+                          {t("story.newParksHeading", { count: card.parks.length })}
+                        </h3>
+                      }
+                      caption={t("story.newParksCaption")}
+                    />
                   </div>
 
-                  <div className="mt-6 grid gap-4 md:grid-cols-2">
-                    {card.parks.map((park) => (
-                      <article
+                  <div className={cn("mt-6", getReviewStoryParkGridClassName(card.parks.length))}>
+                    {card.parks.map((park, parkIndex) => (
+                      <ReviewStoryPlaceCard
                         key={`${park.park.slug}-${park.visitedOn}`}
-                        className="space-y-3 rounded-[1.55rem] border border-white/18 bg-white/10 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]"
-                      >
-                        {park.featuredImage !== null && (
-                          <ReviewImage
-                            alt={`${park.park.name}, ${formatFinnishDate(park.visitedOn)}`}
-                            image={park.featuredImage}
-                          />
+                        href={appRoutes.park(park.park.slug)}
+                        image={
+                          park.featuredImage !== null ? (
+                            <ReviewImage
+                              alt={`${park.park.name}, ${formatFinnishLongDate(park.visitedOn)}`}
+                              image={park.featuredImage}
+                            />
+                          ) : undefined
+                        }
+                        name={park.park.name}
+                        dateText={formatFinnishLongDate(park.visitedOn)}
+                        className={cn(
+                          "border-white/18 bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]",
+                          getMediaRevealClassName(shouldAnimateCardEntry),
                         )}
-                        <div className="space-y-2">
-                          <Link
-                            href={appRoutes.park(park.park.slug)}
-                            className="text-xl font-bold tracking-tight hover:underline"
-                          >
-                            {park.park.name}
-                          </Link>
-                          <p className="text-sm text-primary-foreground/78">
-                            {t("story.newParkVisitedOn", {
-                              date: formatFinnishDate(park.visitedOn),
-                            })}
-                          </p>
-                        </div>
-                      </article>
+                        style={getRevealStyle(shouldAnimateCardEntry, 180 + parkIndex * 90)}
+                        contentClassName="space-y-2 p-4"
+                        linkClassName="text-xl font-bold tracking-tight"
+                      />
                     ))}
                   </div>
                 </section>
@@ -472,64 +680,73 @@ export const DateRangeReviewStory = ({
 
           if (card.kind === "revisited-parks") {
             return (
-              <StoryCard key={cardKeys[index]} kind={card.kind}>
+              <StoryCard
+                key={cardKeys[index]}
+                active={index === activeIndex}
+                entryState={entryState}
+                kind={card.kind}
+              >
                 <section
                   ref={(element) => {
                     sectionRefs.current[index] = element;
                   }}
                   data-card-index={index}
+                  data-story-entry-state={entryState}
                   data-testid={`date-range-review-story-card-${index}`}
                 >
-                  <div className="space-y-3">
-                    <div className="inline-flex h-11 w-11 items-center justify-center rounded-[1.1rem] border border-white/18 bg-white/10">
-                      <MapPinned className="h-5 w-5" aria-hidden="true" />
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="text-3xl font-black tracking-tight sm:text-4xl">
-                        {t("story.revisitedParksTitle")}
-                      </h3>
-                      <p className="text-sm leading-6 text-primary-foreground/82 sm:text-base">
-                        {t("story.revisitedParksCaption")}
-                      </p>
-                    </div>
+                  <div
+                    className={getRevealClassName(shouldAnimateCardEntry)}
+                    style={getRevealStyle(shouldAnimateCardEntry, 0)}
+                  >
+                    <ReviewStorySectionHeader
+                      badge={t("story.revisitedParksBadge")}
+                      icon={<MapPinned className="h-5 w-5" aria-hidden="true" />}
+                      title={
+                        <h3 className="text-3xl font-black tracking-tight sm:text-4xl">
+                          {t("story.revisitedParksTitle")}
+                        </h3>
+                      }
+                      caption={t("story.revisitedParksCaption")}
+                    />
                   </div>
 
-                  <div className="mt-6 grid gap-4 md:grid-cols-2">
-                    {card.parks.map((park) => (
-                      <article
+                  <div className={cn("mt-6", getReviewStoryParkGridClassName(card.parks.length))}>
+                    {card.parks.map((park, parkIndex) => (
+                      <ReviewStoryPlaceCard
                         key={`${park.park.slug}-${park.visitedOn}`}
-                        className="space-y-3 rounded-[1.55rem] border border-white/18 bg-white/10 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]"
-                      >
-                        {park.featuredImage !== null && (
-                          <ReviewImage
-                            alt={`${park.park.name}, ${formatFinnishDate(park.visitedOn)}`}
-                            image={park.featuredImage}
-                          />
+                        href={appRoutes.park(park.park.slug)}
+                        image={
+                          park.featuredImage !== null ? (
+                            <ReviewImage
+                              alt={`${park.park.name}, ${formatFinnishLongDate(park.visitedOn)}`}
+                              image={park.featuredImage}
+                            />
+                          ) : undefined
+                        }
+                        name={park.park.name}
+                        dateText={formatFinnishLongDate(park.visitedOn)}
+                        extraContent={
+                          <>
+                            <p className="text-sm text-primary-foreground/78">
+                              {t("story.revisitedParkPreviousVisit", {
+                                date: formatFinnishLongDate(park.previousVisitDate),
+                              })}
+                            </p>
+                            <p className="text-sm text-primary-foreground/78">
+                              {t("story.revisitedParkTotalVisits", {
+                                count: park.revisitCount + 1,
+                              })}
+                            </p>
+                          </>
+                        }
+                        className={cn(
+                          "border-white/18 bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]",
+                          getMediaRevealClassName(shouldAnimateCardEntry),
                         )}
-                        <div className="space-y-2">
-                          <Link
-                            href={appRoutes.park(park.park.slug)}
-                            className="text-xl font-bold tracking-tight hover:underline"
-                          >
-                            {park.park.name}
-                          </Link>
-                          <p className="text-sm text-primary-foreground/78">
-                            {t("story.newParkVisitedOn", {
-                              date: formatFinnishDate(park.visitedOn),
-                            })}
-                          </p>
-                          <p className="text-sm text-primary-foreground/78">
-                            {t("story.revisitedParkPreviousVisit", {
-                              date: formatFinnishDate(park.previousVisitDate),
-                            })}
-                          </p>
-                          <p className="text-sm text-primary-foreground/78">
-                            {t("story.revisitedParkTotalVisits", {
-                              count: park.revisitCount + 1,
-                            })}
-                          </p>
-                        </div>
-                      </article>
+                        style={getRevealStyle(shouldAnimateCardEntry, 180 + parkIndex * 90)}
+                        contentClassName="space-y-2 p-4"
+                        linkClassName="text-xl font-bold tracking-tight"
+                      />
                     ))}
                   </div>
                 </section>
@@ -537,50 +754,122 @@ export const DateRangeReviewStory = ({
             );
           }
 
+          if (card.kind === "trip-summary") {
+            return (
+              <StoryCard
+                key={cardKeys[index]}
+                active={index === activeIndex}
+                entryState={entryState}
+                kind={card.kind}
+              >
+                <section
+                  ref={(element) => {
+                    sectionRefs.current[index] = element;
+                  }}
+                  data-card-index={index}
+                  data-testid={`date-range-review-story-card-${index}`}
+                >
+                  <div
+                    className={getRevealClassName(shouldAnimateCardEntry)}
+                    style={getRevealStyle(shouldAnimateCardEntry, 0)}
+                  >
+                    <ReviewStorySectionHeader
+                      badge={getTripSummaryBadge(cards, index, t)}
+                      icon={<Route className="h-5 w-5" aria-hidden="true" />}
+                      title={
+                        <h3 className="text-3xl font-black tracking-tight sm:text-4xl">
+                          <Link href={appRoutes.trip(card.trip.slug)} className="hover:underline">
+                            {card.trip.name}
+                          </Link>
+                        </h3>
+                      }
+                      caption={
+                        card.trip.dateRange !== null
+                          ? formatFinnishDateRange(
+                              card.trip.dateRange.start,
+                              card.trip.dateRange.end,
+                            )
+                          : undefined
+                      }
+                    />
+                  </div>
+
+                  <div
+                    className={cn(
+                      "mt-6 grid gap-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-start",
+                      getRevealClassName(shouldAnimateCardEntry),
+                    )}
+                    style={getRevealStyle(shouldAnimateCardEntry, 180)}
+                  >
+                    {card.featuredImage !== null && (
+                      <div
+                        className={getMediaRevealClassName(shouldAnimateCardEntry)}
+                        style={getRevealStyle(shouldAnimateCardEntry, 260)}
+                      >
+                        <ReviewImage alt={card.trip.name} image={card.featuredImage} />
+                      </div>
+                    )}
+
+                    <div className="space-y-3">
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <MetricTile
+                          label={t("story.tripSummaryVisits")}
+                          value={card.trip.visitCount}
+                        />
+                        <MetricTile
+                          label={t("story.tripSummaryImages")}
+                          value={card.trip.imageCount}
+                        />
+                      </div>
+                      {card.trip.visits.length > 0 && (
+                        <ReviewVisitList
+                          title={t("story.tripSummaryVisitListTitle")}
+                          visits={card.trip.visits}
+                        />
+                      )}
+                    </div>
+                  </div>
+                </section>
+              </StoryCard>
+            );
+          }
+
           return (
-            <StoryCard key={cardKeys[index]} kind={card.kind}>
+            <StoryCard
+              key={cardKeys[index]}
+              active={index === activeIndex}
+              entryState={entryState}
+              kind={card.kind}
+            >
               <section
                 ref={(element) => {
                   sectionRefs.current[index] = element;
                 }}
                 data-card-index={index}
+                data-story-entry-state={entryState}
                 data-testid={`date-range-review-story-card-${index}`}
               >
-                <div className="space-y-3">
-                  <div className="inline-flex h-11 w-11 items-center justify-center rounded-[1.1rem] border border-white/18 bg-white/10">
-                    <Route className="h-5 w-5" aria-hidden="true" />
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="text-3xl font-black tracking-tight sm:text-4xl">
-                      <Link href={appRoutes.trip(card.trip.slug)} className="hover:underline">
-                        {t("story.tripSummaryTitle", { name: card.trip.name })}
-                      </Link>
-                    </h3>
-                    {card.trip.dateRange !== null && (
-                      <p className="text-sm leading-6 text-primary-foreground/82 sm:text-base">
-                        {formatFinnishDateRange(card.trip.dateRange.start, card.trip.dateRange.end)}
-                      </p>
-                    )}
-                  </div>
+                <div
+                  className={getRevealClassName(shouldAnimateCardEntry)}
+                  style={getRevealStyle(shouldAnimateCardEntry, 0)}
+                >
+                  <ReviewStorySectionHeader
+                    badge={t("story.otherVisitsTitle")}
+                    icon={<Footprints className="h-5 w-5" aria-hidden="true" />}
+                    title={
+                      <h3 className="text-3xl font-black tracking-tight sm:text-4xl">
+                        {t("story.otherVisitsHeading")}
+                      </h3>
+                    }
+                    caption={t("story.otherVisitsCaption")}
+                  />
                 </div>
 
-                <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-start">
-                  {card.featuredImage !== null && (
-                    <ReviewImage alt={card.trip.name} image={card.featuredImage} />
-                  )}
-
-                  <div className="space-y-3">
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <MetricTile
-                        label={t("story.tripSummaryVisits")}
-                        value={card.trip.visitCount}
-                      />
-                      <MetricTile
-                        label={t("story.tripSummaryImages")}
-                        value={card.trip.imageCount}
-                      />
-                    </div>
-                  </div>
+                <div
+                  className={cn("mt-6", getRevealClassName(shouldAnimateCardEntry))}
+                  style={getRevealStyle(shouldAnimateCardEntry, 180)}
+                >
+                  <ReviewVisitList title={t("story.otherVisitsListTitle")} visits={card.visits} />
                 </div>
               </section>
             </StoryCard>

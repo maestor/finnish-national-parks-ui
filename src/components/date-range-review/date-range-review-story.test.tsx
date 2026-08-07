@@ -1,6 +1,6 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DateRangeReviewStory } from "./date-range-review-story";
 
 vi.mock("next/image", () => ({
@@ -15,10 +15,6 @@ vi.mock("next-intl", () => ({
       return `${values?.name ?? ""} ${values?.current}/${values?.total}`;
     }
 
-    if (key === "story.newParkVisitedOn") {
-      return `Käynti ${values?.date ?? ""}`;
-    }
-
     if (key === "story.revisitedParkPreviousVisit") {
       return `Edellinen käynti ${values?.date ?? ""}`;
     }
@@ -27,8 +23,8 @@ vi.mock("next-intl", () => ({
       return `Käyntejä yhteensä ${values?.count ?? ""}`;
     }
 
-    if (key === "story.tripSummaryTitle") {
-      return `Retki: ${values?.name ?? ""}`;
+    if (key === "story.visitCountLabel" || key === "story.tripCountLabel") {
+      return `${key}:${values?.count ?? ""}`;
     }
 
     return key;
@@ -102,6 +98,26 @@ const story = {
         imageCount: 2,
         name: "Saaristoretki",
         slug: "saaristoretki",
+        visits: [
+          {
+            park: {
+              name: "Örön linnakesaari",
+              slug: "oro",
+              typeLabel: "Historiakohde",
+              typeSlug: "historiakohde",
+            },
+            visitedOn: "2026-08-01",
+          },
+          {
+            park: {
+              name: "Teijon kansallispuisto",
+              slug: "teijo",
+              typeLabel: "Kansallispuisto",
+              typeSlug: "kansallispuisto",
+            },
+            visitedOn: "2026-08-01",
+          },
+        ],
         visitCount: 2,
       },
     },
@@ -117,6 +133,26 @@ const story = {
         imageCount: 3,
         name: "Kymenlaakson kierros",
         slug: "kymenlaakson-kierros",
+        visits: [
+          {
+            park: {
+              name: "Repoveden kansallispuisto",
+              slug: "repovesi",
+              typeLabel: "Kansallispuisto",
+              typeSlug: "kansallispuisto",
+            },
+            visitedOn: "2026-08-02",
+          },
+          {
+            park: {
+              name: "Langinkoski",
+              slug: "langinkoski",
+              typeLabel: "Historiakohde",
+              typeSlug: "historiakohde",
+            },
+            visitedOn: "2026-08-03",
+          },
+        ],
         visitCount: 2,
       },
     },
@@ -132,20 +168,67 @@ const story = {
         imageCount: 3,
         name: "Hankoretki",
         slug: "hankoretki",
+        visits: [
+          {
+            park: {
+              name: "Tulliniemen luontopolku",
+              slug: "tulliniemi",
+              typeLabel: "Luontokohde",
+              typeSlug: "luontokohde",
+            },
+            visitedOn: "2026-08-05",
+          },
+          {
+            park: {
+              name: "Bengtskär",
+              slug: "bengtskar",
+              typeLabel: "Majakka",
+              typeSlug: "majakka",
+            },
+            visitedOn: "2026-08-06",
+          },
+        ],
         visitCount: 2,
       },
+    },
+    {
+      kind: "other-visits" as const,
+      visits: [
+        {
+          park: {
+            name: "Aulanko",
+            slug: "aulanko",
+            typeLabel: "Luontokohde",
+            typeSlug: "luontokohde",
+          },
+          visitedOn: "2026-08-06",
+        },
+        {
+          park: {
+            name: "Porvoon vanhakaupunki",
+            slug: "porvoon-vanhakaupunki",
+            typeLabel: "Historiakohde",
+            typeSlug: "historiakohde",
+          },
+          visitedOn: "2026-08-04",
+        },
+      ],
     },
   ],
 };
 
-let latestIntersectionCallback: IntersectionObserverCallback | null = null;
+const intersectionCallbacks: IntersectionObserverCallback[] = [];
+
+beforeEach(() => {
+  intersectionCallbacks.length = 0;
+});
 
 class MockIntersectionObserver {
   observe = vi.fn();
   disconnect = vi.fn();
 
   constructor(callback: IntersectionObserverCallback) {
-    latestIntersectionCallback = callback;
+    intersectionCallbacks.push(callback);
   }
 }
 
@@ -157,30 +240,32 @@ const triggerIntersections = (
     top?: number;
   }>,
 ) => {
-  if (latestIntersectionCallback === null) {
-    throw new Error("Expected an intersection observer callback to be registered.");
+  if (intersectionCallbacks.length === 0) {
+    throw new Error("Expected intersection observer callbacks to be registered.");
   }
 
   act(() => {
-    latestIntersectionCallback?.(
-      entries.map((entry) => ({
-        boundingClientRect: {
-          bottom: (entry.top ?? 0) + 100,
-          height: 100,
-          left: 0,
-          right: 0,
-          toJSON: () => ({}),
-          top: entry.top ?? 0,
-          width: 0,
-          x: 0,
-          y: entry.top ?? 0,
-        },
-        intersectionRatio: entry.intersectionRatio,
-        isIntersecting: entry.isIntersecting ?? true,
-        target: entry.target,
-      })) as IntersectionObserverEntry[],
-      {} as IntersectionObserver,
-    );
+    for (const callback of intersectionCallbacks) {
+      callback(
+        entries.map((entry) => ({
+          boundingClientRect: {
+            bottom: (entry.top ?? 0) + 100,
+            height: 100,
+            left: 0,
+            right: 0,
+            toJSON: () => ({}),
+            top: entry.top ?? 0,
+            width: 0,
+            x: 0,
+            y: entry.top ?? 0,
+          },
+          intersectionRatio: entry.intersectionRatio,
+          isIntersecting: entry.isIntersecting ?? true,
+          target: entry.target,
+        })) as IntersectionObserverEntry[],
+        {} as IntersectionObserver,
+      );
+    }
   });
 };
 
@@ -220,16 +305,32 @@ describe("DateRangeReviewStory", () => {
       />,
     );
 
-    expect(screen.getByText("Kesaloma 2026 1/7")).toBeInTheDocument();
+    const revisitedCard = screen.getByTestId("date-range-review-story-card-3");
+    const firstTripCard = screen.getByTestId("date-range-review-story-card-4");
+    const otherVisitsCard = screen.getByTestId("date-range-review-story-card-7");
+
+    expect(screen.getByText("Kesaloma 2026 1/8")).toBeInTheDocument();
     expect(screen.getAllByText("Kesaloma 2026")).toHaveLength(1);
     expect(screen.getByRole("button", { name: "story.previous" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "story.next" })).toBeInTheDocument();
+    expect(screen.getByText("story.visitCountLabel:6")).toBeInTheDocument();
+    expect(screen.getByText("story.tripCountLabel:3")).toBeInTheDocument();
     expect(screen.getByText("31.7.-6.8.2026")).toBeInTheDocument();
-    expect(screen.getByText("Käynti 4.8.2026")).toBeInTheDocument();
-    expect(screen.getByText("Edellinen käynti 24.8.2024")).toBeInTheDocument();
-    expect(screen.getByText("Käyntejä yhteensä 2")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Retki: Saaristoretki" })).toBeInTheDocument();
-    expect(screen.getByText("1.8.2026")).toBeInTheDocument();
+    expect(within(revisitedCard).queryByText("Käynti 4. elokuuta 2026")).not.toBeInTheDocument();
+    expect(within(revisitedCard).getByText("4. elokuuta 2026")).toBeInTheDocument();
+    expect(
+      within(revisitedCard).getByText("Edellinen käynti 24. elokuuta 2024"),
+    ).toBeInTheDocument();
+    expect(within(revisitedCard).getByText("Käyntejä yhteensä 2")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Saaristoretki" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Örön linnakesaari" })).toBeInTheDocument();
+    expect(screen.getByText("story.otherVisitsTitle")).toBeInTheDocument();
+    expect(screen.getByText("story.otherVisitsHeading")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Aulanko" })).toBeInTheDocument();
+    expect(within(firstTripCard).queryByText("Käynti 1.8.2026")).not.toBeInTheDocument();
+    expect(within(firstTripCard).getAllByText("1.8.2026")).toHaveLength(3);
+    expect(within(otherVisitsCard).queryByText("Käynti 6.8.2026")).not.toBeInTheDocument();
+    expect(within(otherVisitsCard).getByText("6.8.2026")).toBeInTheDocument();
   });
 
   it("keeps the second card active after the first next click with shorter cards", async () => {
@@ -311,7 +412,7 @@ describe("DateRangeReviewStory", () => {
 
     await user.click(nextButton);
 
-    expect(screen.getByText("Kesaloma 2026 2/7")).toBeInTheDocument();
+    expect(screen.getByText("Kesaloma 2026 2/8")).toBeInTheDocument();
 
     triggerIntersections([
       {
@@ -326,8 +427,8 @@ describe("DateRangeReviewStory", () => {
       },
     ]);
 
-    expect(screen.getByText("Kesaloma 2026 2/7")).toBeInTheDocument();
-    expect(screen.queryByText("Kesaloma 2026 1/7")).not.toBeInTheDocument();
+    expect(screen.getByText("Kesaloma 2026 2/8")).toBeInTheDocument();
+    expect(screen.queryByText("Kesaloma 2026 1/8")).not.toBeInTheDocument();
 
     setScrollState({ scrollY: 432 });
 
@@ -344,8 +445,8 @@ describe("DateRangeReviewStory", () => {
       },
     ]);
 
-    expect(screen.getByText("Kesaloma 2026 2/7")).toBeInTheDocument();
-    expect(screen.queryByText("Kesaloma 2026 3/7")).not.toBeInTheDocument();
+    expect(screen.getByText("Kesaloma 2026 2/8")).toBeInTheDocument();
+    expect(screen.queryByText("Kesaloma 2026 3/8")).not.toBeInTheDocument();
   });
 
   it("renders the empty state when the period has no visits", () => {
@@ -468,8 +569,33 @@ describe("DateRangeReviewStory", () => {
                 imageCount: 5,
                 name: "Yopymisretki",
                 slug: "yopymisretki",
+                visits: [
+                  {
+                    park: {
+                      name: "Patvinsuon kansallispuisto",
+                      slug: "patvinsuo",
+                      typeLabel: "Kansallispuisto",
+                      typeSlug: "kansallispuisto",
+                    },
+                    visitedOn: "2026-08-05",
+                  },
+                ],
                 visitCount: 3,
               },
+            },
+            {
+              kind: "other-visits",
+              visits: [
+                {
+                  park: {
+                    name: "Aavasaksa",
+                    slug: "aavasaksa",
+                    typeLabel: "Maisemakohde",
+                    typeSlug: "maisemakohde",
+                  },
+                  visitedOn: "2026-08-06",
+                },
+              ],
             },
           ],
           summary: {
@@ -491,6 +617,10 @@ describe("DateRangeReviewStory", () => {
     expect(screen.getByRole("img", { name: "Puistokuva" })).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Paluukuva" })).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Retkikuva" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Patvinsuon kansallispuisto" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Aavasaksa" })).toBeInTheDocument();
+    expect(screen.queryByText("Käynti 3.8.2026")).not.toBeInTheDocument();
+    expect(screen.queryByText("Käynti 4.8.2026")).not.toBeInTheDocument();
     expect(screen.queryByText("story.photoFallback")).not.toBeInTheDocument();
   });
 });
