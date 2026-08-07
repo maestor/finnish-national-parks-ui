@@ -24,6 +24,7 @@ export const useStoryProgressNavigation = ({
   getScrollBehavior = () => "auto",
 }: UseStoryProgressNavigationOptions) => {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [visibleIndex, setVisibleIndex] = useState(0);
   const progressButtonRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const sectionRefs = useRef<Array<HTMLElement | null>>([]);
   const storyRef = useRef<HTMLDivElement | null>(null);
@@ -180,6 +181,21 @@ export const useStoryProgressNavigation = ({
     [getNavigationAnchorTop],
   );
 
+  const getRevealIndex = useCallback((entries: IntersectionObserverEntry[]) => {
+    const revealEntries = entries
+      .filter((entry) => entry.isIntersecting && entry.intersectionRatio >= 0.8)
+      .map((entry) => ({
+        index: resolveCardIndex(entry.target),
+        intersectionRatio: entry.intersectionRatio,
+      }))
+      .filter(
+        (entry): entry is { index: number; intersectionRatio: number } => entry.index !== null,
+      )
+      .sort((left, right) => right.intersectionRatio - left.intersectionRatio);
+
+    return revealEntries[0]?.index ?? null;
+  }, []);
+
   const syncEdgeActiveIndex = useCallback(() => {
     const edgeIndex = getEdgeIndex();
 
@@ -189,6 +205,7 @@ export const useStoryProgressNavigation = ({
 
     clearPendingTarget();
     setActiveIndex((currentIndex) => (currentIndex === edgeIndex ? currentIndex : edgeIndex));
+    setVisibleIndex((currentIndex) => (currentIndex === edgeIndex ? currentIndex : edgeIndex));
 
     return true;
   }, [clearPendingTarget, getEdgeIndex]);
@@ -206,6 +223,9 @@ export const useStoryProgressNavigation = ({
           if (hasReachedPendingTarget()) {
             clearPendingTarget();
             setActiveIndex((currentIndex) =>
+              currentIndex === pendingTargetIndex ? currentIndex : pendingTargetIndex,
+            );
+            setVisibleIndex((currentIndex) =>
               currentIndex === pendingTargetIndex ? currentIndex : pendingTargetIndex,
             );
 
@@ -246,6 +266,41 @@ export const useStoryProgressNavigation = ({
   }, [clearPendingTarget, getEntryActiveIndex, hasReachedPendingTarget, syncEdgeActiveIndex]);
 
   useEffect(() => {
+    if (typeof IntersectionObserver === "undefined") {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (pendingTargetIndexRef.current !== null && !hasReachedPendingTarget()) {
+          return;
+        }
+
+        const nextIndex = getRevealIndex(entries);
+
+        if (nextIndex !== null) {
+          setVisibleIndex((currentIndex) =>
+            currentIndex === nextIndex ? currentIndex : nextIndex,
+          );
+        }
+      },
+      {
+        threshold: [0.8],
+      },
+    );
+
+    for (const section of sectionRefs.current) {
+      if (section) {
+        observer.observe(section);
+      }
+    }
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [getRevealIndex, hasReachedPendingTarget]);
+
+  useEffect(() => {
     if (typeof window === "undefined") {
       return;
     }
@@ -257,6 +312,9 @@ export const useStoryProgressNavigation = ({
 
           clearPendingTarget();
           setActiveIndex((currentIndex) =>
+            currentIndex === pendingTargetIndex ? currentIndex : pendingTargetIndex,
+          );
+          setVisibleIndex((currentIndex) =>
             currentIndex === pendingTargetIndex ? currentIndex : pendingTargetIndex,
           );
         }
@@ -288,6 +346,7 @@ export const useStoryProgressNavigation = ({
     sectionRefs.current = sectionRefs.current.slice(0, cardCount);
     clearPendingTarget();
     setActiveIndex(0);
+    setVisibleIndex(0);
   }, [cardCount, clearPendingTarget]);
 
   const scrollToPosition = (top: number) => {
@@ -320,6 +379,7 @@ export const useStoryProgressNavigation = ({
 
       if (Math.abs(scrollTarget - window.scrollY) <= EDGE_TOLERANCE_PX) {
         clearPendingTarget();
+        setVisibleIndex(index);
         return;
       }
 
@@ -338,6 +398,7 @@ export const useStoryProgressNavigation = ({
 
     if (Math.abs(scrollTarget - window.scrollY) <= EDGE_TOLERANCE_PX) {
       clearPendingTarget();
+      setVisibleIndex(index);
       return;
     }
 
@@ -358,5 +419,6 @@ export const useStoryProgressNavigation = ({
     scrollToCard,
     sectionRefs,
     storyRef,
+    visibleIndex,
   };
 };

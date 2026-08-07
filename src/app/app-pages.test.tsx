@@ -734,8 +734,42 @@ const dateRangeReviewStory = {
         imageCount: 3,
         name: "Kesaretki",
         slug: "kesaretki",
+        visits: [
+          {
+            park: {
+              name: "Repoveden kansallispuisto",
+              slug: "repovesi",
+              typeLabel: "Kansallispuisto",
+              typeSlug: "kansallispuisto",
+            },
+            visitedOn: "2026-07-27",
+          },
+          {
+            park: {
+              name: "Verlan tehdasmuseo",
+              slug: "verla",
+              typeLabel: "Maailmanperintökohde",
+              typeSlug: "maailmanperintokohde",
+            },
+            visitedOn: "2026-07-28",
+          },
+        ],
         visitCount: 2,
       },
+    },
+    {
+      kind: "other-visits",
+      visits: [
+        {
+          park: {
+            name: "Aulanko",
+            slug: "aulanko",
+            typeLabel: "Luontokohde",
+            typeSlug: "luontokohde",
+          },
+          visitedOn: "2026-06-14",
+        },
+      ],
     },
   ],
 } as const;
@@ -1347,7 +1381,7 @@ describe("App pages", () => {
     );
 
     expect(screen.getByTestId("date-range-review-story")).toHaveTextContent(
-      "mode:public|name:Kesaloma 2026|visits:4|cards:3|published:2026-08-01T11:00:00Z",
+      "mode:public|name:Kesaloma 2026|visits:4|cards:4|published:2026-08-01T11:00:00Z",
     );
   });
 
@@ -1445,7 +1479,7 @@ describe("App pages", () => {
       "2026-06-14 - 2026-07-28",
     );
     expect(screen.getByTestId("date-range-review-story")).toHaveTextContent(
-      "mode:preview|name:Kesaloma 2026|visits:4|cards:3|published:none",
+      "mode:preview|name:Kesaloma 2026|visits:4|cards:4|published:none",
     );
     expect(
       screen.getByRole("button", { name: "controlPanel.dateRangeReview.copyShareLink" }),

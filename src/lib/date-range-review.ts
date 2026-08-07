@@ -22,6 +22,8 @@ export type DateRangeReviewRevisitedParksCard = Extract<
   { kind: "revisited-parks" }
 >;
 export type DateRangeReviewTripSummaryCard = Extract<DateRangeReviewCard, { kind: "trip-summary" }>;
+export type DateRangeReviewOtherVisitsCard = Extract<DateRangeReviewCard, { kind: "other-visits" }>;
+export type DateRangeReviewStoryVisit = DateRangeReviewOtherVisitsCard["visits"][number];
 export type DateRangeReviewPublishInfo = DateRangeReviewPreviewResponse["publishInfo"];
 export type DateRangeReviewPreview = DateRangeReviewPreviewResponse;
 export type DateRangeReviewPublishResponse =

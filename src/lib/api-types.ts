@@ -1612,8 +1612,29 @@ export interface paths {
                                         imageCount: number;
                                         name: string;
                                         slug: string;
+                                        visits: {
+                                            park: {
+                                                name: string;
+                                                slug: string;
+                                                typeLabel: string;
+                                                typeSlug: string;
+                                            };
+                                            visitedOn: string;
+                                        }[];
                                         visitCount: number;
                                     };
+                                } | {
+                                    /** @enum {string} */
+                                    kind: "other-visits";
+                                    visits: {
+                                        park: {
+                                            name: string;
+                                            slug: string;
+                                            typeLabel: string;
+                                            typeSlug: string;
+                                        };
+                                        visitedOn: string;
+                                    }[];
                                 })[];
                                 summary: {
                                     distinctParkCount: number;
@@ -1968,8 +1989,29 @@ export interface paths {
                                         imageCount: number;
                                         name: string;
                                         slug: string;
+                                        visits: {
+                                            park: {
+                                                name: string;
+                                                slug: string;
+                                                typeLabel: string;
+                                                typeSlug: string;
+                                            };
+                                            visitedOn: string;
+                                        }[];
                                         visitCount: number;
                                     };
+                                } | {
+                                    /** @enum {string} */
+                                    kind: "other-visits";
+                                    visits: {
+                                        park: {
+                                            name: string;
+                                            slug: string;
+                                            typeLabel: string;
+                                            typeSlug: string;
+                                        };
+                                        visitedOn: string;
+                                    }[];
                                 })[];
                                 summary: {
                                     distinctParkCount: number;

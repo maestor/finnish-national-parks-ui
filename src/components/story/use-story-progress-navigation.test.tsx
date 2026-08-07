@@ -1,16 +1,20 @@
 import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useStoryProgressNavigation } from "./use-story-progress-navigation";
 
-let latestIntersectionCallback: IntersectionObserverCallback | null = null;
+const intersectionCallbacks: IntersectionObserverCallback[] = [];
+
+beforeEach(() => {
+  intersectionCallbacks.length = 0;
+});
 
 class MockIntersectionObserver {
   observe = vi.fn();
   disconnect = vi.fn();
 
   constructor(callback: IntersectionObserverCallback) {
-    latestIntersectionCallback = callback;
+    intersectionCallbacks.push(callback);
   }
 }
 
@@ -40,32 +44,34 @@ const setScrollState = ({
 };
 
 const triggerIntersection = (target: Element, top: number, intersectionRatio = 0.8) => {
-  if (latestIntersectionCallback === null) {
+  if (intersectionCallbacks.length === 0) {
     throw new Error("Expected an intersection observer callback to be registered.");
   }
 
   act(() => {
-    latestIntersectionCallback?.(
-      [
-        {
-          boundingClientRect: {
-            bottom: top + 100,
-            height: 100,
-            left: 0,
-            right: 0,
-            toJSON: () => ({}),
-            top,
-            width: 0,
-            x: 0,
-            y: top,
-          },
-          intersectionRatio,
-          isIntersecting: true,
-          target,
-        } as IntersectionObserverEntry,
-      ],
-      {} as IntersectionObserver,
-    );
+    for (const callback of intersectionCallbacks) {
+      callback(
+        [
+          {
+            boundingClientRect: {
+              bottom: top + 100,
+              height: 100,
+              left: 0,
+              right: 0,
+              toJSON: () => ({}),
+              top,
+              width: 0,
+              x: 0,
+              y: top,
+            },
+            intersectionRatio,
+            isIntersecting: true,
+            target,
+          } as IntersectionObserverEntry,
+        ],
+        {} as IntersectionObserver,
+      );
+    }
   });
 };
 
@@ -77,30 +83,32 @@ const triggerIntersections = (
     top: number;
   }>,
 ) => {
-  if (latestIntersectionCallback === null) {
+  if (intersectionCallbacks.length === 0) {
     throw new Error("Expected an intersection observer callback to be registered.");
   }
 
   act(() => {
-    latestIntersectionCallback?.(
-      entries.map((entry) => ({
-        boundingClientRect: {
-          bottom: entry.top + 100,
-          height: 100,
-          left: 0,
-          right: 0,
-          toJSON: () => ({}),
-          top: entry.top,
-          width: 0,
-          x: 0,
-          y: entry.top,
-        },
-        intersectionRatio: entry.intersectionRatio,
-        isIntersecting: entry.isIntersecting ?? true,
-        target: entry.target,
-      })) as IntersectionObserverEntry[],
-      {} as IntersectionObserver,
-    );
+    for (const callback of intersectionCallbacks) {
+      callback(
+        entries.map((entry) => ({
+          boundingClientRect: {
+            bottom: entry.top + 100,
+            height: 100,
+            left: 0,
+            right: 0,
+            toJSON: () => ({}),
+            top: entry.top,
+            width: 0,
+            x: 0,
+            y: entry.top,
+          },
+          intersectionRatio: entry.intersectionRatio,
+          isIntersecting: entry.isIntersecting ?? true,
+          target: entry.target,
+        })) as IntersectionObserverEntry[],
+        {} as IntersectionObserver,
+      );
+    }
   });
 };
 

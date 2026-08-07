@@ -1,6 +1,6 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { YearReviewStory } from "./year-review-story";
 
 vi.mock("@/components/ui/app-image", () => ({
@@ -25,6 +25,10 @@ vi.mock("next-intl", () => ({
 
     if (key === "story.publishedOn") {
       return `Julkaistu ${values?.date ?? ""}`;
+    }
+
+    if (key === "story.visitCountLabel") {
+      return `${key}:${values?.count ?? ""}`;
     }
 
     return key;
@@ -315,33 +319,57 @@ const portraitTripStory = {
   ),
 };
 
-let latestIntersectionCallback: IntersectionObserverCallback | null = null;
+const tripDateRangeStory = {
+  ...fallbackStory,
+  cards: fallbackStory.cards.map((card) =>
+    card.kind === "trip-highlight"
+      ? {
+          ...card,
+          trip: {
+            ...card.trip,
+            dateRange: {
+              end: "2025-08-06",
+              start: "2025-08-05",
+            },
+          },
+        }
+      : card,
+  ),
+};
+
+const intersectionCallbacks: IntersectionObserverCallback[] = [];
+
+beforeEach(() => {
+  intersectionCallbacks.length = 0;
+});
 
 class MockIntersectionObserver {
   observe = vi.fn();
   disconnect = vi.fn();
 
   constructor(callback: IntersectionObserverCallback) {
-    latestIntersectionCallback = callback;
+    intersectionCallbacks.push(callback);
   }
 }
 
 const triggerIntersection = (target: Element, intersectionRatio = 0.85) => {
-  if (latestIntersectionCallback === null) {
-    throw new Error("Expected an intersection observer callback to be registered.");
+  if (intersectionCallbacks.length === 0) {
+    throw new Error("Expected intersection observer callbacks to be registered.");
   }
 
   act(() => {
-    latestIntersectionCallback?.(
-      [
-        {
-          intersectionRatio,
-          isIntersecting: true,
-          target,
-        } as IntersectionObserverEntry,
-      ],
-      {} as IntersectionObserver,
-    );
+    for (const callback of intersectionCallbacks) {
+      callback(
+        [
+          {
+            intersectionRatio,
+            isIntersecting: true,
+            target,
+          } as IntersectionObserverEntry,
+        ],
+        {} as IntersectionObserver,
+      );
+    }
   });
 };
 
@@ -470,6 +498,13 @@ describe("YearReviewStory", () => {
     expect(screen.getByText("Lauhanvuori")).toBeInTheDocument();
   });
 
+  it("renders new park dates without the visit prefix", () => {
+    render(<YearReviewStory story={fallbackStory} mode="preview" />);
+
+    expect(screen.getByText("12. kesäkuuta 2025")).toBeInTheDocument();
+    expect(screen.queryByText("Käynti 12. kesäkuuta 2025")).not.toBeInTheDocument();
+  });
+
   it("uses a portrait-friendly image treatment for tall featured photos", () => {
     render(<YearReviewStory story={portraitMilestoneStory} mode="preview" />);
 
@@ -498,6 +533,16 @@ describe("YearReviewStory", () => {
     );
   });
 
+  it("uses the shared compact date range and lets the trip tile span the full detail row", () => {
+    render(<YearReviewStory story={tripDateRangeStory} mode="preview" />);
+
+    expect(screen.getByText("5.-6.8.2025")).toBeInTheDocument();
+    expect(screen.queryByText("5. elokuuta 2025 - 6. elokuuta 2025")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Loppukesän kierros" }).closest("div")).toHaveClass(
+      "sm:col-span-2",
+    );
+  });
+
   it("falls back to the visit details tile when the photo highlight has no featured image", () => {
     render(<YearReviewStory story={visitOnlyPhotoStory} mode="preview" />);
 
@@ -508,7 +553,7 @@ describe("YearReviewStory", () => {
   it("falls back to the photo title as image alt text when the hero image has no own alt", () => {
     render(<YearReviewStory story={imageOnlyPhotoStory} mode="preview" />);
 
-    expect(screen.getByRole("img", { name: "story.photoTitle" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "story.photoHeading" })).toBeInTheDocument();
     expect(screen.getAllByText("story.notAvailable").length).toBeGreaterThan(0);
   });
 
@@ -517,7 +562,7 @@ describe("YearReviewStory", () => {
 
     expect(screen.getByText("story.returnedPlace")).toBeInTheDocument();
     expect(screen.getByText("Sipoonkorven kansallispuisto")).toBeInTheDocument();
-    expect(screen.getByText("3 story.visitCountLabel")).toBeInTheDocument();
+    expect(screen.getByText("3 story.visitCountLabel:3")).toBeInTheDocument();
   });
 
   it("falls back to the place type when repeats stay below the spotlight threshold", () => {
@@ -566,14 +611,16 @@ describe("YearReviewStory", () => {
 
     triggerIntersection(secondCard);
 
-    expect(firstCard).toHaveAttribute("data-story-entry-state", "seen");
-    expect(secondCard).toHaveAttribute("data-story-entry-state", "entry");
+    return waitFor(() => {
+      expect(firstCard).toHaveAttribute("data-story-entry-state", "seen");
+      expect(secondCard).toHaveAttribute("data-story-entry-state", "entry");
+    }).then(() => {
+      triggerIntersection(firstCard);
 
-    triggerIntersection(firstCard);
-
-    expect(firstCard).toHaveAttribute("data-story-entry-state", "seen");
-    expect(secondCard).toHaveAttribute("data-story-entry-state", "seen");
-    vi.unstubAllGlobals();
+      expect(firstCard).toHaveAttribute("data-story-entry-state", "seen");
+      expect(secondCard).toHaveAttribute("data-story-entry-state", "seen");
+      vi.unstubAllGlobals();
+    });
   });
 
   it("lets people move between cards with the previous and next buttons", async () => {
@@ -761,7 +808,7 @@ describe("YearReviewStory", () => {
     vi.unstubAllGlobals();
   });
 
-  it("activates the selected story card immediately when progress navigation scrolls to it", async () => {
+  it("activates the selected story card on the next frame when progress navigation scrolls to it", async () => {
     const user = userEvent.setup();
     const scrollTo = vi.fn();
 
@@ -814,7 +861,9 @@ describe("YearReviewStory", () => {
     await user.click(targetButton);
 
     expect(screen.getByText("Kortti 7/8")).toBeInTheDocument();
-    expect(targetSection).toHaveAttribute("data-story-entry-state", "entry");
+    await waitFor(() => {
+      expect(targetSection).toHaveAttribute("data-story-entry-state", "entry");
+    });
     expect(scrollTo).not.toHaveBeenCalled();
   });
 
