@@ -544,20 +544,94 @@ describe("useStoryProgressNavigation", () => {
       y: -200,
     });
     vi.spyOn(thirdSection, "getBoundingClientRect").mockReturnValue({
-      bottom: 1200,
+      bottom: 1600,
       height: 840,
       left: 0,
       right: 0,
       toJSON: () => ({}),
-      top: 360,
+      top: 760,
       width: 0,
       x: 0,
-      y: 360,
+      y: 760,
     });
 
     dispatchScroll();
 
     expect(screen.getByTestId("active-index")).toHaveTextContent("1");
+    expect(screen.getByTestId("visible-index")).toHaveTextContent("1");
+  });
+
+  it("reveals the next card before it becomes the active card while scrolling", () => {
+    setScrollState({ scrollY: 500 });
+    vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
+
+    render(<StoryHarness />);
+
+    const storyRoot = screen.getByTestId("story-root");
+    const navigation = screen.getByTestId("navigation");
+    const firstSection = screen.getByTestId("section-0");
+    const secondSection = screen.getByTestId("section-1");
+    const thirdSection = screen.getByTestId("section-2");
+
+    vi.spyOn(storyRoot, "getBoundingClientRect").mockImplementation(() => ({
+      bottom: 1008 - window.scrollY,
+      height: 960,
+      left: 0,
+      right: 0,
+      toJSON: () => ({}),
+      top: 48 - window.scrollY,
+      width: 0,
+      x: 0,
+      y: 48 - window.scrollY,
+    }));
+    vi.spyOn(navigation, "getBoundingClientRect").mockReturnValue({
+      bottom: 108,
+      height: 96,
+      left: 0,
+      right: 0,
+      toJSON: () => ({}),
+      top: 12,
+      width: 0,
+      x: 0,
+      y: 12,
+    });
+    vi.spyOn(firstSection, "getBoundingClientRect").mockReturnValue({
+      bottom: -140,
+      height: 320,
+      left: 0,
+      right: 0,
+      toJSON: () => ({}),
+      top: -460,
+      width: 0,
+      x: 0,
+      y: -460,
+    });
+    vi.spyOn(secondSection, "getBoundingClientRect").mockReturnValue({
+      bottom: 548,
+      height: 320,
+      left: 0,
+      right: 0,
+      toJSON: () => ({}),
+      top: 228,
+      width: 0,
+      x: 0,
+      y: 228,
+    });
+    vi.spyOn(thirdSection, "getBoundingClientRect").mockReturnValue({
+      bottom: 940,
+      height: 320,
+      left: 0,
+      right: 0,
+      toJSON: () => ({}),
+      top: 620,
+      width: 0,
+      x: 0,
+      y: 620,
+    });
+
+    dispatchScroll();
+
+    expect(screen.getByTestId("active-index")).toHaveTextContent("0");
     expect(screen.getByTestId("visible-index")).toHaveTextContent("1");
   });
 

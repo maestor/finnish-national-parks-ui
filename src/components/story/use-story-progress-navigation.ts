@@ -9,6 +9,9 @@ interface UseStoryProgressNavigationOptions {
 
 const CARD_SCROLL_GAP_PX = 20;
 const EDGE_TOLERANCE_PX = 4;
+const MIN_REVEAL_LEAD_PX = 96;
+const MAX_REVEAL_ANCHOR_TOP_PX = 620;
+const VIEWPORT_REVEAL_RATIO = 0.56;
 
 const getMaxScrollTop = () =>
   Math.max(document.documentElement.scrollHeight - window.innerHeight, 0);
@@ -87,8 +90,8 @@ export const useStoryProgressNavigation = ({
     return navigationRect.top + navigationRect.height + CARD_SCROLL_GAP_PX;
   }, []);
 
-  const getViewportActiveIndex = useCallback(() => {
-    if (cardCount === 0) {
+  const getRevealAnchorTop = useCallback(() => {
+    if (typeof window === "undefined") {
       return null;
     }
 
@@ -98,36 +101,70 @@ export const useStoryProgressNavigation = ({
       return null;
     }
 
-    let nearestAboveIndex: number | null = null;
-    let nearestAboveTop = Number.NEGATIVE_INFINITY;
-    let nearestBelowIndex: number | null = null;
-    let nearestBelowTop = Number.POSITIVE_INFINITY;
+    return Math.max(
+      anchorTop + MIN_REVEAL_LEAD_PX,
+      Math.min(window.innerHeight * VIEWPORT_REVEAL_RATIO, MAX_REVEAL_ANCHOR_TOP_PX),
+    );
+  }, [getNavigationAnchorTop]);
 
-    for (const [index, section] of sectionRefs.current.entries()) {
-      if (!section) {
-        continue;
+  const getViewportIndexAtAnchor = useCallback(
+    (anchorTop: number) => {
+      if (cardCount === 0) {
+        return null;
       }
 
-      const sectionTop = section.getBoundingClientRect().top;
+      let nearestAboveIndex: number | null = null;
+      let nearestAboveTop = Number.NEGATIVE_INFINITY;
+      let nearestBelowIndex: number | null = null;
+      let nearestBelowTop = Number.POSITIVE_INFINITY;
 
-      if (sectionTop <= anchorTop + EDGE_TOLERANCE_PX && sectionTop > nearestAboveTop) {
-        nearestAboveIndex = index;
-        nearestAboveTop = sectionTop;
-        continue;
+      for (const [index, section] of sectionRefs.current.entries()) {
+        if (!section) {
+          continue;
+        }
+
+        const sectionTop = section.getBoundingClientRect().top;
+
+        if (sectionTop <= anchorTop + EDGE_TOLERANCE_PX && sectionTop > nearestAboveTop) {
+          nearestAboveIndex = index;
+          nearestAboveTop = sectionTop;
+          continue;
+        }
+
+        if (sectionTop > anchorTop + EDGE_TOLERANCE_PX && sectionTop < nearestBelowTop) {
+          nearestBelowIndex = index;
+          nearestBelowTop = sectionTop;
+        }
       }
 
-      if (sectionTop > anchorTop + EDGE_TOLERANCE_PX && sectionTop < nearestBelowTop) {
-        nearestBelowIndex = index;
-        nearestBelowTop = sectionTop;
+      if (nearestAboveIndex !== null) {
+        return nearestAboveIndex;
       }
+
+      return nearestBelowIndex;
+    },
+    [cardCount],
+  );
+
+  const getViewportActiveIndex = useCallback(() => {
+    const anchorTop = getNavigationAnchorTop();
+
+    if (anchorTop === null) {
+      return null;
     }
 
-    if (nearestAboveIndex !== null) {
-      return nearestAboveIndex;
+    return getViewportIndexAtAnchor(anchorTop);
+  }, [getNavigationAnchorTop, getViewportIndexAtAnchor]);
+
+  const getViewportVisibleIndex = useCallback(() => {
+    const revealAnchorTop = getRevealAnchorTop();
+
+    if (revealAnchorTop === null) {
+      return null;
     }
 
-    return nearestBelowIndex;
-  }, [cardCount, getNavigationAnchorTop]);
+    return getViewportIndexAtAnchor(revealAnchorTop);
+  }, [getRevealAnchorTop, getViewportIndexAtAnchor]);
 
   const getEntryActiveIndex = useCallback(
     (entries: IntersectionObserverEntry[]) => {
@@ -276,11 +313,19 @@ export const useStoryProgressNavigation = ({
         return;
       }
 
-      const nextIndex = getViewportActiveIndex();
+      const nextActiveIndex = getViewportActiveIndex();
+      const nextVisibleIndex = getViewportVisibleIndex();
 
-      if (nextIndex !== null) {
-        setActiveIndex((currentIndex) => (currentIndex === nextIndex ? currentIndex : nextIndex));
-        setVisibleIndex((currentIndex) => (currentIndex === nextIndex ? currentIndex : nextIndex));
+      if (nextActiveIndex !== null) {
+        setActiveIndex((currentIndex) =>
+          currentIndex === nextActiveIndex ? currentIndex : nextActiveIndex,
+        );
+      }
+
+      if (nextVisibleIndex !== null) {
+        setVisibleIndex((currentIndex) =>
+          currentIndex === nextVisibleIndex ? currentIndex : nextVisibleIndex,
+        );
       }
     };
 
@@ -290,7 +335,13 @@ export const useStoryProgressNavigation = ({
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
-  }, [clearPendingTarget, getViewportActiveIndex, hasReachedPendingTarget, syncEdgeActiveIndex]);
+  }, [
+    clearPendingTarget,
+    getViewportActiveIndex,
+    getViewportVisibleIndex,
+    hasReachedPendingTarget,
+    syncEdgeActiveIndex,
+  ]);
 
   useEffect(() => {
     progressButtonRefs.current = progressButtonRefs.current.slice(0, cardCount);
