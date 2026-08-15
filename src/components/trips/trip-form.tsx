@@ -6,6 +6,10 @@ import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 import { LocationSuggestionInput } from "@/components/location/location-suggestion-input";
 import { Button } from "@/components/ui/button";
+import {
+  LONG_TEXTAREA_MAX_LENGTH,
+  TextareaWithCounter,
+} from "@/components/ui/textarea-with-counter";
 import { apiFetch } from "@/lib/api";
 import {
   formatCoordinateQuery,
@@ -113,7 +117,8 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
     trimmedName !== savedSnapshot.name ||
     description !== savedSnapshot.description ||
     getLocationKey(startingPoint) !== savedSnapshot.startingPointKey;
-  const isSubmitDisabled = isSubmitting || (isEditing && !isEditDirty);
+  const isDescriptionTooLong = description.length > LONG_TEXTAREA_MAX_LENGTH;
+  const isSubmitDisabled = isSubmitting || isDescriptionTooLong || (isEditing && !isEditDirty);
 
   const handleBack = () => {
     router.back();
@@ -348,10 +353,10 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
         <label htmlFor="trip-description" className="text-sm font-medium">
           {t("descriptionLabel")}
         </label>
-        <textarea
+        <TextareaWithCounter
           id="trip-description"
           value={description}
-          onChange={(event) => setDescription(event.target.value)}
+          onValueChange={setDescription}
           placeholder={t("descriptionPlaceholder")}
           rows={5}
           className={`${INPUT_CLASS_NAME} resize-y`}

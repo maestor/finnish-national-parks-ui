@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { LONG_TEXTAREA_MAX_LENGTH } from "@/components/ui/textarea-with-counter";
 import type { Trip } from "@/lib/trips";
 import { TripForm } from "./trip-form";
 
@@ -56,6 +57,11 @@ const tripWithStartingPoint = {
     displayName: "Jyvaskyla",
     label: "Jyvaskyla",
   },
+} satisfies Trip;
+
+const tripWithTooLongDescription = {
+  ...tripToEdit,
+  description: "a".repeat(LONG_TEXTAREA_MAX_LENGTH + 1),
 } satisfies Trip;
 
 describe("TripForm", () => {
@@ -285,6 +291,33 @@ describe("TripForm", () => {
     );
 
     expect(screen.getByText("controlPanel.trips.form.locationUnsupported")).toBeInTheDocument();
+  });
+
+  it("disables submit until an over-limit description is brought back under the API max", async () => {
+    render(<TripForm tripToEdit={tripWithTooLongDescription} />);
+
+    const submitButton = screen.getByRole("button", { name: /controlPanel.trips.form.submit/i });
+    const descriptionField = screen.getByLabelText(/controlPanel.trips.form.descriptionLabel/i);
+
+    await userEvent.clear(screen.getByLabelText(/controlPanel.trips.form.nameLabel/i));
+    await userEvent.type(
+      screen.getByLabelText(/controlPanel.trips.form.nameLabel/i),
+      "Lapin kierros",
+    );
+
+    expect(
+      screen.getByText(`${LONG_TEXTAREA_MAX_LENGTH + 1} / ${LONG_TEXTAREA_MAX_LENGTH}`),
+    ).toBeInTheDocument();
+    expect(submitButton).toBeDisabled();
+
+    fireEvent.change(descriptionField, {
+      target: { value: "a".repeat(LONG_TEXTAREA_MAX_LENGTH) },
+    });
+
+    expect(
+      screen.getByText(`${LONG_TEXTAREA_MAX_LENGTH} / ${LONG_TEXTAREA_MAX_LENGTH}`),
+    ).toBeInTheDocument();
+    expect(submitButton).toBeEnabled();
   });
 
   it("does not submit an unchanged trip edit", async () => {

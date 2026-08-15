@@ -10,6 +10,10 @@ import { CoordinateOverrideFields } from "@/components/location/coordinate-overr
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
+import {
+  LONG_TEXTAREA_MAX_LENGTH,
+  TextareaWithCounter,
+} from "@/components/ui/textarea-with-counter";
 import { apiFetch } from "@/lib/api";
 import {
   type CoordinateInputValue,
@@ -65,7 +69,8 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
     location.lat !== savedSnapshot.location.lat ||
     location.lon !== savedSnapshot.location.lon ||
     note !== savedSnapshot.note;
-  const isSubmitDisabled = isSubmitting || (isEditing && !isEditDirty);
+  const isNoteTooLong = note.length > LONG_TEXTAREA_MAX_LENGTH;
+  const isSubmitDisabled = isSubmitting || isNoteTooLong || (isEditing && !isEditDirty);
   const hasParkSlugError = errors.parkSlug !== undefined;
   const hasVisitedOnError = errors.visitedOn !== undefined;
   const hasLocationError = errors.location !== undefined;
@@ -325,10 +330,10 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{note || "_"}</ReactMarkdown>
           </div>
         ) : (
-          <textarea
+          <TextareaWithCounter
             id="note"
             value={note}
-            onChange={(e) => setNote(e.target.value)}
+            onValueChange={setNote}
             placeholder={t("notePlaceholder")}
             rows={5}
             className={`${inputClassName} resize-y`}
