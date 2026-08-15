@@ -41,7 +41,7 @@ import {
 } from "@/lib/public-trip-visit-details";
 import { createParkVisitHref } from "@/lib/public-visits";
 import { appRoutes } from "@/lib/routes";
-import type { PublicTripDetail } from "@/lib/trips";
+import { getTripStopDisplayName, type PublicTripDetail } from "@/lib/trips";
 import { LazyPublicTripMap } from "./lazy-public-trip-map";
 
 interface PublicTripPageProps {
@@ -609,7 +609,7 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
                                   </span>
                                 </div>
                                 <h3 className="mt-2 text-lg font-semibold tracking-tight">
-                                  {item.stop.location.displayName}
+                                  {getTripStopDisplayName(item.stop)}
                                 </h3>
                               </div>
                               {stopHasExpandableDetails === true && (

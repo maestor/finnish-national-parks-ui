@@ -59,6 +59,7 @@ const trip: PublicTripDetail = {
       kind: "stop",
       tripStopOrder: 2,
       stop: {
+        displayName: null,
         id: 31,
         images: [],
         createdAt: "2024-06-16T10:00:00Z",

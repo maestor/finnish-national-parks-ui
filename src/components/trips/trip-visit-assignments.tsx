@@ -25,15 +25,16 @@ import {
 } from "@/lib/location";
 import type { VisitWithPark } from "@/lib/parks";
 import { revalidatePublicCache } from "@/lib/public-cache";
-import type {
-  TripDetail,
-  TripItineraryItem,
-  TripItineraryStopItem,
-  TripItineraryVisitItem,
-  TripLocation,
-  TripStop,
-  TripStopCreateRequest,
-  TripStopUpdateRequest,
+import {
+  getTripStopDisplayName,
+  type TripDetail,
+  type TripItineraryItem,
+  type TripItineraryStopItem,
+  type TripItineraryVisitItem,
+  type TripLocation,
+  type TripStop,
+  type TripStopCreateRequest,
+  type TripStopUpdateRequest,
 } from "@/lib/trips";
 import { TripStopImageSection } from "./trip-stop-image-section";
 
@@ -114,7 +115,7 @@ const getItineraryItemKey = (item: TripItineraryItem) =>
 const getItineraryOrderKeys = (items: TripItineraryItem[]) => items.map(getItineraryItemKey);
 
 const getItineraryItemLabel = (item: TripItineraryItem) =>
-  item.kind === "visit" ? item.visit.park.name : item.stop.location.label;
+  item.kind === "visit" ? item.visit.park.name : getTripStopDisplayName(item.stop);
 
 const reorderItineraryItems = (items: TripItineraryItem[], activeKey: string, overKey: string) => {
   const activeIndex = items.findIndex((item) => getItineraryItemKey(item) === activeKey);
@@ -314,6 +315,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
   const [isStopFormOpen, setIsStopFormOpen] = useState(false);
   const [stopLocationQuery, setStopLocationQuery] = useState("");
   const [stopLocation, setStopLocation] = useState<TripLocation | null>(null);
+  const [stopDisplayName, setStopDisplayName] = useState("");
   const [stopOrder, setStopOrder] = useState("");
   const [stopVisitedOn, setStopVisitedOn] = useState("");
   const [stopLocationStatus, setStopLocationStatus] = useState<UserLocationStatus>("idle");
@@ -461,11 +463,13 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       ? t("addStopRequiresDateRange")
       : null;
   const normalizedStopLocationQuery = stopLocationQuery.trim();
+  const normalizedStopDisplayName = trimToNull(stopDisplayName);
   const normalizedStopNote = trimToNull(stopNote);
   const hasStopDetailChanges =
     isEditingStop &&
     activeEditingStop !== null &&
     (stopVisitedOn !== activeEditingStop.visitedOn ||
+      normalizedStopDisplayName !== activeEditingStop.displayName ||
       normalizedStopNote !== (activeEditingStop.note ?? null) ||
       normalizedStopLocationQuery !== activeEditingStop.location.label ||
       !doTripLocationsMatch(stopLocation, activeEditingStop.location));
@@ -506,6 +510,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     setEditingStopId(null);
     setStopLocationQuery("");
     setStopLocation(null);
+    setStopDisplayName("");
     setStopOrder("");
     setStopVisitedOn("");
     setStopLocationStatus("idle");
@@ -532,6 +537,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     setEditingStopId(null);
     setStopLocationQuery("");
     setStopLocation(null);
+    setStopDisplayName("");
     setStopOrder(String(itineraryRef.current.length + 1));
     setStopVisitedOn("");
     setStopLocationStatus("idle");
@@ -593,6 +599,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     setEditingStopId(stop.id);
     setStopLocationQuery(stop.location.label);
     setStopLocation(stop.location);
+    setStopDisplayName(stop.displayName ?? "");
     setStopOrder(String(stop.tripStopOrder));
     setStopVisitedOn(stop.visitedOn);
     setStopLocationStatus("idle");
@@ -1095,6 +1102,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
               ...item,
               stop: {
                 ...item.stop,
+                displayName: normalizedStopDisplayName,
                 location: selectedStopLocation,
                 note: normalizedStopNote,
                 visitedOn: stopVisitedOn,
@@ -1110,6 +1118,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
         const updatedStop = await apiFetch<TripStop>(`/api/trip-stops/${editingStopId}`, {
           method: "PATCH",
           body: JSON.stringify({
+            displayName: normalizedStopDisplayName,
             location: selectedStopLocation,
             note: normalizedStopNote,
             visitedOn: stopVisitedOn,
@@ -1160,6 +1169,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       const createdStop = await apiFetch<TripStop>(`/api/trips/${trip.id}/stops`, {
         method: "POST",
         body: JSON.stringify({
+          displayName: normalizedStopDisplayName,
           location: selectedStopLocation,
           note: normalizedStopNote,
           tripStopOrder: requestedTripStopOrder,
@@ -1181,6 +1191,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       setIsStopFormOpen(false);
       setStopLocationQuery(createdStop.location.label);
       setStopLocation(createdStop.location);
+      setStopDisplayName(createdStop.displayName ?? "");
       setStopOrder(String(createdStop.tripStopOrder));
       setStopVisitedOn(createdStop.visitedOn);
       setStopLocationStatus("idle");
@@ -1201,7 +1212,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       return;
     }
 
-    if (!window.confirm(t("deleteStopConfirm", { locationLabel: stop.location.label }))) {
+    if (!window.confirm(t("deleteStopConfirm", { locationLabel: getTripStopDisplayName(stop) }))) {
       return;
     }
 
@@ -1359,6 +1370,22 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                       {stopErrors.location !== undefined && (
                         <p className="text-sm text-destructive">{stopErrors.location}</p>
                       )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="trip-stop-display-name" className="text-sm font-medium">
+                        {t("stopDisplayNameLabel")}
+                      </label>
+                      <input
+                        id="trip-stop-display-name"
+                        type="text"
+                        value={stopDisplayName}
+                        onChange={(event) => setStopDisplayName(event.target.value)}
+                        disabled={isBusy}
+                        placeholder={t("stopDisplayNamePlaceholder")}
+                        className="flex h-10 w-full rounded-xl border border-white/45 bg-white/78 px-3 py-2 text-sm ring-offset-background shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                      />
+                      <p className="text-sm text-muted-foreground">{t("stopDisplayNameHint")}</p>
                     </div>
 
                     <div className="space-y-2">

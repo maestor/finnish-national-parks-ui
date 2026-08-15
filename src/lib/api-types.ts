@@ -3029,6 +3029,7 @@ export interface paths {
                                 stop: {
                                     /** Format: date-time */
                                     createdAt: string;
+                                    displayName: string | null;
                                     id: number;
                                     images: {
                                         id: number;
@@ -3200,6 +3201,7 @@ export interface paths {
                                 stop: {
                                     /** Format: date-time */
                                     createdAt: string;
+                                    displayName: string | null;
                                     id: number;
                                     images: {
                                         id: number;
@@ -4230,6 +4232,7 @@ export interface paths {
             requestBody?: {
                 content: {
                     "application/json": {
+                        displayName?: string | null;
                         location: {
                             coordinate: {
                                 lat: number;
@@ -4253,6 +4256,7 @@ export interface paths {
                         "application/json": {
                             /** Format: date-time */
                             createdAt: string;
+                            displayName: string | null;
                             id: number;
                             images: {
                                 id: number;
@@ -4497,6 +4501,7 @@ export interface paths {
             requestBody?: {
                 content: {
                     "application/json": {
+                        displayName?: string | null;
                         location?: {
                             coordinate: {
                                 lat: number;
@@ -4520,6 +4525,7 @@ export interface paths {
                         "application/json": {
                             /** Format: date-time */
                             createdAt: string;
+                            displayName: string | null;
                             id: number;
                             images: {
                                 id: number;
