@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { formatFinnishDate } from "@/lib/fi-date";
 import { createTripItineraryItemKey } from "@/lib/public-trip-visit-details";
-import type { PublicTripDetail, PublicTripRoute } from "@/lib/trips";
+import { getTripStopDisplayName, type PublicTripDetail, type PublicTripRoute } from "@/lib/trips";
 import { getMapStyle } from "../map/map-style";
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -394,7 +394,7 @@ export const PublicTripMap = ({
             index: item.tripStopOrder,
             itemKey: createTripItineraryItemKey("stop", item.stop.id),
             kind: "stop",
-            label: item.stop.location.displayName,
+            label: getTripStopDisplayName(item.stop),
             subtitle: t("stopLabel"),
             visitedOn: item.stop.visitedOn,
           },

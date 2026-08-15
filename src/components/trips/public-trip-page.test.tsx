@@ -141,6 +141,7 @@ const trip: PublicTripDetail = {
       kind: "stop",
       tripStopOrder: 2,
       stop: {
+        displayName: null,
         id: 31,
         images: [],
         createdAt: "2024-06-16T10:00:00Z",
@@ -693,6 +694,28 @@ describe("PublicTripPage", () => {
       "true",
     );
     expect(screen.getByText("Hotelli keskustassa")).toBeInTheDocument();
+  });
+
+  it("prefers a stop display name override in the itinerary", () => {
+    const tripWithCustomStopName: PublicTripDetail = {
+      ...trip,
+      itinerary: trip.itinerary.map((item) =>
+        item.kind === "stop"
+          ? {
+              ...item,
+              stop: {
+                ...item.stop,
+                displayName: "Oma yöpymispaikka",
+              },
+            }
+          : item,
+      ),
+    };
+
+    render(<PublicTripPage trip={tripWithCustomStopName} />);
+
+    const itinerary = screen.getByRole("list", { name: "tripPage.itineraryTitle" });
+    expect(within(itinerary).getByText("Oma yöpymispaikka")).toBeInTheDocument();
   });
 
   it("shows a stop image section only when the stop has images", async () => {

@@ -42,6 +42,13 @@ export type TripStopUpdateRequest = NonNullable<
   paths["/api/trip-stops/{id}"]["patch"]["requestBody"]
 >["content"]["application/json"];
 
+type TripStopDisplayNameSource =
+  | Pick<TripStop, "displayName" | "location">
+  | Pick<PublicTripStop, "displayName" | "location">;
+
+export const getTripStopDisplayName = (stop: TripStopDisplayNameSource) =>
+  stop.displayName ?? stop.location.displayName;
+
 const getTripSortTimestamp = (trip: Trip) => {
   if (trip.dateRange) {
     return new Date(trip.dateRange.end).getTime();

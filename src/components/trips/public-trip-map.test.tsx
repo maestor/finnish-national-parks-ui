@@ -219,6 +219,7 @@ const tripStops: PublicTripDetail["itinerary"] = [
     kind: "stop",
     tripStopOrder: 3,
     stop: {
+      displayName: null,
       id: 31,
       images: [],
       createdAt: "2024-06-16T10:00:00Z",
@@ -244,6 +245,7 @@ const tripStopsWithSharedLocation: PublicTripDetail["itinerary"] = [
     kind: "stop",
     tripStopOrder: 4,
     stop: {
+      displayName: null,
       id: 32,
       images: [],
       createdAt: "2024-06-16T20:00:00Z",
@@ -397,6 +399,46 @@ describe("PublicTripMap", () => {
     fireEvent.click(within(popup).getByRole("button", { name: "tripPage.showStop" }));
 
     expect(onItineraryItemAction).toHaveBeenCalledWith("stop:31");
+  });
+
+  it("uses a stop display name override for markers and popups", async () => {
+    const tripStopsWithCustomStopName: PublicTripDetail["itinerary"] = tripStops.map((item) =>
+      item.kind === "stop"
+        ? {
+            ...item,
+            stop: {
+              ...item.stop,
+              displayName: "Oma yöpymispaikka",
+            },
+          }
+        : item,
+    );
+
+    render(
+      <PublicTripMap
+        onItineraryItemAction={vi.fn()}
+        route={route}
+        startingPoint={startingPoint}
+        tripName="Kesaretki"
+        tripStops={tripStopsWithCustomStopName}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(markerInstances).toHaveLength(4);
+    });
+
+    expect(markerInstances[3]?.element).toHaveAttribute("aria-label", "3. Oma yöpymispaikka");
+
+    fireEvent.click(markerInstances[3].element);
+
+    const popup = document.querySelector(".maplibregl-popup");
+
+    if (!(popup instanceof HTMLElement)) {
+      throw new Error("Expected an open map popup");
+    }
+
+    expect(within(popup).getByRole("heading", { name: "Oma yöpymispaikka" })).toBeInTheDocument();
   });
 
   it("opens a popup on hover and closes it after the leave delay", async () => {

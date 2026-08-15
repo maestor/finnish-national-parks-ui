@@ -91,6 +91,7 @@ const currentTrip = {
       kind: "stop",
       tripStopOrder: 2,
       stop: {
+        displayName: null,
         id: 21,
         images: [],
         location: {
@@ -907,6 +908,7 @@ describe("TripVisitAssignments", () => {
       label: "Mikkeli",
     });
     vi.mocked(apiFetch).mockResolvedValueOnce({
+      displayName: "Yöpymispaikka Mikkeli",
       id: 33,
       images: [],
       location: {
@@ -960,6 +962,10 @@ describe("TripVisitAssignments", () => {
       "2024-06-15",
     );
     await userEvent.type(
+      screen.getByLabelText("controlPanel.trips.assignments.stopDisplayNameLabel"),
+      "Yöpymispaikka Mikkeli",
+    );
+    await userEvent.type(
       screen.getByLabelText("controlPanel.trips.assignments.stopNoteLabel"),
       "Yopyminen",
     );
@@ -972,6 +978,7 @@ describe("TripVisitAssignments", () => {
     expect(apiFetch).toHaveBeenCalledWith("/api/trips/7/stops", {
       method: "POST",
       body: JSON.stringify({
+        displayName: "Yöpymispaikka Mikkeli",
         location: {
           coordinate: { lat: 61.6886, lon: 27.2736 },
           label: "Mikkeli",
@@ -992,6 +999,7 @@ describe("TripVisitAssignments", () => {
       label: "Mikkeli",
     });
     vi.mocked(apiFetch).mockResolvedValueOnce({
+      displayName: null,
       id: 33,
       images: [],
       location: {
@@ -1066,6 +1074,7 @@ describe("TripVisitAssignments", () => {
     expect(apiFetch).toHaveBeenCalledWith("/api/trips/7/stops", {
       method: "POST",
       body: JSON.stringify({
+        displayName: null,
         location: {
           coordinate: { lat: 61.6886, lon: 27.2736 },
           label: "Mikkeli",
@@ -1507,6 +1516,7 @@ describe("TripVisitAssignments", () => {
     const { apiFetch } = await import("@/lib/api");
     vi.mocked(apiFetch).mockResolvedValueOnce({
       ...currentTrip.itinerary[1].stop,
+      displayName: "Keskilinjan tauko",
       note: "Pitka lounastauko",
     });
 
@@ -1528,6 +1538,10 @@ describe("TripVisitAssignments", () => {
       screen.getByLabelText("controlPanel.trips.assignments.stopNoteLabel"),
       "Pitka lounastauko",
     );
+    await userEvent.type(
+      screen.getByLabelText("controlPanel.trips.assignments.stopDisplayNameLabel"),
+      "Keskilinjan tauko",
+    );
     const existingStop = currentTrip.itinerary[1];
 
     if (existingStop?.kind !== "stop") {
@@ -1543,6 +1557,7 @@ describe("TripVisitAssignments", () => {
     expect(apiFetch).toHaveBeenCalledWith("/api/trip-stops/21", {
       method: "PATCH",
       body: JSON.stringify({
+        displayName: "Keskilinjan tauko",
         location: existingStop.stop.location,
         note: "Pitka lounastauko",
         visitedOn: existingStop.stop.visitedOn,
@@ -1551,5 +1566,6 @@ describe("TripVisitAssignments", () => {
     await waitFor(() => {
       expect(mockRefresh).toHaveBeenCalled();
     });
+    expect(screen.getByText("Keskilinjan tauko")).toBeInTheDocument();
   });
 });
