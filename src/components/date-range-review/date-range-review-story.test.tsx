@@ -652,4 +652,109 @@ describe("DateRangeReviewStory", () => {
     expect(screen.queryByText("Käynti 4.8.2026")).not.toBeInTheDocument();
     expect(screen.queryByText("story.photoFallback")).not.toBeInTheDocument();
   });
+
+  it("switches the new parks card to a denser grid when many national parks were added", () => {
+    render(
+      <DateRangeReviewStory
+        mode="public"
+        overview={overview}
+        story={{
+          cards: [
+            story.cards[0],
+            {
+              kind: "new-parks",
+              parks: Array.from({ length: 7 }, (_, index) => ({
+                featuredImage: {
+                  alt: `Puisto ${index + 1}`,
+                  fullHeight: 900,
+                  fullUrl: `https://images.example/park-${index + 1}.jpg`,
+                  fullWidth: 1400,
+                  thumbHeight: null,
+                  thumbUrl: `https://images.example/park-${index + 1}-thumb.jpg`,
+                  thumbWidth: null,
+                },
+                park: {
+                  name: `Puisto ${index + 1}`,
+                  slug: `puisto-${index + 1}`,
+                },
+                visitedOn: `2026-08-${String(index + 1).padStart(2, "0")}`,
+              })),
+            },
+          ],
+          summary: {
+            distinctParkCount: 7,
+            imageCount: 7,
+            newNationalParkCount: 7,
+            revisitedParkCount: 0,
+            tripCount: 0,
+            visitCount: 7,
+          },
+        }}
+      />,
+    );
+
+    const denseGrid = screen.getByTestId("date-range-review-park-grid-1");
+
+    expect(denseGrid).toHaveAttribute("data-layout", "dense");
+    expect(screen.getByRole("link", { name: "Puisto 7" })).toBeInTheDocument();
+  });
+
+  it("switches long trip summaries to the denser stacked layout", () => {
+    render(
+      <DateRangeReviewStory
+        mode="public"
+        overview={overview}
+        story={{
+          cards: [
+            story.cards[0],
+            {
+              featuredImage: {
+                alt: "Roadtrip",
+                fullHeight: 900,
+                fullUrl: "https://images.example/roadtrip.jpg",
+                fullWidth: 1400,
+                thumbHeight: null,
+                thumbUrl: "https://images.example/roadtrip-thumb.jpg",
+                thumbWidth: null,
+              },
+              kind: "trip-summary",
+              trip: {
+                dateRange: {
+                  end: "2026-08-15",
+                  start: "2026-08-11",
+                },
+                id: 30,
+                imageCount: 12,
+                name: "Kesäloman roadtrip 2026",
+                slug: "kesaloman-roadtrip-2026",
+                visits: Array.from({ length: 10 }, (_, index) => ({
+                  park: {
+                    name: `Retkikohde ${index + 1}`,
+                    slug: `retkikohde-${index + 1}`,
+                    typeLabel: "Kansallispuisto",
+                    typeSlug: "kansallispuisto",
+                  },
+                  visitedOn: `2026-08-${String(index + 1).padStart(2, "0")}`,
+                })),
+                visitCount: 10,
+              },
+            },
+          ],
+          summary: {
+            distinctParkCount: 10,
+            imageCount: 12,
+            newNationalParkCount: 0,
+            revisitedParkCount: 0,
+            tripCount: 1,
+            visitCount: 10,
+          },
+        }}
+      />,
+    );
+
+    const tripLayout = screen.getByTestId("date-range-review-trip-layout-1");
+
+    expect(tripLayout).toHaveAttribute("data-layout", "dense");
+    expect(screen.getByRole("link", { name: "Retkikohde 10" })).toBeInTheDocument();
+  });
 });

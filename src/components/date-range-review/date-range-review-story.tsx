@@ -97,6 +97,17 @@ const getTripSummaryBadge = (
   return `${tripNumber}. ${t("story.tripLabel")}`;
 };
 
+const DENSE_PARK_GRID_THRESHOLD = 7;
+const DENSE_TRIP_VISIT_LIST_THRESHOLD = 8;
+
+const getDateRangeReviewParkGridClassName = (count: number) => {
+  if (count >= DENSE_PARK_GRID_THRESHOLD) {
+    return "grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
+  }
+
+  return getReviewStoryParkGridClassName(count);
+};
+
 const CARD_THEME_CLASS_NAMES: Record<DateRangeReviewCard["kind"], string> = {
   intro: "bg-[linear-gradient(145deg,#14532d_0%,#0f766e_52%,#1d4ed8_100%)] text-primary-foreground",
   "new-parks":
@@ -121,6 +132,7 @@ const MetricTile = ({ label, value }: { label: string; value: number }) => (
 const ReviewImage = ({
   alt,
   image,
+  imageClassName,
 }: {
   alt: string;
   image: {
@@ -129,6 +141,7 @@ const ReviewImage = ({
     fullUrl: string;
     fullWidth: number | null;
   };
+  imageClassName?: string;
 }) => {
   const dimensions = getImageDimensions(image);
 
@@ -136,7 +149,7 @@ const ReviewImage = ({
     <div className="overflow-hidden rounded-[1.75rem] border border-white/18 bg-white/10 shadow-[0_24px_60px_rgba(15,23,42,0.28)]">
       <Image
         alt={image.alt ?? alt}
-        className="h-72 w-full object-cover"
+        className={cn("h-72 w-full object-cover", imageClassName)}
         height={dimensions.height}
         src={image.fullUrl}
         unoptimized
@@ -175,9 +188,13 @@ const getMediaRevealClassName = (shouldAnimate: boolean) => {
 };
 
 const ReviewVisitList = ({
+  compact = false,
+  denseColumns = false,
   title,
   visits,
 }: {
+  compact?: boolean;
+  denseColumns?: boolean;
   title: string;
   visits?: DateRangeReviewStoryVisit[];
 }) => {
@@ -192,26 +209,40 @@ const ReviewVisitList = ({
       <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary-foreground/70">
         {title}
       </p>
-      <ul className="space-y-2.5" aria-label={title}>
+      <ul
+        aria-label={title}
+        className={cn("space-y-2.5", denseColumns && "grid gap-2.5 space-y-0 xl:grid-cols-2")}
+      >
         {normalizedVisits.map((visit) => (
           <li
             key={`${visit.park.slug}-${visit.visitedOn}`}
-            className="rounded-3xl border border-white/18 bg-white/10 px-3.5 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]"
+            className={cn(
+              "rounded-3xl border border-white/18 bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]",
+              compact ? "px-3 py-2.5" : "px-3.5 py-3",
+            )}
           >
             <div className="flex flex-wrap items-start justify-between gap-2">
-              <div className="space-y-1.5">
+              <div className={cn(compact ? "space-y-1" : "space-y-1.5")}>
                 <Link
                   href={appRoutes.park(visit.park.slug)}
-                  className="text-base font-semibold tracking-tight hover:underline"
+                  className={cn(
+                    "font-semibold tracking-tight hover:underline",
+                    compact ? "text-sm leading-5" : "text-base",
+                  )}
                 >
                   {visit.park.name}
                 </Link>
                 <div className="flex flex-wrap items-center gap-1.5">
                   <ParkTypeBadge
-                    className="border-white/28 bg-white/14 px-2 py-0.5 text-xs text-primary-foreground shadow-none dark:border-white/28 dark:bg-white/14"
+                    className={cn(
+                      "border-white/28 bg-white/14 text-primary-foreground shadow-none dark:border-white/28 dark:bg-white/14",
+                      compact ? "px-1.5 py-0.5 text-[0.6875rem]" : "px-2 py-0.5 text-xs",
+                    )}
                     label={visit.park.typeLabel}
                   />
-                  <span className="text-sm text-primary-foreground/78">
+                  <span
+                    className={cn("text-primary-foreground/78", compact ? "text-xs" : "text-sm")}
+                  >
                     {formatFinnishDate(visit.visitedOn)}
                   </span>
                 </div>
@@ -625,6 +656,8 @@ export const DateRangeReviewStory = ({
           }
 
           if (card.kind === "new-parks") {
+            const usesDenseParkGrid = card.parks.length >= DENSE_PARK_GRID_THRESHOLD;
+
             return (
               <StoryCard
                 key={cardKeys[index]}
@@ -656,7 +689,11 @@ export const DateRangeReviewStory = ({
                     />
                   </div>
 
-                  <div className={cn("mt-6", getReviewStoryParkGridClassName(card.parks.length))}>
+                  <div
+                    data-layout={usesDenseParkGrid ? "dense" : "default"}
+                    data-testid={`date-range-review-park-grid-${index}`}
+                    className={cn("mt-6", getDateRangeReviewParkGridClassName(card.parks.length))}
+                  >
                     {card.parks.map((park, parkIndex) => (
                       <ReviewStoryPlaceCard
                         key={`${park.park.slug}-${park.visitedOn}`}
@@ -666,6 +703,7 @@ export const DateRangeReviewStory = ({
                             <ReviewImage
                               alt={`${park.park.name}, ${formatFinnishLongDate(park.visitedOn)}`}
                               image={park.featuredImage}
+                              imageClassName={usesDenseParkGrid ? "h-40 sm:h-44" : undefined}
                             />
                           ) : undefined
                         }
@@ -676,8 +714,12 @@ export const DateRangeReviewStory = ({
                           getMediaRevealClassName(shouldAnimateCardEntry),
                         )}
                         style={getRevealStyle(shouldAnimateCardEntry, 180 + parkIndex * 90)}
-                        contentClassName="space-y-2 p-4"
-                        linkClassName="text-xl font-bold tracking-tight"
+                        contentClassName={usesDenseParkGrid ? "space-y-2 p-3.5" : "space-y-2 p-4"}
+                        linkClassName={
+                          usesDenseParkGrid
+                            ? "text-lg font-bold leading-snug tracking-tight"
+                            : "text-xl font-bold tracking-tight"
+                        }
                       />
                     ))}
                   </div>
@@ -687,6 +729,8 @@ export const DateRangeReviewStory = ({
           }
 
           if (card.kind === "revisited-parks") {
+            const usesDenseParkGrid = card.parks.length >= DENSE_PARK_GRID_THRESHOLD;
+
             return (
               <StoryCard
                 key={cardKeys[index]}
@@ -718,7 +762,11 @@ export const DateRangeReviewStory = ({
                     />
                   </div>
 
-                  <div className={cn("mt-6", getReviewStoryParkGridClassName(card.parks.length))}>
+                  <div
+                    data-layout={usesDenseParkGrid ? "dense" : "default"}
+                    data-testid={`date-range-review-park-grid-${index}`}
+                    className={cn("mt-6", getDateRangeReviewParkGridClassName(card.parks.length))}
+                  >
                     {card.parks.map((park, parkIndex) => (
                       <ReviewStoryPlaceCard
                         key={`${park.park.slug}-${park.visitedOn}`}
@@ -728,6 +776,7 @@ export const DateRangeReviewStory = ({
                             <ReviewImage
                               alt={`${park.park.name}, ${formatFinnishLongDate(park.visitedOn)}`}
                               image={park.featuredImage}
+                              imageClassName={usesDenseParkGrid ? "h-40 sm:h-44" : undefined}
                             />
                           ) : undefined
                         }
@@ -752,8 +801,12 @@ export const DateRangeReviewStory = ({
                           getMediaRevealClassName(shouldAnimateCardEntry),
                         )}
                         style={getRevealStyle(shouldAnimateCardEntry, 180 + parkIndex * 90)}
-                        contentClassName="space-y-2 p-4"
-                        linkClassName="text-xl font-bold tracking-tight"
+                        contentClassName={usesDenseParkGrid ? "space-y-2 p-3.5" : "space-y-2 p-4"}
+                        linkClassName={
+                          usesDenseParkGrid
+                            ? "text-lg font-bold leading-snug tracking-tight"
+                            : "text-xl font-bold tracking-tight"
+                        }
                       />
                     ))}
                   </div>
@@ -763,6 +816,9 @@ export const DateRangeReviewStory = ({
           }
 
           if (card.kind === "trip-summary") {
+            const tripVisits = card.trip.visits ?? [];
+            const usesDenseTripLayout = tripVisits.length >= DENSE_TRIP_VISIT_LIST_THRESHOLD;
+
             return (
               <StoryCard
                 key={cardKeys[index]}
@@ -802,41 +858,89 @@ export const DateRangeReviewStory = ({
                     />
                   </div>
 
-                  <div
-                    className={cn(
-                      "mt-6 grid gap-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-start",
-                      getRevealClassName(shouldAnimateCardEntry),
-                    )}
-                    style={getRevealStyle(shouldAnimateCardEntry, 180)}
-                  >
-                    {card.featuredImage !== null && (
-                      <div
-                        className={getMediaRevealClassName(shouldAnimateCardEntry)}
-                        style={getRevealStyle(shouldAnimateCardEntry, 260)}
-                      >
-                        <ReviewImage alt={card.trip.name} image={card.featuredImage} />
-                      </div>
-                    )}
-
-                    <div className="space-y-3">
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <MetricTile
-                          label={t("story.tripSummaryVisits")}
-                          value={card.trip.visitCount}
-                        />
-                        <MetricTile
-                          label={t("story.tripSummaryImages")}
-                          value={card.trip.imageCount}
-                        />
-                      </div>
-                      {(card.trip.visits ?? []).length > 0 && (
-                        <ReviewVisitList
-                          title={t("story.tripSummaryVisitListTitle")}
-                          visits={card.trip.visits}
-                        />
+                  {!usesDenseTripLayout && (
+                    <div
+                      data-layout="default"
+                      data-testid={`date-range-review-trip-layout-${index}`}
+                      className={cn(
+                        "mt-6 grid gap-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-start",
+                        getRevealClassName(shouldAnimateCardEntry),
                       )}
+                      style={getRevealStyle(shouldAnimateCardEntry, 180)}
+                    >
+                      {card.featuredImage !== null && (
+                        <div
+                          className={getMediaRevealClassName(shouldAnimateCardEntry)}
+                          style={getRevealStyle(shouldAnimateCardEntry, 260)}
+                        >
+                          <ReviewImage alt={card.trip.name} image={card.featuredImage} />
+                        </div>
+                      )}
+
+                      <div className="space-y-3">
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <MetricTile
+                            label={t("story.tripSummaryVisits")}
+                            value={card.trip.visitCount}
+                          />
+                          <MetricTile
+                            label={t("story.tripSummaryImages")}
+                            value={card.trip.imageCount}
+                          />
+                        </div>
+                        {tripVisits.length > 0 && (
+                          <ReviewVisitList
+                            title={t("story.tripSummaryVisitListTitle")}
+                            visits={tripVisits}
+                          />
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
+
+                  {usesDenseTripLayout && (
+                    <div
+                      data-layout="dense"
+                      data-testid={`date-range-review-trip-layout-${index}`}
+                      className={cn("mt-6 space-y-5", getRevealClassName(shouldAnimateCardEntry))}
+                      style={getRevealStyle(shouldAnimateCardEntry, 180)}
+                    >
+                      {card.featuredImage !== null && (
+                        <div
+                          className={getMediaRevealClassName(shouldAnimateCardEntry)}
+                          style={getRevealStyle(shouldAnimateCardEntry, 260)}
+                        >
+                          <ReviewImage
+                            alt={card.trip.name}
+                            image={card.featuredImage}
+                            imageClassName="h-60 sm:h-72"
+                          />
+                        </div>
+                      )}
+
+                      <div className="grid gap-5 xl:grid-cols-[minmax(0,0.34fr)_minmax(0,0.66fr)] xl:items-start">
+                        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                          <MetricTile
+                            label={t("story.tripSummaryVisits")}
+                            value={card.trip.visitCount}
+                          />
+                          <MetricTile
+                            label={t("story.tripSummaryImages")}
+                            value={card.trip.imageCount}
+                          />
+                        </div>
+
+                        {tripVisits.length > 0 && (
+                          <ReviewVisitList
+                            compact
+                            denseColumns
+                            title={t("story.tripSummaryVisitListTitle")}
+                            visits={tripVisits}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </section>
               </StoryCard>
             );
