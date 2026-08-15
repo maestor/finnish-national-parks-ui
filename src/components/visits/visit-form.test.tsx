@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { LONG_TEXTAREA_MAX_LENGTH } from "@/components/ui/textarea-with-counter";
 import type { Park } from "@/lib/parks";
 import { VisitForm } from "./visit-form";
 
@@ -347,6 +348,20 @@ describe("VisitForm", () => {
 
     expect(
       await screen.findByText("controlPanel.visits.form.validation.locationInvalid"),
+    ).toBeInTheDocument();
+  });
+
+  it("shows a note counter and caps the note at the API max length", () => {
+    render(<VisitForm parks={parks} />);
+
+    const noteField = screen.getByLabelText(/controlPanel.visits.form.noteLabel/i);
+    fireEvent.change(noteField, {
+      target: { value: "a".repeat(LONG_TEXTAREA_MAX_LENGTH + 1) },
+    });
+
+    expect((noteField as HTMLTextAreaElement).value).toHaveLength(LONG_TEXTAREA_MAX_LENGTH);
+    expect(
+      screen.getByText(`${LONG_TEXTAREA_MAX_LENGTH} / ${LONG_TEXTAREA_MAX_LENGTH}`),
     ).toBeInTheDocument();
   });
 

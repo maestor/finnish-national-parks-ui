@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { LONG_TEXTAREA_MAX_LENGTH } from "@/components/ui/textarea-with-counter";
 import { apiFetch } from "@/lib/api";
 import { prepareImageFileForUpload } from "@/lib/image-upload";
 import type { VisitWithPark } from "@/lib/parks";
@@ -991,6 +992,26 @@ describe("TripVisitAssignments", () => {
     await waitFor(() => {
       expect(mockRefresh).toHaveBeenCalled();
     });
+  });
+
+  it("shows a stop note counter and caps stop notes at the API max length", async () => {
+    render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
+
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.addStopAction",
+      }),
+    );
+
+    const stopNoteField = screen.getByLabelText("controlPanel.trips.assignments.stopNoteLabel");
+    fireEvent.change(stopNoteField, {
+      target: { value: "b".repeat(LONG_TEXTAREA_MAX_LENGTH + 1) },
+    });
+
+    expect((stopNoteField as HTMLTextAreaElement).value).toHaveLength(LONG_TEXTAREA_MAX_LENGTH);
+    expect(
+      screen.getByText(`${LONG_TEXTAREA_MAX_LENGTH} / ${LONG_TEXTAREA_MAX_LENGTH}`),
+    ).toBeInTheDocument();
   });
 
   it("lets a new stop choose its insertion order", async () => {

@@ -15,6 +15,10 @@ import { createPortal } from "react-dom";
 import { AdminTableFilters } from "@/components/admin/admin-table-filters";
 import { LocationSuggestionInput } from "@/components/location/location-suggestion-input";
 import { Button } from "@/components/ui/button";
+import {
+  LONG_TEXTAREA_MAX_LENGTH,
+  TextareaWithCounter,
+} from "@/components/ui/textarea-with-counter";
 import { apiFetch } from "@/lib/api";
 import { formatFinnishDate } from "@/lib/fi-date";
 import {
@@ -473,6 +477,8 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       normalizedStopNote !== (activeEditingStop.note ?? null) ||
       normalizedStopLocationQuery !== activeEditingStop.location.label ||
       !doTripLocationsMatch(stopLocation, activeEditingStop.location));
+  const isStopNoteTooLong = stopNote.length > LONG_TEXTAREA_MAX_LENGTH;
+  const isStopSubmitBlockedByLength = isStopNoteTooLong && (!isEditingStop || hasStopDetailChanges);
 
   const setItineraryWithRef = (
     updater: TripItineraryItem[] | ((currentItinerary: TripItineraryItem[]) => TripItineraryItem[]),
@@ -1392,11 +1398,11 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                       <label htmlFor="trip-stop-note" className="text-sm font-medium">
                         {t("stopNoteLabel")}
                       </label>
-                      <textarea
+                      <TextareaWithCounter
                         id="trip-stop-note"
                         rows={4}
                         value={stopNote}
-                        onChange={(event) => setStopNote(event.target.value)}
+                        onValueChange={setStopNote}
                         disabled={isBusy}
                         placeholder={t("stopNotePlaceholder")}
                         className="flex w-full resize-y rounded-xl border border-white/45 bg-white/78 px-3 py-2 text-sm ring-offset-background shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
@@ -1427,7 +1433,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                   </button>
                   <Button
                     type="button"
-                    disabled={isActionLocked}
+                    disabled={isActionLocked || isStopSubmitBlockedByLength}
                     onClick={() =>
                       isEditingStop && !hasStopDetailChanges
                         ? handleCloseStopForm()
