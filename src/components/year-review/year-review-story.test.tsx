@@ -594,7 +594,15 @@ describe("YearReviewStory", () => {
     vi.unstubAllGlobals();
   });
 
-  it("does not replay the card entry state after a card has already been seen once", () => {
+  it("does not replay the card entry state after a card has already been seen once", async () => {
+    const user = userEvent.setup();
+    const scrollTo = vi.fn();
+
+    Object.defineProperty(window, "scrollTo", {
+      configurable: true,
+      value: scrollTo,
+      writable: true,
+    });
     vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
     setScrollState({ scrollY: 400 });
 
@@ -602,25 +610,53 @@ describe("YearReviewStory", () => {
 
     const storyElement = screen.getByTestId("year-review-story");
     const firstCard = screen.getByTestId("year-review-story-card-0");
+    const navigationPanel = screen.getByLabelText("story.progressNavigator").closest("div");
     const secondCard = screen.getByTestId("year-review-story-card-1");
 
+    if (!(navigationPanel && secondCard)) {
+      throw new Error("Expected the navigation panel and second story card to exist.");
+    }
+
     mockStoryPosition(storyElement);
+    vi.spyOn(navigationPanel, "getBoundingClientRect").mockReturnValue({
+      bottom: 108,
+      height: 96,
+      left: 0,
+      right: 0,
+      toJSON: () => ({}),
+      top: 12,
+      width: 0,
+      x: 0,
+      y: 12,
+    });
+    vi.spyOn(secondCard, "getBoundingClientRect").mockReturnValue({
+      bottom: 448,
+      height: 320,
+      left: 0,
+      right: 0,
+      toJSON: () => ({}),
+      top: 128,
+      width: 0,
+      x: 0,
+      y: 128,
+    });
 
     expect(firstCard).toHaveAttribute("data-story-entry-state", "entry");
     expect(secondCard).toHaveAttribute("data-story-entry-state", "upcoming");
 
-    triggerIntersection(secondCard);
+    await user.click(screen.getByRole("button", { name: "story.next" }));
 
-    return waitFor(() => {
+    await waitFor(() => {
       expect(firstCard).toHaveAttribute("data-story-entry-state", "seen");
       expect(secondCard).toHaveAttribute("data-story-entry-state", "entry");
-    }).then(() => {
-      triggerIntersection(firstCard);
-
-      expect(firstCard).toHaveAttribute("data-story-entry-state", "seen");
-      expect(secondCard).toHaveAttribute("data-story-entry-state", "seen");
-      vi.unstubAllGlobals();
     });
+
+    setScrollState({ scrollY: 48 });
+    dispatchScroll();
+
+    expect(firstCard).toHaveAttribute("data-story-entry-state", "seen");
+    expect(secondCard).toHaveAttribute("data-story-entry-state", "seen");
+    vi.unstubAllGlobals();
   });
 
   it("lets people move between cards with the previous and next buttons", async () => {

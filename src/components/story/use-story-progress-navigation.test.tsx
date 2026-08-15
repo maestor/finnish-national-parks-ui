@@ -135,6 +135,7 @@ const StoryHarness = ({
     scrollToCard,
     sectionRefs,
     storyRef,
+    visibleIndex,
   } = useStoryProgressNavigation({
     cardCount,
   });
@@ -143,6 +144,7 @@ const StoryHarness = ({
   return (
     <div ref={storyRef} data-testid="story-root">
       <p data-testid="active-index">{activeIndex}</p>
+      <p data-testid="visible-index">{visibleIndex}</p>
 
       <button type="button" onClick={() => scrollToCard(0)}>
         external-first
@@ -482,6 +484,81 @@ describe("useStoryProgressNavigation", () => {
     dispatchScroll();
 
     expect(screen.getByTestId("active-index")).toHaveTextContent("1");
+    expect(screen.getByTestId("visible-index")).toHaveTextContent("1");
+  });
+
+  it("reveals a tall active card as soon as it becomes the scroll-active card", () => {
+    setScrollState({ innerHeight: 640, scrollY: 780 });
+    vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
+
+    render(<StoryHarness />);
+
+    const storyRoot = screen.getByTestId("story-root");
+    const navigation = screen.getByTestId("navigation");
+    const firstSection = screen.getByTestId("section-0");
+    const secondSection = screen.getByTestId("section-1");
+    const thirdSection = screen.getByTestId("section-2");
+
+    vi.spyOn(storyRoot, "getBoundingClientRect").mockImplementation(() => ({
+      bottom: 2600 - window.scrollY,
+      height: 2552,
+      left: 0,
+      right: 0,
+      toJSON: () => ({}),
+      top: 48 - window.scrollY,
+      width: 0,
+      x: 0,
+      y: 48 - window.scrollY,
+    }));
+    vi.spyOn(navigation, "getBoundingClientRect").mockReturnValue({
+      bottom: 108,
+      height: 96,
+      left: 0,
+      right: 0,
+      toJSON: () => ({}),
+      top: 12,
+      width: 0,
+      x: 0,
+      y: 12,
+    });
+    vi.spyOn(firstSection, "getBoundingClientRect").mockReturnValue({
+      bottom: -200,
+      height: 720,
+      left: 0,
+      right: 0,
+      toJSON: () => ({}),
+      top: -920,
+      width: 0,
+      x: 0,
+      y: -920,
+    });
+    vi.spyOn(secondSection, "getBoundingClientRect").mockReturnValue({
+      bottom: 920,
+      height: 1120,
+      left: 0,
+      right: 0,
+      toJSON: () => ({}),
+      top: -200,
+      width: 0,
+      x: 0,
+      y: -200,
+    });
+    vi.spyOn(thirdSection, "getBoundingClientRect").mockReturnValue({
+      bottom: 1200,
+      height: 840,
+      left: 0,
+      right: 0,
+      toJSON: () => ({}),
+      top: 360,
+      width: 0,
+      x: 0,
+      y: 360,
+    });
+
+    dispatchScroll();
+
+    expect(screen.getByTestId("active-index")).toHaveTextContent("1");
+    expect(screen.getByTestId("visible-index")).toHaveTextContent("1");
   });
 
   it("falls back to the nearest below card when every section starts below the navigation anchor", () => {
