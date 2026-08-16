@@ -1,5 +1,10 @@
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
+import { HeaderBrandMark } from "@/components/layout/header-brand-mark";
+import {
+  PUBLIC_HERO_DESCRIPTION_CLASS_NAME,
+  PUBLIC_PANEL_CLASS_NAME,
+} from "@/components/layout/public-page-styles";
 import { cn } from "@/lib/cn";
 
 export const REVIEW_STORY_COPY_CLASS_NAME =
@@ -99,4 +104,54 @@ export const ReviewStoryPlaceCard = ({
       {extraContent}
     </div>
   </article>
+);
+
+interface ReviewStoryFooterProps {
+  browseAppLabel: string;
+  footer: string;
+  footerHint: string;
+  footerIcon: ReactNode;
+  mode: "preview" | "public";
+  siteTitle: string;
+}
+
+export const ReviewStoryFooter = ({
+  browseAppLabel,
+  footer,
+  footerHint,
+  footerIcon,
+  mode,
+  siteTitle,
+}: ReviewStoryFooterProps) => (
+  <div className={cn(PUBLIC_PANEL_CLASS_NAME, "px-5 py-5")}>
+    {mode === "public" ? (
+      <div className="flex flex-col gap-4 sm:grid sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-3 self-start rounded-full border border-white/45 bg-white/82 px-3 py-2 text-foreground shadow-[0_12px_28px_rgba(148,163,184,0.22)] backdrop-blur-md transition-colors hover:bg-white/94 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/56 dark:hover:bg-slate-950/76 dark:shadow-[0_16px_32px_rgba(2,6,23,0.38)] sm:justify-self-start"
+        >
+          <HeaderBrandMark className="h-10 w-10" />
+          <span className="text-base font-semibold">{siteTitle}</span>
+        </Link>
+        <p className={cn(PUBLIC_HERO_DESCRIPTION_CLASS_NAME, "sm:text-center")}>
+          {footerIcon}
+          {footer}
+        </p>
+        <Link
+          href="/"
+          className="inline-flex items-center justify-center rounded-full border border-border/60 px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-primary/45 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:justify-self-end"
+        >
+          {browseAppLabel}
+        </Link>
+      </div>
+    ) : (
+      <>
+        <p className="text-sm text-muted-foreground">{footer}</p>
+        <p className={`mt-2 ${PUBLIC_HERO_DESCRIPTION_CLASS_NAME}`}>
+          {footerIcon}
+          {footerHint}
+        </p>
+      </>
+    )}
+  </div>
 );

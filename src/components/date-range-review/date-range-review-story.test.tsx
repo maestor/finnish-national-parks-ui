@@ -327,6 +327,10 @@ describe("DateRangeReviewStory", () => {
     expect(screen.getByText("story.otherVisitsTitle")).toBeInTheDocument();
     expect(screen.getByText("story.otherVisitsHeading")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Aulanko" })).toBeInTheDocument();
+    expect(screen.getByText("story.footer")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "story.browseApp" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "siteTitle" })).toHaveAttribute("href", "/");
+    expect(screen.queryByText("story.footerHint")).not.toBeInTheDocument();
     expect(within(firstTripCard).queryByText("Käynti 1.8.2026")).not.toBeInTheDocument();
     expect(within(firstTripCard).getAllByText("1.8.2026")).toHaveLength(3);
     expect(within(otherVisitsCard).queryByText("Käynti 6.8.2026")).not.toBeInTheDocument();

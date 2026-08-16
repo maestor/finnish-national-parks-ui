@@ -20,6 +20,7 @@ import {
 import { ParkTypeBadge } from "@/components/park/park-type-badge";
 import {
   getReviewStoryParkGridClassName,
+  ReviewStoryFooter,
   ReviewStoryPlaceCard,
   ReviewStorySectionHeader,
 } from "@/components/story/review-story-shared";
@@ -308,6 +309,7 @@ export const DateRangeReviewStory = ({
   story,
 }: DateRangeReviewStoryProps) => {
   const t = useTranslations("dateRangeReview");
+  const layoutT = useTranslations("layout");
   const HeadingTag = headingLevel === 1 ? "h1" : "h2";
   const cards = story.cards;
   const cardKeys = cards.map((card) => getCardKey(card));
@@ -988,6 +990,20 @@ export const DateRangeReviewStory = ({
           );
         })}
       </div>
+
+      <ReviewStoryFooter
+        browseAppLabel={t("story.browseApp")}
+        footer={t("story.footer")}
+        footerHint={t("story.footerHint")}
+        footerIcon={
+          <Route
+            className="mr-2 inline h-4 w-4 align-text-bottom text-primary"
+            aria-hidden="true"
+          />
+        }
+        mode={mode}
+        siteTitle={layoutT("siteTitle")}
+      />
     </div>
   );
 };
