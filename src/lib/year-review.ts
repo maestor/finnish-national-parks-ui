@@ -75,6 +75,11 @@ export const findYearReviewTripHighlightCard = (
   story.cards.find((card): card is YearReviewTripHighlightCard => card.kind === "trip-highlight") ??
   null;
 
+export const findYearReviewSocialPreviewImageUrl = (story: YearReviewStory): string | null =>
+  findYearReviewPhotoHighlightCard(story)?.featuredImage?.fullUrl ??
+  findYearReviewTripHighlightCard(story)?.featuredImage?.fullUrl ??
+  null;
+
 export const findYearReviewSeasonalCard = (story: YearReviewStory): YearReviewSeasonalCard | null =>
   story.cards.find((card): card is YearReviewSeasonalCard => card.kind === "seasonal") ?? null;
 
