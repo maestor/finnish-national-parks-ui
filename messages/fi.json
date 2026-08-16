@@ -802,7 +802,7 @@
       "publishedOn": "Julkaistu {date}",
       "notAvailable": "Ei vielä dataa",
       "browseApp": "Selaa Reissuvihkoa",
-      "footer": "Katsaus rakentuu automaattisesti käynti- ja retkitiedoista.",
+      "footer": "Kooste rakentuu automaattisesti käynti- ja retkitiedoista.",
       "footerHint": "Julkaistu linkki näyttää tämän saman tarinan myös julkisessa näkymässä."
     }
   },
@@ -868,7 +868,7 @@
       "otherVisitsCaption": "Nuohosimme menemään myös seuraavissa yksittäisissä paikoissa",
       "otherVisitsListTitle": "Muut käynnit",
       "browseApp": "Selaa Reissuvihkoa",
-      "footer": "Katsaus rakentuu automaattisesti käynti- ja retkitiedoista.",
+      "footer": "Kooste rakentuu automaattisesti käynti- ja retkitiedoista.",
       "footerHint": "Kun julkaiset katsauksen, sama tarina näkyy tällä linkillä myös julkisessa näkymässä."
     }
   },
