@@ -809,7 +809,7 @@
   "dateRangeReview": {
     "eyebrow": "Reissukatsaus",
     "shareTitle": "{name}",
-    "shareDescription": "Ajanjakson {name} käynnit, retket ja kuvat Reissuvihkossa.",
+    "shareDescription": "{name} käynnit, retket ja kuvat Reissuvihkossa.",
     "stats": {
       "visits": "Käynnit",
       "trips": "Retket",
