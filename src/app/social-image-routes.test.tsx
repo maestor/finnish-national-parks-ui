@@ -1,10 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError, apiFetch } from "@/lib/api";
-import YearReviewOpenGraphImage, {
-  alt as yearReviewAlt,
-  contentType as yearReviewContentType,
-  size as yearReviewSize,
-} from "./(user)/vuosikatsaus/jako/[shareId]/opengraph-image";
+import { GET as getDateRangeReviewShareImage } from "./(user)/ajanjaksokatsaus/jako/[shareId]/kuva/route";
+import { GET as getYearReviewShareImage } from "./(user)/vuosikatsaus/jako/[shareId]/kuva/route";
 import OpenGraphImage, {
   alt as openGraphAlt,
   contentType as openGraphContentType,
@@ -126,6 +123,56 @@ const yearReviewShare = {
   year: 2024,
 };
 
+const dateRangeReviewShare = {
+  overview: {
+    endDate: "2026-08-06",
+    name: "Kesaloma 2026",
+    shareSlug: "kesaloma-2026",
+    startDate: "2026-07-31",
+  },
+  publishedAt: "2026-08-07T09:00:00Z",
+  shareId,
+  story: {
+    summary: {
+      distinctParkCount: 4,
+      imageCount: 8,
+      newNationalParkCount: 2,
+      revisitedParkCount: 1,
+      tripCount: 3,
+      visitCount: 6,
+    },
+    cards: [
+      {
+        dateRange: {
+          endDate: "2026-08-06",
+          startDate: "2026-07-31",
+        },
+        kind: "intro",
+        name: "Kesaloma 2026",
+        primaryStat: {
+          key: "visitCount",
+          value: 6,
+        },
+        tripCount: 3,
+      },
+      {
+        featuredImage: {
+          alt: "Kesaloman suosikkikuva",
+          fullHeight: 1200,
+          fullUrl: "https://images.example/date-range-photo-full.jpg",
+          fullWidth: 1600,
+          thumbHeight: 900,
+          thumbUrl: "https://images.example/date-range-photo-thumb.jpg",
+          thumbWidth: 1200,
+        },
+        kind: "photo-highlight",
+        totalImageCount: 8,
+        visit: null,
+      },
+    ],
+  },
+};
+
 describe("social image routes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -162,15 +209,13 @@ describe("social image routes", () => {
     });
   });
 
-  it("serves the landscape year review Open Graph image with headline stats", async () => {
+  it("serves the landscape year review share image with headline stats", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce(yearReviewShare);
 
-    expect(yearReviewAlt).toEqual(expect.any(String));
-    expect(yearReviewAlt.length).toBeGreaterThan(0);
-    expect(yearReviewContentType).toBe("image/png");
-    expect(yearReviewSize).toEqual({ width: 1200, height: 630 });
     await expect(
-      YearReviewOpenGraphImage({ params: Promise.resolve({ shareId }) }),
+      getYearReviewShareImage(new Request("https://frontend.example"), {
+        params: Promise.resolve({ shareId }),
+      }),
     ).resolves.toSatisfy(
       (result) =>
         result.variant === "landscape" &&
@@ -204,23 +249,58 @@ describe("social image routes", () => {
     });
 
     await expect(
-      YearReviewOpenGraphImage({ params: Promise.resolve({ shareId }) }),
+      getYearReviewShareImage(new Request("https://frontend.example"), {
+        params: Promise.resolve({ shareId }),
+      }),
     ).resolves.toSatisfy((result) => result.imageUrl === "https://images.example/trip-full.jpg");
   });
 
-  it("calls notFound for a year review image with an unknown share", async () => {
+  it("returns 404 for a year review image with an unknown share", async () => {
     vi.mocked(apiFetch).mockRejectedValueOnce(new ApiError(404, "missing"));
 
     await expect(
-      YearReviewOpenGraphImage({ params: Promise.resolve({ shareId }) }),
-    ).rejects.toThrow("NEXT_NOT_FOUND");
-    expect(mockNotFound).toHaveBeenCalled();
+      getYearReviewShareImage(new Request("https://frontend.example"), {
+        params: Promise.resolve({ shareId }),
+      }),
+    ).resolves.toHaveProperty("status", 404);
   });
 
-  it("calls notFound for a malformed year review share id", async () => {
+  it("returns 404 for a malformed year review share id", async () => {
     await expect(
-      YearReviewOpenGraphImage({ params: Promise.resolve({ shareId: "not-a-share-id" }) }),
-    ).rejects.toThrow("NEXT_NOT_FOUND");
-    expect(mockNotFound).toHaveBeenCalled();
+      getYearReviewShareImage(new Request("https://frontend.example"), {
+        params: Promise.resolve({ shareId: "not-a-share-id" }),
+      }),
+    ).resolves.toHaveProperty("status", 404);
+  });
+
+  it("serves the landscape date-range review share image with headline stats", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce(dateRangeReviewShare);
+
+    await expect(
+      getDateRangeReviewShareImage(new Request("https://frontend.example"), {
+        params: Promise.resolve({ shareId }),
+      }),
+    ).resolves.toSatisfy(
+      (result) =>
+        result.variant === "landscape" &&
+        result.width === 1200 &&
+        result.height === 630 &&
+        result.imageUrl === "https://images.example/date-range-photo-full.jpg" &&
+        result.title.includes("Kesaloma 2026") &&
+        result.description.includes("Kesaloma 2026") &&
+        result.highlights.length === 4 &&
+        result.highlights[0]?.startsWith("6 ") === true &&
+        result.highlights[1]?.startsWith("3 ") === true &&
+        result.highlights[2]?.startsWith("8 ") === true &&
+        result.highlights[3]?.startsWith("2 ") === true,
+    );
+  });
+
+  it("returns 404 for a malformed date-range review share id", async () => {
+    await expect(
+      getDateRangeReviewShareImage(new Request("https://frontend.example"), {
+        params: Promise.resolve({ shareId: "not-a-share-id" }),
+      }),
+    ).resolves.toHaveProperty("status", 404);
   });
 });

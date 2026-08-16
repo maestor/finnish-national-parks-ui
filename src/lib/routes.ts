@@ -9,7 +9,9 @@ export const appRoutes = {
   visits: "/kaynnit",
   tripPlanner: "/reissusuunnittelu",
   dateRangeReviewShare: (shareId: string) => `/ajanjaksokatsaus/jako/${shareId}`,
+  dateRangeReviewShareImage: (shareId: string) => `/ajanjaksokatsaus/jako/${shareId}/kuva`,
   yearReviewShare: (shareId: string) => `/vuosikatsaus/jako/${shareId}`,
+  yearReviewShareImage: (shareId: string) => `/vuosikatsaus/jako/${shareId}/kuva`,
   controlPanel: {
     root: CONTROL_PANEL_ROOT,
     parks: `${CONTROL_PANEL_ROOT}/paikat`,

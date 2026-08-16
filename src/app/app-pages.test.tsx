@@ -855,6 +855,7 @@ const createExpectedShareMetadata = (
   pageTitle: string,
   options?: {
     description?: string;
+    socialImagePath?: string;
   },
 ) => ({
   title: pageTitle,
@@ -862,10 +863,13 @@ const createExpectedShareMetadata = (
   openGraph: {
     title: `${pageTitle} | metadata.title`,
     ...(options?.description ? { description: options.description } : {}),
+    ...(options?.socialImagePath ? { images: [options.socialImagePath] } : {}),
   },
   twitter: {
+    ...(options?.socialImagePath ? { card: "summary_large_image" } : {}),
     title: `${pageTitle} | metadata.title`,
     ...(options?.description ? { description: options.description } : {}),
+    ...(options?.socialImagePath ? { images: [options.socialImagePath] } : {}),
   },
 });
 
@@ -1434,6 +1438,7 @@ describe("App pages", () => {
     ).resolves.toEqual(
       createExpectedShareMetadata("dateRangeReview.shareTitle", {
         description: "dateRangeReview.shareDescription",
+        socialImagePath: "/ajanjaksokatsaus/jako/93d27350-b7a4-48ba-a93f-16f38d44aa03/kuva",
       }),
     );
   });
@@ -1472,6 +1477,7 @@ describe("App pages", () => {
     ).resolves.toEqual(
       createExpectedShareMetadata("yearReview.shareTitle", {
         description: "yearReview.shareDescription",
+        socialImagePath: "/vuosikatsaus/jako/93d27350-b7a4-48ba-a93f-16f38d44aa03/kuva",
       }),
     );
   });

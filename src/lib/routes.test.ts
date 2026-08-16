@@ -29,8 +29,14 @@ describe("routes", () => {
     expect(appRoutes.dateRangeReviewShare("93d27350-b7a4-48ba-a93f-16f38d44aa03")).toBe(
       "/ajanjaksokatsaus/jako/93d27350-b7a4-48ba-a93f-16f38d44aa03",
     );
+    expect(appRoutes.dateRangeReviewShareImage("93d27350-b7a4-48ba-a93f-16f38d44aa03")).toBe(
+      "/ajanjaksokatsaus/jako/93d27350-b7a4-48ba-a93f-16f38d44aa03/kuva",
+    );
     expect(appRoutes.yearReviewShare("93d27350-b7a4-48ba-a93f-16f38d44aa03")).toBe(
       "/vuosikatsaus/jako/93d27350-b7a4-48ba-a93f-16f38d44aa03",
+    );
+    expect(appRoutes.yearReviewShareImage("93d27350-b7a4-48ba-a93f-16f38d44aa03")).toBe(
+      "/vuosikatsaus/jako/93d27350-b7a4-48ba-a93f-16f38d44aa03/kuva",
     );
   });
 
