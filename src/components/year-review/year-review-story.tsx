@@ -13,13 +13,10 @@ import {
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { type CSSProperties, type ReactNode, useEffect, useRef, useState } from "react";
-import { HeaderBrandMark } from "@/components/layout/header-brand-mark";
-import {
-  PUBLIC_HERO_DESCRIPTION_CLASS_NAME,
-  PUBLIC_PANEL_CLASS_NAME,
-} from "@/components/layout/public-page-styles";
+import { PUBLIC_PANEL_CLASS_NAME } from "@/components/layout/public-page-styles";
 import {
   getReviewStoryParkGridClassName,
+  ReviewStoryFooter,
   ReviewStoryPlaceCard,
   ReviewStorySectionHeader,
 } from "@/components/story/review-story-shared";
@@ -1168,43 +1165,19 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
         })}
       </div>
 
-      <div className={cn(PUBLIC_PANEL_CLASS_NAME, "px-5 py-5")}>
-        {mode === "public" ? (
-          <div className="flex flex-col gap-4 sm:grid sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center">
-            <Link
-              href={appRoutes.home}
-              className="inline-flex items-center gap-3 self-start rounded-full border border-white/45 bg-white/82 px-3 py-2 text-foreground shadow-[0_12px_28px_rgba(148,163,184,0.22)] backdrop-blur-md transition-colors hover:bg-white/94 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/56 dark:hover:bg-slate-950/76 dark:shadow-[0_16px_32px_rgba(2,6,23,0.38)] sm:justify-self-start"
-            >
-              <HeaderBrandMark className="h-10 w-10" />
-              <span className="text-base font-semibold">{layoutT("siteTitle")}</span>
-            </Link>
-            <p className={cn(PUBLIC_HERO_DESCRIPTION_CLASS_NAME, "sm:text-center")}>
-              <Route
-                className="mr-2 inline h-4 w-4 align-text-bottom text-primary"
-                aria-hidden="true"
-              />
-              {t("story.footer")}
-            </p>
-            <Link
-              href={appRoutes.home}
-              className="inline-flex items-center justify-center rounded-full border border-border/60 px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-primary/45 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:justify-self-end"
-            >
-              {t("story.browseApp")}
-            </Link>
-          </div>
-        ) : (
-          <>
-            <p className="text-sm text-muted-foreground">{t("story.footer")}</p>
-            <p className={`mt-2 ${PUBLIC_HERO_DESCRIPTION_CLASS_NAME}`}>
-              <Route
-                className="mr-2 inline h-4 w-4 align-text-bottom text-primary"
-                aria-hidden="true"
-              />
-              {t("story.footerHint")}
-            </p>
-          </>
-        )}
-      </div>
+      <ReviewStoryFooter
+        browseAppLabel={t("story.browseApp")}
+        footer={t("story.footer")}
+        footerHint={t("story.footerHint")}
+        footerIcon={
+          <Route
+            className="mr-2 inline h-4 w-4 align-text-bottom text-primary"
+            aria-hidden="true"
+          />
+        }
+        mode={mode}
+        siteTitle={layoutT("siteTitle")}
+      />
     </div>
   );
 };
