@@ -855,6 +855,7 @@ const createExpectedShareMetadata = (
   pageTitle: string,
   options?: {
     description?: string;
+    pagePath?: string;
     socialImagePath?: string;
   },
 ) => ({
@@ -862,6 +863,7 @@ const createExpectedShareMetadata = (
   ...(options?.description ? { description: options.description } : {}),
   openGraph: {
     title: `${pageTitle} | metadata.title`,
+    ...(options?.pagePath ? { type: "website", url: options.pagePath } : {}),
     ...(options?.description ? { description: options.description } : {}),
     ...(options?.socialImagePath ? { images: [options.socialImagePath] } : {}),
   },
@@ -1438,7 +1440,45 @@ describe("App pages", () => {
     ).resolves.toEqual(
       createExpectedShareMetadata("dateRangeReview.shareTitle", {
         description: "dateRangeReview.shareDescription",
+        pagePath: "/ajanjaksokatsaus/jako/93d27350-b7a4-48ba-a93f-16f38d44aa03",
         socialImagePath: "/ajanjaksokatsaus/jako/93d27350-b7a4-48ba-a93f-16f38d44aa03/kuva",
+      }),
+    );
+  });
+
+  it("prefers the direct featured photo in public date-range review metadata when one exists", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ...dateRangeReviewShare,
+      story: {
+        ...dateRangeReviewShare.story,
+        cards: dateRangeReviewShare.story.cards.map((card) =>
+          card.kind === "photo-highlight"
+            ? {
+                ...card,
+                featuredImage: {
+                  alt: "Kesaloman suosikkikuva",
+                  fullHeight: 1200,
+                  fullUrl: "https://images.example/date-range-photo-full.jpg",
+                  fullWidth: 1600,
+                  thumbHeight: 900,
+                  thumbUrl: "https://images.example/date-range-photo-thumb.jpg",
+                  thumbWidth: 1200,
+                },
+              }
+            : card,
+        ),
+      },
+    });
+
+    await expect(
+      generatePublicDateRangeReviewMetadata({
+        params: Promise.resolve({ shareId: yearReviewShareId }),
+      }),
+    ).resolves.toEqual(
+      createExpectedShareMetadata("dateRangeReview.shareTitle", {
+        description: "dateRangeReview.shareDescription",
+        pagePath: "/ajanjaksokatsaus/jako/93d27350-b7a4-48ba-a93f-16f38d44aa03",
+        socialImagePath: "https://images.example/date-range-photo-full.jpg",
       }),
     );
   });
@@ -1477,7 +1517,44 @@ describe("App pages", () => {
     ).resolves.toEqual(
       createExpectedShareMetadata("yearReview.shareTitle", {
         description: "yearReview.shareDescription",
+        pagePath: "/vuosikatsaus/jako/93d27350-b7a4-48ba-a93f-16f38d44aa03",
         socialImagePath: "/vuosikatsaus/jako/93d27350-b7a4-48ba-a93f-16f38d44aa03/kuva",
+      }),
+    );
+  });
+
+  it("prefers the direct featured photo in public year review metadata when one exists", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ...yearReviewShare,
+      story: {
+        ...yearReviewShare.story,
+        cards: [
+          ...yearReviewShare.story.cards,
+          {
+            featuredImage: {
+              alt: "Pallas-Yllästunturin huippukuva",
+              fullHeight: 1200,
+              fullUrl: "https://images.example/year-review-photo-full.jpg",
+              fullWidth: 1600,
+              thumbHeight: 900,
+              thumbUrl: "https://images.example/year-review-photo-thumb.jpg",
+              thumbWidth: 1200,
+            },
+            kind: "photo-highlight",
+            totalImageCount: 2,
+            visit: null,
+          },
+        ],
+      },
+    });
+
+    await expect(
+      generatePublicYearReviewMetadata({ params: Promise.resolve({ shareId: yearReviewShareId }) }),
+    ).resolves.toEqual(
+      createExpectedShareMetadata("yearReview.shareTitle", {
+        description: "yearReview.shareDescription",
+        pagePath: "/vuosikatsaus/jako/93d27350-b7a4-48ba-a93f-16f38d44aa03",
+        socialImagePath: "https://images.example/year-review-photo-full.jpg",
       }),
     );
   });

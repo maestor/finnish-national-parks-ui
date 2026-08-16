@@ -13,11 +13,8 @@ import TwitterImage, {
   size as twitterSize,
 } from "./twitter-image";
 
-const { createSocialPreviewImageResponseMock, mockNotFound } = vi.hoisted(() => ({
+const { createSocialPreviewImageResponseMock } = vi.hoisted(() => ({
   createSocialPreviewImageResponseMock: vi.fn((options) => options),
-  mockNotFound: vi.fn(() => {
-    throw new Error("NEXT_NOT_FOUND");
-  }),
 }));
 
 vi.mock("@/lib/social-preview-image", () => ({
@@ -32,10 +29,6 @@ vi.mock("@/lib/api", async () => {
     apiFetch: vi.fn(),
   };
 });
-
-vi.mock("next/navigation", () => ({
-  notFound: mockNotFound,
-}));
 
 const shareId = "93d27350-b7a4-48ba-a93f-16f38d44aa03";
 
@@ -176,9 +169,6 @@ const dateRangeReviewShare = {
 describe("social image routes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockNotFound.mockImplementation(() => {
-      throw new Error("NEXT_NOT_FOUND");
-    });
   });
 
   it("serves the square Open Graph image metadata route", () => {
@@ -209,7 +199,7 @@ describe("social image routes", () => {
     });
   });
 
-  it("serves the landscape year review share image with headline stats", async () => {
+  it("redirects year review share image requests to the featured photo", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce(yearReviewShare);
 
     await expect(
@@ -218,21 +208,13 @@ describe("social image routes", () => {
       }),
     ).resolves.toSatisfy(
       (result) =>
-        result.variant === "landscape" &&
-        result.width === 1200 &&
-        result.height === 630 &&
-        result.imageUrl === "https://images.example/pallas-full.jpg" &&
-        result.title.includes("2024") &&
-        result.description.includes("2024") &&
-        result.highlights.length === 4 &&
-        result.highlights[0]?.startsWith("1 ") === true &&
-        result.highlights[1]?.startsWith("1 ") === true &&
-        result.highlights[2]?.startsWith("2 ") === true &&
-        result.highlights[3] === "Pallas-Yllästunturi x1",
+        result instanceof Response &&
+        result.status === 307 &&
+        result.headers.get("location") === "https://images.example/pallas-full.jpg",
     );
   });
 
-  it("falls back to the trip highlight image when the photo highlight has no image", async () => {
+  it("redirects year review share image requests to the trip photo when the photo highlight has no image", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce({
       ...yearReviewShare,
       story: {
@@ -252,7 +234,43 @@ describe("social image routes", () => {
       getYearReviewShareImage(new Request("https://frontend.example"), {
         params: Promise.resolve({ shareId }),
       }),
-    ).resolves.toSatisfy((result) => result.imageUrl === "https://images.example/trip-full.jpg");
+    ).resolves.toSatisfy(
+      (result) =>
+        result instanceof Response &&
+        result.status === 307 &&
+        result.headers.get("location") === "https://images.example/trip-full.jpg",
+    );
+  });
+
+  it("falls back to a generated year review image when no featured photo exists", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ...yearReviewShare,
+      story: {
+        ...yearReviewShare.story,
+        cards: yearReviewShare.story.cards
+          .filter((card) => card.kind !== "photo-highlight")
+          .map((card) =>
+            card.kind === "trip-highlight"
+              ? {
+                  ...card,
+                  featuredImage: null,
+                }
+              : card,
+          ),
+      },
+    });
+
+    await expect(
+      getYearReviewShareImage(new Request("https://frontend.example"), {
+        params: Promise.resolve({ shareId }),
+      }),
+    ).resolves.toSatisfy(
+      (result) =>
+        result.variant === "landscape" &&
+        result.width === 1200 &&
+        result.height === 630 &&
+        result.imageUrl === null,
+    );
   });
 
   it("returns 404 for a year review image with an unknown share", async () => {
@@ -282,17 +300,38 @@ describe("social image routes", () => {
       }),
     ).resolves.toSatisfy(
       (result) =>
+        result instanceof Response &&
+        result.status === 307 &&
+        result.headers.get("location") === "https://images.example/date-range-photo-full.jpg",
+    );
+  });
+
+  it("falls back to a generated date-range review image when no featured photo exists", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ...dateRangeReviewShare,
+      story: {
+        ...dateRangeReviewShare.story,
+        cards: dateRangeReviewShare.story.cards.map((card) =>
+          card.kind === "photo-highlight"
+            ? {
+                ...card,
+                featuredImage: null,
+              }
+            : card,
+        ),
+      },
+    });
+
+    await expect(
+      getDateRangeReviewShareImage(new Request("https://frontend.example"), {
+        params: Promise.resolve({ shareId }),
+      }),
+    ).resolves.toSatisfy(
+      (result) =>
         result.variant === "landscape" &&
         result.width === 1200 &&
         result.height === 630 &&
-        result.imageUrl === "https://images.example/date-range-photo-full.jpg" &&
-        result.title.includes("Kesaloma 2026") &&
-        result.description.includes("Kesaloma 2026") &&
-        result.highlights.length === 4 &&
-        result.highlights[0]?.startsWith("6 ") === true &&
-        result.highlights[1]?.startsWith("3 ") === true &&
-        result.highlights[2]?.startsWith("8 ") === true &&
-        result.highlights[3]?.startsWith("2 ") === true,
+        result.imageUrl === null,
     );
   });
 

@@ -143,6 +143,29 @@ export const readDateRangeReviewShareOrNull = async (
   }
 };
 
+export const findDateRangeReviewSocialPreviewImageUrl = (
+  story: DateRangeReviewStory,
+): string | null => {
+  for (const card of story.cards) {
+    if (
+      (card.kind === "photo-highlight" || card.kind === "trip-summary") &&
+      card.featuredImage !== null
+    ) {
+      return card.featuredImage.fullUrl;
+    }
+
+    if (card.kind === "new-parks" || card.kind === "revisited-parks") {
+      const parkWithImage = card.parks.find((park) => park.featuredImage !== null);
+
+      if (parkWithImage?.featuredImage) {
+        return parkWithImage.featuredImage.fullUrl;
+      }
+    }
+  }
+
+  return null;
+};
+
 export const buildDateRangeReviewShareDescription = ({
   imageCount,
   name,

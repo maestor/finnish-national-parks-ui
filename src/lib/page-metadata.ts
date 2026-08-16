@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 interface BuildPageMetadataOptions {
   description?: string;
+  pagePath?: string;
   socialImagePath?: string;
 }
 
@@ -15,6 +16,7 @@ export const buildPageMetadata = (
 ): Metadata => {
   const shareTitle = buildShareTitle(pageTitle, siteTitle);
   const description = options?.description;
+  const pagePath = options?.pagePath;
   const socialImagePath = options?.socialImagePath;
 
   return {
@@ -22,6 +24,7 @@ export const buildPageMetadata = (
     ...(description ? { description } : {}),
     openGraph: {
       title: shareTitle,
+      ...(pagePath ? { type: "website" as const, url: pagePath } : {}),
       ...(description ? { description } : {}),
       ...(socialImagePath ? { images: [socialImagePath] } : {}),
     },

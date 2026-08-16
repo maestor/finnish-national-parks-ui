@@ -2,7 +2,7 @@ import { createSocialPreviewImageResponse } from "@/lib/social-preview-image";
 import {
   findYearReviewPhotoHighlightCard,
   findYearReviewProfileCard,
-  findYearReviewTripHighlightCard,
+  findYearReviewSocialPreviewImageUrl,
   isYearReviewShareId,
   readYearReviewShareOrNull,
 } from "@/lib/year-review";
@@ -32,7 +32,11 @@ export const GET = async (
 
   const profileCard = findYearReviewProfileCard(share.story);
   const photoHighlightCard = findYearReviewPhotoHighlightCard(share.story);
-  const tripHighlightCard = findYearReviewTripHighlightCard(share.story);
+  const imageUrl = findYearReviewSocialPreviewImageUrl(share.story);
+
+  if (imageUrl) {
+    return Response.redirect(imageUrl, 307);
+  }
 
   return createSocialPreviewImageResponse({
     title: withYear(messages.yearReview.shareTitle, share.year),
@@ -45,10 +49,7 @@ export const GET = async (
         ? [`${profileCard.mostVisitedPark.name} x${profileCard.mostVisitedPark.visitCount}`]
         : []),
     ],
-    imageUrl:
-      photoHighlightCard?.featuredImage?.fullUrl ??
-      tripHighlightCard?.featuredImage?.fullUrl ??
-      null,
+    imageUrl: photoHighlightCard?.featuredImage?.fullUrl ?? null,
     variant: "landscape",
     width: 1200,
     height: 630,

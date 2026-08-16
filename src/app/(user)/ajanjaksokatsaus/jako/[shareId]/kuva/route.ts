@@ -1,5 +1,5 @@
 import {
-  type DateRangeReviewStory,
+  findDateRangeReviewSocialPreviewImageUrl,
   isDateRangeReviewShareId,
   readDateRangeReviewShareOrNull,
 } from "@/lib/date-range-review";
@@ -11,27 +11,6 @@ export const dynamic = "force-dynamic";
 const createNotFoundResponse = () => new Response(null, { status: 404 });
 
 const withName = (template: string, name: string) => template.replace("{name}", name);
-
-const getDateRangeReviewShareImageUrl = (story: DateRangeReviewStory) => {
-  for (const card of story.cards) {
-    if (
-      (card.kind === "photo-highlight" || card.kind === "trip-summary") &&
-      card.featuredImage !== null
-    ) {
-      return card.featuredImage.fullUrl;
-    }
-
-    if (card.kind === "new-parks" || card.kind === "revisited-parks") {
-      const parkWithImage = card.parks.find((park) => park.featuredImage !== null);
-
-      if (parkWithImage?.featuredImage !== null && parkWithImage?.featuredImage !== undefined) {
-        return parkWithImage.featuredImage.fullUrl;
-      }
-    }
-  }
-
-  return null;
-};
 
 export const GET = async (
   _request: Request,
@@ -49,6 +28,12 @@ export const GET = async (
     return createNotFoundResponse();
   }
 
+  const imageUrl = findDateRangeReviewSocialPreviewImageUrl(share.story);
+
+  if (imageUrl) {
+    return Response.redirect(imageUrl, 307);
+  }
+
   return createSocialPreviewImageResponse({
     title: withName(messages.dateRangeReview.shareTitle, share.overview.name),
     description: withName(messages.dateRangeReview.shareDescription, share.overview.name),
@@ -58,7 +43,7 @@ export const GET = async (
       `${share.story.summary.imageCount} ${messages.dateRangeReview.stats.images.toLowerCase()}`,
       `${share.story.summary.newNationalParkCount} ${messages.dateRangeReview.stats.newNationalParks.toLowerCase()}`,
     ],
-    imageUrl: getDateRangeReviewShareImageUrl(share.story),
+    imageUrl: null,
     variant: "landscape",
     width: 1200,
     height: 630,

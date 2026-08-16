@@ -7,6 +7,7 @@ import { buildPageMetadata } from "@/lib/page-metadata";
 import { appRoutes } from "@/lib/routes";
 import {
   buildYearReviewShareDescription,
+  findYearReviewSocialPreviewImageUrl,
   isYearReviewShareId,
   readYearReviewShareOrNull,
 } from "@/lib/year-review";
@@ -49,7 +50,9 @@ export const generateMetadata = async ({ params }: PublicYearReviewSharePageProp
       imageCount: share.story.summary.imageCount,
       t,
     }),
-    socialImagePath: appRoutes.yearReviewShareImage(shareId),
+    pagePath: appRoutes.yearReviewShare(shareId),
+    socialImagePath:
+      findYearReviewSocialPreviewImageUrl(share.story) ?? appRoutes.yearReviewShareImage(shareId),
   });
 };
 

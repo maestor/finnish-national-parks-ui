@@ -5,6 +5,7 @@ import { PUBLIC_PAGE_SHELL_CLASS_NAME } from "@/components/layout/public-page-st
 import { cn } from "@/lib/cn";
 import {
   buildDateRangeReviewShareDescription,
+  findDateRangeReviewSocialPreviewImageUrl,
   isDateRangeReviewShareId,
   readDateRangeReviewShareOrNull,
 } from "@/lib/date-range-review";
@@ -47,7 +48,10 @@ export const generateMetadata = async ({ params }: PublicDateRangeReviewSharePag
       tripCount: share.story.summary.tripCount,
       visitCount: share.story.summary.visitCount,
     }),
-    socialImagePath: appRoutes.dateRangeReviewShareImage(shareId),
+    pagePath: appRoutes.dateRangeReviewShare(shareId),
+    socialImagePath:
+      findDateRangeReviewSocialPreviewImageUrl(share.story) ??
+      appRoutes.dateRangeReviewShareImage(shareId),
   });
 };
 
