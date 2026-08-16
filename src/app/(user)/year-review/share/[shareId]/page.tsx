@@ -4,6 +4,7 @@ import { PUBLIC_PAGE_SHELL_CLASS_NAME } from "@/components/layout/public-page-st
 import { YearReviewStory } from "@/components/year-review/year-review-story";
 import { cn } from "@/lib/cn";
 import { buildPageMetadata } from "@/lib/page-metadata";
+import { appRoutes } from "@/lib/routes";
 import {
   buildYearReviewShareDescription,
   isYearReviewShareId,
@@ -48,6 +49,7 @@ export const generateMetadata = async ({ params }: PublicYearReviewSharePageProp
       imageCount: share.story.summary.imageCount,
       t,
     }),
+    socialImagePath: appRoutes.yearReviewShareImage(shareId),
   });
 };
 

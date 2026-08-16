@@ -9,6 +9,7 @@ import {
   readDateRangeReviewShareOrNull,
 } from "@/lib/date-range-review";
 import { buildPageMetadata } from "@/lib/page-metadata";
+import { appRoutes } from "@/lib/routes";
 
 interface PublicDateRangeReviewSharePageProps {
   params: Promise<{ shareId: string }>;
@@ -46,6 +47,7 @@ export const generateMetadata = async ({ params }: PublicDateRangeReviewSharePag
       tripCount: share.story.summary.tripCount,
       visitCount: share.story.summary.visitCount,
     }),
+    socialImagePath: appRoutes.dateRangeReviewShareImage(shareId),
   });
 };
 
