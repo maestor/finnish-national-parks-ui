@@ -287,7 +287,12 @@ describe("PublicTripMap", () => {
       />,
     );
 
-    expect(screen.getByRole("application", { name: "tripPage.mapAriaLabel" })).toBeInTheDocument();
+    const map = screen.getByRole("application", { name: "tripPage.mapAriaLabel" });
+
+    expect(map).toBeInTheDocument();
+    expect(map).toHaveClass("h-[75dvh]");
+    expect(map).toHaveClass("min-h-104");
+    expect(map).toHaveClass("max-h-200");
 
     await waitFor(() => {
       expect(mockMap.addSource).toHaveBeenCalledWith(
