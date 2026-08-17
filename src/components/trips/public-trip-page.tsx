@@ -77,7 +77,6 @@ const STOP_KIND_BADGE_CLASS_NAME =
 const ROUTE_KM_FORMATTER = new Intl.NumberFormat("fi-FI", {
   maximumFractionDigits: 0,
 });
-const TRIP_VISIT_DETAILS_LOAD_DELAY_MS = 150;
 const TRIP_DESCRIPTION_SECTION_ID = "trip-description";
 const TRIP_ROUTE_SECTION_ID = "trip-route";
 const TRIP_ITINERARY_SECTION_ID = "trip-itinerary";
@@ -186,20 +185,6 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
       setVisitDetailsStatus("error");
     }
   });
-
-  useEffect(() => {
-    if (hasDeferredVisitDetails === false) {
-      return;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      void loadVisitDetails();
-    }, TRIP_VISIT_DETAILS_LOAD_DELAY_MS);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [hasDeferredVisitDetails]);
 
   useEffect(() => {
     const pendingScrollItemKey = pendingScrollItemKeyRef.current;

@@ -178,6 +178,8 @@ Browser → Next.js App
 Backend request timeout policy:
 
 - `src/lib/api.ts` and `src/lib/backend-proxy.ts` default backend-facing requests to a `10s` timeout so hung reads do not pin pages or route handlers.
+- Public trip detail reads via `src/lib/public-trip.ts` opt into a `30s` timeout because large trip payloads with trip and visit media can legitimately exceed the generic default.
+- The deferred public trip visit-details hydration route also uses a `30s` timeout per park visit read for the same reason.
 - Trip planner nearby searches opt into a `30s` timeout because Geoapify-backed point lookups can legitimately take longer than the generic default.
 - Trip planner route searches opt into a `60s` timeout because cold Geoapify-backed long-route planning can exceed the nearby budget while still returning valid results.
 
@@ -215,7 +217,7 @@ Route naming caveat:
 - The public map page (`/paikat`) reads `GET /api/map-summary`.
 - The public visits page (`/kaynnit`) reads `GET /api/visits-timeline`; its optional map view (`?view=map`) additionally reads `GET /api/map-summary` for marker coordinates, and its visited national parks view (`?view=parks`) joins the same map summary to the visit timeline so park logos and the current total national park count stay available server-side.
 - Public park detail pages still read `GET /api/parks/{slug}` and `GET /api/parks/{slug}/visits`, but those reads now use `cache: "no-store"` because the payload still contains expiring presigned asset URLs (for example visit images and brochure PDFs). Hidden parks still fall back to an authenticated request.
-- Public trip detail pages also use `cache: "no-store"` for the same reason until the backend serves stable public asset URLs for trip and visit media.
+- Public trip detail pages also use `cache: "no-store"` for the same reason until the backend serves stable public asset URLs for trip and visit media. Their visit image galleries now load on demand when a visitor expands a visit instead of prefetching every deferred trip image on initial page render.
 - Admin-only quick links on public pages are resolved client-side with `useAuth`, so the page HTML can stay cache-friendly while signed-in users still see edit and add-visit affordances after hydration.
 - Visit and public park mutations call the local Next.js route `POST /api/revalidate-public-cache` so the frontend can invalidate cached public pages immediately after a successful write.
 

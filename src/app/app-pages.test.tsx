@@ -1017,9 +1017,13 @@ describe("App pages", () => {
     expect(screen.getByTestId("public-trip-page")).toHaveTextContent(
       "slug:keski-suomen-kesaretki|visits:2",
     );
-    expect(apiPublicFetch).toHaveBeenCalledWith("/api/trips/slug/keski-suomen-kesaretki", {
-      cache: "no-store",
-    });
+    expect(apiPublicFetch).toHaveBeenCalledWith(
+      "/api/trips/slug/keski-suomen-kesaretki",
+      expect.objectContaining({
+        cache: "no-store",
+        signal: expect.any(AbortSignal),
+      }),
+    );
   });
 
   it("calls notFound when the public trip page cannot find the requested slug", async () => {
