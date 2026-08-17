@@ -679,6 +679,22 @@ describe("PublicTripPage", () => {
     });
   });
 
+  it("does not prefetch trip visit details on initial render", () => {
+    vi.useFakeTimers();
+
+    try {
+      render(<PublicTripPage trip={trip} />);
+
+      act(() => {
+        vi.advanceTimersByTime(1_000);
+      });
+
+      expect(mockFetch).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("opens stop details inline with the same toggle treatment", async () => {
     const user = userEvent.setup();
 
