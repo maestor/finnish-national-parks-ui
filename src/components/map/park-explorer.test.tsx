@@ -359,6 +359,24 @@ describe("ParkExplorer", () => {
     expect(screen.queryByText("Päijänteen kansallispuisto")).not.toBeInTheDocument();
   });
 
+  it("filters parks to magnet destinations and combines the result with visit status", () => {
+    render(<ParkExplorer parks={parks} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "home.filters.hasMagnets" }));
+
+    expect(screen.getByText("count:1")).toBeInTheDocument();
+    expect(screen.getByText("Päijänteen kansallispuisto")).toBeInTheDocument();
+    expect(screen.queryByText("Teijon kansallispuisto")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "home.filters.visited" }));
+    fireEvent.click(screen.getByRole("button", { name: "home.filters.visitStatusAll" }));
+
+    expect(screen.getByText("count:2")).toBeInTheDocument();
+    expect(screen.getByText("Päijänteen kansallispuisto")).toBeInTheDocument();
+    expect(screen.getByText("Teijon kansallispuisto")).toBeInTheDocument();
+    expect(screen.queryByText("Nuuksion vaellusreitti")).not.toBeInTheDocument();
+  });
+
   it("shows the visit-status selector for all users when visit history is public", () => {
     render(<ParkExplorer parks={parks} />);
 
@@ -444,14 +462,15 @@ describe("ParkExplorer", () => {
 
     const buttons = within(desktopSidebar as HTMLElement).getAllByRole("button");
 
-    expect(buttons).toHaveLength(9);
+    expect(buttons).toHaveLength(10);
     expect(buttons[0]).toHaveTextContent("home.filters.all");
     expect(buttons[1]).toHaveTextContent("home.filters.areas");
     expect(buttons[2]).toHaveTextContent("home.filters.nationalParks");
     expect(buttons[3]).toHaveTextContent("home.filters.hikingAndWildernessAreas");
     expect(buttons[6]).toHaveTextContent("home.filters.culturalHistoryAreas");
     expect(buttons[7]).toHaveTextContent("home.filters.natureTrails");
-    expect(buttons[8]).toHaveTextContent("home.filters.visited");
+    expect(buttons[8]).toHaveTextContent("home.filters.hasMagnets");
+    expect(buttons[9]).toHaveTextContent("home.filters.visited");
   });
 
   it("stops mousedown propagation inside the filter panel", () => {
