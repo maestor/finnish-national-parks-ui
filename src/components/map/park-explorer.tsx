@@ -32,14 +32,15 @@ type VisitStatusFilter = "all" | "visited" | "not-visited";
 type ParkTypeMapFilter =
   | "all"
   | "areas"
+  | "has-magnet"
   | typeof HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG
   | typeof TRAILS_AND_ROUTES_CATEGORY_SLUG
   | FilterableParkTypeSlug;
 
 const FILTER_PANEL_CLASS_NAME =
-  "pointer-events-auto flex flex-col gap-2 rounded-[2rem] border border-white/45 bg-white/60 p-3 shadow-[0_22px_48px_rgba(148,163,184,0.2)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/50 dark:shadow-[0_26px_56px_rgba(2,6,23,0.38)]";
+  "pointer-events-auto flex max-h-[calc(100dvh-12rem)] flex-col gap-1.5 overflow-y-auto overscroll-contain rounded-[2rem] border border-white/45 bg-white/60 p-2.5 shadow-[0_22px_48px_rgba(148,163,184,0.2)] backdrop-blur-xl sm:max-h-none sm:gap-2 sm:p-3 dark:border-white/10 dark:bg-slate-950/50 dark:shadow-[0_26px_56px_rgba(2,6,23,0.38)]";
 const FILTER_BUTTON_CLASS_NAME =
-  "w-full justify-center rounded-2xl border px-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] transition-all hover:-translate-y-px";
+  "h-8 w-full justify-center rounded-2xl border px-3 text-center leading-tight shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] transition-all hover:-translate-y-px sm:h-9";
 const ACTIVE_FILTER_BUTTON_CLASS_NAME =
   "border-transparent bg-[linear-gradient(145deg,#166534_0%,#0f766e_55%,#2563eb_100%)] text-primary-foreground shadow-[0_14px_28px_rgba(37,99,235,0.24)] hover:brightness-105";
 const INACTIVE_FILTER_BUTTON_CLASS_NAME =
@@ -81,6 +82,8 @@ const getFilteredParks = (
       return parksWithSelectedVisitStatus;
     case "areas":
       return parksWithSelectedVisitStatus.filter((park) => isAreaPark(park));
+    case "has-magnet":
+      return parksWithSelectedVisitStatus.filter((park) => park.hasMagnet);
     case HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG:
       return parksWithSelectedVisitStatus.filter((park) => isHikingAndWildernessPark(park));
     case TRAILS_AND_ROUTES_CATEGORY_SLUG:
@@ -105,6 +108,7 @@ const isMapFilter = (value: string | null): value is AcceptedMapFilter => {
   switch (value) {
     case "all":
     case "areas":
+    case "has-magnet":
     case HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG:
     case TRAILS_AND_ROUTES_CATEGORY_SLUG:
     case "national-park":
@@ -195,6 +199,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
         label: t(parkTypeFilterOptionsById.get("cultural-history-area") ?? "culturalHistoryAreas"),
       },
       { id: TRAILS_AND_ROUTES_CATEGORY_SLUG, label: t("natureTrails") },
+      { id: "has-magnet", label: t("hasMagnets") },
     ] satisfies Array<{ id: ParkTypeMapFilter; label: string }>;
   }, [t]);
 
@@ -455,7 +460,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
           className={cn(
             FILTER_BUTTON_CLASS_NAME,
             ACTIVE_FILTER_BUTTON_CLASS_NAME,
-            "mt-1 min-h-11 rounded-[1.25rem] px-4 text-left",
+            "mt-1 min-h-10 rounded-[1.25rem] px-4 text-left sm:min-h-11",
           )}
         >
           <span className="block w-full text-center">{activeVisitStatusOption.label}</span>
@@ -472,7 +477,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
                 onClick={() => selectVisitStatus(option.id)}
                 className={cn(
                   FILTER_BUTTON_CLASS_NAME,
-                  "min-h-10 rounded-[1.2rem]",
+                  "min-h-9 rounded-[1.2rem] sm:min-h-10",
                   filterSelection.visitStatus === option.id
                     ? ACTIVE_FILTER_BUTTON_CLASS_NAME
                     : INACTIVE_FILTER_BUTTON_CLASS_NAME,
@@ -514,7 +519,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
         aria-label={t("panelLabel")}
         className={cn(
           "pointer-events-none absolute left-4 w-40 md:top-4 md:block",
-          isMobileFiltersOpen ? "top-2 z-30 block md:z-10" : "hidden top-2 z-10",
+          isMobileFiltersOpen ? "top-2 z-30 block md:top-4 md:z-10" : "hidden top-2 z-10 md:top-4",
         )}
       >
         {filterPanel}
@@ -526,6 +531,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
         canManageVisits={auth.isAuthenticated}
         homeParkFocusRequest={homeParkFocusRequest}
         resetViewRequestId={mapResetRequestId}
+        pinMobileControlsToViewport
         floatingControls={
           <Button
             type="button"

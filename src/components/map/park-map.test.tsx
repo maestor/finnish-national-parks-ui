@@ -349,6 +349,19 @@ describe("ParkMap", () => {
     expect(screen.getByRole("button", { name: "map.locateUser" })).toBeInTheDocument();
   });
 
+  it("can pin the mobile control stack to the viewport bottom edge", () => {
+    const { container } = render(<ParkMap parks={[]} pinMobileControlsToViewport />);
+
+    const locateButton = screen.getByRole("button", { name: "map.locateUser" });
+    const controlsStack = locateButton.closest("div")?.parentElement;
+
+    expect(controlsStack).not.toBeNull();
+    expect(controlsStack).toHaveClass("fixed");
+    expect(controlsStack).toHaveClass("bottom-[calc(env(safe-area-inset-bottom,0px)+1rem)]");
+    expect(controlsStack).toHaveClass("md:absolute");
+    expect(container.querySelector(".fixed")).toBe(controlsStack);
+  });
+
   it("shows the park logo in the popup when a logo exists", () => {
     render(<ParkMap parks={parks} />);
     triggerMapLoad();
