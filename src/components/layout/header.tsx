@@ -261,6 +261,7 @@ export const Header = () => {
                   </Link>
                   <Link
                     href={appRoutes.parks}
+                    prefetch={false}
                     className={MOBILE_SHEET_ITEM_CLASS}
                     onClick={closeMobileMenu}
                   >
@@ -269,6 +270,7 @@ export const Header = () => {
                   </Link>
                   <Link
                     href={appRoutes.visits}
+                    prefetch={false}
                     className={MOBILE_SHEET_ITEM_CLASS}
                     onClick={closeMobileMenu}
                   >
@@ -277,6 +279,7 @@ export const Header = () => {
                   </Link>
                   <Link
                     href={appRoutes.tripPlanner}
+                    prefetch={false}
                     className={MOBILE_SHEET_ITEM_CLASS}
                     onClick={closeMobileMenu}
                   >
@@ -360,6 +363,13 @@ export const Header = () => {
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={
+                  item.href === appRoutes.parks ||
+                  item.href === appRoutes.visits ||
+                  item.href === appRoutes.tripPlanner
+                    ? false
+                    : undefined
+                }
                 aria-current={item.isCurrent ? "page" : undefined}
                 className={cn(
                   DESKTOP_NAV_LINK_CLASS,

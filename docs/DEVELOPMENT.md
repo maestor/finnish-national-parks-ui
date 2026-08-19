@@ -243,6 +243,10 @@ Park boundary maps and public trip maps are wrapped in `src/components/map/defer
 
 Long public visit timelines progressively skip offscreen month sections with `content-visibility: auto` and an intrinsic placeholder size. Long public trip itineraries use the same treatment per itinerary item after the 12-item budget, while expanded visit details and galleries remain on demand. Review-story place cards also use browser-managed content visibility. Story-card navigation keeps the existing sticky navigation and reveal-anchor geometry; scroll synchronization is sampled once per animation frame and uses nearby cards while `IntersectionObserver` remains the primary active-card signal.
 
+### Public navigation background work
+
+The header disables automatic Next.js prefetching for the heavyweight public map, visits, and trip-planner routes. Navigation remains normal; intentional prefetching can be reconsidered if target-device measurements show a clear benefit. `useAuth` shares concurrent `/auth/me` requests and briefly reuses the settled result during client-side navigation; logout clears that cache. PWA caching remains unchanged.
+
 ---
 
 ## Authentication Flow

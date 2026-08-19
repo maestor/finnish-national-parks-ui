@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { apiFetch } from "@/lib/api";
-import { type AuthUser, useAuth } from "./use-auth";
+import { type AuthUser, clearAuthCache, useAuth } from "./use-auth";
 
 vi.mock("@/lib/api", () => ({
   apiFetch: vi.fn(),
@@ -10,6 +10,7 @@ vi.mock("@/lib/api", () => ({
 describe("useAuth", () => {
   afterEach(() => {
     vi.clearAllMocks();
+    clearAuthCache();
   });
 
   it("loads the authenticated user state from the auth endpoint", async () => {
@@ -67,6 +68,30 @@ describe("useAuth", () => {
 
     expect(apiFetch).toHaveBeenCalledTimes(1);
     expect(first.result.current.user?.id).toBe("user-1");
+    expect(second.result.current.user?.id).toBe("user-1");
+  });
+
+  it("reuses a settled auth result for later hook instances", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      id: "user-1",
+      email: "user@example.com",
+      name: "Test User",
+      picture: "https://example.com/user.png",
+    });
+
+    const first = renderHook(() => useAuth());
+
+    await waitFor(() => {
+      expect(first.result.current.isLoading).toBe(false);
+    });
+
+    const second = renderHook(() => useAuth());
+
+    await waitFor(() => {
+      expect(second.result.current.isLoading).toBe(false);
+    });
+
+    expect(apiFetch).toHaveBeenCalledTimes(1);
     expect(second.result.current.user?.id).toBe("user-1");
   });
 
