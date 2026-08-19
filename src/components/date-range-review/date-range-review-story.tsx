@@ -9,7 +9,6 @@ import {
   Route,
   Sparkles,
 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { type CSSProperties, type ReactNode, useEffect, useRef, useState } from "react";
@@ -25,6 +24,7 @@ import {
   ReviewStorySectionHeader,
 } from "@/components/story/review-story-shared";
 import { useStoryProgressNavigation } from "@/components/story/use-story-progress-navigation";
+import { AppImage } from "@/components/ui/app-image";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import type {
@@ -47,6 +47,16 @@ interface DateRangeReviewStoryProps {
 const getImageDimensions = (image: { fullHeight: number | null; fullWidth: number | null }) => ({
   height: image.fullHeight ?? 1200,
   width: image.fullWidth ?? 1800,
+});
+
+const getThumbnailDimensions = (image: {
+  fullHeight: number | null;
+  fullWidth: number | null;
+  thumbHeight: number | null;
+  thumbWidth: number | null;
+}) => ({
+  height: image.thumbHeight ?? image.fullHeight ?? 1200,
+  width: image.thumbWidth ?? image.fullWidth ?? 1800,
 });
 
 const getCardKey = (card: DateRangeReviewCard) => {
@@ -134,6 +144,8 @@ const ReviewImage = ({
   alt,
   image,
   imageClassName,
+  resolution,
+  sizes,
 }: {
   alt: string;
   image: {
@@ -141,19 +153,26 @@ const ReviewImage = ({
     fullHeight: number | null;
     fullUrl: string;
     fullWidth: number | null;
+    thumbHeight: number | null;
+    thumbUrl: string;
+    thumbWidth: number | null;
   };
   imageClassName?: string;
+  resolution: "full" | "thumb";
+  sizes: string;
 }) => {
-  const dimensions = getImageDimensions(image);
+  const dimensions =
+    resolution === "thumb" ? getThumbnailDimensions(image) : getImageDimensions(image);
 
   return (
     <div className="overflow-hidden rounded-[1.75rem] border border-white/18 bg-white/10 shadow-[0_24px_60px_rgba(15,23,42,0.28)]">
-      <Image
+      <AppImage
         alt={image.alt ?? alt}
         className={cn("h-72 w-full object-cover", imageClassName)}
         height={dimensions.height}
-        src={image.fullUrl}
-        unoptimized
+        sizes={sizes}
+        src={resolution === "thumb" ? image.thumbUrl : image.fullUrl}
+        unoptimized={resolution === "thumb"}
         width={dimensions.width}
       />
     </div>
@@ -596,6 +615,8 @@ export const DateRangeReviewStory = ({
                               : overview.name
                           }
                           image={card.featuredImage}
+                          resolution="full"
+                          sizes="(min-width: 1024px) 32rem, 100vw"
                         />
                       </div>
                     )}
@@ -706,6 +727,8 @@ export const DateRangeReviewStory = ({
                               alt={`${park.park.name}, ${formatFinnishLongDate(park.visitedOn)}`}
                               image={park.featuredImage}
                               imageClassName={usesDenseParkGrid ? "h-40 sm:h-44" : undefined}
+                              resolution="thumb"
+                              sizes="(min-width: 1280px) 20rem, (min-width: 768px) 24rem, 100vw"
                             />
                           ) : undefined
                         }
@@ -779,6 +802,8 @@ export const DateRangeReviewStory = ({
                               alt={`${park.park.name}, ${formatFinnishLongDate(park.visitedOn)}`}
                               image={park.featuredImage}
                               imageClassName={usesDenseParkGrid ? "h-40 sm:h-44" : undefined}
+                              resolution="thumb"
+                              sizes="(min-width: 1280px) 20rem, (min-width: 768px) 24rem, 100vw"
                             />
                           ) : undefined
                         }
@@ -875,7 +900,12 @@ export const DateRangeReviewStory = ({
                           className={getMediaRevealClassName(shouldAnimateCardEntry)}
                           style={getRevealStyle(shouldAnimateCardEntry, 260)}
                         >
-                          <ReviewImage alt={card.trip.name} image={card.featuredImage} />
+                          <ReviewImage
+                            alt={card.trip.name}
+                            image={card.featuredImage}
+                            resolution="full"
+                            sizes="(min-width: 1024px) 32rem, 100vw"
+                          />
                         </div>
                       )}
 
@@ -916,6 +946,8 @@ export const DateRangeReviewStory = ({
                             alt={card.trip.name}
                             image={card.featuredImage}
                             imageClassName="h-60 sm:h-72"
+                            resolution="full"
+                            sizes="(min-width: 1024px) 48rem, 100vw"
                           />
                         </div>
                       )}

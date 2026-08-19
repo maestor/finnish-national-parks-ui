@@ -3,9 +3,31 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DateRangeReviewStory } from "./date-range-review-story";
 
-vi.mock("next/image", () => ({
-  default: ({ alt, src }: { alt: string; src: string }) => (
-    <div aria-label={alt} data-src={src} role="img" />
+vi.mock("@/components/ui/app-image", () => ({
+  AppImage: ({
+    alt,
+    height,
+    sizes,
+    src,
+    unoptimized,
+    width,
+  }: {
+    alt: string;
+    height: number;
+    sizes?: string;
+    src: string;
+    unoptimized?: boolean;
+    width: number;
+  }) => (
+    <div
+      aria-label={alt}
+      data-height={height}
+      data-sizes={sizes}
+      data-src={src}
+      data-unoptimized={unoptimized ? "true" : undefined}
+      data-width={width}
+      role="img"
+    />
   ),
 }));
 
@@ -563,9 +585,9 @@ describe("DateRangeReviewStory", () => {
                     fullHeight: 900,
                     fullUrl: "https://images.example/park.jpg",
                     fullWidth: 1400,
-                    thumbHeight: null,
+                    thumbHeight: 400,
                     thumbUrl: "https://images.example/park-thumb.jpg",
-                    thumbWidth: null,
+                    thumbWidth: 600,
                   },
                   park: {
                     name: "Lemmenjoen kansallispuisto",
@@ -584,9 +606,9 @@ describe("DateRangeReviewStory", () => {
                     fullHeight: 900,
                     fullUrl: "https://images.example/revisit.jpg",
                     fullWidth: 1400,
-                    thumbHeight: null,
+                    thumbHeight: 240,
                     thumbUrl: "https://images.example/revisit-thumb.jpg",
-                    thumbWidth: null,
+                    thumbWidth: 360,
                   },
                   park: {
                     name: "Oulangan kansallispuisto",
@@ -668,6 +690,35 @@ describe("DateRangeReviewStory", () => {
     expect(screen.queryByText("Käynti 3.8.2026")).not.toBeInTheDocument();
     expect(screen.queryByText("Käynti 4.8.2026")).not.toBeInTheDocument();
     expect(screen.queryByText("story.photoFallback")).not.toBeInTheDocument();
+
+    const photoImage = screen.getByRole("img", { name: "Kesamuisto" });
+    expect(photoImage).toHaveAttribute("data-src", "https://images.example/photo.jpg");
+    expect(photoImage).toHaveAttribute("data-sizes", "(min-width: 1024px) 32rem, 100vw");
+    expect(photoImage).not.toHaveAttribute("data-unoptimized");
+
+    const newParkImage = screen.getByRole("img", { name: "Puistokuva" });
+    expect(newParkImage).toHaveAttribute("data-src", "https://images.example/park-thumb.jpg");
+    expect(newParkImage).toHaveAttribute(
+      "data-sizes",
+      "(min-width: 1280px) 20rem, (min-width: 768px) 24rem, 100vw",
+    );
+    expect(newParkImage).toHaveAttribute("data-width", "600");
+    expect(newParkImage).toHaveAttribute("data-height", "400");
+    expect(newParkImage).toHaveAttribute("data-unoptimized", "true");
+
+    const revisitedParkImage = screen.getByRole("img", { name: "Paluukuva" });
+    expect(revisitedParkImage).toHaveAttribute(
+      "data-src",
+      "https://images.example/revisit-thumb.jpg",
+    );
+    expect(revisitedParkImage).toHaveAttribute("data-width", "360");
+    expect(revisitedParkImage).toHaveAttribute("data-height", "240");
+    expect(revisitedParkImage).toHaveAttribute("data-unoptimized", "true");
+
+    const tripImage = screen.getByRole("img", { name: "Retkikuva" });
+    expect(tripImage).toHaveAttribute("data-src", "https://images.example/trip.jpg");
+    expect(tripImage).toHaveAttribute("data-sizes", "(min-width: 1024px) 32rem, 100vw");
+    expect(tripImage).not.toHaveAttribute("data-unoptimized");
   });
 
   it("switches the new parks card to a denser grid when many national parks were added", () => {

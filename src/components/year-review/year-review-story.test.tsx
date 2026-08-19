@@ -4,8 +4,27 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { YearReviewStory } from "./year-review-story";
 
 vi.mock("@/components/ui/app-image", () => ({
-  AppImage: ({ alt, className, src }: { alt: string; className?: string; src: string }) => (
-    <div aria-label={alt} data-class-name={className} data-src={src} role="img" />
+  AppImage: ({
+    alt,
+    className,
+    sizes,
+    src,
+    unoptimized,
+  }: {
+    alt: string;
+    className?: string;
+    sizes?: string;
+    src: string;
+    unoptimized?: boolean;
+  }) => (
+    <div
+      aria-label={alt}
+      data-class-name={className}
+      data-sizes={sizes}
+      data-src={src}
+      data-unoptimized={unoptimized ? "true" : undefined}
+      role="img"
+    />
   ),
 }));
 
@@ -210,6 +229,35 @@ const fallbackStory = {
       highlights: ["2 visits"],
     },
   ],
+};
+
+const mediaDeliveryStory = {
+  ...fallbackStory,
+  summary: {
+    ...fallbackStory.summary,
+    newParkCount: 1,
+  },
+  cards: fallbackStory.cards.map((card) =>
+    card.kind === "new-parks"
+      ? {
+          ...card,
+          parks: [
+            {
+              ...card.parks[0],
+              featuredImage: {
+                alt: "Lauhanvuoren kuva",
+                fullHeight: 1200,
+                fullUrl: "https://images.example/lauhanvuori-full.jpg",
+                fullWidth: 1600,
+                thumbHeight: 400,
+                thumbUrl: "https://images.example/lauhanvuori-thumb.jpg",
+                thumbWidth: 600,
+              },
+            },
+          ],
+        }
+      : card,
+  ),
 };
 
 const repeatSpotlightStory = {
@@ -509,6 +557,23 @@ describe("YearReviewStory", () => {
     expect(screen.getByText("story.tripHighlightCaption")).toBeInTheDocument();
     expect(screen.getByText("story.newParksTitle")).toBeInTheDocument();
     expect(screen.getByText("Lauhanvuori")).toBeInTheDocument();
+  });
+
+  it("uses optimized full media and direct thumbnails for review story images", () => {
+    render(<YearReviewStory story={mediaDeliveryStory} mode="preview" />);
+
+    const fullImage = screen.getByRole("img", { name: "Kuva Repovedeltä" });
+    expect(fullImage).toHaveAttribute("data-src", "https://images.example/repovesi-full.jpg");
+    expect(fullImage).toHaveAttribute("data-sizes", "(min-width: 1024px) 32rem, 100vw");
+    expect(fullImage).not.toHaveAttribute("data-unoptimized");
+
+    const thumbnail = screen.getByRole("img", { name: "Lauhanvuoren kuva" });
+    expect(thumbnail).toHaveAttribute("data-src", "https://images.example/lauhanvuori-thumb.jpg");
+    expect(thumbnail).toHaveAttribute(
+      "data-sizes",
+      "(min-width: 1280px) 20rem, (min-width: 768px) 24rem, 100vw",
+    );
+    expect(thumbnail).toHaveAttribute("data-unoptimized", "true");
   });
 
   it("renders new park dates without the visit prefix", () => {
