@@ -42,6 +42,7 @@ import {
 import { createParkVisitHref } from "@/lib/public-visits";
 import { appRoutes } from "@/lib/routes";
 import { getTripStopDisplayName, type PublicTripDetail } from "@/lib/trips";
+import { DeferredMap } from "../map/deferred-map";
 import { LazyPublicTripMap } from "./lazy-public-trip-map";
 
 interface PublicTripPageProps {
@@ -356,13 +357,18 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
           </div>
           {shouldShowRouteMap === true && (
             <div className="mt-4">
-              <LazyPublicTripMap
-                onItineraryItemAction={openItineraryItemFromMap}
-                route={route}
-                startingPoint={startingPoint}
-                tripName={trip.name}
-                tripStops={trip.itinerary}
-              />
+              <DeferredMap
+                className="h-[75dvh] min-h-104 max-h-200"
+                label={t("mapAriaLabel", { trip: trip.name })}
+              >
+                <LazyPublicTripMap
+                  onItineraryItemAction={openItineraryItemFromMap}
+                  route={route}
+                  startingPoint={startingPoint}
+                  tripName={trip.name}
+                  tripStops={trip.itinerary}
+                />
+              </DeferredMap>
             </div>
           )}
           {shouldShowRouteContent === true && (

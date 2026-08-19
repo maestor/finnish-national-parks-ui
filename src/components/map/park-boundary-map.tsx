@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import type { ParkDetail } from "@/lib/parks";
 import { ThreeDotPulse } from "../ui/three-dot-pulse";
+import { useDeferredMapPower } from "./deferred-map";
 import { getMapStyle } from "./map-style";
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -44,6 +45,7 @@ export const ParkBoundaryMap = ({
   const markerRef = useRef<maplibregl.Marker | null>(null);
   const destroyedRef = useRef(false);
   const t = useTranslations("map");
+  const lowPower = useDeferredMapPower();
   const [isMapLoaded, setIsMapLoaded] = useState(false);
 
   useEffect(() => {
@@ -83,6 +85,15 @@ export const ParkBoundaryMap = ({
       setIsMapLoaded(false);
     };
   }, []);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !isMapLoaded || typeof map.setPixelRatio !== "function") {
+      return;
+    }
+
+    map.setPixelRatio(lowPower ? 1 : window.devicePixelRatio);
+  }, [isMapLoaded, lowPower]);
 
   useEffect(() => {
     const map = mapRef.current;

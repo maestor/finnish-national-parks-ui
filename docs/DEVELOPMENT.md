@@ -235,6 +235,10 @@ The public catalogue map (`/paikat`), visits map (`/kaynnit?view=map`), and trip
 
 Canvas points are not individually keyboard-focusable. The header park search, visits-map result list, and trip-planner result list remain the accessible searchable or link-based alternatives for selecting a place. Trip-planner origin and destination pins remain small DOM markers because they are fixed endpoints, not catalogue-sized result sets.
 
+### Optional map loading
+
+Park boundary maps and public trip maps are wrapped in `src/components/map/deferred-map.tsx`. The boundary reserves the map's layout space, starts loading shortly before it enters the viewport, and keeps an explicit accessible load button for users who want to control optional map work. The same boundary exposes a low-power toggle that sets MapLibre's pixel ratio to `1`; disabling it restores the device pixel ratio. The primary `/paikat` map remains eager because the map is its main content.
+
 ---
 
 ## Authentication Flow
