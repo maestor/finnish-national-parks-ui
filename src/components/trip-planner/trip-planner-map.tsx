@@ -11,6 +11,13 @@ import type {
   TripPlannerSearchAreaResult,
   TripPlannerUiParkResult,
 } from "@/lib/trip-planner";
+import {
+  bindMapPointLayerEvents,
+  MAP_POINT_LAYER_ID,
+  prepareMapPointIcon,
+  setMapPopupInteractivity,
+  syncMapPointLayer,
+} from "../map/map-point-layer";
 import { getMapStyle } from "../map/map-style";
 import { ThreeDotPulse } from "../ui/three-dot-pulse";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -169,16 +176,6 @@ const createEndpointMarkerElement = (label: string, toneClassName: string) => {
   return marker;
 };
 
-const createParkMarkerElement = (park: TripPlannerUiParkResult) => {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className =
-    "group flex h-8 w-8 cursor-pointer items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
-  button.setAttribute("aria-label", `${park.name}, ${getParkTypeDisplayName(park)}`);
-  button.appendChild(createSvgPin(park.visitedSummary.visited ? "#16a34a" : "#64748b"));
-  return button;
-};
-
 const createPopupNode = (park: TripPlannerUiParkResult, labels: PopupLabels) => {
   const container = document.createElement("div");
   container.className = "max-w-[280px] p-3 text-foreground";
@@ -257,8 +254,8 @@ export const TripPlannerMap = ({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markerRefs = useRef<maplibregl.Marker[]>([]);
-  const popupsRef = useRef<Map<string, maplibregl.Popup>>(new Map());
-  const shownPopupsRef = useRef<Set<string>>(new Set());
+  const popupRef = useRef<maplibregl.Popup | null>(null);
+  const popupSlugRef = useRef<string | null>(null);
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeSlugRef = useRef<string | null>(null);
   const hoveredSlugRef = useRef<string | null>(null);
@@ -304,23 +301,6 @@ export const TripPlannerMap = ({
     }, HOVER_CLOSE_DELAY);
   }, []);
 
-  const closeActivePopupIfFocusLeftMapPopup = useCallback((slug: string) => {
-    window.setTimeout(() => {
-      const focusedElement = document.activeElement;
-      if (!(focusedElement instanceof HTMLElement)) {
-        setActiveSlug((current) => (current === slug ? null : current));
-        return;
-      }
-
-      const isInsideMarker = !!focusedElement.closest(".maplibregl-marker");
-      const isInsidePopup = !!focusedElement.closest(".maplibregl-popup");
-
-      if (!isInsideMarker && !isInsidePopup) {
-        setActiveSlug((current) => (current === slug ? null : current));
-      }
-    }, 0);
-  }, []);
-
   const syncPopupVisibility = useCallback(
     (currentActiveSlug: string | null, currentHoveredSlug: string | null) => {
       const map = mapRef.current;
@@ -328,21 +308,48 @@ export const TripPlannerMap = ({
         return;
       }
 
-      for (const [slug, popup] of popupsRef.current) {
-        const shouldShow =
-          currentActiveSlug === slug || (currentActiveSlug === null && currentHoveredSlug === slug);
-        const isShown = shownPopupsRef.current.has(slug);
-
-        if (shouldShow && !isShown) {
-          popup.addTo(map);
-          shownPopupsRef.current.add(slug);
-        } else if (!shouldShow && isShown) {
-          popup.remove();
-          shownPopupsRef.current.delete(slug);
-        }
+      const slugToShow = currentActiveSlug ?? currentHoveredSlug;
+      const park = slugToShow ? parks.find(({ slug }) => slug === slugToShow) : undefined;
+      if (!slugToShow || !park) {
+        popupRef.current?.remove();
+        popupSlugRef.current = null;
+        return;
       }
+
+      const popup =
+        popupRef.current ??
+        new maplibregl.Popup({
+          closeButton: false,
+          closeOnClick: false,
+          maxWidth: "280px",
+          offset: {
+            bottom: [0, -30],
+            center: [0, 12],
+            left: [16, -16],
+            right: [-16, -16],
+            top: [0, 0],
+            "bottom-left": [0, -32],
+            "bottom-right": [0, -32],
+            "top-left": [0, 0],
+            "top-right": [0, 0],
+          },
+        });
+
+      popupRef.current = popup;
+      popup.setLngLat([park.markerPoint.lon, park.markerPoint.lat]);
+      if (popupSlugRef.current !== slugToShow) {
+        popup.setDOMContent(
+          createPopupNode(park, {
+            distance: distanceLabel,
+            openParkPage: mapT("openParkPage"),
+          }),
+        );
+        popupSlugRef.current = slugToShow;
+      }
+      popup.addTo(map);
+      setMapPopupInteractivity(popup, currentActiveSlug !== null);
     },
-    [],
+    [distanceLabel, mapT, parks],
   );
 
   useEffect(() => {
@@ -362,6 +369,7 @@ export const TripPlannerMap = ({
 
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
     map.on("load", () => {
+      prepareMapPointIcon(map);
       setIsMapLoaded(true);
       map.resize();
     });
@@ -383,11 +391,9 @@ export const TripPlannerMap = ({
       }
       markerRefs.current = [];
 
-      for (const popup of popupsRef.current.values()) {
-        popup.remove();
-      }
-      popupsRef.current.clear();
-      shownPopupsRef.current.clear();
+      popupRef.current?.remove();
+      popupRef.current = null;
+      popupSlugRef.current = null;
 
       map.remove();
       mapRef.current = null;
@@ -470,11 +476,8 @@ export const TripPlannerMap = ({
     }
     markerRefs.current = [];
 
-    for (const popup of popupsRef.current.values()) {
-      popup.remove();
-    }
-    popupsRef.current.clear();
-    shownPopupsRef.current.clear();
+    popupRef.current?.remove();
+    popupSlugRef.current = null;
 
     const nextMarkers = [
       new maplibregl.Marker({
@@ -492,76 +495,44 @@ export const TripPlannerMap = ({
       );
     }
 
-    const popupLabels: PopupLabels = {
-      distance: distanceLabel,
-      openParkPage: mapT("openParkPage"),
+    syncMapPointLayer(
+      map,
+      parks.map((park) => ({
+        color: park.visitedSummary.visited ? "#16a34a" : "#64748b",
+        id: park.slug,
+        latitude: park.markerPoint.lat,
+        longitude: park.markerPoint.lon,
+      })),
+    );
+
+    const cleanupPointEvents = bindMapPointLayerEvents(map, {
+      onPointClick: (slug) => {
+        cancelClose();
+        setHoveredSlug(null);
+        setActiveSlug((current) => (current === slug ? null : slug));
+      },
+      onPointEnter: (slug) => {
+        if (activeSlugRef.current && activeSlugRef.current !== slug) {
+          return;
+        }
+
+        cancelClose();
+        setHoveredSlug(slug);
+      },
+      onPointLeave: scheduleClose,
+    });
+
+    const handleMapClick = (event: maplibregl.MapMouseEvent) => {
+      if (
+        map.queryRenderedFeatures(event.point, {
+          layers: [MAP_POINT_LAYER_ID],
+        }).length === 0
+      ) {
+        setActiveSlug(null);
+        setHoveredSlug(null);
+      }
     };
-
-    for (const park of parks) {
-      const element = createParkMarkerElement(park);
-      const popup = new maplibregl.Popup({
-        closeButton: false,
-        closeOnClick: false,
-        maxWidth: "280px",
-        offset: {
-          bottom: [0, -30],
-          center: [0, 12],
-          left: [16, -16],
-          right: [-16, -16],
-          top: [0, 0],
-          "bottom-left": [0, -32],
-          "bottom-right": [0, -32],
-          "top-left": [0, 0],
-          "top-right": [0, 0],
-        },
-      })
-        .setLngLat([park.markerPoint.lon, park.markerPoint.lat])
-        .setDOMContent(createPopupNode(park, popupLabels));
-
-      popupsRef.current.set(park.slug, popup);
-
-      const marker = new maplibregl.Marker({
-        element,
-        anchor: "bottom",
-      }).setLngLat([park.markerPoint.lon, park.markerPoint.lat]);
-
-      nextMarkers.push(marker);
-
-      element.addEventListener("click", () => {
-        cancelClose();
-        setHoveredSlug(null);
-
-        if (activeSlugRef.current === park.slug) {
-          setActiveSlug(null);
-          return;
-        }
-
-        setActiveSlug(park.slug);
-      });
-
-      element.addEventListener("mouseenter", () => {
-        if (activeSlugRef.current && activeSlugRef.current !== park.slug) {
-          return;
-        }
-
-        cancelClose();
-        setHoveredSlug(park.slug);
-      });
-
-      element.addEventListener("mouseleave", () => {
-        scheduleClose();
-      });
-
-      element.addEventListener("focus", () => {
-        cancelClose();
-        setHoveredSlug(null);
-        setActiveSlug(park.slug);
-      });
-
-      element.addEventListener("blur", () => {
-        closeActivePopupIfFocusLeftMapPopup(park.slug);
-      });
-    }
+    map.on("click", handleMapClick);
 
     for (const marker of nextMarkers) {
       marker.addTo(map);
@@ -576,13 +547,15 @@ export const TripPlannerMap = ({
       },
     );
     syncPopupVisibility(activeSlugRef.current, hoveredSlugRef.current);
+
+    return () => {
+      cleanupPointEvents();
+      map.off("click", handleMapClick);
+    };
   }, [
     cancelClose,
-    closeActivePopupIfFocusLeftMapPopup,
     destination,
-    distanceLabel,
     isMapLoaded,
-    mapT,
     origin,
     parks,
     route,
@@ -595,27 +568,6 @@ export const TripPlannerMap = ({
   useEffect(() => {
     syncPopupVisibility(activeSlug, hoveredSlug);
   }, [activeSlug, hoveredSlug, syncPopupVisibility]);
-
-  useEffect(() => {
-    const handleDocumentClick = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      const isInsideMarker = !!target.closest(".maplibregl-marker");
-      const isInsidePopup = !!target.closest(".maplibregl-popup");
-      const mapContainer = mapContainerRef.current;
-
-      if (isInsideMarker || isInsidePopup) {
-        return;
-      }
-
-      if (mapContainer?.contains(target)) {
-        setActiveSlug(null);
-        setHoveredSlug(null);
-      }
-    };
-
-    document.addEventListener("mousedown", handleDocumentClick);
-    return () => document.removeEventListener("mousedown", handleDocumentClick);
-  }, []);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {

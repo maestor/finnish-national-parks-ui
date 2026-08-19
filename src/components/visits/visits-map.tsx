@@ -3,13 +3,20 @@
 import * as maplibregl from "maplibre-gl";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   PUBLIC_EMPTY_STATE_PANEL_CLASS_NAME,
   PUBLIC_PANEL_CLASS_NAME,
 } from "@/components/layout/public-page-styles";
 import { createParkVisitHref, type PublicVisitsMapMarker } from "@/lib/public-visits";
 import { createMapPinSvg } from "../map/map-pin";
+import {
+  bindMapPointLayerEvents,
+  MAP_POINT_LAYER_ID,
+  prepareMapPointIcon,
+  setMapPopupInteractivity,
+  syncMapPointLayer,
+} from "../map/map-point-layer";
 import { getMapStyle } from "../map/map-style";
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -67,22 +74,6 @@ const getMarkersBounds = (markers: PublicVisitsMapMarker[]): maplibregl.LngLatBo
     [combined.minLon, combined.minLat],
     [combined.maxLon, combined.maxLat],
   ];
-};
-
-const createMarkerElement = (
-  marker: PublicVisitsMapMarker,
-  visitCountLabel: string,
-): HTMLButtonElement => {
-  const tone = getMarkerTone(marker.visitCount);
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className =
-    "group flex h-8 w-8 cursor-pointer items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
-  button.setAttribute("aria-label", `${marker.name}, ${visitCountLabel}`);
-  button.dataset.slug = marker.slug;
-  button.appendChild(createMapPinSvg(tone.color));
-
-  return button;
 };
 
 interface PopupLabels {
@@ -150,14 +141,97 @@ export const VisitsMap = ({ markers, selectedYear = null }: VisitsMapProps) => {
   const t = useTranslations("visits");
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
-  const markersRef = useRef<maplibregl.Marker[]>([]);
-  const popupsRef = useRef<maplibregl.Popup[]>([]);
+  const popupRef = useRef<maplibregl.Popup | null>(null);
+  const popupSlugRef = useRef<string | null>(null);
+  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const activeSlugRef = useRef<string | null>(null);
+  const hoveredSlugRef = useRef<string | null>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const [activeSlug, setActiveSlug] = useState<string | null>(null);
+  const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
   const isEmpty = markers.length === 0;
 
-  // Initialize map. Depends on isEmpty (not markers) so the map is created when
-  // the first non-empty marker set arrives and torn down if it empties; bounds
-  // updates for later filter changes happen in the marker effect below.
+  const cancelClose = useCallback(() => {
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
+    }
+  }, []);
+
+  const scheduleClose = useCallback(() => {
+    cancelClose();
+    hoverTimerRef.current = setTimeout(() => {
+      setHoveredSlug(null);
+      hoverTimerRef.current = null;
+    }, HOVER_CLOSE_DELAY);
+  }, [cancelClose]);
+
+  const syncPopupVisibility = useCallback(
+    (currentActiveSlug: string | null, currentHoveredSlug: string | null) => {
+      const map = mapRef.current;
+      if (!map) {
+        return;
+      }
+
+      const slugToShow = currentActiveSlug ?? currentHoveredSlug;
+      const marker = slugToShow ? markers.find(({ slug }) => slug === slugToShow) : undefined;
+
+      if (!slugToShow || !marker) {
+        popupRef.current?.remove();
+        popupSlugRef.current = null;
+        return;
+      }
+
+      const visitCountLabel = t("map.visitCount", { count: marker.visitCount });
+      const visitCountInYearLabel =
+        selectedYear === null
+          ? visitCountLabel
+          : t("map.visitCountInYear", {
+              count: marker.visitCount,
+              year: selectedYear,
+            });
+      const popup =
+        popupRef.current ??
+        new maplibregl.Popup({
+          closeButton: false,
+          closeOnClick: false,
+          maxWidth: "240px",
+          offset: 20,
+        });
+
+      popupRef.current = popup;
+      popup.setLngLat([marker.coordinates.lon, marker.coordinates.lat]);
+      if (popupSlugRef.current !== slugToShow) {
+        const content = createPopupNode(
+          marker,
+          {
+            openParkVisits: t("map.openParkVisits"),
+            visitCount: visitCountLabel,
+            visitCountInYear: visitCountInYearLabel,
+            years: t("map.yearsLabel"),
+          },
+          selectedYear,
+        );
+        content.addEventListener("mouseenter", cancelClose);
+        content.addEventListener("mouseleave", scheduleClose);
+        popup.setDOMContent(content);
+        popupSlugRef.current = slugToShow;
+      }
+      popup.addTo(map);
+      setMapPopupInteractivity(popup, currentActiveSlug !== null);
+    },
+    [cancelClose, markers, scheduleClose, selectedYear, t],
+  );
+
+  useEffect(() => {
+    activeSlugRef.current = activeSlug;
+  }, [activeSlug]);
+
+  useEffect(() => {
+    hoveredSlugRef.current = hoveredSlug;
+  }, [hoveredSlug]);
+
+  // Initialize map. Depends on isEmpty so an empty result does not create WebGL work.
   // biome-ignore lint/correctness/useExhaustiveDependencies: the map is (re)created only when the empty state flips; marker changes are applied by the effect below.
   useEffect(() => {
     const container = mapContainerRef.current;
@@ -185,6 +259,7 @@ export const VisitsMap = ({ markers, selectedYear = null }: VisitsMapProps) => {
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
 
     map.on("load", () => {
+      prepareMapPointIcon(map);
       setIsMapLoaded(true);
     });
 
@@ -197,42 +272,32 @@ export const VisitsMap = ({ markers, selectedYear = null }: VisitsMapProps) => {
 
     return () => {
       resizeObserver.disconnect();
-      for (const marker of markersRef.current) {
-        marker.remove();
-      }
-      markersRef.current = [];
-      for (const popup of popupsRef.current) {
-        popup.remove();
-      }
-      popupsRef.current = [];
+      cancelClose();
+      popupRef.current?.remove();
+      popupRef.current = null;
+      popupSlugRef.current = null;
       map.remove();
       mapRef.current = null;
       setIsMapLoaded(false);
     };
   }, [isEmpty]);
 
-  // Create markers and popups once the map has loaded, and keep them in sync
-  // with the server-built marker list when the filters change.
+  // Keep point data and one active popup in sync with the server-built marker list.
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !isMapLoaded) {
       return;
     }
 
-    // Clear the previous marker set first so filter changes and dev-mode
-    // effect re-runs never leave stale or duplicated pins on the map.
-    for (const marker of markersRef.current) {
-      marker.remove();
-    }
-    markersRef.current = [];
-    for (const popup of popupsRef.current) {
-      popup.remove();
-    }
-    popupsRef.current = [];
-
-    if (markers.length === 0) {
-      return;
-    }
+    syncMapPointLayer(
+      map,
+      markers.map((marker) => ({
+        color: getMarkerTone(marker.visitCount).color,
+        id: marker.slug,
+        latitude: marker.coordinates.lat,
+        longitude: marker.coordinates.lon,
+      })),
+    );
 
     map.fitBounds(getMarkersBounds(markers), {
       duration: 0,
@@ -240,160 +305,69 @@ export const VisitsMap = ({ markers, selectedYear = null }: VisitsMapProps) => {
       maxZoom: MAP_BOUNDS_MAX_ZOOM,
     });
 
-    let activePopup: maplibregl.Popup | null = null;
-    let lockedPopup: maplibregl.Popup | null = null;
-    let hoverCloseTimer: ReturnType<typeof setTimeout> | null = null;
-
-    const cancelClose = () => {
-      if (hoverCloseTimer) {
-        clearTimeout(hoverCloseTimer);
-        hoverCloseTimer = null;
-      }
-    };
-
-    const closeActivePopup = () => {
-      cancelClose();
-      activePopup?.remove();
-      activePopup = null;
-      lockedPopup = null;
-    };
-
-    const scheduleClose = () => {
-      if (lockedPopup) {
-        return;
-      }
-
-      cancelClose();
-      hoverCloseTimer = setTimeout(() => {
-        activePopup?.remove();
-        activePopup = null;
-        hoverCloseTimer = null;
-      }, HOVER_CLOSE_DELAY);
-    };
-
-    const previewPopup = (popup: maplibregl.Popup) => {
-      cancelClose();
-
-      if (lockedPopup && lockedPopup !== popup) {
-        return;
-      }
-
-      if (activePopup === popup) {
-        return;
-      }
-
-      activePopup?.remove();
-      popup.addTo(map);
-      activePopup = popup;
-    };
-
-    const lockPopup = (popup: maplibregl.Popup) => {
-      cancelClose();
-
-      if (activePopup !== popup) {
-        activePopup?.remove();
-        popup.addTo(map);
-        activePopup = popup;
-      }
-
-      lockedPopup = popup;
-    };
-
-    for (const marker of markers) {
-      const visitCountLabel = t("map.visitCount", { count: marker.visitCount });
-      const visitCountInYearLabel =
-        selectedYear === null
-          ? visitCountLabel
-          : t("map.visitCountInYear", {
-              count: marker.visitCount,
-              year: selectedYear,
-            });
-      const element = createMarkerElement(marker, visitCountLabel);
-      const popupContent = createPopupNode(
-        marker,
-        {
-          openParkVisits: t("map.openParkVisits"),
-          visitCount: visitCountLabel,
-          visitCountInYear: visitCountInYearLabel,
-          years: t("map.yearsLabel"),
-        },
-        selectedYear,
-      );
-
-      const popup = new maplibregl.Popup({
-        closeButton: false,
-        closeOnClick: false,
-        maxWidth: "240px",
-        offset: 20,
-      }).setLngLat([marker.coordinates.lon, marker.coordinates.lat]);
-      popup.setDOMContent(popupContent);
-      popupsRef.current.push(popup);
-
-      popupContent.addEventListener("mouseenter", cancelClose);
-      popupContent.addEventListener("mouseleave", scheduleClose);
-
-      // Pointer clicks focus the marker first, so a click on a hovered/focused
-      // popup should lock it open instead of immediately toggling it closed.
-      const handleMarkerClick = () => {
-        if (lockedPopup === popup) {
-          closeActivePopup();
+    const cleanupPointEvents = bindMapPointLayerEvents(map, {
+      onPointClick: (slug) => {
+        cancelClose();
+        setHoveredSlug(null);
+        setActiveSlug((current) => (current === slug ? null : slug));
+      },
+      onPointEnter: (slug) => {
+        if (activeSlugRef.current && activeSlugRef.current !== slug) {
           return;
         }
+        cancelClose();
+        setHoveredSlug(slug);
+      },
+      onPointLeave: scheduleClose,
+    });
 
-        if (activePopup === popup) {
-          lockedPopup = popup;
-          return;
-        }
-
-        lockPopup(popup);
-      };
-
-      element.addEventListener("click", handleMarkerClick);
-      element.addEventListener("mouseenter", () => {
-        previewPopup(popup);
-      });
-      element.addEventListener("mouseleave", () => {
-        if (lockedPopup === popup) {
-          return;
-        }
-
-        scheduleClose();
-      });
-      element.addEventListener("focus", () => {
-        previewPopup(popup);
-      });
-
-      const mapMarker = new maplibregl.Marker({ element, anchor: "bottom" })
-        .setLngLat([marker.coordinates.lon, marker.coordinates.lat])
-        .addTo(map);
-      markersRef.current.push(mapMarker);
-    }
-
-    const handleDocumentClick = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-
-      if (target.closest(".maplibregl-marker") || target.closest(".maplibregl-popup")) {
-        return;
-      }
-
-      closeActivePopup();
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        closeActivePopup();
+    const handleMapClick = (event: maplibregl.MapMouseEvent) => {
+      if (
+        map.queryRenderedFeatures(event.point, {
+          layers: [MAP_POINT_LAYER_ID],
+        }).length === 0
+      ) {
+        cancelClose();
+        setActiveSlug(null);
+        setHoveredSlug(null);
       }
     };
+    map.on("click", handleMapClick);
 
-    document.addEventListener("mousedown", handleDocumentClick);
-    document.addEventListener("keydown", handleKeyDown);
+    syncPopupVisibility(activeSlugRef.current, hoveredSlugRef.current);
 
     return () => {
       cancelClose();
-      document.removeEventListener("mousedown", handleDocumentClick);
-      document.removeEventListener("keydown", handleKeyDown);
+      cleanupPointEvents();
+      map.off("click", handleMapClick);
     };
-  }, [isMapLoaded, markers, selectedYear, t]);
+  }, [cancelClose, isMapLoaded, markers, scheduleClose, syncPopupVisibility]);
+
+  useEffect(() => {
+    syncPopupVisibility(activeSlug, hoveredSlug);
+  }, [activeSlug, hoveredSlug, syncPopupVisibility]);
+
+  useEffect(() => {
+    if (!markers.some(({ slug }) => slug === activeSlug)) {
+      setActiveSlug(null);
+    }
+    if (!markers.some(({ slug }) => slug === hoveredSlug)) {
+      setHoveredSlug(null);
+    }
+  }, [activeSlug, hoveredSlug, markers]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        cancelClose();
+        setActiveSlug(null);
+        setHoveredSlug(null);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [cancelClose]);
 
   if (isEmpty) {
     return (

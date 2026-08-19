@@ -229,6 +229,12 @@ MapLibre GL v6 ships ESM-only and cannot auto-detect its worker URL inside the N
 - `src/components/map/map-worker.ts` calls `setWorkerUrl("/maplibre/maplibre-gl-worker.mjs")`; it is imported by `src/components/map/map-style.ts`, which every map component already imports.
 - The CSP `worker-src 'self' blob:` in `next.config.ts` covers the same-origin worker file.
 
+### Public result-map point rendering
+
+The public catalogue map (`/paikat`), visits map (`/kaynnit?view=map`), and trip-planner result map share the point-layer adapter in `src/components/map/map-point-layer.ts`. Visible places are one unclustered GeoJSON source rendered by a reusable MapLibre pin layer; they are not individual DOM markers or one popup per place. Each map keeps at most one active popup and updates the source data when filters or results change.
+
+Canvas points are not individually keyboard-focusable. The header park search, visits-map result list, and trip-planner result list remain the accessible searchable or link-based alternatives for selecting a place. Trip-planner origin and destination pins remain small DOM markers because they are fixed endpoints, not catalogue-sized result sets.
+
 ---
 
 ## Authentication Flow

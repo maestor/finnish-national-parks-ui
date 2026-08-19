@@ -14,6 +14,14 @@ import {
 import { Button } from "../ui/button";
 import { ThreeDotPulse } from "../ui/three-dot-pulse";
 import { MAP_FLOATING_CONTROL_BUTTON_CLASS_NAME } from "./map-floating-control-styles";
+import {
+  bindMapPointLayerEvents,
+  MAP_POINT_LAYER_ID,
+  prepareMapPointIcon,
+  setMapPointSelection,
+  setMapPopupInteractivity,
+  syncMapPointLayer,
+} from "./map-point-layer";
 import { getMapStyle } from "./map-style";
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -200,32 +208,6 @@ const initializeCompactAttribution = (map: maplibregl.Map, container: HTMLElemen
     map.off("styledata", keepCollapsedUntilOpened);
     map.off("sourcedata", keepCollapsedUntilOpened);
   };
-};
-
-const createMarkerElement = (park: MapPark, colorOverride?: string) => {
-  const button = document.createElement("button");
-  const displayTypeName = getParkTypeDisplayName(park);
-  button.type = "button";
-  button.className =
-    "group relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
-  button.setAttribute("aria-label", `${park.name}, ${displayTypeName}`);
-  button.dataset.slug = park.slug;
-
-  const color = colorOverride ?? getVisitStatusColor(park);
-
-  button.appendChild(
-    createSvgIcon({
-      className: "h-6 w-6 drop-shadow-md transition-transform group-hover:scale-110",
-      fill: color,
-      paths: [
-        {
-          d: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z",
-        },
-      ],
-    }),
-  );
-
-  return button;
 };
 
 const createUserLocationMarkerElement = () => {
@@ -539,16 +521,16 @@ export const ParkMap = ({
   const initialPaddingRef = useRef(parks.length > 0 ? PARK_FOCUS_PADDING : MAP_PADDING);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
-  const markersRef = useRef<maplibregl.Marker[]>([]);
   const userLocationMarkerRef = useRef<maplibregl.Marker | null>(null);
-  const popupsRef = useRef<Map<string, maplibregl.Popup>>(new Map());
-  const shownPopupsRef = useRef<Set<string>>(new Set());
+  const popupRef = useRef<maplibregl.Popup | null>(null);
+  const popupSlugRef = useRef<string | null>(null);
   // Popup DOM (including logo <img> sources) is built on first show so loading
   // the map does not fetch every park logo up front.
   const popupContentFactoriesRef = useRef<Map<string, () => HTMLElement>>(new Map());
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeSlugRef = useRef<string | null>(null);
   const hoveredSlugRef = useRef<string | null>(null);
+  const selectedPointSlugRef = useRef<string | null>(null);
   const lastHandledHomeFocusRequestIdRef = useRef(0);
   const lastHandledResetViewRequestIdRef = useRef(0);
   const t = useTranslations("map");
@@ -594,23 +576,6 @@ export const ParkMap = ({
     hoverTimerRef.current = setTimeout(() => {
       setHoveredSlug(null);
     }, HOVER_CLOSE_DELAY);
-  }, []);
-
-  const closeActivePopupIfFocusLeftMapPopup = useCallback((slug: string) => {
-    window.setTimeout(() => {
-      const focusedElement = document.activeElement;
-      if (!(focusedElement instanceof HTMLElement)) {
-        setActiveSlug((current) => (current === slug ? null : current));
-        return;
-      }
-
-      const isInsideMarker = !!focusedElement.closest(".maplibregl-marker");
-      const isInsidePopup = !!focusedElement.closest(".maplibregl-popup");
-
-      if (!isInsideMarker && !isInsidePopup) {
-        setActiveSlug((current) => (current === slug ? null : current));
-      }
-    }, 0);
   }, []);
 
   const focusPark = useCallback(
@@ -745,26 +710,47 @@ export const ParkMap = ({
         return;
       }
 
-      for (const [slug, popup] of popupsRef.current) {
-        const shouldShow =
-          currentActiveSlug === slug || (currentActiveSlug === null && currentHoveredSlug === slug);
-        const isShown = shownPopupsRef.current.has(slug);
+      const slugToShow = currentActiveSlug ?? currentHoveredSlug;
+      const buildContent = slugToShow
+        ? popupContentFactoriesRef.current.get(slugToShow)
+        : undefined;
+      const park = slugToShow ? parks.find(({ slug }) => slug === slugToShow) : undefined;
 
-        if (shouldShow && !isShown) {
-          const buildContent = popupContentFactoriesRef.current.get(slug);
-          if (buildContent) {
-            popupContentFactoriesRef.current.delete(slug);
-            popup.setDOMContent(buildContent());
-          }
-          popup.addTo(map);
-          shownPopupsRef.current.add(slug);
-        } else if (!shouldShow && isShown) {
-          popup.remove();
-          shownPopupsRef.current.delete(slug);
-        }
+      if (!slugToShow || !buildContent || !park) {
+        popupRef.current?.remove();
+        popupSlugRef.current = null;
+        return;
       }
+
+      const popup =
+        popupRef.current ??
+        new maplibregl.Popup({
+          closeButton: false,
+          closeOnClick: false,
+          maxWidth: "280px",
+          offset: {
+            center: [0, 12],
+            top: [0, 0],
+            bottom: [0, -30],
+            left: [16, -16],
+            right: [-16, -16],
+            "top-left": [0, 0],
+            "top-right": [0, 0],
+            "bottom-left": [0, -32],
+            "bottom-right": [0, -32],
+          },
+        });
+
+      popupRef.current = popup;
+      popup.setLngLat([park.markerPoint.lon, park.markerPoint.lat]);
+      if (popupSlugRef.current !== slugToShow) {
+        popup.setDOMContent(buildContent());
+        popupSlugRef.current = slugToShow;
+      }
+      popup.addTo(map);
+      setMapPopupInteractivity(popup, currentActiveSlug !== null);
     },
-    [],
+    [parks],
   );
 
   // Initialize map
@@ -799,6 +785,7 @@ export const ParkMap = ({
     const cleanupCompactAttribution = initializeCompactAttribution(map, container);
 
     map.on("load", () => {
+      prepareMapPointIcon(map);
       setIsMapLoaded(true);
     });
 
@@ -812,16 +799,11 @@ export const ParkMap = ({
     return () => {
       cancelClose();
       resizeObserver.disconnect();
-      for (const marker of markersRef.current) {
-        marker.remove();
-      }
-      markersRef.current = [];
-      for (const popup of popupsRef.current.values()) {
-        popup.remove();
-      }
-      popupsRef.current.clear();
-      shownPopupsRef.current.clear();
+      popupRef.current?.remove();
+      popupRef.current = null;
+      popupSlugRef.current = null;
       popupContentFactoriesRef.current.clear();
+      selectedPointSlugRef.current = null;
       userLocationMarkerRef.current?.remove();
       userLocationMarkerRef.current = null;
       cleanupCompactAttribution();
@@ -832,24 +814,28 @@ export const ParkMap = ({
     };
   }, [cancelClose]);
 
-  // Create markers and popups when parks or map load state changes
+  // Keep the shared point source and its single popup interaction path in sync.
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !isMapLoaded) return;
 
-    // Clear existing markers and popups
-    for (const marker of markersRef.current) {
-      marker.remove();
-    }
-    markersRef.current = [];
-    for (const popup of popupsRef.current.values()) {
-      popup.remove();
-    }
-    popupsRef.current.clear();
-    shownPopupsRef.current.clear();
-    popupContentFactoriesRef.current.clear();
+    syncMapPointLayer(
+      map,
+      parks.map((park) => ({
+        color: onToggleRemoved
+          ? removedSlugs?.has(park.slug)
+            ? "#ef4444"
+            : "#16a34a"
+          : getVisitStatusColor(park),
+        id: park.slug,
+        latitude: park.markerPoint.lat,
+        longitude: park.markerPoint.lon,
+      })),
+    );
 
-    if (parks.length === 0) return;
+    popupRef.current?.remove();
+    popupSlugRef.current = null;
+    popupContentFactoriesRef.current.clear();
 
     const labels: PopupLabels = {
       established: t("established"),
@@ -862,41 +848,18 @@ export const ParkMap = ({
 
     for (const park of parks) {
       const isRemoved = removedSlugs?.has(park.slug) ?? false;
-      const isAdmin = onToggleRemoved !== undefined;
-      const colorOverride = isAdmin ? (isRemoved ? "#ef4444" : "#16a34a") : undefined;
-      const el = createMarkerElement(park, colorOverride);
-
-      const popup = new maplibregl.Popup({
-        closeButton: false,
-        closeOnClick: false,
-        maxWidth: "280px",
-        offset: {
-          center: [0, 12],
-          top: [0, 0],
-          bottom: [0, -30],
-          left: [16, -16],
-          right: [-16, -16],
-          "top-left": [0, 0],
-          "top-right": [0, 0],
-          "bottom-left": [0, -32],
-          "bottom-right": [0, -32],
-        },
-      }).setLngLat([park.markerPoint.lon, park.markerPoint.lat]);
-
       popupContentFactoriesRef.current.set(park.slug, () =>
         createPopupNode(park, labels, canManageVisits, isRemoved, onToggleRemoved, toggleLabels),
       );
+    }
 
-      popupsRef.current.set(park.slug, popup);
+    const cleanupPointEvents = bindMapPointLayerEvents(map, {
+      onPointClick: (slug) => {
+        const park = parks.find(({ slug: parkSlug }) => parkSlug === slug);
+        if (!park) {
+          return;
+        }
 
-      const marker = new maplibregl.Marker({ element: el, anchor: "bottom" })
-        .setLngLat([park.markerPoint.lon, park.markerPoint.lat])
-        .addTo(map);
-
-      markersRef.current.push(marker);
-
-      // Pin interactions
-      el.addEventListener("click", () => {
         if (activeSlugRef.current === park.slug) {
           cancelClose();
           setHoveredSlug(null);
@@ -905,31 +868,38 @@ export const ParkMap = ({
         }
 
         focusPark(park);
-      });
-
-      el.addEventListener("mouseenter", () => {
-        if (activeSlugRef.current && activeSlugRef.current !== park.slug) {
+      },
+      onPointEnter: (slug) => {
+        if (activeSlugRef.current && activeSlugRef.current !== slug) {
           return;
         }
 
         cancelClose();
-        setHoveredSlug(park.slug);
-      });
-
-      el.addEventListener("mouseleave", () => {
+        setHoveredSlug(slug);
+      },
+      onPointLeave: () => {
         scheduleClose();
-      });
+      },
+    });
 
-      el.addEventListener("focus", () => {
-        focusPark(park);
-      });
-
-      el.addEventListener("blur", () => {
-        closeActivePopupIfFocusLeftMapPopup(park.slug);
-      });
-    }
+    const handleMapClick = (event: maplibregl.MapMouseEvent) => {
+      if (
+        map.queryRenderedFeatures(event.point, {
+          layers: [MAP_POINT_LAYER_ID],
+        }).length === 0
+      ) {
+        setActiveSlug(null);
+        setHoveredSlug(null);
+      }
+    };
+    map.on("click", handleMapClick);
 
     syncPopupVisibility(activeSlugRef.current, hoveredSlugRef.current);
+
+    return () => {
+      cleanupPointEvents();
+      map.off("click", handleMapClick);
+    };
   }, [
     parks,
     isMapLoaded,
@@ -937,7 +907,6 @@ export const ParkMap = ({
     cancelClose,
     scheduleClose,
     canManageVisits,
-    closeActivePopupIfFocusLeftMapPopup,
     focusPark,
     syncPopupVisibility,
     removedSlugs,
@@ -1002,27 +971,15 @@ export const ParkMap = ({
     syncPopupVisibility(activeSlug, hoveredSlug);
   }, [activeSlug, hoveredSlug, syncPopupVisibility]);
 
-  // Click outside to close active popup
   useEffect(() => {
-    const handleDocumentClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      const isInsideMarker = !!target.closest(".maplibregl-marker");
-      const isInsidePopup = !!target.closest(".maplibregl-popup");
-      const mapContainer = mapContainerRef.current;
+    const map = mapRef.current;
+    if (!map || !isMapLoaded) {
+      return;
+    }
 
-      if (isInsideMarker || isInsidePopup) {
-        return;
-      }
-
-      if (mapContainer?.contains(target)) {
-        setActiveSlug(null);
-        setHoveredSlug(null);
-      }
-    };
-
-    document.addEventListener("mousedown", handleDocumentClick);
-    return () => document.removeEventListener("mousedown", handleDocumentClick);
-  }, []);
+    setMapPointSelection(map, selectedPointSlugRef.current, activeSlug);
+    selectedPointSlugRef.current = activeSlug;
+  }, [activeSlug, isMapLoaded]);
 
   // Escape to close active popup
   useEffect(() => {

@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { FilterableMapPark } from "@/lib/parks";
+import { type FilterableMapPark, getParkTypeDisplayName } from "@/lib/parks";
 import { ParkMap } from "./park-map";
 
 const { homeMapControlsState } = vi.hoisted(() => ({
@@ -12,8 +12,12 @@ const { homeMapControlsState } = vi.hoisted(() => ({
 }));
 
 const loadHandlers: Array<() => void> = [];
-const mapEventHandlers = new Map<string, Array<() => void>>();
+const mapEventHandlers = new Map<
+  string,
+  Array<{ handler: (event?: unknown) => void; layer?: string }>
+>();
 const markerElements: HTMLElement[] = [];
+let virtualPointElements: HTMLElement[] = [];
 const resizeObservers: MockResizeObserver[] = [];
 const popupInstances: Array<{
   addTo: ReturnType<typeof vi.fn>;
@@ -24,6 +28,7 @@ let mapOptions: Record<string, unknown> | null = null;
 let mapInstance: ReturnType<typeof createMockMap> | null = null;
 const fitBoundsMock = vi.fn();
 const easeToMock = vi.fn();
+let renderedPointSlug: string | null = null;
 
 const parks: FilterableMapPark[] = [
   {
@@ -85,9 +90,21 @@ const triggerMapLoad = () => {
 
 const triggerMapEvent = (event: string) => {
   act(() => {
-    for (const handler of mapEventHandlers.get(event) ?? []) {
-      handler();
+    for (const { handler } of mapEventHandlers.get(event) ?? []) {
+      handler({ point: { x: 0, y: 0 } });
     }
+  });
+};
+
+const triggerMapPointEvent = (event: string, slug: string) => {
+  act(() => {
+    renderedPointSlug = slug;
+    for (const { handler, layer } of mapEventHandlers.get(event) ?? []) {
+      if (layer === "public-map-points") {
+        handler({ point: { x: 0, y: 0 } });
+      }
+    }
+    renderedPointSlug = null;
   });
 };
 
@@ -111,7 +128,7 @@ const createMockPopup = () => {
     remove: vi.fn(() => {
       wrapper.remove();
     }),
-    getElement: vi.fn(() => content),
+    getElement: vi.fn(() => wrapper),
   };
 
   popup.setLngLat.mockReturnThis();
@@ -135,48 +152,143 @@ const createMockMarker = (options?: { element?: HTMLElement }) => {
   return marker;
 };
 
-const createMockMap = (container: HTMLElement) => ({
-  on: vi.fn((event: string, handler: () => void) => {
-    const handlers = mapEventHandlers.get(event) ?? [];
-    handlers.push(handler);
-    mapEventHandlers.set(event, handlers);
-
-    if (event === "load") {
-      loadHandlers.push(handler);
+const createMockMap = (container: HTMLElement) => {
+  const sources = new Map<
+    string,
+    {
+      type: "geojson";
+      setData: ReturnType<typeof vi.fn>;
+      getClusterExpansionZoom: ReturnType<typeof vi.fn>;
     }
-  }),
-  off: vi.fn((event: string, handler: () => void) => {
-    const handlers = mapEventHandlers.get(event) ?? [];
-    mapEventHandlers.set(
-      event,
-      handlers.filter((registeredHandler) => registeredHandler !== handler),
-    );
-  }),
-  remove: vi.fn(),
-  resize: vi.fn(),
-  addControl: vi.fn((control: { __kind?: string }) => {
-    if (control.__kind === "attribution") {
-      const attribution = document.createElement("details");
-      attribution.className =
-        "maplibregl-ctrl maplibregl-ctrl-attrib maplibregl-compact maplibregl-compact-show";
-      attribution.setAttribute("open", "");
+  >();
+  const layers = new Set<string>();
 
-      const button = document.createElement("summary");
-      button.className = "maplibregl-ctrl-attrib-button";
-      attribution.appendChild(button);
-
-      const inner = document.createElement("div");
-      inner.className = "maplibregl-ctrl-attrib-inner";
-      inner.textContent = "MapLibre | © OpenStreetMap contributors | Improve this map";
-      attribution.appendChild(inner);
-
-      container.appendChild(attribution);
+  const syncVirtualPointElements = (data: {
+    features: Array<{ properties?: { id?: string } }>;
+  }) => {
+    for (const element of virtualPointElements) {
+      const index = markerElements.indexOf(element);
+      if (index >= 0) {
+        markerElements.splice(index, 1);
+      }
     }
-  }),
-  getContainer: vi.fn(() => container),
-  fitBounds: fitBoundsMock,
-  easeTo: easeToMock,
-});
+
+    virtualPointElements = data.features.flatMap((feature) => {
+      const slug = feature.properties?.id;
+      const park = parks.find(({ slug: parkSlug }) => parkSlug === slug);
+      if (!slug || !park) {
+        return [];
+      }
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.setAttribute("aria-label", `${park.name}, ${getParkTypeDisplayName(park)}`);
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      button.appendChild(svg);
+      for (const event of ["click", "mouseenter", "mousemove", "mouseleave", "focus"]) {
+        button.addEventListener(event, () => triggerMapPointEvent(event, slug));
+      }
+      markerElements.push(button);
+      return [button];
+    });
+  };
+
+  return {
+    on: vi.fn(
+      (
+        event: string,
+        layerOrHandler: string | ((event?: unknown) => void),
+        maybeHandler?: (event?: unknown) => void,
+      ) => {
+        const layer = typeof layerOrHandler === "string" ? layerOrHandler : undefined;
+        const handler = (typeof layerOrHandler === "string" ? maybeHandler : layerOrHandler) as (
+          event?: unknown,
+        ) => void;
+        const handlers = mapEventHandlers.get(event) ?? [];
+        handlers.push({ handler, layer });
+        mapEventHandlers.set(event, handlers);
+
+        if (event === "load") {
+          loadHandlers.push(handler);
+        }
+      },
+    ),
+    off: vi.fn(
+      (
+        event: string,
+        layerOrHandler: string | ((event?: unknown) => void),
+        maybeHandler?: (event?: unknown) => void,
+      ) => {
+        const layer = typeof layerOrHandler === "string" ? layerOrHandler : undefined;
+        const handler = (typeof layerOrHandler === "string" ? maybeHandler : layerOrHandler) as (
+          event?: unknown,
+        ) => void;
+        const handlers = mapEventHandlers.get(event) ?? [];
+        mapEventHandlers.set(
+          event,
+          handlers.filter(
+            ({ handler: registeredHandler, layer: registeredLayer }) =>
+              registeredHandler !== handler || registeredLayer !== layer,
+          ),
+        );
+      },
+    ),
+    remove: vi.fn(),
+    resize: vi.fn(),
+    addControl: vi.fn((control: { __kind?: string }) => {
+      if (control.__kind === "attribution") {
+        const attribution = document.createElement("details");
+        attribution.className =
+          "maplibregl-ctrl maplibregl-ctrl-attrib maplibregl-compact maplibregl-compact-show";
+        attribution.setAttribute("open", "");
+
+        const button = document.createElement("summary");
+        button.className = "maplibregl-ctrl-attrib-button";
+        attribution.appendChild(button);
+
+        const inner = document.createElement("div");
+        inner.className = "maplibregl-ctrl-attrib-inner";
+        inner.textContent = "MapLibre | © OpenStreetMap contributors | Improve this map";
+        attribution.appendChild(inner);
+
+        container.appendChild(attribution);
+      }
+    }),
+    getContainer: vi.fn(() => container),
+    getCanvas: vi.fn(() => container),
+    getSource: vi.fn((sourceId: string) => sources.get(sourceId)),
+    getLayer: vi.fn((layerId: string) => (layers.has(layerId) ? { id: layerId } : undefined)),
+    addSource: vi.fn(
+      (
+        sourceId: string,
+        options: { data: { features: Array<{ properties?: { id?: string } }> } },
+      ) => {
+        const source = {
+          type: "geojson" as const,
+          setData: vi.fn((data: { features: Array<{ properties?: { id?: string } }> }) => {
+            syncVirtualPointElements(data);
+          }),
+          getClusterExpansionZoom: vi.fn(async () => 8),
+        };
+        sources.set(sourceId, source);
+        syncVirtualPointElements(options.data);
+      },
+    ),
+    addLayer: vi.fn((layer: { id: string }) => {
+      layers.add(layer.id);
+    }),
+    queryRenderedFeatures: vi.fn(() => {
+      if (!renderedPointSlug) {
+        return [];
+      }
+      return [{ properties: { id: renderedPointSlug } }];
+    }),
+    setFeatureState: vi.fn(),
+    removeFeatureState: vi.fn(),
+    fitBounds: fitBoundsMock,
+    easeTo: easeToMock,
+  };
+};
 
 class MockResizeObserver {
   observe = vi.fn();
@@ -222,6 +334,7 @@ describe("ParkMap", () => {
     loadHandlers.length = 0;
     mapEventHandlers.clear();
     markerElements.length = 0;
+    virtualPointElements = [];
     popupInstances.length = 0;
     resizeObservers.length = 0;
     mapOptions = null;
@@ -419,6 +532,18 @@ describe("ParkMap", () => {
     });
 
     expect(document.querySelector(".maplibregl-popup")).not.toBeInTheDocument();
+  });
+
+  it("allows direct hover transitions while a hover popup is open", () => {
+    render(<ParkMap parks={parks} />);
+    triggerMapLoad();
+
+    fireEvent.mouseEnter(markerElements[0]);
+    expect(document.querySelector(".maplibregl-popup")).toHaveStyle({ pointerEvents: "none" });
+
+    fireEvent.mouseMove(markerElements[1]);
+
+    expect(document.querySelector(".maplibregl-popup h3")).toHaveTextContent("Hetta");
   });
 
   it("keeps a clicked popup locked when hovering another marker", async () => {
@@ -1070,8 +1195,7 @@ describe("ParkMap", () => {
     fireEvent.click(markerElements[0]);
     expect(document.body).toHaveTextContent("Pallas-Yllästunturin kansallispuisto");
 
-    const mapContainer = screen.getByRole("application", { name: "map.ariaLabel" });
-    fireEvent.mouseDown(mapContainer);
+    triggerMapEvent("click");
 
     expect(document.querySelector(".maplibregl-popup")).not.toBeInTheDocument();
   });
@@ -1123,8 +1247,18 @@ describe("ParkMap", () => {
     );
     triggerMapLoad();
 
-    const svg = markerElements[0].querySelector("svg");
-    expect(svg).toHaveAttribute("fill", "#ef4444");
+    expect(mapInstance?.addSource).toHaveBeenCalledWith(
+      "public-map-points",
+      expect.objectContaining({
+        data: expect.objectContaining({
+          features: expect.arrayContaining([
+            expect.objectContaining({
+              properties: expect.objectContaining({ color: "#ef4444" }),
+            }),
+          ]),
+        }),
+      }),
+    );
   });
 
   it("renders visible park markers with green color in admin mode", () => {
@@ -1138,8 +1272,18 @@ describe("ParkMap", () => {
     );
     triggerMapLoad();
 
-    const svg = markerElements[0].querySelector("svg");
-    expect(svg).toHaveAttribute("fill", "#16a34a");
+    expect(mapInstance?.addSource).toHaveBeenCalledWith(
+      "public-map-points",
+      expect.objectContaining({
+        data: expect.objectContaining({
+          features: expect.arrayContaining([
+            expect.objectContaining({
+              properties: expect.objectContaining({ color: "#16a34a" }),
+            }),
+          ]),
+        }),
+      }),
+    );
   });
 
   it("shows a hide button in popup for visible parks when admin toggle is enabled", () => {
