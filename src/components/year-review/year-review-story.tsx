@@ -293,7 +293,7 @@ const StoryFeaturedImagePanel = ({
         width={dimensions.width}
         height={dimensions.height}
         sizes={sizes}
-        unoptimized
+        unoptimized={resolution === "thumb"}
         className={cn(
           "w-full motion-safe:transition-transform motion-safe:duration-1000 motion-safe:ease-out",
           isPortrait

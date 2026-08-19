@@ -208,7 +208,8 @@ Route naming caveat:
 - Park logos and visit images ultimately live in the backend's Cloudflare R2 bucket.
 - Public park logos may now load through the backend origin first (`NEXT_PUBLIC_API_URL`) before the API redirects to R2, so `next.config.ts` allowlists both the configured backend origin and the R2 host for image loading.
 - `next.config.ts` keeps optimized-image cache entries alive for at least 31 days (`images.minimumCacheTTL = 2678400`) and constrains generated widths/qualities to the app's actual usage (`deviceSizes`, `imageSizes`, `qualities`, `formats`) so Vercel does not generate unnecessary variants.
-- Small local social icons, park logos, and backend-provided visit thumbnail URLs opt out of Vercel optimization with `unoptimized` because they are already tiny or pre-sized. Keep large lightbox images optimized unless the backend starts serving its own stable display-sized derivatives.
+- Small local social icons, park logos, backend-provided visit thumbnail URLs, and compact review-story grid media opt out of Vercel optimization with `unoptimized` because they are already tiny or pre-sized. Full review-story media uses responsive Next image variants with explicit `sizes` values.
+- Keep large lightbox images optimized unless the backend starts serving its own stable display-sized derivatives.
 - If the backend moves image hosting or its public origin, update `next.config.ts` and this note in the same change. Do not widen the allowlist with wildcards.
 
 ### Public Page Data Strategy
@@ -241,7 +242,7 @@ Park boundary maps and public trip maps are wrapped in `src/components/map/defer
 
 ### Growing public surfaces
 
-Long public visit timelines progressively skip offscreen month sections with `content-visibility: auto` and an intrinsic placeholder size. Long public trip itineraries use the same treatment per itinerary item after the 12-item budget, while expanded visit details and galleries remain on demand. Review-story place cards also use browser-managed content visibility. Story-card navigation keeps the existing sticky navigation and reveal-anchor geometry; scroll synchronization is sampled once per animation frame and uses nearby cards while `IntersectionObserver` remains the primary active-card signal.
+Long public visit timelines progressively skip offscreen month sections with `content-visibility: auto` and an intrinsic placeholder size. Long public trip itineraries use the same treatment per itinerary item after the 12-item budget, while expanded visit details and galleries remain on demand. Review-story place cards also use browser-managed content visibility. Story-card navigation keeps the existing sticky navigation and reveal-anchor geometry; scroll synchronization is sampled once per animation frame and uses nearby cards while `IntersectionObserver` remains the primary active-card signal. Review-card glow motion is finite and activation-triggered, so it settles instead of running while the page is idle.
 
 ### Public navigation background work
 
