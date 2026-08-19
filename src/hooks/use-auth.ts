@@ -10,18 +10,36 @@ export type AuthUser = {
   picture: string;
 };
 
+const AUTH_CACHE_TTL_MS = 30_000;
+
 // Concurrent hook instances (header, map, visit history, admin controls) mount
-// together and would each fire their own /auth/me. Share the in-flight request;
-// once it settles, later mounts fetch again so session changes are picked up.
+// together and share the in-flight request. Keep the settled result briefly too,
+// so client-side navigation does not refetch the same session for every page.
 let authMeRequest: Promise<AuthUser | null> | null = null;
+let authMeCache: { expiresAt: number; user: AuthUser | null } | null = null;
 
 const fetchAuthUser = () => {
+  if (authMeCache && authMeCache.expiresAt > Date.now()) {
+    return Promise.resolve(authMeCache.user);
+  }
+
   authMeRequest ??= apiFetch<AuthUser>("/auth/me")
-    .catch(() => null)
+    .then((user) => {
+      authMeCache = { expiresAt: Date.now() + AUTH_CACHE_TTL_MS, user };
+      return user;
+    })
+    .catch(() => {
+      authMeCache = { expiresAt: Date.now() + AUTH_CACHE_TTL_MS, user: null };
+      return null;
+    })
     .finally(() => {
       authMeRequest = null;
     });
   return authMeRequest;
+};
+
+export const clearAuthCache = () => {
+  authMeCache = null;
 };
 
 export const useAuth = () => {
@@ -44,6 +62,7 @@ export const useAuth = () => {
 
   const logout = useCallback(async () => {
     await apiFetch("/auth/logout", { method: "POST" });
+    clearAuthCache();
     window.location.href = "/";
   }, []);
 

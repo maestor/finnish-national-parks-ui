@@ -111,6 +111,21 @@
   }
 }
 
+.public-story-place-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 26rem;
+}
+
+.public-visits-timeline-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 52rem;
+}
+
+.public-trip-itinerary-item {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 18rem;
+}
+
 :root {
   --background: 0 0% 100%;
   --background-image:

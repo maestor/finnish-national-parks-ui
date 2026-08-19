@@ -229,6 +229,24 @@ MapLibre GL v6 ships ESM-only and cannot auto-detect its worker URL inside the N
 - `src/components/map/map-worker.ts` calls `setWorkerUrl("/maplibre/maplibre-gl-worker.mjs")`; it is imported by `src/components/map/map-style.ts`, which every map component already imports.
 - The CSP `worker-src 'self' blob:` in `next.config.ts` covers the same-origin worker file.
 
+### Public result-map point rendering
+
+The public catalogue map (`/paikat`), visits map (`/kaynnit?view=map`), and trip-planner result map share the point-layer adapter in `src/components/map/map-point-layer.ts`. Visible places are one unclustered GeoJSON source rendered by a reusable MapLibre pin layer; they are not individual DOM markers or one popup per place. Each map keeps at most one active popup and updates the source data when filters or results change.
+
+Canvas points are not individually keyboard-focusable. The header park search, visits-map result list, and trip-planner result list remain the accessible searchable or link-based alternatives for selecting a place. Trip-planner origin and destination pins remain small DOM markers because they are fixed endpoints, not catalogue-sized result sets.
+
+### Optional map loading
+
+Park boundary maps and public trip maps are wrapped in `src/components/map/deferred-map.tsx`. The boundary reserves the map's layout space, starts loading shortly before it enters the viewport, and keeps an explicit accessible load button for users who want to control optional map work. The same boundary exposes a low-power toggle that sets MapLibre's pixel ratio to `1`; disabling it restores the device pixel ratio. The primary `/paikat` map remains eager because the map is its main content.
+
+### Growing public surfaces
+
+Long public visit timelines progressively skip offscreen month sections with `content-visibility: auto` and an intrinsic placeholder size. Long public trip itineraries use the same treatment per itinerary item after the 12-item budget, while expanded visit details and galleries remain on demand. Review-story place cards also use browser-managed content visibility. Story-card navigation keeps the existing sticky navigation and reveal-anchor geometry; scroll synchronization is sampled once per animation frame and uses nearby cards while `IntersectionObserver` remains the primary active-card signal.
+
+### Public navigation background work
+
+The header disables automatic Next.js prefetching for the heavyweight public map, visits, and trip-planner routes. Navigation remains normal; intentional prefetching can be reconsidered if target-device measurements show a clear benefit. `useAuth` shares concurrent `/auth/me` requests and briefly reuses the settled result during client-side navigation; logout clears that cache. PWA caching remains unchanged.
+
 ---
 
 ## Authentication Flow

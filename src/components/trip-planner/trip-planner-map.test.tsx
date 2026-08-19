@@ -56,6 +56,7 @@ const createMockPopup = () => {
       wrapper.remove();
       return popup;
     }),
+    getElement: vi.fn(() => wrapper),
   };
 
   popup.setLngLat.mockReturnThis();
@@ -63,31 +64,62 @@ const createMockPopup = () => {
 };
 
 const createMockMap = ({ autoLoad = true } = {}) => {
-  const listeners: Record<string, Array<() => void>> = {};
+  const listeners: Record<string, Array<(event?: unknown) => void>> = {};
+  const sources = new Map<string, { setData: ReturnType<typeof vi.fn> }>();
+  const layers = new Set<string>();
 
   return {
     trigger: (event: string) => {
       for (const handler of listeners[event] ?? []) {
-        handler();
+        handler({ point: { x: 0, y: 0 } });
       }
     },
-    on: vi.fn((event: string, handler: () => void) => {
-      listeners[event] ??= [];
-      listeners[event]?.push(handler);
+    triggerLayer: (event: string, layer: string, slug: string) => {
+      act(() => {
+        renderedPointSlug = slug;
+        for (const handler of listeners[`${event}:${layer}`] ?? []) {
+          handler({ point: { x: 0, y: 0 } });
+        }
+        renderedPointSlug = null;
+      });
+    },
+    on: vi.fn(
+      (
+        event: string,
+        layerOrHandler: string | ((event?: unknown) => void),
+        maybeHandler?: (event?: unknown) => void,
+      ) => {
+        const key = typeof layerOrHandler === "string" ? `${event}:${layerOrHandler}` : event;
+        const handler = (typeof layerOrHandler === "string" ? maybeHandler : layerOrHandler) as (
+          event?: unknown,
+        ) => void;
+        listeners[key] ??= [];
+        listeners[key]?.push(handler);
 
-      if (event === "load" && autoLoad) {
-        handler();
-      }
-    }),
+        if (event === "load" && autoLoad) {
+          handler();
+        }
+      },
+    ),
+    off: vi.fn(),
     remove: vi.fn(),
     resize: vi.fn(),
     addControl: vi.fn(),
-    addLayer: vi.fn(),
-    addSource: vi.fn(),
-    getLayer: vi.fn(() => undefined),
-    getSource: vi.fn(() => undefined),
+    getCanvas: vi.fn(() => document.createElement("canvas")),
+    addLayer: vi.fn((layer: { id: string }) => {
+      layers.add(layer.id);
+    }),
+    addSource: vi.fn((sourceId: string, options: { data: unknown }) => {
+      sources.set(sourceId, { setData: vi.fn() });
+      void options;
+    }),
+    getLayer: vi.fn((layerId: string) => (layers.has(layerId) ? { id: layerId } : undefined)),
+    getSource: vi.fn((sourceId: string) => sources.get(sourceId)),
     removeLayer: vi.fn(),
     removeSource: vi.fn(),
+    queryRenderedFeatures: vi.fn(() =>
+      renderedPointSlug ? [{ properties: { id: renderedPointSlug } }] : [],
+    ),
     fitBounds: vi.fn(),
   };
 };
@@ -100,6 +132,7 @@ class MockResizeObserver {
 global.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
 
 let mockMap = createMockMap();
+let renderedPointSlug: string | null = null;
 
 vi.mock("maplibre-gl", () => ({
   // biome-ignore lint: Vitest v4 constructor mocks must be constructible.
@@ -192,6 +225,7 @@ describe("TripPlannerMap", () => {
   beforeEach(() => {
     markerInstances.length = 0;
     mockMap = createMockMap();
+    renderedPointSlug = null;
     document.body.innerHTML = "";
   });
 
@@ -237,7 +271,7 @@ describe("TripPlannerMap", () => {
         duration: 0,
       }),
     );
-    expect(markerInstances).toHaveLength(4);
+    expect(markerInstances).toHaveLength(2);
   });
 
   it("renders nearby results without adding route geometry", () => {
@@ -267,9 +301,11 @@ describe("TripPlannerMap", () => {
       />,
     );
 
-    expect(mockMap.addSource).not.toHaveBeenCalled();
-    expect(mockMap.addLayer).not.toHaveBeenCalled();
-    expect(markerInstances).toHaveLength(3);
+    expect(mockMap.addSource).not.toHaveBeenCalledWith("trip-planner-route", expect.anything());
+    expect(mockMap.addLayer).not.toHaveBeenCalledWith(
+      expect.objectContaining({ id: "trip-planner-route-line" }),
+    );
+    expect(markerInstances).toHaveLength(1);
   });
 
   it("fits nearby results to the active visible distance instead of the full search area", () => {
@@ -330,7 +366,7 @@ describe("TripPlannerMap", () => {
   it("opens a park popup with a park page link when a park pin is clicked", () => {
     render(<TripPlannerMap {...routeModeProps} />);
 
-    fireEvent.click(markerInstances[2].element);
+    mockMap.triggerLayer("click", "public-map-points", "nuuksio");
 
     expect(screen.getByRole("link", { name: "Nuuksion kansallispuisto" })).toHaveAttribute(
       "href",
@@ -365,10 +401,10 @@ describe("TripPlannerMap", () => {
 
     render(<TripPlannerMap {...routeModeProps} />);
 
-    fireEvent.mouseEnter(markerInstances[2].element);
+    mockMap.triggerLayer("mouseenter", "public-map-points", "nuuksio");
     expect(screen.getByRole("link", { name: "Nuuksion kansallispuisto" })).toBeInTheDocument();
 
-    fireEvent.mouseLeave(markerInstances[2].element);
+    mockMap.triggerLayer("mouseleave", "public-map-points", "nuuksio");
     await act(async () => {
       vi.advanceTimersByTime(250);
     });
@@ -381,7 +417,7 @@ describe("TripPlannerMap", () => {
   it("closes an open popup when escape is pressed", async () => {
     render(<TripPlannerMap {...routeModeProps} />);
 
-    fireEvent.mouseEnter(markerInstances[2].element);
+    mockMap.triggerLayer("mouseenter", "public-map-points", "nuuksio");
     expect(screen.getByRole("link", { name: "Nuuksion kansallispuisto" })).toBeInTheDocument();
 
     fireEvent.keyDown(document, { key: "Escape" });
@@ -396,14 +432,14 @@ describe("TripPlannerMap", () => {
   it("keeps the popup open for popup clicks but closes it when the user clicks the map background", async () => {
     render(<TripPlannerMap {...routeModeProps} />);
 
-    fireEvent.click(markerInstances[2].element);
+    mockMap.triggerLayer("click", "public-map-points", "nuuksio");
 
     const popupLink = screen.getByRole("link", { name: "Nuuksion kansallispuisto" });
     fireEvent.mouseDown(popupLink);
 
     expect(screen.getByRole("link", { name: "Nuuksion kansallispuisto" })).toBeInTheDocument();
 
-    fireEvent.mouseDown(screen.getByRole("application", { name: "tripPlanner.map.ariaLabel" }));
+    mockMap.trigger("click");
 
     await waitFor(() => {
       expect(
@@ -415,7 +451,7 @@ describe("TripPlannerMap", () => {
   it("clears an active popup when the matching park disappears from the result set", async () => {
     const { rerender } = render(<TripPlannerMap {...routeModeProps} />);
 
-    fireEvent.click(markerInstances[2].element);
+    mockMap.triggerLayer("click", "public-map-points", "nuuksio");
     expect(screen.getByRole("link", { name: "Nuuksion kansallispuisto" })).toBeInTheDocument();
 
     rerender(<TripPlannerMap {...routeModeProps} parks={parks.slice(1)} />);
@@ -444,7 +480,9 @@ describe("TripPlannerMap", () => {
       properties: {},
       geometry: route.geometry,
     });
-    expect(mockMap.addSource).not.toHaveBeenCalled();
-    expect(mockMap.addLayer).not.toHaveBeenCalled();
+    expect(mockMap.addSource).not.toHaveBeenCalledWith("trip-planner-route", expect.anything());
+    expect(mockMap.addLayer).not.toHaveBeenCalledWith(
+      expect.objectContaining({ id: "trip-planner-route-line" }),
+    );
   });
 });

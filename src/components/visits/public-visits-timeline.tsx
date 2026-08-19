@@ -690,6 +690,7 @@ const PublicVisitsTimeline = ({
                   return (
                     <section
                       key={`${section.year}-${monthSection.month}`}
+                      className="public-visits-timeline-section"
                       aria-labelledby={`visits-month-${section.year}-${monthSection.month}`}
                     >
                       <div className="md:grid md:grid-cols-[minmax(0,1fr)_2.5rem_minmax(0,1fr)] md:gap-4">

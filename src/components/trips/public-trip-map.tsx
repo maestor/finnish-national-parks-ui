@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { formatFinnishDate } from "@/lib/fi-date";
 import { createTripItineraryItemKey } from "@/lib/public-trip-visit-details";
 import { getTripStopDisplayName, type PublicTripDetail, type PublicTripRoute } from "@/lib/trips";
+import { useDeferredMapPower } from "../map/deferred-map";
 import { getMapStyle } from "../map/map-style";
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -240,6 +241,7 @@ export const PublicTripMap = ({
   tripStops,
 }: PublicTripMapProps) => {
   const t = useTranslations("tripPage");
+  const lowPower = useDeferredMapPower();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markerRefs = useRef<maplibregl.Marker[]>([]);
@@ -292,6 +294,15 @@ export const PublicTripMap = ({
       setIsMapLoaded(false);
     };
   }, []);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !isMapLoaded || typeof map.setPixelRatio !== "function") {
+      return;
+    }
+
+    map.setPixelRatio(lowPower ? 1 : window.devicePixelRatio);
+  }, [isMapLoaded, lowPower]);
 
   useEffect(() => {
     const map = mapRef.current;
