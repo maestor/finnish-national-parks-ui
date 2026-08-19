@@ -12,6 +12,7 @@ const EDGE_TOLERANCE_PX = 4;
 const MIN_REVEAL_LEAD_PX = 96;
 const MAX_REVEAL_ANCHOR_TOP_PX = 620;
 const VIEWPORT_REVEAL_RATIO = 0.56;
+const NEARBY_CARD_RADIUS = 2;
 
 const getMaxScrollTop = () =>
   Math.max(document.documentElement.scrollHeight - window.innerHeight, 0);
@@ -34,6 +35,20 @@ export const useStoryProgressNavigation = ({
   const navigationRef = useRef<HTMLDivElement | null>(null);
   const pendingTargetIndexRef = useRef<number | null>(null);
   const pendingScrollTopRef = useRef<number | null>(null);
+  const activeIndexRef = useRef(0);
+  const visibleIndexRef = useRef(0);
+  const previousScrollYRef = useRef<number | null>(null);
+  const scrollFrameRef = useRef<number | null>(null);
+
+  const updateActiveIndex = useCallback((nextIndex: number) => {
+    activeIndexRef.current = nextIndex;
+    setActiveIndex((currentIndex) => (currentIndex === nextIndex ? currentIndex : nextIndex));
+  }, []);
+
+  const updateVisibleIndex = useCallback((nextIndex: number) => {
+    visibleIndexRef.current = nextIndex;
+    setVisibleIndex((currentIndex) => (currentIndex === nextIndex ? currentIndex : nextIndex));
+  }, []);
 
   const clearPendingTarget = useCallback(() => {
     pendingTargetIndexRef.current = null;
@@ -108,7 +123,7 @@ export const useStoryProgressNavigation = ({
   }, [getNavigationAnchorTop]);
 
   const getViewportIndexAtAnchor = useCallback(
-    (anchorTop: number) => {
+    (anchorTop: number, candidateIndexes?: number[]) => {
       if (cardCount === 0) {
         return null;
       }
@@ -118,7 +133,11 @@ export const useStoryProgressNavigation = ({
       let nearestBelowIndex: number | null = null;
       let nearestBelowTop = Number.POSITIVE_INFINITY;
 
-      for (const [index, section] of sectionRefs.current.entries()) {
+      const indexes = candidateIndexes ?? sectionRefs.current.map((_section, index) => index);
+
+      for (const index of indexes) {
+        const section = sectionRefs.current[index];
+
         if (!section) {
           continue;
         }
@@ -145,26 +164,6 @@ export const useStoryProgressNavigation = ({
     },
     [cardCount],
   );
-
-  const getViewportActiveIndex = useCallback(() => {
-    const anchorTop = getNavigationAnchorTop();
-
-    if (anchorTop === null) {
-      return null;
-    }
-
-    return getViewportIndexAtAnchor(anchorTop);
-  }, [getNavigationAnchorTop, getViewportIndexAtAnchor]);
-
-  const getViewportVisibleIndex = useCallback(() => {
-    const revealAnchorTop = getRevealAnchorTop();
-
-    if (revealAnchorTop === null) {
-      return null;
-    }
-
-    return getViewportIndexAtAnchor(revealAnchorTop);
-  }, [getRevealAnchorTop, getViewportIndexAtAnchor]);
 
   const getEntryActiveIndex = useCallback(
     (entries: IntersectionObserverEntry[]) => {
@@ -226,11 +225,44 @@ export const useStoryProgressNavigation = ({
     }
 
     clearPendingTarget();
-    setActiveIndex((currentIndex) => (currentIndex === edgeIndex ? currentIndex : edgeIndex));
-    setVisibleIndex((currentIndex) => (currentIndex === edgeIndex ? currentIndex : edgeIndex));
+    updateActiveIndex(edgeIndex);
+    updateVisibleIndex(edgeIndex);
 
     return true;
-  }, [clearPendingTarget, getEdgeIndex]);
+  }, [clearPendingTarget, getEdgeIndex, updateActiveIndex, updateVisibleIndex]);
+
+  const getNearbyCardIndexes = useCallback(() => {
+    if (previousScrollYRef.current === null) {
+      return undefined;
+    }
+
+    const scrollDistance = Math.abs(window.scrollY - previousScrollYRef.current);
+
+    if (scrollDistance > window.innerHeight) {
+      return undefined;
+    }
+
+    const candidateIndexes = new Set<number>();
+    const addNearbyIndexes = (index: number) => {
+      for (
+        let candidateIndex = index - NEARBY_CARD_RADIUS;
+        candidateIndex <= index + NEARBY_CARD_RADIUS;
+        candidateIndex += 1
+      ) {
+        if (candidateIndex >= 0 && candidateIndex < cardCount) {
+          candidateIndexes.add(candidateIndex);
+        }
+      }
+    };
+
+    addNearbyIndexes(activeIndexRef.current);
+    addNearbyIndexes(visibleIndexRef.current);
+    addNearbyIndexes(pendingTargetIndexRef.current ?? activeIndexRef.current);
+    candidateIndexes.add(0);
+    candidateIndexes.add(Math.max(cardCount - 1, 0));
+
+    return [...candidateIndexes].sort((left, right) => left - right);
+  }, [cardCount]);
 
   useEffect(() => {
     if (typeof IntersectionObserver === "undefined") {
@@ -244,19 +276,13 @@ export const useStoryProgressNavigation = ({
         if (pendingTargetIndex !== null) {
           if (hasReachedPendingTarget()) {
             clearPendingTarget();
-            setActiveIndex((currentIndex) =>
-              currentIndex === pendingTargetIndex ? currentIndex : pendingTargetIndex,
-            );
-            setVisibleIndex((currentIndex) =>
-              currentIndex === pendingTargetIndex ? currentIndex : pendingTargetIndex,
-            );
+            updateActiveIndex(pendingTargetIndex);
+            updateVisibleIndex(pendingTargetIndex);
 
             return;
           }
 
-          setActiveIndex((currentIndex) =>
-            currentIndex === pendingTargetIndex ? currentIndex : pendingTargetIndex,
-          );
+          updateActiveIndex(pendingTargetIndex);
           return;
         }
 
@@ -267,7 +293,7 @@ export const useStoryProgressNavigation = ({
         const nextIndex = getEntryActiveIndex(entries);
 
         if (nextIndex !== null) {
-          setActiveIndex((currentIndex) => (currentIndex === nextIndex ? currentIndex : nextIndex));
+          updateActiveIndex(nextIndex);
         }
       },
       {
@@ -285,7 +311,68 @@ export const useStoryProgressNavigation = ({
     return () => {
       observer.disconnect();
     };
-  }, [clearPendingTarget, getEntryActiveIndex, hasReachedPendingTarget, syncEdgeActiveIndex]);
+  }, [
+    clearPendingTarget,
+    getEntryActiveIndex,
+    hasReachedPendingTarget,
+    syncEdgeActiveIndex,
+    updateActiveIndex,
+    updateVisibleIndex,
+  ]);
+
+  const syncScrollState = useCallback(() => {
+    const currentScrollY = window.scrollY;
+
+    if (pendingTargetIndexRef.current !== null) {
+      if (hasReachedPendingTarget()) {
+        const pendingTargetIndex = pendingTargetIndexRef.current;
+
+        clearPendingTarget();
+        updateActiveIndex(pendingTargetIndex);
+        updateVisibleIndex(pendingTargetIndex);
+      }
+
+      previousScrollYRef.current = currentScrollY;
+      return;
+    }
+
+    if (syncEdgeActiveIndex()) {
+      previousScrollYRef.current = currentScrollY;
+      return;
+    }
+
+    const navigationAnchorTop = getNavigationAnchorTop();
+    const revealAnchorTop = getRevealAnchorTop();
+
+    if (navigationAnchorTop === null || revealAnchorTop === null) {
+      previousScrollYRef.current = currentScrollY;
+      return;
+    }
+
+    const nearbyCardIndexes = getNearbyCardIndexes();
+    const nextActiveIndex = getViewportIndexAtAnchor(navigationAnchorTop, nearbyCardIndexes);
+    const nextVisibleIndex = getViewportIndexAtAnchor(revealAnchorTop, nearbyCardIndexes);
+
+    if (nextActiveIndex !== null) {
+      updateActiveIndex(nextActiveIndex);
+    }
+
+    if (nextVisibleIndex !== null) {
+      updateVisibleIndex(nextVisibleIndex);
+    }
+
+    previousScrollYRef.current = currentScrollY;
+  }, [
+    clearPendingTarget,
+    getNearbyCardIndexes,
+    getNavigationAnchorTop,
+    getRevealAnchorTop,
+    getViewportIndexAtAnchor,
+    hasReachedPendingTarget,
+    syncEdgeActiveIndex,
+    updateActiveIndex,
+    updateVisibleIndex,
+  ]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -293,60 +380,46 @@ export const useStoryProgressNavigation = ({
     }
 
     const handleScroll = () => {
-      if (pendingTargetIndexRef.current !== null) {
-        if (hasReachedPendingTarget()) {
-          const pendingTargetIndex = pendingTargetIndexRef.current;
-
-          clearPendingTarget();
-          setActiveIndex((currentIndex) =>
-            currentIndex === pendingTargetIndex ? currentIndex : pendingTargetIndex,
-          );
-          setVisibleIndex((currentIndex) =>
-            currentIndex === pendingTargetIndex ? currentIndex : pendingTargetIndex,
-          );
-        }
-
+      if (scrollFrameRef.current !== null) {
         return;
       }
 
-      if (syncEdgeActiveIndex()) {
+      if (typeof window.requestAnimationFrame !== "function") {
+        syncScrollState();
         return;
       }
 
-      const nextActiveIndex = getViewportActiveIndex();
-      const nextVisibleIndex = getViewportVisibleIndex();
+      let frameCallbackRan = false;
+      const frameId = window.requestAnimationFrame(() => {
+        frameCallbackRan = true;
+        scrollFrameRef.current = null;
+        syncScrollState();
+      });
 
-      if (nextActiveIndex !== null) {
-        setActiveIndex((currentIndex) =>
-          currentIndex === nextActiveIndex ? currentIndex : nextActiveIndex,
-        );
-      }
-
-      if (nextVisibleIndex !== null) {
-        setVisibleIndex((currentIndex) =>
-          currentIndex === nextVisibleIndex ? currentIndex : nextVisibleIndex,
-        );
+      if (!frameCallbackRan) {
+        scrollFrameRef.current = frameId;
       }
     };
 
-    handleScroll();
+    syncScrollState();
     window.addEventListener("scroll", handleScroll, { passive: true });
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
+
+      if (scrollFrameRef.current !== null) {
+        window.cancelAnimationFrame(scrollFrameRef.current);
+        scrollFrameRef.current = null;
+      }
     };
-  }, [
-    clearPendingTarget,
-    getViewportActiveIndex,
-    getViewportVisibleIndex,
-    hasReachedPendingTarget,
-    syncEdgeActiveIndex,
-  ]);
+  }, [syncScrollState]);
 
   useEffect(() => {
     progressButtonRefs.current = progressButtonRefs.current.slice(0, cardCount);
     sectionRefs.current = sectionRefs.current.slice(0, cardCount);
     clearPendingTarget();
+    activeIndexRef.current = 0;
+    visibleIndexRef.current = 0;
     setActiveIndex(0);
     setVisibleIndex(0);
   }, [cardCount, clearPendingTarget]);
@@ -371,7 +444,7 @@ export const useStoryProgressNavigation = ({
     }
 
     pendingTargetIndexRef.current = index;
-    setActiveIndex(index);
+    updateActiveIndex(index);
 
     if (index === 0) {
       const storyTop = storyRef.current?.getBoundingClientRect().top ?? 0;
@@ -381,7 +454,7 @@ export const useStoryProgressNavigation = ({
 
       if (Math.abs(scrollTarget - window.scrollY) <= EDGE_TOLERANCE_PX) {
         clearPendingTarget();
-        setVisibleIndex(index);
+        updateVisibleIndex(index);
         return;
       }
 
@@ -400,7 +473,7 @@ export const useStoryProgressNavigation = ({
 
     if (Math.abs(scrollTarget - window.scrollY) <= EDGE_TOLERANCE_PX) {
       clearPendingTarget();
-      setVisibleIndex(index);
+      updateVisibleIndex(index);
       return;
     }
 

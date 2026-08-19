@@ -221,6 +221,19 @@ const intersectionCallbacks: IntersectionObserverCallback[] = [];
 
 beforeEach(() => {
   intersectionCallbacks.length = 0;
+  Object.defineProperty(window, "requestAnimationFrame", {
+    configurable: true,
+    value: (callback: FrameRequestCallback) => {
+      callback(0);
+      return 1;
+    },
+    writable: true,
+  });
+  Object.defineProperty(window, "cancelAnimationFrame", {
+    configurable: true,
+    value: vi.fn(),
+    writable: true,
+  });
 });
 
 class MockIntersectionObserver {

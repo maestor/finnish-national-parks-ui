@@ -32,6 +32,7 @@ import { CopyLinkButton } from "@/components/ui/copy-link-button";
 import { VisitImageGallery } from "@/components/visits/visit-image-gallery";
 import { useAuth } from "@/hooks/use-auth";
 import { apiPublicFetch } from "@/lib/api";
+import { cn } from "@/lib/cn";
 import { formatFinnishDate, formatFinnishDateRange } from "@/lib/fi-date";
 import type { PublicTripVisitDetailsResponse } from "@/lib/public-trip-visit-details";
 import {
@@ -81,6 +82,7 @@ const ROUTE_KM_FORMATTER = new Intl.NumberFormat("fi-FI", {
 const TRIP_DESCRIPTION_SECTION_ID = "trip-description";
 const TRIP_ROUTE_SECTION_ID = "trip-route";
 const TRIP_ITINERARY_SECTION_ID = "trip-itinerary";
+const TRIP_ITINERARY_PROGRESSIVE_THRESHOLD = 12;
 
 const getTripVisitDetailsPath = (slug: string) => `/api/trips/slug/${slug}/visit-details`;
 
@@ -429,7 +431,11 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
 
                         itineraryItemRefs.current.delete(itemKey);
                       }}
-                      className={VISIT_CARD_CLASS_NAME}
+                      className={cn(
+                        VISIT_CARD_CLASS_NAME,
+                        trip.itinerary.length >= TRIP_ITINERARY_PROGRESSIVE_THRESHOLD &&
+                          "public-trip-itinerary-item",
+                      )}
                     >
                       <div className="px-5 py-4">
                         <div className="flex items-start gap-3">
@@ -581,7 +587,11 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
 
                         itineraryItemRefs.current.delete(itemKey);
                       }}
-                      className="rounded-3xl border border-white/45 bg-white/60 shadow-[0_12px_24px_rgba(148,163,184,0.12)] dark:border-white/10 dark:bg-slate-950/38 dark:shadow-[0_16px_28px_rgba(2,6,23,0.24)]"
+                      className={cn(
+                        "rounded-3xl border border-white/45 bg-white/60 shadow-[0_12px_24px_rgba(148,163,184,0.12)] dark:border-white/10 dark:bg-slate-950/38 dark:shadow-[0_16px_28px_rgba(2,6,23,0.24)]",
+                        trip.itinerary.length >= TRIP_ITINERARY_PROGRESSIVE_THRESHOLD &&
+                          "public-trip-itinerary-item",
+                      )}
                     >
                       <div className="px-5 py-4">
                         <div className="flex items-start gap-3">

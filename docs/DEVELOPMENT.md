@@ -239,6 +239,10 @@ Canvas points are not individually keyboard-focusable. The header park search, v
 
 Park boundary maps and public trip maps are wrapped in `src/components/map/deferred-map.tsx`. The boundary reserves the map's layout space, starts loading shortly before it enters the viewport, and keeps an explicit accessible load button for users who want to control optional map work. The same boundary exposes a low-power toggle that sets MapLibre's pixel ratio to `1`; disabling it restores the device pixel ratio. The primary `/paikat` map remains eager because the map is its main content.
 
+### Growing public surfaces
+
+Long public visit timelines progressively skip offscreen month sections with `content-visibility: auto` and an intrinsic placeholder size. Long public trip itineraries use the same treatment per itinerary item after the 12-item budget, while expanded visit details and galleries remain on demand. Review-story place cards also use browser-managed content visibility. Story-card navigation keeps the existing sticky navigation and reveal-anchor geometry; scroll synchronization is sampled once per animation frame and uses nearby cards while `IntersectionObserver` remains the primary active-card signal.
+
 ---
 
 ## Authentication Flow

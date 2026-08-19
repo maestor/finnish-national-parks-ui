@@ -91,6 +91,7 @@ export const ReviewStoryPlaceCard = ({
   <article
     className={cn(
       "overflow-hidden rounded-3xl border border-white/24 bg-black/14 shadow-[0_24px_56px_rgba(15,23,42,0.2)]",
+      "public-story-place-card",
       className,
     )}
     style={style}
