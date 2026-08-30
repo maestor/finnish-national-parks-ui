@@ -65,7 +65,9 @@ export const filterTripStories = (stories: TripStorySummary[], filters: TripStor
   );
 
 export const fetchTripStories = () =>
-  apiPublicFetch<TripStoryListResponse>("/api/trip-stories", { cache: "no-store" });
+  Promise.resolve(
+    apiPublicFetch<TripStoryListResponse>("/api/trip-stories", { cache: "no-store" }),
+  ).then((response) => ({ stories: response?.stories ?? [] }));
 
 const getSeason = (month: number): TripStorySeason => {
   if (month >= 3 && month <= 5) return "spring";

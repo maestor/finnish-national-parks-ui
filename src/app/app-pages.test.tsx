@@ -860,6 +860,7 @@ const createExpectedShareMetadata = (
   },
 ) => ({
   title: pageTitle,
+  ...(options?.pagePath ? { alternates: { canonical: options.pagePath } } : {}),
   ...(options?.description ? { description: options.description } : {}),
   openGraph: {
     title: `${pageTitle} | metadata.title`,
@@ -1103,6 +1104,9 @@ describe("App pages", () => {
         latestTrips: [],
         updatedAt: visitWithPark.updatedAt,
         version: 3,
+      })
+      .mockResolvedValueOnce({
+        stories: [],
       })
       .mockResolvedValueOnce({
         parks: [],

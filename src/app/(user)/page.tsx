@@ -5,6 +5,7 @@ import { HomeIntro } from "@/components/home/home-intro";
 import { HomeSocialLinks } from "@/components/home/home-social-links";
 import { HomeSummaryPanels } from "@/components/home/home-summary-panels";
 import { PUBLIC_PAGE_SHELL_CLASS_NAME } from "@/components/layout/public-page-styles";
+import { HomeTripStories } from "@/components/trip-stories/home-trip-stories";
 import {
   createHomeLatestTripsFromSummary,
   createHomeLatestVisitEntriesFromSummary,
@@ -13,6 +14,7 @@ import {
   createHomeRecentVisitsFromSummary,
   fetchHomeSummary,
 } from "@/lib/frontend-summaries";
+import { fetchTripStories, selectHomeTripStories } from "@/lib/trip-stories";
 
 // Reads use force-cache tagged fetches, but force-dynamic keeps Next from
 // prerendering this page at build time, when no backend is reachable.
@@ -27,12 +29,21 @@ export const generateMetadata = async () => {
 
 const HomePage = async () => {
   const t = await getTranslations("home");
-  const summary = await fetchHomeSummary();
+  const [summary, tripStoriesResult] = await Promise.all([
+    fetchHomeSummary(),
+    fetchTripStories()
+      .then((response) => ({ error: null, stories: response.stories }))
+      .catch((failure) => ({
+        error: failure instanceof Error ? failure.message : "Unknown error",
+        stories: [],
+      })),
+  ]);
   const progressItems = createHomeProgressItems(summary, t("statistics.allParks"));
   const mostVisitedParks = createHomeMostVisitedParks(summary);
   const recentVisits = createHomeRecentVisitsFromSummary(summary);
   const latestVisitEntries = createHomeLatestVisitEntriesFromSummary(summary);
   const latestTrips = createHomeLatestTripsFromSummary(summary);
+  const homeTripStories = selectHomeTripStories(tripStoriesResult.stories, new Date());
 
   const descriptionParagraphs = t("description")
     .split("\n\n")
@@ -47,6 +58,8 @@ const HomePage = async () => {
         openMapLabel={t("openMap")}
         infoLabel={t("intro.showInfo")}
       />
+
+      <HomeTripStories model={homeTripStories} error={tripStoriesResult.error} />
 
       <HomeVisitStats
         sectionTitle={t("statistics.title")}

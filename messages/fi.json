@@ -74,6 +74,17 @@
       "title": "Viimeisimmät retket",
       "empty": "Ei vielä retkiä."
     },
+    "tripStories": {
+      "featuredTitle": "Poimittu retki",
+      "latestTitle": "Uusin retki",
+      "recentTitle": "Tuoreita retkitarinoita",
+      "all": "Kaikki retket",
+      "seasonalTitle": "Tähän aikaan {count} vuotta sitten",
+      "emptyTitle": "Retkitarinoita ei ole vielä julkaistu",
+      "emptyDescription": "Käyntejä ja paikkoja voi silti tutkia Reissuvihkossa.",
+      "openArchive": "Avaa retket",
+      "errorTitle": "Retkitarinoita ei voitu ladata"
+    },
     "social": {
       "sectionLabel": "Projektin linkit",
       "title": "Toteutus",
