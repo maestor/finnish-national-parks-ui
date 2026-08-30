@@ -45,9 +45,9 @@ export const TripStoryCard = ({
             {story.name}
           </Link>
         </h2>
-        <p className="text-sm leading-6 text-muted-foreground">
-          {story.summary ?? t("fallbackSummary")}
-        </p>
+        {story.summary !== null && (
+          <p className="text-sm leading-6 text-muted-foreground">{story.summary}</p>
+        )}
         {story.places.length > 0 && (
           <p className="text-sm text-foreground/75">
             {story.places

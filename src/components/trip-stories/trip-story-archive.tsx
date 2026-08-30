@@ -1,9 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import {
   PUBLIC_EMPTY_STATE_PANEL_CLASS_NAME,
   PUBLIC_PANEL_CLASS_NAME,
 } from "@/components/layout/public-page-styles";
+import { Select } from "@/components/ui/select";
 import { appRoutes } from "@/lib/routes";
 import { getTripStoryFilterOptions, type TripStoryFilters } from "@/lib/trip-stories";
 import type { TripStorySummary } from "@/lib/trips";
@@ -23,8 +26,7 @@ export const TripStoryArchive = ({
   const t = useTranslations("trips");
   const options = getTripStoryFilterOptions(stories);
   const isFiltered = filters.year !== null || filters.season !== null || filters.place !== null;
-  const selectClass =
-    "w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  const selectClass = "w-full";
   return (
     <div className="space-y-6">
       <section className={PUBLIC_PANEL_CLASS_NAME} aria-labelledby="trip-archive-filters">
@@ -33,12 +35,14 @@ export const TripStoryArchive = ({
         </h2>
         <form method="get" className="grid gap-4 sm:grid-cols-3">
           {options.years.length >= 2 && (
-            <label className="space-y-1.5 text-sm font-medium">
+            <label htmlFor="trip-filter-year" className="space-y-1.5 text-sm font-medium">
               <span>{t("year")}</span>
-              <select
+              <Select
+                id="trip-filter-year"
                 name="year"
                 defaultValue={filters.year?.toString() ?? ""}
                 className={selectClass}
+                onChange={(event) => event.currentTarget.form?.requestSubmit()}
               >
                 <option value="">{t("allYears")}</option>
                 {options.years.map((year) => (
@@ -46,42 +50,48 @@ export const TripStoryArchive = ({
                     {year}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
           )}
           {options.seasons.length >= 2 && (
-            <label className="space-y-1.5 text-sm font-medium">
+            <label htmlFor="trip-filter-season" className="space-y-1.5 text-sm font-medium">
               <span>{t("season")}</span>
-              <select name="season" defaultValue={filters.season ?? ""} className={selectClass}>
+              <Select
+                id="trip-filter-season"
+                name="season"
+                defaultValue={filters.season ?? ""}
+                className={selectClass}
+                onChange={(event) => event.currentTarget.form?.requestSubmit()}
+              >
                 <option value="">{t("allSeasons")}</option>
                 {options.seasons.map((season) => (
                   <option key={season} value={season}>
-                    {season}
+                    {t(`seasonLabels.${season}`)}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
           )}
           {options.places.length >= 2 && (
-            <label className="space-y-1.5 text-sm font-medium">
+            <label htmlFor="trip-filter-place" className="space-y-1.5 text-sm font-medium">
               <span>{t("place")}</span>
-              <select name="place" defaultValue={filters.place ?? ""} className={selectClass}>
+              <Select
+                id="trip-filter-place"
+                name="place"
+                defaultValue={filters.place ?? ""}
+                className={selectClass}
+                onChange={(event) => event.currentTarget.form?.requestSubmit()}
+              >
                 <option value="">{t("allPlaces")}</option>
                 {options.places.map((place) => (
                   <option key={place.slug} value={place.slug}>
                     {place.name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
           )}
           <div className="flex items-end gap-3 sm:col-span-3">
-            <button
-              type="submit"
-              className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              {t("apply")}
-            </button>
             {isFiltered === true && (
               <Link
                 href={appRoutes.trips}

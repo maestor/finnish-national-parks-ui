@@ -74,17 +74,6 @@
       "title": "Viimeisimmät retket",
       "empty": "Ei vielä retkiä."
     },
-    "tripStories": {
-      "featuredTitle": "Poimittu retki",
-      "latestTitle": "Uusin retki",
-      "recentTitle": "Tuoreita retkitarinoita",
-      "all": "Kaikki retket",
-      "seasonalTitle": "Tähän aikaan {count} vuotta sitten",
-      "emptyTitle": "Retkitarinoita ei ole vielä julkaistu",
-      "emptyDescription": "Käyntejä ja paikkoja voi silti tutkia Reissuvihkossa.",
-      "openArchive": "Avaa retket",
-      "errorTitle": "Retkitarinoita ei voitu ladata"
-    },
     "social": {
       "sectionLabel": "Projektin linkit",
       "title": "Toteutus",
@@ -241,7 +230,12 @@
     "allYears": "Kaikki vuodet",
     "allSeasons": "Kaikki vuodenajat",
     "allPlaces": "Kaikki paikat",
-    "apply": "Rajaa",
+    "seasonLabels": {
+      "winter": "Talvi",
+      "spring": "Kevät",
+      "summer": "Kesä",
+      "autumn": "Syksy"
+    },
     "reset": "Tyhjennä rajaus",
     "resultCount": "{count, plural, one {# retki} other {# retkeä}}",
     "emptyTitle": "Retkiä ei ole vielä julkaistu",
@@ -253,7 +247,6 @@
     "retry": "Yritä uudelleen",
     "featured": "Esillä",
     "read": "Lue retki",
-    "fallbackSummary": "Retkestä ei ole vielä kirjoitettu yhteenvetoa.",
     "datesMissing": "Päivä ei tiedossa",
     "visitsCount": "{count, plural, one {# käynti} other {# käyntiä}}",
     "stopsCount": "{count, plural, one {# pysähdys} other {# pysähdystä}}",

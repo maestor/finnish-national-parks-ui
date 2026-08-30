@@ -1108,9 +1108,6 @@ describe("App pages", () => {
         version: 3,
       })
       .mockResolvedValueOnce({
-        stories: [],
-      })
-      .mockResolvedValueOnce({
         parks: [],
         updatedAt: visitWithPark.updatedAt,
         version: 4,

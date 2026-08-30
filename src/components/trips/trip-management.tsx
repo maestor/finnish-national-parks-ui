@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { AdminTableFilters } from "@/components/admin/admin-table-filters";
 import { EditIconLink } from "@/components/admin/edit-icon-link";
+import { Select } from "@/components/ui/select";
 import { appRoutes } from "@/lib/routes";
 import { formatTripDateRange, sortTrips, type Trip } from "@/lib/trips";
 
@@ -59,17 +60,22 @@ export const TripManagement = ({ trips }: TripManagementProps) => {
         resetLabel={t("filters.reset")}
         onReset={() => setQuery("")}
       />
-      <label className="flex items-center gap-2 text-sm font-medium">
+      <label
+        htmlFor="trip-publication-filter"
+        className="flex items-center gap-2 text-sm font-medium"
+      >
         <span>{t("filters.publicationLabel")}</span>
-        <select
+        <Select
+          id="trip-publication-filter"
           value={publicationFilter}
           onChange={(event) => setPublicationFilter(event.target.value as typeof publicationFilter)}
-          className="rounded-md border border-border bg-background px-2 py-1.5"
+          className="min-w-36"
+          aria-label={t("filters.publicationLabel")}
         >
           <option value="all">{t("filters.publicationAll")}</option>
           <option value="published">{t("filters.publicationPublished")}</option>
           <option value="unlisted">{t("filters.publicationUnlisted")}</option>
-        </select>
+        </Select>
       </label>
 
       {filteredTrips.length === 0 ? (
