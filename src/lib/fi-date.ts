@@ -9,6 +9,21 @@ const finnishLongDateFormatter = new Intl.DateTimeFormat("fi-FI", {
   year: "numeric",
 });
 
+const finnishDateInputFormatter = new Intl.DateTimeFormat("en-CA", {
+  day: "2-digit",
+  month: "2-digit",
+  timeZone: "Europe/Helsinki",
+  year: "numeric",
+});
+
+export const getCurrentFinnishDate = (date = new Date()): string => {
+  const parts = Object.fromEntries(
+    finnishDateInputFormatter.formatToParts(date).map((part) => [part.type, part.value]),
+  );
+
+  return `${parts.year}-${parts.month}-${parts.day}`;
+};
+
 const getFinnishDateParts = (dateStr: string) => {
   const parts = finnishDateFormatter.formatToParts(new Date(dateStr));
 

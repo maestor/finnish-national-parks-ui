@@ -15,6 +15,7 @@ import {
   TextareaWithCounter,
 } from "@/components/ui/textarea-with-counter";
 import { apiFetch } from "@/lib/api";
+import { getCurrentFinnishDate } from "@/lib/fi-date";
 import {
   type CoordinateInputValue,
   formatCoordinateInputValue,
@@ -42,7 +43,9 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
   const isEditing = !!visitToEdit;
 
   const [parkSlug, setParkSlug] = useState(visitToEdit?.park.slug ?? defaultParkSlug ?? "");
-  const [visitedOn, setVisitedOn] = useState(visitToEdit?.visitedOn ?? "");
+  const [visitedOn, setVisitedOn] = useState(
+    () => visitToEdit?.visitedOn ?? getCurrentFinnishDate(),
+  );
   const [route, setRoute] = useState(visitToEdit?.route ?? "");
   const [author, setAuthor] = useState(visitToEdit?.author ?? "");
   const [location, setLocation] = useState<CoordinateInputValue>(

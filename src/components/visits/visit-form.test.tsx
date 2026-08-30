@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LONG_TEXTAREA_MAX_LENGTH } from "@/components/ui/textarea-with-counter";
 import type { Park } from "@/lib/parks";
 import { VisitForm } from "./visit-form";
@@ -55,17 +55,28 @@ const visitToEdit = {
 describe("VisitForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.setSystemTime(new Date("2024-06-14T21:30:00Z"));
     vi.stubGlobal(
       "confirm",
       vi.fn(() => true),
     );
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("defaults a new visit date to today in Finland", () => {
+    render(<VisitForm parks={parks} />);
+
+    expect(screen.getByLabelText(/controlPanel.visits.form.dateLabel/i)).toHaveValue("2024-06-15");
+  });
+
   it("redirects a newly created visit to the edit page", async () => {
     const { apiFetch } = await import("@/lib/api");
     vi.mocked(apiFetch).mockResolvedValueOnce({
       id: 42,
-      visitedOn: "2024-06-15",
+      visitedOn: "2024-06-16",
       route: null,
       excludeFromRoute: false,
       author: null,
@@ -82,14 +93,14 @@ describe("VisitForm", () => {
       target: { value: "pallas" },
     });
     fireEvent.change(screen.getByLabelText(/controlPanel.visits.form.dateLabel/i), {
-      target: { value: "2024-06-15" },
+      target: { value: "2024-06-16" },
     });
     await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.submit/i }));
 
     expect(apiFetch).toHaveBeenCalledWith("/api/parks/pallas/visits", {
       method: "POST",
       body: JSON.stringify({
-        visitedOn: "2024-06-15",
+        visitedOn: "2024-06-16",
         route: null,
         author: null,
         location: null,
@@ -123,10 +134,6 @@ describe("VisitForm", () => {
     await userEvent.selectOptions(
       screen.getByLabelText(/controlPanel.visits.form.parkLabel/i),
       "pallas",
-    );
-    await userEvent.type(
-      screen.getByLabelText(/controlPanel.visits.form.dateLabel/i),
-      "2024-06-15",
     );
 
     const submitButton = screen.getByRole("button", {
@@ -165,7 +172,7 @@ describe("VisitForm", () => {
     expect(screen.getByLabelText(/controlPanel.visits.form.parkLabel/i)).toHaveValue("nuuksio");
   });
 
-  it("shows validation errors when required fields are empty", async () => {
+  it("keeps today's date while validating a missing park", async () => {
     render(<VisitForm parks={parks} />);
 
     const submitButton = screen.getByRole("button", { name: /controlPanel.visits.form.submit/i });
@@ -175,8 +182,8 @@ describe("VisitForm", () => {
       screen.getByText("controlPanel.visits.form.validation.parkRequired"),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("controlPanel.visits.form.validation.dateRequired"),
-    ).toBeInTheDocument();
+      screen.queryByText("controlPanel.visits.form.validation.dateRequired"),
+    ).not.toBeInTheDocument();
   });
 
   it("renders edit mode with prefilled values, read-only park and delete button", () => {
@@ -266,10 +273,6 @@ describe("VisitForm", () => {
       screen.getByLabelText(/controlPanel.visits.form.parkLabel/i),
       "pallas",
     );
-    await userEvent.type(
-      screen.getByLabelText(/controlPanel.visits.form.dateLabel/i),
-      "2024-06-15",
-    );
     await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.submit/i }));
 
     expect(await screen.findByText("create failed")).toBeInTheDocument();
@@ -296,10 +299,6 @@ describe("VisitForm", () => {
     await userEvent.selectOptions(
       screen.getByLabelText(/controlPanel.visits.form.parkLabel/i),
       "pallas",
-    );
-    await userEvent.type(
-      screen.getByLabelText(/controlPanel.visits.form.dateLabel/i),
-      "2024-06-15",
     );
     await userEvent.clear(screen.getByLabelText(/controlPanel.visits.form.locationLatitudeLabel/i));
     await userEvent.type(
@@ -334,10 +333,6 @@ describe("VisitForm", () => {
     await userEvent.selectOptions(
       screen.getByLabelText(/controlPanel.visits.form.parkLabel/i),
       "pallas",
-    );
-    await userEvent.type(
-      screen.getByLabelText(/controlPanel.visits.form.dateLabel/i),
-      "2024-06-15",
     );
     await userEvent.type(
       screen.getByLabelText(/controlPanel.visits.form.locationLatitudeLabel/i),
