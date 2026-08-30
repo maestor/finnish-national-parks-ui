@@ -40,6 +40,17 @@ describe("trip story models", () => {
     });
   });
 
+  it("accepts valid year, season, and place parameters", () => {
+    const stories = [story()];
+
+    expect(
+      parseTripStoryFilters(
+        { place: "pallas-yllastunturi", season: "autumn", year: "2025" },
+        stories,
+      ),
+    ).toEqual({ place: "pallas-yllastunturi", season: "autumn", year: 2025 });
+  });
+
   it("applies year, season, and place as combined filters", () => {
     const stories = [
       story(),

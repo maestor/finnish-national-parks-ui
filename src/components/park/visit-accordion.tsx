@@ -169,7 +169,7 @@ export const VisitAccordion = ({
                   </span>
                 )}
                 {visit.trip !== null &&
-                  (visit.trip.published === true ? (
+                  (visit.trip.published !== false ? (
                     <Link href={appRoutes.trip(visit.trip.slug)} className={TRIP_LINK_CLASS_NAME}>
                       <TentTree className="h-3.5 w-3.5" aria-hidden="true" />
                       {visit.trip.name}
@@ -226,7 +226,7 @@ export const VisitAccordion = ({
                     </span>
                   )}
                   {visit.trip !== null &&
-                    (visit.trip.published === true ? (
+                    (visit.trip.published !== false ? (
                       <Link
                         href={appRoutes.trip(visit.trip.slug)}
                         className={TRIP_LINK_CLASS_NAME}

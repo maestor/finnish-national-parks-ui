@@ -68,8 +68,8 @@ const EditTripPage = async ({ params, searchParams }: EditTripPageProps) => {
         </output>
       )}
       <TripForm tripToEdit={tripToEdit} />
-      <TripPublicationPanel trip={tripToEdit} visits={visits} />
       <TripVisitAssignments trip={tripToEdit} visits={visits} />
+      <TripPublicationPanel trip={tripToEdit} visits={visits} />
     </div>
   );
 };

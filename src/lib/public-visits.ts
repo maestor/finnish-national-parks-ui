@@ -456,7 +456,7 @@ export const buildPublicVisitsTimelineModel = (
       kind: "trip",
       tripId,
       name: latestVisit.trip.name,
-      published: latestVisit.trip.published === true,
+      published: latestVisit.trip.published !== false,
       slug: latestVisit.trip.slug,
       dateRange: {
         start: visitsInNarrativeOrder[0]?.visitedOn ?? latestVisit.visitedOn,

@@ -498,19 +498,19 @@
         "previewTripPage": "Esikatsele suoraa linkkiä",
         "unlistedPreviewHint": "Luonnos näkyy suoralla linkillä, mutta sitä ei löydy julkisesta retkilistasta.",
         "publication": {
-          "title": "Julkaisu",
-          "description": "Valitse retkelle kansikuva, tiivistelmä ja näkyvyys.",
+          "title": "Julkinen näkyvyys",
+          "description": "Julkaisu tarkoittaa, että retki näkyy julkisessa retkilistassa. Voit lisätä sille tiivistelmän ja kansikuvan tai piilottaa sen julkisesta listasta.",
           "summary": "Tiivistelmä",
           "cover": "Kansikuva",
           "noCover": "Ei kansikuvaa",
           "featured": "Nosta retki esiin",
           "save": "Tallenna julkaisutiedot",
           "publish": "Julkaise retki",
-          "unlist": "Poista julkaisu",
+          "unlist": "Piilota julkisesta listasta",
           "saving": "Tallennetaan...",
           "saved": "Julkaisutiedot tallennettiin.",
           "published": "Retki julkaistiin.",
-          "unlisted": "Retki poistettiin julkaisusta.",
+          "unlisted": "Retki piilotettiin julkisesta listasta. Retki säilyi tallessa.",
           "failed": "Julkaisutietojen tallennus epäonnistui."
         }
       },

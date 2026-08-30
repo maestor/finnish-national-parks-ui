@@ -12,6 +12,9 @@ import { revalidatePublicCache } from "@/lib/public-cache";
 import { buildTripCoverCandidates } from "@/lib/trip-cover-candidates";
 import type { TripDetail } from "@/lib/trips";
 
+const INPUT_CLASS_NAME =
+  "flex w-full rounded-xl border border-white/45 bg-white/78 px-3 py-2 text-sm ring-offset-background shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
+
 export const TripPublicationPanel = ({
   trip,
   visits,
@@ -70,10 +73,7 @@ export const TripPublicationPanel = ({
     setBusy(false);
   };
   return (
-    <section
-      className="mt-8 space-y-5 rounded-3xl border border-white/45 bg-white/56 p-5 shadow-[0_18px_36px_rgba(148,163,184,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/38"
-      aria-labelledby="trip-publication-title"
-    >
+    <section className="mt-10 space-y-6" aria-labelledby="trip-publication-title">
       <div>
         <h2 id="trip-publication-title" className="text-lg font-semibold">
           {t("title")}
@@ -88,41 +88,44 @@ export const TripPublicationPanel = ({
           onValueChange={setSummary}
           maxLength={320}
           rows={4}
+          className={`${INPUT_CLASS_NAME} resize-y`}
         />
       </label>
       <fieldset className="space-y-2">
         <legend className="text-sm font-medium">{t("cover")}</legend>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="radio"
-            name="trip-cover"
-            checked={cover === ""}
-            onChange={() => setCover("")}
-          />
-          {t("noCover")}
-        </label>
-        {candidates.map((candidate) => (
-          <label
-            key={`${candidate.source}:${candidate.id}`}
-            className="flex items-center gap-3 text-sm"
-          >
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <label className="flex items-center gap-2 rounded-xl border border-dashed border-white/45 bg-white/40 p-3 text-sm dark:border-white/10 dark:bg-slate-950/28">
             <input
               type="radio"
               name="trip-cover"
-              value={`${candidate.source}:${candidate.id}`}
-              checked={cover === `${candidate.source}:${candidate.id}`}
-              onChange={() => setCover(`${candidate.source}:${candidate.id}`)}
+              checked={cover === ""}
+              onChange={() => setCover("")}
             />
-            <AppImage
-              src={candidate.thumbUrl}
-              alt=""
-              width={64}
-              height={48}
-              className="h-12 w-16 rounded-lg object-cover"
-            />
-            {candidate.context}
+            {t("noCover")}
           </label>
-        ))}
+          {candidates.map((candidate) => (
+            <label
+              key={`${candidate.source}:${candidate.id}`}
+              className="flex min-w-0 items-center gap-3 rounded-xl border border-white/45 bg-white/40 p-3 text-sm dark:border-white/10 dark:bg-slate-950/28"
+            >
+              <input
+                type="radio"
+                name="trip-cover"
+                value={`${candidate.source}:${candidate.id}`}
+                checked={cover === `${candidate.source}:${candidate.id}`}
+                onChange={() => setCover(`${candidate.source}:${candidate.id}`)}
+              />
+              <AppImage
+                src={candidate.thumbUrl}
+                alt=""
+                width={64}
+                height={48}
+                className="h-12 w-16 shrink-0 rounded-lg object-cover"
+              />
+              <span className="min-w-0">{candidate.context}</span>
+            </label>
+          ))}
+        </div>
       </fieldset>
       <label className="flex items-center gap-2 text-sm font-medium">
         <input
