@@ -118,6 +118,7 @@ export interface PublicVisitTimelineTripItem {
   kind: "trip";
   latestVisit: FrontendTimelineVisit;
   name: string;
+  published: boolean;
   slug: string;
   tripId: number;
   visitCount: number;
@@ -455,6 +456,7 @@ export const buildPublicVisitsTimelineModel = (
       kind: "trip",
       tripId,
       name: latestVisit.trip.name,
+      published: latestVisit.trip.published === true,
       slug: latestVisit.trip.slug,
       dateRange: {
         start: visitsInNarrativeOrder[0]?.visitedOn ?? latestVisit.visitedOn,
