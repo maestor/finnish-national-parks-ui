@@ -860,6 +860,7 @@ const createExpectedShareMetadata = (
   },
 ) => ({
   title: pageTitle,
+  ...(options?.pagePath ? { alternates: { canonical: options.pagePath } } : {}),
   ...(options?.description ? { description: options.description } : {}),
   openGraph: {
     title: `${pageTitle} | metadata.title`,
@@ -1076,6 +1077,8 @@ describe("App pages", () => {
     ).resolves.toEqual(
       createExpectedShareMetadata("Keski-Suomen kesaretki", {
         description: "Kolmen paivan kierros kansallispuistoihin.",
+        pagePath: "/retki/keski-suomen-kesaretki",
+        socialImagePath: "/retki/keski-suomen-kesaretki/kuva",
       }),
     );
   });

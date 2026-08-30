@@ -7,6 +7,8 @@ export const appRoutes = {
   park: (slug: string) => `/paikka/${slug}`,
   trip: (slug: string) => `/retki/${slug}`,
   visits: "/kaynnit",
+  trips: "/retket",
+  tripImage: (slug: string) => `/retki/${slug}/kuva`,
   tripPlanner: "/reissusuunnittelu",
   dateRangeReviewShare: (shareId: string) => `/ajanjaksokatsaus/jako/${shareId}`,
   dateRangeReviewShareImage: (shareId: string) => `/ajanjaksokatsaus/jako/${shareId}/kuva`,
@@ -33,6 +35,7 @@ export const legacyAppRedirects = [
   { source: "/park/:slug", destination: "/paikka/:slug", permanent: true },
   { source: "/trip/:slug", destination: "/retki/:slug", permanent: true },
   { source: "/visits", destination: appRoutes.visits, permanent: true },
+  { source: "/trips", destination: appRoutes.trips, permanent: true },
   { source: "/trip-planner", destination: appRoutes.tripPlanner, permanent: true },
   { source: "/control-panel", destination: appRoutes.controlPanel.root, permanent: true },
   {
@@ -126,6 +129,10 @@ const normalizePathname = (pathname: string) => {
     return appRoutes.visits;
   }
 
+  if (pathname === "/trips") {
+    return appRoutes.trips;
+  }
+
   if (pathname === "/trip-planner") {
     return appRoutes.tripPlanner;
   }
@@ -215,6 +222,10 @@ export const appRoutePatterns = {
   isParksPath: (path: string) => normalizePathname(path) === appRoutes.parks,
   isTripPlannerPath: (path: string) => normalizePathname(path) === appRoutes.tripPlanner,
   isVisitsPath: (path: string) => normalizePathname(path) === appRoutes.visits,
+  isTripsPath: (path: string) => {
+    const normalized = normalizePathname(path);
+    return normalized === appRoutes.trips || /^\/retki\/[^/]+$/.test(normalized);
+  },
   isDateRangeReviewSharePath: (path: string) =>
     /^\/ajanjaksokatsaus\/jako\/[^/]+$/.test(normalizePathname(path)),
   isYearReviewSharePath: (path: string) =>

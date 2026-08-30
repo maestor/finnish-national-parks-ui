@@ -1,6 +1,6 @@
 import { apiPublicFetch } from "./api";
 import type { paths } from "./api-types";
-import { type FilterableMapPark, getParkTypeDisplayName } from "./parks";
+import { type FilterableMapPark, getParkTypeDisplayName, type VisitWithPark } from "./parks";
 import { PUBLIC_VISITS_TAG } from "./public-cache";
 import { appRoutes, createPathWithSearchParams } from "./routes";
 
@@ -97,8 +97,12 @@ export interface PublicVisitedMagnetParksModel {
   otherMagnetPlaces: PublicVisitedMagnetParkGroup;
 }
 
-export type FrontendTimelineVisit =
+type GeneratedFrontendTimelineVisit =
   paths["/api/visits-timeline"]["get"]["responses"][200]["content"]["application/json"]["visits"][number];
+
+export type FrontendTimelineVisit = Omit<GeneratedFrontendTimelineVisit, "trip"> & {
+  trip: VisitWithPark["trip"];
+};
 
 export interface PublicVisitTimelineVisitItem {
   kind: "visit";
@@ -114,6 +118,7 @@ export interface PublicVisitTimelineTripItem {
   kind: "trip";
   latestVisit: FrontendTimelineVisit;
   name: string;
+  published: boolean;
   slug: string;
   tripId: number;
   visitCount: number;
@@ -451,6 +456,7 @@ export const buildPublicVisitsTimelineModel = (
       kind: "trip",
       tripId,
       name: latestVisit.trip.name,
+      published: latestVisit.trip.published !== false,
       slug: latestVisit.trip.slug,
       dateRange: {
         start: visitsInNarrativeOrder[0]?.visitedOn ?? latestVisit.visitedOn,

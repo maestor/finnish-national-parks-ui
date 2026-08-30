@@ -10,6 +10,7 @@
       "home": "Etusivu",
       "map": "Paikat",
       "visits": "Käynnit",
+      "trips": "Retket",
       "tripPlanner": "Reitit",
       "controlPanel": "Hallinta",
       "filters": "Suodata karttaa",
@@ -217,6 +218,39 @@
         "missing": "Puuttuvat"
       }
     }
+  },
+  "trips": {
+    "eyebrow": "Matkapäiväkirja",
+    "title": "Retket",
+    "description": "Selaa julkaistuja retkitarinoita, kuvia ja luonnon äärellä koettuja hetkiä.",
+    "filters": "Rajaa retkiä",
+    "year": "Vuosi",
+    "season": "Vuodenaika",
+    "place": "Paikka",
+    "allYears": "Kaikki vuodet",
+    "allSeasons": "Kaikki vuodenajat",
+    "allPlaces": "Kaikki paikat",
+    "seasonLabels": {
+      "winter": "Talvi",
+      "spring": "Kevät",
+      "summer": "Kesä",
+      "autumn": "Syksy"
+    },
+    "reset": "Tyhjennä rajaus",
+    "resultCount": "{count, plural, one {# retki} other {# retkeä}}",
+    "emptyTitle": "Retkiä ei ole vielä julkaistu",
+    "emptyDescription": "Käyntejä ja paikkoja voi silti tutkia muilla sivuilla.",
+    "emptyVisits": "Selaa käyntejä",
+    "emptyParks": "Avaa paikkakartta",
+    "filteredEmptyTitle": "Rajauksella ei löytynyt retkiä",
+    "errorTitle": "Retkien lataus epäonnistui",
+    "retry": "Yritä uudelleen",
+    "featured": "Esillä",
+    "read": "Lue retki",
+    "datesMissing": "Päivä ei tiedossa",
+    "visitsCount": "{count, plural, one {# käynti} other {# käyntiä}}",
+    "stopsCount": "{count, plural, one {# pysähdys} other {# pysähdystä}}",
+    "imagesCount": "{count, plural, one {# kuva} other {# kuvaa}}"
   },
   "tripPage": {
     "eyebrow": "Retki",
@@ -460,7 +494,25 @@
         "title": "Muokkaa retkeä",
         "description": "Päivitä retken tiedot ja hallitse reitin järjestystä käyntien sekä muiden pysähdysten välillä.",
         "createdNotice": "Retki tallennettiin. Voit jatkaa sen muokkaamista täällä.",
-        "viewTripPage": "Siirry retken sivulle"
+        "viewTripPage": "Näytä julkaistu retki",
+        "previewTripPage": "Esikatsele suoraa linkkiä",
+        "unlistedPreviewHint": "Luonnos näkyy suoralla linkillä, mutta sitä ei löydy julkisesta retkilistasta.",
+        "publication": {
+          "title": "Julkinen näkyvyys",
+          "description": "Julkaisu tarkoittaa, että retki näkyy julkisessa retkilistassa. Voit lisätä sille tiivistelmän ja kansikuvan tai piilottaa sen julkisesta listasta.",
+          "summary": "Tiivistelmä",
+          "cover": "Kansikuva",
+          "noCover": "Ei kansikuvaa",
+          "featured": "Nosta retki esiin",
+          "save": "Tallenna julkaisutiedot",
+          "publish": "Julkaise retki",
+          "unlist": "Piilota julkisesta listasta",
+          "saving": "Tallennetaan...",
+          "saved": "Julkaisutiedot tallennettiin.",
+          "published": "Retki julkaistiin.",
+          "unlisted": "Retki piilotettiin julkisesta listasta. Retki säilyi tallessa.",
+          "failed": "Julkaisutietojen tallennus epäonnistui."
+        }
       },
       "assignments": {
         "title": "Muokkaa retken reittiä",
@@ -587,6 +639,9 @@
         "tripName": "Retki",
         "dateRange": "Aikaväli",
         "visitCount": "Käynnit",
+        "publication": "Julkaisu",
+        "published": "Julkaistu",
+        "unlisted": "Luonnos",
         "visitCountValue": "{count, plural, one {# käynti} other {# käyntiä}}",
         "edit": "Muokkaa",
         "noDateRange": "Ei vielä käyntejä",
@@ -594,7 +649,11 @@
           "searchLabel": "Haku",
           "searchPlaceholder": "Hae retkeä",
           "results": "{count} retkeä",
-          "reset": "Tyhjennä suodattimet"
+          "reset": "Tyhjennä suodattimet",
+          "publicationLabel": "Julkaisutila",
+          "publicationAll": "Kaikki",
+          "publicationPublished": "Julkaistut",
+          "publicationUnlisted": "Luonnokset"
         },
         "noTrips": "Ei vielä luotuja retkiä.",
         "emptyFiltered": "Yksikään retki ei vastaa nykyisiä suodattimia.",

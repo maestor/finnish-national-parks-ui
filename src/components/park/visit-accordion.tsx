@@ -168,12 +168,15 @@ export const VisitAccordion = ({
                     {visit.route}
                   </span>
                 )}
-                {visit.trip !== null && (
-                  <Link href={appRoutes.trip(visit.trip.slug)} className={TRIP_LINK_CLASS_NAME}>
-                    <TentTree className="h-3.5 w-3.5" aria-hidden="true" />
-                    {visit.trip.name}
-                  </Link>
-                )}
+                {visit.trip !== null &&
+                  (visit.trip.published !== false ? (
+                    <Link href={appRoutes.trip(visit.trip.slug)} className={TRIP_LINK_CLASS_NAME}>
+                      <TentTree className="h-3.5 w-3.5" aria-hidden="true" />
+                      {visit.trip.name}
+                    </Link>
+                  ) : (
+                    <span className={TRIP_LINK_CLASS_NAME}>{visit.trip.name}</span>
+                  ))}
               </span>
               <span className="flex shrink-0 items-center gap-1.5">
                 <CopyLinkButton
@@ -222,16 +225,19 @@ export const VisitAccordion = ({
                       {t("imageCount", { count: imageCount })}
                     </span>
                   )}
-                  {visit.trip !== null && (
-                    <Link
-                      href={appRoutes.trip(visit.trip.slug)}
-                      className={TRIP_LINK_CLASS_NAME}
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      <TentTree className="h-3.5 w-3.5" aria-hidden="true" />
-                      {visit.trip.name}
-                    </Link>
-                  )}
+                  {visit.trip !== null &&
+                    (visit.trip.published !== false ? (
+                      <Link
+                        href={appRoutes.trip(visit.trip.slug)}
+                        className={TRIP_LINK_CLASS_NAME}
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        <TentTree className="h-3.5 w-3.5" aria-hidden="true" />
+                        {visit.trip.name}
+                      </Link>
+                    ) : (
+                      <span className={TRIP_LINK_CLASS_NAME}>{visit.trip.name}</span>
+                    ))}
                 </span>
                 <ChevronDown
                   className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}

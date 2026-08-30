@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { AdminTableFilters } from "@/components/admin/admin-table-filters";
 import { EditIconLink } from "@/components/admin/edit-icon-link";
+import { Select } from "@/components/ui/select";
 import { appRoutes } from "@/lib/routes";
 import { formatTripDateRange, sortTrips, type Trip } from "@/lib/trips";
 
@@ -15,17 +16,24 @@ interface TripManagementProps {
 export const TripManagement = ({ trips }: TripManagementProps) => {
   const t = useTranslations("controlPanel.trips.list");
   const [query, setQuery] = useState("");
+  const [publicationFilter, setPublicationFilter] = useState<"all" | "published" | "unlisted">(
+    "all",
+  );
 
   const sortedTrips = useMemo(() => sortTrips(trips), [trips]);
   const normalizedQuery = query.trim().toLocaleLowerCase("fi-FI");
 
-  const filteredTrips = sortedTrips.filter((trip) => {
-    const haystack = [trip.name, formatTripDateRange(trip) ?? ""]
-      .join(" ")
-      .toLocaleLowerCase("fi-FI");
+  const filteredTrips = sortedTrips
+    .filter((trip) => {
+      const haystack = [trip.name, formatTripDateRange(trip) ?? ""]
+        .join(" ")
+        .toLocaleLowerCase("fi-FI");
 
-    return normalizedQuery ? haystack.includes(normalizedQuery) : true;
-  });
+      return normalizedQuery ? haystack.includes(normalizedQuery) : true;
+    })
+    .filter(
+      (trip) => publicationFilter === "all" || trip.publication?.status === publicationFilter,
+    );
 
   if (sortedTrips.length === 0) {
     return (
@@ -52,6 +60,23 @@ export const TripManagement = ({ trips }: TripManagementProps) => {
         resetLabel={t("filters.reset")}
         onReset={() => setQuery("")}
       />
+      <label
+        htmlFor="trip-publication-filter"
+        className="flex items-center gap-2 text-sm font-medium"
+      >
+        <span>{t("filters.publicationLabel")}</span>
+        <Select
+          id="trip-publication-filter"
+          value={publicationFilter}
+          onChange={(event) => setPublicationFilter(event.target.value as typeof publicationFilter)}
+          className="min-w-36"
+          aria-label={t("filters.publicationLabel")}
+        >
+          <option value="all">{t("filters.publicationAll")}</option>
+          <option value="published">{t("filters.publicationPublished")}</option>
+          <option value="unlisted">{t("filters.publicationUnlisted")}</option>
+        </Select>
+      </label>
 
       {filteredTrips.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-white/45 bg-white/48 p-8 text-center backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/38">
@@ -65,6 +90,7 @@ export const TripManagement = ({ trips }: TripManagementProps) => {
                 <th className="px-4 py-3 text-left font-medium">{t("tripName")}</th>
                 <th className="px-4 py-3 text-left font-medium">{t("dateRange")}</th>
                 <th className="px-4 py-3 text-left font-medium">{t("visitCount")}</th>
+                <th className="px-4 py-3 text-left font-medium">{t("publication")}</th>
                 <th className="px-4 py-3 text-right font-medium" />
               </tr>
             </thead>
@@ -84,6 +110,10 @@ export const TripManagement = ({ trips }: TripManagementProps) => {
                   </td>
                   <td className="px-4 py-3">{formatTripDateRange(trip) ?? t("noDateRange")}</td>
                   <td className="px-4 py-3">{t("visitCountValue", { count: trip.visitCount })}</td>
+                  <td className="px-4 py-3">
+                    {trip.publication?.status === "published" ? t("published") : t("unlisted")}
+                    {trip.publication?.featured === true ? " · Esillä" : ""}
+                  </td>
                   <td className="px-4 py-3 text-right">
                     <EditIconLink
                       href={appRoutes.controlPanel.editTrip(trip.id)}

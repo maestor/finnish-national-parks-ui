@@ -28,6 +28,7 @@ import {
   StickySectionNavigation,
   type StickySectionNavigationItem,
 } from "@/components/navigation/sticky-section-navigation";
+import { TripStoryCover } from "@/components/trip-stories/trip-story-cover";
 import { CopyLinkButton } from "@/components/ui/copy-link-button";
 import { VisitImageGallery } from "@/components/visits/visit-image-gallery";
 import { useAuth } from "@/hooks/use-auth";
@@ -92,6 +93,7 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
   const t = useTranslations("tripPage");
   const auth = useAuth();
   const routeStatus = trip.route;
+  const coverImage = trip.publication?.coverImage ?? null;
   const route = routeStatus.data;
   const startingPoint = trip.startingPoint;
   const shouldShowEditTripLink = auth.isAuthenticated === true;
@@ -268,6 +270,13 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
   return (
     <div className={PUBLIC_PAGE_SHELL_CLASS_NAME}>
       <section className={PUBLIC_PANEL_CLASS_NAME}>
+        {coverImage !== null && (
+          <TripStoryCover
+            story={{ name: trip.name, coverImage }}
+            priority
+            sizes="(max-width: 768px) 100vw, 60vw"
+          />
+        )}
         <div className={PUBLIC_HERO_HEADING_STACK_CLASS_NAME}>
           <div className={PUBLIC_EYEBROW_BADGE_CLASS_NAME}>
             <TentTree className="h-4 w-4" aria-hidden="true" />
