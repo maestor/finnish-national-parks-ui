@@ -61,7 +61,7 @@ This is the Finnish National Parks UI, a Next.js 16 App Router application consu
 ## Repo-Specific Workflow Overrides
 - Branches must follow the repo naming convention: `feature/<name>`, `bugfix/<name>`, `chore/<name>`, `docs/<name>`, `refactor/<name>`, or `test/<name>`.
 - All changes are PR-based against `main`. Do not push directly to `main`.
-- `npm run verify` must pass before any task or PR is considered ready, except for pure documentation or repo-configuration changes that cannot affect code, tests, or generated types.
+- After user acceptance, `npm run verify` must pass before a PR is considered ready, except for pure documentation or repo-configuration changes that cannot affect code, tests, or generated types. Use focused checks while implementing and pause for review before the final gate.
 - For docs-only skips, note the exception in the PR description.
 - User review and explicit acceptance are required before merge.
 - After the agent reports final verification results, a user reply such as `done` counts as explicit acceptance to continue the remaining workflow automatically on the current branch: commit, push, and PR handoff without another pause.
@@ -102,6 +102,13 @@ This is the Finnish National Parks UI, a Next.js 16 App Router application consu
 - No database access and no Server Actions that bypass the API.
 - The API client is in `src/lib/api.ts` and uses Bearer auth.
 - Backend is assumed to be running at `http://localhost:3004`.
+
+## Cross-Repository Reissuvihko Workflow
+- The companion backend repository is `finnish-national-parks-api` ([GitHub](https://github.com/maestor/finnish-national-parks-api)). The backend owns Zod/OpenAPI schemas, persistence, authentication policy, imports, and API runtime behavior; this repository owns the UI, frontend proxy, browser behavior, translations, and generated API consumers.
+- For a task that may affect both repositories, classify the scope first, read both repositories' `AGENTS.md` and relevant development/testing docs, and keep one combined plan with explicit ownership per step.
+- Change the backend contract source first, then regenerate `src/lib/api-types.ts` with `npm run generate:api-types`, update frontend consumers and fixtures, and verify runtime behavior in both repositories. Never hand-edit generated API types.
+- Use matching branch suffixes in the two repositories while keeping separate Git histories, commits, and pull requests. Cross-link the pull requests and state the merge or deployment order when one depends on the other.
+- Use focused checks during implementation, pause for user review, then run `npm run verify` after acceptance in every affected repository before committing and pushing.
 
 ## Security And Sustainability
 - Treat auth, proxying, cache invalidation, uploads, and service worker behavior as security-sensitive boundaries.

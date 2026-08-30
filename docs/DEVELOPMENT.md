@@ -82,7 +82,7 @@ The `AUTH_JWT_SECRET` must match the backend's `AUTH_JWT_SECRET` exactly. `AUTH_
 | `npm run generate:api-types` | Regenerate `src/lib/api-types.ts` from backend OpenAPI  |
 | `npm run copy:maplibre-worker` | Sync the MapLibre v6 worker files into `public/maplibre/` (runs automatically via `predev`/`prebuild`) |
 
-**Always run `npm run verify` before asking for review.** Pull requests targeting `main` also run the same `npm run verify` gate in GitHub Actions.
+Use focused checks while implementing, then pause for user review. After acceptance, run `npm run verify` before committing and pushing. Pull requests targeting `main` also run the same `npm run verify` gate in GitHub Actions.
 
 `npm run typecheck` intentionally clears `.next/types` and `.next/dev/types`, then rebuilds the current branch's route and App Router typings through `next typegen` before running `tsc`. This keeps local verification aligned with the checked-out implementation instead of stale generated artifacts from another branch.
 
@@ -198,10 +198,18 @@ Visit image upload runtime caveat:
 - On `localhost`, the control-panel visit image editor still uses the proxied multipart route `POST /api/visits/{id}/images`.
 - On non-localhost deployments, the control-panel first requests `POST /api/visits/{id}/images/upload-url`, uploads the prepared file directly to the returned presigned `PUT` URL, and then finalizes the image with `POST /api/visits/{id}/images/complete`.
 
-Route naming caveat:
+Public API terminology and access caveat:
 
-- In this project, **all `GET` endpoints are public-readable**, including `GET /api/visits` and `GET /api/parks/{slug}/visits`.
-- **Non-`GET` endpoints require authenticated admin access.**
+- Catalog and visit `GET` data used by the public UI are public from an end-user perspective: visitors can access them through the Reissuvihko frontend without logging in.
+- The backend is a separate API boundary. Outside localhost, its `/api/*` routes generally require the server-side `API_KEY`; `GET /health`, `GET /openapi.json`, and `GET /assets/logos/*` are anonymous backend reads, while `/auth/*` is anonymous login control flow. Do not describe the backend API itself as anonymously public unless its middleware and tests prove that.
+- Admin mutations require authenticated admin access. The frontend proxy keeps the API key server-side and enforces the corresponding session and CSRF checks; the documented public trip-planner POSTs are the deliberate unauthenticated exception.
+
+### Paired UI/API workflow
+
+- Local development uses the frontend at `http://localhost:4300` and the backend at `http://localhost:3004`.
+- The backend repository is [finnish-national-parks-api](https://github.com/maestor/finnish-national-parks-api). Its Zod/OpenAPI definitions are the source of truth for API request and response shapes; this repository consumes generated types.
+- For cross-repository work, read both repositories' `AGENTS.md` and relevant development/testing docs, make the backend contract change first, regenerate `src/lib/api-types.ts`, update frontend consumers and fixtures, and verify both runtime and type-level agreement.
+- Keep matching branch suffixes but separate Git histories, commits, and pull requests. Use focused checks while implementing, pause for review, then run `npm run verify` after acceptance in each affected repository. Cross-link dependent pull requests and document merge order.
 
 ### Image Hosting
 
@@ -380,7 +388,7 @@ See `AGENTS.md` for the full convention list. Key rules:
 - Auth endpoints: `/auth/google`, `/auth/google/callback`, `/auth/me`, `/auth/logout`
 - API endpoints: `/api/parks`, `/api/parks/{slug}`, `/api/parks/{slug}/visits`, `/api/parks/{slug}/removed`, `/api/visits`, `/api/visits/{id}`
 - Cacheable frontend endpoints: `/api/home-summary`, `/api/map-summary`, `/api/visits-timeline`
-- `GET` endpoints are public-readable; non-`GET` endpoints require authenticated admin access
+- Catalog and visit `GET` data is public to end users through the frontend, but direct backend `/api/*` access generally requires the server-side API key outside localhost. Backend-anonymous reads are limited to `GET /health`, `GET /openapi.json`, and `GET /assets/logos/*`; admin mutations require an authenticated admin session, with the documented public trip-planner POSTs as the deliberate exception.
 - OpenAPI doc: `http://localhost:3004/openapi.json`
 
 ## Production Deployment Notes

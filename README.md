@@ -4,7 +4,7 @@ Next.js 16 frontend for exploring Finnish national parks and managing personal v
 
 ## Overview
 
-This is a Finnish-language, PWA-capable web application built with Next.js 16 App Router. It connects to a separate Hono backend API running at `http://localhost:3004`.
+This is a Finnish-language, PWA-capable web application built with Next.js 16 App Router. It connects to the separate [Reissuvihko Hono backend API](https://github.com/maestor/finnish-national-parks-api) running locally at `http://localhost:3004`.
 
 The app serves two audiences:
 
@@ -126,6 +126,8 @@ npm run generate:api-types
 ```
 
 The backend exposes its spec at `http://localhost:3004/openapi.json`.
+
+The backend's Zod/OpenAPI definitions are the API contract source of truth. For a change that affects both repositories, update the backend contract first, regenerate the frontend types, then update and verify the frontend consumer. The two repositories use separate branches, commits, and pull requests; cross-link dependent pull requests and document their merge order.
 
 ## Deployment
 
