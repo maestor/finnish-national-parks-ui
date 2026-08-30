@@ -21,6 +21,7 @@ export const buildPageMetadata = (
 
   return {
     title: pageTitle,
+    ...(pagePath ? { alternates: { canonical: pagePath } } : {}),
     ...(description ? { description } : {}),
     openGraph: {
       title: shareTitle,

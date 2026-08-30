@@ -1,6 +1,17 @@
 "use client";
 
-import { Footprints, House, LogIn, LogOut, MapPin, Menu, Route, Settings, X } from "lucide-react";
+import {
+  BookOpen,
+  Footprints,
+  House,
+  LogIn,
+  LogOut,
+  MapPin,
+  Menu,
+  Route,
+  Settings,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -36,6 +47,7 @@ export const Header = () => {
   const normalizedPathname = normalizeAppPath(pathname);
   const isControlPanel = appRoutePatterns.isControlPanelPath(pathname);
   const isPublicVisitsPage = normalizedPathname === appRoutes.visits;
+  const isPublicTripsPage = appRoutePatterns.isTripsPath(pathname);
   const isDateRangeReviewSharePage = appRoutePatterns.isDateRangeReviewSharePath(pathname);
   const isYearReviewSharePage = appRoutePatterns.isYearReviewSharePath(pathname);
   const isImmersiveSharePage = isDateRangeReviewSharePage || isYearReviewSharePage;
@@ -181,6 +193,11 @@ export const Header = () => {
         isCurrent: isPublicVisitsPage,
       },
       {
+        href: appRoutes.trips,
+        label: t("nav.trips"),
+        isCurrent: isPublicTripsPage,
+      },
+      {
         href: appRoutes.tripPlanner,
         label: t("nav.tripPlanner"),
         isCurrent: normalizedPathname === appRoutes.tripPlanner,
@@ -195,7 +212,14 @@ export const Header = () => {
           ]
         : []),
     ],
-    [auth.isAuthenticated, isControlPanel, isPublicVisitsPage, normalizedPathname, t],
+    [
+      auth.isAuthenticated,
+      isControlPanel,
+      isPublicTripsPage,
+      isPublicVisitsPage,
+      normalizedPathname,
+      t,
+    ],
   );
 
   if (isImmersiveSharePage) {
@@ -276,6 +300,15 @@ export const Header = () => {
                   >
                     <Footprints className="h-4 w-4 shrink-0" aria-hidden="true" />
                     <span>{t("nav.visits")}</span>
+                  </Link>
+                  <Link
+                    href={appRoutes.trips}
+                    prefetch={false}
+                    className={MOBILE_SHEET_ITEM_CLASS}
+                    onClick={closeMobileMenu}
+                  >
+                    <BookOpen className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    <span>{t("nav.trips")}</span>
                   </Link>
                   <Link
                     href={appRoutes.tripPlanner}

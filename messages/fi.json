@@ -10,6 +10,7 @@
       "home": "Etusivu",
       "map": "Paikat",
       "visits": "Käynnit",
+      "trips": "Retket",
       "tripPlanner": "Reitit",
       "controlPanel": "Hallinta",
       "filters": "Suodata karttaa",
@@ -217,6 +218,35 @@
         "missing": "Puuttuvat"
       }
     }
+  },
+  "trips": {
+    "eyebrow": "Matkapäiväkirja",
+    "title": "Retket",
+    "description": "Selaa julkaistuja retkitarinoita, kuvia ja luonnon äärellä koettuja hetkiä.",
+    "filters": "Rajaa retkiä",
+    "year": "Vuosi",
+    "season": "Vuodenaika",
+    "place": "Paikka",
+    "allYears": "Kaikki vuodet",
+    "allSeasons": "Kaikki vuodenajat",
+    "allPlaces": "Kaikki paikat",
+    "apply": "Rajaa",
+    "reset": "Tyhjennä rajaus",
+    "resultCount": "{count, plural, one {# retki} other {# retkeä}}",
+    "emptyTitle": "Retkiä ei ole vielä julkaistu",
+    "emptyDescription": "Käyntejä ja paikkoja voi silti tutkia muilla sivuilla.",
+    "emptyVisits": "Selaa käyntejä",
+    "emptyParks": "Avaa paikkakartta",
+    "filteredEmptyTitle": "Rajauksella ei löytynyt retkiä",
+    "errorTitle": "Retkien lataus epäonnistui",
+    "retry": "Yritä uudelleen",
+    "featured": "Esillä",
+    "read": "Lue retki",
+    "fallbackSummary": "Retkestä ei ole vielä kirjoitettu yhteenvetoa.",
+    "datesMissing": "Päivä ei tiedossa",
+    "visitsCount": "{count, plural, one {# käynti} other {# käyntiä}}",
+    "stopsCount": "{count, plural, one {# pysähdys} other {# pysähdystä}}",
+    "imagesCount": "{count, plural, one {# kuva} other {# kuvaa}}"
   },
   "tripPage": {
     "eyebrow": "Retki",
