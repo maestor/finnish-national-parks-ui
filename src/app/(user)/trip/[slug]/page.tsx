@@ -4,6 +4,7 @@ import { PublicTripPage } from "@/components/trips/public-trip-page";
 import { ApiError } from "@/lib/api";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import { fetchPublicTripBySlug } from "@/lib/public-trip";
+import { appRoutes } from "@/lib/routes";
 
 interface PublicTripRoutePageProps {
   params: Promise<{ slug: string }>;
@@ -30,7 +31,9 @@ export const generateMetadata = async ({ params }: PublicTripRoutePageProps) => 
   }
 
   return buildPageMetadata(trip.name, metadataT("title"), {
-    description: trip.description ?? undefined,
+    description: trip.publication?.summary ?? trip.description ?? undefined,
+    pagePath: appRoutes.trip(slug),
+    socialImagePath: appRoutes.tripImage(slug),
   });
 };
 

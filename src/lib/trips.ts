@@ -30,7 +30,11 @@ export type TripDetail = Omit<GeneratedTripDetail, "publication"> & {
 export type PublicTripDetail = Omit<
   paths["/api/trips/slug/{slug}"]["get"]["responses"][200]["content"]["application/json"],
   "publication"
-> & { publication?: GeneratedTrip["publication"] };
+> & {
+  publication?: GeneratedTripDetail["publication"] & {
+    coverImage: TripStop["images"][number] | null;
+  };
+};
 
 export type TripItineraryItem = TripDetail["itinerary"][number];
 export type PublicTripItineraryItem = PublicTripDetail["itinerary"][number];

@@ -1077,6 +1077,8 @@ describe("App pages", () => {
     ).resolves.toEqual(
       createExpectedShareMetadata("Keski-Suomen kesaretki", {
         description: "Kolmen paivan kierros kansallispuistoihin.",
+        pagePath: "/retki/keski-suomen-kesaretki",
+        socialImagePath: "/retki/keski-suomen-kesaretki/kuva",
       }),
     );
   });
