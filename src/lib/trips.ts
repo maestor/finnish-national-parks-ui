@@ -10,6 +10,12 @@ export type Trip = Omit<GeneratedTrip, "publication"> & {
 
 export type TripPublication = Trip["publication"];
 
+export type TripStorySummary =
+  paths["/api/trip-stories"]["get"]["responses"][200]["content"]["application/json"]["stories"][number];
+
+export type TripStoryListResponse =
+  paths["/api/trip-stories"]["get"]["responses"][200]["content"]["application/json"];
+
 export type UpdateTripPublicationRequest = NonNullable<
   paths["/api/trips/{id}/publication"]["patch"]["requestBody"]
 >["content"]["application/json"];

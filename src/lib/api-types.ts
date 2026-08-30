@@ -1491,6 +1491,79 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/trip-stories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Published trip stories */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            stories: {
+                                coverImage: {
+                                    id: number;
+                                    /** Format: uri */
+                                    fullUrl: string;
+                                    /** Format: uri */
+                                    thumbUrl: string;
+                                    fullWidth: number | null;
+                                    fullHeight: number | null;
+                                    thumbWidth: number | null;
+                                    thumbHeight: number | null;
+                                    originalName: string | null;
+                                    displayOrder: number;
+                                    createdAt: string;
+                                } | null;
+                                dateRange: {
+                                    end: string;
+                                    start: string;
+                                } | null;
+                                featured: boolean;
+                                imageCount: number;
+                                name: string;
+                                places: {
+                                    name: string;
+                                    slug: string;
+                                }[];
+                                /** Format: date-time */
+                                publishedAt: string;
+                                seasons: ("autumn" | "spring" | "summer" | "winter")[];
+                                slug: string;
+                                stopCount: number;
+                                summary: string | null;
+                                /** Format: date-time */
+                                updatedAt: string;
+                                visitCount: number;
+                                years: number[];
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/date-range-review/preview": {
         parameters: {
             query?: never;
@@ -3032,6 +3105,20 @@ export interface paths {
                                 /** @enum {string} */
                                 status: "unlisted" | "published";
                                 summary: string | null;
+                                coverImage: {
+                                    id: number;
+                                    /** Format: uri */
+                                    fullUrl: string;
+                                    /** Format: uri */
+                                    thumbUrl: string;
+                                    fullWidth: number | null;
+                                    fullHeight: number | null;
+                                    thumbWidth: number | null;
+                                    thumbHeight: number | null;
+                                    originalName: string | null;
+                                    displayOrder: number;
+                                    createdAt: string;
+                                } | null;
                             };
                             slug: string;
                             startingPoint: {
