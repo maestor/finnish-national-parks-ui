@@ -1,14 +1,30 @@
 import type { paths } from "./api-types";
 import { formatFinnishDateRange } from "./fi-date";
 
-export type Trip =
+type GeneratedTrip =
   paths["/api/trips"]["get"]["responses"][200]["content"]["application/json"]["trips"][number];
 
-export type TripDetail =
+export type Trip = Omit<GeneratedTrip, "publication"> & {
+  publication?: GeneratedTrip["publication"];
+};
+
+export type TripPublication = Trip["publication"];
+
+export type UpdateTripPublicationRequest = NonNullable<
+  paths["/api/trips/{id}/publication"]["patch"]["requestBody"]
+>["content"]["application/json"];
+
+type GeneratedTripDetail =
   paths["/api/trips/{id}"]["get"]["responses"][200]["content"]["application/json"];
 
-export type PublicTripDetail =
-  paths["/api/trips/slug/{slug}"]["get"]["responses"][200]["content"]["application/json"];
+export type TripDetail = Omit<GeneratedTripDetail, "publication"> & {
+  publication?: GeneratedTripDetail["publication"];
+};
+
+export type PublicTripDetail = Omit<
+  paths["/api/trips/slug/{slug}"]["get"]["responses"][200]["content"]["application/json"],
+  "publication"
+> & { publication?: GeneratedTrip["publication"] };
 
 export type TripItineraryItem = TripDetail["itinerary"][number];
 export type PublicTripItineraryItem = PublicTripDetail["itinerary"][number];

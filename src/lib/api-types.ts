@@ -884,6 +884,7 @@ export interface paths {
                                 trip: {
                                     id: number;
                                     name: string;
+                                    published: boolean;
                                     slug: string;
                                 } | null;
                                 tripStopOrder: number | null;
@@ -969,6 +970,7 @@ export interface paths {
                             trip: {
                                 id: number;
                                 name: string;
+                                published: boolean;
                                 slug: string;
                             } | null;
                             tripStopOrder: number | null;
@@ -1283,6 +1285,7 @@ export interface paths {
                                 trip: {
                                     id: number;
                                     name: string;
+                                    published: boolean;
                                     slug: string;
                                 } | null;
                                 tripStopOrder: number | null;
@@ -1341,6 +1344,23 @@ export interface paths {
                                 description: string | null;
                                 id: number;
                                 name: string;
+                                publication: {
+                                    cover: {
+                                        imageId: number;
+                                        /** @enum {string} */
+                                        source: "visit-image";
+                                    } | {
+                                        imageId: number;
+                                        /** @enum {string} */
+                                        source: "trip-stop-image";
+                                    } | unknown;
+                                    featured: boolean;
+                                    /** Format: date-time */
+                                    publishedAt: string | null;
+                                    /** @enum {string} */
+                                    status: "unlisted" | "published";
+                                    summary: string | null;
+                                };
                                 slug: string;
                                 startingPoint: {
                                     coordinate: {
@@ -1407,6 +1427,23 @@ export interface paths {
                             description: string | null;
                             id: number;
                             name: string;
+                            publication: {
+                                cover: {
+                                    imageId: number;
+                                    /** @enum {string} */
+                                    source: "visit-image";
+                                } | {
+                                    imageId: number;
+                                    /** @enum {string} */
+                                    source: "trip-stop-image";
+                                } | unknown;
+                                featured: boolean;
+                                /** Format: date-time */
+                                publishedAt: string | null;
+                                /** @enum {string} */
+                                status: "unlisted" | "published";
+                                summary: string | null;
+                            };
                             slug: string;
                             startingPoint: {
                                 coordinate: {
@@ -2979,6 +3016,23 @@ export interface paths {
                             description: string | null;
                             id: number;
                             name: string;
+                            publication: {
+                                cover: {
+                                    imageId: number;
+                                    /** @enum {string} */
+                                    source: "visit-image";
+                                } | {
+                                    imageId: number;
+                                    /** @enum {string} */
+                                    source: "trip-stop-image";
+                                } | unknown;
+                                featured: boolean;
+                                /** Format: date-time */
+                                publishedAt: string | null;
+                                /** @enum {string} */
+                                status: "unlisted" | "published";
+                                summary: string | null;
+                            };
                             slug: string;
                             startingPoint: {
                                 coordinate: {
@@ -3158,6 +3212,23 @@ export interface paths {
                             description: string | null;
                             id: number;
                             name: string;
+                            publication: {
+                                cover: {
+                                    imageId: number;
+                                    /** @enum {string} */
+                                    source: "visit-image";
+                                } | {
+                                    imageId: number;
+                                    /** @enum {string} */
+                                    source: "trip-stop-image";
+                                } | unknown;
+                                featured: boolean;
+                                /** Format: date-time */
+                                publishedAt: string | null;
+                                /** @enum {string} */
+                                status: "unlisted" | "published";
+                                summary: string | null;
+                            };
                             slug: string;
                             startingPoint: {
                                 coordinate: {
@@ -3351,6 +3422,23 @@ export interface paths {
                             description: string | null;
                             id: number;
                             name: string;
+                            publication: {
+                                cover: {
+                                    imageId: number;
+                                    /** @enum {string} */
+                                    source: "visit-image";
+                                } | {
+                                    imageId: number;
+                                    /** @enum {string} */
+                                    source: "trip-stop-image";
+                                } | unknown;
+                                featured: boolean;
+                                /** Format: date-time */
+                                publishedAt: string | null;
+                                /** @enum {string} */
+                                status: "unlisted" | "published";
+                                summary: string | null;
+                            };
                             slug: string;
                             startingPoint: {
                                 coordinate: {
@@ -3929,6 +4017,7 @@ export interface paths {
                                 trip: {
                                     id: number;
                                     name: string;
+                                    published: boolean;
                                     slug: string;
                                 } | null;
                                 tripStopOrder: number | null;
@@ -4004,6 +4093,7 @@ export interface paths {
                             trip: {
                                 id: number;
                                 name: string;
+                                published: boolean;
                                 slug: string;
                             } | null;
                             tripStopOrder: number | null;
@@ -4151,6 +4241,7 @@ export interface paths {
                             trip: {
                                 id: number;
                                 name: string;
+                                published: boolean;
                                 slug: string;
                             } | null;
                             tripStopOrder: number | null;
@@ -4395,6 +4486,125 @@ export interface paths {
                 };
                 /** @description Park was not found */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/trips/{id}/publication": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        cover?: {
+                            imageId: number;
+                            /** @enum {string} */
+                            source: "visit-image";
+                        } | {
+                            imageId: number;
+                            /** @enum {string} */
+                            source: "trip-stop-image";
+                        } | unknown;
+                        featured?: boolean;
+                        /** @enum {string} */
+                        status?: "unlisted" | "published";
+                        summary?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Updated trip publication metadata */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            cover: {
+                                imageId: number;
+                                /** @enum {string} */
+                                source: "visit-image";
+                            } | {
+                                imageId: number;
+                                /** @enum {string} */
+                                source: "trip-stop-image";
+                            } | unknown;
+                            featured: boolean;
+                            /** Format: date-time */
+                            publishedAt: string | null;
+                            /** @enum {string} */
+                            status: "unlisted" | "published";
+                            summary: string | null;
+                        };
+                    };
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Trip or cover image was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Publication metadata was invalid */
+                422: {
                     headers: {
                         [name: string]: unknown;
                     };

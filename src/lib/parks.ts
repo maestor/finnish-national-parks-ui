@@ -24,19 +24,35 @@ export type ParkUpdateResponse =
 export type ParkTypeSlug = Park["type"]["slug"];
 export type ParkCategorySlug = Park["category"]["slug"];
 
-export type ParkVisits =
+type GeneratedParkVisits =
   paths["/api/parks/{slug}/visits"]["get"]["responses"][200]["content"]["application/json"];
+type GeneratedVisit = GeneratedParkVisits["visits"][number];
+type CompatibleVisit = Omit<GeneratedVisit, "trip"> & {
+  trip:
+    | (Omit<NonNullable<GeneratedVisit["trip"]>, "published"> & {
+        published?: boolean;
+      })
+    | null;
+};
+
+export type ParkVisits = Omit<GeneratedParkVisits, "visits"> & {
+  visits: CompatibleVisit[];
+};
 
 export type VisitedSummary = ParkVisits["visitedSummary"];
 
-export type Visit = ParkVisits["visits"][number];
+export type Visit = CompatibleVisit;
 
 export type VisitCreateRequest = NonNullable<
   paths["/api/parks/{slug}/visits"]["post"]["requestBody"]
 >["content"]["application/json"];
 
-export type VisitWithPark =
+type GeneratedVisitWithPark =
   paths["/api/visits"]["get"]["responses"][200]["content"]["application/json"]["visits"][number];
+
+export type VisitWithPark = Omit<GeneratedVisitWithPark, "trip"> & {
+  trip: Visit["trip"];
+};
 
 export type VisitUpdateRequest = NonNullable<
   paths["/api/visits/{id}"]["patch"]["requestBody"]
