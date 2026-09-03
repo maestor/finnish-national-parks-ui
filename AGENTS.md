@@ -1,151 +1,45 @@
 # Agent Instructions
 
-## Start of Session — MANDATORY GATE
+## Start of Session — Mandatory Gate
 
-**STOP. Do not write, read, search, or run any code until you have completed every step below in order.**
+Before investigating, planning, editing, or running code:
 
-These steps are not suggestions. They are a hard gate. If you skip any step, you will produce broken, inconsistent, or off-convention work.
+1. Read `README.md`, `docs/DEVELOPMENT.md`, and `docs/TESTING.md` fully.
+2. Read every relevant project skill before acting:
+   - UI, accessibility, semantic HTML, focus, or interaction: `.agents/skills/accessibility-first-ui/SKILL.md`
+   - API, OpenAPI, generated types, or UI/API contract: `.agents/skills/api-contract-sync/SKILL.md`
+   - Browser, responsive, or visual verification: `.agents/skills/browser-ui-verification/SKILL.md`
+   - Tests or TDD: `.agents/skills/intelligence-testing/SKILL.md`
+   - Local verification strategy: `.agents/skills/local-first-verification/SKILL.md`
+   - Documentation or planning: `.agents/skills/project-documentation/SKILL.md`
+   - Branch, commit, push, or PR work: `.agents/skills/git-pr-workflow/SKILL.md`
+3. For a file or Git change, check the branch and work only on an explicit target branch or a new branch using `feature/`, `bugfix/`, `chore/`, `docs/`, `refactor/`, or `test/`.
 
-### Step 1 — Read project docs
-Read these files fully before any action:
-- `docs/DEVELOPMENT.md`
-- `docs/TESTING.md`
-- `README.md` (for human-oriented context)
+`docs/DEVELOPMENT.md` and `docs/TESTING.md` are the source of truth for detailed architecture, UI, security, test, and verification conventions. Do not duplicate them here.
 
-Do not proceed until all three are read.
+## Shared Plans Vault
 
-### Step 2 — Read relevant skills BEFORE acting
-If the task touches any of the areas below, you **must** read the matching `SKILL.md` **before** you investigate, plan, or edit:
+- Use `/Users/maestor/Projects/Documentations/Reissuvihko/Plans/` for every new product, technical, research, and cross-repository plan; start from `_Plan template.md`.
+- Put UI-only plans in `Plans/UI/`, API-only plans in `Plans/API/`, and cross-repository or non-repository plans directly in `Plans/`.
+- Never create `docs/plans/` in this repository. Move any misplaced plan to the vault before continuing.
 
-| Task area | Skill to read |
-|-----------|---------------|
-| UI components, accessibility, semantic HTML, focus handling | `.agents/skills/accessibility-first-ui/SKILL.md` |
-| API changes, OpenAPI, generated types, backend/frontend contract | `.agents/skills/api-contract-sync/SKILL.md` |
-| Browser screenshots, visual verification, dark/light mode check | `.agents/skills/browser-ui-verification/SKILL.md` |
-| Tests, TDD, behavior-first development, mocking decisions | `.agents/skills/intelligence-testing/SKILL.md` |
-| Local verification strategy, deciding what checks to run | `.agents/skills/local-first-verification/SKILL.md` |
-| Documentation changes (`README.md`, `docs/**`, contributor guides) | `.agents/skills/project-documentation/SKILL.md` |
-| Git branch, commit, push, PR workflow | `.agents/skills/git-pr-workflow/SKILL.md` |
+## Repository Rules
 
-**Do not treat skill reading as optional.** The skills exist so you do not re-invent the workflow every time. If a skill matches the work, read it.
+- All user-facing copy is Finnish and belongs in `messages/fi.json`.
+- Use arrow functions; TypeScript is strict; do not use `any` without explicit justification. Use boolean-safe `&&` for render-or-nothing JSX.
+- Keep the API boundary intact: use HTTP through `src/lib/api.ts`; do not access the database or use Server Actions to bypass the Hono API. Do not hand-edit `src/lib/api-types.ts`.
+- For UI, styling, accessibility, security, cache, and media decisions, follow `docs/DEVELOPMENT.md` and the matched skill. Keep secrets server-only and mutation boundaries authenticated.
+- Delete stale code in the touched area and update the relevant tracked documentation whenever a contributor-facing behavior changes.
+- Do not start a local server unless the user asks or one is already running.
 
-### Step 3 — Activate Git workflow if files or Git state will change
-If the request is likely to change files or Git state, **immediately after** Steps 1–2, activate `$git-pr-workflow`:
-- Check the current branch.
-- If on an existing feature branch, verify whether it has already been merged into `origin/main`. If yes — or if the task is genuinely new work — switch to `main`, pull latest, and create a **new** repo-valid working branch **before** any edits.
-- Only continue on an existing branch if the user explicitly names it as the target.
-- Use repo naming convention: `feature/<name>`, `bugfix/<name>`, `chore/<name>`, `docs/<name>`, `refactor/<name>`, or `test/<name>`.
+## Cross-Repository Work
 
-### Step 4 — Only then proceed
-After Steps 1–3 are complete, use this file for repo-specific conventions and overrides.
+- Read the API repository's `AGENTS.md` and relevant development/testing guides before changing shared behavior.
+- The API owns Zod/OpenAPI schemas, persistence, authentication, and runtime behavior; this repository owns UI, translations, browser behavior, proxy routes, and generated consumers.
+- Change the API contract first, regenerate `src/lib/api-types.ts`, update consumers and fixtures, then verify both repositories. Use matching branch suffixes, separate PRs, and document merge order.
 
----
+## Delivery
 
-## Shared Skills
-- Use `$project-documentation` when updating `README.md`, `docs/**`, contributor guidance, or repository workflow docs.
-- Use `$git-pr-workflow` for the standard branch, review, final-verify, commit, push, and PR-notes flow.
-- Use installed project skills from `.agents/skills/` when they match the work:
-  - `accessibility-first-ui`
-  - `api-contract-sync`
-  - `browser-ui-verification`
-  - `intelligence-testing`
-  - `local-first-verification`
-
-## Project Context
-This is the Finnish National Parks UI, a Next.js 16 App Router application consuming a Hono backend API for a public map view and an admin control panel.
-
-## Communication Language
-- **All agent-to-user communication is in English.**
-- Finnish words appear only when they are UI copy, translation keys, or direct quotes from the codebase.
-
-## Repo-Specific Workflow Overrides
-- Branches must follow the repo naming convention: `feature/<name>`, `bugfix/<name>`, `chore/<name>`, `docs/<name>`, `refactor/<name>`, or `test/<name>`.
-- All changes are PR-based against `main`. Do not push directly to `main`.
-- After user acceptance, `npm run verify` must pass before a PR is considered ready, except for pure documentation or repo-configuration changes that cannot affect code, tests, or generated types. Use focused checks while implementing and pause for review before the final gate.
-- For docs-only skips, note the exception in the PR description.
-- User review and explicit acceptance are required before merge.
-- After the agent reports final verification results, a user reply such as `done` counts as explicit acceptance to continue the remaining workflow automatically on the current branch: commit, push, and PR handoff without another pause.
-- Keep documentation-only changes separate from implementation changes when practical.
-- Do not revert user changes.
-- Do not hand-edit generated files once generation exists.
-- Keep changes scoped to the current request.
-- Never start `npm run dev` or any local server on your own. If a server is needed, use an existing one or ask the user to launch it.
-
-## Cleanup and Documentation Hygiene
-- **Never leave unused code behind.** Before finishing any task, remove dead code: orphaned imports, unused variables or parameters, unused translation keys, unreachable components, and stale comments. A passing `npm run verify` is not sufficient proof — grep for removed references explicitly.
-- **Refactor clearly off-pattern code when you touch it.** If the requested change brings you into code that obviously conflicts with this repo's current conventions or quality bar, fix that nearby implementation as part of the same task instead of preserving it. Keep the cleanup scoped to the touched area and directly related behavior; do not use this rule to justify broad opportunistic rewrites.
-- **Centralize shared UI patterns instead of cloning them.** When a page shell, hero block, panel treatment, filter layout, card structure, or class recipe is already shared or is on track to be reused, extend an existing shared component/style module or create one in a neutral shared location instead of multiplying “almost the same” page-local implementations. Keep the shared abstraction honest: extract the repeated core, and leave truly page-specific differences at the page/component edge.
-- **Documentation must stay in sync.** Any change that affects behavior, architecture, environment variables, API usage, or feature status must update the relevant docs (`README.md`, `AGENTS.md`, `docs/**`, roadmaps, etc.) in the same PR. Do not treat docs as an afterthought.
-
-## Coding Conventions
-- All function definitions must use `const` arrow functions. Pure `function` declarations are not allowed.
-- TypeScript strict mode is enabled. No `any` without explicit justification. All env vars are Zod-validated.
-- For render-or-nothing JSX, prefer boolean-safe `&&` rendering over `condition ? <Thing /> : null`. If the source value is not already a true boolean, compute an explicit boolean first so Biome `noLeakedRender` stays happy.
-- Page components may use default exports; everything else should use named exports.
-
-## Styling
-- Tailwind CSS v4 with CSS variables for theming.
-- Prefer Tailwind's canonical utility spellings when an equivalent exists. Examples: use `max-w-none!` instead of `!max-w-none`, `rounded-3xl` instead of `rounded-[1.5rem]`, and scale-based spacing utilities such as `pt-6.5`, `h-104`, or `min-h-30` instead of equivalent arbitrary values.
-- `npm run lint` and `npm run lint:fix` enforce canonical Tailwind class names through `scripts/check-tailwind-canonical.mjs`. Do not introduce a new arbitrary utility form when Tailwind already has a canonical class for the same value.
-- Use semantic color tokens such as `bg-background`, `text-foreground`, and `text-primary`.
-- Dark mode support uses `next-themes` with the `dark` class strategy.
-
-## Accessibility
-- Every interactive control needs an accessible name.
-- Use semantic HTML such as `<nav>`, `<main>`, `<section>`, `<button>`, and `<a>`.
-- Icon-only buttons must have `aria-label`.
-- Respect `prefers-reduced-motion`.
-- Keyboard focus must be visible and intentional.
-
-## Backend Boundary
-- The Next.js app calls the Hono API via HTTP.
-- No database access and no Server Actions that bypass the API.
-- The API client is in `src/lib/api.ts` and uses Bearer auth.
-- Backend is assumed to be running at `http://localhost:3004`.
-
-## Cross-Repository Reissuvihko Workflow
-- The companion backend repository is `finnish-national-parks-api` ([GitHub](https://github.com/maestor/finnish-national-parks-api)). The backend owns Zod/OpenAPI schemas, persistence, authentication policy, imports, and API runtime behavior; this repository owns the UI, frontend proxy, browser behavior, translations, and generated API consumers.
-- For a task that may affect both repositories, classify the scope first, read both repositories' `AGENTS.md` and relevant development/testing docs, and keep one combined plan with explicit ownership per step.
-- Change the backend contract source first, then regenerate `src/lib/api-types.ts` with `npm run generate:api-types`, update frontend consumers and fixtures, and verify runtime behavior in both repositories. Never hand-edit generated API types.
-- Use matching branch suffixes in the two repositories while keeping separate Git histories, commits, and pull requests. Cross-link the pull requests and state the merge or deployment order when one depends on the other.
-- Use focused checks during implementation, pause for user review, then run `npm run verify` after acceptance in every affected repository before committing and pushing.
-
-## Security And Sustainability
-- Treat auth, proxying, cache invalidation, uploads, and service worker behavior as security-sensitive boundaries.
-- Any new non-`GET` route or cache revalidation endpoint must require explicit auth or a signed/shared-secret check. Do not add anonymous mutation endpoints.
-- Keep secrets server-only. Never expose `API_KEY`, JWT secrets, auth tokens, or presigned upload credentials in client code, logs, URLs, or browser storage.
-- Prefer DOM APIs or React nodes over `innerHTML` or `dangerouslySetInnerHTML`. If HTML injection is unavoidable, sanitize it and document the trust boundary.
-- External origins must be allowlisted narrowly. Do not widen image hosts, upload targets, map tiles, or remote embeds with wildcards without documenting the reason and verifying the behavior.
-- Prefer cacheable server reads, explicit cache tags, and optimized media over duplicate client fetches or unnecessary hydration. Document cache invalidation expectations when changing PWA, offline, or revalidation behavior.
-- New dependencies need an explicit purpose, a maintenance check, and a cheapest-existing-alternative check. After dependency changes, run `npm audit` and call out any accepted residual risk.
-
-## Localization
-- Default locale is Finnish (`fi`) and all UI copy is in Finnish.
-- Translation keys live in `messages/fi.json`.
-- Tests should use translation keys via the `I18nProvider` test helper.
-- Future languages can be added by creating new message files and updating `src/i18n/request.ts`.
-
-## Testing Standards
-- Prefer behavior-first tests that exercise what the user sees or does, not component internals.
-- For UI interactions, prefer `@testing-library/user-event` over `fireEvent` unless you need a lower-level browser event.
-- For Next.js App Router pages, prefer integration-style tests that render page modules through the real segment layout when practical.
-- When route metadata is part of the user-visible contract, cover `generateMetadata` in tests alongside route rendering.
-- Security-sensitive changes should add focused tests around auth redirects, proxy behavior, cache invalidation authorization, secret handling, and external-origin constraints.
-- Performance or resilience-sensitive changes should verify the affected cache, media, or offline behavior at the cheapest level that can fail honestly.
-- Coverage exclusions should stay limited to non-product noise such as tool config, generated files, test helpers, and framework-only entrypoints. Do not exclude real runtime app code just to improve the report.
-
-## Environment Assumptions
-- Dev server port: `4300`
-- Backend port: `3004`
-- Playwright E2E base URL: `http://localhost:4300`
-
-## Key Files
-| File | Purpose |
-|------|---------|
-| `src/lib/api.ts` | Typed fetch client to Hono backend |
-| `src/lib/env.ts` | Zod-validated environment variables |
-| `src/lib/api-types.ts` | Auto-generated from backend OpenAPI |
-| `src/i18n/request.ts` | `next-intl` request config |
-| `src/components/map/map-worker.ts` | MapLibre v6 `setWorkerUrl` setup (worker synced to `public/maplibre/` by `scripts/copy-maplibre-worker.mjs`) |
-| `src/app/sw.ts` | Serwist service worker |
-| `messages/fi.json` | Finnish translation messages |
+- Do not work directly on `main`, revert user changes, or hand-edit generated files.
+- Use focused checks while implementing. Pause for review before the final gate; after acceptance, run `npm run verify` unless the change is documentation/repository configuration only, then note that exception in the PR.
+- After acceptance and verification, commit with the Git workflow, push, and provide a PR link and notes.
