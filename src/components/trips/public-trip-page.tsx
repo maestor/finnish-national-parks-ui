@@ -272,7 +272,10 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
   return (
     <div className={PUBLIC_PAGE_SHELL_CLASS_NAME}>
       <section
-        className={cn(PUBLIC_PANEL_CLASS_NAME, hasFeaturedImage && "relative overflow-hidden")}
+        className={cn(
+          PUBLIC_PANEL_CLASS_NAME,
+          hasFeaturedImage && "relative min-h-104 overflow-hidden sm:min-h-120",
+        )}
       >
         {hasFeaturedImage && trip.featuredImage !== null && (
           <AppImage
@@ -280,7 +283,7 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
             alt=""
             fill
             sizes="(max-width: 1024px) calc(100vw - 2rem), 1024px"
-            className="object-cover"
+            className="object-cover object-center"
             onError={() => setFailedFeaturedImageKey(trip.featuredImage?.fullUrl ?? null)}
             priority
           />
