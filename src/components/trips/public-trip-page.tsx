@@ -28,6 +28,7 @@ import {
   StickySectionNavigation,
   type StickySectionNavigationItem,
 } from "@/components/navigation/sticky-section-navigation";
+import { AppImage } from "@/components/ui/app-image";
 import { CopyLinkButton } from "@/components/ui/copy-link-button";
 import { VisitImageGallery } from "@/components/visits/visit-image-gallery";
 import { useAuth } from "@/hooks/use-auth";
@@ -152,6 +153,7 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
     ),
   );
   const [openItemKey, setOpenItemKey] = useState<string | null>(null);
+  const [failedFeaturedImageKey, setFailedFeaturedImageKey] = useState<string | null>(null);
   const [visitDetailsById, setVisitDetailsById] = useState<
     PublicTripVisitDetailsResponse["visits"]
   >({});
@@ -264,56 +266,96 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
   };
 
   const tripSectionScrollMarginTop = `calc(var(--page-sticky-nav-top, 0rem) + ${stickySectionNavHeight}px)`;
+  const hasFeaturedImage =
+    trip.featuredImage !== null && failedFeaturedImageKey !== trip.featuredImage.fullUrl;
 
   return (
     <div className={PUBLIC_PAGE_SHELL_CLASS_NAME}>
-      <section className={PUBLIC_PANEL_CLASS_NAME}>
-        <div className={PUBLIC_HERO_HEADING_STACK_CLASS_NAME}>
-          <div className={PUBLIC_EYEBROW_BADGE_CLASS_NAME}>
-            <TentTree className="h-4 w-4" aria-hidden="true" />
-            <span>{t("eyebrow")}</span>
-          </div>
-          <h1 className={PUBLIC_HERO_TITLE_CLASS_NAME}>{trip.name}</h1>
-          {trip.dateRange !== null && (
-            <p className="text-sm font-medium text-primary">
-              {formatFinnishDateRange(trip.dateRange.start, trip.dateRange.end)}
-            </p>
-          )}
-        </div>
-
-        <div className="mt-5 flex flex-wrap items-center gap-2">
-          <span className={META_PILL_CLASS_NAME}>
-            <CalendarRange className="h-3.5 w-3.5" aria-hidden="true" />
-            {trip.visitCount} {t("visitCount", { count: trip.visitCount })}
-          </span>
-          {shouldShowStopCount === true && (
-            <span className={META_PILL_CLASS_NAME}>
-              <Signpost className="h-3.5 w-3.5" aria-hidden="true" />
-              {trip.stopCount} {t("stopCount", { count: trip.stopCount })}
-            </span>
-          )}
-          {shouldShowImageCount === true && (
-            <span className={META_PILL_CLASS_NAME}>
-              <Camera className="h-3.5 w-3.5" aria-hidden="true" />
-              {trip.imageCount} {t("imageCount", { count: trip.imageCount })}
-            </span>
-          )}
-          <CopyLinkButton
-            href={appRoutes.trip(trip.slug)}
-            label={t("copyTripPageLink")}
-            copiedLabel={t("tripPageLinkCopied")}
-            tooltipSide="top"
-            className={HERO_ICON_BUTTON_CLASS_NAME}
-            iconClassName="h-3.5 w-3.5"
+      <section
+        className={cn(PUBLIC_PANEL_CLASS_NAME, hasFeaturedImage && "relative overflow-hidden")}
+      >
+        {hasFeaturedImage && trip.featuredImage !== null && (
+          <AppImage
+            src={trip.featuredImage.fullUrl}
+            alt=""
+            fill
+            sizes="(max-width: 1024px) calc(100vw - 2rem), 1024px"
+            className="object-cover"
+            onError={() => setFailedFeaturedImageKey(trip.featuredImage?.fullUrl ?? null)}
+            priority
           />
-          {shouldShowEditTripLink === true && (
-            <EditIconLink
-              href={appRoutes.controlPanel.editTrip(trip.id)}
-              label={t("editTrip")}
+        )}
+        {hasFeaturedImage === true && (
+          <div
+            className="absolute inset-0 bg-gradient-to-r from-slate-950/55 via-slate-950/15 to-slate-950/10"
+            aria-hidden="true"
+          />
+        )}
+        <div
+          className={cn(
+            "relative",
+            hasFeaturedImage && "rounded-2xl bg-slate-950/38 p-4 text-white sm:p-6",
+          )}
+        >
+          <div className={PUBLIC_HERO_HEADING_STACK_CLASS_NAME}>
+            <div
+              className={cn(
+                PUBLIC_EYEBROW_BADGE_CLASS_NAME,
+                hasFeaturedImage &&
+                  "border-emerald-300/60 bg-slate-950/90 text-emerald-300 dark:border-emerald-300/60 dark:bg-slate-950/90 dark:text-emerald-300",
+              )}
+            >
+              <TentTree className="h-4 w-4" aria-hidden="true" />
+              <span>{t("eyebrow")}</span>
+            </div>
+            <h1 className={PUBLIC_HERO_TITLE_CLASS_NAME}>{trip.name}</h1>
+            {trip.dateRange !== null && (
+              <p
+                className={cn(
+                  "text-sm font-medium text-primary",
+                  hasFeaturedImage &&
+                    "w-fit rounded-full bg-slate-950/90 px-3 py-1 text-emerald-300 dark:bg-slate-950/90 dark:text-emerald-300",
+                )}
+              >
+                {formatFinnishDateRange(trip.dateRange.start, trip.dateRange.end)}
+              </p>
+            )}
+          </div>
+
+          <div className="mt-5 flex flex-wrap items-center gap-2">
+            <span className={META_PILL_CLASS_NAME}>
+              <CalendarRange className="h-3.5 w-3.5" aria-hidden="true" />
+              {trip.visitCount} {t("visitCount", { count: trip.visitCount })}
+            </span>
+            {shouldShowStopCount === true && (
+              <span className={META_PILL_CLASS_NAME}>
+                <Signpost className="h-3.5 w-3.5" aria-hidden="true" />
+                {trip.stopCount} {t("stopCount", { count: trip.stopCount })}
+              </span>
+            )}
+            {shouldShowImageCount === true && (
+              <span className={META_PILL_CLASS_NAME}>
+                <Camera className="h-3.5 w-3.5" aria-hidden="true" />
+                {trip.imageCount} {t("imageCount", { count: trip.imageCount })}
+              </span>
+            )}
+            <CopyLinkButton
+              href={appRoutes.trip(trip.slug)}
+              label={t("copyTripPageLink")}
+              copiedLabel={t("tripPageLinkCopied")}
+              tooltipSide="top"
               className={HERO_ICON_BUTTON_CLASS_NAME}
               iconClassName="h-3.5 w-3.5"
             />
-          )}
+            {shouldShowEditTripLink === true && (
+              <EditIconLink
+                href={appRoutes.controlPanel.editTrip(trip.id)}
+                label={t("editTrip")}
+                className={HERO_ICON_BUTTON_CLASS_NAME}
+                iconClassName="h-3.5 w-3.5"
+              />
+            )}
+          </div>
         </div>
       </section>
 

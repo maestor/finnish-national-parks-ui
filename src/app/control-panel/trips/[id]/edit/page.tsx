@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { TripFeaturedImageSection } from "@/components/trips/trip-featured-image-section";
 import { TripForm } from "@/components/trips/trip-form";
 import { TripVisitAssignments } from "@/components/trips/trip-visit-assignments";
 import { apiFetch } from "@/lib/api";
@@ -62,6 +63,7 @@ const EditTripPage = async ({ params, searchParams }: EditTripPageProps) => {
         </output>
       )}
       <TripForm tripToEdit={tripToEdit} />
+      <TripFeaturedImageSection slug={tripToEdit.slug} tripId={tripToEdit.id} />
       <TripVisitAssignments trip={tripToEdit} visits={visits} />
     </div>
   );

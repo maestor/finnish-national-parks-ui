@@ -72,6 +72,7 @@ vi.mock("@/components/visits/visit-image-gallery", () => ({
 }));
 
 const trip: PublicTripDetail = {
+  featuredImage: null,
   id: 7,
   name: "Kesaretki",
   slug: "kesaretki",

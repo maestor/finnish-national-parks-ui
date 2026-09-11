@@ -34,6 +34,20 @@ export type TripUpdateRequest = NonNullable<
   paths["/api/trips/{id}"]["patch"]["requestBody"]
 >["content"]["application/json"];
 
+export type TripImageReference = {
+  imageId: number;
+  source: "visit-image" | "trip-stop-image";
+};
+
+export type TripImageCandidate =
+  paths["/api/admin/trips/{id}/images"]["get"]["responses"][200]["content"]["application/json"]["images"][number];
+
+export type TripFeaturedImageResponse =
+  paths["/api/admin/trips/{id}/featured-image"]["get"]["responses"][200]["content"]["application/json"];
+
+export type TripImageCandidatesResponse =
+  paths["/api/admin/trips/{id}/images"]["get"]["responses"][200]["content"]["application/json"];
+
 export type TripStopCreateRequest = NonNullable<
   paths["/api/trips/{id}/stops"]["post"]["requestBody"]
 >["content"]["application/json"];

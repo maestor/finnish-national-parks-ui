@@ -1,5 +1,7 @@
 # Development Guide
 
+Trip editing includes a separate featured-image slot backed by admin proxy routes. It pages through attached visit and stop thumbnails, stores only a composite source reference, and preserves unsaved trip form text. Public trip detail receives nullable `featuredImage` and renders a contrast-safe hero with the existing fallback when absent or unavailable.
+
 ## Project Overview
 
 **Finnish National Parks UI** is a Next.js 16 App Router application that consumes a separate Hono backend API. It serves two audiences:
