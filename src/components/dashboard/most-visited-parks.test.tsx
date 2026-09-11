@@ -10,6 +10,9 @@ describe("MostVisitedParks", () => {
         emptyMessage="Ei käyntejä"
         visitCountLabel="käyntiä"
         backToStartLabel="Takaisin alkuun"
+        showAllAriaLabel="Näytä kaikki paikat kartalla"
+        showAllHref="/paikat"
+        showAllLabel="Näytä kaikki"
         parks={[
           { parkName: "Pallas", parkSlug: "pallas", visitCount: 4 },
           { parkName: "Nuuksio", parkSlug: "nuuksio", visitCount: 2 },
@@ -24,6 +27,10 @@ describe("MostVisitedParks", () => {
       "href",
       "#home-top",
     );
+    expect(screen.getByRole("link", { name: "Näytä kaikki paikat kartalla" })).toHaveAttribute(
+      "href",
+      "/paikat",
+    );
   });
 
   it("shows an empty state when there is no visit data", () => {
@@ -33,6 +40,9 @@ describe("MostVisitedParks", () => {
         emptyMessage="Ei käyntejä"
         visitCountLabel="käyntiä"
         backToStartLabel="Takaisin alkuun"
+        showAllAriaLabel="Näytä kaikki paikat kartalla"
+        showAllHref="/paikat"
+        showAllLabel="Näytä kaikki"
         parks={[]}
       />,
     );
@@ -47,6 +57,9 @@ describe("MostVisitedParks", () => {
         emptyMessage="Ei käyntejä"
         visitCountLabel="käyntiä"
         backToStartLabel="Takaisin alkuun"
+        showAllAriaLabel="Näytä kaikki paikat kartalla"
+        showAllHref="/paikat"
+        showAllLabel="Näytä kaikki"
         parks={[
           {
             parkName: "Kuusijärven luonto- ja virkistysalue",
@@ -72,6 +85,9 @@ describe("MostVisitedParks", () => {
         emptyMessage="Ei käyntejä"
         visitCountLabel="käyntiä"
         backToStartLabel="Takaisin alkuun"
+        showAllAriaLabel="Näytä kaikki paikat kartalla"
+        showAllHref="/paikat"
+        showAllLabel="Näytä kaikki"
         parks={[{ parkName: "Pallas", parkSlug: "pallas", visitCount: 4 }]}
       />,
     );

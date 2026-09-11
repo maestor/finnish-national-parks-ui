@@ -9,6 +9,9 @@ describe("LatestVisitEntries", () => {
         title="Uusimmat käyntikirjaukset"
         emptyMessage="Ei käyntikirjauksia"
         backToStartLabel="Takaisin alkuun"
+        showAllAriaLabel="Näytä kaikki käyntikirjaukset"
+        showAllHref="/kaynnit"
+        showAllLabel="Näytä kaikki"
         visits={[
           {
             id: 1,
@@ -32,6 +35,10 @@ describe("LatestVisitEntries", () => {
       "href",
       "#home-top",
     );
+    expect(screen.getByRole("link", { name: "Näytä kaikki käyntikirjaukset" })).toHaveAttribute(
+      "href",
+      "/kaynnit",
+    );
   });
 
   it("shows an empty state without entries", () => {
@@ -40,6 +47,9 @@ describe("LatestVisitEntries", () => {
         title="Uusimmat käyntikirjaukset"
         emptyMessage="Ei käyntikirjauksia"
         backToStartLabel="Takaisin alkuun"
+        showAllAriaLabel="Näytä kaikki käyntikirjaukset"
+        showAllHref="/kaynnit"
+        showAllLabel="Näytä kaikki"
         visits={[]}
       />,
     );
@@ -53,6 +63,9 @@ describe("LatestVisitEntries", () => {
         title="Uusimmat käyntikirjaukset"
         emptyMessage="Ei käyntikirjauksia"
         backToStartLabel="Takaisin alkuun"
+        showAllAriaLabel="Näytä kaikki käyntikirjaukset"
+        showAllHref="/kaynnit"
+        showAllLabel="Näytä kaikki"
         visits={[
           {
             parkName: "Pallas",

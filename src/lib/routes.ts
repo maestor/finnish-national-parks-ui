@@ -1,10 +1,12 @@
 const CONTROL_PANEL_ROOT = "/hallinta";
+const PUBLIC_TRIP_ROOT = "/retki";
 
 export const appRoutes = {
   home: "/",
   login: "/kirjaudu",
   parks: "/paikat",
   park: (slug: string) => `/paikka/${slug}`,
+  trips: "/retket",
   trip: (slug: string) => `/retki/${slug}`,
   visits: "/kaynnit",
   tripPlanner: "/reissusuunnittelu",
@@ -30,6 +32,7 @@ export const appRoutes = {
 export const legacyAppRedirects = [
   { source: "/login", destination: appRoutes.login, permanent: true },
   { source: "/parks", destination: appRoutes.parks, permanent: true },
+  { source: "/trips", destination: appRoutes.trips, permanent: true },
   { source: "/park/:slug", destination: "/paikka/:slug", permanent: true },
   { source: "/trip/:slug", destination: "/retki/:slug", permanent: true },
   { source: "/visits", destination: appRoutes.visits, permanent: true },
@@ -126,6 +129,10 @@ const normalizePathname = (pathname: string) => {
     return appRoutes.visits;
   }
 
+  if (pathname === "/trips") {
+    return appRoutes.trips;
+  }
+
   if (pathname === "/trip-planner") {
     return appRoutes.tripPlanner;
   }
@@ -214,6 +221,10 @@ export const appRoutePatterns = {
   isLoginPath: (path: string) => normalizePathname(path) === appRoutes.login,
   isParksPath: (path: string) => normalizePathname(path) === appRoutes.parks,
   isTripPlannerPath: (path: string) => normalizePathname(path) === appRoutes.tripPlanner,
+  isTripsPath: (path: string) => {
+    const normalizedPath = normalizePathname(path);
+    return normalizedPath === appRoutes.trips || normalizedPath.startsWith(`${PUBLIC_TRIP_ROOT}/`);
+  },
   isVisitsPath: (path: string) => normalizePathname(path) === appRoutes.visits,
   isDateRangeReviewSharePath: (path: string) =>
     /^\/ajanjaksokatsaus\/jako\/[^/]+$/.test(normalizePathname(path)),

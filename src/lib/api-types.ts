@@ -1454,6 +1454,79 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/trips/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    cursor?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Cursor-paginated public trip archive cards */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            nextCursor: string | null;
+                            total: number;
+                            trips: {
+                                /** Format: date-time */
+                                createdAt: string;
+                                dateRange: {
+                                    end: string;
+                                    start: string;
+                                } | null;
+                                descriptionExcerpt: string | null;
+                                featuredImage: {
+                                    height: number | null;
+                                    /** Format: uri */
+                                    url: string;
+                                    width: number | null;
+                                } | null;
+                                id: number;
+                                name: string;
+                                slug: string;
+                                stopCount: number;
+                                visitCount: number;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Invalid archive cursor or query */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/trips/{id}/images": {
         parameters: {
             query?: never;

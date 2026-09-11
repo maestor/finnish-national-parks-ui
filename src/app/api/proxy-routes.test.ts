@@ -35,6 +35,7 @@ import { POST as postTripStopImageUploadUrl } from "./trip-stops/[id]/images/upl
 import { DELETE as deleteTripStop, PATCH as patchTripStop } from "./trip-stops/[id]/route";
 import { DELETE as deleteTrip, GET as getTrip, PATCH as patchTrip } from "./trips/[id]/route";
 import { POST as postTripStop } from "./trips/[id]/stops/route";
+import { GET as getTripArchive } from "./trips/archive/route";
 import { GET as getTrips, POST as postTrip } from "./trips/route";
 import { DELETE as deleteVisitImage } from "./visits/[id]/images/[imageId]/route";
 import { POST as postVisitImageComplete } from "./visits/[id]/images/complete/route";
@@ -143,6 +144,14 @@ describe("api proxy routes", () => {
     await getTrips(request);
 
     expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/trips");
+  });
+
+  it("proxies trip archive reads with the browser query string", async () => {
+    const request = new Request("https://frontend.example/api/trips/archive?limit=12&cursor=next");
+
+    await getTripArchive(request);
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/trips/archive");
   });
 
   it("proxies trip creation", async () => {

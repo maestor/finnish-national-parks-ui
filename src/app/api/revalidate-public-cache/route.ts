@@ -57,6 +57,7 @@ export const POST = async (request: Request) => {
   revalidateTag(ADMIN_PARK_VISIBILITY_TAG, "max");
   revalidatePath(appRoutes.home, "page");
   revalidatePath(appRoutes.parks, "page");
+  revalidatePath(appRoutes.trips, "page");
   revalidatePath(appRoutes.visits, "page");
   revalidatePath(appRoutes.controlPanel.parks, "page");
 

@@ -1,7 +1,7 @@
 import { Trophy } from "lucide-react";
 import Link from "next/link";
 import { DashboardSectionCard } from "@/components/dashboard/dashboard-section-card";
-import { BackToStartLink } from "@/components/home/back-to-start-link";
+import { HomePanelFooter } from "@/components/home/home-panel-footer";
 import { appRoutes } from "@/lib/routes";
 
 interface MostVisitedPark {
@@ -15,6 +15,9 @@ interface MostVisitedParksProps {
   emptyMessage: string;
   visitCountLabel: string;
   backToStartLabel: string;
+  showAllAriaLabel: string;
+  showAllHref: string;
+  showAllLabel: string;
   parks: MostVisitedPark[];
 }
 
@@ -23,6 +26,9 @@ export const MostVisitedParks = ({
   emptyMessage,
   visitCountLabel,
   backToStartLabel,
+  showAllAriaLabel,
+  showAllHref,
+  showAllLabel,
   parks,
 }: MostVisitedParksProps) => {
   return (
@@ -33,7 +39,14 @@ export const MostVisitedParks = ({
       iconClassName="text-amber-700 dark:text-amber-300"
       iconSurfaceClassName="bg-amber-500/12 dark:bg-amber-400/10"
       className="h-full"
-      footer={<BackToStartLink label={backToStartLabel} />}
+      footer={
+        <HomePanelFooter
+          backToStartLabel={backToStartLabel}
+          showAllAriaLabel={showAllAriaLabel}
+          showAllHref={showAllHref}
+          showAllLabel={showAllLabel}
+        />
+      }
     >
       {parks.length === 0 ? (
         <p className="rounded-[1.45rem] border border-dashed border-white/45 bg-white/48 px-4 py-8 text-sm text-muted-foreground backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/42">

@@ -8,7 +8,7 @@ This is a Finnish-language, PWA-capable web application built with Next.js 16 Ap
 
 The app serves two audiences:
 
-- **Public view** — Visit-focused landing page at `/`, interactive map at `/paikat` with park filters, a visited/unvisited toggle, and current-location targeting, visit browsing at `/kaynnit` as a timeline, visit map, or visited national parks summary, persistent park search, park detail pages under `/paikka/[slug]`, route planning at `/reissusuunnittelu`, and public visit history
+- **Public view** — Visit-focused landing page at `/`, interactive map at `/paikat` with park filters, a visited/unvisited toggle, and current-location targeting, visit browsing at `/kaynnit` as a timeline, visit map, or visited national parks summary, persistent park search, the cursor-paginated trip archive at `/retket` with public trip detail pages under `/retki/[slug]`, park detail pages under `/paikka/[slug]`, route planning at `/reissusuunnittelu`, and public visit history
 - **Admin view** — Adding and editing visits, including excluding individual trip visits from route calculation, editing park details, hiding parks from the catalog via `/hallinta`, and generating both year reviews and shorter named date-range review share pages for moments like an active month or summer vacation
 
 ## Tech Stack
@@ -35,7 +35,7 @@ The app serves two audiences:
 src/
 ├── app/                        # Next.js App Router
 │   ├── (user)/                 # Public pages; implementations live in English-named
-│   │   │                       # dirs (parks/, park/[slug]/, visits/, trip-planner/),
+│   │   │                       # dirs (parks/, park/[slug]/, visits/, trips/, trip-planner/),
 │   │   └── paikat|kaynnit|…    # canonical Finnish routes are one-line re-export shims
 │   ├── control-panel/          # Admin page implementations (English-named)
 │   ├── hallinta/               # Canonical Finnish admin routes (shims of control-panel/)
@@ -56,7 +56,7 @@ src/
 └── test/                       # Test setup & helpers
 ```
 
-Canonical URLs are Finnish-only (`/paikat`, `/kaynnit`, `/paikka/[slug]`, `/reissusuunnittelu`, `/hallinta`, `/kirjaudu`, `/hallinta/ajanjaksokatsaus`, `/hallinta/vuosikatsaus`, `/ajanjaksokatsaus/jako/[shareId]`, `/vuosikatsaus/jako/[shareId]`). Legacy English URLs redirect to the Finnish canonical routes via `legacyAppRedirects` in `src/lib/routes.ts`.
+Canonical URLs are Finnish-only (`/paikat`, `/kaynnit`, `/retket`, `/retki/[slug]`, `/paikka/[slug]`, `/reissusuunnittelu`, `/hallinta`, `/kirjaudu`, `/hallinta/ajanjaksokatsaus`, `/hallinta/vuosikatsaus`, `/ajanjaksokatsaus/jako/[shareId]`, `/vuosikatsaus/jako/[shareId]`). Legacy English URLs redirect to the Finnish canonical routes via `legacyAppRedirects` in `src/lib/routes.ts`.
 
 ## Getting Started
 
