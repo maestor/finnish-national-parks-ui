@@ -1,5 +1,7 @@
 # Testing Guide
 
+Featured-image UI tests should cover lazy candidate loading, selection/cancel/save/clear, pagination, and accessible dialog controls. Browser verification covers the admin slot and public hero at desktop and 354px mobile in light and dark themes.
+
 This project follows **behavior-first TDD**: write the realistic usage story first, turn it into a failing test, implement the smallest change to pass, then refactor.
 
 Read the `intelligence-testing` skill (`.agents/skills/intelligence-testing/`) for the full philosophy. This document applies it to this codebase.

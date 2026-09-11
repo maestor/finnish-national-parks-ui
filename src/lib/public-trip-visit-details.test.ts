@@ -10,6 +10,7 @@ import {
 import type { PublicTripDetail } from "./trips";
 
 const trip: PublicTripDetail = {
+  featuredImage: null,
   id: 7,
   name: "Kesaretki",
   slug: "kesaretki",

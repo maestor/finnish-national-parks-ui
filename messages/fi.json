@@ -462,6 +462,26 @@
         "createdNotice": "Retki tallennettiin. Voit jatkaa sen muokkaamista täällä.",
         "viewTripPage": "Siirry retken sivulle"
       },
+      "featuredImage": {
+        "title": "Pääkuva",
+        "description": "Valitse kuva retken käynneistä tai pysähdyksistä. Kuvaa käytetään retkisivulla ja retken katsausdioissa.",
+        "empty": "Ei pääkuvaa",
+        "choose": "Valitse pääkuva",
+        "change": "Vaihda pääkuva",
+        "remove": "Poista pääkuva",
+        "picker": {
+          "title": "Valitse retken pääkuva",
+          "description": "Valitse yksi retken käynneistä tai pysähdyksistä.",
+          "close": "Sulje kuvavalitsin",
+          "cancel": "Peruuta",
+          "save": "Tallenna pääkuva",
+          "selected": "Valittu",
+          "saving": "Tallennetaan...",
+          "loadMore": "Näytä lisää",
+          "empty": "Retken käynneillä tai pysähdyksillä ei ole vielä kuvia.",
+          "error": "Kuvien lataaminen epäonnistui. Yritä uudelleen."
+        }
+      },
       "assignments": {
         "title": "Muokkaa retken reittiä",
         "description": "Aloituspiste tulee retken alkuun ja loppuun. Sen väliin voit järjestää puistokäynnit ja muut pysähdykset samaan etenemisjärjestykseen.",
