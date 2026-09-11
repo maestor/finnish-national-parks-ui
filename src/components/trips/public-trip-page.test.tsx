@@ -421,6 +421,7 @@ describe("PublicTripPage", () => {
     render(<PublicTripPage trip={trip} />);
 
     expect(screen.getByRole("heading", { name: "Kesaretki" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "tripPage.archiveLink" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "tripPage.descriptionTitle" })).toBeInTheDocument();
     expect(screen.getByText("Kesäinen kierros pohjoiseen.")).toHaveClass("max-w-none!");
     expect(screen.getByText("2 tripPage.visitCount")).toBeInTheDocument();

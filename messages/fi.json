@@ -10,6 +10,7 @@
       "home": "Etusivu",
       "map": "Paikat",
       "visits": "Käynnit",
+      "trips": "Retket",
       "tripPlanner": "Reitit",
       "controlPanel": "Hallinta",
       "filters": "Suodata karttaa",
@@ -41,6 +42,7 @@
     "description": "Vuokko ja Kalle tutustuivat toisiinsa vuonna 2017 ja yhteiseen matkaan on kuulunut aina jaettu intohimo luonnossa liikkumiseen.\n\nKäytyjä kansallispuistoja on keräilty jo tovi sähkökaapin oveen kiinnitettävien magneettien muodossa ja kaikenlaisilla muillakin metsäreiteillä on vierailtu aina mahdollisuuksien mukaan.\n\nKallen pitkä tausta ohjelmointialalla ja tekoälyavusteisen tekemisen harjoittelu synnytti Reissuvihkon: Nyt paikkakäynnit muistoineen ovat näppärästi dokumentoitu yhdelle sivustolle.\n\nTervetuloa seuraamaan meidän matkaa luonnon äärellä ja hakemaan vaikka inspiraatiota omiin retkiin!",
     "openMap": "Siirry kartalle",
     "backToStart": "Takaisin alkuun",
+    "showAll": "Näytä kaikki",
     "intro": {
       "showInfo": "Mistä on kyse?"
     },
@@ -59,19 +61,23 @@
     "mostVisitedParks": {
       "title": "Eniten käydyt paikat",
       "visitCount": "käyntiä",
-      "empty": "Ei vielä käyntitietoja."
+      "empty": "Ei vielä käyntitietoja.",
+      "showAllLabel": "Näytä kaikki paikat kartalla"
     },
     "recentVisits": {
       "title": "Viimeisimmät käynnit",
-      "empty": "Ei vielä kirjattuja käyntejä."
+      "empty": "Ei vielä kirjattuja käyntejä.",
+      "showAllLabel": "Näytä kaikki käynnit"
     },
     "latestEntries": {
       "title": "Uusimmat käyntikirjaukset",
-      "empty": "Ei vielä käyntikirjauksia."
+      "empty": "Ei vielä käyntikirjauksia.",
+      "showAllLabel": "Näytä kaikki käyntikirjaukset"
     },
     "latestTrips": {
       "title": "Viimeisimmät retket",
-      "empty": "Ei vielä retkiä."
+      "empty": "Ei vielä retkiä.",
+      "showAllLabel": "Näytä kaikki retket"
     },
     "social": {
       "sectionLabel": "Projektin linkit",
@@ -251,6 +257,27 @@
     "excludedFromRoute": "Ei mukana ajoreitissä",
     "routeDistanceLabel": "Reitin pituus",
     "routeDistanceValue": "{kilometers} km"
+  },
+  "tripsArchive": {
+    "eyebrow": "Retkikertomukset",
+    "title": "Retket",
+    "description": "Joskus päätämme lähteä retkelle sisältäen useita käyntejä ja pysähdyksiä, niistä lisää täällä.",
+    "listLabel": "Retkien luettelo",
+    "loading": "Ladataan retkiä...",
+    "loadingMore": "Ladataan lisää retkiä…",
+    "loadFailed": "Retkien lataaminen epäonnistui.",
+    "loadMoreFailed": "Lisää retkiä ei voitu ladata.",
+    "retry": "Yritä uudelleen",
+    "loadMore": "Näytä lisää",
+    "allShown": "Kaikki retket on näytetty.",
+    "empty": "Ei vielä retkiä.",
+    "missingDate": "Ajankohta puuttuu",
+    "visitCount": "{count, plural, one {käynti} other {käyntiä}}",
+    "stopCount": "{count, plural, one {pysähdys} other {pysähdystä}}",
+    "readMore": "Lue lisää",
+    "readMoreLabel": "Lue lisää retkestä {name}",
+    "loadedCount": "Näytetään {count, plural, one {# retki} other {# retkeä}} / {total, plural, one {# retki} other {# retkeä}}.",
+    "appendedCount": "Ladattu {count, plural, one {# uusi retki} other {# uutta retkeä}}."
   },
   "tripPlanner": {
     "eyebrow": "Matkan varrelta",

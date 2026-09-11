@@ -9,6 +9,9 @@ describe("RecentVisits", () => {
         title="Viimeisimmät käynnit"
         emptyMessage="Ei käyntejä"
         backToStartLabel="Takaisin alkuun"
+        showAllAriaLabel="Näytä kaikki käynnit"
+        showAllHref="/kaynnit"
+        showAllLabel="Näytä kaikki"
         visits={[
           { id: 1, parkName: "Pallas", parkSlug: "pallas", visitedOn: "2024-06-15T22:30:00Z" },
           { id: 2, parkName: "Nuuksio", parkSlug: "nuuksio", visitedOn: "2024-07-20" },
@@ -35,6 +38,10 @@ describe("RecentVisits", () => {
       "href",
       "#home-top",
     );
+    expect(screen.getByRole("link", { name: "Näytä kaikki käynnit" })).toHaveAttribute(
+      "href",
+      "/kaynnit",
+    );
   });
 
   it("hides edit links when visit management is not available", () => {
@@ -43,6 +50,9 @@ describe("RecentVisits", () => {
         title="Viimeisimmät käynnit"
         emptyMessage="Ei käyntejä"
         backToStartLabel="Takaisin alkuun"
+        showAllAriaLabel="Näytä kaikki käynnit"
+        showAllHref="/kaynnit"
+        showAllLabel="Näytä kaikki"
         visits={[{ id: 1, parkName: "Pallas", parkSlug: "pallas", visitedOn: "2024-06-15" }]}
       />,
     );
@@ -56,6 +66,9 @@ describe("RecentVisits", () => {
         title="Viimeisimmät käynnit"
         emptyMessage="Ei käyntejä"
         backToStartLabel="Takaisin alkuun"
+        showAllAriaLabel="Näytä kaikki käynnit"
+        showAllHref="/kaynnit"
+        showAllLabel="Näytä kaikki"
         visits={[
           { parkName: "Pallas", parkSlug: "pallas", visitedOn: "2024-06-15" },
           { parkName: "Nuuksio", parkSlug: "nuuksio", visitedOn: "2024-07-20" },
@@ -78,6 +91,9 @@ describe("RecentVisits", () => {
         title="Viimeisimmät käynnit"
         emptyMessage="Ei käyntejä"
         backToStartLabel="Takaisin alkuun"
+        showAllAriaLabel="Näytä kaikki käynnit"
+        showAllHref="/kaynnit"
+        showAllLabel="Näytä kaikki"
         visits={[]}
       />,
     );

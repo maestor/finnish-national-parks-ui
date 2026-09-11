@@ -1,6 +1,7 @@
 # Testing Guide
 
 Featured-image UI tests should cover lazy candidate loading, selection/cancel/save/clear, pagination, and accessible dialog controls. Browser verification covers the admin slot and public hero at desktop and 354px mobile in light and dark themes.
+Trip archive UI tests should cover the server-rendered first batch, cursor append/deduplication, initial and later-page retry states, empty/end states, accessible card links, and the no-store same-origin proxy. Browser verification should inspect `/retket` at desktop and 354px mobile in both themes when an authorized local runtime is available.
 
 This project follows **behavior-first TDD**: write the realistic usage story first, turn it into a failing test, implement the smallest change to pass, then refactor.
 

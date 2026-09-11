@@ -72,6 +72,11 @@ const HomePage = async () => {
         latestTripsTitle={t("latestTrips.title")}
         latestTripsEmptyMessage={t("latestTrips.empty")}
         backToStartLabel={t("backToStart")}
+        showAllLabel={t("showAll")}
+        recentVisitsShowAllAriaLabel={t("recentVisits.showAllLabel")}
+        latestEntriesShowAllAriaLabel={t("latestEntries.showAllLabel")}
+        mostVisitedParksShowAllAriaLabel={t("mostVisitedParks.showAllLabel")}
+        latestTripsShowAllAriaLabel={t("latestTrips.showAllLabel")}
         fallbackRecentVisits={recentVisits}
         fallbackLatestVisitEntries={latestVisitEntries}
         fallbackMostVisitedParks={mostVisitedParks}

@@ -72,6 +72,11 @@ describe("HomeSummaryPanels", () => {
         latestTripsTitle="Latest trips"
         latestTripsEmptyMessage="None"
         backToStartLabel="Takaisin alkuun"
+        showAllLabel="Näytä kaikki"
+        recentVisitsShowAllAriaLabel="Näytä kaikki käynnit"
+        latestEntriesShowAllAriaLabel="Näytä kaikki käyntikirjaukset"
+        mostVisitedParksShowAllAriaLabel="Näytä kaikki paikat kartalla"
+        latestTripsShowAllAriaLabel="Näytä kaikki retket"
         fallbackRecentVisits={[
           {
             parkName: "Pallas-Yllästunturi",

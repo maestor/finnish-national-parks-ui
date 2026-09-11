@@ -1,6 +1,6 @@
 # Development Guide
 
-Trip editing includes a separate featured-image slot backed by admin proxy routes. It pages through attached visit and stop thumbnails, stores only a composite source reference, and preserves unsaved trip form text. Public trip detail receives nullable `featuredImage` and renders a contrast-safe hero with the existing fallback when absent or unavailable.
+Trip editing includes a separate featured-image slot backed by admin proxy routes. It pages through attached visit and stop thumbnails, stores only a composite source reference, and preserves unsaved trip form text. Public trip detail receives nullable `featuredImage` and renders a contrast-safe hero with the existing fallback when absent or unavailable. The public trip archive at `/retket` reads a private, no-store cursor-paginated card endpoint server-side for its first batch and appends later batches through the same-origin proxy.
 
 ## Project Overview
 
@@ -111,6 +111,7 @@ src/app/
     page.tsx        # Public landing page
     paikat/page.tsx # Canonical public map route
     kaynnit/page.tsx # Canonical public timeline route
+    retket/page.tsx  # Canonical public trip archive route
     paikka/[slug]/  # Canonical public park detail pages
     reissusuunnittelu/page.tsx # Canonical public trip-planner route
     ajanjaksokatsaus/jako/[shareId]/ # Canonical public date-range review share route
@@ -130,6 +131,8 @@ Canonical end-user URLs are Finnish-only:
 
 - `/paikat`
 - `/kaynnit`
+- `/retket`
+- `/retki/[slug]`
 - `/paikka/[slug]`
 - `/reissusuunnittelu`
 - `/ajanjaksokatsaus/jako/[shareId]` (tokenized named date-range review share pages; intentionally not linked from public navigation)
@@ -230,10 +233,12 @@ Public API terminology and access caveat:
 - The public home page (`/`) reads `GET /api/home-summary`.
 - The public map page (`/paikat`) reads `GET /api/map-summary`.
 - The public visits page (`/kaynnit`) reads `GET /api/visits-timeline`; its optional map view (`?view=map`) additionally reads `GET /api/map-summary` for marker coordinates, and its visited national parks view (`?view=parks`) joins the same map summary to the visit timeline so park logos and the current total national park count stay available server-side.
+- The public trip archive (`/retket`) reads `GET /api/trips/archive` with an initial batch of 12 cards and appends later cursor batches through the same-origin `/api/trips/archive` proxy. Archive responses are private/no-store because selected image URLs may be signed; the client never stores those URLs in Back navigation state and does not prefetch trip details.
 - Public park detail pages still read `GET /api/parks/{slug}` and `GET /api/parks/{slug}/visits`, but those reads now use `cache: "no-store"` because the payload still contains expiring presigned asset URLs (for example visit images and brochure PDFs). Hidden parks still fall back to an authenticated request.
 - Public trip detail pages also use `cache: "no-store"` for the same reason until the backend serves stable public asset URLs for trip and visit media. Their visit image galleries now load on demand when a visitor expands a visit instead of prefetching every deferred trip image on initial page render.
 - Admin-only quick links on public pages are resolved client-side with `useAuth`, so the page HTML can stay cache-friendly while signed-in users still see edit and add-visit affordances after hydration.
 - Visit and public park mutations call the local Next.js route `POST /api/revalidate-public-cache` so the frontend can invalidate cached public pages immediately after a successful write.
+- Trip mutations also revalidate the archive route so new, renamed, deleted, or reassigned trips appear in the next archive request.
 
 ### MapLibre Worker (v6)
 

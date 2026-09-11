@@ -21,6 +21,8 @@ import {
   PUBLIC_HERO_DESCRIPTION_CLASS_NAME,
   PUBLIC_HERO_HEADING_STACK_CLASS_NAME,
   PUBLIC_HERO_TITLE_CLASS_NAME,
+  PUBLIC_META_BADGE_CLASS_NAME,
+  PUBLIC_META_DATE_CLASS_NAME,
   PUBLIC_PAGE_SHELL_CLASS_NAME,
   PUBLIC_PANEL_CLASS_NAME,
 } from "@/components/layout/public-page-styles";
@@ -56,8 +58,6 @@ interface ItineraryItemTarget {
   kind: "stop" | "visit";
 }
 
-const META_PILL_CLASS_NAME =
-  "inline-flex items-center gap-1.5 rounded-full border border-slate-300/75 bg-white/78 px-3 py-1 text-xs font-medium text-foreground/80 shadow-[0_1px_2px_rgba(148,163,184,0.12),inset_0_1px_0_rgba(255,255,255,0.48)] dark:border-white/10 dark:bg-slate-950/56 dark:text-sky-100/72 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
 const ROUTE_BADGE_CLASS_NAME =
   "inline-flex items-center gap-1.5 rounded-full border border-emerald-200/70 bg-[linear-gradient(145deg,rgba(22,101,52,0.12),rgba(16,185,129,0.18))] px-2.5 py-1 text-sm leading-none font-semibold text-emerald-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-emerald-300/15 dark:bg-[linear-gradient(145deg,rgba(22,101,52,0.24),rgba(16,185,129,0.16))] dark:text-emerald-200 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]";
 const IMAGE_BADGE_CLASS_NAME =
@@ -315,7 +315,7 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
             {trip.dateRange !== null && (
               <p
                 className={cn(
-                  "text-sm font-medium text-primary",
+                  PUBLIC_META_DATE_CLASS_NAME,
                   hasFeaturedImage &&
                     "w-fit rounded-full bg-slate-950/90 px-3 py-1 text-emerald-300 dark:bg-slate-950/90 dark:text-emerald-300",
                 )}
@@ -326,18 +326,18 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
           </div>
 
           <div className="mt-5 flex flex-wrap items-center gap-2">
-            <span className={META_PILL_CLASS_NAME}>
+            <span className={PUBLIC_META_BADGE_CLASS_NAME}>
               <CalendarRange className="h-3.5 w-3.5" aria-hidden="true" />
               {trip.visitCount} {t("visitCount", { count: trip.visitCount })}
             </span>
             {shouldShowStopCount === true && (
-              <span className={META_PILL_CLASS_NAME}>
+              <span className={PUBLIC_META_BADGE_CLASS_NAME}>
                 <Signpost className="h-3.5 w-3.5" aria-hidden="true" />
                 {trip.stopCount} {t("stopCount", { count: trip.stopCount })}
               </span>
             )}
             {shouldShowImageCount === true && (
-              <span className={META_PILL_CLASS_NAME}>
+              <span className={PUBLIC_META_BADGE_CLASS_NAME}>
                 <Camera className="h-3.5 w-3.5" aria-hidden="true" />
                 {trip.imageCount} {t("imageCount", { count: trip.imageCount })}
               </span>
@@ -420,7 +420,7 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
           )}
           {shouldShowRouteContent === true && (
             <div className="mt-4 flex flex-wrap gap-2">
-              <span className={META_PILL_CLASS_NAME}>
+              <span className={PUBLIC_META_BADGE_CLASS_NAME}>
                 <Route className="h-3.5 w-3.5" aria-hidden="true" />
                 <span>{t("routeDistanceLabel")}</span>
                 {t("routeDistanceValue", {

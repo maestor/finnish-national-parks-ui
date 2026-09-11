@@ -9,6 +9,9 @@ describe("LatestTrips", () => {
         title="Viimeisimmät retket"
         emptyMessage="Ei retkiä"
         backToStartLabel="Takaisin alkuun"
+        showAllAriaLabel="Näytä kaikki retket"
+        showAllHref="/retket"
+        showAllLabel="Näytä kaikki"
         trips={[
           {
             tripName: "Keski-Suomen kesaretki",
@@ -29,6 +32,10 @@ describe("LatestTrips", () => {
       "href",
       "#home-top",
     );
+    expect(screen.getByRole("link", { name: "Näytä kaikki retket" })).toHaveAttribute(
+      "href",
+      "/retket",
+    );
   });
 
   it("shows an empty state when there are no trips", () => {
@@ -37,6 +44,9 @@ describe("LatestTrips", () => {
         title="Viimeisimmät retket"
         emptyMessage="Ei retkiä"
         backToStartLabel="Takaisin alkuun"
+        showAllAriaLabel="Näytä kaikki retket"
+        showAllHref="/retket"
+        showAllLabel="Näytä kaikki"
         trips={[]}
       />,
     );
@@ -50,6 +60,9 @@ describe("LatestTrips", () => {
         title="Viimeisimmät retket"
         emptyMessage="Ei retkiä"
         backToStartLabel="Takaisin alkuun"
+        showAllAriaLabel="Näytä kaikki retket"
+        showAllHref="/retket"
+        showAllLabel="Näytä kaikki"
         trips={[
           {
             tripName: "Lapin ruska",

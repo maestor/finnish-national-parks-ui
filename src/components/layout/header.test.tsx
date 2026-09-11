@@ -247,6 +247,29 @@ describe("Header", () => {
     );
   });
 
+  it("places the trip archive between visits and the planner and marks detail pages as location", () => {
+    pathnameState.value = "/retki/kesaretki";
+
+    render(<Header />);
+
+    const navigationLinks = screen
+      .getAllByRole("link")
+      .filter((link) =>
+        ["layout.nav.visits", "layout.nav.trips", "layout.nav.tripPlanner"].includes(
+          link.textContent ?? "",
+        ),
+      );
+    expect(navigationLinks.map((link) => link.textContent)).toEqual([
+      "layout.nav.visits",
+      "layout.nav.trips",
+      "layout.nav.tripPlanner",
+    ]);
+    expect(screen.getByRole("link", { name: "layout.nav.trips" })).toHaveAttribute(
+      "aria-current",
+      "location",
+    );
+  });
+
   it("marks the trip planner link as current on the trip planner route", () => {
     pathnameState.value = "/trip-planner";
 

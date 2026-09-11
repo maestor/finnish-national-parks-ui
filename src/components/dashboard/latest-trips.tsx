@@ -1,7 +1,7 @@
 import { Route } from "lucide-react";
 import Link from "next/link";
 import { DashboardSectionCard } from "@/components/dashboard/dashboard-section-card";
-import { BackToStartLink } from "@/components/home/back-to-start-link";
+import { HomePanelFooter } from "@/components/home/home-panel-footer";
 import { formatOptionalFinnishDate } from "@/lib/fi-date";
 import type { HomeLatestTripItem } from "@/lib/frontend-summaries";
 import { appRoutes } from "@/lib/routes";
@@ -11,9 +11,20 @@ interface LatestTripsProps {
   emptyMessage: string;
   trips: HomeLatestTripItem[];
   backToStartLabel: string;
+  showAllAriaLabel: string;
+  showAllHref: string;
+  showAllLabel: string;
 }
 
-export const LatestTrips = ({ title, emptyMessage, trips, backToStartLabel }: LatestTripsProps) => {
+export const LatestTrips = ({
+  title,
+  emptyMessage,
+  trips,
+  backToStartLabel,
+  showAllAriaLabel,
+  showAllHref,
+  showAllLabel,
+}: LatestTripsProps) => {
   return (
     <DashboardSectionCard
       title={title}
@@ -22,7 +33,14 @@ export const LatestTrips = ({ title, emptyMessage, trips, backToStartLabel }: La
       iconClassName="text-violet-700 dark:text-violet-300"
       iconSurfaceClassName="bg-violet-500/12 dark:bg-violet-400/10"
       className="h-full"
-      footer={<BackToStartLink label={backToStartLabel} />}
+      footer={
+        <HomePanelFooter
+          backToStartLabel={backToStartLabel}
+          showAllAriaLabel={showAllAriaLabel}
+          showAllHref={showAllHref}
+          showAllLabel={showAllLabel}
+        />
+      }
     >
       {trips.length === 0 ? (
         <p className="rounded-[1.45rem] border border-dashed border-white/45 bg-white/48 px-4 py-8 text-sm text-muted-foreground backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/42">

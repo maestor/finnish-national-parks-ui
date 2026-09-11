@@ -1,6 +1,17 @@
 "use client";
 
-import { Footprints, House, LogIn, LogOut, MapPin, Menu, Route, Settings, X } from "lucide-react";
+import {
+  Footprints,
+  House,
+  LogIn,
+  LogOut,
+  MapPin,
+  Menu,
+  Route,
+  Settings,
+  TentTree,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -29,6 +40,13 @@ const HEADER_SCROLL_DELTA_THRESHOLD_PX = 12;
 const PAGE_STICKY_NAV_TOP_VISIBLE = "3.5rem";
 const PAGE_STICKY_NAV_TOP_HIDDEN = "0rem";
 
+interface DesktopNavItem {
+  ariaCurrent?: "page" | "location";
+  href: string;
+  isCurrent: boolean;
+  label: string;
+}
+
 export const Header = () => {
   const t = useTranslations("layout");
   const auth = useAuth();
@@ -36,6 +54,7 @@ export const Header = () => {
   const normalizedPathname = normalizeAppPath(pathname);
   const isControlPanel = appRoutePatterns.isControlPanelPath(pathname);
   const isPublicVisitsPage = normalizedPathname === appRoutes.visits;
+  const isPublicTripsPath = appRoutePatterns.isTripsPath(pathname);
   const isDateRangeReviewSharePage = appRoutePatterns.isDateRangeReviewSharePath(pathname);
   const isYearReviewSharePage = appRoutePatterns.isYearReviewSharePath(pathname);
   const isImmersiveSharePage = isDateRangeReviewSharePage || isYearReviewSharePage;
@@ -168,22 +187,36 @@ export const Header = () => {
     };
   }, [isHeaderVisible, isImmersiveSharePage]);
 
-  const desktopNavItems = useMemo(
+  const desktopNavItems = useMemo<DesktopNavItem[]>(
     () => [
       {
         href: appRoutes.parks,
         label: t("nav.map"),
         isCurrent: normalizedPathname === appRoutes.parks,
+        ariaCurrent: normalizedPathname === appRoutes.parks ? "page" : undefined,
       },
       {
         href: appRoutes.visits,
         label: t("nav.visits"),
         isCurrent: isPublicVisitsPage,
+        ariaCurrent: isPublicVisitsPage ? "page" : undefined,
+      },
+      {
+        href: appRoutes.trips,
+        label: t("nav.trips"),
+        isCurrent: isPublicTripsPath,
+        ariaCurrent:
+          normalizedPathname === appRoutes.trips
+            ? "page"
+            : isPublicTripsPath
+              ? "location"
+              : undefined,
       },
       {
         href: appRoutes.tripPlanner,
         label: t("nav.tripPlanner"),
         isCurrent: normalizedPathname === appRoutes.tripPlanner,
+        ariaCurrent: normalizedPathname === appRoutes.tripPlanner ? "page" : undefined,
       },
       ...(auth.isAuthenticated
         ? [
@@ -191,11 +224,19 @@ export const Header = () => {
               href: appRoutes.controlPanel.root,
               label: t("nav.controlPanel"),
               isCurrent: isControlPanel,
+              ariaCurrent: isControlPanel ? ("page" as const) : undefined,
             },
           ]
         : []),
     ],
-    [auth.isAuthenticated, isControlPanel, isPublicVisitsPage, normalizedPathname, t],
+    [
+      auth.isAuthenticated,
+      isControlPanel,
+      isPublicTripsPath,
+      isPublicVisitsPage,
+      normalizedPathname,
+      t,
+    ],
   );
 
   if (isImmersiveSharePage) {
@@ -276,6 +317,15 @@ export const Header = () => {
                   >
                     <Footprints className="h-4 w-4 shrink-0" aria-hidden="true" />
                     <span>{t("nav.visits")}</span>
+                  </Link>
+                  <Link
+                    href={appRoutes.trips}
+                    prefetch={false}
+                    className={MOBILE_SHEET_ITEM_CLASS}
+                    onClick={closeMobileMenu}
+                  >
+                    <TentTree className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    <span>{t("nav.trips")}</span>
                   </Link>
                   <Link
                     href={appRoutes.tripPlanner}
@@ -370,7 +420,7 @@ export const Header = () => {
                     ? false
                     : undefined
                 }
-                aria-current={item.isCurrent ? "page" : undefined}
+                aria-current={item.ariaCurrent}
                 className={cn(
                   DESKTOP_NAV_LINK_CLASS,
                   item.isCurrent && DESKTOP_ACTIVE_NAV_LINK_CLASS,

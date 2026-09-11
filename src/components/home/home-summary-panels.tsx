@@ -8,6 +8,7 @@ import type {
   HomeMostVisitedPark,
   HomeRecentVisitItem,
 } from "@/lib/frontend-summaries";
+import { appRoutes } from "@/lib/routes";
 
 interface HomeSummaryPanelsProps {
   recentVisitsTitle: string;
@@ -20,6 +21,11 @@ interface HomeSummaryPanelsProps {
   latestTripsTitle: string;
   latestTripsEmptyMessage: string;
   backToStartLabel: string;
+  showAllLabel: string;
+  recentVisitsShowAllAriaLabel: string;
+  latestEntriesShowAllAriaLabel: string;
+  mostVisitedParksShowAllAriaLabel: string;
+  latestTripsShowAllAriaLabel: string;
   fallbackRecentVisits: HomeRecentVisitItem[];
   fallbackLatestVisitEntries: HomeLatestVisitEntryItem[];
   fallbackMostVisitedParks: HomeMostVisitedPark[];
@@ -37,6 +43,11 @@ export const HomeSummaryPanels = ({
   latestTripsTitle,
   latestTripsEmptyMessage,
   backToStartLabel,
+  showAllLabel,
+  recentVisitsShowAllAriaLabel,
+  latestEntriesShowAllAriaLabel,
+  mostVisitedParksShowAllAriaLabel,
+  latestTripsShowAllAriaLabel,
   fallbackRecentVisits,
   fallbackLatestVisitEntries,
   fallbackMostVisitedParks,
@@ -45,6 +56,9 @@ export const HomeSummaryPanels = ({
   <div className="grid gap-6 lg:grid-cols-2">
     <RecentVisits
       backToStartLabel={backToStartLabel}
+      showAllAriaLabel={recentVisitsShowAllAriaLabel}
+      showAllHref={appRoutes.visits}
+      showAllLabel={showAllLabel}
       title={recentVisitsTitle}
       emptyMessage={recentVisitsEmptyMessage}
       visits={fallbackRecentVisits}
@@ -53,10 +67,16 @@ export const HomeSummaryPanels = ({
       title={latestTripsTitle}
       emptyMessage={latestTripsEmptyMessage}
       backToStartLabel={backToStartLabel}
+      showAllAriaLabel={latestTripsShowAllAriaLabel}
+      showAllHref={appRoutes.trips}
+      showAllLabel={showAllLabel}
       trips={fallbackLatestTrips}
     />
     <LatestVisitEntries
       backToStartLabel={backToStartLabel}
+      showAllAriaLabel={latestEntriesShowAllAriaLabel}
+      showAllHref={appRoutes.visits}
+      showAllLabel={showAllLabel}
       title={latestEntriesTitle}
       emptyMessage={latestEntriesEmptyMessage}
       visits={fallbackLatestVisitEntries}
@@ -66,6 +86,9 @@ export const HomeSummaryPanels = ({
       emptyMessage={mostVisitedParksEmptyMessage}
       visitCountLabel={mostVisitedParksVisitCountLabel}
       backToStartLabel={backToStartLabel}
+      showAllAriaLabel={mostVisitedParksShowAllAriaLabel}
+      showAllHref={appRoutes.parks}
+      showAllLabel={showAllLabel}
       parks={fallbackMostVisitedParks}
     />
   </div>

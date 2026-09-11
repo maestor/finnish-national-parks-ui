@@ -12,6 +12,7 @@ describe("routes", () => {
     expect(appRoutes.login).toBe("/kirjaudu");
     expect(appRoutes.parks).toBe("/paikat");
     expect(appRoutes.park("pallas")).toBe("/paikka/pallas");
+    expect(appRoutes.trips).toBe("/retket");
     expect(appRoutes.trip("kesaretki")).toBe("/retki/kesaretki");
     expect(appRoutes.visits).toBe("/kaynnit");
     expect(appRoutes.tripPlanner).toBe("/reissusuunnittelu");
@@ -47,6 +48,7 @@ describe("routes", () => {
       "/paikka/pallas?visit=2#visit-history",
     );
     expect(normalizeAppPath("/trip/kesaretki")).toBe("/retki/kesaretki");
+    expect(normalizeAppPath("/trips")).toBe("/retket");
     expect(normalizeAppPath("/visits?year=2026")).toBe("/kaynnit?year=2026");
     expect(normalizeAppPath("/trip-planner")).toBe("/reissusuunnittelu");
     expect(normalizeAppPath("/control-panel")).toBe("/hallinta");
@@ -80,6 +82,13 @@ describe("routes", () => {
     expect(appRoutePatterns.isControlPanelPath("/control-panel/parks")).toBe(true);
     expect(appRoutePatterns.isControlPanelPath("/control-panel/trips")).toBe(true);
     expect(appRoutePatterns.isControlPanelPath("/paikat")).toBe(false);
+  });
+
+  it("detects the public trip archive and detail paths without matching the control panel", () => {
+    expect(appRoutePatterns.isTripsPath("/retket")).toBe(true);
+    expect(appRoutePatterns.isTripsPath("/retki/kesaretki")).toBe(true);
+    expect(appRoutePatterns.isTripsPath("/trip/kesaretki")).toBe(true);
+    expect(appRoutePatterns.isTripsPath("/hallinta/retket")).toBe(false);
   });
 
   it("detects year-review share routes after normalization", () => {

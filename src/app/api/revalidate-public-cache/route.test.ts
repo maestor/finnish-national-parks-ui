@@ -95,6 +95,7 @@ describe("revalidate public cache route", () => {
     expect(revalidateTagMock).toHaveBeenCalledWith("public-trip:kesaretki", "max");
     expect(revalidatePathMock).toHaveBeenCalledWith("/", "page");
     expect(revalidatePathMock).toHaveBeenCalledWith("/paikat", "page");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/retket", "page");
     expect(revalidatePathMock).toHaveBeenCalledWith("/kaynnit", "page");
     expect(revalidatePathMock).toHaveBeenCalledWith("/hallinta/paikat", "page");
     expect(revalidatePathMock).toHaveBeenCalledWith("/paikka/pallas", "page");
@@ -129,6 +130,7 @@ describe("revalidate public cache route", () => {
     );
     expect(revalidatePathMock).toHaveBeenCalledWith("/", "page");
     expect(revalidatePathMock).toHaveBeenCalledWith("/paikat", "page");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/retket", "page");
     expect(revalidatePathMock).toHaveBeenCalledWith("/kaynnit", "page");
     expect(revalidatePathMock).toHaveBeenCalledWith("/hallinta/paikat", "page");
     expect(revalidatePathMock).not.toHaveBeenCalledWith(
