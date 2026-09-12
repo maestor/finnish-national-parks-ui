@@ -766,7 +766,7 @@
         "selectedCount": "{count, plural, one {# kuva valittu} other {# kuvaa valittu}}",
         "preparing": "Optimoidaan kuvia...",
         "upload": "Lähetä kuvat",
-        "uploading": "Lähetetään...",
+        "uploading": "Ladataan ja käsitellään kuvia...",
         "uploadFailed": "Kuvien lähetys epäonnistui",
         "uploadSuccess": "{count, plural, one {# kuva lisättiin.} other {# kuvaa lisättiin.}}",
         "preprocessFailed": "Kuvan esikäsittely epäonnistui: {name}",
