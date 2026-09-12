@@ -4,6 +4,7 @@ import { HomeAboutSection } from "@/components/home/home-about-section";
 import { HomeIntro } from "@/components/home/home-intro";
 import { HomeSocialLinks } from "@/components/home/home-social-links";
 import { HomeSummaryPanels } from "@/components/home/home-summary-panels";
+import { WebsiteStructuredData } from "@/components/home/website-structured-data";
 import { PUBLIC_PAGE_SHELL_CLASS_NAME } from "@/components/layout/public-page-styles";
 import {
   createHomeLatestTripsFromSummary,
@@ -13,20 +14,22 @@ import {
   createHomeRecentVisitsFromSummary,
   fetchHomeSummary,
 } from "@/lib/frontend-summaries";
+import { buildPageMetadata } from "@/lib/page-metadata";
 
 // Reads use force-cache tagged fetches, but force-dynamic keeps Next from
 // prerendering this page at build time, when no backend is reachable.
 export const dynamic = "force-dynamic";
 
 export const generateMetadata = async () => {
-  const t = await getTranslations("home");
-  return {
-    title: t("title"),
-  };
+  const [t, metadataT] = await Promise.all([getTranslations("home"), getTranslations("metadata")]);
+  return buildPageMetadata(t("title"), metadataT("title"), {
+    pagePath: "/",
+    description: metadataT("description"),
+  });
 };
 
 const HomePage = async () => {
-  const t = await getTranslations("home");
+  const [t, metadataT] = await Promise.all([getTranslations("home"), getTranslations("metadata")]);
   const summary = await fetchHomeSummary();
   const progressItems = createHomeProgressItems(summary, t("statistics.allParks"));
   const mostVisitedParks = createHomeMostVisitedParks(summary);
@@ -41,6 +44,7 @@ const HomePage = async () => {
 
   return (
     <div id="home-top" className={`${PUBLIC_PAGE_SHELL_CLASS_NAME} scroll-mt-24 sm:scroll-mt-28`}>
+      <WebsiteStructuredData name={metadataT("title")} description={t("summary")} />
       <HomeIntro
         title={t("title")}
         summary={t("summary")}

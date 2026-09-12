@@ -121,6 +121,9 @@ const nextConfig: NextConfig = {
         { key: "X-Content-Type-Options", value: "nosniff" },
         { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
         { key: "X-Frame-Options", value: "DENY" },
+        ...(process.env.VERCEL_ENV === "preview"
+          ? [{ key: "X-Robots-Tag", value: "noindex, nofollow" }]
+          : []),
         { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self)" },
         // HSTS only makes sense on the real HTTPS deployment, not local HTTP.
         ...(isProduction
@@ -133,6 +136,20 @@ const nextConfig: NextConfig = {
           : []),
       ],
     },
+    ...[
+      "/kirjaudu",
+      "/login",
+      "/hallinta/:path*",
+      "/control-panel/:path*",
+      "/ajanjaksokatsaus/jako/:path*",
+      "/vuosikatsaus/jako/:path*",
+      "/date-range-review/share/:path*",
+      "/year-review/share/:path*",
+      "/~offline",
+    ].map((source) => ({
+      source,
+      headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+    })),
   ],
   redirects: async () => [...legacyAppRedirects],
 };

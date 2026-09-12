@@ -9,7 +9,10 @@ export const dynamic = "force-dynamic";
 
 export const generateMetadata = async () => {
   const [t, metadataT] = await Promise.all([getTranslations("home"), getTranslations("metadata")]);
-  return buildPageMetadata(t("mapTitle"), metadataT("title"));
+  return buildPageMetadata(t("mapTitle"), metadataT("title"), {
+    pagePath: "/paikat",
+    description: metadataT("parksDescription"),
+  });
 };
 
 const ParksMapPage = async () => {

@@ -15,6 +15,7 @@ export const generateMetadata = async () => {
 
   return buildPageMetadata(t("title"), metadataT("title"), {
     pagePath: appRoutes.trips,
+    description: metadataT("tripsDescription"),
   });
 };
 

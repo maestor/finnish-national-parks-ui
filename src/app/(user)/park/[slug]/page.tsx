@@ -62,14 +62,17 @@ const fetchParkDetailForRequest = async (
 
 export const generateMetadata = async ({ params }: ParkDetailPageProps) => {
   const [{ slug }, t] = await Promise.all([params, getTranslations("metadata")]);
-  const parkTitle = await fetchParkDetailForRequest(slug)
-    .then((result) => result.park.name)
-    .catch(() => formatParkMetadataTitle(slug));
+  const result = await fetchParkDetailForRequest(slug).catch(() => null);
+  const parkTitle = result?.park.name ?? formatParkMetadataTitle(slug);
   const shareDescription = t("parkDescription", { park: parkTitle });
 
-  return buildPageMetadata(parkTitle, t("title"), {
+  const metadata = buildPageMetadata(parkTitle, t("title"), {
     description: shareDescription,
+    pagePath: appRoutes.park(slug),
   });
+  return result && !result.usedAuthenticatedFallback
+    ? metadata
+    : { ...metadata, robots: { index: false, follow: false } };
 };
 
 const normalizeVisitSearchParam = (value?: string | string[]) => {
