@@ -28,6 +28,7 @@ describe("revalidate public cache route", () => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Origin: "http://localhost:4300",
       },
       body: JSON.stringify({ parkSlug: "pallas" }),
     });
@@ -51,6 +52,7 @@ describe("revalidate public cache route", () => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Origin: "http://localhost:4300",
         cookie: "__session=test-session",
       },
       body: JSON.stringify({ parkSlug: "pallas" }),
@@ -70,6 +72,7 @@ describe("revalidate public cache route", () => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Origin: "http://localhost:4300",
         cookie: "__session=test-session",
       },
       body: JSON.stringify({ parkSlug: "pallas", tripSlug: "kesaretki" }),
@@ -113,6 +116,7 @@ describe("revalidate public cache route", () => {
     const request = new Request("http://localhost:4300/api/revalidate-public-cache", {
       method: "POST",
       headers: {
+        Origin: "http://localhost:4300",
         cookie: "__session=test-session",
       },
       body: "not-json",
@@ -146,5 +150,31 @@ describe("revalidate public cache route", () => {
       parkSlug: null,
       tripSlug: null,
     });
+  });
+
+  it.each([
+    ["missing Origin", undefined],
+    ["null Origin", "null"],
+    ["different scheme", "https://localhost:4300"],
+  ])("rejects an authenticated revalidation request with %s", async (_label, origin) => {
+    jwtVerifyMock.mockResolvedValueOnce({ payload: { role: "admin" } } as never);
+
+    const headers = new Headers({
+      "Content-Type": "application/json",
+      cookie: "__session=test-session",
+    });
+    if (origin !== undefined) headers.set("Origin", origin);
+
+    const response = await POST(
+      new Request("http://localhost:4300/api/revalidate-public-cache", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({}),
+      }),
+    );
+
+    expect(response.status).toBe(403);
+    expect(revalidateTagMock).not.toHaveBeenCalled();
+    expect(revalidatePathMock).not.toHaveBeenCalled();
   });
 });
