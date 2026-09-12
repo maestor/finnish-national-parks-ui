@@ -879,7 +879,9 @@ export const ManagedImageSection = ({
             aria-label={messages.selectFiles}
           />
           {isPreparingImages === true && (
-            <span className="text-sm text-muted-foreground">{messages.preparing}</span>
+            <span className="text-sm text-muted-foreground" role="status">
+              {messages.preparing}
+            </span>
           )}
           {pendingImages.length > 0 && (
             <span className="text-sm text-muted-foreground">
@@ -957,13 +959,20 @@ export const ManagedImageSection = ({
         )}
 
         {pendingImages.length > 0 && (
-          <Button
-            type="button"
-            onClick={() => void handleUpload()}
-            disabled={isPreparingImages || isUploading || activeDrag?.collection === "pending"}
-          >
-            {isUploading ? messages.uploading : messages.upload}
-          </Button>
+          <>
+            {isUploading === true && (
+              <span className="sr-only" role="status">
+                {messages.uploading}
+              </span>
+            )}
+            <Button
+              type="button"
+              onClick={() => void handleUpload()}
+              disabled={isPreparingImages || isUploading || activeDrag?.collection === "pending"}
+            >
+              {isUploading ? messages.uploading : messages.upload}
+            </Button>
+          </>
         )}
 
         {uploadErrors.length > 0 && (

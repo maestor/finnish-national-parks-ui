@@ -103,6 +103,23 @@ describe("VisitImageGallery", () => {
     expect(firstThumbnailImage).toHaveAttribute("draggable", "false");
   });
 
+  it("loads thumbnail derivatives in the grid and a full derivative only in the lightbox", () => {
+    render(<VisitImageGallery images={images} />);
+
+    expect(screen.getAllByRole("presentation")[0]).toHaveAttribute(
+      "src",
+      "https://example.com/thumb-1.jpg",
+    );
+    expect(screen.queryByRole("img", { name: "imageGallery.activeImage" })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getAllByRole("button", { name: /imageGallery.open/i })[0]);
+
+    expect(screen.getByRole("img", { name: "imageGallery.activeImage" })).toHaveAttribute(
+      "src",
+      "https://example.com/full-1.jpg",
+    );
+  });
+
   it("closes the lightbox from the close button", async () => {
     render(<VisitImageGallery images={images} />);
 
