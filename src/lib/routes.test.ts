@@ -27,6 +27,7 @@ describe("routes", () => {
     expect(appRoutes.controlPanel.editVisit("42")).toBe("/hallinta/kaynnit/42/muokkaa");
     expect(appRoutes.controlPanel.dateRangeReview).toBe("/hallinta/ajanjaksokatsaus");
     expect(appRoutes.controlPanel.yearReview).toBe("/hallinta/vuosikatsaus");
+    expect(appRoutes.controlPanel.admins).toBe("/hallinta/kayttajat");
     expect(appRoutes.dateRangeReviewShare("93d27350-b7a4-48ba-a93f-16f38d44aa03")).toBe(
       "/ajanjaksokatsaus/jako/93d27350-b7a4-48ba-a93f-16f38d44aa03",
     );
@@ -69,6 +70,7 @@ describe("routes", () => {
       "/ajanjaksokatsaus/jako/93d27350-b7a4-48ba-a93f-16f38d44aa03",
     );
     expect(normalizeAppPath("/control-panel/year-review")).toBe("/hallinta/vuosikatsaus");
+    expect(normalizeAppPath("/control-panel/admins")).toBe("/hallinta/kayttajat");
     expect(normalizeAppPath("/year-review/share/93d27350-b7a4-48ba-a93f-16f38d44aa03")).toBe(
       "/vuosikatsaus/jako/93d27350-b7a4-48ba-a93f-16f38d44aa03",
     );

@@ -14,6 +14,7 @@ vi.mock("@/lib/backend-proxy", () => ({
 
 import { DELETE as deleteAdminDateRangeReviewShare } from "./admin/date-range-review/shares/[shareId]/route";
 import { GET as getAdminDateRangeReviewShares } from "./admin/date-range-review/shares/route";
+import { POST as postAdminInvitation } from "./admin/invitations/route";
 import { GET as getAdminParkVisibility } from "./admin/parks/visibility/route";
 import {
   DELETE as deleteDateRangeReviewPublish,
@@ -83,6 +84,18 @@ describe("api proxy routes", () => {
     await getAdminParkVisibility(request);
 
     expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/admin/parks/visibility", {
+      requireAdmin: true,
+    });
+  });
+
+  it("proxies admin invitations", async () => {
+    const request = new Request("https://frontend.example/api/admin/invitations", {
+      method: "POST",
+    });
+
+    await postAdminInvitation(request);
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/admin/invitations", {
       requireAdmin: true,
     });
   });
