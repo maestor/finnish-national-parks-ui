@@ -9,7 +9,7 @@ Trip editing includes a separate featured-image slot backed by admin proxy route
 - **Public visitors** — a visit-focused landing page plus an interactive map of Finnish national parks
 - **Admin users** — a control panel for managing park visit history and notes
 
-Authentication is Google OAuth with an allowlist managed by the backend. Enrolled admins can create one-time Google enrollment links from `/hallinta/kayttajat`; the backend consumes the link when the invited account completes OAuth.
+Authentication is Google OAuth with an allowlist managed by the backend. The backend returns `isSuperAdmin` from `/auth/me`; only super admins see `/hallinta/kayttajat`, where they can create one-time Google enrollment links and manage other admin roles or accounts.
 
 ---
 
@@ -138,6 +138,7 @@ Canonical end-user URLs are Finnish-only:
 - `/ajanjaksokatsaus/jako/[shareId]` (tokenized named date-range review share pages; intentionally not linked from public navigation)
 - `/vuosikatsaus/jako/[shareId]` (tokenized year-in-review share pages; intentionally not linked from public navigation)
 - `/hallinta`
+- `/hallinta/kayttajat` (super-admin-only admin management)
 - `/hallinta/ajanjaksokatsaus`
 - `/hallinta/vuosikatsaus`
 - `/kirjaudu`
@@ -275,10 +276,11 @@ The header disables automatic Next.js prefetching for the heavyweight public map
 3. Frontend redirects to proxied `/auth/google`
 4. Backend redirects to Google OAuth consent screen
 5. Google redirects back to frontend `/auth/google/callback`, which proxies the backend callback
-6. Backend validates allowlist, sets `__session` cookie through the frontend response, then redirects to `/hallinta`
-7. `src/proxy.ts` verifies the cookie on every `/hallinta/*` request
-8. Header shows **"Hallinta"** link when authenticated
-9. Control panel has **"Kirjaudu ulos"** logout button
+6. Backend validates the allowlist, sets `__session` through the frontend response, then redirects to `/hallinta`
+7. `useAuth` reads `/auth/me`, which includes the current `isSuperAdmin` status
+8. `src/proxy.ts` verifies the cookie on every `/hallinta/*` request
+9. Header shows **"Hallinta"** link when authenticated
+10. Control panel has **"Kirjaudu ulos"** logout button
 
 ---
 
@@ -360,8 +362,8 @@ These are contributor defaults, not optional polish:
 ### Session Token Contract and Proxy AuthZ
 
 - Session verification is centralized in `src/lib/session-auth.ts`. Tokens must be HS256-signed with `AUTH_JWT_SECRET` and carry `iss: "reissuvihko-api"` and `aud: "reissuvihko-ui"` (overridable via `AUTH_JWT_ISSUER` / `AUTH_JWT_AUDIENCE`); both claims are bound at verification.
-- `src/proxy.ts` gates `/hallinta/*` page shells on a valid session. Route handlers that proxy admin mutations additionally require the `role: "admin"` claim via `proxyBackendRequest(request, path, { requireAdmin: true })`; missing/invalid sessions get 401 and non-admin sessions 403.
-- Admin-gated proxy routes: park mutations (`/api/parks/[slug]`, `/removed`, `/visits`), visit mutations (`/api/visits/[id]` and all image sub-routes), `GET /api/admin/parks/visibility`, `POST /api/admin/invitations`, and `POST /api/revalidate-public-cache`. Public reads and the public trip-planner POSTs stay unauthenticated.
+- `src/proxy.ts` gates `/hallinta/*` page shells on a valid session. Route handlers that proxy admin mutations additionally require the `role: "admin"` claim via `proxyBackendRequest(request, path, { requireAdmin: true })`; missing/invalid sessions get 401 and non-admin sessions 403. The Ylläpitäjät page also checks `isSuperAdmin` from `/auth/me`, and the backend repeats that authorization for every admin-management request.
+- Admin-gated proxy routes: park mutations (`/api/parks/[slug]`, `/removed`, `/visits`), visit mutations (`/api/visits/[id]` and all image sub-routes), `GET /api/admin/parks/visibility`, `GET/PATCH/DELETE /api/admin/admins`, `POST /api/admin/invitations`, and `POST /api/revalidate-public-cache`. Public reads and the public trip-planner POSTs stay unauthenticated.
 - Non-`GET` proxy requests must carry an `Origin` header whose host matches the request host; mismatches get 403 (CSRF defense-in-depth on top of the `SameSite=Lax` session cookie).
 - Proxy routes forward only an allowlist of client headers (`accept`, `content-type`, `cookie`) to the backend. Client-sent `authorization` headers are never forwarded; the proxy always sets the server-side `API_KEY` itself.
 
@@ -395,7 +397,7 @@ See `AGENTS.md` for the full convention list. Key rules:
 ## Backend Assumptions
 
 - Port: **3004**
-- Auth endpoints: `/auth/google`, `/auth/google/callback`, `/auth/me`, `/auth/logout`; invitation links use `/auth/google?invite=<token>` and the same OAuth callback.
+- Auth endpoints: `/auth/google`, `/auth/google/callback`, `/auth/me`, `/auth/logout`; `/auth/me` includes the current `isSuperAdmin` flag. Invitation links use `/auth/google?invite=<token>` and the same OAuth callback.
 - API endpoints: `/api/parks`, `/api/parks/{slug}`, `/api/parks/{slug}/visits`, `/api/parks/{slug}/removed`, `/api/visits`, `/api/visits/{id}`
 - Cacheable frontend endpoints: `/api/home-summary`, `/api/map-summary`, `/api/visits-timeline`
 - Catalog and visit `GET` data is public to end users through the frontend, but direct backend `/api/*` access generally requires the server-side API key outside localhost. Backend-anonymous reads are limited to `GET /health`, `GET /openapi.json`, and `GET /assets/logos/*`; admin mutations require an authenticated admin session, with the documented public trip-planner POSTs as the deliberate exception.

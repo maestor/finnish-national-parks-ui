@@ -6,6 +6,7 @@ import { apiFetch } from "@/lib/api";
 export type AuthUser = {
   id: string;
   email: string;
+  isSuperAdmin: boolean;
   name: string;
   picture: string;
 };

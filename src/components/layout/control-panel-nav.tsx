@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/cn";
 import { appRoutes, normalizeAppPath } from "@/lib/routes";
 
@@ -14,6 +15,7 @@ const activeLinkClassName =
 
 export const ControlPanelNav = () => {
   const t = useTranslations("controlPanel");
+  const auth = useAuth();
   const normalizedPathname = normalizeAppPath(usePathname());
 
   const links = [
@@ -23,7 +25,9 @@ export const ControlPanelNav = () => {
     { href: appRoutes.controlPanel.visits, label: t("visits.title") },
     { href: appRoutes.controlPanel.dateRangeReview, label: t("dateRangeReview.title") },
     { href: appRoutes.controlPanel.yearReview, label: t("yearReview.title") },
-    { href: appRoutes.controlPanel.admins, label: t("adminUsers.title") },
+    ...(auth.user?.isSuperAdmin === true
+      ? [{ href: appRoutes.controlPanel.admins, label: t("adminUsers.title") }]
+      : []),
   ];
 
   return (
