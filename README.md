@@ -2,6 +2,8 @@
 
 Next.js 16 frontend for exploring Finnish national parks and managing personal visits.
 
+Live site: [Reissuvihko](https://reissuvihko.vercel.app).
+
 ## Overview
 
 This is a Finnish-language, PWA-capable web application built with Next.js 16 App Router. It connects to the separate [Reissuvihko Hono backend API](https://github.com/maestor/finnish-national-parks-api) running locally at `http://localhost:3004`.

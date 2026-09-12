@@ -15,15 +15,22 @@ export const buildPageMetadata = (
   options?: BuildPageMetadataOptions,
 ): Metadata => {
   const shareTitle = buildShareTitle(pageTitle, siteTitle);
-  const description = options?.description;
+  const normalizedDescription = options?.description?.replace(/\s+/g, " ").trim();
+  const description =
+    normalizedDescription && normalizedDescription.length > 180
+      ? `${normalizedDescription.slice(0, 177).replace(/\s+\S*$/, "")}…`
+      : normalizedDescription;
   const pagePath = options?.pagePath;
   const socialImagePath = options?.socialImagePath;
 
   return {
     title: pageTitle,
+    ...(pagePath ? { alternates: { canonical: pagePath } } : {}),
     ...(description ? { description } : {}),
     openGraph: {
       title: shareTitle,
+      siteName: siteTitle,
+      locale: "fi_FI",
       ...(pagePath ? { type: "website" as const, url: pagePath } : {}),
       ...(description ? { description } : {}),
       ...(socialImagePath ? { images: [socialImagePath] } : {}),

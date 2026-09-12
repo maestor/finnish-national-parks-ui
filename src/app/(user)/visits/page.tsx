@@ -27,7 +27,10 @@ export const generateMetadata = async () => {
     getTranslations("metadata"),
   ]);
 
-  return buildPageMetadata(t("title"), metadataT("title"));
+  return buildPageMetadata(t("title"), metadataT("title"), {
+    pagePath: "/kaynnit",
+    description: metadataT("visitsDescription"),
+  });
 };
 
 const PublicVisitsPage = async ({ searchParams }: PublicVisitsPageProps) => {

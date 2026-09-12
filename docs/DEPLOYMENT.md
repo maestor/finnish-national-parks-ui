@@ -10,11 +10,34 @@ Production env vars required by the frontend:
 NEXT_PUBLIC_API_URL=https://reissuvihko-api.vercel.app
 API_KEY=your-backend-api-key
 AUTH_JWT_SECRET=the-same-secret-as-backend
+NEXT_PUBLIC_SITE_URL=https://reissuvihko.vercel.app
 
 # Optional
 AUTH_COOKIE_NAME=__session
 NEXT_PUBLIC_MAP_STYLE_URL=https://demotiles.maplibre.org/style.json
 ```
+
+## Search discovery and Google Search Console
+
+Set `NEXT_PUBLIC_SITE_URL` to the preferred public origin (use your custom domain if applicable) and redeploy. Metadata, canonical links, and the sitemap share this origin. Without it, the app uses `VERCEL_PROJECT_PRODUCTION_URL`, then `VERCEL_URL`, then localhost. Redirect secondary domains to the preferred domain in Vercel; canonical links do not perform redirects.
+
+- `/robots.txt` advertises `/sitemap.xml` and allows public pages and rendering assets. API/auth paths are excluded from crawling.
+- `/sitemap.xml` reads the anonymous-user catalogue and all trip archive pages through the server-side API client, without session cookies. It is generated on request with no-store reads, excludes admin/login/tokenized share URLs, and fails on upstream errors instead of returning a misleading partial sitemap. It does not emit guessed modification dates or signed media URLs. A dedicated lightweight API sitemap feed should replace archive pagination if the catalogue grows enough to approach function time limits or 50,000 URLs.
+- Public pages have Finnish descriptions and canonical URLs without UI filter query parameters. Missing/hidden park fallback metadata is noindex. Login, admin, offline, and tokenized share responses carry `X-Robots-Tag: noindex, nofollow`; these pages remain crawlable so crawlers can read the directive. Vercel previews receive the same header globally. These rules do not replace authentication.
+- Keep `public/googleff9155aacaf6c1d0.html` deployed after ownership verification.
+
+After deploying:
+
+1. Open `/googleff9155aacaf6c1d0.html`, `/robots.txt`, and `/sitemap.xml` on the preferred production domain. Check successful responses and that all sitemap URLs use that domain.
+2. Complete ownership verification in Google Search Console and submit `sitemap.xml`.
+3. Use URL Inspection's live test on the homepage, a park, and a trip; confirm crawling is allowed, content is rendered, and canonical URLs are correct. Request indexing for these representative pages.
+4. Monitor sitemap processing and Page indexing reports for exclusions and server errors. Deployment does not guarantee indexing or ranking.
+
+For AI search discovery, follow the same crawlability, descriptive content, and internal-link foundations. Google does not require special AI files or schema for its AI search features. See [Google's AI search guidance](https://developers.google.com/search/docs/appearance/ai-features) and [canonical URL guidance](https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls). Future structured data must describe visible facts; do not invent reviews, authorship, or travel claims.
+
+The homepage emits `WebSite` JSON-LD with the existing site name, visible introductory summary, Finnish language, and canonical origin. It uses a native script with JSON text, escaping `<` so translated strings cannot terminate the script; no raw HTML injection is used. Page-specific Open Graph metadata explicitly retains the site name and Finnish locale because Next.js replaces nested metadata objects. See [Google's site-name guidance](https://developers.google.com/search/docs/appearance/site-names).
+
+The wildcard robots rule already allows `OAI-SearchBot` on public pages. OpenAI distinguishes this search crawler from user-triggered `ChatGPT-User` fetches and the training crawler `GPTBot`; direct-URL retrieval is not proof of search discovery. After deployment, inspect Vercel firewall/bot-protection logs for rejected crawler requests and use OpenAI's published IP ranges when evaluating actual crawler access. A spoofed user-agent test alone does not prove access from those IPs. Search visibility and training preferences are separate decisions. See [OpenAI crawler documentation](https://developers.openai.com/api/docs/bots).
 
 ## How frontend auth works in production
 

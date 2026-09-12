@@ -860,9 +860,12 @@ const createExpectedShareMetadata = (
   },
 ) => ({
   title: pageTitle,
+  ...(options?.pagePath ? { alternates: { canonical: options.pagePath } } : {}),
   ...(options?.description ? { description: options.description } : {}),
   openGraph: {
     title: `${pageTitle} | metadata.title`,
+    siteName: "metadata.title",
+    locale: "fi_FI",
     ...(options?.pagePath ? { type: "website", url: options.pagePath } : {}),
     ...(options?.description ? { description: options.description } : {}),
     ...(options?.socialImagePath ? { images: [options.socialImagePath] } : {}),
@@ -952,6 +955,15 @@ describe("App pages", () => {
     });
 
     await renderPublicRoute(await HomePage());
+
+    expect(
+      JSON.parse(document.querySelector('script[type="application/ld+json"]')?.textContent ?? ""),
+    ).toMatchObject({
+      "@type": "WebSite",
+      name: "metadata.title",
+      description: "home.summary",
+      url: "https://reissuvihko.example.com/",
+    });
 
     expect(screen.getByTestId("home-intro")).toHaveTextContent(
       "title:home.title|summary:home.summary|map:home.openMap|info:home.intro.showInfo",
@@ -1047,14 +1059,20 @@ describe("App pages", () => {
   });
 
   it("builds translated metadata for the home page", async () => {
-    await expect(generateHomeMetadata()).resolves.toEqual({
-      title: "home.title",
-    });
+    await expect(generateHomeMetadata()).resolves.toEqual(
+      createExpectedShareMetadata("home.title", {
+        pagePath: "/",
+        description: "metadata.description",
+      }),
+    );
   });
 
   it("builds translated metadata for the parks map page", async () => {
     await expect(generateParksMapMetadata()).resolves.toEqual(
-      createExpectedShareMetadata("home.mapTitle"),
+      createExpectedShareMetadata("home.mapTitle", {
+        pagePath: "/paikat",
+        description: "metadata.parksDescription",
+      }),
     );
   });
 
@@ -1062,6 +1080,7 @@ describe("App pages", () => {
     await expect(generateTripPlannerMetadata()).resolves.toEqual(
       createExpectedShareMetadata("tripPlanner.title", {
         description: "tripPlanner.description",
+        pagePath: "/reissusuunnittelu",
       }),
     );
   });
@@ -1076,6 +1095,7 @@ describe("App pages", () => {
     ).resolves.toEqual(
       createExpectedShareMetadata("Keski-Suomen kesaretki", {
         description: "Kolmen paivan kierros kansallispuistoihin.",
+        pagePath: "/retki/keski-suomen-kesaretki",
       }),
     );
   });
@@ -1404,7 +1424,10 @@ describe("App pages", () => {
 
   it("builds translated metadata for the public visits page", async () => {
     await expect(generatePublicVisitsMetadata()).resolves.toEqual(
-      createExpectedShareMetadata("visits.title"),
+      createExpectedShareMetadata("visits.title", {
+        pagePath: "/kaynnit",
+        description: "metadata.visitsDescription",
+      }),
     );
   });
 
@@ -1743,17 +1766,20 @@ describe("App pages", () => {
     ).resolves.toEqual(
       createExpectedShareMetadata("Pallas-Yllästunturi", {
         description: "Tarkastele paikan Pallas-Yllästunturi tietoja ja vierailuja Reissuvihkossa.",
+        pagePath: "/paikka/pallas-yllastunturi",
       }),
     );
 
     await expect(
       generateParkDetailMetadata({ params: Promise.resolve({ slug: "repovesi-kansallispuisto" }) }),
-    ).resolves.toEqual(
-      createExpectedShareMetadata("repovesi kansallispuisto", {
+    ).resolves.toEqual({
+      ...createExpectedShareMetadata("repovesi kansallispuisto", {
+        pagePath: "/paikka/repovesi-kansallispuisto",
         description:
           "Tarkastele paikan repovesi kansallispuisto tietoja ja vierailuja Reissuvihkossa.",
       }),
-    );
+      robots: { index: false, follow: false },
+    });
   });
 
   it("renders the control panel overview page", async () => {

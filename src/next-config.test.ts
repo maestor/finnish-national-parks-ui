@@ -23,6 +23,46 @@ afterEach(() => {
 });
 
 describe("next.config", () => {
+  it("keeps internal and tokenized pages out of search while leaving public pages indexable", async () => {
+    vi.stubEnv("VERCEL_ENV", "production");
+    try {
+      const config = await loadNextConfig();
+      const rules = await config.headers?.();
+      for (const source of [
+        "/kirjaudu",
+        "/hallinta/:path*",
+        "/ajanjaksokatsaus/jako/:path*",
+        "/vuosikatsaus/jako/:path*",
+        "/~offline",
+      ]) {
+        expect(rules?.find((rule) => rule.source === source)?.headers).toContainEqual({
+          key: "X-Robots-Tag",
+          value: "noindex, nofollow",
+        });
+      }
+      expect(
+        rules
+          ?.find((rule) => rule.source === "/:path*")
+          ?.headers.some((header) => header.key === "X-Robots-Tag"),
+      ).toBe(false);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
+  it("marks Vercel previews noindex", async () => {
+    vi.stubEnv("VERCEL_ENV", "preview");
+    try {
+      const config = await loadNextConfig();
+      const rules = await config.headers?.();
+      expect(rules?.find((rule) => rule.source === "/:path*")?.headers).toContainEqual({
+        key: "X-Robots-Tag",
+        value: "noindex, nofollow",
+      });
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
   it("traces the Next config runtime files for the serwist route", async () => {
     const nextConfig = await loadNextConfig();
 

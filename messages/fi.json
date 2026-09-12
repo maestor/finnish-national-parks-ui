@@ -2,7 +2,11 @@
   "metadata": {
     "title": "Reissuvihko",
     "description": "Reissuvihko kokoaa tekijöidensä käynnit Suomen retkeilypaikoista, tarinat kuvineen muistoina retkistä sekä etenemisen ja reissusuunnittelun samoihin kuoriin.",
-    "parkDescription": "Tarkastele paikan {park} tietoja ja vierailuja Reissuvihkossa."
+    "parkDescription": "Tarkastele paikan {park} tietoja ja vierailuja Reissuvihkossa.",
+    "parksDescription": "Tutustu Suomen kansallispuistoihin ja muihin retkikohteisiin kartalla. Löydä paikkojen tiedot ja tekijöiden käyntikertomukset Reissuvihkosta.",
+    "visitsDescription": "Selaa Reissuvihkon tekijöiden retkikäyntejä, valokuvia ja muistoja Suomen kansallispuistoista ja muista retkikohteista.",
+    "tripsDescription": "Tutustu Reissuvihkon retkiin ja matkakertomuksiin: reitit, käyntikohteet, pysähdykset ja valokuvat samassa paikassa.",
+    "tripDescription": "Tutustu retkeen {trip}: käyntikohteet, pysähdykset ja retkimuistot Reissuvihkossa."
   },
   "layout": {
     "siteTitle": "Reissuvihko",

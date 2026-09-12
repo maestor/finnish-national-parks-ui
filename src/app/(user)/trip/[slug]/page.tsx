@@ -30,7 +30,8 @@ export const generateMetadata = async ({ params }: PublicTripRoutePageProps) => 
   }
 
   return buildPageMetadata(trip.name, metadataT("title"), {
-    description: trip.description ?? undefined,
+    description: trip.description || metadataT("tripDescription", { trip: trip.name }),
+    pagePath: `/retki/${trip.slug}`,
   });
 };
 

@@ -10,6 +10,7 @@ export const generateMetadata = async () => {
 
   return buildPageMetadata(t("title"), metadataT("title"), {
     description: t("description"),
+    pagePath: "/reissusuunnittelu",
   });
 };
 

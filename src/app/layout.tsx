@@ -9,7 +9,7 @@ import { HomeMapControlsProvider } from "@/components/providers/home-map-control
 import { NavigationProgress } from "@/components/providers/navigation-progress";
 import { SerwistProvider } from "@/components/providers/serwist-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
-import { siteEnv } from "@/lib/env";
+import { resolveMetadataBase } from "@/lib/site-url";
 import messages from "../../messages/fi.json";
 
 const geistSans = Geist({
@@ -23,21 +23,6 @@ const geistMono = Geist_Mono({
 });
 
 const shouldDisableSerwist = process.env.NODE_ENV === "development";
-
-const toMetadataBase = (value: string): URL => {
-  if (value.startsWith("http://") || value.startsWith("https://")) {
-    return new URL(value);
-  }
-
-  return new URL(`https://${value}`);
-};
-
-const resolveMetadataBase = (): URL => {
-  const configuredBase =
-    siteEnv.NEXT_PUBLIC_SITE_URL ?? siteEnv.VERCEL_PROJECT_PRODUCTION_URL ?? siteEnv.VERCEL_URL;
-
-  return configuredBase ? toMetadataBase(configuredBase) : new URL("http://localhost:4300");
-};
 
 export const generateMetadata = async (): Promise<Metadata> => {
   const t = await getTranslations("metadata");
