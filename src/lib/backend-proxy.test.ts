@@ -32,6 +32,7 @@ describe("proxyBackendRequest", () => {
       headers: {
         cookie: "__session=test-session",
         "Content-Type": "application/json",
+        origin: "https://frontend.example",
       },
       body: JSON.stringify({ note: "Paivitetty" }),
     });
@@ -65,6 +66,7 @@ describe("proxyBackendRequest", () => {
         "x-trip-planner-client-id": "forged-client-id",
         "content-type": "application/json",
         cookie: "__planner_client=client-cookie-id",
+        origin: "https://frontend.example",
       },
       body: JSON.stringify({ query: "He" }),
     });
@@ -84,7 +86,10 @@ describe("proxyBackendRequest", () => {
 
     const request = new Request("https://frontend.example/api/trip-planner/suggestions", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: {
+        "content-type": "application/json",
+        origin: "https://frontend.example",
+      },
       body: JSON.stringify({ query: "He" }),
     });
 
@@ -101,7 +106,10 @@ describe("proxyBackendRequest", () => {
   it("forwards an empty body for bodyless non-GET requests", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(new Response(null, { status: 204 }));
 
-    const request = new Request("https://frontend.example/api/visits/123", { method: "POST" });
+    const request = new Request("https://frontend.example/api/visits/123", {
+      headers: { origin: "https://frontend.example" },
+      method: "POST",
+    });
 
     await proxyBackendRequest(request, "/api/visits/123");
 
@@ -124,7 +132,10 @@ describe("proxyBackendRequest", () => {
     const request = new Request("https://frontend.example/api/trip-planner/search", {
       body,
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: {
+        "content-type": "application/json",
+        origin: "https://frontend.example",
+      },
       duplex: "half",
     } as RequestInit & { duplex: "half" });
 
@@ -143,6 +154,7 @@ describe("proxyBackendRequest", () => {
       headers: {
         "content-length": "16385",
         "content-type": "application/json",
+        origin: "https://frontend.example",
       },
       body: "{}",
     });
@@ -249,6 +261,7 @@ describe("proxyBackendRequest", () => {
         cookie: "__session=test-session",
         "x-forwarded-host": "evil.example",
         "x-custom-injection": "yes",
+        origin: "https://frontend.example",
       },
       body: JSON.stringify({ note: "x" }),
     });
@@ -280,6 +293,40 @@ describe("proxyBackendRequest", () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
+  it("rejects a non-GET request whose Origin uses a different scheme", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+
+    const request = new Request("https://frontend.example/api/visits/123", {
+      method: "DELETE",
+      headers: {
+        origin: "http://frontend.example",
+      },
+    });
+
+    const response = await proxyBackendRequest(request, "/api/visits/123");
+
+    expect(response.status).toBe(403);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["missing Origin", undefined],
+    ["null Origin", "null"],
+  ])("rejects a non-GET request with %s", async (_label, origin) => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const headers = origin === undefined ? undefined : { origin };
+
+    const request = new Request("https://frontend.example/api/visits/123", {
+      method: "DELETE",
+      headers,
+    });
+
+    const response = await proxyBackendRequest(request, "/api/visits/123");
+
+    expect(response.status).toBe(403);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
   it("allows a non-GET request with a matching Origin host", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(new Response(null, { status: 204 }));
 
@@ -300,7 +347,10 @@ describe("proxyBackendRequest", () => {
 
     const request = new Request("https://frontend.example/api/visits/123", {
       method: "PATCH",
-      headers: { "content-type": "application/json" },
+      headers: {
+        "content-type": "application/json",
+        origin: "https://frontend.example",
+      },
       body: JSON.stringify({ note: "x" }),
     });
 
@@ -321,6 +371,7 @@ describe("proxyBackendRequest", () => {
       headers: {
         "content-type": "application/json",
         cookie: "__session=test-session",
+        origin: "https://frontend.example",
       },
       body: JSON.stringify({ note: "x" }),
     });
@@ -333,6 +384,26 @@ describe("proxyBackendRequest", () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
+  it("treats malformed session cookie encoding as an unauthenticated request", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+
+    const request = new Request("https://frontend.example/api/visits/123", {
+      method: "PATCH",
+      headers: {
+        cookie: "__session=%",
+        origin: "https://frontend.example",
+      },
+      body: JSON.stringify({ note: "x" }),
+    });
+
+    const response = await proxyBackendRequest(request, "/api/visits/123", {
+      requireAdmin: true,
+    });
+
+    expect(response.status).toBe(401);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
   it("forwards admin-gated requests for a verified admin session", async () => {
     jwtVerifyMock.mockResolvedValueOnce({ payload: { role: "admin" } });
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(new Response(null, { status: 204 }));
@@ -342,6 +413,7 @@ describe("proxyBackendRequest", () => {
       headers: {
         "content-type": "application/json",
         cookie: "__session=test-session",
+        origin: "https://frontend.example",
       },
       body: JSON.stringify({ note: "x" }),
     });

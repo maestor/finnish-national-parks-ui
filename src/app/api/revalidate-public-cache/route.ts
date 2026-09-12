@@ -7,6 +7,7 @@ import {
   MAP_SUMMARY_TAG,
   PUBLIC_VISITS_TAG,
 } from "@/lib/public-cache";
+import { isSameOriginMutationRequest } from "@/lib/request-origin";
 import { appRoutes } from "@/lib/routes";
 import { isAdminSession, readSessionToken, verifySessionToken } from "@/lib/session-auth";
 
@@ -30,6 +31,16 @@ export const POST = async (request: Request) => {
   }
 
   if (!isAdminSession(payload)) {
+    return Response.json(
+      {
+        ok: false,
+        error: "Forbidden",
+      },
+      { status: 403 },
+    );
+  }
+
+  if (!isSameOriginMutationRequest(request)) {
     return Response.json(
       {
         ok: false,

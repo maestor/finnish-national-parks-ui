@@ -16,7 +16,11 @@ export const readSessionToken = (cookieHeader: string | null): string | null => 
   for (const part of cookieHeader.split(";")) {
     const trimmedPart = part.trim();
     if (trimmedPart.startsWith(`${cookieName}=`)) {
-      return decodeURIComponent(trimmedPart.slice(cookieName.length + 1));
+      try {
+        return decodeURIComponent(trimmedPart.slice(cookieName.length + 1));
+      } catch {
+        return null;
+      }
     }
   }
 

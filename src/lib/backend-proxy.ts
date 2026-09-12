@@ -1,4 +1,5 @@
 import { env } from "@/lib/env";
+import { isSameOriginMutationRequest } from "@/lib/request-origin";
 import { normalizeAppPath } from "@/lib/routes";
 import { isAdminSession, readSessionToken, verifySessionToken } from "@/lib/session-auth";
 
@@ -125,26 +126,6 @@ const buildProxyRequestHeaders = (
   return headers;
 };
 
-// CSRF defense-in-depth on top of the session cookie's SameSite=Lax: state-
-// changing requests must originate from this app. Server-side and same-origin
-// browser fetches either omit Origin or match the request host.
-const hasMismatchedOrigin = (request: Request): boolean => {
-  if (request.method === "GET" || request.method === "HEAD") {
-    return false;
-  }
-
-  const origin = request.headers.get("origin");
-  if (!origin) {
-    return false;
-  }
-
-  try {
-    return new URL(origin).host !== new URL(request.url).host;
-  } catch {
-    return true;
-  }
-};
-
 const jsonError = (status: number, error: string) =>
   Response.json({ ok: false, error }, { status });
 
@@ -220,7 +201,7 @@ export const proxyBackendRequest = async (
     timeoutMs = BACKEND_TIMEOUT_MS,
   }: ProxyRequestOptions = {},
 ): Promise<Response> => {
-  if (hasMismatchedOrigin(request)) {
+  if (!isSameOriginMutationRequest(request)) {
     return jsonError(403, "Forbidden");
   }
 
