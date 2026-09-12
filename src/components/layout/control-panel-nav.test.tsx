@@ -42,6 +42,9 @@ describe("ControlPanelNav", () => {
     expect(
       within(nav).getByRole("link", { name: "controlPanel.yearReview.title" }),
     ).toHaveAttribute("href", "/hallinta/vuosikatsaus");
+    expect(
+      within(nav).getByRole("link", { name: "controlPanel.adminUsers.title" }),
+    ).toHaveAttribute("href", "/hallinta/kayttajat");
   });
 
   it("marks the current page link with aria-current", () => {

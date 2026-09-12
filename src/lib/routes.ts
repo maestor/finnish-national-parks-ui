@@ -26,6 +26,7 @@ export const appRoutes = {
     editVisit: (visitId: string | number) => `${CONTROL_PANEL_ROOT}/kaynnit/${visitId}/muokkaa`,
     dateRangeReview: `${CONTROL_PANEL_ROOT}/ajanjaksokatsaus`,
     yearReview: `${CONTROL_PANEL_ROOT}/vuosikatsaus`,
+    admins: `${CONTROL_PANEL_ROOT}/kayttajat`,
   },
 } as const;
 
@@ -86,6 +87,11 @@ export const legacyAppRedirects = [
   {
     source: "/control-panel/year-review",
     destination: appRoutes.controlPanel.yearReview,
+    permanent: true,
+  },
+  {
+    source: "/control-panel/admins",
+    destination: appRoutes.controlPanel.admins,
     permanent: true,
   },
   {
@@ -167,6 +173,10 @@ const normalizePathname = (pathname: string) => {
 
   if (pathname === "/control-panel/year-review") {
     return appRoutes.controlPanel.yearReview;
+  }
+
+  if (pathname === "/control-panel/admins") {
+    return appRoutes.controlPanel.admins;
   }
 
   const parkMatch = /^\/park\/([^/]+)$/.exec(pathname);

@@ -9,7 +9,15 @@ const LoginPage = async ({
   const t = await getTranslations("auth");
   const params = await searchParams;
   const error = params.error;
-  const hasError = error === "access_denied" || error === "auth_failed";
+  const hasError =
+    error === "access_denied" ||
+    error === "auth_failed" ||
+    error === "invitation_failed" ||
+    error === "invitation_invalid";
+  const errorMessage =
+    error === "invitation_invalid" || error === "invitation_failed"
+      ? t("invitationFailed")
+      : t("accessDenied");
 
   return (
     <section
@@ -22,7 +30,7 @@ const LoginPage = async ({
         </h1>
         {hasError === true && (
           <p className="text-sm text-red-500" role="alert">
-            {t("accessDenied")}
+            {errorMessage}
           </p>
         )}
         <LoginLink className="inline-flex items-center justify-center rounded-md bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground transition-colors hover:bg-secondary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">

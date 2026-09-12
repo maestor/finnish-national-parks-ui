@@ -46,6 +46,7 @@ The wildcard robots rule already allows `OAI-SearchBot` on public pages. OpenAI 
 - Browser admin write requests are also proxied through Next.js route handlers.
 - Browser park search requests are also proxied through Next.js route handlers.
 - The OAuth start and callback routes are proxied through the frontend host so the session cookie can be stored on the frontend domain.
+- Admin invitation links use the same proxied OAuth start and callback; no additional Google redirect URI is required.
 
 ## Current PWA note
 
@@ -83,9 +84,9 @@ The frontend proxy routes in this repo avoid sending the backend cookie directly
 9. Update backend allowed origins or CORS settings if your backend restricts them.
 10. Redeploy the frontend after env or domain changes.
 
-## Backend follow-up before Google OAuth goes live
+## Backend auth setup
 
-Before admin login works in production, the backend must know the frontend's real public URL for OAuth redirect and post-login redirect behavior.
+The backend must know the frontend's real public URL for OAuth redirects and post-login redirects. Apply the current database migrations before enabling the control panel; existing email-only admins are enrolled through `/hallinta/kayttajat` after an enrolled admin signs in.
 
 Typical values you will need on the backend side:
 

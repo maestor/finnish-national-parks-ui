@@ -352,6 +352,26 @@
       "title": "Hallinta",
       "description": "Täällä voit muokata paikkoja, hallita retkiä ja ylläpitää käyntikirjauksia."
     },
+    "adminUsers": {
+      "title": "Ylläpitäjät",
+      "description": "Kutsu uusi ylläpitäjä tai yhdistä aiemmin luotu sähköpostirivi hänen Google-tiliinsä.",
+      "emailLabel": "Google-tilin sähköpostiosoite",
+      "emailHint": "Tarkista osoite huolellisesti. Google-tilin olemassaolo ja vahvistettu sähköpostiosoite tarkistetaan, kun kutsuttu henkilö kirjautuu.",
+      "create": "Luo kutsulinkki",
+      "creating": "Luodaan kutsulinkkiä...",
+      "createdTitle": "Kutsulinkki luotu",
+      "createdDescription": "Jaa linkki kutsutulle turvallista kanavaa pitkin. Linkki toimii kerran ja vanhenee pian.",
+      "linkLabel": "Kutsulinkki",
+      "copyLink": "Kopioi kutsulinkki",
+      "linkCopied": "Kutsulinkki kopioitu",
+      "expiresAt": "Linkki vanhenee {date}.",
+      "errors": {
+        "alreadyEnrolled": "Tällä sähköpostiosoitteella on jo Google-tiliin yhdistetty ylläpitäjä.",
+        "invalidEmail": "Anna kelvollinen sähköpostiosoite.",
+        "notAllowed": "Sinulla ei ole oikeutta luoda ylläpitäjäkutsuja.",
+        "generic": "Kutsulinkin luominen epäonnistui. Yritä uudelleen."
+      }
+    },
     "dateRangeReview": {
       "title": "Ajanjaksokatsaus",
       "description": "Rakenna lyhyempi katsaus valitulle ajanjaksolle, esikatsele tarina ja julkaise siitä jaettava linkki.",
@@ -750,7 +770,8 @@
     "login": "Kirjaudu",
     "loginToControlPanel": "Kirjaudu hallintaan",
     "logout": "Kirjaudu ulos",
-    "accessDenied": "Ei hallintaoikeutta."
+    "accessDenied": "Ei hallintaoikeutta.",
+    "invitationFailed": "Kutsulinkki on virheellinen, vanhentunut tai sitä ei voitu käyttää. Pyydä uusi linkki ylläpitäjältä."
   },
   "imageGallery": {
     "dialogLabel": "Käyntikuvat",
