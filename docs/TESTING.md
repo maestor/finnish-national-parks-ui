@@ -1,7 +1,7 @@
 # Testing Guide
 
 Featured-image UI tests should cover lazy candidate loading, selection/cancel/save/clear, pagination, and accessible dialog controls. Browser verification covers the admin slot and public hero at desktop and 354px mobile in light and dark themes.
-Admin invitation UI tests cover the accessible email form, generated link output, copy action, and already-enrolled error state. Backend integration tests cover token expiry/use, identity matching, and admin-row provisioning.
+Admin invitation UI tests cover the accessible email form, generated link output, copy action, and already-enrolled error state. Admin management UI tests cover super-admin visibility, role changes, self-action hiding, removal confirmation, and error states. Backend integration tests cover token expiry/use, identity matching, admin-row provisioning, super-admin authorization, role changes, self-protection, and removal.
 Trip archive UI tests should cover the server-rendered first batch, cursor append/deduplication, initial and later-page retry states, empty/end states, accessible card links, and the no-store same-origin proxy. Browser verification should inspect `/retket` at desktop and 354px mobile in both themes when an authorized local runtime is available.
 
 This project follows **behavior-first TDD**: write the realistic usage story first, turn it into a failing test, implement the smallest change to pass, then refactor.
@@ -207,7 +207,12 @@ The `useAuth` hook fetches `/auth/me`. In component tests, mock `apiFetch` or th
 
 ```ts
 vi.mock("@/hooks/use-auth", () => ({
-  useAuth: () => ({ isAuthenticated: true, isLoading: false, user: null, logout: vi.fn() }),
+  useAuth: () => ({
+    isAuthenticated: true,
+    isLoading: false,
+    user: { email: "admin@example.com", id: "admin-sub", isSuperAdmin: false, name: "Admin", picture: "" },
+    logout: vi.fn(),
+  }),
 }));
 ```
 

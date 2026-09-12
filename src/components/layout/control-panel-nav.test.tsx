@@ -2,7 +2,19 @@ import { render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ControlPanelNav } from "./control-panel-nav";
 
-const { pathnameState } = vi.hoisted(() => ({
+const { authState, pathnameState } = vi.hoisted(() => ({
+  authState: {
+    isAuthenticated: true,
+    isLoading: false,
+    logout: vi.fn(),
+    user: {
+      email: "super@example.com",
+      id: "super-sub",
+      isSuperAdmin: true,
+      name: "Super",
+      picture: "",
+    },
+  },
   pathnameState: { value: "/control-panel" },
 }));
 
@@ -10,9 +22,14 @@ vi.mock("next/navigation", () => ({
   usePathname: () => pathnameState.value,
 }));
 
+vi.mock("@/hooks/use-auth", () => ({
+  useAuth: () => authState,
+}));
+
 describe("ControlPanelNav", () => {
   beforeEach(() => {
     pathnameState.value = "/control-panel";
+    authState.user.isSuperAdmin = true;
   });
 
   it("renders navigation links", () => {
@@ -66,5 +83,13 @@ describe("ControlPanelNav", () => {
     expect(screen.getByRole("link", { name: "controlPanel.parks.title" })).not.toHaveAttribute(
       "aria-current",
     );
+  });
+
+  it("hides the admin users link for normal admins", () => {
+    authState.user.isSuperAdmin = false;
+
+    render(<ControlPanelNav />);
+
+    expect(screen.queryByRole("link", { name: "controlPanel.adminUsers.title" })).toBeNull();
   });
 });

@@ -17,6 +17,7 @@ describe("useAuth", () => {
     vi.mocked(apiFetch).mockResolvedValueOnce({
       id: "user-1",
       email: "user@example.com",
+      isSuperAdmin: false,
       name: "Test User",
       picture: "https://example.com/user.png",
     });
@@ -32,6 +33,7 @@ describe("useAuth", () => {
     expect(result.current.user).toEqual({
       id: "user-1",
       email: "user@example.com",
+      isSuperAdmin: false,
       name: "Test User",
       picture: "https://example.com/user.png",
     });
@@ -54,6 +56,7 @@ describe("useAuth", () => {
     vi.mocked(apiFetch).mockResolvedValueOnce({
       id: "user-1",
       email: "user@example.com",
+      isSuperAdmin: false,
       name: "Test User",
       picture: "https://example.com/user.png",
     });
@@ -75,6 +78,7 @@ describe("useAuth", () => {
     vi.mocked(apiFetch).mockResolvedValueOnce({
       id: "user-1",
       email: "user@example.com",
+      isSuperAdmin: false,
       name: "Test User",
       picture: "https://example.com/user.png",
     });
@@ -112,6 +116,7 @@ describe("useAuth", () => {
       resolveUser({
         id: "user-1",
         email: "user@example.com",
+        isSuperAdmin: false,
         name: "Test User",
         picture: "https://example.com/user.png",
       });
@@ -148,6 +153,7 @@ describe("useAuth", () => {
     vi.mocked(apiFetch).mockResolvedValueOnce({
       id: "user-1",
       email: "user@example.com",
+      isSuperAdmin: false,
       name: "Test User",
       picture: "https://example.com/user.png",
     });
