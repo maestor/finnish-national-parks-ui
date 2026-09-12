@@ -5810,6 +5810,18 @@ export interface paths {
                         };
                     };
                 };
+                /** @description Stored file size exceeds the allowed upload limit */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
                 /** @description Upload is missing or invalid */
                 422: {
                     headers: {
@@ -6334,6 +6346,18 @@ export interface paths {
                 };
                 /** @description Visit was not found */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Stored file size exceeds the allowed upload limit */
+                413: {
                     headers: {
                         [name: string]: unknown;
                     };
