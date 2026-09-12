@@ -212,6 +212,7 @@ Public API terminology and access caveat:
 - Catalog and visit `GET` data used by the public UI are public from an end-user perspective: visitors can access them through the Reissuvihko frontend without logging in.
 - The backend is a separate API boundary. Outside localhost, its `/api/*` routes generally require the server-side `API_KEY`; `GET /health`, `GET /openapi.json`, and `GET /assets/logos/*` are anonymous backend reads, while `/auth/*` is anonymous login control flow. Do not describe the backend API itself as anonymously public unless its middleware and tests prove that.
 - Admin mutations require authenticated admin access. The frontend proxy keeps the API key server-side and enforces the corresponding session and CSRF checks; the documented public trip-planner POSTs are the deliberate unauthenticated exception.
+- Public trip-planner POSTs go through a dedicated proxy guard: request bodies are streamed and capped at 16 KiB before forwarding, and the proxy supplies an opaque planner client ID for the API's shared abuse budget. The client maps `413` and `429` responses to the Finnish retry/validation messages in `messages/fi.json`; do not weaken the guard by forwarding client-supplied budget headers.
 
 ### Paired UI/API workflow
 

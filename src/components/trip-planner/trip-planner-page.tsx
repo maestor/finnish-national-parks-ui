@@ -32,6 +32,7 @@ import {
 } from "@/components/layout/public-page-styles";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { ApiError } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import {
   type FilterableParkTypeSlug,
@@ -914,7 +915,13 @@ export const TripPlannerPage = () => {
     } catch (failure) {
       setSearchState("error");
       setResult(null);
-      setErrorMessage(failure instanceof Error ? failure.message : t("errors.generic"));
+      if (failure instanceof ApiError && failure.status === 429) {
+        setErrorMessage(t("errors.rateLimited"));
+      } else if (failure instanceof ApiError && failure.status === 413) {
+        setErrorMessage(t("errors.requestTooLarge"));
+      } else {
+        setErrorMessage(failure instanceof Error ? failure.message : t("errors.generic"));
+      }
     }
   };
 

@@ -423,6 +423,7 @@ describe("api proxy routes", () => {
     await postTripPlannerSearch(request);
 
     expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/trip-planner/search", {
+      includeTripPlannerBudget: true,
       timeoutMs: TRIP_PLANNER_SEARCH_REQUEST_TIMEOUT_MS,
     });
   });
@@ -435,6 +436,7 @@ describe("api proxy routes", () => {
     await postTripPlannerNearby(request);
 
     expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/trip-planner/nearby", {
+      includeTripPlannerBudget: true,
       timeoutMs: TRIP_PLANNER_NEARBY_REQUEST_TIMEOUT_MS,
     });
   });
@@ -446,7 +448,9 @@ describe("api proxy routes", () => {
 
     await postTripPlannerSuggestions(request);
 
-    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/trip-planner/suggestions");
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/trip-planner/suggestions", {
+      includeTripPlannerBudget: true,
+    });
   });
 
   it("proxies visit creation for a park", async () => {

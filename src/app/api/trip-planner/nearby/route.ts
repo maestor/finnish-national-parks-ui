@@ -3,5 +3,6 @@ import { TRIP_PLANNER_NEARBY_REQUEST_TIMEOUT_MS } from "@/lib/trip-planner-timeo
 
 export const POST = async (request: Request) =>
   proxyBackendRequest(request, "/api/trip-planner/nearby", {
+    includeTripPlannerBudget: true,
     timeoutMs: TRIP_PLANNER_NEARBY_REQUEST_TIMEOUT_MS,
   });

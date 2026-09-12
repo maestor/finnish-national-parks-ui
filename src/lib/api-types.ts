@@ -3920,6 +3920,72 @@ export interface paths {
                         };
                     };
                 };
+                /** @description Trip route budget exceeded */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                            /** @enum {string} */
+                            errorCode: "destination_not_found" | "origin_not_found" | "provider_unavailable" | "route_not_found" | "trip_planner_budget_exceeded" | "trip_planner_budget_unavailable" | "trip_planner_not_configured";
+                            routeFailure?: {
+                                destination: {
+                                    coordinate: {
+                                        lat: number;
+                                        lon: number;
+                                    };
+                                    displayName: string;
+                                    label: string;
+                                };
+                                origin: {
+                                    coordinate: {
+                                        lat: number;
+                                        lon: number;
+                                    };
+                                    displayName: string;
+                                    label: string;
+                                };
+                                waypointIndex: number;
+                            };
+                        };
+                    };
+                };
+                /** @description Trip route budget unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                            /** @enum {string} */
+                            errorCode: "destination_not_found" | "origin_not_found" | "provider_unavailable" | "route_not_found" | "trip_planner_budget_exceeded" | "trip_planner_budget_unavailable" | "trip_planner_not_configured";
+                            routeFailure?: {
+                                destination: {
+                                    coordinate: {
+                                        lat: number;
+                                        lon: number;
+                                    };
+                                    displayName: string;
+                                    label: string;
+                                };
+                                origin: {
+                                    coordinate: {
+                                        lat: number;
+                                        lon: number;
+                                    };
+                                    displayName: string;
+                                    label: string;
+                                };
+                                waypointIndex: number;
+                            };
+                        };
+                    };
+                };
             };
         };
         put?: never;
@@ -4266,6 +4332,51 @@ export interface paths {
                         };
                     };
                 };
+                /** @description Request body exceeds the trip planner limit */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Trip planner request budget exceeded */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                            /** @enum {string} */
+                            errorCode: "destination_not_found" | "origin_not_found" | "provider_unavailable" | "route_not_found" | "trip_planner_budget_exceeded" | "trip_planner_budget_unavailable" | "trip_planner_not_configured";
+                            routeFailure?: {
+                                destination: {
+                                    coordinate: {
+                                        lat: number;
+                                        lon: number;
+                                    };
+                                    displayName: string;
+                                    label: string;
+                                };
+                                origin: {
+                                    coordinate: {
+                                        lat: number;
+                                        lon: number;
+                                    };
+                                    displayName: string;
+                                    label: string;
+                                };
+                                waypointIndex: number;
+                            };
+                        };
+                    };
+                };
                 /** @description Trip planner provider is unavailable or not configured */
                 503: {
                     headers: {
@@ -4276,7 +4387,7 @@ export interface paths {
                             /** @example Not found */
                             error: string;
                             /** @enum {string} */
-                            errorCode: "destination_not_found" | "origin_not_found" | "provider_unavailable" | "route_not_found" | "trip_planner_not_configured";
+                            errorCode: "destination_not_found" | "origin_not_found" | "provider_unavailable" | "route_not_found" | "trip_planner_budget_exceeded" | "trip_planner_budget_unavailable" | "trip_planner_not_configured";
                             routeFailure?: {
                                 destination: {
                                     coordinate: {
@@ -4429,6 +4540,18 @@ export interface paths {
                         };
                     };
                 };
+                /** @description Request body exceeds the trip planner limit */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
                 /** @description Origin, destination, or route could not be resolved */
                 422: {
                     headers: {
@@ -4439,7 +4562,40 @@ export interface paths {
                             /** @example Not found */
                             error: string;
                             /** @enum {string} */
-                            errorCode: "destination_not_found" | "origin_not_found" | "provider_unavailable" | "route_not_found" | "trip_planner_not_configured";
+                            errorCode: "destination_not_found" | "origin_not_found" | "provider_unavailable" | "route_not_found" | "trip_planner_budget_exceeded" | "trip_planner_budget_unavailable" | "trip_planner_not_configured";
+                            routeFailure?: {
+                                destination: {
+                                    coordinate: {
+                                        lat: number;
+                                        lon: number;
+                                    };
+                                    displayName: string;
+                                    label: string;
+                                };
+                                origin: {
+                                    coordinate: {
+                                        lat: number;
+                                        lon: number;
+                                    };
+                                    displayName: string;
+                                    label: string;
+                                };
+                                waypointIndex: number;
+                            };
+                        };
+                    };
+                };
+                /** @description Trip planner request budget exceeded */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                            /** @enum {string} */
+                            errorCode: "destination_not_found" | "origin_not_found" | "provider_unavailable" | "route_not_found" | "trip_planner_budget_exceeded" | "trip_planner_budget_unavailable" | "trip_planner_not_configured";
                             routeFailure?: {
                                 destination: {
                                     coordinate: {
@@ -4472,7 +4628,7 @@ export interface paths {
                             /** @example Not found */
                             error: string;
                             /** @enum {string} */
-                            errorCode: "destination_not_found" | "origin_not_found" | "provider_unavailable" | "route_not_found" | "trip_planner_not_configured";
+                            errorCode: "destination_not_found" | "origin_not_found" | "provider_unavailable" | "route_not_found" | "trip_planner_budget_exceeded" | "trip_planner_budget_unavailable" | "trip_planner_not_configured";
                             routeFailure?: {
                                 destination: {
                                     coordinate: {
@@ -4610,6 +4766,18 @@ export interface paths {
                         };
                     };
                 };
+                /** @description Request body exceeds the trip planner limit */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
                 /** @description Origin could not be resolved */
                 422: {
                     headers: {
@@ -4620,7 +4788,40 @@ export interface paths {
                             /** @example Not found */
                             error: string;
                             /** @enum {string} */
-                            errorCode: "destination_not_found" | "origin_not_found" | "provider_unavailable" | "route_not_found" | "trip_planner_not_configured";
+                            errorCode: "destination_not_found" | "origin_not_found" | "provider_unavailable" | "route_not_found" | "trip_planner_budget_exceeded" | "trip_planner_budget_unavailable" | "trip_planner_not_configured";
+                            routeFailure?: {
+                                destination: {
+                                    coordinate: {
+                                        lat: number;
+                                        lon: number;
+                                    };
+                                    displayName: string;
+                                    label: string;
+                                };
+                                origin: {
+                                    coordinate: {
+                                        lat: number;
+                                        lon: number;
+                                    };
+                                    displayName: string;
+                                    label: string;
+                                };
+                                waypointIndex: number;
+                            };
+                        };
+                    };
+                };
+                /** @description Trip planner request budget exceeded */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                            /** @enum {string} */
+                            errorCode: "destination_not_found" | "origin_not_found" | "provider_unavailable" | "route_not_found" | "trip_planner_budget_exceeded" | "trip_planner_budget_unavailable" | "trip_planner_not_configured";
                             routeFailure?: {
                                 destination: {
                                     coordinate: {
@@ -4653,7 +4854,7 @@ export interface paths {
                             /** @example Not found */
                             error: string;
                             /** @enum {string} */
-                            errorCode: "destination_not_found" | "origin_not_found" | "provider_unavailable" | "route_not_found" | "trip_planner_not_configured";
+                            errorCode: "destination_not_found" | "origin_not_found" | "provider_unavailable" | "route_not_found" | "trip_planner_budget_exceeded" | "trip_planner_budget_unavailable" | "trip_planner_not_configured";
                             routeFailure?: {
                                 destination: {
                                     coordinate: {
