@@ -343,7 +343,9 @@
     },
     "errors": {
       "generic": "Reitit-haun suorittaminen epäonnistui.",
-      "originRequired": "Lähtöpiste on pakollinen."
+      "originRequired": "Lähtöpiste on pakollinen.",
+      "rateLimited": "Reittihakujen hetkellinen enimmäismäärä on täynnä. Yritä hetken kuluttua uudelleen.",
+      "requestTooLarge": "Hakupyyntö on liian suuri. Lyhennä hakutekstiä ja yritä uudelleen."
     }
   },
   "controlPanel": {

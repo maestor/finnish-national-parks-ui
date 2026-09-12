@@ -1548,4 +1548,44 @@ describe("TripPlannerPage", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("API error 503: provider down");
   });
+
+  it("shows a Finnish retry message when the provider budget is exhausted", async () => {
+    mockTripPlannerApi({
+      searchResponses: [new ApiError(429, "API error 429: Trip planner request budget exceeded.")],
+    });
+
+    const user = userEvent.setup();
+
+    render(<TripPlannerPage />);
+
+    await user.type(screen.getByRole("combobox", { name: "tripPlanner.originLabel" }), "Helsinki");
+    await user.type(
+      screen.getByRole("combobox", { name: "tripPlanner.destinationLabel" }),
+      "Tampere",
+    );
+    await user.click(screen.getByRole("button", { name: "tripPlanner.submit" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("tripPlanner.errors.rateLimited");
+  });
+
+  it("shows a Finnish message when a request body is too large", async () => {
+    mockTripPlannerApi({
+      searchResponses: [new ApiError(413, "API error 413: Request body too large.")],
+    });
+
+    const user = userEvent.setup();
+
+    render(<TripPlannerPage />);
+
+    await user.type(screen.getByRole("combobox", { name: "tripPlanner.originLabel" }), "Helsinki");
+    await user.type(
+      screen.getByRole("combobox", { name: "tripPlanner.destinationLabel" }),
+      "Tampere",
+    );
+    await user.click(screen.getByRole("button", { name: "tripPlanner.submit" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "tripPlanner.errors.requestTooLarge",
+    );
+  });
 });

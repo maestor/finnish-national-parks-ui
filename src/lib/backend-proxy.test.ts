@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { proxyBackendRequest } from "./backend-proxy";
+import { MAX_TRIP_PLANNER_REQUEST_BODY_BYTES, proxyBackendRequest } from "./backend-proxy";
 
 const { jwtVerifyMock } = vi.hoisted(() => ({
   jwtVerifyMock: vi.fn(),
@@ -54,6 +54,106 @@ describe("proxyBackendRequest", () => {
     expect(headers.get("cookie")).toBe("__session=test-session");
 
     await expect(response.json()).resolves.toEqual({ ok: true });
+  });
+
+  it("adds a server-issued planner client ID without forwarding a client-supplied header", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    const request = new Request("https://frontend.example/api/trip-planner/suggestions", {
+      method: "POST",
+      headers: {
+        "x-trip-planner-client-id": "forged-client-id",
+        "content-type": "application/json",
+        cookie: "__planner_client=client-cookie-id",
+      },
+      body: JSON.stringify({ query: "He" }),
+    });
+
+    await proxyBackendRequest(request, "/api/trip-planner/suggestions", {
+      includeTripPlannerBudget: true,
+    });
+
+    const [, options] = vi.mocked(globalThis.fetch).mock.calls[0] ?? [];
+    const headers = options?.headers as Headers;
+    expect(headers.get("x-trip-planner-client-id")).toBe("client-cookie-id");
+    expect(headers.get("x-forwarded-for")).toBeNull();
+  });
+
+  it("creates a planner client cookie when the request has no valid client cookie", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    const request = new Request("https://frontend.example/api/trip-planner/suggestions", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ query: "He" }),
+    });
+
+    const response = await proxyBackendRequest(request, "/api/trip-planner/suggestions", {
+      includeTripPlannerBudget: true,
+    });
+
+    const [, options] = vi.mocked(globalThis.fetch).mock.calls[0] ?? [];
+    const headers = options?.headers as Headers;
+    expect(headers.get("x-trip-planner-client-id")).toMatch(/^[A-Za-z0-9_-]{16,128}$/);
+    expect(response.headers.get("set-cookie")).toMatch(/__planner_client=[A-Za-z0-9_-]{16,128}/);
+  });
+
+  it("forwards an empty body for bodyless non-GET requests", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    const request = new Request("https://frontend.example/api/visits/123", { method: "POST" });
+
+    await proxyBackendRequest(request, "/api/visits/123");
+
+    const [, options] = vi.mocked(globalThis.fetch).mock.calls[0] ?? [];
+    const body = options?.body;
+    expect(body).toBeInstanceOf(ArrayBuffer);
+    if (!(body instanceof ArrayBuffer)) throw new Error("Expected an ArrayBuffer body");
+    expect(body.byteLength).toBe(0);
+  });
+
+  it("rejects an oversized streamed planner body before calling the backend", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new Uint8Array(MAX_TRIP_PLANNER_REQUEST_BODY_BYTES));
+        controller.enqueue(new Uint8Array(1));
+        controller.close();
+      },
+    });
+    const request = new Request("https://frontend.example/api/trip-planner/search", {
+      body,
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      duplex: "half",
+    } as RequestInit & { duplex: "half" });
+
+    const response = await proxyBackendRequest(request, "/api/trip-planner/search", {
+      includeTripPlannerBudget: true,
+    });
+
+    expect(response.status).toBe(413);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("rejects an oversized planner body before calling the backend", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const request = new Request("https://frontend.example/api/trip-planner/search", {
+      method: "POST",
+      headers: {
+        "content-length": "16385",
+        "content-type": "application/json",
+      },
+      body: "{}",
+    });
+
+    const response = await proxyBackendRequest(request, "/api/trip-planner/search", {
+      includeTripPlannerBudget: true,
+    });
+
+    expect(response.status).toBe(413);
+    await expect(response.json()).resolves.toEqual({ ok: false, error: "Request body too large" });
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
   it("rewrites backend redirects to the frontend origin and forwards set-cookie", async () => {

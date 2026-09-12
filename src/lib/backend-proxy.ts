@@ -4,6 +4,7 @@ import { isAdminSession, readSessionToken, verifySessionToken } from "@/lib/sess
 
 interface ProxyRequestOptions {
   includeApiKey?: boolean;
+  includeTripPlannerBudget?: boolean;
   requireAdmin?: boolean;
   timeoutMs?: number;
 }
@@ -15,12 +16,83 @@ const getBackendUrl = (request: Request, backendPath: string): URL => {
   return new URL(`${backendPath}${requestUrl.search}`, env.NEXT_PUBLIC_API_URL);
 };
 
-const getRequestBody = async (request: Request): Promise<ArrayBuffer | undefined> => {
+export const MAX_TRIP_PLANNER_REQUEST_BODY_BYTES = 16 * 1024;
+const TRIP_PLANNER_CLIENT_COOKIE_NAME = "__planner_client";
+const TRIP_PLANNER_CLIENT_ID_PATTERN = /^[A-Za-z0-9_-]{16,128}$/;
+
+class RequestBodyTooLargeError extends Error {}
+
+const getCookieValue = (cookieHeader: string | null, cookieName: string): string | null => {
+  for (const part of cookieHeader?.split(";") ?? []) {
+    const separatorIndex = part.indexOf("=");
+    if (separatorIndex < 0) continue;
+
+    const name = part.slice(0, separatorIndex).trim();
+    if (name !== cookieName) continue;
+
+    return part.slice(separatorIndex + 1).trim() || null;
+  }
+
+  return null;
+};
+
+const createTripPlannerClientId = () => globalThis.crypto.randomUUID();
+
+const getTripPlannerClient = (request: Request) => {
+  const cookieValue = getCookieValue(
+    request.headers.get("cookie"),
+    TRIP_PLANNER_CLIENT_COOKIE_NAME,
+  );
+
+  if (cookieValue && TRIP_PLANNER_CLIENT_ID_PATTERN.test(cookieValue)) {
+    return { id: cookieValue, setCookie: false };
+  }
+
+  return { id: createTripPlannerClientId(), setCookie: true };
+};
+
+const getRequestBody = async (
+  request: Request,
+  maxBytes?: number,
+): Promise<ArrayBuffer | undefined> => {
   if (request.method === "GET" || request.method === "HEAD") {
     return undefined;
   }
 
-  return request.arrayBuffer();
+  const declaredLength = Number(request.headers.get("content-length"));
+  if (maxBytes !== undefined && Number.isFinite(declaredLength) && declaredLength > maxBytes) {
+    throw new RequestBodyTooLargeError();
+  }
+
+  if (!request.body) {
+    return new ArrayBuffer(0);
+  }
+
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    totalBytes += value.byteLength;
+    if (maxBytes !== undefined && totalBytes > maxBytes) {
+      await reader.cancel();
+      throw new RequestBodyTooLargeError();
+    }
+
+    chunks.push(value);
+  }
+
+  const body = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    body.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+
+  return body.buffer;
 };
 
 // Forward only what the backend needs. In particular, a client-supplied
@@ -28,7 +100,11 @@ const getRequestBody = async (request: Request): Promise<ArrayBuffer | undefined
 // only credential this proxy attaches.
 const FORWARDED_HEADER_NAMES = ["accept", "content-type", "cookie"];
 
-const buildProxyRequestHeaders = (request: Request, includeApiKey: boolean): Headers => {
+const buildProxyRequestHeaders = (
+  request: Request,
+  includeApiKey: boolean,
+  tripPlannerClientId?: string,
+): Headers => {
   const headers = new Headers();
 
   for (const name of FORWARDED_HEADER_NAMES) {
@@ -40,6 +116,10 @@ const buildProxyRequestHeaders = (request: Request, includeApiKey: boolean): Hea
 
   if (includeApiKey && env.API_KEY) {
     headers.set("authorization", `Bearer ${env.API_KEY}`);
+  }
+
+  if (tripPlannerClientId) {
+    headers.set("x-trip-planner-client-id", tripPlannerClientId);
   }
 
   return headers;
@@ -68,7 +148,11 @@ const hasMismatchedOrigin = (request: Request): boolean => {
 const jsonError = (status: number, error: string) =>
   Response.json({ ok: false, error }, { status });
 
-const buildProxyResponseHeaders = (response: Response, request: Request): Headers => {
+const buildProxyResponseHeaders = (
+  response: Response,
+  request: Request,
+  tripPlannerClientId?: string,
+): Headers => {
   const headers = new Headers();
   const backendOrigin = getBackendOrigin();
 
@@ -110,6 +194,14 @@ const buildProxyResponseHeaders = (response: Response, request: Request): Header
     }
   }
 
+  if (tripPlannerClientId) {
+    const secureAttribute = process.env.NODE_ENV === "production" ? "; Secure" : "";
+    headers.append(
+      "set-cookie",
+      `${TRIP_PLANNER_CLIENT_COOKIE_NAME}=${tripPlannerClientId}; Max-Age=2592000; Path=/; HttpOnly; SameSite=Lax${secureAttribute}`,
+    );
+  }
+
   return headers;
 };
 
@@ -123,6 +215,7 @@ export const proxyBackendRequest = async (
   backendPath: string,
   {
     includeApiKey = true,
+    includeTripPlannerBudget = false,
     requireAdmin = false,
     timeoutMs = BACKEND_TIMEOUT_MS,
   }: ProxyRequestOptions = {},
@@ -145,13 +238,26 @@ export const proxyBackendRequest = async (
   }
 
   const backendUrl = getBackendUrl(request, backendPath);
-  const body = await getRequestBody(request);
+  const tripPlannerClient = includeTripPlannerBudget ? getTripPlannerClient(request) : null;
+
+  let body: ArrayBuffer | undefined;
+  try {
+    body = await getRequestBody(
+      request,
+      includeTripPlannerBudget ? MAX_TRIP_PLANNER_REQUEST_BODY_BYTES : undefined,
+    );
+  } catch (error) {
+    if (error instanceof RequestBodyTooLargeError) {
+      return jsonError(413, "Request body too large");
+    }
+    throw error;
+  }
 
   let response: Response;
   try {
     response = await fetch(backendUrl, {
       method: request.method,
-      headers: buildProxyRequestHeaders(request, includeApiKey),
+      headers: buildProxyRequestHeaders(request, includeApiKey, tripPlannerClient?.id),
       body,
       redirect: "manual",
       // A hung backend must not pin the route handler indefinitely.
@@ -167,6 +273,10 @@ export const proxyBackendRequest = async (
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,
-    headers: buildProxyResponseHeaders(response, request),
+    headers: buildProxyResponseHeaders(
+      response,
+      request,
+      tripPlannerClient?.setCookie === true ? tripPlannerClient.id : undefined,
+    ),
   });
 };
