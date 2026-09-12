@@ -5762,6 +5762,30 @@ export interface paths {
                 };
             };
             responses: {
+                /** @description Returned the existing image for an idempotent direct-upload completion retry */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            image: {
+                                id: number;
+                                /** Format: uri */
+                                fullUrl: string;
+                                /** Format: uri */
+                                thumbUrl: string;
+                                fullWidth: number | null;
+                                fullHeight: number | null;
+                                thumbWidth: number | null;
+                                thumbHeight: number | null;
+                                originalName: string | null;
+                                displayOrder: number;
+                                createdAt: string;
+                            };
+                        };
+                    };
+                };
                 /** @description Stored one directly uploaded trip stop image */
                 201: {
                     headers: {
@@ -6308,6 +6332,30 @@ export interface paths {
                 };
             };
             responses: {
+                /** @description Returned the existing image for an idempotent direct-upload completion retry */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            image: {
+                                id: number;
+                                /** Format: uri */
+                                fullUrl: string;
+                                /** Format: uri */
+                                thumbUrl: string;
+                                fullWidth: number | null;
+                                fullHeight: number | null;
+                                thumbWidth: number | null;
+                                thumbHeight: number | null;
+                                originalName: string | null;
+                                displayOrder: number;
+                                createdAt: string;
+                            };
+                        };
+                    };
+                };
                 /** @description Stored one directly uploaded visit image */
                 201: {
                     headers: {
