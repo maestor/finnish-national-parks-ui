@@ -12,6 +12,8 @@ vi.mock("@/lib/backend-proxy", () => ({
   proxyBackendRequest: proxyBackendRequestMock,
 }));
 
+import { DELETE as deleteAdminUser, PATCH as patchAdminUser } from "./admin/admins/[id]/route";
+import { GET as getAdminUsers } from "./admin/admins/route";
 import { DELETE as deleteAdminDateRangeReviewShare } from "./admin/date-range-review/shares/[shareId]/route";
 import { GET as getAdminDateRangeReviewShares } from "./admin/date-range-review/shares/route";
 import { POST as postAdminInvitation } from "./admin/invitations/route";
@@ -96,6 +98,40 @@ describe("api proxy routes", () => {
     await postAdminInvitation(request);
 
     expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/admin/invitations", {
+      requireAdmin: true,
+    });
+  });
+
+  it("proxies admin user listing", async () => {
+    const request = new Request("https://frontend.example/api/admin/admins");
+
+    await getAdminUsers(request);
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/admin/admins", {
+      requireAdmin: true,
+    });
+  });
+
+  it("proxies admin user role updates", async () => {
+    const request = new Request("https://frontend.example/api/admin/admins/7", {
+      method: "PATCH",
+    });
+
+    await patchAdminUser(request, { params: Promise.resolve({ id: "7" }) });
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/admin/admins/7", {
+      requireAdmin: true,
+    });
+  });
+
+  it("proxies admin user removal", async () => {
+    const request = new Request("https://frontend.example/api/admin/admins/7", {
+      method: "DELETE",
+    });
+
+    await deleteAdminUser(request, { params: Promise.resolve({ id: "7" }) });
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/admin/admins/7", {
       requireAdmin: true,
     });
   });
