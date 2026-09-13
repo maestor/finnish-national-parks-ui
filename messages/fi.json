@@ -260,7 +260,9 @@
     "mapAriaLabel": "Retken {trip} kartta",
     "excludedFromRoute": "Ei mukana ajoreitissä",
     "routeDistanceLabel": "Reitin pituus",
-    "routeDistanceValue": "{kilometers} km"
+    "routeDistanceValue": "{kilometers} km",
+    "routeRateLimited": "Retken ajoreittiä ei voida näyttää juuri nyt, koska reittihakujen enimmäismäärä on täynnä. Retken muut tiedot ovat käytettävissä.",
+    "routeUnavailable": "Retken ajoreittiä ei voitu näyttää juuri nyt. Retken muut tiedot ovat käytettävissä."
   },
   "tripsArchive": {
     "eyebrow": "Retkikertomukset",
@@ -310,6 +312,7 @@
     "locationLocating": "Paikannetaan nykyistä sijaintiasi...",
     "locationUnsupported": "Selaimesi ei tue nykyisen sijainnin hakemista.",
     "locationPermissionDenied": "Nykyisen sijainnin käyttöä ei sallittu.",
+    "locationRateLimited": "Nykyinen sijainti otettiin käyttöön koordinaatteina, mutta sen nimen haku ei onnistu juuri nyt reittihakujen enimmäismäärän vuoksi.",
     "locationUnavailable": "Nykyistä sijaintia ei saatu haettua.",
     "locationTimeout": "Nykyisen sijainnin haku aikakatkaistiin.",
     "distanceFromRoute": "Etäisyys reitiltä",
@@ -343,10 +346,14 @@
     },
     "errors": {
       "generic": "Reitit-haun suorittaminen epäonnistui.",
+      "suggestionsRateLimited": "Paikkaehdotuksia ei voi hakea juuri nyt, koska reittihakujen enimmäismäärä on täynnä. Yritä hetken kuluttua uudelleen.",
       "originRequired": "Lähtöpiste on pakollinen.",
       "rateLimited": "Reittihakujen hetkellinen enimmäismäärä on täynnä. Yritä hetken kuluttua uudelleen.",
       "requestTooLarge": "Hakupyyntö on liian suuri. Lyhennä hakutekstiä ja yritä uudelleen."
     }
+  },
+  "locationSuggestion": {
+    "rateLimited": "Paikkaehdotuksia ei voi hakea juuri nyt. Yritä hetken kuluttua uudelleen."
   },
   "controlPanel": {
     "title": "Hallinta",
@@ -646,6 +653,7 @@
         "locationLocating": "Nykyistä sijaintia haetaan…",
         "locationUnsupported": "Selaimesi ei tue nykyisen sijainnin käyttöä.",
         "locationPermissionDenied": "Sijainnin käyttö estettiin selaimessa.",
+        "locationRateLimited": "Nykyinen sijainti otettiin käyttöön koordinaatteina, mutta sen nimen haku ei onnistu juuri nyt. Yritä hetken kuluttua uudelleen.",
         "locationTimeout": "Sijainnin haku aikakatkaistiin. Yritä uudelleen.",
         "locationUnavailable": "Nykyistä sijaintia ei voitu määrittää."
       },
@@ -668,6 +676,7 @@
         "locationLocating": "Nykyistä sijaintia haetaan…",
         "locationUnsupported": "Selaimesi ei tue nykyisen sijainnin käyttöä.",
         "locationPermissionDenied": "Sijainnin käyttö estettiin selaimessa.",
+        "locationRateLimited": "Nykyinen sijainti otettiin käyttöön koordinaatteina, mutta sen nimen haku ei onnistu juuri nyt. Yritä hetken kuluttua uudelleen.",
         "locationTimeout": "Sijainnin haku aikakatkaistiin. Yritä uudelleen.",
         "locationUnavailable": "Nykyistä sijaintia ei voitu määrittää.",
         "validation": {

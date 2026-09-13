@@ -807,6 +807,31 @@ describe("TripPlannerPage", () => {
     expect(getApiCallsForPath("/api/trip-planner/search")).toHaveLength(1);
   });
 
+  it("shows a rate-limit warning beside the suggestion input without blocking manual search", async () => {
+    vi.useFakeTimers();
+    mockTripPlannerApi({
+      suggestionHandler: async () => {
+        throw new ApiError(429, "API error 429: Trip planner request budget exceeded.");
+      },
+    });
+
+    render(<TripPlannerPage />);
+
+    const originInput = screen.getByRole("combobox", { name: "tripPlanner.originLabel" });
+    fireEvent.focus(originInput);
+    fireEvent.change(originInput, { target: { value: "Helsinki" } });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+      await Promise.resolve();
+    });
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "tripPlanner.errors.suggestionsRateLimited",
+    );
+    expect(screen.queryByRole("option")).not.toBeInTheDocument();
+  });
+
   it("does not request suggestions below the minimum query length and closes an open suggestion list", async () => {
     vi.useFakeTimers();
     mockTripPlannerApi();
@@ -990,11 +1015,11 @@ describe("TripPlannerPage", () => {
     expect(locateButton).toBeEnabled();
   });
 
-  it("falls back to the coordinate query when reverse lookup fails after geolocation succeeds", async () => {
+  it("keeps the coordinate fallback and warns when reverse lookup is rate-limited", async () => {
     mockTripPlannerApi({
       suggestionHandler: async (query) => {
         if (query === currentLocationCoordinateQuery) {
-          throw new ApiError(503, "API error 503: provider down");
+          throw new ApiError(429, "API error 429: Trip planner request budget exceeded.");
         }
 
         return createSuggestionResponse(query);
@@ -1026,7 +1051,7 @@ describe("TripPlannerPage", () => {
 
     expect(await screen.findByDisplayValue(currentLocationCoordinateQuery)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "tripPlanner.submit" })).toBeEnabled();
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.getByText("tripPlanner.locationRateLimited")).toBeInTheDocument();
   });
 
   it("shows a location error message when the browser cannot provide geolocation", async () => {

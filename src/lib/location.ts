@@ -1,11 +1,12 @@
 import type { TripPlannerResolvedLocation } from "./trip-planner";
-import { fetchTripPlannerSuggestions } from "./trip-planner";
+import { fetchTripPlannerSuggestions, isTripPlannerRateLimitError } from "./trip-planner";
 
 export type UserLocationStatus =
   | "idle"
   | "locating"
   | "unsupported"
   | "permissionDenied"
+  | "rateLimited"
   | "unavailable"
   | "timeout";
 
@@ -81,7 +82,7 @@ export const buildFallbackResolvedLocation = (
 
 export const resolveLocationFromCoordinate = async (
   coordinate: LocationCoordinate,
-): Promise<TripPlannerResolvedLocation> => {
+): Promise<{ location: TripPlannerResolvedLocation; rateLimited: boolean }> => {
   const fallbackLocation = buildFallbackResolvedLocation(coordinate);
 
   try {
@@ -89,15 +90,15 @@ export const resolveLocationFromCoordinate = async (
       query: fallbackLocation.label,
     });
 
-    return response.suggestions[0] ?? fallbackLocation;
-  } catch {
-    return fallbackLocation;
+    return { location: response.suggestions[0] ?? fallbackLocation, rateLimited: false };
+  } catch (error) {
+    return { location: fallbackLocation, rateLimited: isTripPlannerRateLimitError(error) };
   }
 };
 
 export const getUserLocationStatusFromError = (
   error: GeolocationPositionError,
-): Exclude<UserLocationStatus, "idle" | "locating" | "unsupported"> => {
+): Exclude<UserLocationStatus, "idle" | "locating" | "rateLimited" | "unsupported"> => {
   switch (error.code) {
     case error.PERMISSION_DENIED:
       return "permissionDenied";

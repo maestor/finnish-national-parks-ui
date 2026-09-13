@@ -51,6 +51,7 @@ type AssignmentLocationMessageKey =
   | "locationLocating"
   | "locationUnsupported"
   | "locationPermissionDenied"
+  | "locationRateLimited"
   | "locationTimeout"
   | "locationUnavailable";
 
@@ -228,6 +229,8 @@ const getLocationStatusMessage = (
       return t("locationUnsupported");
     case "permissionDenied":
       return t("locationPermissionDenied");
+    case "rateLimited":
+      return t("locationRateLimited");
     case "timeout":
       return t("locationTimeout");
     case "unavailable":
@@ -578,14 +581,14 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
 
     geolocation.getCurrentPosition(
       async (position) => {
-        const resolvedLocation = await resolveLocationFromCoordinate({
+        const resolved = await resolveLocationFromCoordinate({
           lat: position.coords.latitude,
           lon: position.coords.longitude,
         });
 
-        setStopLocationQuery(resolvedLocation.label);
-        setStopLocation(resolvedLocation);
-        setStopLocationStatus("idle");
+        setStopLocationQuery(resolved.location.label);
+        setStopLocation(resolved.location);
+        setStopLocationStatus(resolved.rateLimited ? "rateLimited" : "idle");
       },
       (error) => {
         setStopLocationStatus(getUserLocationStatusFromError(error));

@@ -99,6 +99,11 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
   const shouldShowStopCount = trip.stopCount > 0;
   const shouldShowImageCount = trip.imageCount > 0;
   const shouldShowRouteContent = routeStatus.success && route !== null;
+  const shouldShowRouteError = routeStatus.success === false && routeStatus.error !== null;
+  const routeErrorMessage =
+    routeStatus.error?.errorCode === "trip_planner_budget_exceeded"
+      ? t("routeRateLimited")
+      : t("routeUnavailable");
   const shouldShowRouteMap =
     startingPoint !== null &&
     (trip.itinerary.length > 0 || routeStatus.success === false || shouldShowRouteContent);
@@ -402,6 +407,14 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
               {t("routeTitle")}
             </h2>
           </div>
+          {shouldShowRouteError === true && (
+            <p
+              className="mt-4 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+              role="alert"
+            >
+              {routeErrorMessage}
+            </p>
+          )}
           {shouldShowRouteMap === true && (
             <div className="mt-4">
               <DeferredMap

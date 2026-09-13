@@ -36,6 +36,7 @@ type TripFormLocationMessageKey =
   | "locationLocating"
   | "locationUnsupported"
   | "locationPermissionDenied"
+  | "locationRateLimited"
   | "locationTimeout"
   | "locationUnavailable";
 
@@ -55,6 +56,8 @@ const getLocationStatusMessage = (
       return t("locationUnsupported");
     case "permissionDenied":
       return t("locationPermissionDenied");
+    case "rateLimited":
+      return t("locationRateLimited");
     case "timeout":
       return t("locationTimeout");
     case "unavailable":
@@ -159,14 +162,14 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
 
     geolocation.getCurrentPosition(
       async (position) => {
-        const resolvedLocation = await resolveLocationFromCoordinate({
+        const resolved = await resolveLocationFromCoordinate({
           lat: position.coords.latitude,
           lon: position.coords.longitude,
         });
 
-        setStartingPointQuery(resolvedLocation.label);
-        setStartingPoint(resolvedLocation);
-        setStartingPointLocationStatus("idle");
+        setStartingPointQuery(resolved.location.label);
+        setStartingPoint(resolved.location);
+        setStartingPointLocationStatus(resolved.rateLimited ? "rateLimited" : "idle");
       },
       (error) => {
         setStartingPointLocationStatus(getUserLocationStatusFromError(error));

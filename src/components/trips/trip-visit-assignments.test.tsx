@@ -905,8 +905,11 @@ describe("TripVisitAssignments", () => {
   it("creates a stop using the current location", async () => {
     const { apiFetch } = await import("@/lib/api");
     mockResolveLocationFromCoordinate.mockResolvedValueOnce({
-      coordinate: { lat: 61.6886, lon: 27.2736 },
-      label: "Mikkeli",
+      location: {
+        coordinate: { lat: 61.6886, lon: 27.2736 },
+        label: "Mikkeli",
+      },
+      rateLimited: false,
     });
     vi.mocked(apiFetch).mockResolvedValueOnce({
       displayName: "Yöpymispaikka Mikkeli",
@@ -1016,8 +1019,11 @@ describe("TripVisitAssignments", () => {
 
   it("lets a new stop choose its insertion order", async () => {
     mockResolveLocationFromCoordinate.mockResolvedValueOnce({
-      coordinate: { lat: 61.6886, lon: 27.2736 },
-      label: "Mikkeli",
+      location: {
+        coordinate: { lat: 61.6886, lon: 27.2736 },
+        label: "Mikkeli",
+      },
+      rateLimited: false,
     });
     vi.mocked(apiFetch).mockResolvedValueOnce({
       displayName: null,
@@ -1135,8 +1141,11 @@ describe("TripVisitAssignments", () => {
   it("shows an error when creating a stop fails", async () => {
     const { apiFetch } = await import("@/lib/api");
     mockResolveLocationFromCoordinate.mockResolvedValueOnce({
-      coordinate: { lat: 61.6886, lon: 27.2736 },
-      label: "Mikkeli",
+      location: {
+        coordinate: { lat: 61.6886, lon: 27.2736 },
+        label: "Mikkeli",
+      },
+      rateLimited: false,
     });
     vi.mocked(apiFetch).mockRejectedValueOnce(new Error("stop failed"));
 

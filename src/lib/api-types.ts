@@ -3881,7 +3881,7 @@ export interface paths {
                                 error: {
                                     error: string;
                                     /** @enum {string} */
-                                    errorCode: "provider_unavailable" | "route_not_found" | "trip_planner_not_configured";
+                                    errorCode: "provider_unavailable" | "route_not_found" | "trip_planner_budget_exceeded" | "trip_planner_budget_unavailable" | "trip_planner_not_configured";
                                     routeFailure?: {
                                         destination: {
                                             coordinate: {
@@ -3917,72 +3917,6 @@ export interface paths {
                         "application/json": {
                             /** @example Not found */
                             error: string;
-                        };
-                    };
-                };
-                /** @description Trip route budget exceeded */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example Not found */
-                            error: string;
-                            /** @enum {string} */
-                            errorCode: "destination_not_found" | "origin_not_found" | "provider_unavailable" | "route_not_found" | "trip_planner_budget_exceeded" | "trip_planner_budget_unavailable" | "trip_planner_not_configured";
-                            routeFailure?: {
-                                destination: {
-                                    coordinate: {
-                                        lat: number;
-                                        lon: number;
-                                    };
-                                    displayName: string;
-                                    label: string;
-                                };
-                                origin: {
-                                    coordinate: {
-                                        lat: number;
-                                        lon: number;
-                                    };
-                                    displayName: string;
-                                    label: string;
-                                };
-                                waypointIndex: number;
-                            };
-                        };
-                    };
-                };
-                /** @description Trip route budget unavailable */
-                503: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example Not found */
-                            error: string;
-                            /** @enum {string} */
-                            errorCode: "destination_not_found" | "origin_not_found" | "provider_unavailable" | "route_not_found" | "trip_planner_budget_exceeded" | "trip_planner_budget_unavailable" | "trip_planner_not_configured";
-                            routeFailure?: {
-                                destination: {
-                                    coordinate: {
-                                        lat: number;
-                                        lon: number;
-                                    };
-                                    displayName: string;
-                                    label: string;
-                                };
-                                origin: {
-                                    coordinate: {
-                                        lat: number;
-                                        lon: number;
-                                    };
-                                    displayName: string;
-                                    label: string;
-                                };
-                                waypointIndex: number;
-                            };
                         };
                     };
                 };

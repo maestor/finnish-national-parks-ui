@@ -1,4 +1,4 @@
-import { apiFetch } from "./api";
+import { ApiError, apiFetch } from "./api";
 import type { paths } from "./api-types";
 import {
   TRIP_PLANNER_NEARBY_REQUEST_TIMEOUT_MS,
@@ -66,6 +66,9 @@ export const fetchTripPlannerSuggestions = async (
     body: JSON.stringify(request),
     signal,
   });
+
+export const isTripPlannerRateLimitError = (error: unknown) =>
+  error instanceof ApiError && error.status === 429;
 
 export const searchTripPlanner = async (
   request: Omit<TripPlannerSearchRequest, "mode">,

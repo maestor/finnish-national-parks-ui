@@ -196,9 +196,12 @@ describe("TripForm", () => {
   it("uses the current location as the starting point", async () => {
     const { apiFetch } = await import("@/lib/api");
     mockResolveLocationFromCoordinate.mockResolvedValueOnce({
-      coordinate: { lat: 61.4978, lon: 23.761 },
-      displayName: "Tampere",
-      label: "Tampere",
+      location: {
+        coordinate: { lat: 61.4978, lon: 23.761 },
+        displayName: "Tampere",
+        label: "Tampere",
+      },
+      rateLimited: false,
     });
     vi.mocked(apiFetch).mockResolvedValueOnce({
       ...tripToEdit,
@@ -251,6 +254,48 @@ describe("TripForm", () => {
         },
       }),
     });
+  });
+
+  it("keeps the coordinate as a starting point and explains a rate-limited lookup", async () => {
+    mockResolveLocationFromCoordinate.mockResolvedValueOnce({
+      location: {
+        coordinate: { lat: 61.4978, lon: 23.761 },
+        displayName: "61.4978, 23.761",
+        label: "61.4978, 23.761",
+      },
+      rateLimited: true,
+    });
+
+    Object.defineProperty(window.navigator, "geolocation", {
+      configurable: true,
+      value: {
+        getCurrentPosition: vi.fn((success: PositionCallback) =>
+          success({
+            coords: {
+              latitude: 61.4978,
+              longitude: 23.761,
+            },
+          } as GeolocationPosition),
+        ),
+      },
+    });
+
+    render(<TripForm tripToEdit={tripToEdit} />);
+
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: /controlPanel.trips.form.useCurrentLocation/i,
+      }),
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("combobox", {
+          name: /controlPanel.trips.form.startingPointLabel/i,
+        }),
+      ).toHaveValue("61.4978, 23.761");
+    });
+    expect(screen.getByText("controlPanel.trips.form.locationRateLimited")).toBeInTheDocument();
   });
 
   it("shows a permission error when current location lookup fails", async () => {

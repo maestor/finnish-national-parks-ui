@@ -8,6 +8,8 @@ const mockFetchTripPlannerSuggestions = vi.fn();
 
 vi.mock("@/lib/trip-planner", () => ({
   fetchTripPlannerSuggestions: (...args: unknown[]) => mockFetchTripPlannerSuggestions(...args),
+  isTripPlannerRateLimitError: (error: unknown) =>
+    typeof error === "object" && error !== null && "status" in error && error.status === 429,
 }));
 
 const createSuggestion = (
@@ -346,6 +348,24 @@ describe("LocationSuggestionInput", () => {
 
     fireEvent.keyDown(input, { key: "Escape" });
 
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+  });
+
+  it("explains a rate-limited suggestion lookup beside the affected input", async () => {
+    mockFetchTripPlannerSuggestions.mockRejectedValueOnce({ status: 429 });
+
+    render(<TestHarness />);
+
+    const input = screen.getByRole("combobox", { name: "Sijainti" });
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: "Helsinki" } });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+      await Promise.resolve();
+    });
+
+    expect(screen.getByRole("alert")).toHaveTextContent("locationSuggestion.rateLimited");
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
   });
 });
