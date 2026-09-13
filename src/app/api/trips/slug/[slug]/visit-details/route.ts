@@ -7,6 +7,8 @@ import {
   collectTripVisitDetailTargets,
 } from "@/lib/public-trip-visit-details";
 
+const PRIVATE_NO_STORE_HEADERS = { "Cache-Control": "private, no-store" };
+
 interface RouteContext {
   params: Promise<{
     slug: string;
@@ -21,14 +23,14 @@ export const GET = async (_request: Request, { params }: RouteContext) => {
     const targets = collectTripVisitDetailTargets(trip);
 
     if (targets.size === 0) {
-      return Response.json({ visits: {} });
+      return Response.json({ visits: {} }, { headers: PRIVATE_NO_STORE_HEADERS });
     }
 
     const parkVisitsBySlug = new Map(
       await Promise.all(
         [...targets.keys()].map(async (parkSlug) => {
           const parkVisits = await apiPublicFetch<ParkVisits>(`/api/parks/${parkSlug}/visits`, {
-            cache: "force-cache",
+            cache: "no-store",
             signal: AbortSignal.timeout(PUBLIC_TRIP_VISIT_DETAILS_REQUEST_TIMEOUT_MS),
           });
           return [parkSlug, parkVisits.visits] as const;
@@ -36,10 +38,15 @@ export const GET = async (_request: Request, { params }: RouteContext) => {
       ),
     );
 
-    return Response.json(buildPublicTripVisitDetailsResponse(trip, parkVisitsBySlug));
+    return Response.json(buildPublicTripVisitDetailsResponse(trip, parkVisitsBySlug), {
+      headers: PRIVATE_NO_STORE_HEADERS,
+    });
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) {
-      return Response.json({ error: "Not found" }, { status: 404 });
+      return Response.json(
+        { error: "Not found" },
+        { headers: PRIVATE_NO_STORE_HEADERS, status: 404 },
+      );
     }
 
     throw error;

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ApiError } from "@/lib/api";
 import type { ParkVisits } from "@/lib/parks";
 import { PUBLIC_TRIP_VISIT_DETAILS_REQUEST_TIMEOUT_MS } from "@/lib/public-trip-timeout";
 import { GET } from "./route";
@@ -42,7 +43,7 @@ describe("trip visit details route", () => {
     vi.clearAllMocks();
   });
 
-  it("uses an extended timeout when hydrating park visit details", async () => {
+  it("uses an extended timeout and never stores signed gallery URLs", async () => {
     const firstSignal = new AbortController().signal;
     const secondSignal = new AbortController().signal;
     const timeoutSpy = vi
@@ -75,11 +76,11 @@ describe("trip visit details route", () => {
     expect(timeoutSpy).toHaveBeenNthCalledWith(1, PUBLIC_TRIP_VISIT_DETAILS_REQUEST_TIMEOUT_MS);
     expect(timeoutSpy).toHaveBeenNthCalledWith(2, PUBLIC_TRIP_VISIT_DETAILS_REQUEST_TIMEOUT_MS);
     expect(apiPublicFetchMock).toHaveBeenNthCalledWith(1, "/api/parks/nuuksio/visits", {
-      cache: "force-cache",
+      cache: "no-store",
       signal: firstSignal,
     });
     expect(apiPublicFetchMock).toHaveBeenNthCalledWith(2, "/api/parks/pallas-yllastunturi/visits", {
-      cache: "force-cache",
+      cache: "no-store",
       signal: secondSignal,
     });
     await expect(response.json()).resolves.toEqual({
@@ -88,5 +89,30 @@ describe("trip visit details route", () => {
         "12": { images: [] },
       },
     });
+    expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+  });
+
+  it("does not store the empty gallery response", async () => {
+    fetchPublicTripBySlugMock.mockResolvedValueOnce({ slug: "kesaretki" });
+    collectTripVisitDetailTargetsMock.mockReturnValueOnce(new Map());
+
+    const response = await GET(new Request("http://localhost:4300/api/trips/slug/kesaretki"), {
+      params: Promise.resolve({ slug: "kesaretki" }),
+    });
+
+    await expect(response.json()).resolves.toEqual({ visits: {} });
+    expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+  });
+
+  it("does not store a missing trip response", async () => {
+    fetchPublicTripBySlugMock.mockRejectedValueOnce(new ApiError(404, "Not found"));
+
+    const response = await GET(new Request("http://localhost:4300/api/trips/slug/puuttuu"), {
+      params: Promise.resolve({ slug: "puuttuu" }),
+    });
+
+    expect(response.status).toBe(404);
+    await expect(response.json()).resolves.toEqual({ error: "Not found" });
+    expect(response.headers.get("Cache-Control")).toBe("private, no-store");
   });
 });
