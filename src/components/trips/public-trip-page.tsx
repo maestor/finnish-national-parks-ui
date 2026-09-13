@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useEffect, useEffectEvent, useMemo, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { EditIconLink } from "@/components/admin/edit-icon-link";
@@ -37,7 +37,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { apiPublicFetch } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { formatFinnishDate, formatFinnishDateRange } from "@/lib/fi-date";
-import type { PublicTripVisitDetailsResponse } from "@/lib/public-trip-visit-details";
 import {
   createTripItineraryItemKey,
   tripStopHasExpandableDetails,
@@ -45,7 +44,11 @@ import {
 } from "@/lib/public-trip-visit-details";
 import { createParkVisitHref } from "@/lib/public-visits";
 import { appRoutes } from "@/lib/routes";
-import { getTripStopDisplayName, type PublicTripDetail } from "@/lib/trips";
+import {
+  getTripStopDisplayName,
+  type PublicTripDetail,
+  type PublicTripVisitImagesResponse,
+} from "@/lib/trips";
 import { DeferredMap } from "../map/deferred-map";
 import { LazyPublicTripMap } from "./lazy-public-trip-map";
 
@@ -56,6 +59,12 @@ interface PublicTripPageProps {
 interface ItineraryItemTarget {
   isExpandable: boolean;
   kind: "stop" | "visit";
+}
+
+interface VisitImageDetailsState extends PublicTripVisitImagesResponse {
+  isLoadingMore: boolean;
+  loadMoreFailed: boolean;
+  status: "loading" | "ready" | "error";
 }
 
 const ROUTE_BADGE_CLASS_NAME =
@@ -85,7 +94,8 @@ const TRIP_ROUTE_SECTION_ID = "trip-route";
 const TRIP_ITINERARY_SECTION_ID = "trip-itinerary";
 const TRIP_ITINERARY_PROGRESSIVE_THRESHOLD = 12;
 
-const getTripVisitDetailsPath = (slug: string) => `/api/trips/slug/${slug}/visit-details`;
+const getTripVisitImagesPath = (slug: string, visitId: number) =>
+  `/api/trips/slug/${slug}/visits/${visitId}/images`;
 
 const getItineraryDetailsPanelId = (itemKey: string) => `trip-itinerary-details-${itemKey}`;
 
@@ -159,42 +169,151 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
   );
   const [openItemKey, setOpenItemKey] = useState<string | null>(null);
   const [failedFeaturedImageKey, setFailedFeaturedImageKey] = useState<string | null>(null);
-  const [visitDetailsById, setVisitDetailsById] = useState<
-    PublicTripVisitDetailsResponse["visits"]
-  >({});
-  const [visitDetailsStatus, setVisitDetailsStatus] = useState<
-    "idle" | "loading" | "ready" | "error"
-  >(hasDeferredVisitDetails ? "idle" : "ready");
+  const [visitDetailsById, setVisitDetailsById] = useState<Record<string, VisitImageDetailsState>>(
+    {},
+  );
   const [stickySectionNavHeight, setStickySectionNavHeight] = useState(0);
   const [, startVisitDetailsTransition] = useTransition();
   const itineraryItemRefs = useRef(new Map<string, HTMLLIElement>());
   const itineraryToggleButtonRefs = useRef(new Map<string, HTMLButtonElement>());
   const pendingScrollItemKeyRef = useRef<string | null>(null);
+  const visitDetailsByIdRef = useRef<Record<string, VisitImageDetailsState>>({});
+  const visitImageRequestControllersRef = useRef(new Map<string, AbortController>());
+  const visitImageRequestsRef = useRef(new Map<string, Promise<void>>());
+  const visitDetailsTripSlugRef = useRef(trip.slug);
 
-  const loadVisitDetails = useEffectEvent(async () => {
-    if (hasDeferredVisitDetails === false || visitDetailsStatus === "loading") {
+  const setVisitImageDetails = useCallback((visitId: number, state: VisitImageDetailsState) => {
+    const nextDetails = { ...visitDetailsByIdRef.current, [visitId]: state };
+    visitDetailsByIdRef.current = nextDetails;
+    setVisitDetailsById(nextDetails);
+  }, []);
+
+  const loadVisitImages = useCallback(
+    (visitId: number, offset = 0) => {
+      const requestKey = `${visitId}:${offset}`;
+      const current = visitDetailsByIdRef.current[String(visitId)];
+
+      if (hasDeferredVisitDetails === false || visitImageRequestsRef.current.has(requestKey)) {
+        return visitImageRequestsRef.current.get(requestKey);
+      }
+
+      if (offset === 0 && (current?.status === "loading" || current?.status === "ready")) {
+        return;
+      }
+
+      if (offset > 0 && (current?.nextOffset !== offset || current.isLoadingMore === true)) {
+        return;
+      }
+
+      if (offset === 0) {
+        setVisitImageDetails(visitId, {
+          images: [],
+          isLoadingMore: false,
+          loadMoreFailed: false,
+          nextOffset: null,
+          status: "loading",
+        });
+      } else if (current) {
+        setVisitImageDetails(visitId, {
+          ...current,
+          isLoadingMore: true,
+          loadMoreFailed: false,
+        });
+      }
+
+      const controller = new AbortController();
+      visitImageRequestControllersRef.current.set(requestKey, controller);
+      const search = offset === 0 ? "" : `?offset=${offset}`;
+      const request = apiPublicFetch<PublicTripVisitImagesResponse>(
+        getTripVisitImagesPath(trip.slug, visitId) + search,
+        {
+          signal: controller.signal,
+        },
+      )
+        .then((response) => {
+          if (controller.signal.aborted) {
+            return;
+          }
+
+          startVisitDetailsTransition(() => {
+            const previous = visitDetailsByIdRef.current[String(visitId)];
+            const images =
+              offset === 0
+                ? response.images
+                : Array.from(
+                    new Map(
+                      [...(previous?.images ?? []), ...response.images].map((image) => [
+                        image.id,
+                        image,
+                      ]),
+                    ).values(),
+                  );
+            setVisitImageDetails(visitId, {
+              images,
+              isLoadingMore: false,
+              loadMoreFailed: false,
+              nextOffset: response.nextOffset,
+              status: "ready",
+            });
+          });
+        })
+        .catch(() => {
+          if (controller.signal.aborted) {
+            return;
+          }
+
+          const previous = visitDetailsByIdRef.current[String(visitId)];
+          if (offset > 0 && previous) {
+            setVisitImageDetails(visitId, {
+              ...previous,
+              isLoadingMore: false,
+              loadMoreFailed: true,
+            });
+            return;
+          }
+
+          setVisitImageDetails(visitId, {
+            images: [],
+            isLoadingMore: false,
+            loadMoreFailed: false,
+            nextOffset: null,
+            status: "error",
+          });
+        })
+        .finally(() => {
+          visitImageRequestControllersRef.current.delete(requestKey);
+          visitImageRequestsRef.current.delete(requestKey);
+        });
+
+      visitImageRequestsRef.current.set(requestKey, request);
+      return request;
+    },
+    [hasDeferredVisitDetails, setVisitImageDetails, trip.slug],
+  );
+
+  useEffect(() => {
+    if (visitDetailsTripSlugRef.current !== trip.slug) {
+      visitDetailsTripSlugRef.current = trip.slug;
+      visitDetailsByIdRef.current = {};
+      setVisitDetailsById({});
+    }
+
+    return () => {
+      for (const controller of visitImageRequestControllersRef.current.values()) {
+        controller.abort();
+      }
+      visitImageRequestControllersRef.current.clear();
+      visitImageRequestsRef.current.clear();
+    };
+  }, [trip.slug]);
+
+  const ensureVisitDetailsLoaded = (visitId: number) => {
+    if (hasDeferredVisitDetails === false) {
       return;
     }
 
-    if (visitDetailsStatus === "ready" && Object.keys(visitDetailsById).length > 0) {
-      return;
-    }
-
-    setVisitDetailsStatus("loading");
-
-    try {
-      const response = await apiPublicFetch<PublicTripVisitDetailsResponse>(
-        getTripVisitDetailsPath(trip.slug),
-      );
-
-      startVisitDetailsTransition(() => {
-        setVisitDetailsById(response.visits);
-        setVisitDetailsStatus("ready");
-      });
-    } catch {
-      setVisitDetailsStatus("error");
-    }
-  });
+    void loadVisitImages(visitId);
+  };
 
   useEffect(() => {
     const pendingScrollItemKey = pendingScrollItemKeyRef.current;
@@ -215,12 +334,6 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
     });
     pendingScrollItemKeyRef.current = null;
   });
-
-  const ensureVisitDetailsLoaded = () => {
-    if (hasDeferredVisitDetails === true) {
-      void loadVisitDetails();
-    }
-  };
 
   const scrollToItineraryItem = (itemKey: string) => {
     const itineraryItem = itineraryItemRefs.current.get(itemKey);
@@ -243,7 +356,7 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
     }
 
     if (itemTarget.kind === "visit") {
-      ensureVisitDetailsLoaded();
+      ensureVisitDetailsLoaded(Number(itemKey.slice("visit:".length)));
     }
 
     if (itemTarget.isExpandable === false) {
@@ -264,7 +377,7 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
     const itemTarget = itineraryItemTargets.get(itemKey);
 
     if (itemTarget?.kind === "visit") {
-      ensureVisitDetailsLoaded();
+      ensureVisitDetailsLoaded(Number(itemKey.slice("visit:".length)));
     }
 
     setOpenItemKey((currentOpenItemKey) => (currentOpenItemKey === itemKey ? null : itemKey));
@@ -471,12 +584,12 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
                   const shouldShowImageLoadingState =
                     item.visit.imageCount > 0 &&
                     images.length === 0 &&
-                    visitDetailsStatus !== "error" &&
-                    visitDetailsStatus !== "ready";
+                    visitDetails?.status !== "error" &&
+                    visitDetails?.status !== "ready";
                   const shouldShowImageErrorState =
                     item.visit.imageCount > 0 &&
                     images.length === 0 &&
-                    visitDetailsStatus === "error";
+                    visitDetails?.status === "error";
 
                   return (
                     <li
@@ -615,11 +728,59 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
                                     </p>
                                   )}
                                   {shouldShowImageErrorState === true && (
-                                    <p className="text-sm text-muted-foreground">
-                                      {t("visitDetailsLoadFailed")}
-                                    </p>
+                                    <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                                      <p role="alert">{t("visitDetailsLoadFailed")}</p>
+                                      <button
+                                        type="button"
+                                        className="font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        onClick={() => void loadVisitImages(item.visit.id)}
+                                      >
+                                        {t("retryVisitDetails")}
+                                      </button>
+                                    </div>
                                   )}
                                   {images.length > 0 && <VisitImageGallery images={images} />}
+                                  {visitDetails?.isLoadingMore === true && (
+                                    <p className="text-sm text-muted-foreground">
+                                      {t("loadingMoreVisitImages")}
+                                    </p>
+                                  )}
+                                  {visitDetails?.loadMoreFailed === true && (
+                                    <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                                      <p role="alert">{t("visitDetailsLoadFailed")}</p>
+                                      <button
+                                        type="button"
+                                        className="font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        onClick={() =>
+                                          visitDetails.nextOffset !== null &&
+                                          void loadVisitImages(
+                                            item.visit.id,
+                                            visitDetails.nextOffset,
+                                          )
+                                        }
+                                      >
+                                        {t("retryVisitDetails")}
+                                      </button>
+                                    </div>
+                                  )}
+                                  {visitDetails !== undefined &&
+                                    visitDetails.nextOffset !== null &&
+                                    visitDetails.status === "ready" &&
+                                    visitDetails.isLoadingMore === false &&
+                                    visitDetails.loadMoreFailed === false && (
+                                      <button
+                                        type="button"
+                                        className="text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        onClick={() =>
+                                          void loadVisitImages(
+                                            item.visit.id,
+                                            visitDetails.nextOffset ?? 0,
+                                          )
+                                        }
+                                      >
+                                        {t("loadMoreVisitImages")}
+                                      </button>
+                                    )}
                                 </section>
                               )}
                             </div>
