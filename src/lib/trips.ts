@@ -10,6 +10,9 @@ export type TripDetail =
 export type PublicTripDetail =
   paths["/api/trips/slug/{slug}"]["get"]["responses"][200]["content"]["application/json"];
 
+export type PublicTripVisitImagesResponse =
+  paths["/api/trips/slug/{slug}/visits/{visitId}/images"]["get"]["responses"][200]["content"]["application/json"];
+
 export type TripItineraryItem = TripDetail["itinerary"][number];
 export type PublicTripItineraryItem = PublicTripDetail["itinerary"][number];
 

@@ -310,52 +310,21 @@ describe("PublicTripPage", () => {
     mockFetch.mockResolvedValue(
       new Response(
         JSON.stringify({
-          visits: {
-            "11": {
-              images: [
-                {
-                  id: 501,
-                  fullUrl: "https://images.example.com/nuuksio.jpg",
-                  thumbUrl: "https://images.example.com/nuuksio-thumb.jpg",
-                  fullWidth: 1600,
-                  fullHeight: 900,
-                  thumbWidth: 640,
-                  thumbHeight: 360,
-                  originalName: "nuuksio.jpg",
-                  displayOrder: 1,
-                  createdAt: "2024-06-15T12:00:00Z",
-                },
-              ],
+          images: [
+            {
+              id: 501,
+              fullUrl: "https://images.example.com/nuuksio.jpg",
+              thumbUrl: "https://images.example.com/nuuksio-thumb.jpg",
+              fullWidth: 1600,
+              fullHeight: 900,
+              thumbWidth: 640,
+              thumbHeight: 360,
+              originalName: "nuuksio.jpg",
+              displayOrder: 1,
+              createdAt: "2024-06-15T12:00:00Z",
             },
-            "12": {
-              images: [
-                {
-                  id: 601,
-                  fullUrl: "https://images.example.com/pallas.jpg",
-                  thumbUrl: "https://images.example.com/pallas-thumb.jpg",
-                  fullWidth: 1600,
-                  fullHeight: 900,
-                  thumbWidth: 640,
-                  thumbHeight: 360,
-                  originalName: "pallas.jpg",
-                  displayOrder: 1,
-                  createdAt: "2024-06-18T12:00:00Z",
-                },
-                {
-                  id: 602,
-                  fullUrl: "https://images.example.com/pallas-2.jpg",
-                  thumbUrl: "https://images.example.com/pallas-2-thumb.jpg",
-                  fullWidth: 1600,
-                  fullHeight: 900,
-                  thumbWidth: 640,
-                  thumbHeight: 360,
-                  originalName: "pallas-2.jpg",
-                  displayOrder: 2,
-                  createdAt: "2024-06-18T12:05:00Z",
-                },
-              ],
-            },
-          },
+          ],
+          nextOffset: null,
         }),
         {
           headers: {
@@ -666,7 +635,7 @@ describe("PublicTripPage", () => {
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalled();
     });
-    expect(mockFetch.mock.calls[0]?.[0]).toBe("/api/trips/slug/kesaretki/visit-details");
+    expect(mockFetch.mock.calls[0]?.[0]).toBe("/api/trips/slug/kesaretki/visits/11/images");
 
     const nuuksioVisitCard = screen.getByRole("link", { name: "Nuuksio" }).closest("li");
 
@@ -679,6 +648,96 @@ describe("PublicTripPage", () => {
         "images:1",
       );
     });
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the trip usable when one visit gallery fails and retries only that visit", async () => {
+    const user = userEvent.setup();
+    mockFetch
+      .mockReset()
+      .mockRejectedValueOnce(new Error("Temporary gallery error"))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ images: [], nextOffset: null }), {
+          headers: { "Content-Type": "application/json" },
+          status: 200,
+        }),
+      );
+
+    render(<PublicTripPage trip={trip} />);
+
+    await user.click(screen.getAllByRole("button", { name: "tripPage.showVisit" })[0]);
+
+    expect(screen.getByText("Aamupäivän kierros")).toBeInTheDocument();
+    expect(await screen.findByRole("alert")).toHaveTextContent("tripPage.visitDetailsLoadFailed");
+
+    await user.click(screen.getByRole("button", { name: "tripPage.retryVisitDetails" }));
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+    });
+    expect(mockFetch.mock.calls[1]?.[0]).toBe("/api/trips/slug/kesaretki/visits/11/images");
+  });
+
+  it("loads the next image page only when its visit gallery requests more", async () => {
+    const user = userEvent.setup();
+    mockFetch
+      .mockReset()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            images: [
+              {
+                id: 501,
+                fullUrl: "https://images.example.com/nuuksio.jpg",
+                thumbUrl: "https://images.example.com/nuuksio-thumb.jpg",
+                fullWidth: 1600,
+                fullHeight: 900,
+                thumbWidth: 640,
+                thumbHeight: 360,
+                originalName: "nuuksio.jpg",
+                displayOrder: 1,
+                createdAt: "2024-06-15T12:00:00Z",
+              },
+            ],
+            nextOffset: 12,
+          }),
+          { headers: { "Content-Type": "application/json" }, status: 200 },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            images: [
+              {
+                id: 502,
+                fullUrl: "https://images.example.com/nuuksio-2.jpg",
+                thumbUrl: "https://images.example.com/nuuksio-2-thumb.jpg",
+                fullWidth: 1600,
+                fullHeight: 900,
+                thumbWidth: 640,
+                thumbHeight: 360,
+                originalName: "nuuksio-2.jpg",
+                displayOrder: 2,
+                createdAt: "2024-06-15T12:01:00Z",
+              },
+            ],
+            nextOffset: null,
+          }),
+          { headers: { "Content-Type": "application/json" }, status: 200 },
+        ),
+      );
+
+    render(<PublicTripPage trip={trip} />);
+    await user.click(screen.getAllByRole("button", { name: "tripPage.showVisit" })[0]);
+    await user.click(await screen.findByRole("button", { name: "tripPage.loadMoreVisitImages" }));
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+    });
+    expect(mockFetch.mock.calls[1]?.[0]).toBe(
+      "/api/trips/slug/kesaretki/visits/11/images?offset=12",
+    );
+    expect(screen.getByTestId("visit-image-gallery")).toHaveTextContent("images:2");
   });
 
   it("does not prefetch trip visit details on initial render", () => {
