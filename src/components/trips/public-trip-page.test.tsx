@@ -837,7 +837,30 @@ describe("PublicTripPage", () => {
 
     expect(screen.getByRole("heading", { name: "tripPage.routeTitle" })).toBeInTheDocument();
     expect(screen.getByTestId("public-trip-map")).toHaveTextContent("trip:Kesaretki|distance:none");
-    expect(screen.queryByText("tripPage.routeError")).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("tripPage.routeUnavailable");
+  });
+
+  it("keeps the trip visible and explains the route budget limit inside its route section", () => {
+    render(
+      <PublicTripPage
+        trip={{
+          ...trip,
+          route: {
+            success: false,
+            data: null,
+            error: {
+              error: "Trip planner request budget exceeded.",
+              errorCode: "trip_planner_budget_exceeded",
+            },
+          },
+        }}
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "Kesaretki" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "tripPage.routeTitle" })).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("tripPage.routeRateLimited");
+    expect(screen.getByRole("heading", { name: "tripPage.itineraryTitle" })).toBeInTheDocument();
   });
 
   it("hides optional hero and summary details when the trip does not include them", () => {

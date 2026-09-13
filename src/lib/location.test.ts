@@ -11,6 +11,8 @@ const mockFetchTripPlannerSuggestions = vi.fn();
 
 vi.mock("./trip-planner", () => ({
   fetchTripPlannerSuggestions: (...args: unknown[]) => mockFetchTripPlannerSuggestions(...args),
+  isTripPlannerRateLimitError: (error: unknown) =>
+    typeof error === "object" && error !== null && "status" in error && error.status === 429,
 }));
 
 describe("location helpers", () => {
@@ -43,9 +45,12 @@ describe("location helpers", () => {
     });
 
     await expect(resolveLocationFromCoordinate({ lat: 60.17, lon: 24.94 })).resolves.toEqual({
-      coordinate: { lat: 60.17, lon: 24.94 },
-      displayName: "Helsinki, Suomi",
-      label: "Helsinki, Suomi",
+      location: {
+        coordinate: { lat: 60.17, lon: 24.94 },
+        displayName: "Helsinki, Suomi",
+        label: "Helsinki, Suomi",
+      },
+      rateLimited: false,
     });
   });
 
@@ -55,9 +60,12 @@ describe("location helpers", () => {
     });
 
     await expect(resolveLocationFromCoordinate({ lat: 65.0121, lon: 25.4651 })).resolves.toEqual({
-      coordinate: { lat: 65.0121, lon: 25.4651 },
-      displayName: "65.012100,25.465100",
-      label: "65.012100,25.465100",
+      location: {
+        coordinate: { lat: 65.0121, lon: 25.4651 },
+        displayName: "65.012100,25.465100",
+        label: "65.012100,25.465100",
+      },
+      rateLimited: false,
     });
   });
 
@@ -65,9 +73,25 @@ describe("location helpers", () => {
     mockFetchTripPlannerSuggestions.mockRejectedValueOnce(new Error("lookup failed"));
 
     await expect(resolveLocationFromCoordinate({ lat: 62.2426, lon: 25.7473 })).resolves.toEqual({
-      coordinate: { lat: 62.2426, lon: 25.7473 },
-      displayName: "62.242600,25.747300",
-      label: "62.242600,25.747300",
+      location: {
+        coordinate: { lat: 62.2426, lon: 25.7473 },
+        displayName: "62.242600,25.747300",
+        label: "62.242600,25.747300",
+      },
+      rateLimited: false,
+    });
+  });
+
+  it("keeps the coordinate fallback and reports a rate-limited reverse lookup", async () => {
+    mockFetchTripPlannerSuggestions.mockRejectedValueOnce({ status: 429 });
+
+    await expect(resolveLocationFromCoordinate({ lat: 62.2426, lon: 25.7473 })).resolves.toEqual({
+      location: {
+        coordinate: { lat: 62.2426, lon: 25.7473 },
+        displayName: "62.242600,25.747300",
+        label: "62.242600,25.747300",
+      },
+      rateLimited: true,
     });
   });
 

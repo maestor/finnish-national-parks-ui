@@ -45,6 +45,7 @@ import { getParkTypeDisplayName } from "@/lib/parks";
 import { appRoutes } from "@/lib/routes";
 import {
   fetchTripPlannerSuggestions,
+  isTripPlannerRateLimitError,
   normalizeTripPlannerNearbyResponse,
   normalizeTripPlannerSearchResponse,
   searchTripPlanner,
@@ -111,12 +112,14 @@ type UserLocationStatus =
   | "locating"
   | "unsupported"
   | "permissionDenied"
+  | "rateLimited"
   | "unavailable"
   | "timeout";
 type UserLocationStatusMessageKey =
   | "locationLocating"
   | "locationUnsupported"
   | "locationPermissionDenied"
+  | "locationRateLimited"
   | "locationTimeout"
   | "locationUnavailable";
 type ViewTab = "list" | "map";
@@ -233,6 +236,8 @@ const getUserLocationStatusMessage = (
       return t("locationUnsupported");
     case "permissionDenied":
       return t("locationPermissionDenied");
+    case "rateLimited":
+      return t("locationRateLimited");
     case "timeout":
       return t("locationTimeout");
     case "unavailable":
@@ -315,6 +320,7 @@ type TripPlannerSuggestionInputProps = {
   name: string;
   onLocate?: () => void;
   placeholder: string;
+  rateLimitMessage: string;
   locateButtonLabel?: string;
   isLocating?: boolean;
   required: boolean;
@@ -335,6 +341,7 @@ const TripPlannerSuggestionInput = ({
   name,
   onLocate,
   placeholder,
+  rateLimitMessage,
   required,
   selectedLocation,
   value,
@@ -344,6 +351,7 @@ const TripPlannerSuggestionInput = ({
   const errorId = useId();
   const assistiveMessageId = useId();
   const listboxId = useId();
+  const rateLimitErrorId = useId();
   const isFocusedRef = useRef(false);
   const debounceTimeoutRef = useRef<number | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -352,6 +360,7 @@ const TripPlannerSuggestionInput = ({
   const [hasBeenTouched, setHasBeenTouched] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [isOpen, setIsOpen] = useState(false);
+  const [isSuggestionRateLimited, setIsSuggestionRateLimited] = useState(false);
   const [suggestions, setSuggestions] = useState<TripPlannerSuggestion[]>([]);
 
   const normalizedValue = normalizeSuggestionQuery(value);
@@ -366,6 +375,7 @@ const TripPlannerSuggestionInput = ({
   const shouldShowErrorMessage = showRequiredError && errorMessage !== undefined;
   const shouldShowAssistiveMessage = assistiveMessage !== undefined;
   const shouldShowSuggestions = isOpen === true;
+  const shouldShowSuggestionRateLimitError = isSuggestionRateLimited === true;
   const activeSuggestionId =
     highlightedIndex >= 0
       ? `${listboxId}-option-${getTripPlannerSuggestionKey(suggestions[highlightedIndex])}`
@@ -373,6 +383,7 @@ const TripPlannerSuggestionInput = ({
   const describedBy = [
     showRequiredError ? errorId : null,
     assistiveMessage ? assistiveMessageId : null,
+    shouldShowSuggestionRateLimitError ? rateLimitErrorId : null,
   ]
     .filter((id) => id !== null)
     .join(" ");
@@ -385,6 +396,7 @@ const TripPlannerSuggestionInput = ({
 
     abortControllerRef.current?.abort();
     abortControllerRef.current = null;
+    setIsSuggestionRateLimited(false);
 
     if (!hasSuggestionQuery || selectedLocationKey === queryKey) {
       setSuggestions([]);
@@ -422,6 +434,7 @@ const TripPlannerSuggestionInput = ({
         }
 
         suggestionCacheRef.current.set(queryKey, response.suggestions);
+        setIsSuggestionRateLimited(false);
         setSuggestions(response.suggestions);
         setHighlightedIndex(-1);
         setIsOpen(isFocusedRef.current && response.suggestions.length > 0);
@@ -441,6 +454,7 @@ const TripPlannerSuggestionInput = ({
         setSuggestions([]);
         setHighlightedIndex(-1);
         setIsOpen(false);
+        setIsSuggestionRateLimited(isTripPlannerRateLimitError(error));
       } finally {
         if (abortControllerRef.current === controller) {
           abortControllerRef.current = null;
@@ -613,6 +627,12 @@ const TripPlannerSuggestionInput = ({
           aria-live="polite"
         >
           {assistiveMessage}
+        </p>
+      )}
+
+      {shouldShowSuggestionRateLimitError === true && (
+        <p id={rateLimitErrorId} className="text-sm text-destructive" role="alert">
+          {rateLimitMessage}
         </p>
       )}
 
@@ -866,11 +886,11 @@ export const TripPlannerPage = () => {
 
           setOriginQuery(resolvedLocation.label);
           setOriginLocation(resolvedLocation);
-        } catch {
+          setOriginLocationStatus("idle");
+        } catch (error) {
           setOriginQuery(fallbackLocation.label);
           setOriginLocation(fallbackLocation);
-        } finally {
-          setOriginLocationStatus("idle");
+          setOriginLocationStatus(isTripPlannerRateLimitError(error) ? "rateLimited" : "idle");
         }
       },
       (error) => {
@@ -1030,6 +1050,7 @@ export const TripPlannerPage = () => {
                 onSelectedLocationChange={setOriginLocation}
                 onValueChange={handleOriginValueChange}
                 placeholder={t("originPlaceholder")}
+                rateLimitMessage={t("errors.suggestionsRateLimited")}
                 required
                 selectedLocation={originLocation}
                 value={originQuery}
@@ -1042,6 +1063,7 @@ export const TripPlannerPage = () => {
                 onSelectedLocationChange={setDestinationLocation}
                 onValueChange={setDestinationQuery}
                 placeholder={t("destinationPlaceholder")}
+                rateLimitMessage={t("errors.suggestionsRateLimited")}
                 required={false}
                 selectedLocation={destinationLocation}
                 value={destinationQuery}

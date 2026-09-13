@@ -1,6 +1,7 @@
 "use client";
 
 import { LoaderCircle, LocateFixed } from "lucide-react";
+import { useTranslations } from "next-intl";
 import {
   type ChangeEvent,
   type KeyboardEvent,
@@ -14,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/cn";
 import {
   fetchTripPlannerSuggestions,
+  isTripPlannerRateLimitError,
   type TripPlannerResolvedLocation,
   type TripPlannerSuggestion,
 } from "@/lib/trip-planner";
@@ -72,9 +74,11 @@ export const LocationSuggestionInput = ({
   selectedLocation,
   value,
 }: LocationSuggestionInputProps) => {
+  const t = useTranslations("locationSuggestion");
   const errorId = useId();
   const assistiveMessageId = useId();
   const listboxId = useId();
+  const suggestionErrorId = useId();
   const isFocusedRef = useRef(false);
   const debounceTimeoutRef = useRef<number | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -83,6 +87,7 @@ export const LocationSuggestionInput = ({
   const [hasBeenTouched, setHasBeenTouched] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [isOpen, setIsOpen] = useState(false);
+  const [isSuggestionRateLimited, setIsSuggestionRateLimited] = useState(false);
   const [suggestions, setSuggestions] = useState<TripPlannerSuggestion[]>([]);
 
   const normalizedValue = normalizeSuggestionQuery(value);
@@ -97,6 +102,7 @@ export const LocationSuggestionInput = ({
   const shouldShowErrorMessage =
     showRequiredError && errorMessage !== undefined && errorMessage.length > 0;
   const shouldShowAssistiveMessage = assistiveMessage !== undefined && assistiveMessage.length > 0;
+  const shouldShowSuggestionRateLimitError = isSuggestionRateLimited === true;
   const shouldShowSuggestions = isOpen === true;
   const activeSuggestionId =
     highlightedIndex >= 0
@@ -105,6 +111,7 @@ export const LocationSuggestionInput = ({
   const describedBy = [
     showRequiredError ? errorId : null,
     assistiveMessage ? assistiveMessageId : null,
+    shouldShowSuggestionRateLimitError ? suggestionErrorId : null,
   ]
     .filter((currentId) => currentId !== null)
     .join(" ");
@@ -117,6 +124,7 @@ export const LocationSuggestionInput = ({
 
     abortControllerRef.current?.abort();
     abortControllerRef.current = null;
+    setIsSuggestionRateLimited(false);
 
     if (!hasSuggestionQuery || selectedLocationKey === queryKey) {
       setSuggestions([]);
@@ -154,6 +162,7 @@ export const LocationSuggestionInput = ({
         }
 
         suggestionCacheRef.current.set(queryKey, response.suggestions);
+        setIsSuggestionRateLimited(false);
         setSuggestions(response.suggestions);
         setHighlightedIndex(-1);
         setIsOpen(isFocusedRef.current && response.suggestions.length > 0);
@@ -173,6 +182,7 @@ export const LocationSuggestionInput = ({
         setSuggestions([]);
         setHighlightedIndex(-1);
         setIsOpen(false);
+        setIsSuggestionRateLimited(isTripPlannerRateLimitError(error));
       } finally {
         if (abortControllerRef.current === controller) {
           abortControllerRef.current = null;
@@ -346,6 +356,12 @@ export const LocationSuggestionInput = ({
           aria-live="polite"
         >
           {assistiveMessage}
+        </p>
+      )}
+
+      {shouldShowSuggestionRateLimitError === true && (
+        <p id={suggestionErrorId} className="text-sm text-destructive" role="alert">
+          {t("rateLimited")}
         </p>
       )}
 
