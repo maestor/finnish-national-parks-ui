@@ -153,6 +153,8 @@ Current PWA support includes:
 - Route-served install icons under `src/app/icons/`
 - Dedicated favicon and Apple touch icon metadata
 
+Runtime caching is deliberately limited to same-origin Next static assets and app icons. API, auth, admin, review-share, RSC/navigation, optimized-image, signed-media, and cross-origin requests always use the network. Installing the updated worker removes the broad runtime caches used by earlier releases.
+
 ## Conventions
 
 - **Arrow functions only** — Enforced via Biome (`useArrowFunction: error`)

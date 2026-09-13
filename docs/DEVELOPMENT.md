@@ -392,6 +392,7 @@ See `AGENTS.md` for the full convention list. Key rules:
 - App install icons are served from `src/app/icons/`
 - The shared icon artwork and image responses live in `src/lib/pwa-icon.tsx`
 - Changes to offline, caching, or service-worker registration behavior must be verified against the intended production experience and documented in the same PR.
+- Runtime caching is intentionally narrow: only same-origin `/_next/static/` assets, app icons, and the favicon may enter Cache Storage. API, auth, admin, review-share, RSC/navigation, optimized-image, signed-media, and cross-origin requests are NetworkOnly. Worker activation removes the old broad runtime caches (`apis`, page/RSC, cross-origin, and image caches) while preserving the active precache and unrelated origin storage.
 
 ---
 
