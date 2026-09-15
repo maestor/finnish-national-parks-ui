@@ -101,6 +101,15 @@ Workflow shorthand:
 
 - After the verify-phase results have been reported, a user reply such as `done` means the batch is accepted and the remaining workflow should continue automatically on the current branch: commit, push, and PR handoff without another stop for confirmation.
 
+Resource baseline:
+
+- The API owns the deterministic O4 payload/query baseline. Run its
+  `tests/integration/resource-baseline.integration.test.ts` against the sibling API repository for
+  reproducible public-response budgets.
+- The UI's `src/components/trips/public-trip-page.test.tsx` keeps the browser-side gallery behavior
+  bounded: opening a visit loads one page, and requesting more images loads exactly one next page.
+  Production-mode browser transfer measurements remain a separately authorized runtime check.
+
 ---
 
 ## Architecture
