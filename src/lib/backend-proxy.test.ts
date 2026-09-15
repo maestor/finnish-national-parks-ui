@@ -10,6 +10,15 @@ vi.mock("jose", () => ({
 }));
 
 describe("proxyBackendRequest", () => {
+  const validAdminPayload = {
+    email: "admin@example.com",
+    exp: 1_900_000_000,
+    name: "Admin",
+    picture: "https://example.com/admin.jpg",
+    role: "admin",
+    sub: "admin-1",
+  };
+
   beforeEach(() => {
     vi.restoreAllMocks();
     jwtVerifyMock.mockReset();
@@ -450,7 +459,7 @@ describe("proxyBackendRequest", () => {
       requireAdmin: true,
     });
 
-    expect(response.status).toBe(403);
+    expect(response.status).toBe(401);
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
@@ -475,7 +484,7 @@ describe("proxyBackendRequest", () => {
   });
 
   it("forwards admin-gated requests for a verified admin session", async () => {
-    jwtVerifyMock.mockResolvedValueOnce({ payload: { role: "admin" } });
+    jwtVerifyMock.mockResolvedValueOnce({ payload: validAdminPayload });
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(new Response(null, { status: 204 }));
 
     const request = new Request("https://frontend.example/api/visits/123", {
