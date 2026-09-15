@@ -4,6 +4,7 @@ import { Images, Trash2, Upload, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { ChangeEvent, KeyboardEvent, PointerEvent } from "react";
 import { useEffect, useRef, useState } from "react";
+import { useSnackbar } from "@/components/providers/snackbar-provider";
 import { AppImage } from "@/components/ui/app-image";
 import { Button } from "@/components/ui/button";
 import { VisitImageGallery } from "@/components/visits/visit-image-gallery";
@@ -173,6 +174,7 @@ export const ManagedImageSection = ({
   uploadPlanPath,
 }: ManagedImageSectionProps) => {
   const router = useRouter();
+  const { showSnackbar } = useSnackbar();
   const [localImages, setLocalImages] = useState(images);
   const [savedImageOrder, setSavedImageOrder] = useState(images.map((image) => String(image.id)));
   const [pendingImages, setPendingImages] = useState<PendingImage[]>([]);
@@ -180,10 +182,6 @@ export const ManagedImageSection = ({
   const [isUploading, setIsUploading] = useState(false);
   const [isReordering, setIsReordering] = useState(false);
   const [uploadErrors, setUploadErrors] = useState<string[]>([]);
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const hasActionError = actionError !== null;
-  const hasStatusMessage = statusMessage !== null;
   const [activeDrag, setActiveDrag] = useState<ActiveDrag | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const activeDragRef = useRef<ActiveDrag | null>(null);
@@ -257,14 +255,10 @@ export const ManagedImageSection = ({
   );
 
   const moveSavedImage = (activeId: string, overId: string) => {
-    setActionError(null);
-    setStatusMessage(null);
     setLocalImages((currentImages) => reorderItems(currentImages, activeId, overId));
   };
 
   const movePendingImage = (activeId: string, overId: string) => {
-    setActionError(null);
-    setStatusMessage(null);
     setPendingImages((currentImages) => reorderItems(currentImages, activeId, overId));
   };
 
@@ -307,8 +301,6 @@ export const ManagedImageSection = ({
       setActiveDrag(nextDrag);
       dragOverIdRef.current = itemId;
       setDragOverId(itemId);
-      setActionError(null);
-      setStatusMessage(null);
     };
 
   const handleDragMove = (event: PointerEvent<HTMLButtonElement>) => {
@@ -431,8 +423,6 @@ export const ManagedImageSection = ({
     const files = Array.from(event.target.files ?? []);
     const validFiles: PendingImage[] = [];
     const errors: string[] = [];
-    setActionError(null);
-    setStatusMessage(null);
     setUploadErrors([]);
 
     const remainingImageSlots =
@@ -529,11 +519,15 @@ export const ManagedImageSection = ({
 
     if (response.errors.length > 0) {
       setUploadErrors(response.errors.map((error) => `${error.originalName}: ${error.reason}`));
+      showSnackbar({ message: messages.uploadFailed, tone: "error" });
     }
 
     if (response.images.length > 0) {
       await revalidatePublicCache(revalidateTargets);
-      setStatusMessage(messages.uploadSuccess(response.images.length));
+      showSnackbar({
+        message: messages.uploadSuccess(response.images.length),
+        tone: "success",
+      });
       router.refresh();
     }
   };
@@ -617,12 +611,16 @@ export const ManagedImageSection = ({
       ]);
       onSavedImagesChange?.(nextImages);
       await revalidatePublicCache(revalidateTargets);
-      setStatusMessage(messages.uploadSuccess(uploadedImages.length));
+      showSnackbar({
+        message: messages.uploadSuccess(uploadedImages.length),
+        tone: "success",
+      });
       router.refresh();
     }
 
     if (nextUploadErrors.length > 0) {
       setUploadErrors(nextUploadErrors);
+      showSnackbar({ message: messages.uploadFailed, tone: "error" });
     }
   };
 
@@ -632,8 +630,6 @@ export const ManagedImageSection = ({
     }
 
     setIsUploading(true);
-    setActionError(null);
-    setStatusMessage(null);
     setUploadErrors([]);
 
     try {
@@ -643,7 +639,9 @@ export const ManagedImageSection = ({
         await handleDirectUpload();
       }
     } catch (error) {
-      setUploadErrors([error instanceof Error ? error.message : messages.uploadFailed]);
+      const message = error instanceof Error ? error.message : messages.uploadFailed;
+      setUploadErrors([message]);
+      showSnackbar({ message, tone: "error" });
     } finally {
       setIsUploading(false);
     }
@@ -657,8 +655,6 @@ export const ManagedImageSection = ({
     const previousImages = localImages;
     const previousSavedImageOrder = savedImageOrder;
     const nextImages = localImages.filter((image) => image.id !== imageId);
-    setActionError(null);
-    setStatusMessage(null);
     setLocalImages(nextImages);
     setSavedImageOrder((currentOrder) =>
       currentOrder.filter((currentImageId) => currentImageId !== String(imageId)),
@@ -670,10 +666,13 @@ export const ManagedImageSection = ({
       });
       await revalidatePublicCache(revalidateTargets);
       onSavedImagesChange?.(nextImages);
-      setStatusMessage(messages.deleteSuccess);
+      showSnackbar({ message: messages.deleteSuccess, tone: "success" });
       router.refresh();
     } catch (error) {
-      setActionError(error instanceof Error ? error.message : messages.deleteFailed);
+      showSnackbar({
+        message: error instanceof Error ? error.message : messages.deleteFailed,
+        tone: "error",
+      });
       setLocalImages(previousImages);
       setSavedImageOrder(previousSavedImageOrder);
     }
@@ -684,8 +683,6 @@ export const ManagedImageSection = ({
       return;
     }
 
-    setActionError(null);
-    setStatusMessage(null);
     setIsReordering(true);
 
     try {
@@ -698,18 +695,19 @@ export const ManagedImageSection = ({
       await revalidatePublicCache(revalidateTargets);
       setSavedImageOrder(localImages.map((image) => String(image.id)));
       onSavedImagesChange?.(localImages);
-      setStatusMessage(messages.reorderSuccess);
+      showSnackbar({ message: messages.reorderSuccess, tone: "success" });
       router.refresh();
     } catch (error) {
-      setActionError(error instanceof Error ? error.message : messages.reorderFailed);
+      showSnackbar({
+        message: error instanceof Error ? error.message : messages.reorderFailed,
+        tone: "error",
+      });
     } finally {
       setIsReordering(false);
     }
   };
 
   const handleRestoreImageOrder = () => {
-    setActionError(null);
-    setStatusMessage(null);
     setLocalImages((currentImages) => {
       const imageById = new Map(currentImages.map((image) => [String(image.id), image]));
 
@@ -837,24 +835,6 @@ export const ManagedImageSection = ({
             </div>
           )}
         </div>
-      )}
-
-      {hasActionError && (
-        <p
-          className="rounded-[1.3rem] border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
-          role="alert"
-        >
-          {actionError}
-        </p>
-      )}
-
-      {hasStatusMessage && (
-        <output
-          aria-live="polite"
-          className="block rounded-[1.3rem] border border-emerald-600/20 bg-[linear-gradient(118deg,rgba(22,101,52,0.14),rgba(15,118,110,0.08))] px-4 py-3 text-sm text-emerald-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.38)] dark:border-emerald-300/18 dark:text-emerald-200 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
-        >
-          {statusMessage}
-        </output>
       )}
 
       <div className="space-y-3">

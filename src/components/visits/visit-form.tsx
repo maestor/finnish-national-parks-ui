@@ -1,12 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { CoordinateOverrideFields } from "@/components/location/coordinate-override-fields";
+import { useSnackbar } from "@/components/providers/snackbar-provider";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
@@ -39,6 +39,7 @@ interface VisitFormProps {
 
 export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProps) => {
   const t = useTranslations("controlPanel.visits.form");
+  const { showSnackbar } = useSnackbar();
   const router = useRouter();
   const isEditing = !!visitToEdit;
 
@@ -55,8 +56,6 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
   const [isPreview, setIsPreview] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [savedSnapshot, setSavedSnapshot] = useState({
     visitedOn: visitToEdit?.visitedOn ?? "",
     route: visitToEdit?.route ?? "",
@@ -77,8 +76,6 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
   const hasParkSlugError = errors.parkSlug !== undefined;
   const hasVisitedOnError = errors.visitedOn !== undefined;
   const hasLocationError = errors.location !== undefined;
-  const hasSubmitError = submitError !== null;
-  const hasStatusMessage = statusMessage !== null;
 
   const handleBack = () => {
     router.back();
@@ -113,8 +110,6 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setErrors({});
-    setSubmitError(null);
-    setStatusMessage(null);
 
     const validationErrors: Record<string, string> = {};
     if (!isEditing && !parkSlug) {
@@ -167,7 +162,11 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
           ),
           note: note || "",
         });
-        setStatusMessage(t("updateSuccess"));
+        showSnackbar({
+          action: { href: appRoutes.controlPanel.visits, label: t("viewAllVisits") },
+          message: t("updateSuccess"),
+          tone: "success",
+        });
         router.refresh();
       } else {
         const payload: VisitCreateRequest = {
@@ -192,7 +191,10 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
         );
       }
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : String(error));
+      showSnackbar({
+        message: error instanceof Error ? error.message : String(error),
+        tone: "error",
+      });
     } finally {
       if (shouldResetSubmittingState) {
         setIsSubmitting(false);
@@ -215,7 +217,10 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
       router.push(appRoutes.controlPanel.visits);
       router.refresh();
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : String(error));
+      showSnackbar({
+        message: error instanceof Error ? error.message : String(error),
+        tone: "error",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -343,22 +348,6 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
           />
         )}
       </div>
-
-      {hasSubmitError && <p className="text-sm text-destructive">{submitError}</p>}
-      {hasStatusMessage && (
-        <output
-          aria-live="polite"
-          className="block rounded-[1.3rem] border border-emerald-600/20 bg-[linear-gradient(118deg,rgba(22,101,52,0.14),rgba(15,118,110,0.08))] px-4 py-3 text-sm text-emerald-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.38)] dark:border-emerald-300/18 dark:text-emerald-200 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
-        >
-          <span>{statusMessage}</span>{" "}
-          <Link
-            href={appRoutes.controlPanel.visits}
-            className="font-medium underline underline-offset-4 hover:text-emerald-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:hover:text-emerald-100"
-          >
-            {t("viewAllVisits")}
-          </Link>
-        </output>
-      )}
 
       <div className="flex items-center gap-4">
         <Button type="submit" disabled={isSubmitDisabled}>

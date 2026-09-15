@@ -1,5 +1,6 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render as renderTestingLibrary, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { SnackbarProvider } from "@/components/providers/snackbar-provider";
 import { ApiError, apiFetch } from "@/lib/api";
 import { DateRangeReviewShareList } from "./date-range-review-share-list";
 
@@ -25,6 +26,9 @@ vi.mock("next-intl", () => ({
     return key;
   },
 }));
+
+const render = (ui: Parameters<typeof renderTestingLibrary>[0]) =>
+  renderTestingLibrary(<SnackbarProvider>{ui}</SnackbarProvider>);
 
 describe("DateRangeReviewShareList", () => {
   const confirmMock = vi.fn(() => true);

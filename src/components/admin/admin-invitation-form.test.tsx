@@ -1,5 +1,6 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render as renderTestingLibrary, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { SnackbarProvider } from "@/components/providers/snackbar-provider";
 import { createAdminInvitation } from "@/lib/admin-invitations";
 import { ApiError } from "@/lib/api";
 import { AdminInvitationForm } from "./admin-invitation-form";
@@ -7,6 +8,9 @@ import { AdminInvitationForm } from "./admin-invitation-form";
 vi.mock("@/lib/admin-invitations", () => ({
   createAdminInvitation: vi.fn(),
 }));
+
+const render = (ui: Parameters<typeof renderTestingLibrary>[0]) =>
+  renderTestingLibrary(<SnackbarProvider>{ui}</SnackbarProvider>);
 
 describe("AdminInvitationForm", () => {
   beforeEach(() => {

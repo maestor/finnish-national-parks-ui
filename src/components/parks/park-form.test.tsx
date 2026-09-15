@@ -1,6 +1,7 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render as renderTestingLibrary, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { SnackbarProvider } from "@/components/providers/snackbar-provider";
 import { apiFetch } from "@/lib/api";
 import type { ParkDetail } from "@/lib/parks";
 import { revalidatePublicCache } from "@/lib/public-cache";
@@ -8,6 +9,9 @@ import { ParkForm } from "./park-form";
 
 const replaceMock = vi.fn();
 const refreshMock = vi.fn();
+
+const render = (ui: Parameters<typeof renderTestingLibrary>[0]) =>
+  renderTestingLibrary(<SnackbarProvider>{ui}</SnackbarProvider>);
 
 vi.mock("@/lib/api", () => ({
   apiFetch: vi.fn(),

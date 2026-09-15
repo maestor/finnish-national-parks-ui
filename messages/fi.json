@@ -36,6 +36,9 @@
       "lightMode": "Vaalea tila",
       "darkMode": "Tumma tila",
       "srLabel": "Vaihda teema"
+    },
+    "snackbar": {
+      "close": "Sulje ilmoitus"
     }
   },
   "home": {
@@ -147,6 +150,8 @@
       "hiddenBadge": "Piilotettu sovelluksesta",
       "hideAction": "Piilota sovelluksesta",
       "showAction": "Näytä sovelluksessa",
+      "visibilityHiddenSuccess": "Paikka piilotettiin.",
+      "visibilityVisibleSuccess": "Paikka palautettiin näkyviin.",
       "editAction": "Muokkaa paikan tietoja",
       "updating": "Päivitetään..."
     }
@@ -382,6 +387,8 @@
       "upgrade": "Korota superylläpitäjäksi",
       "reduce": "Palauta ylläpitäjäksi",
       "remove": "Poista ylläpitäjä",
+      "roleUpdated": "Ylläpitäjän rooli päivitettiin.",
+      "removed": "Ylläpitäjä poistettiin.",
       "confirmRemove": "Haluatko varmasti poistaa ylläpitäjän {email}?",
       "emailLabel": "Google-tilin sähköpostiosoite",
       "emailHint": "Tarkista osoite huolellisesti. Google-tilin olemassaolo ja vahvistettu sähköpostiosoite tarkistetaan, kun kutsuttu henkilö kirjautuu.",
@@ -423,6 +430,9 @@
       "publishedStatus": "Julkaistu",
       "actionFailed": "Ajanjaksokatsauksen päivittäminen ei onnistunut.",
       "removeShareFailed": "Julkaistun jakolinkin poistaminen ei onnistunut.",
+      "publishedSuccess": "Ajanjaksokatsaus julkaistiin.",
+      "unpublishedSuccess": "Ajanjaksokatsauksen julkaisu poistettiin.",
+      "shareRemoved": "Jakolinkki poistettiin.",
       "copyShareLink": "Kopioi jakolinkki",
       "shareLinkCopied": "Jakolinkki kopioitu",
       "openSharePage": "Avaa jaettava sivu",
@@ -446,6 +456,8 @@
       "draftStatus": "Luonnos",
       "publishedStatus": "Julkaistu",
       "actionFailed": "Vuosikatsauksen päivittäminen ei onnistunut.",
+      "publishedSuccess": "Vuosikatsaus julkaistiin.",
+      "unpublishedSuccess": "Vuosikatsauksen julkaisu poistettiin.",
       "copyShareLink": "Kopioi jakolinkki",
       "shareLinkCopied": "Jakolinkki kopioitu",
       "openSharePage": "Avaa jaettava sivu"
@@ -468,6 +480,8 @@
       },
       "visibleNotice": "Paikan piilottaminen poistaa sen näkyvistä julkisista näkymistä ja rajapinnoista. Voit palauttaa paikan myöhemmin Piilotetut-välilehdeltä.",
       "hiddenNotice": "Piilotetut paikat eivät näy julkisissa näkymissä. Palauta paikka näkyviin, jos haluat sen takaisin julkisiin rajapintoihin.",
+      "visibleSuccess": "Paikka palautettiin näkyviin.",
+      "hiddenSuccess": "Paikka piilotettiin.",
       "parkName": "Paikka",
       "parkType": "Tyyppi",
       "location": "Sijainti",

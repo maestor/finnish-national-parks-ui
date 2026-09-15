@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { ParkForm } from "@/components/parks/park-form";
+import { SnackbarNotice } from "@/components/providers/snackbar-notice";
 import { apiAuthFetch } from "@/lib/api";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import type { ParkDetail } from "@/lib/parks";
@@ -50,14 +51,7 @@ const EditParkPage = async ({ params, searchParams }: EditParkPageProps) => {
           {t("viewParkPage")}
         </Link>
       </div>
-      {updated === "1" && (
-        <output
-          aria-live="polite"
-          className="mt-4 block rounded-lg border border-emerald-600/20 bg-emerald-600/10 px-4 py-3 text-sm text-emerald-900 dark:text-emerald-200"
-        >
-          {t("updatedNotice")}
-        </output>
-      )}
+      {updated === "1" && <SnackbarNotice message={t("updatedNotice")} />}
       <ParkForm park={park} />
     </div>
   );

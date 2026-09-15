@@ -1,6 +1,7 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render as renderTestingLibrary, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { SnackbarProvider } from "@/components/providers/snackbar-provider";
 import { LONG_TEXTAREA_MAX_LENGTH } from "@/components/ui/textarea-with-counter";
 import type { Trip } from "@/lib/trips";
 import { TripForm } from "./trip-form";
@@ -63,6 +64,9 @@ const tripWithTooLongDescription = {
   ...tripToEdit,
   description: "a".repeat(LONG_TEXTAREA_MAX_LENGTH + 1),
 } satisfies Trip;
+
+const render = (ui: Parameters<typeof renderTestingLibrary>[0]) =>
+  renderTestingLibrary(<SnackbarProvider>{ui}</SnackbarProvider>);
 
 describe("TripForm", () => {
   beforeEach(() => {

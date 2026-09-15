@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { SnackbarProvider } from "@/components/providers/snackbar-provider";
 import { ApiError, apiAuthFetch, apiFetch, apiPublicFetch } from "@/lib/api";
 import type { AdminVisibilityPark, Park, Visit, VisitWithPark } from "@/lib/parks";
 import type { FrontendTimelineVisit } from "@/lib/public-visits";
@@ -848,7 +849,9 @@ const renderPublicRoute = async (page: React.ReactNode) => {
 };
 
 const renderControlPanelRoute = async (page: React.ReactNode) => {
-  return render(await ControlPanelLayout({ children: page }));
+  return render(
+    <SnackbarProvider>{await ControlPanelLayout({ children: page })}</SnackbarProvider>,
+  );
 };
 
 const createExpectedShareMetadata = (

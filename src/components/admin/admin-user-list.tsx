@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
+import { useSnackbar } from "@/components/providers/snackbar-provider";
 import { useAuth } from "@/hooks/use-auth";
 import {
   type AdminUser,
@@ -14,9 +15,9 @@ import { ApiError } from "@/lib/api";
 export const AdminUserList = () => {
   const t = useTranslations("controlPanel.adminUsers");
   const listError = t("errors.list");
+  const { showSnackbar } = useSnackbar();
   const auth = useAuth();
   const [admins, setAdmins] = useState<AdminUser[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const [busyAdminId, setBusyAdminId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -33,14 +34,14 @@ export const AdminUserList = () => {
       })
       .catch(() => {
         if (mounted) {
-          setError(listError);
+          showSnackbar({ message: listError, tone: "error" });
         }
       });
 
     return () => {
       mounted = false;
     };
-  }, [auth.isLoading, auth.user?.isSuperAdmin, listError]);
+  }, [auth.isLoading, auth.user?.isSuperAdmin, listError, showSnackbar]);
 
   const getActionError = (caughtError: unknown, action: "remove" | "update") => {
     if (
@@ -55,7 +56,6 @@ export const AdminUserList = () => {
 
   const handleRoleChange = async (admin: AdminUser) => {
     setBusyAdminId(admin.id);
-    setError(null);
 
     try {
       const updatedAdmin = await updateAdminUser(admin.id, { isSuperAdmin: !admin.isSuperAdmin });
@@ -64,8 +64,9 @@ export const AdminUserList = () => {
           currentAdmin.id === updatedAdmin.id ? updatedAdmin : currentAdmin,
         ),
       );
+      showSnackbar({ message: t("roleUpdated"), tone: "success" });
     } catch (caughtError) {
-      setError(getActionError(caughtError, "update"));
+      showSnackbar({ message: getActionError(caughtError, "update"), tone: "error" });
     } finally {
       setBusyAdminId(null);
     }
@@ -77,15 +78,15 @@ export const AdminUserList = () => {
     }
 
     setBusyAdminId(admin.id);
-    setError(null);
 
     try {
       await removeAdminUser(admin.id);
       setAdmins((currentAdmins) =>
         currentAdmins.filter((currentAdmin) => currentAdmin.id !== admin.id),
       );
+      showSnackbar({ message: t("removed"), tone: "success" });
     } catch (caughtError) {
-      setError(getActionError(caughtError, "remove"));
+      showSnackbar({ message: getActionError(caughtError, "remove"), tone: "error" });
     } finally {
       setBusyAdminId(null);
     }
@@ -104,12 +105,6 @@ export const AdminUserList = () => {
         </h2>
         <p className="mt-1 text-sm leading-6 text-muted-foreground">{t("listDescription")}</p>
       </div>
-
-      {error !== null && (
-        <p role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
-      )}
 
       <div className="overflow-x-auto">
         <table className="w-full min-w-168 text-left text-sm">

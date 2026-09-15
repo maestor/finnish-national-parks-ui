@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { SnackbarNotice } from "@/components/providers/snackbar-notice";
 import { VisitForm } from "@/components/visits/visit-form";
 import { VisitImageSection } from "@/components/visits/visit-image-section";
 import { apiFetch } from "@/lib/api";
@@ -45,14 +46,7 @@ const EditVisitPage = async ({ params, searchParams }: EditVisitPageProps) => {
       >
         {t("viewParkPage")}
       </Link>
-      {created === "1" && (
-        <output
-          aria-live="polite"
-          className="mt-4 block rounded-lg border border-emerald-600/20 bg-emerald-600/10 px-4 py-3 text-sm text-emerald-900 dark:text-emerald-200"
-        >
-          {t("createdNotice")}
-        </output>
-      )}
+      {created === "1" && <SnackbarNotice message={t("createdNotice")} />}
       <VisitForm parks={[]} visitToEdit={visitToEdit} />
       <VisitImageSection
         visitId={visitToEdit.id}
