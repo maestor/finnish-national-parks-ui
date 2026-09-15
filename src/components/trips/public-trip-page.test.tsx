@@ -737,7 +737,9 @@ describe("PublicTripPage", () => {
     expect(mockFetch.mock.calls[1]?.[0]).toBe(
       "/api/trips/slug/kesaretki/visits/11/images?offset=12",
     );
-    expect(screen.getByTestId("visit-image-gallery")).toHaveTextContent("images:2");
+    await waitFor(() => {
+      expect(screen.getByTestId("visit-image-gallery")).toHaveTextContent("images:2");
+    });
   });
 
   it("does not prefetch trip visit details on initial render", () => {
