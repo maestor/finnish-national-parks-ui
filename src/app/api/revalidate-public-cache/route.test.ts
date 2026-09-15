@@ -17,6 +17,15 @@ vi.mock("next/cache", () => ({
 }));
 
 describe("revalidate public cache route", () => {
+  const validAdminPayload = {
+    email: "admin@example.com",
+    exp: 1_900_000_000,
+    name: "Admin",
+    picture: "https://example.com/admin.jpg",
+    role: "admin",
+    sub: "admin-1",
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.AUTH_COOKIE_NAME = "__session";
@@ -60,13 +69,13 @@ describe("revalidate public cache route", () => {
 
     const response = await POST(request);
 
-    expect(response.status).toBe(403);
+    expect(response.status).toBe(401);
     expect(revalidateTagMock).not.toHaveBeenCalled();
     expect(revalidatePathMock).not.toHaveBeenCalled();
   });
 
   it("revalidates summary tags and the specific park page for an authenticated admin session", async () => {
-    jwtVerifyMock.mockResolvedValueOnce({ payload: { role: "admin" } } as never);
+    jwtVerifyMock.mockResolvedValueOnce({ payload: validAdminPayload } as never);
 
     const request = new Request("http://localhost:4300/api/revalidate-public-cache", {
       method: "POST",
@@ -111,7 +120,7 @@ describe("revalidate public cache route", () => {
   });
 
   it("still revalidates shared pages when an authenticated request body is missing or invalid", async () => {
-    jwtVerifyMock.mockResolvedValueOnce({ payload: { role: "admin" } } as never);
+    jwtVerifyMock.mockResolvedValueOnce({ payload: validAdminPayload } as never);
 
     const request = new Request("http://localhost:4300/api/revalidate-public-cache", {
       method: "POST",
@@ -157,7 +166,7 @@ describe("revalidate public cache route", () => {
     ["null Origin", "null"],
     ["different scheme", "https://localhost:4300"],
   ])("rejects an authenticated revalidation request with %s", async (_label, origin) => {
-    jwtVerifyMock.mockResolvedValueOnce({ payload: { role: "admin" } } as never);
+    jwtVerifyMock.mockResolvedValueOnce({ payload: validAdminPayload } as never);
 
     const headers = new Headers({
       "Content-Type": "application/json",

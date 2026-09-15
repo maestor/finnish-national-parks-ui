@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MAX_TRIP_PLANNER_REQUEST_BODY_BYTES, proxyBackendRequest } from "./backend-proxy";
 
 const { jwtVerifyMock } = vi.hoisted(() => ({
@@ -10,11 +10,25 @@ vi.mock("jose", () => ({
 }));
 
 describe("proxyBackendRequest", () => {
+  const validAdminPayload = {
+    email: "admin@example.com",
+    exp: 1_900_000_000,
+    name: "Admin",
+    picture: "https://example.com/admin.jpg",
+    role: "admin",
+    sub: "admin-1",
+  };
+
   beforeEach(() => {
     vi.restoreAllMocks();
     jwtVerifyMock.mockReset();
     process.env.AUTH_COOKIE_NAME = "__session";
     process.env.AUTH_JWT_SECRET = "test-jwt-secret";
+    vi.stubEnv("NODE_ENV", "test");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it("forwards the request to the backend with cookies and the server-side API key", async () => {
@@ -101,6 +115,71 @@ describe("proxyBackendRequest", () => {
     const headers = options?.headers as Headers;
     expect(headers.get("x-trip-planner-client-id")).toMatch(/^[A-Za-z0-9_-]{16,128}$/);
     expect(response.headers.get("set-cookie")).toMatch(/__planner_client=[A-Za-z0-9_-]{16,128}/);
+  });
+
+  it("derives the planner identity from the trusted Vercel header in production", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(null, { status: 204 }));
+
+    const createRequest = (cookie: string) =>
+      new Request("https://frontend.example/api/trip-planner/suggestions", {
+        method: "POST",
+        headers: {
+          cookie,
+          "content-type": "application/json",
+          origin: "https://frontend.example",
+          "x-forwarded-for": "198.51.100.8",
+          "x-trip-planner-client-id": "attacker-controlled",
+          "x-vercel-forwarded-for": "203.0.113.8",
+        },
+        body: JSON.stringify({ query: "He" }),
+      });
+
+    await proxyBackendRequest(
+      createRequest("__planner_client=first"),
+      "/api/trip-planner/suggestions",
+      {
+        includeTripPlannerBudget: true,
+      },
+    );
+    await proxyBackendRequest(
+      createRequest("__planner_client=second"),
+      "/api/trip-planner/suggestions",
+      {
+        includeTripPlannerBudget: true,
+      },
+    );
+
+    const calls = vi.mocked(globalThis.fetch).mock.calls;
+    const firstHeaders = calls[0]?.[1]?.headers as Headers;
+    const secondHeaders = calls[1]?.[1]?.headers as Headers;
+    expect(firstHeaders.get("x-trip-planner-client-id")).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(secondHeaders.get("x-trip-planner-client-id")).toBe(
+      firstHeaders.get("x-trip-planner-client-id"),
+    );
+    expect(firstHeaders.get("x-trip-planner-client-id")).not.toBe("attacker-controlled");
+    expect(calls[0]?.[1]?.headers).toEqual(expect.any(Headers));
+  });
+
+  it("rejects production planner requests without the trusted identity header", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const request = new Request("https://frontend.example/api/trip-planner/suggestions", {
+      method: "POST",
+      headers: {
+        cookie: "__planner_client=client-cookie-id",
+        "content-type": "application/json",
+        origin: "https://frontend.example",
+      },
+      body: JSON.stringify({ query: "He" }),
+    });
+
+    const response = await proxyBackendRequest(request, "/api/trip-planner/suggestions", {
+      includeTripPlannerBudget: true,
+    });
+
+    expect(response.status).toBe(503);
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
   it("forwards an empty body for bodyless non-GET requests", async () => {
@@ -380,7 +459,7 @@ describe("proxyBackendRequest", () => {
       requireAdmin: true,
     });
 
-    expect(response.status).toBe(403);
+    expect(response.status).toBe(401);
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
@@ -405,7 +484,7 @@ describe("proxyBackendRequest", () => {
   });
 
   it("forwards admin-gated requests for a verified admin session", async () => {
-    jwtVerifyMock.mockResolvedValueOnce({ payload: { role: "admin" } });
+    jwtVerifyMock.mockResolvedValueOnce({ payload: validAdminPayload });
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(new Response(null, { status: 204 }));
 
     const request = new Request("https://frontend.example/api/visits/123", {

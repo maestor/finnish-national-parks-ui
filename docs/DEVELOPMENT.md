@@ -56,6 +56,7 @@ NEXT_PUBLIC_MAP_STYLE_URL=https://demotiles.maplibre.org/style.json
 AUTH_COOKIE_NAME=__session
 AUTH_JWT_ISSUER=reissuvihko-api
 AUTH_JWT_AUDIENCE=reissuvihko-ui
+TRIP_PLANNER_CLIENT_SECRET=at-least-32-characters-planner-boundary-secret
 NEXT_PUBLIC_SITE_URL=https://reissuvihko.vercel.app
 ```
 
@@ -373,7 +374,7 @@ These are contributor defaults, not optional polish:
 
 ### Session Token Contract and Proxy AuthZ
 
-- Session verification is centralized in `src/lib/session-auth.ts`. Tokens must be HS256-signed with `AUTH_JWT_SECRET` and carry `iss: "reissuvihko-api"` and `aud: "reissuvihko-ui"` (overridable via `AUTH_JWT_ISSUER` / `AUTH_JWT_AUDIENCE`); both claims are bound at verification.
+- Session verification is centralized in `src/lib/session-auth.ts`. Tokens must be HS256-signed with `AUTH_JWT_SECRET`, carry `iss: "reissuvihko-api"` and `aud: "reissuvihko-ui"` (overridable via `AUTH_JWT_ISSUER` / `AUTH_JWT_AUDIENCE`), and contain the complete API identity shape: finite `exp`, non-empty `sub`, valid `email`, string `name` and `picture`, and `role: "admin"`. All claims are validated before admin shell access, backend mutations, or public-cache revalidation.
 - `src/proxy.ts` gates `/hallinta/*` page shells on a valid session. Route handlers that proxy admin mutations additionally require the `role: "admin"` claim via `proxyBackendRequest(request, path, { requireAdmin: true })`; missing/invalid sessions get 401 and non-admin sessions 403. The Ylläpitäjät page also checks `isSuperAdmin` from `/auth/me`, and the backend repeats that authorization for every admin-management request.
 - Admin-gated proxy routes: park mutations (`/api/parks/[slug]`, `/removed`, `/visits`), visit mutations (`/api/visits/[id]` and all image sub-routes), `GET /api/admin/parks/visibility`, `GET/PATCH/DELETE /api/admin/admins`, `POST /api/admin/invitations`, and `POST /api/revalidate-public-cache`. Public reads and the public trip-planner POSTs stay unauthenticated.
 - Non-`GET` proxy and cache-revalidation requests must carry an `Origin` header whose complete origin (scheme, host, and port) matches the request origin; missing, malformed, or mismatched origins get 403 (CSRF defense-in-depth on top of the `SameSite=Lax` session cookie). Browser same-origin fetches supply this header automatically; no server-originated non-`GET` proxy caller is supported.
@@ -419,7 +420,8 @@ See `AGENTS.md` for the full convention list. Key rules:
 
 ## Production Deployment Notes
 
-- The frontend expects `NEXT_PUBLIC_API_URL`, `API_KEY`, and `AUTH_JWT_SECRET` to be set in Vercel.
+- The frontend expects `NEXT_PUBLIC_API_URL`, `API_KEY`, `AUTH_JWT_SECRET`, and `TRIP_PLANNER_CLIENT_SECRET` to be set in Vercel.
 - `AUTH_JWT_SECRET` must match the backend exactly so `src/proxy.ts` and `src/lib/session-auth.ts` can verify the session JWT. The token's `iss`/`aud` claims must also match `AUTH_JWT_ISSUER` / `AUTH_JWT_AUDIENCE` (defaults `reissuvihko-api` / `reissuvihko-ui`).
+- `TRIP_PLANNER_CLIENT_SECRET` is server-only and must be at least 32 characters. In production the proxy derives the opaque planner client ID from Vercel's platform-overwritten `x-vercel-forwarded-for` header using HMAC-SHA256; it rejects planner requests when that header or secret is missing. Do not expose the UI origin outside Vercel or substitute an arbitrary `x-forwarded-for` value. The identity is intentionally not logged or stored as a raw network identifier.
 - For production auth, prefer custom domains such as `app.example.com` and `api.example.com` over two separate default `*.vercel.app` domains.
 - See [docs/DEPLOYMENT.md](./DEPLOYMENT.md) for the full deployment checklist.
