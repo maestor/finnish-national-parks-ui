@@ -1,6 +1,7 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render as renderTestingLibrary, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { SnackbarProvider } from "@/components/providers/snackbar-provider";
 import { apiFetch } from "@/lib/api";
 import { prepareImageFileForUpload } from "@/lib/image-upload";
 import type { VisitImage } from "@/lib/parks";
@@ -87,6 +88,16 @@ const mockElementFromPoint = (element: Element | null) => {
   });
 
   return elementFromPoint;
+};
+
+const render = (ui: Parameters<typeof renderTestingLibrary>[0]) => {
+  const result = renderTestingLibrary(<SnackbarProvider>{ui}</SnackbarProvider>);
+
+  return {
+    ...result,
+    rerender: (nextUi: Parameters<typeof renderTestingLibrary>[0]) =>
+      result.rerender(<SnackbarProvider>{nextUi}</SnackbarProvider>),
+  };
 };
 
 describe("VisitImageSection", () => {
@@ -496,7 +507,11 @@ describe("VisitImageSection", () => {
     fireEvent.click(uploadButton);
 
     await waitFor(() => {
-      expect(screen.getByRole("alert")).toHaveTextContent("big.jpg: File too large");
+      expect(
+        screen
+          .getAllByRole("alert")
+          .some((alert) => alert.textContent?.includes("big.jpg: File too large")),
+      ).toBe(true);
     });
   });
 
@@ -654,7 +669,9 @@ describe("VisitImageSection", () => {
       tripSlug: null,
     });
     expect(mockRefresh).toHaveBeenCalled();
-    expect(screen.getByText("controlPanel.visits.images.uploadSuccess")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "controlPanel.visits.images.uploadSuccess",
+    );
     expect(
       screen.queryByRole("button", { name: "controlPanel.visits.images.upload" }),
     ).not.toBeInTheDocument();
@@ -712,7 +729,11 @@ describe("VisitImageSection", () => {
     fireEvent.click(screen.getByRole("button", { name: "controlPanel.visits.images.upload" }));
 
     await waitFor(() => {
-      expect(screen.getByRole("alert")).toHaveTextContent("second.jpg: signature expired");
+      expect(
+        screen
+          .getAllByRole("alert")
+          .some((alert) => alert.textContent?.includes("second.jpg: signature expired")),
+      ).toBe(true);
     });
 
     expect(mockRevalidatePublicCache).toHaveBeenCalledWith({
@@ -720,7 +741,11 @@ describe("VisitImageSection", () => {
       tripSlug: null,
     });
     expect(mockRefresh).toHaveBeenCalled();
-    expect(screen.getByText("controlPanel.visits.images.uploadSuccess")).toBeInTheDocument();
+    expect(
+      screen
+        .getAllByRole("alert")
+        .some((alert) => alert.textContent?.includes("controlPanel.visits.images.uploadFailed")),
+    ).toBe(true);
     expect(screen.getByText("controlPanel.visits.images.selectedCount")).toBeInTheDocument();
     expect(getPendingImageOrder(container)).toHaveLength(1);
     expect(URL.revokeObjectURL).toHaveBeenCalledTimes(1);
@@ -741,7 +766,9 @@ describe("VisitImageSection", () => {
     fireEvent.click(screen.getByRole("button", { name: "controlPanel.visits.images.upload" }));
 
     await waitFor(() => {
-      expect(screen.getByRole("alert")).toHaveTextContent("upload failed");
+      expect(
+        screen.getAllByRole("alert").some((alert) => alert.textContent?.includes("upload failed")),
+      ).toBe(true);
     });
 
     expect(mockRefresh).not.toHaveBeenCalled();
@@ -781,7 +808,9 @@ describe("VisitImageSection", () => {
     fireEvent.click(screen.getByRole("button", { name: "controlPanel.visits.images.upload" }));
 
     await waitFor(() => {
-      expect(screen.getByText("controlPanel.visits.images.uploadSuccess")).toBeInTheDocument();
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "controlPanel.visits.images.uploadSuccess",
+      );
     });
 
     expect(getSavedImageOrder(container)).toEqual(["1", "2", "3"]);

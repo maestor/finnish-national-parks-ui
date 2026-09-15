@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 import { LocationSuggestionInput } from "@/components/location/location-suggestion-input";
+import { useSnackbar } from "@/components/providers/snackbar-provider";
 import { Button } from "@/components/ui/button";
 import {
   LONG_TEXTAREA_MAX_LENGTH,
@@ -86,6 +87,7 @@ const revalidateTripPages = async (...tripSlugs: Array<string | null | undefined
 
 export const TripForm = ({ tripToEdit }: TripFormProps) => {
   const t = useTranslations("controlPanel.trips.form");
+  const { showSnackbar } = useSnackbar();
   const router = useRouter();
   const isEditing = !!tripToEdit;
 
@@ -101,8 +103,6 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
     useState<UserLocationStatus>("idle");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [savedSnapshot, setSavedSnapshot] = useState({
     name: tripToEdit?.name ?? "",
     description: tripToEdit?.description ?? "",
@@ -157,7 +157,6 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
       return;
     }
 
-    setSubmitError(null);
     setStartingPointLocationStatus("locating");
 
     geolocation.getCurrentPosition(
@@ -181,8 +180,6 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setErrors({});
-    setSubmitError(null);
-    setStatusMessage(null);
 
     const nextErrors: Record<string, string> = {};
 
@@ -237,7 +234,11 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
           description: updatedTrip.description ?? "",
           startingPointKey: getLocationKey(updatedTrip.startingPoint),
         });
-        setStatusMessage(t("updateSuccess"));
+        showSnackbar({
+          action: { href: appRoutes.controlPanel.trips, label: t("viewAllTrips") },
+          message: t("updateSuccess"),
+          tone: "success",
+        });
         router.refresh();
       } else {
         const payload = {
@@ -260,7 +261,10 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
         );
       }
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : String(error));
+      showSnackbar({
+        message: error instanceof Error ? error.message : String(error),
+        tone: "error",
+      });
     } finally {
       if (shouldResetSubmittingState) {
         setIsSubmitting(false);
@@ -278,7 +282,6 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
     }
 
     setIsSubmitting(true);
-    setSubmitError(null);
 
     try {
       await apiFetch(`/api/trips/${tripToEdit.id}`, { method: "DELETE" });
@@ -286,7 +289,10 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
       router.push(appRoutes.controlPanel.trips);
       router.refresh();
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : String(error));
+      showSnackbar({
+        message: error instanceof Error ? error.message : String(error),
+        tone: "error",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -365,22 +371,6 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
           className={`${INPUT_CLASS_NAME} resize-y`}
         />
       </div>
-
-      {submitError !== null && <p className="text-sm text-destructive">{submitError}</p>}
-      {statusMessage !== null && (
-        <output
-          aria-live="polite"
-          className="block rounded-[1.3rem] border border-emerald-600/20 bg-[linear-gradient(118deg,rgba(22,101,52,0.14),rgba(15,118,110,0.08))] px-4 py-3 text-sm text-emerald-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.38)] dark:border-emerald-300/18 dark:text-emerald-200 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
-        >
-          <span>{statusMessage}</span>{" "}
-          <Link
-            href={appRoutes.controlPanel.trips}
-            className="font-medium underline underline-offset-4 hover:text-emerald-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:hover:text-emerald-100"
-          >
-            {t("viewAllTrips")}
-          </Link>
-        </output>
-      )}
 
       <div className="flex flex-wrap items-center gap-4">
         <Button type="submit" disabled={isSubmitDisabled}>

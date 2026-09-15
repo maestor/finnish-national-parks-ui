@@ -1,5 +1,6 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render as renderTestingLibrary, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { SnackbarProvider } from "@/components/providers/snackbar-provider";
 import { listAdminUsers, removeAdminUser, updateAdminUser } from "@/lib/admin-users";
 import { ApiError } from "@/lib/api";
 import { AdminUserList } from "./admin-user-list";
@@ -55,6 +56,9 @@ const admins = [
     updatedAt: "2026-09-12T10:00:00.000Z",
   },
 ];
+
+const render = (ui: Parameters<typeof renderTestingLibrary>[0]) =>
+  renderTestingLibrary(<SnackbarProvider>{ui}</SnackbarProvider>);
 
 describe("AdminUserList", () => {
   beforeEach(() => {

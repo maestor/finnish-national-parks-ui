@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useSnackbar } from "@/components/providers/snackbar-provider";
 import { AppImage } from "@/components/ui/app-image";
 import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api";
@@ -29,6 +30,8 @@ export const TripImagePicker = ({
   tripId,
 }: TripImagePickerProps) => {
   const t = useTranslations("controlPanel.trips.featuredImage.picker");
+  const { showSnackbar } = useSnackbar();
+  const errorMessage = t("error");
   const dialogRef = useRef<HTMLDialogElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const openerRef = useRef<HTMLElement | null>(null);
@@ -64,9 +67,10 @@ export const TripImagePicker = ({
         setStatus("idle");
       } catch {
         setStatus("error");
+        showSnackbar({ message: errorMessage, tone: "error" });
       }
     },
-    [tripId],
+    [errorMessage, showSnackbar, tripId],
   );
 
   useEffect(() => {
@@ -98,6 +102,7 @@ export const TripImagePicker = ({
       close();
     } catch {
       setStatus("error");
+      showSnackbar({ message: errorMessage, tone: "error" });
     }
   };
 
@@ -129,7 +134,6 @@ export const TripImagePicker = ({
           </button>
         </div>
         <div className="overflow-y-auto p-5" aria-busy={status === "loading"}>
-          {status === "error" && <p role="alert">{t("error")}</p>}
           {status === "idle" && images.length === 0 && <p>{t("empty")}</p>}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {images.map((candidate) => {

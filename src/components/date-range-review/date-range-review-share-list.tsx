@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
+import { useSnackbar } from "@/components/providers/snackbar-provider";
 import { Button } from "@/components/ui/button";
 import { CopyLinkButton } from "@/components/ui/copy-link-button";
 import { ApiError, apiFetch } from "@/lib/api";
@@ -23,9 +24,9 @@ const formatDateTime = (value: string) => DATE_TIME_FORMATTER.format(new Date(va
 
 export const DateRangeReviewShareList = ({ shares }: DateRangeReviewShareListProps) => {
   const t = useTranslations("controlPanel.dateRangeReview");
+  const { showSnackbar } = useSnackbar();
   const [localShares, setLocalShares] = useState(shares);
   const [pendingShareId, setPendingShareId] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     setLocalShares(shares);
@@ -43,7 +44,6 @@ export const DateRangeReviewShareList = ({ shares }: DateRangeReviewShareListPro
     }
 
     setPendingShareId(share.shareId);
-    setActionError(null);
 
     try {
       await apiFetch(`/api/admin/date-range-review/shares/${share.shareId}`, {
@@ -52,11 +52,12 @@ export const DateRangeReviewShareList = ({ shares }: DateRangeReviewShareListPro
       setLocalShares((current) =>
         current.filter((currentShare) => currentShare.shareId !== share.shareId),
       );
+      showSnackbar({ message: t("shareRemoved"), tone: "success" });
     } catch (error) {
       if (error instanceof ApiError) {
-        setActionError(error.message);
+        showSnackbar({ message: error.message, tone: "error" });
       } else {
-        setActionError(t("removeShareFailed"));
+        showSnackbar({ message: t("removeShareFailed"), tone: "error" });
       }
     } finally {
       setPendingShareId(null);
@@ -82,15 +83,6 @@ export const DateRangeReviewShareList = ({ shares }: DateRangeReviewShareListPro
           {t("sharesDescription")}
         </p>
       </div>
-
-      {actionError !== null && (
-        <p
-          className="rounded-[1.3rem] border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
-          role="alert"
-        >
-          {actionError}
-        </p>
-      )}
 
       <div className="grid gap-4">
         {localShares.map((share) => {

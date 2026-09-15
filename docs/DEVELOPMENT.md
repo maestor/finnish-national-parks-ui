@@ -393,6 +393,7 @@ See `AGENTS.md` for the full convention list. Key rules:
 - **Accessible by default** — semantic HTML, `aria-label` on icon buttons, visible focus
 - **Fix clearly off-pattern code in touched areas** — when a task brings you into code that obviously conflicts with current repo conventions, fold the nearby refactor into the same change instead of preserving the mismatch
 - **Centralize repeated UI patterns early** — when a page shell, hero block, panel surface, filter row, card layout, or class recipe is already reused or clearly becoming a shared pattern, extend an existing shared component/style module or create one in a neutral location instead of copying and re-tuning nearly identical markup page by page
+- **Use the shared snackbar for transient notifications** — `src/components/providers/snackbar-provider.tsx` exposes `SnackbarProvider` and `useSnackbar` for reusable success/error notifications. It renders fixed bottom-left feedback with accessible status/alert semantics, automatic dismissal, and a manual close control. Keep field validation, blocking page errors, and persistent result content inline when users need them to continue the task.
 - **Tailwind v4** — semantic tokens (`bg-background`, `text-primary`)
 - **Dark mode** — use `dark:` variants, test both themes
 

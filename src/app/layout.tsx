@@ -8,6 +8,7 @@ import { Header } from "@/components/layout/header";
 import { HomeMapControlsProvider } from "@/components/providers/home-map-controls-provider";
 import { NavigationProgress } from "@/components/providers/navigation-progress";
 import { SerwistProvider } from "@/components/providers/serwist-provider";
+import { SnackbarProvider } from "@/components/providers/snackbar-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { resolveMetadataBase } from "@/lib/site-url";
 import messages from "../../messages/fi.json";
@@ -99,15 +100,17 @@ const RootLayout = async ({
               enableSystem
               disableTransitionOnChange
             >
-              <Suspense>
-                <HomeMapControlsProvider>
-                  <div className="relative flex min-h-screen flex-col">
-                    <NavigationProgress />
-                    <Header />
-                    <main className="flex flex-1 flex-col">{children}</main>
-                  </div>
-                </HomeMapControlsProvider>
-              </Suspense>
+              <SnackbarProvider>
+                <Suspense>
+                  <HomeMapControlsProvider>
+                    <div className="relative flex min-h-screen flex-col">
+                      <NavigationProgress />
+                      <Header />
+                      <main className="flex flex-1 flex-col">{children}</main>
+                    </div>
+                  </HomeMapControlsProvider>
+                </Suspense>
+              </SnackbarProvider>
             </ThemeProvider>
           </SerwistProvider>
         </NextIntlClientProvider>

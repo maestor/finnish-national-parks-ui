@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useMemo, useState, useTransition } from "react";
 import { CoordinateOverrideFields } from "@/components/location/coordinate-override-fields";
+import { useSnackbar } from "@/components/providers/snackbar-provider";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { apiFetch } from "@/lib/api";
@@ -70,13 +71,13 @@ const isFiniteNumber = (value: number | null): value is number =>
 
 export const ParkForm = ({ park }: ParkFormProps) => {
   const t = useTranslations("controlPanel.parks.edit.form");
+  const { showSnackbar } = useSnackbar();
   const router = useRouter();
   const initialState = useMemo(() => createInitialState(park), [park]);
   const isNationalPark = park.category.slug === "national-park";
   const [formState, setFormState] = useState(initialState);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
   const [isNavigationPending, startTransition] = useTransition();
   const isPending = isSubmitting || isNavigationPending;
 
@@ -113,12 +114,9 @@ export const ParkForm = ({ park }: ParkFormProps) => {
   const hasEstablishmentYearError = errors.establishmentYear !== undefined;
   const hasLocationLabelError = errors.locationLabel !== undefined;
   const hasMarkerPointError = errors.markerPoint !== undefined;
-  const hasSubmitError = submitError !== null;
-
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setErrors({});
-    setSubmitError(null);
 
     const nextErrors: Record<string, string> = {};
     if (formState.name.trim() === "") {
@@ -217,7 +215,10 @@ export const ParkForm = ({ park }: ParkFormProps) => {
         router.refresh();
       });
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : String(error));
+      showSnackbar({
+        message: error instanceof Error ? error.message : String(error),
+        tone: "error",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -387,8 +388,6 @@ export const ParkForm = ({ park }: ParkFormProps) => {
           />
         </div>
       </div>
-
-      {hasSubmitError && <p className="text-sm text-destructive">{submitError}</p>}
 
       <div className="flex flex-wrap items-center gap-4">
         <Button type="submit" disabled={isPending || !isDirty}>

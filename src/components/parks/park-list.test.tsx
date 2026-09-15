@@ -1,6 +1,7 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render as renderTestingLibrary, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { SnackbarProvider } from "@/components/providers/snackbar-provider";
 import { apiFetch } from "@/lib/api";
 import type { AdminVisibilityPark } from "@/lib/parks";
 import { ParkList } from "./park-list";
@@ -56,6 +57,9 @@ const removedParks: AdminVisibilityPark[] = [
     type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },
   },
 ];
+
+const render = (ui: Parameters<typeof renderTestingLibrary>[0]) =>
+  renderTestingLibrary(<SnackbarProvider>{ui}</SnackbarProvider>);
 
 describe("ParkList", () => {
   beforeEach(() => {

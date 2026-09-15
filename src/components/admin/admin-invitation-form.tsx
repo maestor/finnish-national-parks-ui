@@ -2,45 +2,47 @@
 
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { useSnackbar } from "@/components/providers/snackbar-provider";
 import { CopyLinkButton } from "@/components/ui/copy-link-button";
 import { type AdminInvitationResponse, createAdminInvitation } from "@/lib/admin-invitations";
 import { ApiError } from "@/lib/api";
 
 export const AdminInvitationForm = () => {
   const t = useTranslations("controlPanel.adminUsers");
+  const { showSnackbar } = useSnackbar();
   const [email, setEmail] = useState("");
   const [invitation, setInvitation] = useState<AdminInvitationResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setError(null);
     setInvitation(null);
     setIsSubmitting(true);
 
     try {
       setInvitation(await createAdminInvitation({ email }));
+      showSnackbar({ message: t("createdTitle"), tone: "success" });
     } catch (caughtError) {
       if (caughtError instanceof ApiError) {
-        setError(
-          caughtError.status === 409
-            ? t("errors.alreadyEnrolled")
-            : caughtError.status === 400
-              ? t("errors.invalidEmail")
-              : caughtError.status === 401 || caughtError.status === 403
-                ? t("errors.notAllowed")
-                : t("errors.generic"),
-        );
+        showSnackbar({
+          message:
+            caughtError.status === 409
+              ? t("errors.alreadyEnrolled")
+              : caughtError.status === 400
+                ? t("errors.invalidEmail")
+                : caughtError.status === 401 || caughtError.status === 403
+                  ? t("errors.notAllowed")
+                  : t("errors.generic"),
+          tone: "error",
+        });
       } else {
-        setError(t("errors.generic"));
+        showSnackbar({ message: t("errors.generic"), tone: "error" });
       }
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const hasError = error !== null;
   const hasInvitation = invitation !== null;
 
   return (
@@ -74,11 +76,6 @@ export const AdminInvitationForm = () => {
         >
           {isSubmitting ? t("creating") : t("create")}
         </button>
-        {hasError && (
-          <p role="alert" className="text-sm text-destructive">
-            {error}
-          </p>
-        )}
       </form>
 
       {hasInvitation && (

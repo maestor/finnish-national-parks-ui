@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { AdminTableFilters } from "@/components/admin/admin-table-filters";
+import { useSnackbar } from "@/components/providers/snackbar-provider";
 import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api";
 import { type AdminVisibilityPark, getParkTypeDisplayName } from "@/lib/parks";
@@ -19,13 +20,13 @@ type ParkTab = "visible" | "hidden";
 
 export const ParkList = ({ parks, removedParks }: ParkListProps) => {
   const t = useTranslations("controlPanel.parks");
+  const { showSnackbar } = useSnackbar();
   const [localParks, setLocalParks] = useState(parks);
   const [localRemovedParks, setLocalRemovedParks] = useState(removedParks);
   const [activeTab, setActiveTab] = useState<ParkTab>("visible");
   const [query, setQuery] = useState("");
   const [selectedTypeSlug, setSelectedTypeSlug] = useState("");
   const [pendingSlug, setPendingSlug] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     setLocalParks(parks);
@@ -72,7 +73,6 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
     }
 
     setPendingSlug(park.slug);
-    setActionError(null);
 
     try {
       await apiFetch(`/api/parks/${park.slug}/removed`, {
@@ -90,8 +90,15 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
         );
         setLocalParks((current) => [...current, park]);
       }
+      showSnackbar({
+        message: t(removed ? "hiddenSuccess" : "visibleSuccess"),
+        tone: "success",
+      });
     } catch (error) {
-      setActionError(error instanceof Error ? error.message : String(error));
+      showSnackbar({
+        message: error instanceof Error ? error.message : String(error),
+        tone: "error",
+      });
     } finally {
       setPendingSlug(null);
     }
@@ -110,8 +117,6 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
   });
   const notice = activeTab === "visible" ? t("visibleNotice") : t("hiddenNotice");
   const resultCountLabel = t("filters.results", { count: filteredParks.length });
-  const hasActionError = actionError !== null;
-
   if (sortedParks.length === 0 && sortedRemovedParks.length === 0) {
     return (
       <div className="mt-6 rounded-3xl border border-dashed border-white/45 bg-white/48 p-8 text-center backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/38">
@@ -180,15 +185,6 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
           },
         ]}
       />
-
-      {hasActionError && (
-        <p
-          className="rounded-[1.3rem] border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
-          role="alert"
-        >
-          {actionError}
-        </p>
-      )}
 
       {displayedParks.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-white/45 bg-white/48 p-8 text-center backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/38">

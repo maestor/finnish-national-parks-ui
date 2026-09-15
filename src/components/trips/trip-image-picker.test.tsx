@@ -1,5 +1,6 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render as renderTestingLibrary, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { SnackbarProvider } from "@/components/providers/snackbar-provider";
 import type { TripImageCandidate } from "@/lib/trips";
 import { TripImagePicker } from "./trip-image-picker";
 
@@ -9,6 +10,9 @@ vi.mock("@/lib/api", () => ({ apiFetch: mockApiFetch }));
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
+
+const render = (ui: Parameters<typeof renderTestingLibrary>[0]) =>
+  renderTestingLibrary(<SnackbarProvider>{ui}</SnackbarProvider>);
 
 const candidate: TripImageCandidate = {
   image: {

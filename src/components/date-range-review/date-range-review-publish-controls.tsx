@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
+import { useSnackbar } from "@/components/providers/snackbar-provider";
 import { Button } from "@/components/ui/button";
 import { CopyLinkButton } from "@/components/ui/copy-link-button";
 import { ApiError, apiFetch } from "@/lib/api";
@@ -35,15 +36,13 @@ export const DateRangeReviewPublishControls = ({
   status,
 }: DateRangeReviewPublishControlsProps) => {
   const t = useTranslations("controlPanel.dateRangeReview");
+  const { showSnackbar } = useSnackbar();
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [lastPublishedSharePath, setLastPublishedSharePath] = useState(publishInfo.sharePath);
   const [lastPublishedAt, setLastPublishedAt] = useState(publishInfo.publishedAt);
 
   const handlePublish = () => {
-    setError(null);
-
     startTransition(async () => {
       try {
         const response = await apiFetch<DateRangeReviewPublishResponse>(
@@ -59,21 +58,20 @@ export const DateRangeReviewPublishControls = ({
         );
         setLastPublishedSharePath(response.sharePath);
         setLastPublishedAt(response.publishedAt);
+        showSnackbar({ message: t("publishedSuccess"), tone: "success" });
         router.refresh();
       } catch (caughtError) {
         if (caughtError instanceof ApiError) {
-          setError(caughtError.message);
+          showSnackbar({ message: caughtError.message, tone: "error" });
           return;
         }
 
-        setError(t("actionFailed"));
+        showSnackbar({ message: t("actionFailed"), tone: "error" });
       }
     });
   };
 
   const handleUnpublish = () => {
-    setError(null);
-
     startTransition(async () => {
       try {
         await apiFetch(
@@ -84,14 +82,15 @@ export const DateRangeReviewPublishControls = ({
         );
         setLastPublishedSharePath(null);
         setLastPublishedAt(null);
+        showSnackbar({ message: t("unpublishedSuccess"), tone: "success" });
         router.refresh();
       } catch (caughtError) {
         if (caughtError instanceof ApiError) {
-          setError(caughtError.message);
+          showSnackbar({ message: caughtError.message, tone: "error" });
           return;
         }
 
-        setError(t("actionFailed"));
+        showSnackbar({ message: t("actionFailed"), tone: "error" });
       }
     });
   };
@@ -99,7 +98,6 @@ export const DateRangeReviewPublishControls = ({
   const sharePath = publishInfo.sharePath ?? lastPublishedSharePath;
   const publishedAt = publishInfo.publishedAt ?? lastPublishedAt;
   const isPublished = status === "published" || sharePath !== null;
-  const hasError = error !== null;
   const hasPublishedAt = publishedAt !== null;
   const hasSharePath = sharePath !== null;
 
@@ -168,12 +166,6 @@ export const DateRangeReviewPublishControls = ({
           )}
         </div>
       </div>
-
-      {hasError && (
-        <p role="alert" className="mt-4 text-sm text-destructive">
-          {error}
-        </p>
-      )}
     </section>
   );
 };

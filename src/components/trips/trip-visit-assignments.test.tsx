@@ -1,6 +1,13 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import {
+  fireEvent,
+  render as renderTestingLibrary,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { SnackbarProvider } from "@/components/providers/snackbar-provider";
 import { LONG_TEXTAREA_MAX_LENGTH } from "@/components/ui/textarea-with-counter";
 import { apiFetch } from "@/lib/api";
 import { prepareImageFileForUpload } from "@/lib/image-upload";
@@ -298,6 +305,16 @@ const mockItineraryRowLayout = (section: HTMLElement) => {
       },
     });
   });
+};
+
+const render = (ui: Parameters<typeof renderTestingLibrary>[0]) => {
+  const result = renderTestingLibrary(<SnackbarProvider>{ui}</SnackbarProvider>);
+
+  return {
+    ...result,
+    rerender: (nextUi: Parameters<typeof renderTestingLibrary>[0]) =>
+      result.rerender(<SnackbarProvider>{nextUi}</SnackbarProvider>),
+  };
 };
 
 describe("TripVisitAssignments", () => {

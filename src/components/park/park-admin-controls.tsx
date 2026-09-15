@@ -11,6 +11,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { useSnackbar } from "@/components/providers/snackbar-provider";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { apiFetch } from "@/lib/api";
@@ -21,7 +22,6 @@ import { appRoutes } from "@/lib/routes";
 type ParkVisibilityState = "visible" | "hidden" | null;
 
 interface ParkAdminControlsContextValue {
-  actionError: string | null;
   isAuthenticated: boolean;
   isPending: boolean;
   isVisibilityLoading: boolean;
@@ -66,10 +66,11 @@ export const ParkAdminControlsProvider = ({
   parkSlug,
 }: ParkAdminControlsProviderProps) => {
   const auth = useAuth();
+  const t = useTranslations("park.admin");
+  const { showSnackbar } = useSnackbar();
   const [visibility, setVisibility] = useState<ParkVisibilityState>(null);
   const [isVisibilityLoading, setIsVisibilityLoading] = useState(false);
   const [isPending, setIsPending] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     if (auth.isLoading) {
@@ -80,13 +81,11 @@ export const ParkAdminControlsProvider = ({
       setVisibility(null);
       setIsVisibilityLoading(false);
       setIsPending(false);
-      setActionError(null);
       return;
     }
 
     let cancelled = false;
     setIsVisibilityLoading(true);
-    setActionError(null);
 
     apiFetch<AdminParkVisibilityResponse>("/api/admin/parks/visibility")
       .then((response) => {
@@ -96,7 +95,10 @@ export const ParkAdminControlsProvider = ({
       })
       .catch((error) => {
         if (!cancelled) {
-          setActionError(error instanceof Error ? error.message : String(error));
+          showSnackbar({
+            message: error instanceof Error ? error.message : String(error),
+            tone: "error",
+          });
         }
       })
       .finally(() => {
@@ -108,7 +110,7 @@ export const ParkAdminControlsProvider = ({
     return () => {
       cancelled = true;
     };
-  }, [auth.isAuthenticated, auth.isLoading, parkSlug]);
+  }, [auth.isAuthenticated, auth.isLoading, parkSlug, showSnackbar]);
 
   const toggleVisibility = useCallback(async () => {
     if (visibility === null) {
@@ -117,7 +119,6 @@ export const ParkAdminControlsProvider = ({
 
     const nextVisibility = visibility === "visible" ? "hidden" : "visible";
     setIsPending(true);
-    setActionError(null);
 
     try {
       await apiFetch(`/api/parks/${parkSlug}/removed`, {
@@ -126,16 +127,25 @@ export const ParkAdminControlsProvider = ({
       });
       await revalidatePublicCache({ parkSlug });
       setVisibility(nextVisibility);
+      showSnackbar({
+        message:
+          nextVisibility === "hidden"
+            ? t("visibilityHiddenSuccess")
+            : t("visibilityVisibleSuccess"),
+        tone: "success",
+      });
     } catch (error) {
-      setActionError(error instanceof Error ? error.message : String(error));
+      showSnackbar({
+        message: error instanceof Error ? error.message : String(error),
+        tone: "error",
+      });
     } finally {
       setIsPending(false);
     }
-  }, [parkSlug, visibility]);
+  }, [parkSlug, showSnackbar, t, visibility]);
 
   const value = useMemo<ParkAdminControlsContextValue>(
     () => ({
-      actionError,
       isAuthenticated: auth.isAuthenticated,
       isPending,
       isVisibilityLoading,
@@ -143,15 +153,7 @@ export const ParkAdminControlsProvider = ({
       toggleVisibility,
       visibility,
     }),
-    [
-      actionError,
-      auth.isAuthenticated,
-      isPending,
-      isVisibilityLoading,
-      parkSlug,
-      toggleVisibility,
-      visibility,
-    ],
+    [auth.isAuthenticated, isPending, isVisibilityLoading, parkSlug, toggleVisibility, visibility],
   );
 
   return (
@@ -185,7 +187,6 @@ export const ParkVisibilityBadge = () => {
 export const ParkAdminSection = () => {
   const t = useTranslations("park.admin");
   const {
-    actionError,
     isAuthenticated,
     isPending,
     isVisibilityLoading,
@@ -199,7 +200,6 @@ export const ParkAdminSection = () => {
   }
 
   const isVisible = visibility === "visible";
-  const hasActionError = actionError !== null;
 
   return (
     <section className="mt-8 rounded-[2rem] border border-white/45 bg-white/60 p-5 shadow-[0_24px_48px_rgba(148,163,184,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/42 dark:shadow-[0_28px_56px_rgba(2,6,23,0.3)]">
@@ -210,15 +210,6 @@ export const ParkAdminSection = () => {
         </div>
         <ParkVisibilityBadge />
       </div>
-
-      {hasActionError === true && (
-        <p
-          role="alert"
-          className="mt-4 rounded-[1.3rem] border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
-        >
-          {actionError}
-        </p>
-      )}
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <Link

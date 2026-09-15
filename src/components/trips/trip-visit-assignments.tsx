@@ -15,6 +15,7 @@ import {
 import { createPortal } from "react-dom";
 import { AdminTableFilters } from "@/components/admin/admin-table-filters";
 import { LocationSuggestionInput } from "@/components/location/location-suggestion-input";
+import { useSnackbar } from "@/components/providers/snackbar-provider";
 import { Button } from "@/components/ui/button";
 import {
   LONG_TEXTAREA_MAX_LENGTH,
@@ -356,6 +357,7 @@ const insertStopIntoItinerary = (
 
 export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps) => {
   const t = useTranslations("controlPanel.trips.assignments");
+  const { showSnackbar } = useSnackbar();
   const router = useRouter();
   const tripIdRef = useRef(trip.id);
   const tripPropItineraryOrderRef = useRef(
@@ -379,8 +381,6 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
   const [stopNote, setStopNote] = useState("");
   const [stopErrors, setStopErrors] = useState<Record<string, string>>({});
   const [pendingKey, setPendingKey] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [activeItineraryDrag, setActiveItineraryDrag] = useState<ActiveItineraryDrag | null>(null);
   const itineraryRef = useRef(itinerary);
   const savedItineraryOrderRef = useRef(savedItineraryOrder);
@@ -613,8 +613,6 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     setStopLocationStatus("idle");
     setStopNote("");
     setStopErrors({});
-    setActionError(null);
-    setStatusMessage(null);
   };
 
   const handleStopLocationValueChange = (value: string) => {
@@ -637,7 +635,6 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       return;
     }
 
-    setActionError(null);
     setStopLocationStatus("locating");
 
     geolocation.getCurrentPosition(
@@ -675,8 +672,6 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     setStopLocationStatus("idle");
     setStopNote(stop.note ?? "");
     setStopErrors({});
-    setActionError(null);
-    setStatusMessage(null);
   };
 
   const handleStopFormEscape = useEffectEvent(() => {
@@ -728,8 +723,6 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     }
 
     setPendingAction("reorder-save");
-    setActionError(null);
-    setStatusMessage(null);
 
     try {
       for (const item of changedItems) {
@@ -755,10 +748,13 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       const nextSavedOrder = getItineraryOrderKeys(nextItinerary);
       savedItineraryOrderRef.current = nextSavedOrder;
       setSavedItineraryOrder(nextSavedOrder);
-      setStatusMessage(t("reorderSuccess"));
+      showSnackbar({ message: t("reorderSuccess"), tone: "success" });
       router.refresh();
     } catch (error) {
-      setActionError(error instanceof Error ? error.message : t("reorderFailed"));
+      showSnackbar({
+        message: error instanceof Error ? error.message : t("reorderFailed"),
+        tone: "error",
+      });
     } finally {
       setPendingAction(null);
     }
@@ -828,8 +824,6 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
           getItineraryOrderKeys(nextItinerary),
         )
       ) {
-        setActionError(null);
-        setStatusMessage(null);
         previewItineraryMove(nextItinerary);
       }
     };
@@ -944,8 +938,6 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       );
       activeItineraryDragRef.current = nextDrag;
       setActiveItineraryDrag(nextDrag);
-      setActionError(null);
-      setStatusMessage(null);
     };
 
   const handleItineraryKeyDown =
@@ -995,8 +987,6 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     ] satisfies TripItineraryItem[];
 
     setPendingAction(`visit-${visit.id}-attach`);
-    setActionError(null);
-    setStatusMessage(null);
     setItineraryWithRef(nextItinerary);
     setVisitsState((currentVisits) =>
       currentVisits.map((currentVisit) =>
@@ -1014,13 +1004,16 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       });
       await revalidatePublicCache({ parkSlug: visit.park.slug, tripSlug: trip.slug });
       setSavedItineraryOrder(getItineraryOrderKeys(nextItinerary));
-      setStatusMessage(t("attachSuccess"));
+      showSnackbar({ message: t("attachSuccess"), tone: "success" });
       router.refresh();
     } catch (error) {
       itineraryRef.current = previousItinerary;
       setItinerary(previousItinerary);
       setVisitsState(previousVisitsState);
-      setActionError(error instanceof Error ? error.message : String(error));
+      showSnackbar({
+        message: error instanceof Error ? error.message : String(error),
+        tone: "error",
+      });
     } finally {
       setPendingAction(null);
     }
@@ -1040,8 +1033,6 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     }
 
     setPendingAction(`visit-${visitId}-exclude`);
-    setActionError(null);
-    setStatusMessage(null);
     setItineraryWithRef((currentItinerary) =>
       currentItinerary.map((item) =>
         item.kind === "visit" && item.visit.id === visitId
@@ -1068,13 +1059,19 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
         }),
       });
       await revalidatePublicCache({ parkSlug: visit.park.slug, tripSlug: trip.slug });
-      setStatusMessage(excludeFromRoute ? t("routeExclusionSuccess") : t("routeInclusionSuccess"));
+      showSnackbar({
+        message: excludeFromRoute ? t("routeExclusionSuccess") : t("routeInclusionSuccess"),
+        tone: "success",
+      });
       router.refresh();
     } catch (error) {
       itineraryRef.current = previousItinerary;
       setItinerary(previousItinerary);
       setVisitsState(previousVisitsState);
-      setActionError(error instanceof Error ? error.message : String(error));
+      showSnackbar({
+        message: error instanceof Error ? error.message : String(error),
+        tone: "error",
+      });
     } finally {
       setPendingAction(null);
     }
@@ -1098,8 +1095,6 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     );
 
     setPendingAction(`visit-${visitId}-remove`);
-    setActionError(null);
-    setStatusMessage(null);
     setItineraryWithRef(nextItinerary);
     setVisitsState((currentVisits) =>
       currentVisits.map((currentVisit) =>
@@ -1122,13 +1117,16 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       });
       await revalidatePublicCache({ parkSlug: visit.park.slug, tripSlug: trip.slug });
       setSavedItineraryOrder(getItineraryOrderKeys(nextItinerary));
-      setStatusMessage(t("detachSuccess"));
+      showSnackbar({ message: t("detachSuccess"), tone: "success" });
       router.refresh();
     } catch (error) {
       itineraryRef.current = previousItinerary;
       setItinerary(previousItinerary);
       setVisitsState(previousVisitsState);
-      setActionError(error instanceof Error ? error.message : String(error));
+      showSnackbar({
+        message: error instanceof Error ? error.message : String(error),
+        tone: "error",
+      });
     } finally {
       setPendingAction(null);
     }
@@ -1162,8 +1160,6 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     }
 
     setStopErrors({});
-    setActionError(null);
-    setStatusMessage(null);
 
     if (editingStopId !== null) {
       const selectedStopLocation = stopLocation;
@@ -1217,13 +1213,16 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
           ),
         );
         await revalidatePublicCache({ tripSlug: trip.slug });
-        setStatusMessage(t("stopUpdateSuccess"));
+        showSnackbar({ message: t("stopUpdateSuccess"), tone: "success" });
         clearStopForm();
         router.refresh();
       } catch (error) {
         itineraryRef.current = previousItinerary;
         setItinerary(previousItinerary);
-        setActionError(error instanceof Error ? error.message : String(error));
+        showSnackbar({
+          message: error instanceof Error ? error.message : String(error),
+          tone: "error",
+        });
       } finally {
         setPendingAction(null);
       }
@@ -1263,7 +1262,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       setItineraryWithRef(nextItinerary);
       await revalidatePublicCache({ tripSlug: trip.slug });
       setSavedItineraryOrder(getItineraryOrderKeys(nextItinerary));
-      setStatusMessage(t("stopCreateSuccess"));
+      showSnackbar({ message: t("stopCreateSuccess"), tone: "success" });
       setEditingStopId(createdStop.id);
       setIsStopFormOpen(false);
       setStopLocationQuery(createdStop.location.label);
@@ -1278,7 +1277,10 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     } catch (error) {
       itineraryRef.current = previousItinerary;
       setItinerary(previousItinerary);
-      setActionError(error instanceof Error ? error.message : String(error));
+      showSnackbar({
+        message: error instanceof Error ? error.message : String(error),
+        tone: "error",
+      });
     } finally {
       setPendingAction(null);
     }
@@ -1299,8 +1301,6 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     );
 
     setPendingAction(`stop-${stop.id}-delete`);
-    setActionError(null);
-    setStatusMessage(null);
     setItineraryWithRef(nextItinerary);
 
     try {
@@ -1309,7 +1309,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       });
       await revalidatePublicCache({ tripSlug: trip.slug });
       setSavedItineraryOrder(getItineraryOrderKeys(nextItinerary));
-      setStatusMessage(t("stopDeleteSuccess"));
+      showSnackbar({ message: t("stopDeleteSuccess"), tone: "success" });
       if (editingStopId === stop.id) {
         clearStopForm();
       }
@@ -1317,20 +1317,14 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     } catch (error) {
       itineraryRef.current = previousItinerary;
       setItinerary(previousItinerary);
-      setActionError(error instanceof Error ? error.message : String(error));
+      showSnackbar({
+        message: error instanceof Error ? error.message : String(error),
+        tone: "error",
+      });
     } finally {
       setPendingAction(null);
     }
   };
-
-  const renderFeedback = () => (
-    <>
-      {statusMessage !== null && (
-        <p className="text-sm text-emerald-700 dark:text-emerald-300">{statusMessage}</p>
-      )}
-      {actionError !== null && <p className="text-sm text-destructive">{actionError}</p>}
-    </>
-  );
 
   const stopDialog =
     isStopFormVisible && typeof document !== "undefined"
@@ -1375,8 +1369,6 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
 
                 <div className="min-h-0 overflow-y-auto px-5 py-5 sm:px-6">
                   <div className="space-y-5">
-                    {renderFeedback()}
-
                     {!isEditingStop && (
                       <div className="space-y-2">
                         <label htmlFor="trip-stop-order" className="text-sm font-medium">
@@ -1559,8 +1551,6 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
           },
         ]}
       />
-
-      {!isStopFormVisible && renderFeedback()}
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         <section className="min-w-0 space-y-4 rounded-[1.6rem] border border-white/45 bg-white/56 p-4 shadow-[0_18px_36px_rgba(148,163,184,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/38 dark:shadow-[0_22px_40px_rgba(2,6,23,0.28)]">

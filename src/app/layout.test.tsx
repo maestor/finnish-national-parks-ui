@@ -28,6 +28,8 @@ vi.mock("next-intl", () => ({
     intlProviderPropsMock({ locale, messages });
     return <div data-testid="intl-provider">{children}</div>;
   },
+  useTranslations: (namespace?: string) => (key: string) =>
+    namespace ? `${namespace}.${key}` : key,
 }));
 
 vi.mock("next-intl/server", () => ({

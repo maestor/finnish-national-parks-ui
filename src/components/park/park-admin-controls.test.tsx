@@ -1,7 +1,8 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render as renderTestingLibrary, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { SnackbarProvider } from "@/components/providers/snackbar-provider";
 import { apiFetch } from "@/lib/api";
 import {
   ParkAdminControlsProvider,
@@ -13,6 +14,9 @@ const mockUseAuth = vi.fn();
 const { mockRevalidatePublicCache } = vi.hoisted(() => ({
   mockRevalidatePublicCache: vi.fn(async () => true),
 }));
+
+const render = (ui: Parameters<typeof renderTestingLibrary>[0]) =>
+  renderTestingLibrary(<SnackbarProvider>{ui}</SnackbarProvider>);
 
 vi.mock("@/hooks/use-auth", () => ({
   useAuth: () => mockUseAuth(),
