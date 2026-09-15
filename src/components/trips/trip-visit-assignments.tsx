@@ -8,6 +8,7 @@ import {
   type PointerEvent,
   useEffect,
   useEffectEvent,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react";
@@ -70,6 +71,11 @@ interface ItineraryDragLayoutItem {
   left: number;
   right: number;
   top: number;
+}
+
+interface ItineraryDropTarget {
+  shouldMove: boolean;
+  targetKey: string | null;
 }
 
 const DRAG_START_DISTANCE = 6;
@@ -136,17 +142,44 @@ const reorderItineraryItems = (items: TripItineraryItem[], activeKey: string, ov
   return reindexItinerary(nextItems);
 };
 
+const reorderItineraryItemBefore = (
+  items: TripItineraryItem[],
+  activeKey: string,
+  targetKey: string,
+) => {
+  const activeIndex = items.findIndex((item) => getItineraryItemKey(item) === activeKey);
+
+  if (activeIndex === -1) {
+    return items;
+  }
+
+  const nextItems = [...items];
+  const [movedItem] = nextItems.splice(activeIndex, 1);
+  const targetIndex = nextItems.findIndex((item) => getItineraryItemKey(item) === targetKey);
+
+  if (targetIndex === -1) {
+    return items;
+  }
+
+  nextItems.splice(targetIndex, 0, movedItem);
+  return reindexItinerary(nextItems);
+};
+
+const reorderItineraryItemToEnd = (items: TripItineraryItem[], activeKey: string) => {
+  const activeIndex = items.findIndex((item) => getItineraryItemKey(item) === activeKey);
+
+  if (activeIndex === -1) {
+    return items;
+  }
+
+  const nextItems = [...items];
+  const [movedItem] = nextItems.splice(activeIndex, 1);
+  nextItems.push(movedItem);
+  return reindexItinerary(nextItems);
+};
+
 const doItineraryOrdersMatch = (left: string[], right: string[]) =>
   left.length === right.length && left.every((itemKey, index) => itemKey === right[index]);
-
-const restoreItineraryOrder = (items: TripItineraryItem[], savedOrder: string[]) => {
-  const itemByKey = new Map(items.map((item) => [getItineraryItemKey(item), item]));
-
-  return savedOrder.flatMap((itemKey) => {
-    const item = itemByKey.get(itemKey);
-    return item ? [item] : [];
-  });
-};
 
 const createTripReference = (trip: TripDetail) => ({
   id: trip.id,
@@ -178,42 +211,56 @@ const captureItineraryDragLayout = (container: ParentNode) =>
     },
   );
 
-const getItineraryDropTargetKey = (
+const getItineraryDropTarget = (
   dragLayout: ItineraryDragLayoutItem[],
   clientX: number,
   clientY: number,
   activeKey: string,
-) => {
+): ItineraryDropTarget => {
+  const noMove = { shouldMove: false, targetKey: null } satisfies ItineraryDropTarget;
+
   if (dragLayout.length === 0) {
-    return activeKey;
-  }
-
-  const hoveredItem = dragLayout.find(
-    (item) =>
-      clientX >= item.left &&
-      clientX <= item.right &&
-      clientY >= item.top &&
-      clientY <= item.bottom,
-  );
-
-  if (hoveredItem) {
-    return hoveredItem.itemKey;
+    return noMove;
   }
 
   const listLeft = Math.min(...dragLayout.map((item) => item.left));
   const listRight = Math.max(...dragLayout.map((item) => item.right));
 
   if (clientX < listLeft || clientX > listRight) {
-    return activeKey;
+    return noMove;
   }
 
-  for (const item of dragLayout) {
-    if (clientY <= item.centerY) {
-      return item.itemKey;
+  const activeIndex = dragLayout.findIndex((item) => item.itemKey === activeKey);
+  const activeItem = dragLayout[activeIndex];
+
+  if (!activeItem || (clientY >= activeItem.top && clientY <= activeItem.bottom)) {
+    return noMove;
+  }
+
+  if (clientY < activeItem.top) {
+    const targetItem = dragLayout.slice(0, activeIndex).find((item) => clientY < item.centerY);
+
+    if (!targetItem) {
+      return noMove;
     }
+
+    return {
+      shouldMove: true,
+      targetKey: targetItem.itemKey,
+    };
   }
 
-  return dragLayout.at(-1)?.itemKey ?? activeKey;
+  const itemsAfterActive = dragLayout.slice(activeIndex + 1);
+  const lastCrossedIndex = itemsAfterActive.findLastIndex((item) => clientY >= item.centerY);
+
+  if (lastCrossedIndex === -1) {
+    return noMove;
+  }
+
+  return {
+    shouldMove: true,
+    targetKey: itemsAfterActive[lastCrossedIndex + 1]?.itemKey ?? null,
+  };
 };
 
 const getLocationStatusMessage = (
@@ -311,6 +358,9 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
   const t = useTranslations("controlPanel.trips.assignments");
   const router = useRouter();
   const tripIdRef = useRef(trip.id);
+  const tripPropItineraryOrderRef = useRef(
+    getItineraryOrderKeys(normalizeItinerary(trip.itinerary)),
+  );
   const [query, setQuery] = useState("");
   const [selectedParkSlug, setSelectedParkSlug] = useState("");
   const [visitsState, setVisitsState] = useState(visits);
@@ -332,13 +382,12 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
   const [actionError, setActionError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [activeItineraryDrag, setActiveItineraryDrag] = useState<ActiveItineraryDrag | null>(null);
-  const [dragOverItemKey, setDragOverItemKey] = useState<string | null>(null);
   const itineraryRef = useRef(itinerary);
   const savedItineraryOrderRef = useRef(savedItineraryOrder);
   const pendingKeyRef = useRef<string | null>(null);
   const activeItineraryDragRef = useRef<ActiveItineraryDrag | null>(null);
-  const dragOverItemKeyRef = useRef<string | null>(null);
   const itineraryDragLayoutRef = useRef<ItineraryDragLayoutItem[] | null>(null);
+  const itineraryDragTableRef = useRef<HTMLTableElement | null>(null);
   const dragStartItineraryRef = useRef<TripItineraryItem[] | null>(null);
   const stopDialogCloseButtonRef = useRef<HTMLButtonElement>(null);
   const previousStopDialogFocusRef = useRef<HTMLElement | null>(null);
@@ -354,17 +403,20 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     const currentSavedOrder = savedItineraryOrderRef.current;
     const hasUnsavedLocalOrder = !doItineraryOrdersMatch(currentSavedOrder, currentItineraryOrder);
     const isSameTrip = tripIdRef.current === trip.id;
+    const previousTripPropOrder = tripPropItineraryOrderRef.current;
+    const shouldKeepLocalOrder =
+      isSameTrip &&
+      !doItineraryOrdersMatch(nextSavedOrder, currentItineraryOrder) &&
+      ((hasUnsavedLocalOrder && doItineraryOrdersMatch(nextSavedOrder, currentSavedOrder)) ||
+        doItineraryOrdersMatch(nextSavedOrder, previousTripPropOrder));
 
     tripIdRef.current = trip.id;
 
-    if (
-      isSameTrip &&
-      hasUnsavedLocalOrder &&
-      doItineraryOrdersMatch(nextSavedOrder, currentSavedOrder)
-    ) {
+    if (shouldKeepLocalOrder) {
       return;
     }
 
+    tripPropItineraryOrderRef.current = nextSavedOrder;
     itineraryRef.current = nextItinerary;
     savedItineraryOrderRef.current = nextSavedOrder;
     setItinerary(nextItinerary);
@@ -378,6 +430,18 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
   useEffect(() => {
     savedItineraryOrderRef.current = savedItineraryOrder;
   }, [savedItineraryOrder]);
+
+  useLayoutEffect(() => {
+    if (activeItineraryDragRef.current?.isDragging !== true) {
+      return;
+    }
+
+    const table = itineraryDragTableRef.current;
+
+    if (table !== null) {
+      itineraryDragLayoutRef.current = captureItineraryDragLayout(table);
+    }
+  });
 
   const parkOptions = [
     { label: t("filters.allParks"), value: "" },
@@ -408,17 +472,11 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     .sort(compareAvailableVisits);
 
   const stopLocationStatusMessage = getLocationStatusMessage(stopLocationStatus, t);
-  const currentItineraryOrder = getItineraryOrderKeys(itinerary);
-  const hasUnsavedItineraryOrder = !doItineraryOrdersMatch(
-    savedItineraryOrder,
-    currentItineraryOrder,
-  );
   const isBusy = pendingKey !== null;
-  const isActionLocked = isBusy || hasUnsavedItineraryOrder;
+  const isActionLocked = isBusy;
   const isEditingStop = editingStopId !== null;
   const isStopFormVisible = Boolean(isStopFormOpen || isEditingStop);
   const isReorderDisabled = isBusy || isStopFormVisible;
-  const isSaveOrderDisabled = isBusy || activeItineraryDrag?.isDragging === true;
   const activeEditingStop =
     editingStopId === null
       ? null
@@ -483,15 +541,18 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
   const isStopNoteTooLong = stopNote.length > LONG_TEXTAREA_MAX_LENGTH;
   const isStopSubmitBlockedByLength = isStopNoteTooLong && (!isEditingStop || hasStopDetailChanges);
 
-  const setItineraryWithRef = (
-    updater: TripItineraryItem[] | ((currentItinerary: TripItineraryItem[]) => TripItineraryItem[]),
-  ) => {
-    setItinerary((currentItinerary) => {
+  const setItineraryWithRef = useEffectEvent(
+    (
+      updater:
+        | TripItineraryItem[]
+        | ((currentItinerary: TripItineraryItem[]) => TripItineraryItem[]),
+    ) => {
+      const currentItinerary = itineraryRef.current;
       const nextItinerary = typeof updater === "function" ? updater(currentItinerary) : updater;
       itineraryRef.current = nextItinerary;
-      return nextItinerary;
-    });
-  };
+      setItinerary(nextItinerary);
+    },
+  );
 
   const setPendingAction = (nextPendingKey: string | null) => {
     pendingKeyRef.current = nextPendingKey;
@@ -536,7 +597,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
   };
 
   const openStopForm = () => {
-    if (pendingKeyRef.current !== null || hasUnsavedItineraryOrder) {
+    if (pendingKeyRef.current !== null) {
       return;
     }
 
@@ -565,7 +626,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
   };
 
   const handleLocateStop = () => {
-    if (pendingKeyRef.current !== null || hasUnsavedItineraryOrder) {
+    if (pendingKeyRef.current !== null) {
       return;
     }
 
@@ -598,7 +659,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
   };
 
   const handleStartStopEdit = (stop: TripStop) => {
-    if (pendingKeyRef.current !== null || hasUnsavedItineraryOrder) {
+    if (pendingKeyRef.current !== null) {
       return;
     }
 
@@ -653,12 +714,13 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
   }, [isStopFormVisible]);
 
   const persistItineraryOrder = useEffectEvent(async (nextItinerary: TripItineraryItem[]) => {
-    if (pendingKeyRef.current !== null || !hasUnsavedItineraryOrder) {
+    if (pendingKeyRef.current !== null) {
       return;
     }
 
+    const savedOrder = savedItineraryOrderRef.current;
     const changedItems = nextItinerary.filter((item, index) => {
-      return savedItineraryOrder[index] !== getItineraryItemKey(item);
+      return savedOrder[index] !== getItineraryItemKey(item);
     });
 
     if (changedItems.length === 0) {
@@ -690,7 +752,9 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       }
 
       await revalidatePublicCache({ tripSlug: trip.slug });
-      setSavedItineraryOrder(getItineraryOrderKeys(nextItinerary));
+      const nextSavedOrder = getItineraryOrderKeys(nextItinerary);
+      savedItineraryOrderRef.current = nextSavedOrder;
+      setSavedItineraryOrder(nextSavedOrder);
       setStatusMessage(t("reorderSuccess"));
       router.refresh();
     } catch (error) {
@@ -700,34 +764,17 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     }
   });
 
-  const handleRestoreItineraryOrder = () => {
-    if (pendingKeyRef.current !== null || activeItineraryDrag?.isDragging === true) {
-      return;
-    }
-
-    setActionError(null);
-    setStatusMessage(null);
-    setItineraryWithRef((currentItinerary) =>
-      restoreItineraryOrder(currentItinerary, savedItineraryOrder),
-    );
-  };
-
-  const previewItineraryMove = useEffectEvent((activeKey: string, overKey: string) => {
-    setActionError(null);
-    setStatusMessage(null);
-    setItineraryWithRef((currentItinerary) =>
-      reorderItineraryItems(currentItinerary, activeKey, overKey),
-    );
+  const previewItineraryMove = useEffectEvent((nextItinerary: TripItineraryItem[]) => {
+    setItineraryWithRef(nextItinerary);
   });
 
   useEffect(() => {
     const clearItineraryDragState = () => {
       activeItineraryDragRef.current = null;
-      dragOverItemKeyRef.current = null;
       itineraryDragLayoutRef.current = null;
+      itineraryDragTableRef.current = null;
       dragStartItineraryRef.current = null;
       setActiveItineraryDrag(null);
-      setDragOverItemKey(null);
     };
 
     const handleWindowPointerMove = (event: globalThis.PointerEvent) => {
@@ -746,6 +793,8 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
         return;
       }
 
+      event.preventDefault();
+
       if (!currentDrag.isDragging) {
         const nextDrag = {
           ...currentDrag,
@@ -756,19 +805,32 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
         setActiveItineraryDrag(nextDrag);
       }
 
-      const previousTargetKey = dragOverItemKeyRef.current;
-      const targetKey = getItineraryDropTargetKey(
+      const dropTarget = getItineraryDropTarget(
         itineraryDragLayoutRef.current ?? [],
         event.clientX,
         event.clientY,
         currentDrag.itemKey,
       );
 
-      dragOverItemKeyRef.current = targetKey;
-      setDragOverItemKey(targetKey);
+      if (!dropTarget.shouldMove) {
+        return;
+      }
 
-      if (targetKey !== currentDrag.itemKey && targetKey !== previousTargetKey) {
-        previewItineraryMove(currentDrag.itemKey, targetKey);
+      const currentItinerary = itineraryRef.current;
+      const nextItinerary =
+        dropTarget.targetKey === null
+          ? reorderItineraryItemToEnd(currentItinerary, currentDrag.itemKey)
+          : reorderItineraryItemBefore(currentItinerary, currentDrag.itemKey, dropTarget.targetKey);
+
+      if (
+        !doItineraryOrdersMatch(
+          getItineraryOrderKeys(currentItinerary),
+          getItineraryOrderKeys(nextItinerary),
+        )
+      ) {
+        setActionError(null);
+        setStatusMessage(null);
+        previewItineraryMove(nextItinerary);
       }
     };
 
@@ -800,6 +862,8 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       ) {
         return;
       }
+
+      void persistItineraryOrder(nextItinerary);
     };
 
     const handleWindowPointerCancel = (event: globalThis.PointerEvent) => {
@@ -812,8 +876,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       const previousItinerary = dragStartItineraryRef.current;
 
       if (previousItinerary) {
-        itineraryRef.current = previousItinerary;
-        setItinerary(previousItinerary);
+        setItineraryWithRef(previousItinerary);
       }
 
       clearItineraryDragState();
@@ -852,6 +915,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     );
 
     setItineraryWithRef(nextItinerary);
+    await persistItineraryOrder(nextItinerary);
   };
 
   const handleItineraryDragStart =
@@ -868,14 +932,18 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
         isDragging: false,
       } satisfies ActiveItineraryDrag;
 
+      event.preventDefault();
+      if (typeof event.currentTarget.setPointerCapture === "function") {
+        event.currentTarget.setPointerCapture(event.pointerId);
+      }
+
       dragStartItineraryRef.current = itineraryRef.current;
+      itineraryDragTableRef.current = event.currentTarget.closest("table");
       itineraryDragLayoutRef.current = captureItineraryDragLayout(
-        event.currentTarget.closest("table") ?? document,
+        itineraryDragTableRef.current ?? document,
       );
       activeItineraryDragRef.current = nextDrag;
-      dragOverItemKeyRef.current = itemKey;
       setActiveItineraryDrag(nextDrag);
-      setDragOverItemKey(itemKey);
       setActionError(null);
       setStatusMessage(null);
     };
@@ -894,7 +962,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     };
 
   const handleAttachVisit = async (visit: VisitWithPark) => {
-    if (pendingKeyRef.current !== null || hasUnsavedItineraryOrder) {
+    if (pendingKeyRef.current !== null) {
       return;
     }
 
@@ -959,7 +1027,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
   };
 
   const handleToggleVisitExcludeFromRoute = async (visitId: number, excludeFromRoute: boolean) => {
-    if (pendingKeyRef.current !== null || hasUnsavedItineraryOrder) {
+    if (pendingKeyRef.current !== null) {
       return;
     }
 
@@ -1013,7 +1081,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
   };
 
   const handleRemoveVisit = async (visitId: number) => {
-    if (pendingKeyRef.current !== null || hasUnsavedItineraryOrder) {
+    if (pendingKeyRef.current !== null) {
       return;
     }
 
@@ -1067,7 +1135,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
   };
 
   const handleSubmitStop = async () => {
-    if (pendingKeyRef.current !== null || hasUnsavedItineraryOrder) {
+    if (pendingKeyRef.current !== null) {
       return;
     }
 
@@ -1217,7 +1285,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
   };
 
   const handleDeleteStop = async (stop: TripStop) => {
-    if (pendingKeyRef.current !== null || hasUnsavedItineraryOrder) {
+    if (pendingKeyRef.current !== null) {
       return;
     }
 
@@ -1536,27 +1604,6 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
             <p id="trip-itinerary-reorder-hint" className="mt-2 text-sm text-muted-foreground">
               {t("reorderHint")}
             </p>
-            {hasUnsavedItineraryOrder && (
-              <div className="mt-3 flex flex-wrap items-center gap-3">
-                <Button
-                  type="button"
-                  onClick={() => void persistItineraryOrder(itineraryRef.current)}
-                  disabled={isSaveOrderDisabled}
-                  className="w-fit"
-                >
-                  {pendingKey === "reorder-save" ? t("savingOrder") : t("saveOrder")}
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={handleRestoreItineraryOrder}
-                  disabled={isSaveOrderDisabled}
-                  className="w-fit"
-                >
-                  {t("restoreOrder")}
-                </Button>
-              </div>
-            )}
             {!isStopFormVisible && stopAddBlockedMessage !== null && (
               <p className="mt-2 text-sm text-muted-foreground">{stopAddBlockedMessage}</p>
             )}
@@ -1567,11 +1614,16 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
               {t("assignedEmpty")}
             </div>
           ) : (
-            <div className="overflow-hidden rounded-[1.3rem] border border-white/35 dark:border-white/8">
-              <table className="w-full text-sm">
+            <div className="overflow-x-auto rounded-[1.3rem] border border-white/35 dark:border-white/8">
+              <table className="min-w-192 w-full text-sm">
                 <thead className="bg-white/70 dark:bg-slate-950/52">
                   <tr>
-                    <th className="w-32 px-4 py-3 text-left font-medium">{t("table.order")}</th>
+                    <th className="w-20 px-4 py-3 text-center font-medium" title={t("table.order")}>
+                      <span aria-hidden="true" title={t("table.order")}>
+                        #
+                      </span>
+                      <span className="sr-only">{t("table.order")}</span>
+                    </th>
                     <th className="px-4 py-3 text-left font-medium">{t("table.target")}</th>
                     <th className="px-4 py-3 text-left font-medium">{t("table.details")}</th>
                     <th className="px-4 py-3 text-right font-medium">{t("table.actions")}</th>
@@ -1586,20 +1638,23 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                     const isDragging =
                       activeItineraryDrag?.isDragging === true &&
                       activeItineraryDrag.itemKey === itemKey;
-                    const isDragTarget =
-                      activeItineraryDrag?.isDragging === true &&
-                      dragOverItemKey === itemKey &&
-                      activeItineraryDrag.itemKey !== itemKey;
 
                     return (
                       <tr
                         key={itemKey}
                         data-itinerary-item-key={itemKey}
-                        className="transition-colors hover:bg-white/56 dark:hover:bg-slate-950/42"
+                        className={[
+                          "transition-[background-color,box-shadow] duration-150 hover:bg-white/56 dark:hover:bg-slate-950/42",
+                          isDragging
+                            ? "relative z-10 bg-emerald-50/85 shadow-[0_10px_24px_rgba(16,185,129,0.16)] dark:bg-emerald-500/12 dark:shadow-[0_12px_28px_rgba(16,185,129,0.12)]"
+                            : "",
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
                       >
                         <td className="px-4 py-3 align-top">
-                          <div className="flex items-center gap-2">
-                            <span className="w-7 text-sm font-medium tabular-nums text-muted-foreground">
+                          <div className="flex w-16 flex-col items-center gap-2">
+                            <span className="w-full text-center text-sm font-medium tabular-nums text-muted-foreground">
                               {item.tripStopOrder}
                             </span>
                             <Button
@@ -1608,7 +1663,14 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                               size="icon"
                               aria-label={t("table.reorderItem", { targetName: itemLabel })}
                               aria-describedby="trip-itinerary-reorder-hint"
-                              className="h-8 w-8 cursor-grab rounded-full border border-white/35 bg-white/72 text-foreground/70 hover:bg-white/92 active:cursor-grabbing dark:border-white/10 dark:bg-slate-950/48 dark:text-sky-100/72 dark:hover:bg-slate-950/68"
+                              className={[
+                                "h-8 w-8 touch-none select-none cursor-grab rounded-full border border-white/35 bg-white/72 text-foreground/70 hover:bg-white/92 active:cursor-grabbing dark:border-white/10 dark:bg-slate-950/48 dark:text-sky-100/72 dark:hover:bg-slate-950/68",
+                                isDragging
+                                  ? "ring-2 ring-emerald-500/60 ring-offset-2 ring-offset-background dark:ring-emerald-300/50 dark:ring-offset-slate-950"
+                                  : "",
+                              ]
+                                .filter(Boolean)
+                                .join(" ")}
                               disabled={isReorderDisabled}
                               onPointerDown={handleItineraryDragStart(itemKey)}
                               onKeyDown={(event) => {
@@ -1622,18 +1684,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                             </Button>
                           </div>
                         </td>
-                        <td
-                          className={[
-                            "px-4 py-3 align-top transition-colors",
-                            isDragging
-                              ? "bg-emerald-50/75 dark:bg-emerald-500/10"
-                              : isDragTarget
-                                ? "bg-sky-50/85 dark:bg-sky-500/10"
-                                : "",
-                          ]
-                            .filter(Boolean)
-                            .join(" ")}
-                        >
+                        <td className="px-4 py-3 align-top">
                           <div className="space-y-1">
                             <div className="flex flex-wrap items-center gap-2">
                               <span className="inline-flex items-center rounded-full bg-sky-100 px-2.5 py-1 text-xs font-medium text-sky-900 dark:bg-sky-950/60 dark:text-sky-200">
@@ -1751,9 +1802,9 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
             ) : (
               <div
                 data-testid="available-visits-scroll-area"
-                className="max-h-144 overflow-y-auto rounded-[1.3rem] border border-white/35 dark:border-white/8"
+                className="max-h-144 overflow-x-auto overflow-y-auto rounded-[1.3rem] border border-white/35 dark:border-white/8"
               >
-                <table className="w-full table-fixed text-sm">
+                <table className="min-w-144 w-full table-fixed text-sm">
                   <thead className="sticky top-0 z-10 bg-white/70 dark:bg-slate-950/52">
                     <tr>
                       <th className="px-4 py-3 text-left font-medium">{t("table.target")}</th>

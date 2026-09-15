@@ -272,23 +272,30 @@ const getItineraryOrder = (section: HTMLElement) =>
 const mockItineraryRowLayout = (section: HTMLElement) => {
   const rows = Array.from(section.querySelectorAll<HTMLElement>("[data-itinerary-item-key]"));
 
-  rows.forEach((row, index) => {
-    const top = 100 + index * 48;
+  rows.forEach((row) => {
     const height = 40;
 
     Object.defineProperty(row, "getBoundingClientRect", {
       configurable: true,
-      value: () => ({
-        x: 0,
-        y: top,
-        width: 400,
-        height,
-        top,
-        bottom: top + height,
-        left: 0,
-        right: 400,
-        toJSON: () => null,
-      }),
+      value: () => {
+        const currentRows = Array.from(
+          section.querySelectorAll<HTMLElement>("[data-itinerary-item-key]"),
+        );
+        const currentIndex = currentRows.indexOf(row);
+        const top = 100 + currentIndex * 48;
+
+        return {
+          x: 0,
+          y: top,
+          width: 400,
+          height,
+          top,
+          bottom: top + height,
+          left: 0,
+          right: 400,
+          toJSON: () => null,
+        };
+      },
     });
   });
 };
@@ -407,8 +414,8 @@ describe("TripVisitAssignments", () => {
     const availableScrollArea = within(availableSection).getByTestId(
       "available-visits-scroll-area",
     );
-    expect(availableScrollArea).toHaveClass("max-h-144", "overflow-y-auto");
-    expect(within(availableScrollArea).getByRole("table")).toHaveClass("table-fixed");
+    expect(availableScrollArea).toHaveClass("max-h-144", "overflow-x-auto", "overflow-y-auto");
+    expect(within(availableScrollArea).getByRole("table")).toHaveClass("min-w-144", "table-fixed");
     expect(
       within(availableScrollArea).getByRole("button", {
         name: "controlPanel.trips.assignments.attachAction",
@@ -542,7 +549,7 @@ describe("TripVisitAssignments", () => {
     );
   });
 
-  it("keeps itinerary reorders local until saving and disables other actions while the new order is unsaved", async () => {
+  it("saves an itinerary reorder when the item is dropped", async () => {
     const { apiFetch } = await import("@/lib/api");
     vi.mocked(apiFetch).mockResolvedValue(undefined);
     const user = userEvent.setup();
@@ -574,6 +581,18 @@ describe("TripVisitAssignments", () => {
     const reorderButton = within(visitRow).getByRole("button", {
       name: "controlPanel.trips.assignments.table.reorderItem",
     });
+    const itineraryTable = within(itinerarySection).getByRole("table");
+
+    expect(reorderButton).toHaveClass("touch-none", "select-none");
+    expect(itineraryTable).toHaveClass("min-w-192");
+    expect(itineraryTable.parentElement).toHaveClass("overflow-x-auto");
+    const orderHeader = within(itineraryTable).getByRole("columnheader", {
+      name: "controlPanel.trips.assignments.table.order",
+    });
+
+    expect(orderHeader).toHaveTextContent("#");
+    expect(orderHeader).toHaveAttribute("title", "controlPanel.trips.assignments.table.order");
+    expect(reorderButton.parentElement).toHaveClass("flex-col");
 
     expect(getItineraryOrder(itinerarySection)).toEqual(["visit-11", "stop-21"]);
 
@@ -582,39 +601,35 @@ describe("TripVisitAssignments", () => {
       { target: reorderButton, coords: { x: 10, y: 168 } },
     ]);
 
-    await waitFor(() => {
-      expect(getItineraryOrder(itinerarySection)).toEqual(["stop-21", "visit-11"]);
-    });
+    expect(getItineraryOrder(itinerarySection)).toEqual(["stop-21", "visit-11"]);
 
     await user.pointer([{ target: reorderButton, keys: "[/MouseLeft]" }]);
 
-    expect(apiFetch).not.toHaveBeenCalled();
+    expect(getItineraryOrder(itinerarySection)).toEqual(["stop-21", "visit-11"]);
+
+    await waitFor(() => {
+      expect(apiFetch).toHaveBeenCalledTimes(2);
+    });
     expect(
-      screen.getByRole("button", {
+      screen.queryByRole("button", {
         name: "controlPanel.trips.assignments.saveOrder",
       }),
-    ).toBeInTheDocument();
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByRole("button", {
+      screen.queryByRole("button", {
         name: "controlPanel.trips.assignments.restoreOrder",
       }),
-    ).toBeInTheDocument();
+    ).not.toBeInTheDocument();
     expect(
       within(itinerarySection).getByRole("button", {
         name: "controlPanel.trips.assignments.removeVisitAction",
       }),
-    ).toBeDisabled();
+    ).toBeEnabled();
     expect(
       screen.getByRole("button", {
         name: "controlPanel.trips.assignments.attachAction",
       }),
-    ).toBeDisabled();
-
-    await user.click(
-      screen.getByRole("button", {
-        name: "controlPanel.trips.assignments.saveOrder",
-      }),
-    );
+    ).toBeEnabled();
 
     expect(apiFetch).toHaveBeenNthCalledWith(1, "/api/trip-stops/21", {
       method: "PATCH",
@@ -682,12 +697,14 @@ describe("TripVisitAssignments", () => {
       { target: reorderButton, coords: { x: 10, y: 170 } },
     ]);
 
-    await waitFor(() => {
-      expect(getItineraryOrder(itinerarySection)).toEqual(["stop-21", "visit-11", "visit-14"]);
-    });
+    expect(getItineraryOrder(itinerarySection)).toEqual(["stop-21", "visit-11", "visit-14"]);
+
+    await user.pointer([{ target: reorderButton, keys: "[/MouseLeft]" }]);
+
+    expect(getItineraryOrder(itinerarySection)).toEqual(["stop-21", "visit-11", "visit-14"]);
   });
 
-  it("keeps an unsaved itinerary reorder when the same trip props refresh", async () => {
+  it("keeps the saved itinerary reorder when the same trip props refresh", async () => {
     const user = userEvent.setup();
     const refreshedTrip = {
       ...currentTrip,
@@ -721,18 +738,22 @@ describe("TripVisitAssignments", () => {
       { target: reorderButton, coords: { x: 10, y: 168 } },
     ]);
 
+    expect(getItineraryOrder(itinerarySection)).toEqual(["stop-21", "visit-11"]);
+
+    await user.pointer([{ target: reorderButton, keys: "[/MouseLeft]" }]);
+
     await waitFor(() => {
-      expect(getItineraryOrder(itinerarySection)).toEqual(["stop-21", "visit-11"]);
+      expect(apiFetch).toHaveBeenCalledTimes(2);
     });
 
     rerender(<TripVisitAssignments trip={refreshedTrip} visits={visits} />);
 
     expect(getItineraryOrder(itinerarySection)).toEqual(["stop-21", "visit-11"]);
     expect(
-      screen.getByRole("button", {
+      screen.queryByRole("button", {
         name: "controlPanel.trips.assignments.saveOrder",
       }),
-    ).toBeInTheDocument();
+    ).not.toBeInTheDocument();
   });
 
   it("restores the previous itinerary order when a drag is canceled", async () => {
@@ -769,15 +790,11 @@ describe("TripVisitAssignments", () => {
     fireEvent.pointerDown(reorderButton, { pointerId: 1, clientX: 10, clientY: 120 });
     fireEvent.pointerMove(window, { pointerId: 1, clientX: 10, clientY: 168 });
 
-    await waitFor(() => {
-      expect(getItineraryOrder(itinerarySection)).toEqual(["stop-21", "visit-11"]);
-    });
+    expect(getItineraryOrder(itinerarySection)).toEqual(["stop-21", "visit-11"]);
 
     fireEvent.pointerCancel(window, { pointerId: 1 });
 
-    await waitFor(() => {
-      expect(getItineraryOrder(itinerarySection)).toEqual(["visit-11", "stop-21"]);
-    });
+    expect(getItineraryOrder(itinerarySection)).toEqual(["visit-11", "stop-21"]);
   });
 
   it("removes an assigned visit from the trip", async () => {
@@ -1495,22 +1512,15 @@ describe("TripVisitAssignments", () => {
     await userEvent.keyboard("{ArrowDown}");
 
     expect(getItineraryOrder(itinerarySection)).toEqual(["stop-21", "visit-11"]);
-    expect(apiFetch).not.toHaveBeenCalled();
-    expect(
-      screen.getByRole("button", {
-        name: "controlPanel.trips.assignments.saveOrder",
-      }),
-    ).toBeInTheDocument();
-
-    await userEvent.click(
-      screen.getByRole("button", {
-        name: "controlPanel.trips.assignments.saveOrder",
-      }),
-    );
 
     await waitFor(() => {
       expect(apiFetch).toHaveBeenCalledTimes(2);
     });
+    expect(
+      screen.queryByRole("button", {
+        name: "controlPanel.trips.assignments.saveOrder",
+      }),
+    ).not.toBeInTheDocument();
   });
 
   it("uses the primary edit action as close when stop details have not changed", async () => {

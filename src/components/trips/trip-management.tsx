@@ -58,8 +58,8 @@ export const TripManagement = ({ trips }: TripManagementProps) => {
           <p className="text-muted-foreground">{t("emptyFiltered")}</p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-[1.6rem] border border-white/45 bg-white/56 shadow-[0_18px_36px_rgba(148,163,184,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/38 dark:shadow-[0_22px_40px_rgba(2,6,23,0.28)]">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto rounded-[1.6rem] border border-white/45 bg-white/56 shadow-[0_18px_36px_rgba(148,163,184,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/38 dark:shadow-[0_22px_40px_rgba(2,6,23,0.28)]">
+          <table className="min-w-168 w-full text-sm">
             <thead className="bg-white/74 dark:bg-slate-950/56">
               <tr>
                 <th className="px-4 py-3 text-left font-medium">{t("tripName")}</th>
