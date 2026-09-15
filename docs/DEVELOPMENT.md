@@ -56,6 +56,7 @@ NEXT_PUBLIC_MAP_STYLE_URL=https://demotiles.maplibre.org/style.json
 AUTH_COOKIE_NAME=__session
 AUTH_JWT_ISSUER=reissuvihko-api
 AUTH_JWT_AUDIENCE=reissuvihko-ui
+TRIP_PLANNER_CLIENT_SECRET=at-least-32-characters-planner-boundary-secret
 NEXT_PUBLIC_SITE_URL=https://reissuvihko.vercel.app
 ```
 
@@ -419,7 +420,8 @@ See `AGENTS.md` for the full convention list. Key rules:
 
 ## Production Deployment Notes
 
-- The frontend expects `NEXT_PUBLIC_API_URL`, `API_KEY`, and `AUTH_JWT_SECRET` to be set in Vercel.
+- The frontend expects `NEXT_PUBLIC_API_URL`, `API_KEY`, `AUTH_JWT_SECRET`, and `TRIP_PLANNER_CLIENT_SECRET` to be set in Vercel.
 - `AUTH_JWT_SECRET` must match the backend exactly so `src/proxy.ts` and `src/lib/session-auth.ts` can verify the session JWT. The token's `iss`/`aud` claims must also match `AUTH_JWT_ISSUER` / `AUTH_JWT_AUDIENCE` (defaults `reissuvihko-api` / `reissuvihko-ui`).
+- `TRIP_PLANNER_CLIENT_SECRET` is server-only and must be at least 32 characters. In production the proxy derives the opaque planner client ID from Vercel's platform-overwritten `x-vercel-forwarded-for` header using HMAC-SHA256; it rejects planner requests when that header or secret is missing. Do not expose the UI origin outside Vercel or substitute an arbitrary `x-forwarded-for` value. The identity is intentionally not logged or stored as a raw network identifier.
 - For production auth, prefer custom domains such as `app.example.com` and `api.example.com` over two separate default `*.vercel.app` domains.
 - See [docs/DEPLOYMENT.md](./DEPLOYMENT.md) for the full deployment checklist.

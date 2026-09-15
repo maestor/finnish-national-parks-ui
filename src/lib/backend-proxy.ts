@@ -1,3 +1,4 @@
+import { createHmac } from "node:crypto";
 import { env } from "@/lib/env";
 import { isSameOriginMutationRequest } from "@/lib/request-origin";
 import { normalizeAppPath } from "@/lib/routes";
@@ -20,6 +21,7 @@ const getBackendUrl = (request: Request, backendPath: string): URL => {
 export const MAX_TRIP_PLANNER_REQUEST_BODY_BYTES = 16 * 1024;
 const TRIP_PLANNER_CLIENT_COOKIE_NAME = "__planner_client";
 const TRIP_PLANNER_CLIENT_ID_PATTERN = /^[A-Za-z0-9_-]{16,128}$/;
+const TRUSTED_CLIENT_IDENTITY_HEADER = "x-vercel-forwarded-for";
 
 class RequestBodyTooLargeError extends Error {}
 
@@ -40,6 +42,30 @@ const getCookieValue = (cookieHeader: string | null, cookieName: string): string
 const createTripPlannerClientId = () => globalThis.crypto.randomUUID();
 
 const getTripPlannerClient = (request: Request) => {
+  const trustedIdentity = request.headers.get(TRUSTED_CLIENT_IDENTITY_HEADER)?.trim();
+
+  if (process.env.NODE_ENV === "production") {
+    if (!(trustedIdentity && env.TRIP_PLANNER_CLIENT_SECRET)) {
+      return null;
+    }
+
+    return {
+      id: createHmac("sha256", env.TRIP_PLANNER_CLIENT_SECRET)
+        .update(`trip-planner-client:v1:${trustedIdentity}`)
+        .digest("base64url"),
+      setCookie: false,
+    };
+  }
+
+  if (trustedIdentity && env.TRIP_PLANNER_CLIENT_SECRET) {
+    return {
+      id: createHmac("sha256", env.TRIP_PLANNER_CLIENT_SECRET)
+        .update(`trip-planner-client:v1:${trustedIdentity}`)
+        .digest("base64url"),
+      setCookie: false,
+    };
+  }
+
   const cookieValue = getCookieValue(
     request.headers.get("cookie"),
     TRIP_PLANNER_CLIENT_COOKIE_NAME,
@@ -220,6 +246,10 @@ export const proxyBackendRequest = async (
 
   const backendUrl = getBackendUrl(request, backendPath);
   const tripPlannerClient = includeTripPlannerBudget ? getTripPlannerClient(request) : null;
+
+  if (includeTripPlannerBudget && !tripPlannerClient) {
+    return jsonError(503, "Trip planner trust boundary unavailable");
+  }
 
   let body: ArrayBuffer | undefined;
   try {

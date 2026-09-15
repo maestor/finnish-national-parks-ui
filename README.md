@@ -85,6 +85,7 @@ cp .env.local.example .env.local
 NEXT_PUBLIC_API_URL=http://localhost:3004
 API_KEY=your-hono-api-key
 AUTH_JWT_SECRET=at-least-32-characters-shared-secret
+TRIP_PLANNER_CLIENT_SECRET=at-least-32-characters-planner-boundary-secret
 NEXT_PUBLIC_MAP_STYLE_URL=https://demotiles.maplibre.org/style.json
 ```
 
