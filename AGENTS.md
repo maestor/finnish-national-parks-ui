@@ -38,6 +38,16 @@ Before investigating, planning, editing, or running code:
 - Delete stale code in the touched area and update the relevant tracked documentation whenever a contributor-facing behavior changes.
 - Do not start a local server unless the user asks or one is already running.
 
+## Local AI Admin Login
+
+When a future AI agent needs the admin UI locally without Google OAuth:
+
+1. In the API `.env`, set `LOCAL_AGENT_AUTH_ENABLED=true` and make sure the configured development database is safe for agent edits.
+2. Ensure the API and UI are running on their normal local ports (`3004` and `4300`) and share the same `AUTH_JWT_SECRET`.
+3. Open `http://localhost:4300/auth/dev-login` with the browser agent. The route sets a normal `__session` cookie and redirects to `/hallinta`.
+
+This route is intentionally hidden from the UI, loopback-only, unavailable on Vercel, and does not create a local admin row. Google login remains the normal path for real users and super-admin access.
+
 ## Cross-Repository Work
 
 - Read the API repository's `AGENTS.md` and relevant development/testing guides before changing shared behavior.
