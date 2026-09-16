@@ -3,7 +3,7 @@
 import { CalendarRange, Signpost, TentTree } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   PUBLIC_HERO_DESCRIPTION_CLASS_NAME,
   PUBLIC_META_BADGE_CLASS_NAME,
@@ -22,15 +22,10 @@ interface TripArchiveCardProps {
 
 export const TripArchiveCard = ({ onDetailNavigate, trip }: TripArchiveCardProps) => {
   const t = useTranslations("tripsArchive");
-  const [imageFailed, setImageFailed] = useState(false);
+  const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null);
   const featuredImage = trip.featuredImage;
   const featuredImageUrl = featuredImage?.url;
-
-  useEffect(() => {
-    if (imageFailed && featuredImageUrl) {
-      setImageFailed(false);
-    }
-  }, [featuredImageUrl, imageFailed]);
+  const shouldShowFeaturedImage = featuredImage !== null && featuredImageUrl !== failedImageUrl;
 
   return (
     <li className="flex min-w-0">
@@ -42,14 +37,14 @@ export const TripArchiveCard = ({ onDetailNavigate, trip }: TripArchiveCardProps
           className="relative flex aspect-video w-full shrink-0 items-center justify-center overflow-hidden bg-slate-200/65 dark:bg-slate-900/70"
           aria-hidden="true"
         >
-          {featuredImage !== null && !imageFailed ? (
+          {shouldShowFeaturedImage ? (
             <AppImage
               src={featuredImage.url}
               alt=""
               fill
               sizes="(max-width: 767px) calc(100vw - 2rem), (max-width: 1023px) calc(50vw - 3rem), 480px"
               className="object-cover object-center"
-              onError={() => setImageFailed(true)}
+              onError={() => setFailedImageUrl(featuredImageUrl ?? null)}
             />
           ) : (
             <TentTree className="h-12 w-12 text-primary" />
