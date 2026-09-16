@@ -255,6 +255,8 @@
     "visitDetailsLoadFailed": "Kuvia ei saatu ladattua juuri nyt.",
     "retryVisitDetails": "Yritä uudelleen",
     "loadMoreVisitImages": "Näytä lisää kuvia",
+    "loadingRoute": "Ladataan retken reittiä...",
+    "retryRoute": "Yritä uudelleen",
     "copyTripPageLink": "Kopioi retken sivun linkki",
     "tripPageLinkCopied": "Retken sivun linkki kopioitu",
     "editTrip": "Muokkaa retkeä",

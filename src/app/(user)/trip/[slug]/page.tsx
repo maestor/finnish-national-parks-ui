@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { cache } from "react";
 import { PublicTripPage } from "@/components/trips/public-trip-page";
 import { ApiError } from "@/lib/api";
 import { buildPageMetadata } from "@/lib/page-metadata";
@@ -9,7 +10,7 @@ interface PublicTripRoutePageProps {
   params: Promise<{ slug: string }>;
 }
 
-const fetchTripForRequest = async (slug: string) => {
+const fetchTripForRequest = cache(async (slug: string) => {
   try {
     return await fetchPublicTripBySlug(slug);
   } catch (error) {
@@ -19,7 +20,7 @@ const fetchTripForRequest = async (slug: string) => {
 
     throw error;
   }
-};
+});
 
 export const generateMetadata = async ({ params }: PublicTripRoutePageProps) => {
   const [{ slug }, metadataT] = await Promise.all([params, getTranslations("metadata")]);

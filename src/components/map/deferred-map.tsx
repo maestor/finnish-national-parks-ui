@@ -7,21 +7,31 @@ import { cn } from "@/lib/cn";
 const DeferredMapPowerContext = createContext(false);
 
 interface DeferredMapProps {
+  autoLoad?: boolean;
   children: ReactNode;
   className: string;
   label: string;
+  loadImmediately?: boolean;
+  showLoadAction?: boolean;
 }
 
 export const useDeferredMapPower = () => useContext(DeferredMapPowerContext);
 
-const DeferredMap = ({ children, className, label }: DeferredMapProps) => {
+const DeferredMap = ({
+  autoLoad = true,
+  children,
+  className,
+  label,
+  loadImmediately = false,
+  showLoadAction = true,
+}: DeferredMapProps) => {
   const t = useTranslations("map");
   const containerRef = useRef<HTMLElement>(null);
-  const [isLoadRequested, setIsLoadRequested] = useState(false);
+  const [isLoadRequested, setIsLoadRequested] = useState(loadImmediately);
   const [isLowPower, setIsLowPower] = useState(false);
 
   useEffect(() => {
-    if (isLoadRequested) {
+    if (loadImmediately || autoLoad === false || isLoadRequested) {
       return;
     }
 
@@ -47,7 +57,7 @@ const DeferredMap = ({ children, className, label }: DeferredMapProps) => {
     observer.observe(container);
 
     return () => observer.disconnect();
-  }, [isLoadRequested]);
+  }, [autoLoad, isLoadRequested, loadImmediately]);
 
   return (
     <section ref={containerRef} className={cn("relative", className)} aria-label={label}>
@@ -78,13 +88,15 @@ const DeferredMap = ({ children, className, label }: DeferredMapProps) => {
           <div className="flex max-w-sm flex-col items-center gap-3">
             <p className="text-sm font-medium text-foreground">{t("deferredMapTitle")}</p>
             <p className="text-sm text-muted-foreground">{t("deferredMapDescription")}</p>
-            <button
-              type="button"
-              className="rounded-full border border-emerald-200/70 bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              onClick={() => setIsLoadRequested(true)}
-            >
-              {t("loadDeferredMap")}
-            </button>
+            {showLoadAction === true && (
+              <button
+                type="button"
+                className="rounded-full border border-emerald-200/70 bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                onClick={() => setIsLoadRequested(true)}
+              >
+                {t("loadDeferredMap")}
+              </button>
+            )}
           </div>
         </div>
       )}

@@ -13,6 +13,12 @@ export type PublicTripDetail =
 export type PublicTripVisitImagesResponse =
   paths["/api/trips/slug/{slug}/visits/{visitId}/images"]["get"]["responses"][200]["content"]["application/json"];
 
+export type PublicTripRouteResponse =
+  paths["/api/trips/slug/{slug}/route"]["get"]["responses"][200]["content"]["application/json"];
+
+export type PublicTripStopImagesResponse =
+  paths["/api/trips/slug/{slug}/stops/{stopId}/images"]["get"]["responses"][200]["content"]["application/json"];
+
 export type TripItineraryItem = TripDetail["itinerary"][number];
 export type PublicTripItineraryItem = PublicTripDetail["itinerary"][number];
 

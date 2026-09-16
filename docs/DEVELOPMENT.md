@@ -200,7 +200,7 @@ Backend request timeout policy:
 
 - `src/lib/api.ts` and `src/lib/backend-proxy.ts` default backend-facing requests to a `10s` timeout so hung reads do not pin pages or route handlers.
 - Public trip detail reads via `src/lib/public-trip.ts` opt into a `30s` timeout because large trip payloads with trip and visit media can legitimately exceed the generic default.
-- The deferred public trip visit-image route uses a `30s` timeout for the one requested visit image page. It never reloads the trip or runs route planning just to open a gallery.
+- Deferred public trip route and image requests use a `30s` timeout. They never reload the trip detail page; opening a gallery loads only the requested visit or stop image page, while route planning runs separately in the background.
 - Trip planner nearby searches opt into a `30s` timeout because Geoapify-backed point lookups can legitimately take longer than the generic default.
 - Trip planner route searches opt into a `60s` timeout because cold Geoapify-backed long-route planning can exceed the nearby budget while still returning valid results.
 
@@ -250,7 +250,7 @@ Public API terminology and access caveat:
 - The public visits page (`/kaynnit`) reads `GET /api/visits-timeline`; its optional map view (`?view=map`) additionally reads `GET /api/map-summary` for marker coordinates, and its visited national parks view (`?view=parks`) joins the same map summary to the visit timeline so park logos and the current total national park count stay available server-side.
 - The public trip archive (`/retket`) reads `GET /api/trips/archive` with an initial batch of 12 cards and appends later cursor batches through the same-origin `/api/trips/archive` proxy. Archive responses are private/no-store because selected image URLs may be signed; the client never stores those URLs in Back navigation state and does not prefetch trip details.
 - Public park detail pages still read `GET /api/parks/{slug}` and `GET /api/parks/{slug}/visits`, but those reads now use `cache: "no-store"` because the payload still contains expiring presigned asset URLs (for example visit images and brochure PDFs). Hidden parks still fall back to an authenticated request.
-- Public trip detail pages also use `cache: "no-store"` for the same reason until the backend serves stable public asset URLs for trip and visit media. When a visitor opens a visit gallery, the same-origin private/no-store proxy requests only `GET /api/trips/slug/{slug}/visits/{visitId}/images`. The API validates that the visit belongs to that visible trip parent and returns a stable image order in pages of 12 (maximum 24). The UI has loading, retry, and “show more” states for that one gallery, does not retain signed URLs across navigation, and never reloads the trip or other parks' history for it.
+- Public trip detail pages also use `cache: "no-store"` for the same reason until the backend serves stable public asset URLs for trip and visit media. When a visitor opens a visit or stop gallery, the same-origin private/no-store proxy requests only the corresponding `GET /api/trips/slug/{slug}/visits/{visitId}/images` or `GET /api/trips/slug/{slug}/stops/{stopId}/images` page. The API validates that the image parent belongs to that visible trip, returns a stable image order in pages of 12 (maximum 24), and keeps route planning out of gallery reads. The UI has loading, retry, and “show more” states for that one gallery, does not retain signed URLs across navigation, and never reloads the trip or other parks' history for it.
 - Admin-only quick links on public pages are resolved client-side with `useAuth`, so the page HTML can stay cache-friendly while signed-in users still see edit and add-visit affordances after hydration.
 - Visit and public park mutations call the local Next.js route `POST /api/revalidate-public-cache` so the frontend can invalidate cached public pages immediately after a successful write.
 - Trip mutations also revalidate the archive route so new, renamed, deleted, or reassigned trips appear in the next archive request.
@@ -271,7 +271,7 @@ Canvas points are not individually keyboard-focusable. The header park search, v
 
 ### Optional map loading
 
-Park boundary maps and public trip maps are wrapped in `src/components/map/deferred-map.tsx`. The boundary reserves the map's layout space, starts loading shortly before it enters the viewport, and keeps an explicit accessible load button for users who want to control optional map work. The same boundary exposes a low-power toggle that sets MapLibre's pixel ratio to `1`; disabling it restores the device pixel ratio. The primary `/paikat` map remains eager because the map is its main content.
+Park boundary maps and public trip maps are wrapped in `src/components/map/deferred-map.tsx`. The boundary reserves the map's layout space and starts loading shortly before it enters the viewport. Generic optional maps keep an explicit accessible load button, while public trip maps mount automatically after hydration without a manual action and can show itinerary points before the separately loaded route line arrives. The same boundary exposes a low-power toggle that sets MapLibre's pixel ratio to `1`; disabling it restores the device pixel ratio. The primary `/paikat` map remains eager because the map is its main content.
 
 ### Growing public surfaces
 

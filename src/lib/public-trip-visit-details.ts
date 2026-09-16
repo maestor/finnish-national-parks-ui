@@ -8,4 +8,4 @@ export const tripVisitHasExpandableDetails = (visit: PublicTripItineraryVisitIte
   hasNonEmptyText(visit.note) || visit.imageCount > 0;
 
 export const tripStopHasExpandableDetails = (stop: PublicTripItineraryStopItem["stop"]) =>
-  hasNonEmptyText(stop.note) || stop.images.length > 0;
+  hasNonEmptyText(stop.note) || stop.imageCount > 0;

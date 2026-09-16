@@ -37,6 +37,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { apiPublicFetch } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { formatFinnishDate, formatFinnishDateRange } from "@/lib/fi-date";
+import { fetchPublicTripRoute, fetchPublicTripStopImages } from "@/lib/public-trip";
 import {
   createTripItineraryItemKey,
   tripStopHasExpandableDetails,
@@ -47,6 +48,8 @@ import { appRoutes } from "@/lib/routes";
 import {
   getTripStopDisplayName,
   type PublicTripDetail,
+  type PublicTripRouteStatus,
+  type PublicTripStopImagesResponse,
   type PublicTripVisitImagesResponse,
 } from "@/lib/trips";
 import { DeferredMap } from "../map/deferred-map";
@@ -61,7 +64,7 @@ interface ItineraryItemTarget {
   kind: "stop" | "visit";
 }
 
-interface VisitImageDetailsState extends PublicTripVisitImagesResponse {
+interface ImageDetailsState extends PublicTripVisitImagesResponse {
   isLoadingMore: boolean;
   loadMoreFailed: boolean;
   status: "loading" | "ready" | "error";
@@ -102,14 +105,19 @@ const getItineraryDetailsPanelId = (itemKey: string) => `trip-itinerary-details-
 export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
   const t = useTranslations("tripPage");
   const auth = useAuth();
-  const routeStatus = trip.route;
+  const [routeStatus, setRouteStatus] = useState<PublicTripRouteStatus>(trip.route);
+  const [routeLoadState, setRouteLoadState] = useState<"idle" | "loading" | "ready" | "error">(
+    trip.route.data !== null ? "ready" : trip.route.success === false ? "error" : "idle",
+  );
+  const routeRequestRef = useRef<Promise<void> | null>(null);
+  const routeControllerRef = useRef<AbortController | null>(null);
   const route = routeStatus.data;
   const startingPoint = trip.startingPoint;
   const shouldShowEditTripLink = auth.isAuthenticated === true;
   const shouldShowStopCount = trip.stopCount > 0;
   const shouldShowImageCount = trip.imageCount > 0;
   const shouldShowRouteContent = routeStatus.success && route !== null;
-  const shouldShowRouteError = routeStatus.success === false && routeStatus.error !== null;
+  const shouldShowRouteError = routeLoadState === "error" || routeStatus.success === false;
   const routeErrorMessage =
     routeStatus.error?.errorCode === "trip_planner_budget_exceeded"
       ? t("routeRateLimited")
@@ -118,9 +126,6 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
     startingPoint !== null &&
     (trip.itinerary.length > 0 || routeStatus.success === false || shouldShowRouteContent);
   const shouldShowRouteSection = shouldShowRouteContent || shouldShowRouteMap;
-  const hasDeferredVisitDetails = trip.itinerary.some(
-    (item) => item.kind === "visit" && item.visit.imageCount > 0,
-  );
   const sectionNavigationItems = useMemo(() => {
     const items: StickySectionNavigationItem[] = [];
 
@@ -169,32 +174,34 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
   );
   const [openItemKey, setOpenItemKey] = useState<string | null>(null);
   const [failedFeaturedImageKey, setFailedFeaturedImageKey] = useState<string | null>(null);
-  const [visitDetailsById, setVisitDetailsById] = useState<Record<string, VisitImageDetailsState>>(
-    {},
-  );
+  const [imageDetailsByKey, setImageDetailsByKey] = useState<Record<string, ImageDetailsState>>({});
   const [stickySectionNavHeight, setStickySectionNavHeight] = useState(0);
   const [, startVisitDetailsTransition] = useTransition();
   const itineraryItemRefs = useRef(new Map<string, HTMLLIElement>());
   const itineraryToggleButtonRefs = useRef(new Map<string, HTMLButtonElement>());
   const pendingScrollItemKeyRef = useRef<string | null>(null);
-  const visitDetailsByIdRef = useRef<Record<string, VisitImageDetailsState>>({});
-  const visitImageRequestControllersRef = useRef(new Map<string, AbortController>());
-  const visitImageRequestsRef = useRef(new Map<string, Promise<void>>());
-  const visitDetailsTripSlugRef = useRef(trip.slug);
+  const imageDetailsByKeyRef = useRef<Record<string, ImageDetailsState>>({});
+  const imageRequestControllersRef = useRef(new Map<string, AbortController>());
+  const imageRequestsRef = useRef(new Map<string, Promise<void>>());
+  const tripSlugRef = useRef(trip.slug);
 
-  const setVisitImageDetails = useCallback((visitId: number, state: VisitImageDetailsState) => {
-    const nextDetails = { ...visitDetailsByIdRef.current, [visitId]: state };
-    visitDetailsByIdRef.current = nextDetails;
-    setVisitDetailsById(nextDetails);
+  const setImageDetails = useCallback((key: string, state: ImageDetailsState) => {
+    const nextDetails = { ...imageDetailsByKeyRef.current, [key]: state };
+    imageDetailsByKeyRef.current = nextDetails;
+    setImageDetailsByKey(nextDetails);
   }, []);
 
-  const loadVisitImages = useCallback(
-    (visitId: number, offset = 0) => {
-      const requestKey = `${visitId}:${offset}`;
-      const current = visitDetailsByIdRef.current[String(visitId)];
+  const loadImages = useCallback(
+    (
+      key: string,
+      loadPage: (signal: AbortSignal) => Promise<PublicTripVisitImagesResponse>,
+      offset = 0,
+    ) => {
+      const requestKey = `${key}:${offset}`;
+      const current = imageDetailsByKeyRef.current[key];
 
-      if (hasDeferredVisitDetails === false || visitImageRequestsRef.current.has(requestKey)) {
-        return visitImageRequestsRef.current.get(requestKey);
+      if (imageRequestsRef.current.has(requestKey)) {
+        return imageRequestsRef.current.get(requestKey);
       }
 
       if (offset === 0 && (current?.status === "loading" || current?.status === "ready")) {
@@ -206,7 +213,7 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
       }
 
       if (offset === 0) {
-        setVisitImageDetails(visitId, {
+        setImageDetails(key, {
           images: [],
           isLoadingMore: false,
           loadMoreFailed: false,
@@ -214,7 +221,7 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
           status: "loading",
         });
       } else if (current) {
-        setVisitImageDetails(visitId, {
+        setImageDetails(key, {
           ...current,
           isLoadingMore: true,
           loadMoreFailed: false,
@@ -222,21 +229,15 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
       }
 
       const controller = new AbortController();
-      visitImageRequestControllersRef.current.set(requestKey, controller);
-      const search = offset === 0 ? "" : `?offset=${offset}`;
-      const request = apiPublicFetch<PublicTripVisitImagesResponse>(
-        getTripVisitImagesPath(trip.slug, visitId) + search,
-        {
-          signal: controller.signal,
-        },
-      )
+      imageRequestControllersRef.current.set(requestKey, controller);
+      const request = loadPage(controller.signal)
         .then((response) => {
           if (controller.signal.aborted) {
             return;
           }
 
           startVisitDetailsTransition(() => {
-            const previous = visitDetailsByIdRef.current[String(visitId)];
+            const previous = imageDetailsByKeyRef.current[key];
             const images =
               offset === 0
                 ? response.images
@@ -248,7 +249,7 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
                       ]),
                     ).values(),
                   );
-            setVisitImageDetails(visitId, {
+            setImageDetails(key, {
               images,
               isLoadingMore: false,
               loadMoreFailed: false,
@@ -262,9 +263,9 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
             return;
           }
 
-          const previous = visitDetailsByIdRef.current[String(visitId)];
+          const previous = imageDetailsByKeyRef.current[key];
           if (offset > 0 && previous) {
-            setVisitImageDetails(visitId, {
+            setImageDetails(key, {
               ...previous,
               isLoadingMore: false,
               loadMoreFailed: true,
@@ -272,7 +273,7 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
             return;
           }
 
-          setVisitImageDetails(visitId, {
+          setImageDetails(key, {
             images: [],
             isLoadingMore: false,
             loadMoreFailed: false,
@@ -281,39 +282,120 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
           });
         })
         .finally(() => {
-          visitImageRequestControllersRef.current.delete(requestKey);
-          visitImageRequestsRef.current.delete(requestKey);
+          imageRequestControllersRef.current.delete(requestKey);
+          imageRequestsRef.current.delete(requestKey);
         });
 
-      visitImageRequestsRef.current.set(requestKey, request);
+      imageRequestsRef.current.set(requestKey, request);
       return request;
     },
-    [hasDeferredVisitDetails, setVisitImageDetails, trip.slug],
+    [setImageDetails],
   );
 
+  const loadVisitImages = useCallback(
+    (visitId: number, offset = 0) =>
+      loadImages(
+        `visit:${visitId}`,
+        (signal) =>
+          apiPublicFetch<PublicTripVisitImagesResponse>(
+            getTripVisitImagesPath(trip.slug, visitId) + (offset === 0 ? "" : `?offset=${offset}`),
+            { signal },
+          ),
+        offset,
+      ),
+    [loadImages, trip.slug],
+  );
+
+  const loadStopImages = useCallback(
+    (stopId: number, offset = 0) =>
+      loadImages(
+        `stop:${stopId}`,
+        (signal) =>
+          fetchPublicTripStopImages(trip.slug, stopId, { offset, signal }).then(
+            (response: PublicTripStopImagesResponse) => response,
+          ),
+        offset,
+      ),
+    [loadImages, trip.slug],
+  );
+
+  const loadRoute = useCallback(() => {
+    if (routeRequestRef.current !== null || routeStatus.data !== null) {
+      return routeRequestRef.current ?? Promise.resolve();
+    }
+
+    setRouteLoadState("loading");
+    const controller = new AbortController();
+    routeControllerRef.current = controller;
+    const request = fetchPublicTripRoute(trip.slug, { signal: controller.signal })
+      .then((response) => {
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        setRouteStatus(response);
+        setRouteLoadState(response.success ? "ready" : "error");
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setRouteLoadState("error");
+        }
+      })
+      .finally(() => {
+        routeRequestRef.current = null;
+        routeControllerRef.current = null;
+      });
+
+    routeRequestRef.current = request;
+    return request;
+  }, [routeStatus.data, trip.slug]);
+
   useEffect(() => {
-    if (visitDetailsTripSlugRef.current !== trip.slug) {
-      visitDetailsTripSlugRef.current = trip.slug;
-      visitDetailsByIdRef.current = {};
-      setVisitDetailsById({});
+    if (tripSlugRef.current !== trip.slug) {
+      tripSlugRef.current = trip.slug;
+      imageDetailsByKeyRef.current = {};
+      setImageDetailsByKey({});
+      setRouteStatus(trip.route);
+      setRouteLoadState(
+        trip.route.data !== null ? "ready" : trip.route.success === false ? "error" : "idle",
+      );
     }
 
     return () => {
-      for (const controller of visitImageRequestControllersRef.current.values()) {
+      for (const controller of imageRequestControllersRef.current.values()) {
         controller.abort();
       }
-      visitImageRequestControllersRef.current.clear();
-      visitImageRequestsRef.current.clear();
+      imageRequestControllersRef.current.clear();
+      imageRequestsRef.current.clear();
+      routeControllerRef.current?.abort();
     };
-  }, [trip.slug]);
+  }, [trip.route, trip.slug]);
 
   const ensureVisitDetailsLoaded = (visitId: number) => {
-    if (hasDeferredVisitDetails === false) {
+    void loadVisitImages(visitId);
+  };
+
+  const ensureStopDetailsLoaded = (stopId: number) => {
+    void loadStopImages(stopId);
+  };
+
+  useEffect(() => {
+    if (
+      trip.route.data !== null ||
+      trip.route.success === false ||
+      trip.startingPoint === null ||
+      trip.itinerary.filter((item) => item.kind === "stop" || !item.visit.excludeFromRoute).length <
+        2
+    ) {
       return;
     }
 
-    void loadVisitImages(visitId);
-  };
+    const timeoutId = window.setTimeout(() => {
+      void loadRoute();
+    }, 800);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [loadRoute, trip.itinerary, trip.route.data, trip.route.success, trip.startingPoint]);
 
   useEffect(() => {
     const pendingScrollItemKey = pendingScrollItemKeyRef.current;
@@ -357,6 +439,8 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
 
     if (itemTarget.kind === "visit") {
       ensureVisitDetailsLoaded(Number(itemKey.slice("visit:".length)));
+    } else {
+      ensureStopDetailsLoaded(Number(itemKey.slice("stop:".length)));
     }
 
     if (itemTarget.isExpandable === false) {
@@ -378,6 +462,8 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
 
     if (itemTarget?.kind === "visit") {
       ensureVisitDetailsLoaded(Number(itemKey.slice("visit:".length)));
+    } else if (itemTarget?.kind === "stop") {
+      ensureStopDetailsLoaded(Number(itemKey.slice("stop:".length)));
     }
 
     setOpenItemKey((currentOpenItemKey) => (currentOpenItemKey === itemKey ? null : itemKey));
@@ -521,18 +607,26 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
             </h2>
           </div>
           {shouldShowRouteError === true && (
-            <p
-              className="mt-4 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
-              role="alert"
-            >
-              {routeErrorMessage}
-            </p>
+            <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-red-700/35 bg-red-50 px-4 py-3 text-sm font-medium text-red-950 dark:border-red-300/40 dark:bg-red-950/80 dark:text-red-50">
+              <p role="alert">{routeErrorMessage}</p>
+              {routeLoadState === "error" && routeStatus.success !== false && (
+                <button
+                  type="button"
+                  className="font-semibold underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700 focus-visible:ring-offset-2 dark:focus-visible:ring-red-200"
+                  onClick={() => void loadRoute()}
+                >
+                  {t("retryRoute")}
+                </button>
+              )}
+            </div>
           )}
           {shouldShowRouteMap === true && (
-            <div className="mt-4">
+            <div className="relative mt-4 overflow-hidden rounded-[1.75rem]">
               <DeferredMap
                 className="h-[75dvh] min-h-104 max-h-200"
                 label={t("mapAriaLabel", { trip: trip.name })}
+                loadImmediately
+                showLoadAction={false}
               >
                 <LazyPublicTripMap
                   onItineraryItemAction={openItineraryItemFromMap}
@@ -542,6 +636,17 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
                   tripStops={trip.itinerary}
                 />
               </DeferredMap>
+              {routeLoadState === "loading" && (
+                <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-slate-950/20 p-4 dark:bg-slate-950/45">
+                  <p
+                    className="rounded-2xl border border-slate-300/80 bg-white/95 px-4 py-3 text-center text-sm font-semibold text-slate-950 shadow-xl dark:border-slate-200/35 dark:bg-slate-900/95 dark:text-white"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    {t("loadingRoute")}
+                  </p>
+                </div>
+              )}
             </div>
           )}
           {shouldShowRouteContent === true && (
@@ -579,7 +684,7 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
                   const itemKey = createTripItineraryItemKey("visit", item.visit.id);
                   const isOpen = openItemKey === itemKey;
                   const visitHasExpandableDetails = tripVisitHasExpandableDetails(item.visit);
-                  const visitDetails = visitDetailsById[String(item.visit.id)];
+                  const visitDetails = imageDetailsByKey[`visit:${item.visit.id}`];
                   const images = visitDetails?.images ?? [];
                   const shouldShowImageLoadingState =
                     item.visit.imageCount > 0 &&
@@ -794,6 +899,17 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
                   const itemKey = createTripItineraryItemKey("stop", item.stop.id);
                   const isOpen = openItemKey === itemKey;
                   const stopHasExpandableDetails = tripStopHasExpandableDetails(item.stop);
+                  const stopDetails = imageDetailsByKey[`stop:${item.stop.id}`];
+                  const stopImages = stopDetails?.images ?? [];
+                  const shouldShowStopImageLoadingState =
+                    item.stop.imageCount > 0 &&
+                    stopImages.length === 0 &&
+                    stopDetails?.status !== "error" &&
+                    stopDetails?.status !== "ready";
+                  const shouldShowStopImageErrorState =
+                    item.stop.imageCount > 0 &&
+                    stopImages.length === 0 &&
+                    stopDetails?.status === "error";
 
                   return (
                     <li
@@ -858,12 +974,12 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
                                 </button>
                               )}
                             </div>
-                            {item.stop.images.length > 0 && (
+                            {item.stop.imageCount > 0 && (
                               <div className="mt-3 flex flex-wrap gap-2">
                                 <span className={IMAGE_BADGE_CLASS_NAME}>
                                   <Camera className="h-3.5 w-3.5" aria-hidden="true" />
-                                  {item.stop.images.length}{" "}
-                                  {t("imageCount", { count: item.stop.images.length })}
+                                  {item.stop.imageCount}{" "}
+                                  {t("imageCount", { count: item.stop.imageCount })}
                                 </span>
                               </div>
                             )}
@@ -900,7 +1016,7 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
                                   </div>
                                 </section>
                               )}
-                              {item.stop.images.length > 0 && (
+                              {item.stop.imageCount > 0 && (
                                 <section className="space-y-3">
                                   <h4 className={DETAIL_SECTION_HEADING_CLASS_NAME}>
                                     <Images
@@ -909,7 +1025,64 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
                                     />
                                     {t("imagesTitle")}
                                   </h4>
-                                  <VisitImageGallery images={item.stop.images} />
+                                  {shouldShowStopImageLoadingState === true && (
+                                    <p className="text-sm text-muted-foreground">
+                                      {t("loadingVisitDetails")}
+                                    </p>
+                                  )}
+                                  {shouldShowStopImageErrorState === true && (
+                                    <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                                      <p role="alert">{t("visitDetailsLoadFailed")}</p>
+                                      <button
+                                        type="button"
+                                        className="font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        onClick={() => void loadStopImages(item.stop.id)}
+                                      >
+                                        {t("retryVisitDetails")}
+                                      </button>
+                                    </div>
+                                  )}
+                                  {stopImages.length > 0 && (
+                                    <VisitImageGallery images={stopImages} />
+                                  )}
+                                  {stopDetails?.isLoadingMore === true && (
+                                    <p className="text-sm text-muted-foreground">
+                                      {t("loadingMoreVisitImages")}
+                                    </p>
+                                  )}
+                                  {stopDetails?.loadMoreFailed === true && (
+                                    <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                                      <p role="alert">{t("visitDetailsLoadFailed")}</p>
+                                      <button
+                                        type="button"
+                                        className="font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        onClick={() =>
+                                          stopDetails.nextOffset !== null &&
+                                          void loadStopImages(item.stop.id, stopDetails.nextOffset)
+                                        }
+                                      >
+                                        {t("retryVisitDetails")}
+                                      </button>
+                                    </div>
+                                  )}
+                                  {stopDetails !== undefined &&
+                                    stopDetails.nextOffset !== null &&
+                                    stopDetails.status === "ready" &&
+                                    stopDetails.isLoadingMore === false &&
+                                    stopDetails.loadMoreFailed === false && (
+                                      <button
+                                        type="button"
+                                        className="text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        onClick={() =>
+                                          void loadStopImages(
+                                            item.stop.id,
+                                            stopDetails.nextOffset ?? 0,
+                                          )
+                                        }
+                                      >
+                                        {t("loadMoreVisitImages")}
+                                      </button>
+                                    )}
                                 </section>
                               )}
                             </div>
