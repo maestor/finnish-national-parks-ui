@@ -365,6 +365,7 @@
   },
   "controlPanel": {
     "title": "Hallinta",
+    "sectionLabel": "Hallinnan osio",
     "dashboard": {
       "title": "Hallinta",
       "description": "Täällä voit muokata paikkoja, hallita retkiä ja ylläpitää käyntikirjauksia."

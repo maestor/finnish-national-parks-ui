@@ -1,8 +1,10 @@
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ControlPanelNav } from "./control-panel-nav";
 
-const { authState, pathnameState } = vi.hoisted(() => ({
+const { authState, mockPush, pathnameState } = vi.hoisted(() => ({
+  mockPush: vi.fn(),
   authState: {
     isAuthenticated: true,
     isLoading: false,
@@ -20,6 +22,7 @@ const { authState, pathnameState } = vi.hoisted(() => ({
 
 vi.mock("next/navigation", () => ({
   usePathname: () => pathnameState.value,
+  useRouter: () => ({ push: mockPush }),
 }));
 
 vi.mock("@/hooks/use-auth", () => ({
@@ -28,6 +31,7 @@ vi.mock("@/hooks/use-auth", () => ({
 
 describe("ControlPanelNav", () => {
   beforeEach(() => {
+    mockPush.mockReset();
     pathnameState.value = "/control-panel";
     authState.user.isSuperAdmin = true;
   });
@@ -82,6 +86,36 @@ describe("ControlPanelNav", () => {
 
     expect(screen.getByRole("link", { name: "controlPanel.parks.title" })).not.toHaveAttribute(
       "aria-current",
+    );
+  });
+
+  it("provides a compact mobile section switcher that navigates to the selected section", async () => {
+    const user = userEvent.setup();
+
+    render(<ControlPanelNav />);
+
+    const sectionSwitcher = screen.getByRole("combobox", {
+      name: "controlPanel.sectionLabel",
+    });
+
+    expect(sectionSwitcher).toHaveValue("/hallinta");
+
+    await user.selectOptions(sectionSwitcher, "/hallinta/retket");
+
+    expect(mockPush).toHaveBeenCalledWith("/hallinta/retket");
+  });
+
+  it("keeps the parent section selected on nested admin pages", () => {
+    pathnameState.value = "/hallinta/retket/123/muokkaa";
+
+    render(<ControlPanelNav />);
+
+    expect(screen.getByRole("combobox", { name: "controlPanel.sectionLabel" })).toHaveValue(
+      "/hallinta/retket",
+    );
+    expect(screen.getByRole("link", { name: "controlPanel.trips.title" })).toHaveAttribute(
+      "aria-current",
+      "page",
     );
   });
 
