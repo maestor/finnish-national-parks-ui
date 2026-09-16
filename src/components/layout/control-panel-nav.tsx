@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Select } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/cn";
 import { appRoutes, normalizeAppPath } from "@/lib/routes";
@@ -17,6 +18,7 @@ export const ControlPanelNav = () => {
   const t = useTranslations("controlPanel");
   const auth = useAuth();
   const normalizedPathname = normalizeAppPath(usePathname());
+  const router = useRouter();
 
   const links = [
     { href: appRoutes.controlPanel.root, label: t("dashboard.title") },
@@ -30,18 +32,40 @@ export const ControlPanelNav = () => {
       : []),
   ];
 
+  const isCurrentLink = (href: string) =>
+    normalizedPathname === href ||
+    (href !== appRoutes.controlPanel.root && normalizedPathname.startsWith(`${href}/`));
+  const currentLink = links.find(({ href }) => isCurrentLink(href)) ?? links[0];
+
   return (
     <nav className="flex flex-col gap-2" aria-label={t("title")}>
-      {links.map((link) => (
-        <Link
-          key={link.href}
-          href={link.href}
-          className={cn(navLinkClassName, normalizedPathname === link.href && activeLinkClassName)}
-          aria-current={normalizedPathname === link.href ? "page" : undefined}
-        >
-          {link.label}
-        </Link>
-      ))}
+      <label className="sr-only" htmlFor="control-panel-section">
+        {t("sectionLabel")}
+      </label>
+      <Select
+        id="control-panel-section"
+        value={currentLink.href}
+        onChange={(event) => router.push(event.target.value)}
+        wrapperClassName="md:hidden"
+      >
+        {links.map((link) => (
+          <option key={link.href} value={link.href}>
+            {link.label}
+          </option>
+        ))}
+      </Select>
+      <div className="hidden flex-col gap-2 md:flex">
+        {links.map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className={cn(navLinkClassName, isCurrentLink(link.href) && activeLinkClassName)}
+            aria-current={isCurrentLink(link.href) ? "page" : undefined}
+          >
+            {link.label}
+          </Link>
+        ))}
+      </div>
     </nav>
   );
 };
