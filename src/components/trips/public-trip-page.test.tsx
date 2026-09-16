@@ -144,7 +144,7 @@ const trip: PublicTripDetail = {
       stop: {
         displayName: null,
         id: 31,
-        images: [],
+        imageCount: 0,
         createdAt: "2024-06-16T10:00:00Z",
         location: {
           displayName: "Yöpyminen Oulussa",
@@ -212,20 +212,7 @@ const createTripWithImageOnlyStop = (): PublicTripDetail => ({
           ...item,
           stop: {
             ...item.stop,
-            images: [
-              {
-                id: 41,
-                createdAt: "2024-06-16T10:00:00Z",
-                displayOrder: 1,
-                fullHeight: null,
-                fullUrl: "https://images.example.com/stop.jpg",
-                fullWidth: null,
-                originalName: "stop.jpg",
-                thumbHeight: null,
-                thumbUrl: "https://images.example.com/stop-thumb.jpg",
-                thumbWidth: null,
-              },
-            ],
+            imageCount: 1,
             note: null,
           },
         }
@@ -399,6 +386,7 @@ describe("PublicTripPage", () => {
     expect(screen.getByTestId("public-trip-map")).toHaveTextContent(
       "trip:Kesaretki|distance:880000",
     );
+    expect(screen.queryByRole("button", { name: "map.loadDeferredMap" })).not.toBeInTheDocument();
     expect(screen.getByText("tripPage.routeDistanceLabel")).toBeInTheDocument();
     expect(screen.getByText("tripPage.itineraryDescription")).toBeInTheDocument();
     expect(screen.getByText("Punarinnankierros")).toHaveClass("text-emerald-900");
@@ -424,6 +412,150 @@ describe("PublicTripPage", () => {
       "/paikka/pallas-yllastunturi?visit=12#visit-history",
     );
     expect(within(itinerary).queryByText("tripPage.excludedFromRoute")).not.toBeInTheDocument();
+  });
+
+  it("shows the map before a missing route arrives and adds the route in the background", async () => {
+    const route = trip.route.data;
+    const tripWithoutRoute: PublicTripDetail = {
+      ...trip,
+      route: {
+        data: null,
+        error: null,
+        success: true,
+      },
+    };
+
+    let resolveRoute: (response: Response) => void = () => undefined;
+    const routeResponse = new Promise<Response>((resolve) => {
+      resolveRoute = resolve;
+    });
+    mockFetch.mockImplementation(async (input) => {
+      if (String(input).includes("/route")) {
+        return routeResponse;
+      }
+
+      return new Response(JSON.stringify({ images: [], nextOffset: null }), {
+        headers: { "Content-Type": "application/json" },
+        status: 200,
+      });
+    });
+
+    vi.useFakeTimers();
+
+    try {
+      render(<PublicTripPage trip={tripWithoutRoute} />);
+
+      expect(screen.getByTestId("public-trip-map")).toHaveTextContent(
+        "trip:Kesaretki|distance:none",
+      );
+
+      await act(async () => {
+        await Promise.resolve();
+        vi.advanceTimersByTime(800);
+      });
+
+      const map = screen.getByRole("region", { name: "tripPage.mapAriaLabel" });
+      const mapFrame = map.parentElement;
+      if (!(mapFrame instanceof HTMLElement)) {
+        throw new Error("Expected the map to be inside its loading overlay frame");
+      }
+      expect(within(mapFrame).getByRole("status")).toHaveTextContent("tripPage.loadingRoute");
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining("/api/trips/slug/kesaretki/route"),
+        expect.objectContaining({ cache: "no-store" }),
+      );
+
+      resolveRoute(
+        new Response(JSON.stringify({ data: route, error: null, success: true }), {
+          headers: { "Content-Type": "application/json" },
+          status: 200,
+        }),
+      );
+
+      await act(async () => {
+        await routeResponse;
+      });
+
+      expect(screen.getByTestId("public-trip-map")).toHaveTextContent(
+        "trip:Kesaretki|distance:880000",
+      );
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("explains a temporary route failure and lets the visitor retry", async () => {
+    const route = trip.route.data;
+    const tripWithoutRoute: PublicTripDetail = {
+      ...trip,
+      route: {
+        data: null,
+        error: null,
+        success: true,
+      },
+    };
+    mockFetch.mockRejectedValueOnce(new Error("network unavailable")).mockResolvedValueOnce(
+      new Response(JSON.stringify({ data: route, error: null, success: true }), {
+        headers: { "Content-Type": "application/json" },
+        status: 200,
+      }),
+    );
+
+    render(<PublicTripPage trip={tripWithoutRoute} />);
+
+    const retryButton = await waitFor(
+      () => screen.getByRole("button", { name: "tripPage.retryRoute" }),
+      { timeout: 2_000 },
+    );
+    expect(screen.getByRole("alert")).toHaveTextContent("tripPage.routeUnavailable");
+
+    fireEvent.click(retryButton);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("public-trip-map")).toHaveTextContent(
+        "trip:Kesaretki|distance:880000",
+      );
+    });
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("keeps the map available when background route generation fails", async () => {
+    const tripWithoutRoute: PublicTripDetail = {
+      ...trip,
+      route: {
+        data: null,
+        error: {
+          error: "provider unavailable",
+          errorCode: "provider_unavailable",
+        },
+        success: true,
+      },
+    };
+    mockFetch.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          data: null,
+          error: {
+            error: "provider unavailable",
+            errorCode: "provider_unavailable",
+          },
+          success: false,
+        }),
+        {
+          headers: { "Content-Type": "application/json" },
+          status: 200,
+        },
+      ),
+    );
+
+    render(<PublicTripPage trip={tripWithoutRoute} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent("tripPage.routeUnavailable");
+    });
+    expect(screen.getByTestId("public-trip-map")).toHaveTextContent("trip:Kesaretki|distance:none");
+    expect(screen.queryByRole("button", { name: "tripPage.retryRoute" })).not.toBeInTheDocument();
   });
 
   it("renders a compact section navigation and updates the active chip by scroll position", () => {
@@ -811,7 +943,9 @@ describe("PublicTripPage", () => {
     }
 
     expect(within(stopCard).getByText("1 tripPage.imageCount")).toBeInTheDocument();
-    expect(within(stopCard).getByTestId("visit-image-gallery")).toHaveTextContent("images:1");
+    await waitFor(() => {
+      expect(within(stopCard).getByTestId("visit-image-gallery")).toHaveTextContent("images:1");
+    });
     expect(screen.queryByText("Hotelli keskustassa")).not.toBeInTheDocument();
   });
 
@@ -899,6 +1033,48 @@ describe("PublicTripPage", () => {
     expect(screen.getByRole("heading", { name: "tripPage.routeTitle" })).toBeInTheDocument();
     expect(screen.getByTestId("public-trip-map")).toHaveTextContent("trip:Kesaretki|distance:none");
     expect(screen.getByRole("alert")).toHaveTextContent("tripPage.routeUnavailable");
+  });
+
+  it("keeps the route map visible for an empty failed trip route", () => {
+    render(
+      <PublicTripPage
+        trip={{
+          ...trip,
+          itinerary: [],
+          route: {
+            success: false,
+            data: null,
+            error: {
+              error: "provider down",
+              errorCode: "provider_unavailable",
+            },
+          },
+        }}
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "tripPage.routeTitle" })).toBeInTheDocument();
+    expect(screen.getByTestId("public-trip-map")).toHaveTextContent("trip:Kesaretki|distance:none");
+    expect(screen.getByRole("alert")).toHaveTextContent("tripPage.routeUnavailable");
+  });
+
+  it("hides the route section when a trip has no routeable entries yet", () => {
+    render(
+      <PublicTripPage
+        trip={{
+          ...trip,
+          itinerary: [],
+          route: {
+            success: true,
+            data: null,
+            error: null,
+          },
+        }}
+      />,
+    );
+
+    expect(screen.queryByRole("heading", { name: "tripPage.routeTitle" })).not.toBeInTheDocument();
+    expect(screen.queryByTestId("public-trip-map")).not.toBeInTheDocument();
   });
 
   it("keeps the trip visible and explains the route budget limit inside its route section", () => {

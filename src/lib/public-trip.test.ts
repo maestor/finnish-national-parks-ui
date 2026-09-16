@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { apiPublicFetch } from "./api";
-import { fetchPublicTripBySlug } from "./public-trip";
+import {
+  fetchPublicTripBySlug,
+  fetchPublicTripRoute,
+  fetchPublicTripStopImages,
+} from "./public-trip";
 import { PUBLIC_TRIP_REQUEST_TIMEOUT_MS } from "./public-trip-timeout";
 
 vi.mock("./api", () => ({
@@ -42,5 +46,42 @@ describe("public trip fetches", () => {
     });
     expect(timeoutSpy).not.toHaveBeenCalled();
     timeoutSpy.mockRestore();
+  });
+
+  it("fetches the calculated route separately from trip details", async () => {
+    const timeoutSignal = new AbortController().signal;
+    const timeoutSpy = vi.spyOn(AbortSignal, "timeout").mockReturnValue(timeoutSignal);
+    vi.mocked(apiPublicFetch).mockResolvedValueOnce({ data: null, error: null, success: true });
+
+    await fetchPublicTripRoute("kesaretki");
+
+    expect(apiPublicFetch).toHaveBeenCalledWith("/api/trips/slug/kesaretki/route", {
+      cache: "no-store",
+      signal: timeoutSignal,
+    });
+    timeoutSpy.mockRestore();
+  });
+
+  it("fetches stop images only for the opened stop", async () => {
+    const controller = new AbortController();
+    vi.mocked(apiPublicFetch).mockResolvedValueOnce({ images: [], nextOffset: null });
+
+    await fetchPublicTripStopImages("kesaretki", 31, { signal: controller.signal });
+
+    expect(apiPublicFetch).toHaveBeenCalledWith("/api/trips/slug/kesaretki/stops/31/images", {
+      cache: "no-store",
+      signal: controller.signal,
+    });
+  });
+
+  it("passes the next image offset when loading more stop images", async () => {
+    vi.mocked(apiPublicFetch).mockResolvedValueOnce({ images: [], nextOffset: null });
+
+    await fetchPublicTripStopImages("kesaretki", 31, { offset: 24 });
+
+    expect(apiPublicFetch).toHaveBeenCalledWith(
+      "/api/trips/slug/kesaretki/stops/31/images?offset=24",
+      expect.objectContaining({ cache: "no-store" }),
+    );
   });
 });

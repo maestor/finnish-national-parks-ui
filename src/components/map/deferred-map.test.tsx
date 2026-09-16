@@ -58,6 +58,24 @@ describe("DeferredMap", () => {
     expect(screen.getByTestId("deferred-map-content")).toBeInTheDocument();
   });
 
+  it("keeps the map deferred while the container is outside the viewport", () => {
+    renderDeferredMap();
+
+    act(() => {
+      observers[0]?.trigger(false);
+    });
+
+    expect(screen.queryByTestId("deferred-map-content")).not.toBeInTheDocument();
+  });
+
+  it("loads immediately when viewport observation is unavailable", () => {
+    vi.stubGlobal("IntersectionObserver", undefined);
+
+    renderDeferredMap();
+
+    expect(screen.getByTestId("deferred-map-content")).toBeInTheDocument();
+  });
+
   it("supports an explicit load action and low-power mode", () => {
     renderDeferredMap();
 
@@ -66,5 +84,49 @@ describe("DeferredMap", () => {
 
     fireEvent.click(screen.getByRole("checkbox", { name: "map.lowPowerMode" }));
     expect(screen.getByTestId("deferred-map-content")).toHaveAttribute("data-low-power", "true");
+  });
+
+  it("can wait for an explicit action without observing the viewport", () => {
+    render(
+      <DeferredMap autoLoad={false} className="h-80" label="Optional map">
+        <DeferredMapContent />
+      </DeferredMap>,
+    );
+
+    expect(observers).toHaveLength(0);
+    expect(screen.queryByTestId("deferred-map-content")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "map.loadDeferredMap" }));
+
+    expect(screen.getByTestId("deferred-map-content")).toBeInTheDocument();
+  });
+
+  it("can hide the manual load action while still waiting for visibility", () => {
+    render(
+      <DeferredMap showLoadAction={false} className="h-80" label="Trip map">
+        <DeferredMapContent />
+      </DeferredMap>,
+    );
+
+    expect(screen.queryByRole("button", { name: "map.loadDeferredMap" })).not.toBeInTheDocument();
+    expect(screen.queryByTestId("deferred-map-content")).not.toBeInTheDocument();
+
+    act(() => {
+      observers[0]?.trigger(true);
+    });
+
+    expect(screen.getByTestId("deferred-map-content")).toBeInTheDocument();
+  });
+
+  it("can mount immediately without showing a manual load action", () => {
+    render(
+      <DeferredMap loadImmediately showLoadAction={false} className="h-80" label="Trip map">
+        <DeferredMapContent />
+      </DeferredMap>,
+    );
+
+    expect(observers).toHaveLength(0);
+    expect(screen.getByTestId("deferred-map-content")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "map.loadDeferredMap" })).not.toBeInTheDocument();
   });
 });

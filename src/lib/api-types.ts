@@ -3884,20 +3884,6 @@ export interface paths {
                                     createdAt: string;
                                     displayName: string | null;
                                     id: number;
-                                    images: {
-                                        id: number;
-                                        /** Format: uri */
-                                        fullUrl: string;
-                                        /** Format: uri */
-                                        thumbUrl: string;
-                                        fullWidth: number | null;
-                                        fullHeight: number | null;
-                                        thumbWidth: number | null;
-                                        thumbHeight: number | null;
-                                        originalName: string | null;
-                                        displayOrder: number;
-                                        createdAt: string;
-                                    }[];
                                     location: {
                                         coordinate: {
                                             lat: number;
@@ -3911,6 +3897,7 @@ export interface paths {
                                     /** Format: date-time */
                                     updatedAt: string;
                                     visitedOn: string;
+                                    imageCount: number;
                                 };
                             })[];
                             route: {
@@ -3952,6 +3939,92 @@ export interface paths {
                                 success: boolean;
                             };
                             stopCount: number;
+                        };
+                    };
+                };
+                /** @description Trip was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trips/slug/{slug}/route": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    slug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Calculated public trip route state */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data: {
+                                distanceMeters: number;
+                                durationSeconds: number;
+                                geometry: {
+                                    coordinates: number[][];
+                                    /** @enum {string} */
+                                    type: "LineString";
+                                };
+                                returnsToStart: boolean;
+                                waypointCount: number;
+                            } | null;
+                            error: {
+                                error: string;
+                                /** @enum {string} */
+                                errorCode: "provider_unavailable" | "route_not_found" | "trip_planner_budget_exceeded" | "trip_planner_budget_unavailable" | "trip_planner_not_configured";
+                                routeFailure?: {
+                                    destination: {
+                                        coordinate: {
+                                            lat: number;
+                                            lon: number;
+                                        };
+                                        displayName: string;
+                                        label: string;
+                                    };
+                                    origin: {
+                                        coordinate: {
+                                            lat: number;
+                                            lon: number;
+                                        };
+                                        displayName: string;
+                                        label: string;
+                                    };
+                                    waypointIndex: number;
+                                };
+                            } | null;
+                            success: boolean;
                         };
                     };
                 };
@@ -4025,6 +4098,75 @@ export interface paths {
                     };
                 };
                 /** @description Trip visit was not found or is not publicly visible */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trips/slug/{slug}/stops/{stopId}/images": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                    offset?: number | null;
+                };
+                header?: never;
+                path: {
+                    slug: string;
+                    stopId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description One public trip stop image page */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            images: {
+                                id: number;
+                                /** Format: uri */
+                                fullUrl: string;
+                                /** Format: uri */
+                                thumbUrl: string;
+                                fullWidth: number | null;
+                                fullHeight: number | null;
+                                thumbWidth: number | null;
+                                thumbHeight: number | null;
+                                originalName: string | null;
+                                displayOrder: number;
+                                createdAt: string;
+                            }[];
+                            nextOffset: number | null;
+                        };
+                    };
+                };
+                /** @description Trip stop was not found */
                 404: {
                     headers: {
                         [name: string]: unknown;

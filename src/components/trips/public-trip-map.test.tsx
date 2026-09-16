@@ -221,7 +221,7 @@ const tripStops: PublicTripDetail["itinerary"] = [
     stop: {
       displayName: null,
       id: 31,
-      images: [],
+      imageCount: 0,
       createdAt: "2024-06-16T10:00:00Z",
       location: {
         displayName: "Yöpyminen Oulussa",
@@ -247,7 +247,7 @@ const tripStopsWithSharedLocation: PublicTripDetail["itinerary"] = [
     stop: {
       displayName: null,
       id: 32,
-      images: [],
+      imageCount: 0,
       createdAt: "2024-06-16T20:00:00Z",
       location: {
         displayName: "Paluu Oulun mökille",
