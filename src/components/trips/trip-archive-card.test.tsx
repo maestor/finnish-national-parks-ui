@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { PublicTripArchiveItem } from "@/lib/public-trips";
 import { TripArchiveCard } from "./trip-archive-card";
@@ -53,6 +53,20 @@ describe("TripArchiveCard", () => {
     expect(container.querySelector(".aspect-video")).toBeInTheDocument();
     expect(screen.queryByRole("img", { name: "" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: trip.name })).toBeInTheDocument();
+  });
+
+  it("keeps the placeholder instead of retrying a failed image", async () => {
+    const { container } = render(<TripArchiveCard onDetailNavigate={vi.fn()} trip={trip} />);
+    fireEvent.error(container.querySelector("img") as HTMLImageElement);
+
+    await waitFor(() => {
+      expect(container.querySelector("img")).not.toBeInTheDocument();
+    });
+
+    await new Promise((resolve) => window.setTimeout(resolve, 0));
+
+    expect(container.querySelector("img")).not.toBeInTheDocument();
+    expect(container.querySelector("svg.lucide-tent-tree")).toBeInTheDocument();
   });
 
   it("reserves the cover surface with a placeholder when no image is selected", () => {
