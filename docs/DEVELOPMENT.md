@@ -207,6 +207,7 @@ Backend request timeout policy:
 The backend handles:
 
 - Google OAuth flow (`/auth/google`, `/auth/google/callback`)
+- Local AI-agent login (`/auth/dev-login`) when explicitly enabled by the local API
 - Session cookie (`__session` JWT)
 - Park catalog API (`/api/parks`, `/api/parks/{slug}`)
 - Park detail admin updates (`PATCH /api/parks/{slug}`)
@@ -294,6 +295,16 @@ The header disables automatic Next.js prefetching for the heavyweight public map
 8. `src/proxy.ts` verifies the cookie on every `/hallinta/*` request
 9. Header shows **"Hallinta"** link when authenticated
 10. Control panel has **"Kirjaudu ulos"** logout button
+
+### Local AI-agent login
+
+Future AI agents can use the local-only shortcut without Google OAuth:
+
+1. The API must have `LOCAL_AGENT_AUTH_ENABLED=true` and point at a development database safe for agent edits.
+2. The API and UI must share the same `AUTH_JWT_SECRET` and run on ports `3004` and `4300`.
+3. Open `http://localhost:4300/auth/dev-login` in the browser agent.
+
+The frontend proxy forwards the backend's normal session cookie and redirects to `/hallinta`. The route is not shown in the UI, is loopback-only, is unavailable on Vercel, creates no admin database row, and does not grant super-admin access.
 
 ---
 
@@ -413,7 +424,7 @@ See `AGENTS.md` for the full convention list. Key rules:
 ## Backend Assumptions
 
 - Port: **3004**
-- Auth endpoints: `/auth/google`, `/auth/google/callback`, `/auth/me`, `/auth/logout`; `/auth/me` includes the current `isSuperAdmin` flag. Invitation links use `/auth/google?invite=<token>` and the same OAuth callback.
+- Auth endpoints: `/auth/google`, `/auth/google/callback`, `/auth/dev-login` (local AI-agent use only), `/auth/me`, `/auth/logout`; `/auth/me` includes the current `isSuperAdmin` flag. Invitation links use `/auth/google?invite=<token>` and the same OAuth callback.
 - API endpoints: `/api/parks`, `/api/parks/{slug}`, `/api/parks/{slug}/visits`, `/api/parks/{slug}/removed`, `/api/visits`, `/api/visits/{id}`
 - Cacheable frontend endpoints: `/api/home-summary`, `/api/map-summary`, `/api/visits-timeline`
 - Catalog and visit `GET` data is public to end users through the frontend, but direct backend `/api/*` access generally requires the server-side API key outside localhost. Backend-anonymous reads are limited to `GET /health`, `GET /openapi.json`, and `GET /assets/logos/*`; admin mutations require an authenticated admin session, with the documented public trip-planner POSTs as the deliberate exception.
