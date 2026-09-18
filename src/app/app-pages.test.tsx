@@ -19,6 +19,7 @@ import PublicTripRoutePage, {
 import TripPlannerRoutePage, {
   generateMetadata as generateTripPlannerMetadata,
 } from "./(user)/trip-planner/page";
+import PublicTripsPage from "./(user)/trips/page";
 import PublicVisitsPage, {
   generateMetadata as generatePublicVisitsMetadata,
 } from "./(user)/visits/page";
@@ -186,6 +187,12 @@ vi.mock("@/components/trips/public-trip-page", () => ({
     <div data-testid="public-trip-page">
       slug:{trip.slug}|visits:{trip.visitCount}
     </div>
+  ),
+}));
+
+vi.mock("@/components/trips/trip-archive-page", () => ({
+  TripArchivePage: ({ initialResponse }: { initialResponse: { total: number } | null }) => (
+    <div data-testid="trip-archive-page">total:{initialResponse?.total ?? "none"}</div>
   ),
 }));
 
@@ -1064,6 +1071,28 @@ describe("App pages", () => {
     expect(screen.getByTestId("trip-planner-page")).toHaveTextContent("trip-planner");
   });
 
+  it("renders the public trip archive with a request-time boundary", async () => {
+    vi.mocked(apiPublicFetch).mockResolvedValueOnce({
+      trips: [],
+      nextCursor: null,
+      total: 0,
+    });
+
+    await renderPublicRoute(await PublicTripsPage());
+
+    expect(screen.getByTestId("trip-archive-page")).toHaveTextContent("total:0");
+    expect(apiPublicFetch).toHaveBeenCalledWith(
+      "/api/trips/archive?limit=12",
+      expect.objectContaining({
+        cache: "force-cache",
+        next: {
+          tags: ["public-trips"],
+        },
+      }),
+    );
+    expect(connectionMock).toHaveBeenCalled();
+  });
+
   it("renders the public trip page", async () => {
     vi.mocked(apiPublicFetch).mockResolvedValueOnce(publicTrip);
 
@@ -1079,10 +1108,14 @@ describe("App pages", () => {
     expect(apiPublicFetch).toHaveBeenCalledWith(
       "/api/trips/slug/keski-suomen-kesaretki",
       expect.objectContaining({
-        cache: "no-store",
+        cache: "force-cache",
+        next: {
+          tags: ["public-trip:keski-suomen-kesaretki"],
+        },
         signal: expect.any(AbortSignal),
       }),
     );
+    expect(connectionMock).toHaveBeenCalled();
   });
 
   it("calls notFound when the public trip page cannot find the requested slug", async () => {
@@ -1225,6 +1258,7 @@ describe("App pages", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Pallas-Yllästunturi" })).toBeInTheDocument();
+    expect(connectionMock).toHaveBeenCalled();
     expect(screen.getByText("Maailmanperintökohde")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "park.copyParkPageLink" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "park.showInFinlandsMap" })).toHaveAttribute(

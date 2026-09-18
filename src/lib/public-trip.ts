@@ -1,4 +1,5 @@
 import { apiPublicFetch } from "./api";
+import { getPublicTripTag } from "./public-cache";
 import { PUBLIC_TRIP_REQUEST_TIMEOUT_MS } from "./public-trip-timeout";
 import type {
   PublicTripDetail,
@@ -19,9 +20,10 @@ export const fetchPublicTripBySlug = async (
   { signal }: FetchPublicTripBySlugOptions = {},
 ): Promise<PublicTripDetail> =>
   apiPublicFetch<PublicTripDetail>(`/api/trips/slug/${slug}`, {
-    // Public trip payloads include presigned visit images, so caching them can
-    // freeze expired URLs into the rendered page.
-    cache: "no-store",
+    cache: "force-cache",
+    next: {
+      tags: [getPublicTripTag(slug)],
+    },
     signal: signal ?? AbortSignal.timeout(PUBLIC_TRIP_REQUEST_TIMEOUT_MS),
   });
 

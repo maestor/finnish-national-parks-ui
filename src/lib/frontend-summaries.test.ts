@@ -14,6 +14,7 @@ import {
   fetchPublicParkDetail,
   fetchPublicParkVisits,
 } from "./frontend-summaries";
+import { getPublicParkTag } from "./public-cache";
 
 vi.mock("./api", () => ({
   apiFetch: vi.fn(),
@@ -446,7 +447,10 @@ describe("createHomeProgressItems", () => {
     await fetchPublicParkDetail("riisitunturi", { includeBoundary: true });
 
     expect(apiFetch).toHaveBeenCalledWith("/api/parks/riisitunturi?includeBoundary=true", {
-      cache: "no-store",
+      cache: "force-cache",
+      next: {
+        tags: [getPublicParkTag("riisitunturi")],
+      },
     });
   });
 
@@ -456,7 +460,10 @@ describe("createHomeProgressItems", () => {
     await fetchPublicParkVisits("riisitunturi");
 
     expect(apiFetch).toHaveBeenCalledWith("/api/parks/riisitunturi/visits", {
-      cache: "no-store",
+      cache: "force-cache",
+      next: {
+        tags: [getPublicParkTag("riisitunturi")],
+      },
     });
   });
 

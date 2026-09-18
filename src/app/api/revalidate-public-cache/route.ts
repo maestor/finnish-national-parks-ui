@@ -5,6 +5,7 @@ import {
   getPublicTripTag,
   HOME_SUMMARY_TAG,
   MAP_SUMMARY_TAG,
+  PUBLIC_TRIPS_TAG,
   PUBLIC_VISITS_TAG,
 } from "@/lib/public-cache";
 import { isSameOriginMutationRequest } from "@/lib/request-origin";
@@ -64,6 +65,7 @@ export const POST = async (request: Request) => {
 
   revalidateTag(HOME_SUMMARY_TAG, "max");
   revalidateTag(MAP_SUMMARY_TAG, "max");
+  revalidateTag(PUBLIC_TRIPS_TAG, "max");
   revalidateTag(PUBLIC_VISITS_TAG, "max");
   revalidateTag(ADMIN_PARK_VISIBILITY_TAG, "max");
   revalidatePath(appRoutes.home, "page");
