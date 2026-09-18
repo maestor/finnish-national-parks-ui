@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { HomeVisitStats } from "@/components/dashboard/home-visit-stats";
 import { HomeAboutSection } from "@/components/home/home-about-section";
@@ -16,10 +17,6 @@ import {
 } from "@/lib/frontend-summaries";
 import { buildPageMetadata } from "@/lib/page-metadata";
 
-// Reads use force-cache tagged fetches, but force-dynamic keeps Next from
-// prerendering this page at build time, when no backend is reachable.
-export const dynamic = "force-dynamic";
-
 export const generateMetadata = async () => {
   const metadataT = await getTranslations("metadata");
   return buildPageMetadata(metadataT("homeTitle"), metadataT("title"), {
@@ -30,6 +27,9 @@ export const generateMetadata = async () => {
 };
 
 const HomePage = async () => {
+  // Keep page rendering request-time so builds do not need the backend.
+  // fetchHomeSummary remains explicitly force-cached and tag-revalidated.
+  await connection();
   const [t, metadataT] = await Promise.all([getTranslations("home"), getTranslations("metadata")]);
   const summary = await fetchHomeSummary();
   const progressItems = createHomeProgressItems(summary, t("statistics.allParks"));
