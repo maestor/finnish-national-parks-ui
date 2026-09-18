@@ -238,6 +238,7 @@ Public API terminology and access caveat:
 
 - Park logos and visit images ultimately live in the backend's Cloudflare R2 bucket.
 - Public park logos may now load through the backend origin first (`NEXT_PUBLIC_API_URL`) before the API redirects to R2, so `next.config.ts` allowlists both the configured backend origin and the R2 host for image loading.
+- During local `next dev`, stable backend media URLs resolve through `localhost`; `next.config.ts` enables `images.dangerouslyAllowLocalIP` only in development so the optimizer can reach the local API. Production keeps the private-IP SSRF guard enabled.
 - `next.config.ts` keeps optimized-image cache entries alive for at least 31 days (`images.minimumCacheTTL = 2678400`) and constrains generated widths/qualities to the app's actual usage (`deviceSizes`, `imageSizes`, `qualities`, `formats`) so Vercel does not generate unnecessary variants.
 - Small local social icons, park logos, backend-provided visit thumbnail URLs, and compact review-story grid media opt out of Vercel optimization with `unoptimized` because they are already tiny or pre-sized. Full review-story media uses responsive Next image variants with explicit `sizes` values.
 - Keep large lightbox images optimized unless the backend starts serving its own stable display-sized derivatives.

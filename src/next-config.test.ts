@@ -101,6 +101,24 @@ describe("next.config", () => {
     expect(hasRemoteMatch([], remotePatterns, signedVisitImageUrl)).toBe(true);
   });
 
+  it("allows next/image to fetch the local backend only during development", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    try {
+      const developmentConfig = await loadNextConfig("http://localhost:3004");
+      expect(developmentConfig.images?.dangerouslyAllowLocalIP).toBe(true);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+
+    vi.stubEnv("NODE_ENV", "production");
+    try {
+      const productionConfig = await loadNextConfig("https://reissuvihko-api.vercel.app");
+      expect(productionConfig.images?.dangerouslyAllowLocalIP).toBe(false);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
   it("applies baseline security headers to all routes", async () => {
     const nextConfig = await loadNextConfig("https://reissuvihko-api.vercel.app");
     const headerRules = await nextConfig.headers?.();
