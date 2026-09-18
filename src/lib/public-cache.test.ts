@@ -4,6 +4,7 @@ import {
   getPublicTripTag,
   HOME_SUMMARY_TAG,
   MAP_SUMMARY_TAG,
+  PUBLIC_TRIPS_TAG,
   PUBLIC_VISITS_TAG,
   revalidatePublicCache,
 } from "./public-cache";
@@ -16,6 +17,7 @@ describe("public cache helpers", () => {
   it("builds the park cache tag", () => {
     expect(HOME_SUMMARY_TAG).toBe("home-summary");
     expect(MAP_SUMMARY_TAG).toBe("map-summary");
+    expect(PUBLIC_TRIPS_TAG).toBe("public-trips");
     expect(PUBLIC_VISITS_TAG).toBe("public-visits");
     expect(getPublicParkTag("pallas")).toBe("public-park:pallas");
     expect(getPublicTripTag("kesaretki")).toBe("public-trip:kesaretki");

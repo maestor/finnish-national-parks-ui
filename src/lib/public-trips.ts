@@ -1,5 +1,6 @@
 import { apiPublicFetch } from "./api";
 import type { paths } from "./api-types";
+import { PUBLIC_TRIPS_TAG } from "./public-cache";
 
 export type PublicTripArchiveItem =
   paths["/api/trips/archive"]["get"]["responses"][200]["content"]["application/json"]["trips"][number];
@@ -23,7 +24,10 @@ const createPublicTripArchivePath = (cursor?: string | null) => {
 
 export const fetchPublicTripArchive = async (cursor?: string | null) =>
   apiPublicFetch<PublicTripArchiveResponse>(createPublicTripArchivePath(cursor), {
-    cache: "no-store",
+    cache: "force-cache",
+    next: {
+      tags: [PUBLIC_TRIPS_TAG],
+    },
   });
 
 export { createPublicTripArchivePath };

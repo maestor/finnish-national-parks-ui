@@ -102,6 +102,7 @@ describe("revalidate public cache route", () => {
     expect(revalidateTagMock).toHaveBeenCalledWith("home-summary", "max");
     expect(revalidateTagMock).toHaveBeenCalledWith("map-summary", "max");
     expect(revalidateTagMock).toHaveBeenCalledWith("public-visits", "max");
+    expect(revalidateTagMock).toHaveBeenCalledWith("public-trips", "max");
     expect(revalidateTagMock).toHaveBeenCalledWith("admin-park-visibility", "max");
     expect(revalidateTagMock).toHaveBeenCalledWith("public-park:pallas", "max");
     expect(revalidateTagMock).toHaveBeenCalledWith("public-trip:kesaretki", "max");
@@ -136,6 +137,7 @@ describe("revalidate public cache route", () => {
     expect(revalidateTagMock).toHaveBeenCalledWith("home-summary", "max");
     expect(revalidateTagMock).toHaveBeenCalledWith("map-summary", "max");
     expect(revalidateTagMock).toHaveBeenCalledWith("public-visits", "max");
+    expect(revalidateTagMock).toHaveBeenCalledWith("public-trips", "max");
     expect(revalidateTagMock).toHaveBeenCalledWith("admin-park-visibility", "max");
     expect(revalidateTagMock).not.toHaveBeenCalledWith(
       expect.stringMatching(/^public-park:/),

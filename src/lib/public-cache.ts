@@ -1,5 +1,6 @@
 export const HOME_SUMMARY_TAG = "home-summary";
 export const MAP_SUMMARY_TAG = "map-summary";
+export const PUBLIC_TRIPS_TAG = "public-trips";
 export const PUBLIC_VISITS_TAG = "public-visits";
 
 export const getPublicParkTag = (slug: string) => `public-park:${slug}`;

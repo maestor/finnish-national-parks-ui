@@ -14,7 +14,7 @@ import type {
   ParkVisits,
   VisitWithPark,
 } from "./parks";
-import { HOME_SUMMARY_TAG, MAP_SUMMARY_TAG } from "./public-cache";
+import { getPublicParkTag, HOME_SUMMARY_TAG, MAP_SUMMARY_TAG } from "./public-cache";
 
 export type HomeSummary =
   paths["/api/home-summary"]["get"]["responses"][200]["content"]["application/json"];
@@ -89,17 +89,19 @@ export const fetchPublicParkDetail = async (
   apiFetch<ParkDetail>(
     `/api/parks/${slug}${options?.includeBoundary ? "?includeBoundary=true" : ""}`,
     {
-      // Park detail still includes presigned asset links such as brochure PDFs,
-      // so avoid caching the response until those URLs become stable.
-      cache: "no-store",
+      cache: "force-cache",
+      next: {
+        tags: [getPublicParkTag(slug)],
+      },
     },
   );
 
 export const fetchPublicParkVisits = async (slug: string): Promise<ParkVisits> =>
   apiFetch<ParkVisits>(`/api/parks/${slug}/visits`, {
-    // Visit payloads include expiring presigned image URLs, so force-cache can
-    // serve stale HTML that later renders broken images in the browser.
-    cache: "no-store",
+    cache: "force-cache",
+    next: {
+      tags: [getPublicParkTag(slug)],
+    },
   });
 
 export const createHomeProgressItems = (

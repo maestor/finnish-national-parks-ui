@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { apiPublicFetch } from "./api";
+import { getPublicTripTag } from "./public-cache";
 import {
   fetchPublicTripBySlug,
   fetchPublicTripRoute,
@@ -24,7 +25,10 @@ describe("public trip fetches", () => {
     await fetchPublicTripBySlug("kesaretki");
 
     expect(apiPublicFetch).toHaveBeenCalledWith("/api/trips/slug/kesaretki", {
-      cache: "no-store",
+      cache: "force-cache",
+      next: {
+        tags: [getPublicTripTag("kesaretki")],
+      },
       signal: timeoutSignal,
     });
     expect(timeoutSpy).toHaveBeenCalledWith(PUBLIC_TRIP_REQUEST_TIMEOUT_MS);
@@ -41,7 +45,10 @@ describe("public trip fetches", () => {
     });
 
     expect(apiPublicFetch).toHaveBeenCalledWith("/api/trips/slug/kesaretki", {
-      cache: "no-store",
+      cache: "force-cache",
+      next: {
+        tags: [getPublicTripTag("kesaretki")],
+      },
       signal: controller.signal,
     });
     expect(timeoutSpy).not.toHaveBeenCalled();

@@ -1,5 +1,6 @@
 import { ExternalLink, FileDown, MapPin } from "lucide-react";
 import Link from "next/link";
+import { connection } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { DeferredMap } from "@/components/map/deferred-map";
 import { LazyParkBoundaryMap } from "@/components/map/lazy-park-boundary-map";
@@ -61,6 +62,8 @@ const fetchParkDetailForRequest = async (
 };
 
 export const generateMetadata = async ({ params }: ParkDetailPageProps) => {
+  await connection();
+
   const [{ slug }, t] = await Promise.all([params, getTranslations("metadata")]);
   const result = await fetchParkDetailForRequest(slug).catch(() => null);
   const parkTitle = result?.park.name ?? formatParkMetadataTitle(slug);
@@ -84,6 +87,11 @@ const normalizeVisitSearchParam = (value?: string | string[]) => {
 };
 
 const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => {
+  // Keep public page rendering request-time so builds do not need the backend.
+  // Public detail and visit reads remain explicitly force-cached and tagged;
+  // hidden-park fallbacks stay authenticated and uncached.
+  await connection();
+
   const { slug } = await params;
   const { visit } = searchParams ? await searchParams : {};
   const t = await getTranslations("park");
