@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 interface BuildPageMetadataOptions {
+  absoluteTitle?: boolean;
   description?: string;
   pagePath?: string;
   socialImagePath?: string;
@@ -14,7 +15,7 @@ export const buildPageMetadata = (
   siteTitle: string,
   options?: BuildPageMetadataOptions,
 ): Metadata => {
-  const shareTitle = buildShareTitle(pageTitle, siteTitle);
+  const shareTitle = options?.absoluteTitle ? pageTitle : buildShareTitle(pageTitle, siteTitle);
   const normalizedDescription = options?.description?.replace(/\s+/g, " ").trim();
   const description =
     normalizedDescription && normalizedDescription.length > 180
@@ -24,7 +25,7 @@ export const buildPageMetadata = (
   const socialImagePath = options?.socialImagePath;
 
   return {
-    title: pageTitle,
+    title: options?.absoluteTitle ? { absolute: pageTitle } : pageTitle,
     ...(pagePath ? { alternates: { canonical: pagePath } } : {}),
     ...(description ? { description } : {}),
     openGraph: {
