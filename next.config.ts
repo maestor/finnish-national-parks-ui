@@ -90,6 +90,7 @@ const buildContentSecurityPolicy = (isProduction: boolean) => {
 };
 
 const isProduction = process.env.NODE_ENV === "production";
+const isDevelopment = process.env.NODE_ENV === "development";
 const publicApiOrigin = getPublicApiOrigin();
 
 const nextConfig: NextConfig = {
@@ -108,6 +109,10 @@ const nextConfig: NextConfig = {
     imageSizes: [64, 80, 112, 144, 192],
     minimumCacheTTL: 2_678_400,
     qualities: [75],
+    // Local stable media URLs resolve through the development API. Next.js
+    // blocks private IPs in its optimizer by default, so keep this exception
+    // development-only and retain the production SSRF guard.
+    dangerouslyAllowLocalIP: isDevelopment,
     remotePatterns: [
       toRemotePattern(R2_IMAGE_ORIGIN),
       ...(publicApiOrigin ? [toRemotePattern(publicApiOrigin)] : []),
