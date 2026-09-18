@@ -21,8 +21,9 @@ import { buildPageMetadata } from "@/lib/page-metadata";
 export const dynamic = "force-dynamic";
 
 export const generateMetadata = async () => {
-  const [t, metadataT] = await Promise.all([getTranslations("home"), getTranslations("metadata")]);
-  return buildPageMetadata(t("title"), metadataT("title"), {
+  const metadataT = await getTranslations("metadata");
+  return buildPageMetadata(metadataT("homeTitle"), metadataT("title"), {
+    absoluteTitle: true,
     pagePath: "/",
     description: metadataT("description"),
   });

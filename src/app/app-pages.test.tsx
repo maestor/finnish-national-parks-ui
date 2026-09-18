@@ -857,16 +857,17 @@ const renderControlPanelRoute = async (page: React.ReactNode) => {
 const createExpectedShareMetadata = (
   pageTitle: string,
   options?: {
+    absoluteTitle?: boolean;
     description?: string;
     pagePath?: string;
     socialImagePath?: string;
   },
 ) => ({
-  title: pageTitle,
+  title: options?.absoluteTitle ? { absolute: pageTitle } : pageTitle,
   ...(options?.pagePath ? { alternates: { canonical: options.pagePath } } : {}),
   ...(options?.description ? { description: options.description } : {}),
   openGraph: {
-    title: `${pageTitle} | metadata.title`,
+    title: options?.absoluteTitle ? pageTitle : `${pageTitle} | metadata.title`,
     siteName: "metadata.title",
     locale: "fi_FI",
     ...(options?.pagePath ? { type: "website", url: options.pagePath } : {}),
@@ -875,7 +876,7 @@ const createExpectedShareMetadata = (
   },
   twitter: {
     ...(options?.socialImagePath ? { card: "summary_large_image" } : {}),
-    title: `${pageTitle} | metadata.title`,
+    title: options?.absoluteTitle ? pageTitle : `${pageTitle} | metadata.title`,
     ...(options?.description ? { description: options.description } : {}),
     ...(options?.socialImagePath ? { images: [options.socialImagePath] } : {}),
   },
@@ -1063,7 +1064,8 @@ describe("App pages", () => {
 
   it("builds translated metadata for the home page", async () => {
     await expect(generateHomeMetadata()).resolves.toEqual(
-      createExpectedShareMetadata("home.title", {
+      createExpectedShareMetadata("metadata.homeTitle", {
+        absoluteTitle: true,
         pagePath: "/",
         description: "metadata.description",
       }),
