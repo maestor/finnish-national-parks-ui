@@ -59,7 +59,8 @@ import ControlPanelYearReviewPage, {
 import LoginPage from "./login/page";
 import NotFoundPage from "./not-found";
 
-const { mockNotFound, mockWriteText } = vi.hoisted(() => ({
+const { connectionMock, mockNotFound, mockWriteText } = vi.hoisted(() => ({
+  connectionMock: vi.fn(async () => undefined),
   mockNotFound: vi.fn(() => {
     throw new Error("NEXT_NOT_FOUND");
   }),
@@ -88,6 +89,15 @@ vi.mock("next-intl/server", () => ({
     };
   }),
 }));
+
+vi.mock("next/server", async () => {
+  const actual = await vi.importActual<typeof import("next/server")>("next/server");
+
+  return {
+    ...actual,
+    connection: connectionMock,
+  };
+});
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",
@@ -887,6 +897,7 @@ describe("App pages", () => {
     vi.mocked(apiAuthFetch).mockReset();
     vi.mocked(apiFetch).mockReset();
     vi.mocked(apiPublicFetch).mockReset();
+    connectionMock.mockReset().mockResolvedValue(undefined);
     mockNotFound.mockReset();
     mockWriteText.mockReset();
     mockNotFound.mockImplementation(() => {
@@ -1013,6 +1024,38 @@ describe("App pages", () => {
     await renderPublicRoute(await ParksMapPage());
 
     expect(screen.getByTestId("park-explorer")).toHaveTextContent("parks:1|error:none");
+  });
+
+  it("establishes request-time boundaries before public summary reads", async () => {
+    vi.mocked(apiPublicFetch)
+      .mockResolvedValueOnce({
+        totalVisits: 0,
+        uniqueVisitedParks: 0,
+        progressByType: [],
+        progressByCategory: [],
+        mostVisitedParks: [],
+        recentVisits: [],
+        latestVisitEntries: [],
+        latestTrips: [],
+        updatedAt: "2024-06-15T12:00:00.000Z",
+        version: 1,
+      })
+      .mockResolvedValueOnce({
+        parks: [],
+        updatedAt: "2024-06-15T12:00:00.000Z",
+        version: 1,
+      });
+
+    await HomePage();
+    await ParksMapPage();
+
+    expect(connectionMock).toHaveBeenCalledTimes(2);
+    expect(connectionMock.mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(apiPublicFetch).mock.invocationCallOrder[0],
+    );
+    expect(connectionMock.mock.invocationCallOrder[1]).toBeLessThan(
+      vi.mocked(apiPublicFetch).mock.invocationCallOrder[1],
+    );
   });
 
   it("renders the public trip planner page", async () => {
