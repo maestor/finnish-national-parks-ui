@@ -26,9 +26,11 @@ export type TripItineraryVisitItem = Extract<TripItineraryItem, { kind: "visit" 
 export type PublicTripItineraryVisitItem = Extract<PublicTripItineraryItem, { kind: "visit" }>;
 
 export type TripItineraryStopItem = Extract<TripItineraryItem, { kind: "stop" }>;
+export type TripItineraryRouteWaypointItem = Extract<TripItineraryItem, { kind: "route-waypoint" }>;
 export type PublicTripItineraryStopItem = Extract<PublicTripItineraryItem, { kind: "stop" }>;
 
 export type TripStop = TripItineraryStopItem["stop"];
+export type TripRouteWaypoint = TripItineraryRouteWaypointItem["routeWaypoint"];
 export type PublicTripStop = PublicTripItineraryStopItem["stop"];
 
 export type TripLocation = NonNullable<Trip["startingPoint"]>;
@@ -63,6 +65,14 @@ export type TripStopCreateRequest = NonNullable<
 
 export type TripStopUpdateRequest = NonNullable<
   paths["/api/trip-stops/{id}"]["patch"]["requestBody"]
+>["content"]["application/json"];
+
+export type TripRouteWaypointCreateRequest = NonNullable<
+  paths["/api/trips/{id}/route-waypoints"]["post"]["requestBody"]
+>["content"]["application/json"];
+
+export type TripRouteWaypointUpdateRequest = NonNullable<
+  paths["/api/trip-route-waypoints/{id}"]["patch"]["requestBody"]
 >["content"]["application/json"];
 
 type TripStopDisplayNameSource =

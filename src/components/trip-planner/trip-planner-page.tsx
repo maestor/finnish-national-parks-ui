@@ -32,6 +32,7 @@ import {
 } from "@/components/layout/public-page-styles";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { ApiError } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import {
@@ -67,10 +68,6 @@ const TripPlannerMap = dynamic(
 
 const INPUT_CLASS_NAME =
   "flex h-11 w-full rounded-xl border border-white/45 bg-white/78 px-3 py-2 text-sm text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] placeholder:text-muted-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
-const INLINE_SELECT_CLASS_NAME = cn(
-  INPUT_CLASS_NAME,
-  "h-10 rounded-lg px-3 py-2 pr-11 text-sm appearance-none md:min-w-44",
-);
 const INLINE_SLIDER_CLASS_NAME =
   "relative -top-1 h-2 w-full cursor-pointer appearance-none rounded-full bg-sky-100 accent-primary dark:bg-slate-800";
 const FILTER_GROUP_CLASS_NAME = "flex min-w-0 flex-col gap-1";
@@ -1262,10 +1259,10 @@ export const TripPlannerPage = () => {
                             <Label htmlFor="trip-planner-park-filter">
                               {t("filters.parkTypeLabel")}
                             </Label>
-                            <div className="relative">
-                              <select
+                            <div>
+                              <Select
                                 id="trip-planner-park-filter"
-                                className={INLINE_SELECT_CLASS_NAME}
+                                className="rounded-lg md:min-w-44"
                                 value={activeParkFilter}
                                 disabled={!isResultsFiltersVisible}
                                 onChange={(event) =>
@@ -1279,11 +1276,7 @@ export const TripPlannerPage = () => {
                                     {option.label}
                                   </option>
                                 ))}
-                              </select>
-                              <ChevronDown
-                                className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                                aria-hidden="true"
-                              />
+                              </Select>
                             </div>
                           </div>
 
@@ -1291,10 +1284,10 @@ export const TripPlannerPage = () => {
                             <Label htmlFor="trip-planner-visit-status-filter">
                               {t("filters.visitStatusLabel")}
                             </Label>
-                            <div className="relative">
-                              <select
+                            <div>
+                              <Select
                                 id="trip-planner-visit-status-filter"
-                                className={INLINE_SELECT_CLASS_NAME}
+                                className="rounded-lg md:min-w-44"
                                 value={activeVisitStatus}
                                 disabled={!isResultsFiltersVisible}
                                 onChange={(event) =>
@@ -1304,11 +1297,7 @@ export const TripPlannerPage = () => {
                                 <option value="all">{homeFilterT("visitStatusAll")}</option>
                                 <option value="visited">{homeFilterT("visited")}</option>
                                 <option value="not-visited">{homeFilterT("notVisited")}</option>
-                              </select>
-                              <ChevronDown
-                                className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                                aria-hidden="true"
-                              />
+                              </Select>
                             </div>
                           </div>
 

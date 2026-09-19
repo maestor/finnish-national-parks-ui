@@ -1059,11 +1059,17 @@ export interface paths {
                             boundaryGeoJson?: {
                                 features: {
                                     geometry: {
-                                        coordinates: number[][][];
+                                        coordinates: [
+                                            number,
+                                            number
+                                        ][][];
                                         /** @enum {string} */
                                         type: "Polygon";
                                     } | {
-                                        coordinates: number[][];
+                                        coordinates: [
+                                            number,
+                                            number
+                                        ][];
                                         /** @enum {string} */
                                         type: "LineString";
                                     };
@@ -1196,11 +1202,17 @@ export interface paths {
                             boundaryGeoJson?: {
                                 features: {
                                     geometry: {
-                                        coordinates: number[][][];
+                                        coordinates: [
+                                            number,
+                                            number
+                                        ][][];
                                         /** @enum {string} */
                                         type: "Polygon";
                                     } | {
-                                        coordinates: number[][];
+                                        coordinates: [
+                                            number,
+                                            number
+                                        ][];
                                         /** @enum {string} */
                                         type: "LineString";
                                     };
@@ -1302,7 +1314,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Park visit history */
+                /** @description Park visit history with stable public media URLs */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -1620,7 +1632,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Frontend park and visit summary for the map page */
+                /** @description Frontend park and visit summary for the map page with stable public media URLs */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -1931,7 +1943,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Cursor-paginated public trip archive cards */
+                /** @description Cursor-paginated public trip archive cards with stable featured-media URLs */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -2996,7 +3008,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Published named date range review share snapshot for trusted callers */
+                /** @description Published named date range review share snapshot with stable public media URLs for trusted callers */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -3574,7 +3586,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Published year review share snapshot for trusted callers */
+                /** @description Published year review share snapshot with stable public media URLs for trusted callers */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -3802,7 +3814,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Page-ready trip detail by slug */
+                /** @description Page-ready trip detail by slug with stable featured-media URLs */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -3901,11 +3913,15 @@ export interface paths {
                                 };
                             })[];
                             route: {
+                                available: boolean;
                                 data: {
                                     distanceMeters: number;
                                     durationSeconds: number;
                                     geometry: {
-                                        coordinates: number[][];
+                                        coordinates: [
+                                            number,
+                                            number
+                                        ][];
                                         /** @enum {string} */
                                         type: "LineString";
                                     };
@@ -3989,11 +4005,15 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
+                            available: boolean;
                             data: {
                                 distanceMeters: number;
                                 durationSeconds: number;
                                 geometry: {
-                                    coordinates: number[][];
+                                    coordinates: [
+                                        number,
+                                        number
+                                    ][];
                                     /** @enum {string} */
                                     type: "LineString";
                                 };
@@ -4072,7 +4092,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description One public trip visit image page */
+                /** @description One public trip visit image page with stable full and thumbnail URLs */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -4141,7 +4161,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description One public trip stop image page */
+                /** @description One public trip stop image page with stable full and thumbnail URLs */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -4295,6 +4315,27 @@ export interface paths {
                                     updatedAt: string;
                                     visitedOn: string;
                                 };
+                            } | {
+                                /** @enum {string} */
+                                kind: "route-waypoint";
+                                routeWaypoint: {
+                                    /** Format: date-time */
+                                    createdAt: string;
+                                    id: number;
+                                    location: {
+                                        coordinate: {
+                                            lat: number;
+                                            lon: number;
+                                        };
+                                        displayName: string;
+                                        label: string;
+                                    };
+                                    tripId: number;
+                                    tripStopOrder: number;
+                                    /** Format: date-time */
+                                    updatedAt: string;
+                                };
+                                tripStopOrder: number;
                             })[];
                         };
                     };
@@ -4710,7 +4751,10 @@ export interface paths {
                                 distanceMeters: number;
                                 durationSeconds: number;
                                 geometry: {
-                                    coordinates: number[][];
+                                    coordinates: [
+                                        number,
+                                        number
+                                    ][];
                                     /** @enum {string} */
                                     type: "LineString";
                                 };
@@ -5543,6 +5587,120 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/trips/{id}/route-waypoints": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        location: {
+                            coordinate: {
+                                lat: number;
+                                lon: number;
+                            };
+                            label: string;
+                        };
+                        tripStopOrder?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Created trip route waypoint */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: date-time */
+                            createdAt: string;
+                            id: number;
+                            location: {
+                                coordinate: {
+                                    lat: number;
+                                    lon: number;
+                                };
+                                displayName: string;
+                                label: string;
+                            };
+                            tripId: number;
+                            tripStopOrder: number;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Trip was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Invalid trip route waypoint payload */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/parks/{slug}/removed": {
         parameters: {
             query?: never;
@@ -5781,6 +5939,175 @@ export interface paths {
                     };
                 };
                 /** @description Invalid trip stop payload */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/trip-route-waypoints/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted trip route waypoint */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Trip route waypoint was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        location?: {
+                            coordinate: {
+                                lat: number;
+                                lon: number;
+                            };
+                            label: string;
+                        };
+                        tripStopOrder?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Updated trip route waypoint */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: date-time */
+                            createdAt: string;
+                            id: number;
+                            location: {
+                                coordinate: {
+                                    lat: number;
+                                    lon: number;
+                                };
+                                displayName: string;
+                                label: string;
+                            };
+                            tripId: number;
+                            tripStopOrder: number;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Trip route waypoint was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Invalid trip route waypoint payload */
                 422: {
                     headers: {
                         [name: string]: unknown;

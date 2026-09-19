@@ -13,7 +13,9 @@ describe("Select", () => {
     const select = screen.getByRole("combobox", { name: "Puisto" });
 
     expect(select).toHaveClass("appearance-none");
-    expect(select).toHaveClass("pr-10");
+    expect(select).toHaveClass("ps-3");
+    expect(select).toHaveClass("pe-10");
+    expect(select).not.toHaveClass("px-3", "pr-10");
     expect(document.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
   });
 });

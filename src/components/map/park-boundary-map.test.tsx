@@ -75,7 +75,7 @@ const mockBoundaryGeoJson = {
             [24.0, 60.1],
             [24.0, 60.0],
           ],
-        ],
+        ] as [number, number][][],
       },
     },
   ],
