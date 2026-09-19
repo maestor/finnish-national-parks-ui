@@ -47,6 +47,8 @@ describe("Header", () => {
 });
 ```
 
+The shared admin image queue is covered through both `VisitImageSection` and `TripStopImageSection`: preparation/upload progress, controls locked during upload, failure pausing before later files, retry order, and local multipart/direct-upload paths. Browser checks should include pending, uploading, and paused cards at mobile and desktop sizes in light and dark themes.
+
 **Key conventions:**
 
 - Query by role, label, or text — not by CSS class or test-id
