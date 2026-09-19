@@ -17,6 +17,7 @@ import { AdminTableFilters } from "@/components/admin/admin-table-filters";
 import { LocationSuggestionInput } from "@/components/location/location-suggestion-input";
 import { useSnackbar } from "@/components/providers/snackbar-provider";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 import {
   LONG_TEXTAREA_MAX_LENGTH,
   TextareaWithCounter,
@@ -35,9 +36,13 @@ import {
   getTripStopDisplayName,
   type TripDetail,
   type TripItineraryItem,
+  type TripItineraryRouteWaypointItem,
   type TripItineraryStopItem,
   type TripItineraryVisitItem,
   type TripLocation,
+  type TripRouteWaypoint,
+  type TripRouteWaypointCreateRequest,
+  type TripRouteWaypointUpdateRequest,
   type TripStop,
   type TripStopCreateRequest,
   type TripStopUpdateRequest,
@@ -98,14 +103,23 @@ const updateItineraryItemOrder = (
         ...item,
         tripStopOrder,
       }
-    : {
-        ...item,
-        tripStopOrder,
-        stop: {
-          ...item.stop,
+    : item.kind === "stop"
+      ? {
+          ...item,
           tripStopOrder,
-        },
-      };
+          stop: {
+            ...item.stop,
+            tripStopOrder,
+          },
+        }
+      : {
+          ...item,
+          tripStopOrder,
+          routeWaypoint: {
+            ...item.routeWaypoint,
+            tripStopOrder,
+          },
+        };
 
 const updateItineraryVisitExcludeFromRoute = (
   item: TripItineraryVisitItem,
@@ -122,12 +136,20 @@ const reindexItinerary = (items: TripItineraryItem[]) =>
   items.map((item, index) => updateItineraryItemOrder(item, index + 1));
 
 const getItineraryItemKey = (item: TripItineraryItem) =>
-  item.kind === "visit" ? `visit-${item.visit.id}` : `stop-${item.stop.id}`;
+  item.kind === "visit"
+    ? `visit-${item.visit.id}`
+    : item.kind === "stop"
+      ? `stop-${item.stop.id}`
+      : `route-waypoint-${item.routeWaypoint.id}`;
 
 const getItineraryOrderKeys = (items: TripItineraryItem[]) => items.map(getItineraryItemKey);
 
 const getItineraryItemLabel = (item: TripItineraryItem) =>
-  item.kind === "visit" ? item.visit.park.name : getTripStopDisplayName(item.stop);
+  item.kind === "visit"
+    ? item.visit.park.name
+    : item.kind === "stop"
+      ? getTripStopDisplayName(item.stop)
+      : item.routeWaypoint.location.displayName;
 
 const reorderItineraryItems = (items: TripItineraryItem[], activeKey: string, overKey: string) => {
   const activeIndex = items.findIndex((item) => getItineraryItemKey(item) === activeKey);
@@ -355,6 +377,22 @@ const insertStopIntoItinerary = (
   return reindexItinerary(nextItems);
 };
 
+const insertRouteWaypointIntoItinerary = (
+  items: TripItineraryItem[],
+  routeWaypoint: TripRouteWaypoint,
+  tripStopOrder: number,
+) => {
+  const nextItems = [...items];
+
+  nextItems.splice(Math.max(tripStopOrder - 1, 0), 0, {
+    kind: "route-waypoint",
+    routeWaypoint: { ...routeWaypoint, tripStopOrder },
+    tripStopOrder,
+  } satisfies TripItineraryRouteWaypointItem);
+
+  return reindexItinerary(nextItems);
+};
+
 export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps) => {
   const t = useTranslations("controlPanel.trips.assignments");
   const { showSnackbar } = useSnackbar();
@@ -380,6 +418,14 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
   const [stopLocationStatus, setStopLocationStatus] = useState<UserLocationStatus>("idle");
   const [stopNote, setStopNote] = useState("");
   const [stopErrors, setStopErrors] = useState<Record<string, string>>({});
+  const [editingRouteWaypointId, setEditingRouteWaypointId] = useState<number | null>(null);
+  const [isRouteWaypointFormOpen, setIsRouteWaypointFormOpen] = useState(false);
+  const [routeWaypointLocationQuery, setRouteWaypointLocationQuery] = useState("");
+  const [routeWaypointLocation, setRouteWaypointLocation] = useState<TripLocation | null>(null);
+  const [routeWaypointOrder, setRouteWaypointOrder] = useState("");
+  const [routeWaypointLocationStatus, setRouteWaypointLocationStatus] =
+    useState<UserLocationStatus>("idle");
+  const [routeWaypointErrors, setRouteWaypointErrors] = useState<Record<string, string>>({});
   const [pendingKey, setPendingKey] = useState<string | null>(null);
   const [activeItineraryDrag, setActiveItineraryDrag] = useState<ActiveItineraryDrag | null>(null);
   const itineraryRef = useRef(itinerary);
@@ -472,11 +518,18 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     .sort(compareAvailableVisits);
 
   const stopLocationStatusMessage = getLocationStatusMessage(stopLocationStatus, t);
+  const routeWaypointLocationStatusMessage = getLocationStatusMessage(
+    routeWaypointLocationStatus,
+    t,
+  );
   const isBusy = pendingKey !== null;
   const isActionLocked = isBusy;
   const isEditingStop = editingStopId !== null;
   const isStopFormVisible = Boolean(isStopFormOpen || isEditingStop);
-  const isReorderDisabled = isBusy || isStopFormVisible;
+  const isEditingRouteWaypoint = editingRouteWaypointId !== null;
+  const isRouteWaypointFormVisible = Boolean(isRouteWaypointFormOpen || isEditingRouteWaypoint);
+  const isEditorVisible = isStopFormVisible || isRouteWaypointFormVisible;
+  const isReorderDisabled = isBusy || isEditorVisible;
   const activeEditingStop =
     editingStopId === null
       ? null
@@ -484,6 +537,13 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
           (item): item is TripItineraryStopItem =>
             item.kind === "stop" && item.stop.id === editingStopId,
         )?.stop ?? null);
+  const activeEditingRouteWaypoint =
+    editingRouteWaypointId === null
+      ? null
+      : (itinerary.find(
+          (item): item is TripItineraryRouteWaypointItem =>
+            item.kind === "route-waypoint" && item.routeWaypoint.id === editingRouteWaypointId,
+        )?.routeWaypoint ?? null);
   const tripReference = createTripReference(trip);
   const hasAssignedVisit = itinerary.some((item) => item.kind === "visit");
   const tripDateOptions = trip.dateRange
@@ -496,6 +556,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
           },
         ]
       : [];
+  const canOpenRouteWaypointForm = true;
   const stopOrderOptions = itinerary.map((item, index) => {
     const order = index + 1;
 
@@ -507,7 +568,12 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     }
 
     const previousItem = itinerary[index - 1] ?? item;
-    const previousKindLabel = previousItem.kind === "visit" ? t("visitBadge") : t("stopBadge");
+    const previousKindLabel =
+      previousItem.kind === "visit"
+        ? t("visitBadge")
+        : previousItem.kind === "stop"
+          ? t("stopBadge")
+          : t("routeWaypointBadge");
 
     return {
       label: `${order} - ${t("stopOrderAfter", {
@@ -588,12 +654,23 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     setStopErrors({});
   };
 
-  const handleCloseStopForm = () => {
-    if (pendingKeyRef.current !== null) {
+  const clearRouteWaypointForm = () => {
+    setIsRouteWaypointFormOpen(false);
+    setEditingRouteWaypointId(null);
+    setRouteWaypointLocationQuery("");
+    setRouteWaypointLocation(null);
+    setRouteWaypointOrder("");
+    setRouteWaypointLocationStatus("idle");
+    setRouteWaypointErrors({});
+  };
+
+  const handleCloseStopForm = (options: { allowWhileBusy?: boolean } = {}) => {
+    if (pendingKeyRef.current !== null && options.allowWhileBusy !== true) {
       return;
     }
 
     clearStopForm();
+    clearRouteWaypointForm();
   };
 
   const openStopForm = () => {
@@ -613,6 +690,22 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     setStopLocationStatus("idle");
     setStopNote("");
     setStopErrors({});
+  };
+
+  const openRouteWaypointForm = () => {
+    if (pendingKeyRef.current !== null) {
+      return;
+    }
+
+    previousStopDialogFocusRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setIsRouteWaypointFormOpen(true);
+    setEditingRouteWaypointId(null);
+    setRouteWaypointLocationQuery("");
+    setRouteWaypointLocation(null);
+    setRouteWaypointOrder(String(itineraryRef.current.length + 1));
+    setRouteWaypointLocationStatus("idle");
+    setRouteWaypointErrors({});
   };
 
   const handleStopLocationValueChange = (value: string) => {
@@ -674,16 +767,71 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     setStopErrors({});
   };
 
+  const handleStartRouteWaypointEdit = (routeWaypoint: TripRouteWaypoint) => {
+    if (pendingKeyRef.current !== null) {
+      return;
+    }
+
+    previousStopDialogFocusRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setIsRouteWaypointFormOpen(true);
+    setEditingRouteWaypointId(routeWaypoint.id);
+    setRouteWaypointLocationQuery(routeWaypoint.location.label);
+    setRouteWaypointLocation(routeWaypoint.location);
+    setRouteWaypointOrder(String(routeWaypoint.tripStopOrder));
+    setRouteWaypointLocationStatus("idle");
+    setRouteWaypointErrors({});
+  };
+
+  const handleRouteWaypointLocationValueChange = (value: string) => {
+    if (routeWaypointLocationStatus !== "locating") {
+      setRouteWaypointLocationStatus("idle");
+    }
+
+    setRouteWaypointLocationQuery(value);
+  };
+
+  const handleLocateRouteWaypoint = () => {
+    if (pendingKeyRef.current !== null) {
+      return;
+    }
+
+    const geolocation = window.navigator.geolocation;
+
+    if (!geolocation) {
+      setRouteWaypointLocationStatus("unsupported");
+      return;
+    }
+
+    setRouteWaypointLocationStatus("locating");
+    geolocation.getCurrentPosition(
+      async (position) => {
+        const resolved = await resolveLocationFromCoordinate({
+          lat: position.coords.latitude,
+          lon: position.coords.longitude,
+        });
+
+        setRouteWaypointLocationQuery(resolved.location.label);
+        setRouteWaypointLocation(resolved.location);
+        setRouteWaypointLocationStatus(resolved.rateLimited ? "rateLimited" : "idle");
+      },
+      (error) => {
+        setRouteWaypointLocationStatus(getUserLocationStatusFromError(error));
+      },
+      LOCATION_REQUEST_OPTIONS,
+    );
+  };
+
   const handleStopFormEscape = useEffectEvent(() => {
     if (pendingKeyRef.current !== null) {
       return;
     }
 
-    clearStopForm();
+    handleCloseStopForm();
   });
 
   useEffect(() => {
-    if (!isStopFormVisible) {
+    if (!isEditorVisible) {
       previousStopDialogFocusRef.current?.focus();
       previousStopDialogFocusRef.current = null;
       return;
@@ -706,7 +854,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       document.body.style.overflow = originalOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isStopFormVisible]);
+  }, [isEditorVisible]);
 
   const persistItineraryOrder = useEffectEvent(async (nextItinerary: TripItineraryItem[]) => {
     if (pendingKeyRef.current !== null) {
@@ -734,12 +882,19 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
               tripStopOrder: item.tripStopOrder,
             }),
           });
-        } else {
+        } else if (item.kind === "stop") {
           await apiFetch(`/api/trip-stops/${item.stop.id}`, {
             method: "PATCH",
             body: JSON.stringify({
               tripStopOrder: item.tripStopOrder,
             } satisfies TripStopUpdateRequest),
+          });
+        } else {
+          await apiFetch(`/api/trip-route-waypoints/${item.routeWaypoint.id}`, {
+            method: "PATCH",
+            body: JSON.stringify({
+              tripStopOrder: item.tripStopOrder,
+            } satisfies TripRouteWaypointUpdateRequest),
           });
         }
       }
@@ -1286,6 +1441,173 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
     }
   };
 
+  const handleSubmitRouteWaypoint = async () => {
+    if (pendingKeyRef.current !== null) {
+      return;
+    }
+
+    const nextErrors: Record<string, string> = {};
+    const normalizedLocationQuery = routeWaypointLocationQuery.trim();
+
+    if (!normalizedLocationQuery) {
+      nextErrors.location = t("validation.routeWaypointLocationRequired");
+    } else if (routeWaypointLocation === null) {
+      nextErrors.location = t("validation.routeWaypointLocationSelectionRequired");
+    }
+
+    if (Object.keys(nextErrors).length > 0) {
+      setRouteWaypointErrors(nextErrors);
+      return;
+    }
+
+    if (routeWaypointLocation === null) {
+      return;
+    }
+
+    const previousItinerary = itineraryRef.current;
+    const activeLocation = activeEditingRouteWaypoint?.location ?? null;
+    const hasLocationChanges =
+      !doTripLocationsMatch(routeWaypointLocation, activeLocation) ||
+      normalizedLocationQuery !== (activeLocation?.label ?? null);
+
+    if (editingRouteWaypointId !== null && !hasLocationChanges) {
+      handleCloseStopForm();
+      return;
+    }
+
+    setRouteWaypointErrors({});
+
+    if (editingRouteWaypointId !== null) {
+      const nextItinerary = previousItinerary.map((item) =>
+        item.kind === "route-waypoint" && item.routeWaypoint.id === editingRouteWaypointId
+          ? {
+              ...item,
+              routeWaypoint: {
+                ...item.routeWaypoint,
+                location: routeWaypointLocation,
+              },
+            }
+          : item,
+      );
+
+      setPendingAction(`route-waypoint-${editingRouteWaypointId}-update`);
+      setItineraryWithRef(nextItinerary);
+
+      try {
+        const updatedRouteWaypoint = await apiFetch<TripRouteWaypoint>(
+          `/api/trip-route-waypoints/${editingRouteWaypointId}`,
+          {
+            method: "PATCH",
+            body: JSON.stringify({
+              location: routeWaypointLocation,
+            } satisfies TripRouteWaypointUpdateRequest),
+          },
+        );
+        setItineraryWithRef((currentItinerary) =>
+          currentItinerary.map((item) =>
+            item.kind === "route-waypoint" && item.routeWaypoint.id === editingRouteWaypointId
+              ? { ...item, routeWaypoint: updatedRouteWaypoint }
+              : item,
+          ),
+        );
+        await revalidatePublicCache({ tripSlug: trip.slug });
+        showSnackbar({ message: t("routeWaypointUpdateSuccess"), tone: "success" });
+        handleCloseStopForm({ allowWhileBusy: true });
+        router.refresh();
+      } catch (error) {
+        itineraryRef.current = previousItinerary;
+        setItinerary(previousItinerary);
+        showSnackbar({
+          message: error instanceof Error ? error.message : t("routeWaypointUpdateFailed"),
+          tone: "error",
+        });
+      } finally {
+        setPendingAction(null);
+      }
+
+      return;
+    }
+
+    const requestedTripStopOrder = Number(routeWaypointOrder) || previousItinerary.length + 1;
+    setPendingAction("route-waypoint-create");
+
+    try {
+      const createdRouteWaypoint = await apiFetch<TripRouteWaypoint>(
+        `/api/trips/${trip.id}/route-waypoints`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            location: routeWaypointLocation,
+            tripStopOrder: requestedTripStopOrder,
+          } satisfies TripRouteWaypointCreateRequest),
+        },
+      );
+      const nextItinerary = insertRouteWaypointIntoItinerary(
+        previousItinerary,
+        createdRouteWaypoint,
+        createdRouteWaypoint.tripStopOrder,
+      );
+      setItineraryWithRef(nextItinerary);
+      await revalidatePublicCache({ tripSlug: trip.slug });
+      setSavedItineraryOrder(getItineraryOrderKeys(nextItinerary));
+      showSnackbar({ message: t("routeWaypointCreateSuccess"), tone: "success" });
+      handleCloseStopForm({ allowWhileBusy: true });
+      router.refresh();
+    } catch (error) {
+      itineraryRef.current = previousItinerary;
+      setItinerary(previousItinerary);
+      showSnackbar({
+        message: error instanceof Error ? error.message : t("routeWaypointCreateFailed"),
+        tone: "error",
+      });
+    } finally {
+      setPendingAction(null);
+    }
+  };
+
+  const handleDeleteRouteWaypoint = async (routeWaypoint: TripRouteWaypoint) => {
+    if (pendingKeyRef.current !== null) {
+      return;
+    }
+
+    if (
+      !window.confirm(
+        t("deleteRouteWaypointConfirm", { locationLabel: routeWaypoint.location.displayName }),
+      )
+    ) {
+      return;
+    }
+
+    const previousItinerary = itineraryRef.current;
+    const nextItinerary = reindexItinerary(
+      previousItinerary.filter(
+        (item) => !(item.kind === "route-waypoint" && item.routeWaypoint.id === routeWaypoint.id),
+      ),
+    );
+    setPendingAction(`route-waypoint-${routeWaypoint.id}-delete`);
+    setItineraryWithRef(nextItinerary);
+
+    try {
+      await apiFetch(`/api/trip-route-waypoints/${routeWaypoint.id}`, { method: "DELETE" });
+      await revalidatePublicCache({ tripSlug: trip.slug });
+      setSavedItineraryOrder(getItineraryOrderKeys(nextItinerary));
+      showSnackbar({ message: t("routeWaypointDeleteSuccess"), tone: "success" });
+      if (editingRouteWaypointId === routeWaypoint.id) {
+        handleCloseStopForm();
+      }
+      router.refresh();
+    } catch (error) {
+      itineraryRef.current = previousItinerary;
+      setItinerary(previousItinerary);
+      showSnackbar({
+        message: error instanceof Error ? error.message : t("routeWaypointDeleteFailed"),
+        tone: "error",
+      });
+    } finally {
+      setPendingAction(null);
+    }
+  };
+
   const handleDeleteStop = async (stop: TripStop) => {
     if (pendingKeyRef.current !== null) {
       return;
@@ -1327,18 +1649,22 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
   };
 
   const stopDialog =
-    isStopFormVisible && typeof document !== "undefined"
+    isEditorVisible && typeof document !== "undefined"
       ? createPortal(
           <dialog
             open
-            aria-labelledby="trip-stop-dialog-title"
+            aria-labelledby={
+              isRouteWaypointFormVisible
+                ? "trip-route-waypoint-dialog-title"
+                : "trip-stop-dialog-title"
+            }
             aria-modal="true"
             className="fixed inset-0 z-50 m-0 h-full w-full max-h-none max-w-none overflow-hidden border-none bg-transparent p-0"
           >
             <button
               type="button"
               className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
-              onClick={handleCloseStopForm}
+              onClick={() => handleCloseStopForm()}
               aria-label={t("closeStopDialog")}
             />
             <div className="relative flex h-full w-full items-center justify-center px-4 py-6 sm:px-6">
@@ -1347,18 +1673,35 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                   <div className="flex items-start gap-3">
                     <Milestone className="mt-0.5 h-5 w-5 text-primary" aria-hidden="true" />
                     <div>
-                      <h4 id="trip-stop-dialog-title" className="text-lg font-semibold">
-                        {isEditingStop ? t("editStopTitle") : t("addStopTitle")}
+                      <h4
+                        id={
+                          isRouteWaypointFormVisible
+                            ? "trip-route-waypoint-dialog-title"
+                            : "trip-stop-dialog-title"
+                        }
+                        className="text-lg font-semibold"
+                      >
+                        {isRouteWaypointFormVisible
+                          ? isEditingRouteWaypoint
+                            ? t("editRouteWaypointTitle")
+                            : t("addRouteWaypointTitle")
+                          : isEditingStop
+                            ? t("editStopTitle")
+                            : t("addStopTitle")}
                       </h4>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        {isEditingStop ? t("editStopDescription") : t("addStopDescription")}
+                        {isRouteWaypointFormVisible
+                          ? t("routeWaypointDescription")
+                          : isEditingStop
+                            ? t("editStopDescription")
+                            : t("addStopDescription")}
                       </p>
                     </div>
                   </div>
                   <button
                     ref={stopDialogCloseButtonRef}
                     type="button"
-                    onClick={handleCloseStopForm}
+                    onClick={() => handleCloseStopForm()}
                     disabled={isBusy}
                     className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/35 bg-white/80 text-foreground/72 shadow-[0_8px_20px_rgba(148,163,184,0.18)] transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/56 dark:text-sky-100/72 dark:hover:bg-slate-950/72"
                     aria-label={t("closeStopDialog")}
@@ -1369,118 +1712,181 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
 
                 <div className="min-h-0 overflow-y-auto px-5 py-5 sm:px-6">
                   <div className="space-y-5">
-                    {!isEditingStop && (
-                      <div className="space-y-2">
-                        <label htmlFor="trip-stop-order" className="text-sm font-medium">
-                          {t("stopOrderLabel")}
-                        </label>
-                        <select
-                          id="trip-stop-order"
-                          value={stopOrder}
-                          onChange={(event) => setStopOrder(event.target.value)}
-                          disabled={isBusy}
-                          className="flex h-10 w-full rounded-xl border border-white/45 bg-white/78 px-3 py-2 text-sm ring-offset-background shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
-                        >
-                          {stopOrderOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
-                        <p className="text-sm text-muted-foreground">{t("stopOrderHint")}</p>
-                      </div>
-                    )}
-
-                    <div className="space-y-2">
-                      <label htmlFor="trip-stop-visited-on" className="text-sm font-medium">
-                        {t("stopVisitedOnLabel")}
-                      </label>
-                      <select
-                        id="trip-stop-visited-on"
-                        value={stopVisitedOn}
-                        onChange={(event) => setStopVisitedOn(event.target.value)}
-                        disabled={isBusy}
-                        className="flex h-10 w-full rounded-xl border border-white/45 bg-white/78 px-3 py-2 text-sm ring-offset-background shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
-                      >
-                        <option value="">{t("stopVisitedOnPlaceholder")}</option>
-                        {tripDateOptions.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                      {stopErrors.visitedOn !== undefined && (
-                        <p className="text-sm text-destructive">{stopErrors.visitedOn}</p>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <LocationSuggestionInput
-                        assistiveMessage={stopLocationStatusMessage ?? undefined}
-                        assistiveMessageTone={
-                          stopLocationStatus !== "idle" && stopLocationStatus !== "locating"
-                            ? "error"
-                            : "default"
-                        }
-                        id="trip-stop-location"
-                        inputClassName="h-10"
-                        isLocating={stopLocationStatus === "locating"}
-                        label={t("stopLocationLabel")}
-                        locateButtonLabel={t("useCurrentLocation")}
-                        name="stopLocation"
-                        onLocate={handleLocateStop}
-                        onSelectedLocationChange={setStopLocation}
-                        onValueChange={handleStopLocationValueChange}
-                        placeholder={t("stopLocationPlaceholder")}
-                        required={false}
-                        selectedLocation={stopLocation}
-                        value={stopLocationQuery}
-                      />
-                      {stopErrors.location !== undefined && (
-                        <p className="text-sm text-destructive">{stopErrors.location}</p>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <label htmlFor="trip-stop-display-name" className="text-sm font-medium">
-                        {t("stopDisplayNameLabel")}
-                      </label>
-                      <input
-                        id="trip-stop-display-name"
-                        type="text"
-                        value={stopDisplayName}
-                        onChange={(event) => setStopDisplayName(event.target.value)}
-                        disabled={isBusy}
-                        placeholder={t("stopDisplayNamePlaceholder")}
-                        className="flex h-10 w-full rounded-xl border border-white/45 bg-white/78 px-3 py-2 text-sm ring-offset-background shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
-                      />
-                      <p className="text-sm text-muted-foreground">{t("stopDisplayNameHint")}</p>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label htmlFor="trip-stop-note" className="text-sm font-medium">
-                        {t("stopNoteLabel")}
-                      </label>
-                      <TextareaWithCounter
-                        id="trip-stop-note"
-                        rows={4}
-                        value={stopNote}
-                        onValueChange={setStopNote}
-                        disabled={isBusy}
-                        placeholder={t("stopNotePlaceholder")}
-                        className="flex w-full resize-y rounded-xl border border-white/45 bg-white/78 px-3 py-2 text-sm ring-offset-background shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
-                      />
-                    </div>
-
-                    {activeEditingStop !== null ? (
-                      <TripStopImageSection
-                        stopId={activeEditingStop.id}
-                        images={activeEditingStop.images}
-                        onImagesChange={(images) => updateStopImages(activeEditingStop.id, images)}
-                        tripSlug={trip.slug}
-                      />
+                    {isRouteWaypointFormVisible ? (
+                      <>
+                        {!isEditingRouteWaypoint && (
+                          <div className="space-y-2">
+                            <label
+                              htmlFor="trip-route-waypoint-order"
+                              className="text-sm font-medium"
+                            >
+                              {t("stopOrderLabel")}
+                            </label>
+                            <Select
+                              id="trip-route-waypoint-order"
+                              value={routeWaypointOrder}
+                              onChange={(event) => setRouteWaypointOrder(event.target.value)}
+                              disabled={isBusy}
+                            >
+                              {stopOrderOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </Select>
+                          </div>
+                        )}
+                        <LocationSuggestionInput
+                          assistiveMessage={routeWaypointLocationStatusMessage ?? undefined}
+                          assistiveMessageTone={
+                            routeWaypointLocationStatus !== "idle" &&
+                            routeWaypointLocationStatus !== "locating"
+                              ? "error"
+                              : "default"
+                          }
+                          id="trip-route-waypoint-location"
+                          inputClassName="h-10"
+                          isLocating={routeWaypointLocationStatus === "locating"}
+                          label={t("routeWaypointLocationLabel")}
+                          locateButtonLabel={t("useCurrentLocation")}
+                          name="routeWaypointLocation"
+                          onLocate={handleLocateRouteWaypoint}
+                          onSelectedLocationChange={setRouteWaypointLocation}
+                          onValueChange={handleRouteWaypointLocationValueChange}
+                          placeholder={t("routeWaypointLocationPlaceholder")}
+                          required={false}
+                          selectedLocation={routeWaypointLocation}
+                          value={routeWaypointLocationQuery}
+                        />
+                        {routeWaypointErrors.location !== undefined && (
+                          <p className="text-sm text-destructive" role="alert">
+                            {routeWaypointErrors.location}
+                          </p>
+                        )}
+                        <p className="text-sm text-muted-foreground">
+                          {t("routeWaypointVisibilityHint")}
+                        </p>
+                      </>
                     ) : (
-                      <p className="text-sm text-muted-foreground">{t("saveStopBeforeImages")}</p>
+                      <>
+                        {!isEditingStop && (
+                          <div className="space-y-2">
+                            <label htmlFor="trip-stop-order" className="text-sm font-medium">
+                              {t("stopOrderLabel")}
+                            </label>
+                            <Select
+                              id="trip-stop-order"
+                              value={stopOrder}
+                              onChange={(event) => setStopOrder(event.target.value)}
+                              disabled={isBusy}
+                            >
+                              {stopOrderOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </Select>
+                            <p className="text-sm text-muted-foreground">{t("stopOrderHint")}</p>
+                          </div>
+                        )}
+
+                        <div className="space-y-2">
+                          <label htmlFor="trip-stop-visited-on" className="text-sm font-medium">
+                            {t("stopVisitedOnLabel")}
+                          </label>
+                          <Select
+                            id="trip-stop-visited-on"
+                            value={stopVisitedOn}
+                            onChange={(event) => setStopVisitedOn(event.target.value)}
+                            disabled={isBusy}
+                          >
+                            <option value="">{t("stopVisitedOnPlaceholder")}</option>
+                            {tripDateOptions.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </Select>
+                          {stopErrors.visitedOn !== undefined && (
+                            <p className="text-sm text-destructive">{stopErrors.visitedOn}</p>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <LocationSuggestionInput
+                            assistiveMessage={stopLocationStatusMessage ?? undefined}
+                            assistiveMessageTone={
+                              stopLocationStatus !== "idle" && stopLocationStatus !== "locating"
+                                ? "error"
+                                : "default"
+                            }
+                            id="trip-stop-location"
+                            inputClassName="h-10"
+                            isLocating={stopLocationStatus === "locating"}
+                            label={t("stopLocationLabel")}
+                            locateButtonLabel={t("useCurrentLocation")}
+                            name="stopLocation"
+                            onLocate={handleLocateStop}
+                            onSelectedLocationChange={setStopLocation}
+                            onValueChange={handleStopLocationValueChange}
+                            placeholder={t("stopLocationPlaceholder")}
+                            required={false}
+                            selectedLocation={stopLocation}
+                            value={stopLocationQuery}
+                          />
+                          {stopErrors.location !== undefined && (
+                            <p className="text-sm text-destructive">{stopErrors.location}</p>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <label htmlFor="trip-stop-display-name" className="text-sm font-medium">
+                            {t("stopDisplayNameLabel")}
+                          </label>
+                          <input
+                            id="trip-stop-display-name"
+                            type="text"
+                            value={stopDisplayName}
+                            onChange={(event) => setStopDisplayName(event.target.value)}
+                            disabled={isBusy}
+                            placeholder={t("stopDisplayNamePlaceholder")}
+                            className="flex h-10 w-full rounded-xl border border-white/45 bg-white/78 px-3 py-2 text-sm ring-offset-background shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                          />
+                          <p className="text-sm text-muted-foreground">
+                            {t("stopDisplayNameHint")}
+                          </p>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label htmlFor="trip-stop-note" className="text-sm font-medium">
+                            {t("stopNoteLabel")}
+                          </label>
+                          <TextareaWithCounter
+                            id="trip-stop-note"
+                            rows={4}
+                            value={stopNote}
+                            onValueChange={setStopNote}
+                            disabled={isBusy}
+                            placeholder={t("stopNotePlaceholder")}
+                            className="flex w-full resize-y rounded-xl border border-white/45 bg-white/78 px-3 py-2 text-sm ring-offset-background shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                          />
+                        </div>
+
+                        {activeEditingStop !== null ? (
+                          <TripStopImageSection
+                            stopId={activeEditingStop.id}
+                            images={activeEditingStop.images}
+                            onImagesChange={(images) =>
+                              updateStopImages(activeEditingStop.id, images)
+                            }
+                            tripSlug={trip.slug}
+                          />
+                        ) : (
+                          <p className="text-sm text-muted-foreground">
+                            {t("saveStopBeforeImages")}
+                          </p>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -1488,29 +1894,46 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                 <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/35 px-5 py-4 dark:border-white/10 sm:px-6">
                   <button
                     type="button"
-                    onClick={handleCloseStopForm}
+                    onClick={() => handleCloseStopForm()}
                     disabled={isBusy}
                     className="text-sm text-muted-foreground underline hover:text-foreground"
                   >
-                    {isEditingStop ? t("cancelStopEdit") : t("cancelStopAdd")}
+                    {isRouteWaypointFormVisible
+                      ? t("cancelRouteWaypoint")
+                      : isEditingStop
+                        ? t("cancelStopEdit")
+                        : t("cancelStopAdd")}
                   </button>
                   <Button
                     type="button"
                     disabled={isActionLocked || isStopSubmitBlockedByLength}
-                    onClick={() =>
-                      isEditingStop && !hasStopDetailChanges
-                        ? handleCloseStopForm()
-                        : void handleSubmitStop()
-                    }
+                    onClick={() => {
+                      if (isRouteWaypointFormVisible) {
+                        void handleSubmitRouteWaypoint();
+                        return;
+                      }
+
+                      if (isEditingStop && !hasStopDetailChanges) {
+                        handleCloseStopForm();
+                        return;
+                      }
+
+                      void handleSubmitStop();
+                    }}
                   >
-                    {(pendingKey === "stop-create" || pendingKey?.startsWith("stop-") === true) &&
-                      "..."}
-                    {!(pendingKey === "stop-create" || pendingKey?.startsWith("stop-") === true) &&
-                      (isEditingStop
-                        ? hasStopDetailChanges
-                          ? t("saveStopChanges")
-                          : t("closeStopEdit")
-                        : t("addStopAction"))}
+                    {(isBusy && isRouteWaypointFormVisible) ||
+                    pendingKey === "stop-create" ||
+                    pendingKey?.startsWith("stop-") === true
+                      ? "..."
+                      : isRouteWaypointFormVisible
+                        ? isEditingRouteWaypoint
+                          ? t("saveRouteWaypoint")
+                          : t("addRouteWaypointAction")
+                        : isEditingStop
+                          ? hasStopDetailChanges
+                            ? t("saveStopChanges")
+                            : t("closeStopEdit")
+                          : t("addStopAction")}
                   </Button>
                 </div>
               </section>
@@ -1575,8 +1998,8 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                   {t("assignedDescription", { count: itinerary.length })}
                 </p>
               </div>
-              {!isStopFormVisible && (
-                <div className="flex flex-col items-end gap-2">
+              {!isEditorVisible && (
+                <div className="flex flex-wrap justify-end gap-2">
                   <Button
                     type="button"
                     size="sm"
@@ -1588,13 +2011,24 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                   >
                     {t("addStopAction")}
                   </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    aria-haspopup="dialog"
+                    aria-expanded={false}
+                    disabled={isActionLocked || !canOpenRouteWaypointForm}
+                    onClick={openRouteWaypointForm}
+                  >
+                    {t("addRouteWaypointAction")}
+                  </Button>
                 </div>
               )}
             </div>
             <p id="trip-itinerary-reorder-hint" className="mt-2 text-sm text-muted-foreground">
               {t("reorderHint")}
             </p>
-            {!isStopFormVisible && stopAddBlockedMessage !== null && (
+            {!isEditorVisible && stopAddBlockedMessage !== null && (
               <p className="mt-2 text-sm text-muted-foreground">{stopAddBlockedMessage}</p>
             )}
           </div>
@@ -1624,6 +2058,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                     const itemKey = getItineraryItemKey(item);
                     const isPending = pendingKey?.startsWith(`${itemKey}-`) ?? false;
                     const isVisit = item.kind === "visit";
+                    const isRouteWaypoint = item.kind === "route-waypoint";
                     const itemLabel = getItineraryItemLabel(item);
                     const isDragging =
                       activeItineraryDrag?.isDragging === true &&
@@ -1678,7 +2113,11 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                           <div className="space-y-1">
                             <div className="flex flex-wrap items-center gap-2">
                               <span className="inline-flex items-center rounded-full bg-sky-100 px-2.5 py-1 text-xs font-medium text-sky-900 dark:bg-sky-950/60 dark:text-sky-200">
-                                {isVisit ? t("visitBadge") : t("stopBadge")}
+                                {isVisit
+                                  ? t("visitBadge")
+                                  : isRouteWaypoint
+                                    ? t("routeWaypointBadge")
+                                    : t("stopBadge")}
                               </span>
                               <p className="font-medium">{itemLabel}</p>
                             </div>
@@ -1695,6 +2134,10 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                                   </p>
                                 )}
                               </>
+                            ) : isRouteWaypoint ? (
+                              <p className="text-sm text-muted-foreground">
+                                {t("routeWaypointPrivateNote")}
+                              </p>
                             ) : (
                               item.stop.note !== null && (
                                 <p className="text-sm text-muted-foreground">
@@ -1705,7 +2148,11 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                           </div>
                         </td>
                         <td className="px-4 py-3 align-top text-muted-foreground">
-                          {isVisit ? item.visit.visitedOn : item.stop.visitedOn}
+                          {isVisit
+                            ? item.visit.visitedOn
+                            : isRouteWaypoint
+                              ? "—"
+                              : item.stop.visitedOn}
                         </td>
                         <td className="px-4 py-3 text-right">
                           <div className="flex flex-wrap justify-end gap-2">
@@ -1737,6 +2184,28 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                                   onClick={() => void handleRemoveVisit(item.visit.id)}
                                 >
                                   {isPending ? "..." : t("removeVisitAction")}
+                                </Button>
+                              </>
+                            ) : isRouteWaypoint ? (
+                              <>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  disabled={isActionLocked}
+                                  onClick={() => handleStartRouteWaypointEdit(item.routeWaypoint)}
+                                >
+                                  <Pencil className="mr-2 h-4 w-4" aria-hidden="true" />
+                                  {t("editRouteWaypointAction")}
+                                </Button>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  disabled={isActionLocked}
+                                  onClick={() => void handleDeleteRouteWaypoint(item.routeWaypoint)}
+                                >
+                                  {isPending ? "..." : t("deleteRouteWaypointAction")}
                                 </Button>
                               </>
                             ) : (

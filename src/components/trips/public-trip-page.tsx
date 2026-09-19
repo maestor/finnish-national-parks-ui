@@ -124,7 +124,7 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
       : t("routeUnavailable");
   const shouldShowRouteMap =
     startingPoint !== null &&
-    (trip.itinerary.length > 0 || routeStatus.success === false || shouldShowRouteContent);
+    (trip.route.available || routeStatus.success === false || shouldShowRouteContent);
   const shouldShowRouteSection = shouldShowRouteContent || shouldShowRouteMap;
   const sectionNavigationItems = useMemo(() => {
     const items: StickySectionNavigationItem[] = [];
@@ -383,9 +383,8 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
     if (
       trip.route.data !== null ||
       trip.route.success === false ||
-      trip.startingPoint === null ||
-      trip.itinerary.filter((item) => item.kind === "stop" || !item.visit.excludeFromRoute).length <
-        2
+      trip.route.available !== true ||
+      trip.startingPoint === null
     ) {
       return;
     }
@@ -395,7 +394,7 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
     }, 800);
 
     return () => window.clearTimeout(timeoutId);
-  }, [loadRoute, trip.itinerary, trip.route.data, trip.route.success, trip.startingPoint]);
+  }, [loadRoute, trip.route.available, trip.route.data, trip.route.success, trip.startingPoint]);
 
   useEffect(() => {
     const pendingScrollItemKey = pendingScrollItemKeyRef.current;

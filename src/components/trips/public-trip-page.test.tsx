@@ -95,6 +95,7 @@ const trip: PublicTripDetail = {
   createdAt: "2024-06-18T10:00:00Z",
   updatedAt: "2024-06-18T10:00:00Z",
   route: {
+    available: true,
     success: true,
     error: null,
     data: {
@@ -419,6 +420,7 @@ describe("PublicTripPage", () => {
     const tripWithoutRoute: PublicTripDetail = {
       ...trip,
       route: {
+        available: true,
         data: null,
         error: null,
         success: true,
@@ -466,7 +468,7 @@ describe("PublicTripPage", () => {
       );
 
       resolveRoute(
-        new Response(JSON.stringify({ data: route, error: null, success: true }), {
+        new Response(JSON.stringify({ available: true, data: route, error: null, success: true }), {
           headers: { "Content-Type": "application/json" },
           status: 200,
         }),
@@ -490,13 +492,14 @@ describe("PublicTripPage", () => {
     const tripWithoutRoute: PublicTripDetail = {
       ...trip,
       route: {
+        available: true,
         data: null,
         error: null,
         success: true,
       },
     };
     mockFetch.mockRejectedValueOnce(new Error("network unavailable")).mockResolvedValueOnce(
-      new Response(JSON.stringify({ data: route, error: null, success: true }), {
+      new Response(JSON.stringify({ available: true, data: route, error: null, success: true }), {
         headers: { "Content-Type": "application/json" },
         status: 200,
       }),
@@ -524,6 +527,7 @@ describe("PublicTripPage", () => {
     const tripWithoutRoute: PublicTripDetail = {
       ...trip,
       route: {
+        available: true,
         data: null,
         error: {
           error: "provider unavailable",
@@ -535,6 +539,7 @@ describe("PublicTripPage", () => {
     mockFetch.mockResolvedValueOnce(
       new Response(
         JSON.stringify({
+          available: true,
           data: null,
           error: {
             error: "provider unavailable",
@@ -1000,6 +1005,7 @@ describe("PublicTripPage", () => {
         trip={{
           ...trip,
           route: {
+            available: true,
             success: true,
             error: null,
             data: null,
@@ -1019,6 +1025,7 @@ describe("PublicTripPage", () => {
         trip={{
           ...trip,
           route: {
+            available: true,
             success: false,
             data: null,
             error: {
@@ -1042,6 +1049,7 @@ describe("PublicTripPage", () => {
           ...trip,
           itinerary: [],
           route: {
+            available: true,
             success: false,
             data: null,
             error: {
@@ -1058,6 +1066,26 @@ describe("PublicTripPage", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("tripPage.routeUnavailable");
   });
 
+  it("shows an available route map even when the visible itinerary is empty", () => {
+    render(
+      <PublicTripPage
+        trip={{
+          ...trip,
+          itinerary: [],
+          route: {
+            available: true,
+            success: true,
+            data: null,
+            error: null,
+          },
+        }}
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "tripPage.routeTitle" })).toBeInTheDocument();
+    expect(screen.getByTestId("public-trip-map")).toHaveTextContent("trip:Kesaretki|distance:none");
+  });
+
   it("hides the route section when a trip has no routeable entries yet", () => {
     render(
       <PublicTripPage
@@ -1065,6 +1093,7 @@ describe("PublicTripPage", () => {
           ...trip,
           itinerary: [],
           route: {
+            available: false,
             success: true,
             data: null,
             error: null,
@@ -1083,6 +1112,7 @@ describe("PublicTripPage", () => {
         trip={{
           ...trip,
           route: {
+            available: true,
             success: false,
             data: null,
             error: {
@@ -1109,6 +1139,7 @@ describe("PublicTripPage", () => {
           dateRange: null,
           imageCount: 0,
           route: {
+            available: false,
             success: true,
             error: null,
             data: null,

@@ -30,6 +30,10 @@ import { GET as getParkSearch } from "./parks/search/route";
 import { POST as postTripPlannerNearby } from "./trip-planner/nearby/route";
 import { POST as postTripPlannerSearch } from "./trip-planner/search/route";
 import { POST as postTripPlannerSuggestions } from "./trip-planner/suggestions/route";
+import {
+  DELETE as deleteTripRouteWaypoint,
+  PATCH as patchTripRouteWaypoint,
+} from "./trip-route-waypoints/[id]/route";
 import { DELETE as deleteTripStopImage } from "./trip-stops/[id]/images/[imageId]/route";
 import { POST as postTripStopImageComplete } from "./trip-stops/[id]/images/complete/route";
 import { PATCH as patchTripStopImageOrder } from "./trip-stops/[id]/images/reorder/route";
@@ -37,6 +41,7 @@ import { POST as postTripStopImage } from "./trip-stops/[id]/images/route";
 import { POST as postTripStopImageUploadUrl } from "./trip-stops/[id]/images/upload-url/route";
 import { DELETE as deleteTripStop, PATCH as patchTripStop } from "./trip-stops/[id]/route";
 import { DELETE as deleteTrip, GET as getTrip, PATCH as patchTrip } from "./trips/[id]/route";
+import { POST as postTripRouteWaypoint } from "./trips/[id]/route-waypoints/route";
 import { POST as postTripStop } from "./trips/[id]/stops/route";
 import { GET as getTripArchive } from "./trips/archive/route";
 import { GET as getTrips, POST as postTrip } from "./trips/route";
@@ -321,6 +326,40 @@ describe("api proxy routes", () => {
     expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/trips/7/stops", {
       requireAdmin: true,
     });
+  });
+
+  it("proxies route waypoint creation", async () => {
+    const request = new Request("https://frontend.example/api/trips/7/route-waypoints", {
+      method: "POST",
+    });
+
+    await postTripRouteWaypoint(request, { params: Promise.resolve({ id: "7" }) });
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/trips/7/route-waypoints", {
+      requireAdmin: true,
+    });
+  });
+
+  it("proxies route waypoint updates and deletion", async () => {
+    const patchRequest = new Request("https://frontend.example/api/trip-route-waypoints/11", {
+      method: "PATCH",
+    });
+    await patchTripRouteWaypoint(patchRequest, { params: Promise.resolve({ id: "11" }) });
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(
+      patchRequest,
+      "/api/trip-route-waypoints/11",
+      { requireAdmin: true },
+    );
+
+    const deleteRequest = new Request("https://frontend.example/api/trip-route-waypoints/11", {
+      method: "DELETE",
+    });
+    await deleteTripRouteWaypoint(deleteRequest, { params: Promise.resolve({ id: "11" }) });
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(
+      deleteRequest,
+      "/api/trip-route-waypoints/11",
+      { requireAdmin: true },
+    );
   });
 
   it("proxies trip stop updates", async () => {

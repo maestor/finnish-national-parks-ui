@@ -243,6 +243,30 @@ const tripWithThreeAssignedItems = {
   visitCount: 2,
 } satisfies TripDetail;
 
+const tripWithRouteWaypoint = {
+  ...currentTrip,
+  itinerary: [
+    currentTrip.itinerary[0],
+    {
+      kind: "route-waypoint",
+      tripStopOrder: 2,
+      routeWaypoint: {
+        createdAt: "2024-06-14T13:00:00Z",
+        id: 31,
+        location: {
+          coordinate: { lat: 61.4978, lon: 23.761 },
+          displayName: "Tampere",
+          label: "Tampere",
+        },
+        tripId: currentTrip.id,
+        tripStopOrder: 2,
+        updatedAt: "2024-06-14T13:00:00Z",
+      },
+    },
+    currentTrip.itinerary[1],
+  ],
+} satisfies TripDetail;
+
 const tripWithLongStopNote = {
   ...currentTrip,
   itinerary: currentTrip.itinerary.map((item) =>
@@ -438,6 +462,301 @@ describe("TripVisitAssignments", () => {
         name: "controlPanel.trips.assignments.attachAction",
       }),
     ).toHaveClass("whitespace-nowrap");
+  });
+
+  it("adds a Reittivalinta with only a location and order", async () => {
+    const { apiFetch } = await import("@/lib/api");
+    mockResolveLocationFromCoordinate.mockResolvedValueOnce({
+      location: {
+        coordinate: { lat: 61.4978, lon: 23.761 },
+        label: "Tampere",
+      },
+      rateLimited: false,
+    });
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      createdAt: "2024-06-15T18:00:00Z",
+      id: 31,
+      location: {
+        coordinate: { lat: 61.4978, lon: 23.761 },
+        displayName: "Tampere",
+        label: "Tampere",
+      },
+      tripId: 7,
+      tripStopOrder: 2,
+      updatedAt: "2024-06-15T18:00:00Z",
+    });
+    Object.defineProperty(window.navigator, "geolocation", {
+      configurable: true,
+      value: {
+        getCurrentPosition: vi.fn((success: PositionCallback) =>
+          success({
+            coords: { latitude: 61.4978, longitude: 23.761 },
+          } as GeolocationPosition),
+        ),
+      },
+    });
+
+    render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.addRouteWaypointAction",
+      }),
+    );
+
+    expect(
+      screen.getByRole("heading", {
+        name: "controlPanel.trips.assignments.addRouteWaypointTitle",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("controlPanel.trips.assignments.stopVisitedOnLabel"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("controlPanel.trips.assignments.stopNoteLabel"),
+    ).not.toBeInTheDocument();
+    await userEvent.selectOptions(
+      screen.getByLabelText("controlPanel.trips.assignments.stopOrderLabel"),
+      "2",
+    );
+    expect(screen.getByLabelText("controlPanel.trips.assignments.stopOrderLabel")).toHaveClass(
+      "appearance-none",
+      "pe-10",
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.useCurrentLocation",
+      }),
+    );
+    await waitFor(() => {
+      expect(
+        screen.getByRole("combobox", {
+          name: "controlPanel.trips.assignments.routeWaypointLocationLabel",
+        }),
+      ).toHaveValue("Tampere");
+    });
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.addRouteWaypointAction",
+      }),
+    );
+
+    expect(apiFetch).toHaveBeenCalledWith("/api/trips/7/route-waypoints", {
+      method: "POST",
+      body: JSON.stringify({
+        location: {
+          coordinate: { lat: 61.4978, lon: 23.761 },
+          label: "Tampere",
+        },
+        tripStopOrder: 2,
+      }),
+    });
+    await waitFor(() => {
+      expect(
+        screen.getByText("controlPanel.trips.assignments.routeWaypointBadge"),
+      ).toBeInTheDocument();
+    });
+    expect(
+      screen.queryByRole("heading", {
+        name: "controlPanel.trips.assignments.addRouteWaypointTitle",
+      }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("locks waypoint submission and closes the modal after the save resolves", async () => {
+    const { apiFetch } = await import("@/lib/api");
+    let resolveCreate: (value: unknown) => void = () => undefined;
+    const createResponse = new Promise((resolve) => {
+      resolveCreate = resolve;
+    });
+    vi.mocked(apiFetch).mockReturnValueOnce(createResponse as Promise<never>);
+    mockResolveLocationFromCoordinate.mockResolvedValueOnce({
+      location: {
+        coordinate: { lat: 61.4978, lon: 23.761 },
+        label: "Tampere",
+      },
+      rateLimited: false,
+    });
+    Object.defineProperty(window.navigator, "geolocation", {
+      configurable: true,
+      value: {
+        getCurrentPosition: vi.fn((success: PositionCallback) =>
+          success({
+            coords: { latitude: 61.4978, longitude: 23.761 },
+          } as GeolocationPosition),
+        ),
+      },
+    });
+
+    render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.addRouteWaypointAction",
+      }),
+    );
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.useCurrentLocation",
+      }),
+    );
+    await waitFor(() => {
+      expect(
+        screen.getByRole("combobox", {
+          name: "controlPanel.trips.assignments.routeWaypointLocationLabel",
+        }),
+      ).toHaveValue("Tampere");
+    });
+
+    const saveButton = screen.getByRole("button", {
+      name: "controlPanel.trips.assignments.addRouteWaypointAction",
+    });
+    await userEvent.click(saveButton);
+    expect(saveButton).toBeDisabled();
+    await userEvent.click(saveButton);
+    expect(apiFetch).toHaveBeenCalledTimes(1);
+
+    resolveCreate({
+      createdAt: "2024-06-15T18:00:00Z",
+      id: 31,
+      location: {
+        coordinate: { lat: 61.4978, lon: 23.761 },
+        displayName: "Tampere",
+        label: "Tampere",
+      },
+      tripId: 7,
+      tripStopOrder: 3,
+      updatedAt: "2024-06-15T18:00:00Z",
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("heading", {
+          name: "controlPanel.trips.assignments.addRouteWaypointTitle",
+        }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  it("edits a route waypoint and closes the modal after saving", async () => {
+    const { apiFetch } = await import("@/lib/api");
+    mockResolveLocationFromCoordinate.mockResolvedValueOnce({
+      location: {
+        coordinate: { lat: 61.5, lon: 23.8 },
+        label: "Uusi Tampere",
+      },
+      rateLimited: false,
+    });
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      createdAt: "2024-06-14T13:00:00Z",
+      id: 31,
+      location: {
+        coordinate: { lat: 61.5, lon: 23.8 },
+        displayName: "Uusi Tampere",
+        label: "Uusi Tampere",
+      },
+      tripId: currentTrip.id,
+      tripStopOrder: 2,
+      updatedAt: "2024-06-15T18:00:00Z",
+    });
+    Object.defineProperty(window.navigator, "geolocation", {
+      configurable: true,
+      value: {
+        getCurrentPosition: vi.fn((success: PositionCallback) =>
+          success({
+            coords: { latitude: 61.5, longitude: 23.8 },
+          } as GeolocationPosition),
+        ),
+      },
+    });
+
+    render(<TripVisitAssignments trip={tripWithRouteWaypoint} visits={visits} />);
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.editRouteWaypointAction",
+      }),
+    );
+    expect(
+      screen.getByRole("heading", {
+        name: "controlPanel.trips.assignments.editRouteWaypointTitle",
+      }),
+    ).toBeInTheDocument();
+
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.useCurrentLocation",
+      }),
+    );
+    await waitFor(() => {
+      expect(
+        screen.getByRole("combobox", {
+          name: "controlPanel.trips.assignments.routeWaypointLocationLabel",
+        }),
+      ).toHaveValue("Uusi Tampere");
+    });
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.saveRouteWaypoint",
+      }),
+    );
+
+    expect(apiFetch).toHaveBeenCalledWith("/api/trip-route-waypoints/31", {
+      method: "PATCH",
+      body: JSON.stringify({
+        location: {
+          coordinate: { lat: 61.5, lon: 23.8 },
+          label: "Uusi Tampere",
+        },
+      }),
+    });
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("heading", {
+          name: "controlPanel.trips.assignments.editRouteWaypointTitle",
+        }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  it("closes an unchanged route waypoint edit without saving", async () => {
+    const { apiFetch } = await import("@/lib/api");
+
+    render(<TripVisitAssignments trip={tripWithRouteWaypoint} visits={visits} />);
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.editRouteWaypointAction",
+      }),
+    );
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.saveRouteWaypoint",
+      }),
+    );
+
+    expect(apiFetch).not.toHaveBeenCalled();
+    expect(
+      screen.queryByRole("heading", {
+        name: "controlPanel.trips.assignments.editRouteWaypointTitle",
+      }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("removes a route waypoint after confirmation", async () => {
+    const { apiFetch } = await import("@/lib/api");
+    vi.mocked(apiFetch).mockResolvedValueOnce(undefined);
+
+    render(<TripVisitAssignments trip={tripWithRouteWaypoint} visits={visits} />);
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: "controlPanel.trips.assignments.deleteRouteWaypointAction",
+      }),
+    );
+
+    expect(apiFetch).toHaveBeenCalledWith("/api/trip-route-waypoints/31", {
+      method: "DELETE",
+    });
+    await waitFor(() => {
+      expect(mockRefresh).toHaveBeenCalled();
+    });
   });
 
   it("does not allow adding a stop before the trip has any visits", () => {
@@ -1099,6 +1418,7 @@ describe("TripVisitAssignments", () => {
 
     expect(screen.getByLabelText("controlPanel.trips.assignments.stopOrderLabel")).toHaveValue("3");
     const orderSelect = screen.getByLabelText("controlPanel.trips.assignments.stopOrderLabel");
+    expect(orderSelect).toHaveClass("appearance-none", "pe-10");
     const optionLabels = within(orderSelect)
       .getAllByRole("option")
       .map((option) => option.textContent);
@@ -1109,6 +1429,10 @@ describe("TripVisitAssignments", () => {
     ]);
 
     await userEvent.selectOptions(orderSelect, "1");
+    expect(screen.getByLabelText("controlPanel.trips.assignments.stopVisitedOnLabel")).toHaveClass(
+      "appearance-none",
+      "pe-10",
+    );
     await userEvent.click(
       screen.getByRole("button", {
         name: "controlPanel.trips.assignments.useCurrentLocation",
