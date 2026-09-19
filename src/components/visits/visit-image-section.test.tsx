@@ -1,7 +1,14 @@
-import { fireEvent, render as renderTestingLibrary, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render as renderTestingLibrary,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SnackbarProvider } from "@/components/providers/snackbar-provider";
+import { TripStopImageSection } from "@/components/trips/trip-stop-image-section";
 import { apiFetch } from "@/lib/api";
 import { prepareImageFileForUpload } from "@/lib/image-upload";
 import type { VisitImage } from "@/lib/parks";
@@ -103,10 +110,262 @@ const render = (ui: Parameters<typeof renderTestingLibrary>[0]) => {
 describe("VisitImageSection", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockDirectUploadFetch.mockReset();
+    vi.mocked(apiFetch).mockReset();
     vi.stubGlobal("fetch", mockDirectUploadFetch);
     vi.mocked(prepareImageFileForUpload).mockImplementation(async (file: File) => file);
     mockIsLocalImageUploadMode.mockReturnValue(true);
     window.confirm = vi.fn(() => true);
+  });
+
+  it.each(["visit", "stop"])(
+    "pauses a %s upload at the failed slot and resumes in order",
+    async (kind) => {
+      const onImagesChange = vi.fn();
+      const { container } = render(
+        kind === "visit" ? (
+          <VisitImageSection visitId={10} images={images} parkSlug="pallas" />
+        ) : (
+          <TripStopImageSection
+            stopId={10}
+            images={images}
+            tripSlug="retki"
+            onImagesChange={onImagesChange}
+          />
+        ),
+      );
+      let rejectUpload!: (error: Error) => void;
+      vi.mocked(apiFetch).mockImplementationOnce(
+        () =>
+          new Promise((_resolve, reject) => {
+            rejectUpload = reject;
+          }),
+      );
+      const files = ["first.jpg", "second.jpg", "third.jpg"].map(
+        (name) => new File(["image"], name, { type: "image/jpeg" }),
+      );
+      fireEvent.change(screen.getByLabelText("controlPanel.visits.images.selectFiles"), {
+        target: { files },
+      });
+      await screen.findByText("controlPanel.visits.images.selectedCount");
+      fireEvent.click(screen.getByRole("button", { name: "controlPanel.visits.images.upload" }));
+      await waitFor(() => expect(screen.getByRole("progressbar")).toHaveAttribute("value", "0"));
+      expect(
+        screen
+          .getAllByRole("button", { name: "controlPanel.visits.images.removeFile" })
+          .every((button) => button.hasAttribute("disabled")),
+      ).toBe(true);
+      expect(
+        screen
+          .getAllByRole("button", { name: "controlPanel.visits.images.deleteImage" })
+          .every((button) => button.hasAttribute("disabled")),
+      ).toBe(true);
+      rejectUpload(new Error("connection lost"));
+      await screen.findByRole("button", { name: "controlPanel.visits.images.retryUpload" });
+      expect(apiFetch).toHaveBeenCalledTimes(1);
+      expect(getPendingImageOrder(container)).toHaveLength(3);
+      expect(screen.getByText("controlPanel.visits.images.queuePaused")).toBeInTheDocument();
+
+      for (const [index, file] of files.entries()) {
+        vi.mocked(apiFetch).mockResolvedValueOnce({
+          images: [{ ...images[0], id: index + 3, originalName: file.name }],
+          errors: [],
+        });
+      }
+      fireEvent.click(
+        screen.getByRole("button", { name: "controlPanel.visits.images.retryUpload" }),
+      );
+      await waitFor(() => expect(getSavedImageOrder(container)).toEqual(["1", "2", "3", "4", "5"]));
+      expect(getPendingImageOrder(container)).toHaveLength(0);
+      expect(
+        vi.mocked(apiFetch).mock.calls.map(([, init]) => {
+          const body = init?.body as FormData;
+          return body.get("images");
+        }),
+      ).toEqual([files[0], ...files]);
+      if (kind === "stop")
+        expect(onImagesChange).toHaveBeenLastCalledWith(
+          expect.arrayContaining([expect.objectContaining({ id: 5 })]),
+        );
+    },
+  );
+
+  it("shows direct-upload stages and completed counts, then retries a failed middle file before later files", async () => {
+    mockIsLocalImageUploadMode.mockReturnValue(false);
+    const plan = {
+      uploadUrl: "https://uploads.example.com/image",
+      key: "image-key",
+      method: "PUT",
+      headers: {},
+    };
+    let resolvePlan!: (value: typeof plan) => void;
+    let resolveTransfer!: (value: Response) => void;
+    let resolveComplete!: (value: { image: VisitImage }) => void;
+    let rejectSecond!: (reason: Error) => void;
+    vi.mocked(apiFetch)
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolvePlan = resolve;
+          }),
+      )
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveComplete = resolve;
+          }),
+      )
+      .mockImplementationOnce(
+        () =>
+          new Promise((_resolve, reject) => {
+            rejectSecond = reject;
+          }),
+      );
+    mockDirectUploadFetch.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveTransfer = resolve;
+        }),
+    );
+    const { container } = render(
+      <VisitImageSection visitId={10} images={images} parkSlug="pallas" />,
+    );
+    fireEvent.change(screen.getByLabelText("controlPanel.visits.images.selectFiles"), {
+      target: {
+        files: ["same.jpg", "same.jpg", "last.jpg"].map(
+          (name) => new File(["image"], name, { type: "image/jpeg" }),
+        ),
+      },
+    });
+    await screen.findByText("controlPanel.visits.images.selectedCount");
+    fireEvent.click(screen.getByRole("button", { name: "controlPanel.visits.images.upload" }));
+    await screen.findByText("controlPanel.visits.images.stages.requesting");
+    const savedButton = container.querySelector("[data-saved-image-id] button");
+    if (!savedButton) throw new Error("Missing saved image");
+    fireEvent.keyDown(savedButton, { key: "ArrowRight" });
+    fireEvent.pointerDown(savedButton, { pointerId: 1, clientX: 1, clientY: 1 });
+    expect(getSavedImageOrder(container)).toEqual(["1", "2"]);
+    await act(async () => resolvePlan(plan));
+    expect(screen.getByText("controlPanel.visits.images.stages.uploading")).toBeInTheDocument();
+    await act(async () => resolveTransfer(new Response(null, { status: 200 })));
+    expect(screen.getByText("controlPanel.visits.images.stages.processing")).toBeInTheDocument();
+    await act(async () => resolveComplete({ image: { ...images[0], id: 3 } }));
+    expect(screen.getByRole("progressbar")).toHaveAttribute("value", "1");
+    expect(screen.getByRole("progressbar")).toHaveAttribute("max", "3");
+    await act(async () => rejectSecond(new Error("connection lost")));
+    expect(getSavedImageOrder(container)).toEqual(["1", "2", "3"]);
+    expect(getPendingImageOrder(container)).toHaveLength(2);
+    expect(apiFetch).toHaveBeenCalledTimes(3);
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce(plan)
+      .mockResolvedValueOnce({ image: { ...images[0], id: 4 } })
+      .mockResolvedValueOnce(plan)
+      .mockResolvedValueOnce({ image: { ...images[0], id: 5 } });
+    mockDirectUploadFetch.mockResolvedValue(new Response(null, { status: 200 }));
+    fireEvent.click(screen.getByRole("button", { name: "controlPanel.visits.images.retryUpload" }));
+    await waitFor(() => expect(getSavedImageOrder(container)).toEqual(["1", "2", "3", "4", "5"]));
+    expect(mockDirectUploadFetch).toHaveBeenCalledTimes(3);
+    expect(getPendingImageOrder(container)).toHaveLength(0);
+  });
+
+  it("shows preparation progress while keeping uploads disabled", async () => {
+    let resolvePreparation!: (file: File) => void;
+    const file = new File(["image"], "original.jpg", { type: "image/jpeg" });
+    vi.mocked(prepareImageFileForUpload).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolvePreparation = resolve;
+        }),
+    );
+    render(<VisitImageSection visitId={10} images={[]} parkSlug="pallas" />);
+    fireEvent.change(screen.getByLabelText("controlPanel.visits.images.selectFiles"), {
+      target: { files: [file] },
+    });
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "controlPanel.visits.images.preparationProgress",
+    );
+    expect(
+      screen.getByRole("button", { name: "controlPanel.visits.images.selectFiles" }),
+    ).toBeDisabled();
+    await act(async () => resolvePreparation(file));
+    expect(screen.getByText("1. original.jpg")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "controlPanel.visits.images.upload" })).toBeEnabled();
+  });
+
+  it("allows removing a failed file and continuing with the remaining queue", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      images: [],
+      errors: [{ reason: "invalid image" }],
+    });
+    const { container } = render(<VisitImageSection visitId={10} images={[]} parkSlug="pallas" />);
+    fireEvent.change(screen.getByLabelText("controlPanel.visits.images.selectFiles"), {
+      target: {
+        files: ["bad.jpg", "good.jpg"].map(
+          (name) => new File(["image"], name, { type: "image/jpeg" }),
+        ),
+      },
+    });
+    await screen.findByText("controlPanel.visits.images.selectedCount");
+    fireEvent.click(screen.getByRole("button", { name: "controlPanel.visits.images.upload" }));
+    await screen.findByRole("button", { name: "controlPanel.visits.images.retryUpload" });
+    fireEvent.click(
+      screen.getAllByRole("button", { name: "controlPanel.visits.images.removeFile" })[0],
+    );
+    expect(screen.queryByText("controlPanel.visits.images.queuePaused")).not.toBeInTheDocument();
+    expect(screen.queryByText("bad.jpg: invalid image")).not.toBeInTheDocument();
+    vi.mocked(apiFetch).mockResolvedValueOnce({ images: [images[0]], errors: [] });
+    fireEvent.click(screen.getByRole("button", { name: "controlPanel.visits.images.upload" }));
+    await waitFor(() => expect(getPendingImageOrder(container)).toHaveLength(0));
+    const requestBody = vi.mocked(apiFetch).mock.calls[1][1]?.body as FormData;
+    expect((requestBody.get("images") as File).name).toBe("good.jpg");
+  });
+
+  it.each([
+    "local-invalid",
+    "local-empty",
+    "plan-invalid",
+    "transfer-failed",
+    "complete-invalid",
+    "network-failed",
+  ])("retains all selected slots after %s", async (failure) => {
+    const local = failure.startsWith("local");
+    mockIsLocalImageUploadMode.mockReturnValue(local);
+    const plan = {
+      uploadUrl: "https://uploads.example.com/image",
+      key: "key",
+      method: "PUT",
+      headers: {},
+    };
+    if (failure === "local-invalid" || failure === "plan-invalid") {
+      vi.mocked(apiFetch).mockResolvedValueOnce({});
+    } else if (failure === "local-empty") {
+      vi.mocked(apiFetch).mockResolvedValueOnce({ images: [], errors: [] });
+    } else if (failure === "network-failed") {
+      vi.mocked(apiFetch).mockRejectedValueOnce(null);
+    } else {
+      vi.mocked(apiFetch).mockResolvedValueOnce(plan);
+      mockDirectUploadFetch.mockResolvedValueOnce(
+        new Response(null, { status: failure === "transfer-failed" ? 500 : 200 }),
+      );
+      if (failure === "complete-invalid") vi.mocked(apiFetch).mockResolvedValueOnce({});
+    }
+    const { container } = render(<VisitImageSection visitId={10} images={[]} parkSlug="pallas" />);
+    fireEvent.change(screen.getByLabelText("controlPanel.visits.images.selectFiles"), {
+      target: {
+        files: ["first.jpg", "later.jpg"].map(
+          (name) => new File(["image"], name, { type: "image/jpeg" }),
+        ),
+      },
+    });
+    await screen.findByText("controlPanel.visits.images.selectedCount");
+    fireEvent.click(screen.getByRole("button", { name: "controlPanel.visits.images.upload" }));
+    await screen.findByRole("button", { name: "controlPanel.visits.images.retryUpload" });
+    expect(getPendingImageOrder(container)).toHaveLength(2);
+    expect(getSavedImageOrder(container)).toHaveLength(0);
+    expect(screen.getByText("controlPanel.visits.images.stages.failed")).toBeInTheDocument();
+    expect(screen.getByText("controlPanel.visits.images.stages.waiting")).toBeInTheDocument();
+    expect(apiFetch).toHaveBeenCalledTimes(failure === "complete-invalid" ? 2 : 1);
+    expect(URL.revokeObjectURL).not.toHaveBeenCalled();
   });
 
   it("renders existing images", () => {
@@ -357,10 +616,9 @@ describe("VisitImageSection", () => {
   });
 
   it("localhost uploads files in the reordered preview order via multipart form data", async () => {
-    vi.mocked(apiFetch).mockResolvedValueOnce({
-      images: [],
-      errors: [],
-    });
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({ images: [{ ...images[0], originalName: "second.jpg" }], errors: [] })
+      .mockResolvedValueOnce({ images: [{ ...images[1], originalName: "first.jpg" }], errors: [] });
     const user = userEvent.setup();
 
     const { container } = render(<VisitImageSection visitId={10} images={[]} parkSlug="pallas" />);
@@ -408,11 +666,12 @@ describe("VisitImageSection", () => {
       });
     });
 
-    const requestInit = vi.mocked(apiFetch).mock.calls[0]?.[1];
-    const formData = requestInit?.body as FormData;
-    const uploadedFileNames = formData.getAll("images").map((file) => (file as File).name);
-
-    expect(uploadedFileNames).toEqual(["second.jpg", "first.jpg"]);
+    await waitFor(() => expect(apiFetch).toHaveBeenCalledTimes(2));
+    const uploadedFileNames = vi.mocked(apiFetch).mock.calls.map(([, init]) => {
+      const body = init?.body as FormData;
+      return body.get("images");
+    });
+    expect(uploadedFileNames).toEqual([secondFile, firstFile]);
     expect(mockDirectUploadFetch).not.toHaveBeenCalled();
   });
 
@@ -487,7 +746,7 @@ describe("VisitImageSection", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("shows per-file errors from the backend", async () => {
+  it("shows localized recovery guidance instead of backend error details", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce({
       images: [],
       errors: [{ originalName: "big.jpg", reason: "File too large" }],
@@ -506,13 +765,8 @@ describe("VisitImageSection", () => {
     const uploadButton = screen.getByRole("button", { name: "controlPanel.visits.images.upload" });
     fireEvent.click(uploadButton);
 
-    await waitFor(() => {
-      expect(
-        screen
-          .getAllByRole("alert")
-          .some((alert) => alert.textContent?.includes("big.jpg: File too large")),
-      ).toBe(true);
-    });
+    await screen.findByText("controlPanel.visits.images.queuePaused");
+    expect(screen.queryByText("big.jpg: File too large")).not.toBeInTheDocument();
   });
 
   it("uses upload-url, direct PUT, and complete in the reordered pending-file order outside localhost", async () => {
@@ -728,13 +982,8 @@ describe("VisitImageSection", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "controlPanel.visits.images.upload" }));
 
-    await waitFor(() => {
-      expect(
-        screen
-          .getAllByRole("alert")
-          .some((alert) => alert.textContent?.includes("second.jpg: signature expired")),
-      ).toBe(true);
-    });
+    await screen.findByText("controlPanel.visits.images.queuePaused");
+    expect(screen.queryByText("second.jpg: signature expired")).not.toBeInTheDocument();
 
     expect(mockRevalidatePublicCache).toHaveBeenCalledWith({
       parkSlug: "pallas",
@@ -765,11 +1014,8 @@ describe("VisitImageSection", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "controlPanel.visits.images.upload" }));
 
-    await waitFor(() => {
-      expect(
-        screen.getAllByRole("alert").some((alert) => alert.textContent?.includes("upload failed")),
-      ).toBe(true);
-    });
+    await screen.findByText("controlPanel.visits.images.queuePaused");
+    expect(screen.queryByText(/upload failed/)).not.toBeInTheDocument();
 
     expect(mockRefresh).not.toHaveBeenCalled();
   });

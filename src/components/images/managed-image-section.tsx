@@ -1,9 +1,9 @@
 "use client";
 
-import { Images, Trash2, Upload, X } from "lucide-react";
+import { Images, LoaderCircle, Trash2, Upload, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { ChangeEvent, KeyboardEvent, PointerEvent } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useSnackbar } from "@/components/providers/snackbar-provider";
 import { AppImage } from "@/components/ui/app-image";
 import { Button } from "@/components/ui/button";
@@ -14,10 +14,14 @@ import { isLocalImageUploadMode, prepareImageFileForUpload } from "@/lib/image-u
 import type { VisitImage } from "@/lib/parks";
 import { revalidatePublicCache } from "@/lib/public-cache";
 
+type UploadStage = "waiting" | "requesting" | "uploading" | "processing" | "complete" | "failed";
+
 interface PendingImage {
   id: string;
   file: File;
   previewUrl: string;
+  originalName: string;
+  stage: UploadStage;
 }
 
 interface ActiveDrag {
@@ -68,7 +72,6 @@ interface ManagedImageMessages {
   deleteImage: string;
   deleteSuccess: string;
   pendingReorderHint: string;
-  preparing: string;
   preprocessFailed: (name: string) => string;
   removeFile: string;
   reorderFailed: string;
@@ -85,6 +88,12 @@ interface ManagedImageMessages {
   uploadFailed: string;
   uploadSuccess: (count: number) => string;
   uploading: string;
+  preparationProgress: (current: number, total: number) => string;
+  uploadProgress: (completed: number, total: number) => string;
+  stage: (stage: UploadStage) => string;
+  queuePaused: string;
+  retryUpload: string;
+  keepPageOpen: string;
   maxImagesReached?: (maxImageCount: number) => string;
   maxImagesSummary?: (currentImageCount: number, maxImageCount: number) => string;
 }
@@ -145,19 +154,6 @@ const getDropTargetId = (
   return target?.getAttribute(attribute) ?? null;
 };
 
-const getPendingUploadError = (fileName: string, message: string) => `${fileName}: ${message}`;
-
-const getDirectUploadFailureMessage = async (response: Response, fallbackMessage: string) => {
-  const responseBody = await response.text().catch(() => "");
-  const trimmedResponseBody = responseBody.trim();
-
-  if (trimmedResponseBody) {
-    return trimmedResponseBody;
-  }
-
-  return response.status > 0 ? `${fallbackMessage} (${response.status})` : fallbackMessage;
-};
-
 export const ManagedImageSection = ({
   deleteImagePath,
   dialogLabel,
@@ -174,14 +170,18 @@ export const ManagedImageSection = ({
   uploadPlanPath,
 }: ManagedImageSectionProps) => {
   const router = useRouter();
+  const sectionId = useId();
+  const savedHintId = `${sectionId}-saved-hint`;
+  const pendingHintId = `${sectionId}-pending-hint`;
   const { showSnackbar } = useSnackbar();
   const [localImages, setLocalImages] = useState(images);
   const [savedImageOrder, setSavedImageOrder] = useState(images.map((image) => String(image.id)));
   const [pendingImages, setPendingImages] = useState<PendingImage[]>([]);
   const [isPreparingImages, setIsPreparingImages] = useState(false);
+  const [preparationProgress, setPreparationProgress] = useState({ current: 0, total: 0 });
   const [isUploading, setIsUploading] = useState(false);
   const [isReordering, setIsReordering] = useState(false);
-  const [uploadErrors, setUploadErrors] = useState<string[]>([]);
+  const [preparationErrors, setPreparationErrors] = useState<string[]>([]);
   const [activeDrag, setActiveDrag] = useState<ActiveDrag | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const activeDragRef = useRef<ActiveDrag | null>(null);
@@ -246,6 +246,13 @@ export const ManagedImageSection = ({
     };
   }, []);
 
+  const isBusy = isUploading || isPreparingImages || isReordering;
+  const hasFailedUpload = pendingImages.some((image) => image.stage === "failed");
+  const completedCount = pendingImages.filter((image) => image.stage === "complete").length;
+  const activeImage = pendingImages.find(
+    (image) =>
+      image.stage === "requesting" || image.stage === "uploading" || image.stage === "processing",
+  );
   const totalImageCount = localImages.length + pendingImages.length;
   const hasReachedImageLimit =
     maxImageCount !== undefined ? totalImageCount >= maxImageCount : false;
@@ -255,6 +262,7 @@ export const ManagedImageSection = ({
   );
 
   const moveSavedImage = (activeId: string, overId: string) => {
+    if (isBusy) return;
     setLocalImages((currentImages) => reorderItems(currentImages, activeId, overId));
   };
 
@@ -287,6 +295,7 @@ export const ManagedImageSection = ({
   const handleDragStart =
     (collection: ActiveDrag["collection"], itemId: string) =>
     (event: PointerEvent<HTMLButtonElement>) => {
+      if (isBusy) return;
       const nextDrag = {
         collection,
         itemId,
@@ -423,7 +432,7 @@ export const ManagedImageSection = ({
     const files = Array.from(event.target.files ?? []);
     const validFiles: PendingImage[] = [];
     const errors: string[] = [];
-    setUploadErrors([]);
+    setPreparationErrors([]);
 
     const remainingImageSlots =
       maxImageCount !== undefined ? Math.max(maxImageCount - totalImageCount, 0) : files.length;
@@ -435,7 +444,7 @@ export const ManagedImageSection = ({
     }
 
     if (selectableFiles.length === 0) {
-      setUploadErrors(errors);
+      setPreparationErrors(errors);
       event.target.value = "";
       return;
     }
@@ -443,7 +452,8 @@ export const ManagedImageSection = ({
     setIsPreparingImages(true);
 
     try {
-      for (const file of selectableFiles) {
+      for (const [index, file] of selectableFiles.entries()) {
+        setPreparationProgress({ current: index + 1, total: selectableFiles.length });
         if (!ACCEPTED_TYPES.includes(file.type)) {
           errors.push(messages.unsupportedType(file.name));
           continue;
@@ -456,6 +466,8 @@ export const ManagedImageSection = ({
             id: `pending-image-${pendingImageIdRef.current}`,
             file: preparedFile,
             previewUrl: URL.createObjectURL(preparedFile),
+            originalName: file.name,
+            stage: "waiting",
           });
         } catch {
           errors.push(messages.preprocessFailed(file.name));
@@ -467,7 +479,7 @@ export const ManagedImageSection = ({
     }
 
     if (errors.length > 0) {
-      setUploadErrors((currentErrors) => [...currentErrors, ...errors]);
+      setPreparationErrors((currentErrors) => [...currentErrors, ...errors]);
     }
 
     if (validFiles.length > 0) {
@@ -488,51 +500,32 @@ export const ManagedImageSection = ({
     );
   };
 
-  const handleLocalUpload = async () => {
-    const formData = new FormData();
-    for (const pendingImage of pendingImages) {
-      formData.append("images", pendingImage.file);
-    }
+  const setUploadStage = (id: string, stage: UploadStage) => {
+    setPendingImages((current) =>
+      current.map((image) => (image.id === id ? { ...image, stage } : image)),
+    );
+  };
 
+  const uploadImageLocally = async (pendingImage: PendingImage): Promise<VisitImage> => {
+    setUploadStage(pendingImage.id, "uploading");
+    const formData = new FormData();
+    formData.append("images", pendingImage.file);
     const response = await apiFetch<LocalUploadResponse>(uploadLocalPath, {
       method: "POST",
       body: formData,
     });
-
     if (!response || !Array.isArray(response.images) || !Array.isArray(response.errors)) {
       throw new Error(messages.uploadFailed);
     }
-
-    for (const pendingImage of pendingImages) {
-      URL.revokeObjectURL(pendingImage.previewUrl);
+    const image = response.images[0];
+    if (!image) {
+      throw new Error(messages.uploadFailed);
     }
-
-    pendingImagesRef.current = [];
-    setPendingImages([]);
-    const nextImages = [...localImages, ...response.images];
-    setLocalImages(nextImages);
-    setSavedImageOrder((currentOrder) => [
-      ...currentOrder,
-      ...response.images.map((image) => String(image.id)),
-    ]);
-    onSavedImagesChange?.(nextImages);
-
-    if (response.errors.length > 0) {
-      setUploadErrors(response.errors.map((error) => `${error.originalName}: ${error.reason}`));
-      showSnackbar({ message: messages.uploadFailed, tone: "error" });
-    }
-
-    if (response.images.length > 0) {
-      await revalidatePublicCache(revalidateTargets);
-      showSnackbar({
-        message: messages.uploadSuccess(response.images.length),
-        tone: "success",
-      });
-      router.refresh();
-    }
+    return image;
   };
 
   const uploadImageDirectly = async (pendingImage: PendingImage): Promise<VisitImage> => {
+    setUploadStage(pendingImage.id, "requesting");
     const uploadPlanRequest = {
       contentType: pendingImage.file.type as DirectUploadPlanRequest["contentType"],
       fileSizeBytes: pendingImage.file.size,
@@ -548,6 +541,7 @@ export const ManagedImageSection = ({
       throw new Error(messages.uploadFailed);
     }
 
+    setUploadStage(pendingImage.id, "uploading");
     const uploadResponse = await fetch(uploadPlan.uploadUrl, {
       method: uploadPlan.method,
       headers: uploadPlan.headers,
@@ -555,9 +549,10 @@ export const ManagedImageSection = ({
     });
 
     if (!uploadResponse.ok) {
-      throw new Error(await getDirectUploadFailureMessage(uploadResponse, messages.uploadFailed));
+      throw new Error(messages.uploadFailed);
     }
 
+    setUploadStage(pendingImage.id, "processing");
     const completeRequest = {
       key: uploadPlan.key,
       originalName: pendingImage.file.name,
@@ -575,73 +570,49 @@ export const ManagedImageSection = ({
     return completedUpload.image;
   };
 
-  const handleDirectUpload = async () => {
-    const uploadedImages: VisitImage[] = [];
-    const nextUploadErrors: string[] = [];
-    const uploadedPendingImageIds = new Set<string>();
-
-    for (const pendingImage of pendingImages) {
-      try {
-        const uploadedImage = await uploadImageDirectly(pendingImage);
-        uploadedImages.push(uploadedImage);
-        uploadedPendingImageIds.add(pendingImage.id);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : messages.uploadFailed;
-        nextUploadErrors.push(getPendingUploadError(pendingImage.file.name, message));
-      }
-    }
-
-    if (uploadedPendingImageIds.size > 0) {
-      for (const pendingImage of pendingImages) {
-        if (!uploadedPendingImageIds.has(pendingImage.id)) {
-          continue;
-        }
-
-        URL.revokeObjectURL(pendingImage.previewUrl);
-      }
-
-      setPendingImages((currentImages) =>
-        currentImages.filter((image) => !uploadedPendingImageIds.has(image.id)),
-      );
-      const nextImages = [...localImages, ...uploadedImages];
-      setLocalImages(nextImages);
-      setSavedImageOrder((currentOrder) => [
-        ...currentOrder,
-        ...uploadedImages.map((image) => String(image.id)),
-      ]);
-      onSavedImagesChange?.(nextImages);
-      await revalidatePublicCache(revalidateTargets);
-      showSnackbar({
-        message: messages.uploadSuccess(uploadedImages.length),
-        tone: "success",
-      });
-      router.refresh();
-    }
-
-    if (nextUploadErrors.length > 0) {
-      setUploadErrors(nextUploadErrors);
-      showSnackbar({ message: messages.uploadFailed, tone: "error" });
-    }
-  };
-
   const handleUpload = async () => {
-    if (pendingImages.length === 0 || isPreparingImages) {
-      return;
-    }
+    if (pendingImages.length === 0 || isBusy) return;
 
     setIsUploading(true);
-    setUploadErrors([]);
-
+    setPreparationErrors([]);
+    setPendingImages((current) => current.map((image) => ({ ...image, stage: "waiting" })));
+    const uploadedImages: VisitImage[] = [];
+    const uploadedIds = new Set<string>();
     try {
-      if (isLocalImageUploadMode()) {
-        await handleLocalUpload();
-      } else {
-        await handleDirectUpload();
+      for (const pendingImage of pendingImages) {
+        try {
+          const image = isLocalImageUploadMode()
+            ? await uploadImageLocally(pendingImage)
+            : await uploadImageDirectly(pendingImage);
+          uploadedImages.push(image);
+          uploadedIds.add(pendingImage.id);
+          setUploadStage(pendingImage.id, "complete");
+        } catch {
+          setUploadStage(pendingImage.id, "failed");
+          showSnackbar({ message: messages.uploadFailed, tone: "error" });
+          // Later files must not overtake this slot. Retry resumes this same queue.
+          break;
+        }
       }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : messages.uploadFailed;
-      setUploadErrors([message]);
-      showSnackbar({ message, tone: "error" });
+
+      if (uploadedImages.length > 0) {
+        for (const pendingImage of pendingImages) {
+          if (uploadedIds.has(pendingImage.id)) URL.revokeObjectURL(pendingImage.previewUrl);
+        }
+        setPendingImages((current) => current.filter((image) => !uploadedIds.has(image.id)));
+        const nextImages = [...localImages, ...uploadedImages];
+        setLocalImages(nextImages);
+        setSavedImageOrder((current) => [
+          ...current,
+          ...uploadedImages.map((image) => String(image.id)),
+        ]);
+        onSavedImagesChange?.(nextImages);
+        await revalidatePublicCache(revalidateTargets);
+        if (uploadedImages.length === pendingImages.length) {
+          showSnackbar({ message: messages.uploadSuccess(uploadedImages.length), tone: "success" });
+        }
+        router.refresh();
+      }
     } finally {
       setIsUploading(false);
     }
@@ -772,7 +743,7 @@ export const ManagedImageSection = ({
                 onPointerUp: finishDrag,
                 onPointerCancel: cancelDrag,
                 onKeyDown: handleSavedKeyDown(imageId),
-                "aria-describedby": "managed-image-reorder-hint",
+                "aria-describedby": savedHintId,
                 className: "cursor-grab touch-none active:cursor-grabbing",
                 draggable: false,
               };
@@ -795,7 +766,8 @@ export const ManagedImageSection = ({
                           event.stopPropagation();
                           void handleDelete(image.id);
                         }}
-                        className="pointer-events-auto inline-flex h-8 w-8 items-center justify-center rounded-full bg-destructive/90 text-white shadow-sm transition-colors hover:bg-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                        className="pointer-events-auto inline-flex h-8 w-8 items-center justify-center rounded-full bg-destructive/90 text-white shadow-sm transition-colors disabled:opacity-50 hover:bg-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                        disabled={isBusy}
                         aria-label={messages.deleteImage}
                       >
                         <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
@@ -808,7 +780,7 @@ export const ManagedImageSection = ({
           />
 
           {localImages.length > 1 && (
-            <p id="managed-image-reorder-hint" className="text-sm text-muted-foreground">
+            <p id={savedHintId} className="text-sm text-muted-foreground">
               {messages.reorderHint}
             </p>
           )}
@@ -818,7 +790,7 @@ export const ManagedImageSection = ({
               <Button
                 type="button"
                 onClick={() => void handleSaveImageOrder()}
-                disabled={isReordering || activeDrag?.collection === "saved"}
+                disabled={isBusy || activeDrag?.collection === "saved"}
                 className="w-fit"
               >
                 {isReordering ? messages.savingOrder : messages.saveOrder}
@@ -827,7 +799,7 @@ export const ManagedImageSection = ({
                 type="button"
                 variant="ghost"
                 onClick={handleRestoreImageOrder}
-                disabled={isReordering || activeDrag?.collection === "saved"}
+                disabled={isBusy || activeDrag?.collection === "saved"}
                 className="w-fit"
               >
                 {messages.restoreOrder}
@@ -843,7 +815,7 @@ export const ManagedImageSection = ({
             type="button"
             variant="outline"
             onClick={() => fileInputRef.current?.click()}
-            disabled={isPreparingImages || isUploading || hasReachedImageLimit}
+            disabled={isBusy || hasReachedImageLimit}
           >
             <Upload className="h-4 w-4" aria-hidden="true" />
             {messages.selectFiles}
@@ -854,13 +826,13 @@ export const ManagedImageSection = ({
             multiple
             accept="image/jpeg,image/png,image/webp"
             onChange={handleFileSelect}
-            disabled={isPreparingImages || isUploading || hasReachedImageLimit}
+            disabled={isBusy || hasReachedImageLimit}
             className="sr-only"
             aria-label={messages.selectFiles}
           />
           {isPreparingImages === true && (
             <span className="text-sm text-muted-foreground" role="status">
-              {messages.preparing}
+              {messages.preparationProgress(preparationProgress.current, preparationProgress.total)}
             </span>
           )}
           {pendingImages.length > 0 && (
@@ -872,6 +844,7 @@ export const ManagedImageSection = ({
 
         {pendingImages.length > 0 && (
           <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">{messages.keepPageOpen}</p>
             <div className="flex flex-wrap gap-3 px-0.5 pb-2 pt-0.5">
               {pendingImages.map((pendingImage, index) => {
                 const isDragging =
@@ -889,7 +862,8 @@ export const ManagedImageSection = ({
                     key={pendingImage.id}
                     data-pending-image-id={pendingImage.id}
                     className={cn(
-                      "relative aspect-square w-28 shrink-0 overflow-hidden rounded-xl border bg-muted shadow-sm transition-all duration-150 ease-out sm:w-32 md:w-36",
+                      "relative w-28 shrink-0 overflow-hidden rounded-xl border bg-muted shadow-sm transition-all duration-150 ease-out sm:w-32 md:w-36",
+                      pendingImage.stage === "failed" && "border-red-700 dark:border-red-400",
                       isDragging && "z-10 scale-[0.97] opacity-70 shadow-xl",
                       isDropTarget && "ring-2 ring-primary ring-offset-2",
                     )}
@@ -901,9 +875,10 @@ export const ManagedImageSection = ({
                       onPointerUp={finishDrag}
                       onPointerCancel={cancelDrag}
                       onKeyDown={handlePendingKeyDown(pendingImage.id)}
-                      className="block h-full w-full cursor-grab overflow-hidden rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:cursor-grabbing touch-none"
+                      disabled={isBusy}
+                      className="block aspect-square w-full cursor-grab overflow-hidden rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:cursor-grabbing disabled:cursor-default touch-none"
                       aria-label={messages.reorderPendingImage(index + 1)}
-                      aria-describedby="pending-image-reorder-hint"
+                      aria-describedby={`${pendingHintId} ${sectionId}-${pendingImage.id}`}
                       draggable={false}
                     >
                       <div className="relative h-full w-full">
@@ -917,11 +892,29 @@ export const ManagedImageSection = ({
                         />
                       </div>
                     </button>
+                    <div
+                      id={`${sectionId}-${pendingImage.id}`}
+                      className="space-y-1 border-t bg-background p-2 text-xs"
+                    >
+                      <p className="break-words font-medium">
+                        {localImages.length + index + 1}. {pendingImage.originalName}
+                      </p>
+                      <p
+                        className={cn(
+                          "text-muted-foreground",
+                          pendingImage.stage === "failed" && "text-red-700 dark:text-red-300",
+                        )}
+                      >
+                        {messages.stage(pendingImage.stage)}
+                      </p>
+                    </div>
                     <button
                       type="button"
+                      disabled={isBusy}
                       onClick={() => handleRemoveFile(pendingImage.id)}
-                      className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-background/90 text-foreground shadow-sm transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-background/90 text-foreground shadow-sm transition-colors disabled:opacity-50 hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       aria-label={messages.removeFile}
+                      aria-describedby={`${sectionId}-${pendingImage.id}`}
                     >
                       <X className="h-3.5 w-3.5" aria-hidden="true" />
                     </button>
@@ -931,7 +924,7 @@ export const ManagedImageSection = ({
             </div>
 
             {pendingImages.length > 1 && (
-              <p id="pending-image-reorder-hint" className="text-sm text-muted-foreground">
+              <p id={pendingHintId} className="text-sm text-muted-foreground">
                 {messages.pendingReorderHint}
               </p>
             )}
@@ -939,28 +932,55 @@ export const ManagedImageSection = ({
         )}
 
         {pendingImages.length > 0 && (
-          <>
-            {isUploading === true && (
-              <span className="sr-only" role="status">
-                {messages.uploading}
-              </span>
-            )}
-            <Button
-              type="button"
-              onClick={() => void handleUpload()}
-              disabled={isPreparingImages || isUploading || activeDrag?.collection === "pending"}
-            >
-              {isUploading ? messages.uploading : messages.upload}
-            </Button>
-          </>
+          <Button
+            type="button"
+            onClick={() => void handleUpload()}
+            disabled={isBusy || activeDrag?.collection === "pending"}
+          >
+            {isUploading
+              ? messages.uploading
+              : hasFailedUpload
+                ? messages.retryUpload
+                : messages.upload}
+          </Button>
         )}
 
-        {uploadErrors.length > 0 && (
+        {isUploading && pendingImages.length > 0 && (
+          <div className="space-y-2 rounded-xl border bg-muted/50 p-4">
+            <div role="status" className="space-y-1 text-sm">
+              <p className="flex items-center gap-2 font-medium">
+                <LoaderCircle className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" />
+                {messages.uploadProgress(completedCount, pendingImages.length)}
+              </p>
+              {activeImage !== undefined && (
+                <p className="break-words">
+                  {activeImage.originalName}: {messages.stage(activeImage.stage)}
+                </p>
+              )}
+            </div>
+            <progress
+              className="h-2 w-full accent-primary"
+              max={pendingImages.length}
+              value={completedCount}
+              aria-label={messages.uploading}
+            />
+          </div>
+        )}
+        {hasFailedUpload && !isUploading && (
+          <p
+            className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-red-700 dark:text-red-300"
+            role="status"
+          >
+            {messages.queuePaused}
+          </p>
+        )}
+
+        {preparationErrors.length > 0 && (
           <ul
-            className="space-y-1 rounded-[1.3rem] border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+            className="space-y-1 break-words rounded-[1.3rem] border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-red-700 dark:text-red-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
             role="alert"
           >
-            {uploadErrors.map((error) => (
+            {preparationErrors.map((error) => (
               <li key={error}>{error}</li>
             ))}
           </ul>

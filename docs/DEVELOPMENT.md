@@ -215,10 +215,13 @@ The backend handles:
 - Visit management API (`/api/visits`, `/api/visits/{id}`, image routes under `/api/visits/{id}`)
 - Cacheable landing and map API (`/api/home-summary`, `/api/map-summary`) plus the lightweight visits timeline API (`/api/visits-timeline`)
 
-Visit image upload runtime caveat:
+Visit and trip-stop image uploads:
 
-- On `localhost`, the control-panel visit image editor still uses the proxied multipart route `POST /api/visits/{id}/images`.
-- On non-localhost deployments, the control-panel first requests `POST /api/visits/{id}/images/upload-url`, uploads the prepared file directly to the returned presigned `PUT` URL, and then finalizes the image with `POST /api/visits/{id}/images/complete`.
+- Both editors use `ManagedImageSection`. On `localhost`, files use the proxied multipart route `POST /api/visits/{id}/images` (or `/api/trip-stops/{id}/images`), one file per request.
+- On non-localhost deployments, the control-panel first requests `POST /api/visits/{id}/images/upload-url`, uploads the prepared file directly to the returned presigned `PUT` URL, and then finalizes the image with `POST /api/visits/{id}/images/complete`. Trip stops use the equivalent paths under `/api/trip-stops/{id}/images`.
+- Uploads run sequentially in the selected order. The first failure pauses the queue; retry resumes with that file, so later files cannot overtake it. Successfully saved files are removed from the queue and are not uploaded again. Removing a failed file deliberately skips its slot.
+- Preparation shows a file counter; uploads show per-file stages and a completed-file progress bar (not byte progress). Upload, selection, removal, and reorder controls are locked while the queue runs. Pending files and their order live only in the mounted editor; reloading or leaving it loses the pending selection.
+- The same cache revalidation and refresh run after each batch with successful uploads. No API contract or persistent queue is introduced.
 
 Public API terminology and access caveat:
 
