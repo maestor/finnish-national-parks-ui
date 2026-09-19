@@ -21,7 +21,10 @@ export const buildPageMetadata = (
     normalizedDescription && normalizedDescription.length > 180
       ? `${normalizedDescription.slice(0, 177).replace(/\s+\S*$/, "")}…`
       : normalizedDescription;
-  const pagePath = options?.pagePath;
+  // Canonicals and social URLs describe the page, not a UI-state variant.
+  // Keep supported query parameters and fragments out of both signals even
+  // if a caller passes the current browser URL by mistake.
+  const pagePath = options?.pagePath?.split(/[?#]/, 1)[0];
   const socialImagePath = options?.socialImagePath;
 
   return {
