@@ -1,18 +1,15 @@
 import type { MetadataRoute } from "next";
-import { apiPublicFetch } from "@/lib/api";
-import type { paths } from "@/lib/api-types";
+import { connection } from "next/server";
+import { fetchMapSummary } from "@/lib/frontend-summaries";
 import { fetchPublicTripArchive } from "@/lib/public-trips";
 import { appRoutes } from "@/lib/routes";
 import { siteUrl } from "@/lib/site-url";
 
-// Generate on request: builds need no backend and visibility changes must not
-// leave hidden places in a cached sitemap. Never forward a visitor's session.
-export const dynamic = "force-dynamic";
-
 const sitemap = async (): Promise<MetadataRoute.Sitemap> => {
-  const summary = await apiPublicFetch<
-    paths["/api/map-summary"]["get"]["responses"][200]["content"]["application/json"]
-  >("/api/map-summary", { cache: "no-store" });
+  // Keep this metadata route request-time so builds do not need the backend.
+  // The underlying public reads remain force-cached and tag-revalidated.
+  await connection();
+  const summary = await fetchMapSummary();
   const urls = new Set([
     appRoutes.home,
     appRoutes.parks,

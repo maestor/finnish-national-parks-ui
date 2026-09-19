@@ -3,6 +3,7 @@ import {
   appRoutePatterns,
   appRoutes,
   createPathWithSearchParams,
+  legacyAppRedirects,
   normalizeAppPath,
 } from "./routes";
 
@@ -74,6 +75,49 @@ describe("routes", () => {
     expect(normalizeAppPath("/year-review/share/93d27350-b7a4-48ba-a93f-16f38d44aa03")).toBe(
       "/vuosikatsaus/jako/93d27350-b7a4-48ba-a93f-16f38d44aa03",
     );
+  });
+
+  it("keeps supported public deep links on their Finnish route after legacy normalization", () => {
+    expect(normalizeAppPath("/parks?filter=national-park&visitStatus=visited&park=pallas")).toBe(
+      "/paikat?filter=national-park&visitStatus=visited&park=pallas",
+    );
+    expect(normalizeAppPath("/park/pallas?visit=42#visit-history")).toBe(
+      "/paikka/pallas?visit=42#visit-history",
+    );
+    expect(normalizeAppPath("/visits?view=map&year=2026&month=7")).toBe(
+      "/kaynnit?view=map&year=2026&month=7",
+    );
+  });
+
+  it("defines direct permanent redirects for every public English route", () => {
+    expect(legacyAppRedirects).toEqual(
+      expect.arrayContaining([
+        { source: "/parks", destination: appRoutes.parks, permanent: true },
+        { source: "/park/:slug", destination: "/paikka/:slug", permanent: true },
+        { source: "/visits", destination: appRoutes.visits, permanent: true },
+        { source: "/trips", destination: appRoutes.trips, permanent: true },
+        { source: "/trip/:slug", destination: "/retki/:slug", permanent: true },
+        { source: "/trip-planner", destination: appRoutes.tripPlanner, permanent: true },
+      ]),
+    );
+
+    const publicLegacySources = new Set([
+      "/parks",
+      "/park/:slug",
+      "/visits",
+      "/trips",
+      "/trip/:slug",
+      "/trip-planner",
+    ]);
+    const publicLegacyRedirects = legacyAppRedirects.filter(({ source }) =>
+      publicLegacySources.has(source),
+    );
+    expect(publicLegacyRedirects.every(({ permanent }) => permanent)).toBe(true);
+    expect(
+      publicLegacyRedirects.every(
+        ({ destination }) => normalizeAppPath(destination) === destination,
+      ),
+    ).toBe(true);
   });
 
   it("detects canonical and legacy control-panel paths", () => {
