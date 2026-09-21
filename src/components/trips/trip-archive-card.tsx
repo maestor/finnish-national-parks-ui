@@ -8,7 +8,6 @@ import {
   PUBLIC_HERO_DESCRIPTION_CLASS_NAME,
   PUBLIC_META_BADGE_CLASS_NAME,
   PUBLIC_META_DATE_CLASS_NAME,
-  PUBLIC_PANEL_CLASS_NAME,
 } from "@/components/layout/public-page-styles";
 import { AppImage } from "@/components/ui/app-image";
 import { formatFinnishDateRange } from "@/lib/fi-date";
@@ -52,10 +51,14 @@ export const TripArchiveCard = ({ onDetailNavigate, trip }: TripArchiveCardProps
       >
         <article
           aria-labelledby={titleId}
-          className={`${PUBLIC_PANEL_CLASS_NAME} flex h-full w-full min-w-0 flex-col overflow-hidden p-0 transition-[background-color,border-color,box-shadow,transform] duration-200 group-hover:-translate-y-1 group-hover:border-primary/30 group-hover:bg-white/74 group-hover:shadow-xl dark:group-hover:bg-slate-950/64 motion-reduce:transition-none motion-reduce:group-hover:transform-none`}
+          className="relative flex h-full w-full min-w-0 flex-col overflow-hidden rounded-[2rem] border border-white/45 bg-white/68 p-5 shadow-[0_22px_52px_rgba(37,99,235,0.14)] backdrop-blur-xl transition-[background-color,border-color,box-shadow,transform] duration-200 group-hover:-translate-y-1 group-hover:border-primary/45 group-hover:bg-white/82 group-hover:shadow-[0_28px_64px_rgba(37,99,235,0.24)] dark:border-white/10 dark:bg-slate-950/44 sm:p-6 dark:shadow-[0_28px_60px_rgba(2,6,23,0.34)] dark:group-hover:border-emerald-300/30 dark:group-hover:bg-slate-950/58 dark:group-hover:shadow-[0_34px_72px_rgba(2,6,23,0.5)] motion-reduce:transition-none motion-reduce:group-hover:transform-none"
         >
           <div
-            className="relative flex aspect-video w-full shrink-0 items-center justify-center overflow-hidden bg-slate-200/65 dark:bg-slate-900/70"
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 z-0 rounded-[2rem] bg-[linear-gradient(145deg,rgba(255,255,255,0.82),rgba(219,234,254,0.62),rgba(220,252,231,0.68))] transition-opacity duration-200 group-hover:opacity-0 dark:bg-[linear-gradient(145deg,rgba(2,6,23,0.72),rgba(15,23,42,0.84),rgba(6,78,59,0.34))] motion-reduce:transition-none"
+          />
+          <div
+            className="relative z-10 flex aspect-video w-full shrink-0 items-center justify-center overflow-hidden bg-slate-200/65 dark:bg-slate-900/70"
             aria-hidden="true"
           >
             {shouldShowFeaturedImage ? (
@@ -72,7 +75,7 @@ export const TripArchiveCard = ({ onDetailNavigate, trip }: TripArchiveCardProps
             )}
           </div>
 
-          <div className="flex min-w-0 flex-1 flex-col p-0 pt-4">
+          <div className="relative z-10 flex min-w-0 flex-1 flex-col p-0 pt-4">
             <h2 id={titleId} className="break-words text-xl font-semibold tracking-tight">
               {trip.name}
             </h2>
