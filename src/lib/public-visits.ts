@@ -673,20 +673,18 @@ export const buildVisitedMagnetParksModel = (
     ...otherMagnetPlacesGroup.visitedParks.map((park) => park.park.slug),
   ]);
   const missingParks = [
-    ...nationalParks
-      .filter((park) => !visitedParkSlugs.has(park.slug))
-      .sort(compareParksAlphabetically),
-    ...otherMagnetPlaces
-      .filter((park) => !visitedParkSlugs.has(park.slug))
-      .sort(compareParksAlphabetically),
-  ].map((park) => ({
-    park: {
-      logoUrl: park.logo?.url ?? null,
-      name: park.name,
-      slug: park.slug,
-      typeLabel: getParkTypeDisplayName(park),
-    },
-  }));
+    ...nationalParks.filter((park) => !visitedParkSlugs.has(park.slug)),
+    ...otherMagnetPlaces.filter((park) => !visitedParkSlugs.has(park.slug)),
+  ]
+    .sort(compareParksAlphabetically)
+    .map((park) => ({
+      park: {
+        logoUrl: park.logo?.url ?? null,
+        name: park.name,
+        slug: park.slug,
+        typeLabel: getParkTypeDisplayName(park),
+      },
+    }));
 
   return {
     missingParks,

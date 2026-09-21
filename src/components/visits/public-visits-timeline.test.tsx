@@ -858,6 +858,15 @@ describe("PublicVisitsTimeline", () => {
     expect(screen.getByRole("link", { name: /Teijo/ })).toHaveAttribute("href", "/paikka/teijo");
     expect(screen.getAllByText("Kansallispuisto")).toHaveLength(2);
     expect(screen.getByText("Retkeilyalue")).toBeInTheDocument();
+    const missingParksList = screen
+      .getByRole("heading", { name: "visits.parks.sections.missing" })
+      .parentElement?.nextElementSibling?.querySelector("ul");
+
+    if (!(missingParksList instanceof HTMLElement)) {
+      throw new Error("Expected missing parks list");
+    }
+
+    expect(missingParksList).toHaveClass("grid", "md:grid-cols-2");
     const nuuksioLink = screen.getByRole("link", { name: /Nuuksio/ });
     expect(nuuksioLink).toHaveAttribute("href", "/paikka/nuuksio?visit=1#visit-history");
     const nuuksioCard = nuuksioLink.closest("article");

@@ -202,7 +202,7 @@ const MissingMagnetParks = ({
       </div>
 
       <div className="rounded-[2rem] border border-white/50 bg-white/70 p-3 shadow-[0_20px_48px_rgba(148,163,184,0.16)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/50 dark:shadow-[0_24px_52px_rgba(2,6,23,0.32)]">
-        <ul className="space-y-2">
+        <ul className="grid gap-2 md:grid-cols-2">
           {parks.map((park) => (
             <li key={park.park.slug}>
               <Link

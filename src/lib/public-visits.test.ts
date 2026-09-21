@@ -449,6 +449,34 @@ describe("buildPublicVisitsTimelineModel", () => {
 });
 
 describe("buildVisitedMagnetParksModel", () => {
+  it("sorts missing parks alphabetically across national and other place types", () => {
+    const model = buildVisitedMagnetParksModel(
+      [],
+      [
+        ...magnetSummaryParks,
+        {
+          slug: "aakkonen",
+          name: "Aakkonen",
+          category: { name: "Retkeilyalueet", slug: "outdoor-recreation-area" },
+          displayTypeName: null,
+          hasMagnet: true,
+          logo: null,
+          type: { code: 3, id: 3, name: "Retkeilyalue", slug: "outdoor-recreation-area" },
+        },
+      ],
+    );
+
+    expect(model.missingParks.map((park) => park.park.name)).toEqual([
+      "Aakkonen",
+      "Kolovesi",
+      "Nuuksio",
+      "Pallas-Yllästunturi",
+      "Repovesi",
+      "Seurasaari",
+      "Teijo",
+    ]);
+  });
+
   it("groups visited parks into national parks and other magnet places", () => {
     const model = buildVisitedMagnetParksModel(
       [
