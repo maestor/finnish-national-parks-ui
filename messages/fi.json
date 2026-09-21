@@ -291,8 +291,8 @@
     "missingDate": "Ajankohta puuttuu",
     "visitCount": "{count, plural, one {käynti} other {käyntiä}}",
     "stopCount": "{count, plural, one {pysähdys} other {pysähdystä}}",
+    "descriptionPlaceholder": "Tarina reissusta toistaiseksi laiskan päivittäjän ajatushautomossa, syntymässä toivottavasti pian!",
     "readMore": "Lue lisää",
-    "readMoreLabel": "Lue lisää retkestä {name}",
     "loadedCount": "Näytetään {count, plural, one {# retki} other {# retkeä}} / {total, plural, one {# retki} other {# retkeä}}.",
     "appendedCount": "Ladattu {count, plural, one {# uusi retki} other {# uutta retkeä}}."
   },
