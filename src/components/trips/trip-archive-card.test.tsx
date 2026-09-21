@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import type { PublicTripArchiveItem } from "@/lib/public-trips";
 import { TripArchiveCard } from "./trip-archive-card";
@@ -24,10 +25,15 @@ describe("TripArchiveCard", () => {
     render(<TripArchiveCard onDetailNavigate={vi.fn()} trip={trip} />);
 
     expect(screen.getByRole("heading", { name: trip.name })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "tripsArchive.readMoreLabel" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: trip.name })).toHaveAttribute(
       "href",
       "/retki/kesaretki-pohjoiseen",
     );
+    expect(screen.getByRole("link", { name: trip.name })).toHaveAttribute(
+      "aria-describedby",
+      "trip-archive-card-read-more-7",
+    );
+    expect(screen.getByText("tripsArchive.readMore")).toHaveClass("sr-only");
 
     const visitBadge = screen.getByText("3 tripsArchive.visitCount").closest("span");
     expect(visitBadge).not.toBeNull();
@@ -40,6 +46,24 @@ describe("TripArchiveCard", () => {
     expect(dateBadge).not.toHaveClass("rounded-full");
     expect(dateBadge?.querySelector("svg")).toBeNull();
     expect(visitBadge?.querySelector("svg")).toHaveClass("lucide-calendar-range");
+  });
+
+  it("shows a placeholder when the trip has no description", () => {
+    render(
+      <TripArchiveCard onDetailNavigate={vi.fn()} trip={{ ...trip, descriptionExcerpt: null }} />,
+    );
+
+    expect(screen.getByText("tripsArchive.descriptionPlaceholder")).toHaveClass("italic");
+  });
+
+  it("navigates when the card content is clicked", async () => {
+    const onDetailNavigate = vi.fn();
+    const user = userEvent.setup();
+    render(<TripArchiveCard onDetailNavigate={onDetailNavigate} trip={trip} />);
+
+    await user.click(screen.getByRole("heading", { name: trip.name }));
+
+    expect(onDetailNavigate).toHaveBeenCalledOnce();
   });
 
   it("reserves the cover surface when the image fails", () => {
