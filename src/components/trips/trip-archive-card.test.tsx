@@ -31,7 +31,7 @@ describe("TripArchiveCard", () => {
     );
     expect(screen.getByRole("link", { name: trip.name })).toHaveAttribute(
       "aria-describedby",
-      "trip-archive-card-read-more-7",
+      "trip-card-7-read-more",
     );
     expect(screen.getByText("tripsArchive.readMore")).toHaveClass("sr-only");
 
@@ -101,5 +101,27 @@ describe("TripArchiveCard", () => {
     expect(container.querySelector(".aspect-video")).toBeInTheDocument();
     expect(container.querySelector("svg.lucide-tent-tree")).toBeInTheDocument();
     expect(container.querySelector("img")).not.toBeInTheDocument();
+  });
+  it.each([
+    { ctrlKey: true },
+    { metaKey: true },
+    { altKey: true },
+    { shiftKey: true },
+    { button: 1 },
+  ])("preserves browser navigation for modified and middle clicks (%o)", (options) => {
+    const onDetailNavigate = vi.fn();
+    render(<TripArchiveCard trip={trip} onDetailNavigate={onDetailNavigate} />);
+    fireEvent.click(screen.getByRole("link", { name: trip.name }), options);
+    expect(onDetailNavigate).not.toHaveBeenCalled();
+  });
+  it("does not store archive navigation when a parent prevents navigation", async () => {
+    const onDetailNavigate = vi.fn();
+    render(
+      <div onClickCapture={(event) => event.preventDefault()}>
+        <TripArchiveCard trip={trip} onDetailNavigate={onDetailNavigate} />
+      </div>,
+    );
+    await userEvent.setup().click(screen.getByRole("link", { name: trip.name }));
+    expect(onDetailNavigate).not.toHaveBeenCalled();
   });
 });

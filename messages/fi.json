@@ -50,7 +50,6 @@
     "description": "Vuokko ja Kalle tutustuivat toisiinsa vuonna 2017 ja yhteiseen matkaan on kuulunut aina jaettu intohimo luonnossa liikkumiseen.\n\nKäytyjä kansallispuistoja on keräilty jo tovi sähkökaapin oveen kiinnitettävien magneettien muodossa ja kaikenlaisilla muillakin metsäreiteillä on vierailtu aina mahdollisuuksien mukaan.\n\nKallen pitkä tausta ohjelmointialalla ja tekoälyavusteisen tekemisen harjoittelu synnytti Reissuvihkon: Nyt paikkakäynnit muistoineen ovat näppärästi dokumentoitu yhdelle sivustolle.\n\nTervetuloa seuraamaan meidän matkaa luonnon äärellä ja hakemaan vaikka inspiraatiota omiin retkiin!",
     "openMap": "Siirry kartalle",
     "backToStart": "Takaisin alkuun",
-    "showAll": "Näytä kaikki",
     "intro": {
       "showInfo": "Mistä on kyse?"
     },
@@ -64,28 +63,8 @@
         "summer": "Kesä",
         "autumn": "Syksy",
         "winter": "Talvi"
-      }
-    },
-    "mostVisitedParks": {
-      "title": "Eniten käydyt paikat",
-      "visitCount": "käyntiä",
-      "empty": "Ei vielä käyntitietoja.",
-      "showAllLabel": "Näytä kaikki paikat kartalla"
-    },
-    "recentVisits": {
-      "title": "Viimeisimmät käynnit",
-      "empty": "Ei vielä kirjattuja käyntejä.",
-      "showAllLabel": "Näytä kaikki käynnit"
-    },
-    "latestEntries": {
-      "title": "Uusimmat käyntikirjaukset",
-      "empty": "Ei vielä käyntikirjauksia.",
-      "showAllLabel": "Näytä kaikki käyntikirjaukset"
-    },
-    "latestTrips": {
-      "title": "Viimeisimmät retket",
-      "empty": "Ei vielä retkiä.",
-      "showAllLabel": "Näytä kaikki retket"
+      },
+      "magnetHunt": "Magneettijahti"
     },
     "social": {
       "sectionLabel": "Projektin linkit",
@@ -116,6 +95,16 @@
       "close": "Sulje",
       "saveAndClose": "Tallenna ja sulje",
       "results": "{count} kohdetta"
+    },
+    "featured": {
+      "latestTrip": "Viimeisin retki",
+      "latestVisit": "Viimeisin piipahdus",
+      "allTrips": "Kaikki retket",
+      "allVisits": "Kaikki käynnit",
+      "emptyTrip": "Ei vielä julkaistuja retkiä.",
+      "emptyVisit": "Ei vielä retkettömiä käyntejä.",
+      "notePlaceholder": "Tältä käynniltä ei ole vielä muistiinpanoja.",
+      "readVisit": "Lue käynnistä lisää"
     }
   },
   "park": {

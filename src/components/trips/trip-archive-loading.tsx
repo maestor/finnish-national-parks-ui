@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import {
+  PUBLIC_CONTENT_PANEL_CLASS_NAME,
   PUBLIC_EYEBROW_BADGE_CLASS_NAME,
   PUBLIC_HERO_DESCRIPTION_CLASS_NAME,
   PUBLIC_PAGE_SHELL_CLASS_NAME,
@@ -16,7 +17,11 @@ export const TripArchiveLoading = async () => {
         <div className="mt-4 h-10 w-48 animate-pulse rounded-xl bg-muted motion-reduce:animate-none" />
         <p className={`${PUBLIC_HERO_DESCRIPTION_CLASS_NAME} mt-3`}>{t("loading")}</p>
       </section>
-      <section className={PUBLIC_PANEL_CLASS_NAME} aria-label={t("listLabel")} aria-busy="true">
+      <section
+        className={PUBLIC_CONTENT_PANEL_CLASS_NAME}
+        aria-label={t("listLabel")}
+        aria-busy="true"
+      >
         <p role="status" className="text-sm text-muted-foreground">
           {t("loading")}
         </p>

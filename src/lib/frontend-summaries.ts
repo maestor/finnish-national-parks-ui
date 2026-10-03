@@ -6,15 +6,9 @@ import {
   isHikingAndWildernessAreaTypeSlug,
   TRAILS_AND_ROUTES_CATEGORY_SLUG,
 } from "./park-type-filters";
-import type {
-  FilterableMapPark,
-  ParkCategorySlug,
-  ParkDetail,
-  ParkTypeSlug,
-  ParkVisits,
-  VisitWithPark,
-} from "./parks";
+import type { FilterableMapPark, ParkDetail, ParkVisits } from "./parks";
 import { getPublicParkTag, HOME_SUMMARY_TAG, MAP_SUMMARY_TAG } from "./public-cache";
+import { appRoutes } from "./routes";
 
 export type HomeSummary =
   paths["/api/home-summary"]["get"]["responses"][200]["content"]["application/json"];
@@ -30,39 +24,8 @@ export interface HomeProgressItem {
   label: string;
   visited: number;
   total: number;
-  mapFilter?: "all" | ParkTypeSlug | ParkCategorySlug;
-  mapVisitStatus?: "visited" | "not-visited";
+  href: string;
 }
-
-export interface HomeMostVisitedPark {
-  parkName: string;
-  parkSlug: string;
-  visitCount: number;
-}
-
-export interface HomeRecentVisitItem {
-  id?: number;
-  parkName: string;
-  parkSlug: string;
-  visitedOn: string | null;
-}
-
-export interface HomeLatestVisitEntryItem {
-  id?: number;
-  parkName: string;
-  parkSlug: string;
-  createdAt: string;
-}
-
-export interface HomeLatestTripItem {
-  tripName: string;
-  tripSlug: string;
-  startDate: string | null;
-}
-
-const HOME_VISIT_LIST_ITEM_LIMIT = 10;
-const getSummaryItems = <Item>(items: Item[] | null | undefined): Item[] =>
-  Array.isArray(items) ? items : [];
 
 export const fetchHomeSummary = async (): Promise<HomeSummary> =>
   apiPublicFetch<HomeSummary>("/api/home-summary", {
@@ -107,9 +70,10 @@ export const fetchPublicParkVisits = async (slug: string): Promise<ParkVisits> =
 export const createHomeProgressItems = (
   summary: HomeSummary,
   allParksLabel: string,
+  magnetHuntLabel: string,
 ): HomeProgressItem[] => {
-  const progressByType = getSummaryItems(summary.progressByType);
-  const progressByCategory = getSummaryItems(summary.progressByCategory);
+  const progressByType = summary.progressByType;
+  const progressByCategory = summary.progressByCategory;
 
   const visibleTypeItems = progressByType
     .filter((item) => item.visible && !isHikingAndWildernessAreaTypeSlug(item.type.slug))
@@ -145,94 +109,31 @@ export const createHomeProgressItems = (
   ]
     .map((item) => ({
       ...item,
-      sortIndex: getParkFilterSortIndex(item.mapFilter ?? ""),
+      sortIndex: getParkFilterSortIndex(item.mapFilter),
     }))
-    .sort((left, right) => {
-      if (left.sortIndex !== right.sortIndex) {
-        return left.sortIndex - right.sortIndex;
-      }
-
-      return left.label.localeCompare(right.label, "fi-FI");
-    })
+    .sort((left, right) => left.sortIndex - right.sortIndex)
     .map(({ sortIndex: _sortIndex, ...item }) => item);
 
-  if (progressItems.length === 0) {
-    return [];
-  }
-
-  const totalParks =
-    progressByCategory.length > 0
-      ? progressByCategory.reduce((sum, item) => sum + item.totalParks, 0)
-      : progressByType.reduce((sum, item) => sum + item.totalParks, 0);
+  const totalParks = progressByCategory.reduce((sum, item) => sum + item.totalParks, 0);
 
   return [
     {
       label: allParksLabel,
       visited: summary.uniqueVisitedParks,
       total: totalParks,
-      mapFilter: "all",
-      mapVisitStatus: "visited",
+      href: `${appRoutes.parks}?filter=all&visitStatus=visited`,
+    },
+    {
+      label: magnetHuntLabel,
+      visited: summary.magnetProgress.visitedParks,
+      total: summary.magnetProgress.totalParks,
+      href: `${appRoutes.visits}?view=parks`,
     },
     ...progressItems.map((item) => ({
-      ...item,
-      mapVisitStatus: "visited" as const,
+      label: item.label,
+      visited: item.visited,
+      total: item.total,
+      href: `${appRoutes.parks}?filter=${item.mapFilter}&visitStatus=visited`,
     })),
   ];
 };
-
-export const createHomeMostVisitedParks = (summary: HomeSummary): HomeMostVisitedPark[] =>
-  getSummaryItems(summary.mostVisitedParks).map((park) => ({
-    parkName: park.park.name,
-    parkSlug: park.park.slug,
-    visitCount: park.visitCount,
-  }));
-
-export const createHomeRecentVisitsFromSummary = (summary: HomeSummary): HomeRecentVisitItem[] =>
-  getSummaryItems(summary.recentVisits).map((visit) => ({
-    parkName: visit.park.name,
-    parkSlug: visit.park.slug,
-    visitedOn: visit.visitedSummary.lastVisitedOn,
-  }));
-
-export const createHomeLatestVisitEntriesFromSummary = (
-  summary: HomeSummary,
-): HomeLatestVisitEntryItem[] =>
-  getSummaryItems(summary.latestVisitEntries).map((visit) => ({
-    id: visit.id,
-    parkName: visit.park.name,
-    parkSlug: visit.park.slug,
-    createdAt: visit.createdAt,
-  }));
-
-export const createHomeLatestTripsFromSummary = (summary: HomeSummary): HomeLatestTripItem[] =>
-  getSummaryItems(summary.latestTrips).map((trip) => ({
-    tripName: trip.name,
-    tripSlug: trip.slug,
-    startDate: trip.startDate,
-  }));
-
-export const createHomeRecentVisitsFromVisitList = (
-  visits: VisitWithPark[],
-): HomeRecentVisitItem[] =>
-  [...visits]
-    .sort((left, right) => right.visitedOn.localeCompare(left.visitedOn))
-    .slice(0, HOME_VISIT_LIST_ITEM_LIMIT)
-    .map((visit) => ({
-      id: visit.id,
-      parkName: visit.park.name,
-      parkSlug: visit.park.slug,
-      visitedOn: visit.visitedOn,
-    }));
-
-export const createHomeLatestVisitEntriesFromVisitList = (
-  visits: VisitWithPark[],
-): HomeLatestVisitEntryItem[] =>
-  [...visits]
-    .sort((left, right) => right.createdAt.localeCompare(left.createdAt))
-    .slice(0, HOME_VISIT_LIST_ITEM_LIMIT)
-    .map((visit) => ({
-      id: visit.id,
-      parkName: visit.park.name,
-      parkSlug: visit.park.slug,
-      createdAt: visit.createdAt,
-    }));

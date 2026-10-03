@@ -2,13 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { apiFetch, apiPublicFetch } from "./api";
 import type { HomeSummary } from "./frontend-summaries";
 import {
-  createHomeLatestTripsFromSummary,
-  createHomeLatestVisitEntriesFromSummary,
-  createHomeLatestVisitEntriesFromVisitList,
-  createHomeMostVisitedParks,
   createHomeProgressItems,
-  createHomeRecentVisitsFromSummary,
-  createHomeRecentVisitsFromVisitList,
   fetchHomeSummary,
   fetchMapSummary,
   fetchPublicParkDetail,
@@ -33,99 +27,75 @@ const buildSummary = (): HomeSummary => ({
   progressByType: [
     {
       type: {
-        code: 6,
-        id: 6,
         name: "Luontopolut",
         slug: "nature-trail",
       },
       visible: false,
       visitedParks: 1,
       totalParks: 7,
-      totalVisits: 1,
     },
     {
       type: {
-        code: 4,
-        id: 4,
         name: "Muut LS-alueet",
         slug: "nature-reserve-area",
       },
       visible: false,
       visitedParks: 2,
       totalParks: 4,
-      totalVisits: 3,
     },
     {
       type: {
-        code: 1,
-        id: 1,
         name: "Kansallispuistot",
         slug: "national-park",
       },
       visible: true,
       visitedParks: 3,
       totalParks: 8,
-      totalVisits: 6,
     },
     {
       type: {
-        code: 5,
-        id: 5,
         name: "Virkistysalueet",
         slug: "outdoor-recreation-area",
       },
       visible: true,
       visitedParks: 0,
       totalParks: 2,
-      totalVisits: 0,
     },
     {
       type: {
-        code: 9001,
-        id: 9001,
         name: "Historia-alue",
         slug: "cultural-history-area",
       },
       visible: true,
       visitedParks: 1,
       totalParks: 1,
-      totalVisits: 2,
     },
     {
       type: {
-        code: 3,
-        id: 3,
         name: "Erämaa-alueet",
         slug: "wilderness-area",
       },
       visible: true,
       visitedParks: 1,
       totalParks: 6,
-      totalVisits: 1,
     },
     {
       type: {
-        code: 2,
-        id: 2,
         name: "Retkeilyalueet",
         slug: "hiking-area",
       },
       visible: true,
       visitedParks: 1,
       totalParks: 3,
-      totalVisits: 1,
     },
     {
       type: {
-        code: 7,
-        id: 7,
         name: "Vaellusreitit",
         slug: "hiking-trail",
       },
       visible: false,
       visitedParks: 1,
       totalParks: 5,
-      totalVisits: 2,
     },
   ],
   progressByCategory: [
@@ -136,7 +106,6 @@ const buildSummary = (): HomeSummary => ({
       },
       visitedParks: 3,
       totalParks: 8,
-      totalVisits: 6,
     },
     {
       category: {
@@ -145,7 +114,6 @@ const buildSummary = (): HomeSummary => ({
       },
       visitedParks: 2,
       totalParks: 9,
-      totalVisits: 2,
     },
     {
       category: {
@@ -154,7 +122,6 @@ const buildSummary = (): HomeSummary => ({
       },
       visitedParks: 2,
       totalParks: 4,
-      totalVisits: 3,
     },
     {
       category: {
@@ -163,7 +130,6 @@ const buildSummary = (): HomeSummary => ({
       },
       visitedParks: 0,
       totalParks: 2,
-      totalVisits: 0,
     },
     {
       category: {
@@ -172,7 +138,6 @@ const buildSummary = (): HomeSummary => ({
       },
       visitedParks: 1,
       totalParks: 1,
-      totalVisits: 2,
     },
     {
       category: {
@@ -181,13 +146,11 @@ const buildSummary = (): HomeSummary => ({
       },
       visitedParks: 2,
       totalParks: 12,
-      totalVisits: 3,
     },
   ],
-  mostVisitedParks: [],
-  recentVisits: [],
-  latestVisitEntries: [],
-  latestTrips: [],
+  latestTrip: null,
+  latestStandaloneVisit: null,
+  magnetProgress: { visitedParks: 3, totalParks: 8 },
   updatedAt: "2024-06-15T12:00:00.000Z",
   version: 1,
 });
@@ -198,23 +161,28 @@ describe("createHomeProgressItems", () => {
   });
 
   it("shows the combined hiking and wilderness category on the home page", () => {
-    const progressItems = createHomeProgressItems(buildSummary(), "Kaikki paikat");
+    const progressItems = createHomeProgressItems(
+      buildSummary(),
+      "Kaikki paikat",
+      "Magneettijahti",
+    );
 
     expect(progressItems.map((item) => item.label)).toEqual([
       "Kaikki paikat",
+      "Magneettijahti",
       "Kansallispuistot",
       "Erämaa-/retkeilyalue",
       "Virkistysalueet",
       "Historia-alue",
       "Polut ja reitit",
     ]);
-    expect(progressItems[0]?.mapFilter).toBe("all");
-    expect(progressItems[0]?.mapVisitStatus).toBe("visited");
-    expect(progressItems[1]?.mapFilter).toBe("national-park");
-    expect(progressItems[1]?.mapVisitStatus).toBe("visited");
-    expect(progressItems[2]?.mapFilter).toBe("hiking-and-wilderness-areas");
-    expect(progressItems[4]?.mapFilter).toBe("cultural-history-area");
-    expect(progressItems[5]?.mapFilter).toBe("trails-and-routes");
+    expect(progressItems[0]?.href).toBe("/paikat?filter=all&visitStatus=visited");
+    expect(progressItems[2]?.href).toBe("/paikat?filter=national-park&visitStatus=visited");
+    expect(progressItems[3]?.href).toBe(
+      "/paikat?filter=hiking-and-wilderness-areas&visitStatus=visited",
+    );
+    expect(progressItems[5]?.href).toBe("/paikat?filter=cultural-history-area&visitStatus=visited");
+    expect(progressItems[6]?.href).toBe("/paikat?filter=trails-and-routes&visitStatus=visited");
     expect(progressItems[0]?.total).toBe(36);
   });
 
@@ -222,222 +190,44 @@ describe("createHomeProgressItems", () => {
     const summary = buildSummary();
     summary.progressByType = [];
 
-    expect(createHomeProgressItems(summary, "Kaikki paikat")).toEqual([
+    expect(createHomeProgressItems(summary, "Kaikki paikat", "Magneettijahti")).toEqual([
       {
         label: "Kaikki paikat",
         visited: 5,
         total: 36,
-        mapFilter: "all",
-        mapVisitStatus: "visited",
+        href: "/paikat?filter=all&visitStatus=visited",
       },
+      { label: "Magneettijahti", visited: 3, total: 8, href: "/kaynnit?view=parks" },
       {
         label: "Erämaa-/retkeilyalue",
         visited: 2,
         total: 9,
-        mapFilter: "hiking-and-wilderness-areas",
-        mapVisitStatus: "visited",
+        href: "/paikat?filter=hiking-and-wilderness-areas&visitStatus=visited",
       },
       {
         label: "Polut ja reitit",
         visited: 2,
         total: 12,
-        mapFilter: "trails-and-routes",
-        mapVisitStatus: "visited",
+        href: "/paikat?filter=trails-and-routes&visitStatus=visited",
       },
     ]);
   });
 
-  it("returns an empty list when neither typed nor category progress is available", () => {
+  it("keeps all-places and magnet rows when the catalog is empty", () => {
     const summary = buildSummary();
     summary.progressByType = [];
     summary.progressByCategory = [];
+    summary.uniqueVisitedParks = 0;
+    summary.magnetProgress = { totalParks: 0, visitedParks: 0 };
 
-    expect(createHomeProgressItems(summary, "Kaikki paikat")).toEqual([]);
-  });
-
-  it("falls back to type totals when category progress is missing", () => {
-    const summary = buildSummary();
-    summary.progressByCategory = [];
-
-    const progressItems = createHomeProgressItems(summary, "Kaikki paikat");
-
-    expect(progressItems[0]).toEqual({
-      label: "Kaikki paikat",
-      visited: 5,
-      total: 36,
-      mapFilter: "all",
-      mapVisitStatus: "visited",
-    });
-  });
-
-  it("maps most-visited parks to home card items", () => {
-    const summary = buildSummary();
-    summary.mostVisitedParks = [
+    expect(createHomeProgressItems(summary, "Kaikki paikat", "Magneettijahti")).toEqual([
       {
-        park: {
-          name: "Pallas",
-          slug: "pallas",
-        },
-        lastVisitedOn: "2024-06-16",
-        visitCount: 3,
+        label: "Kaikki paikat",
+        visited: 0,
+        total: 0,
+        href: "/paikat?filter=all&visitStatus=visited",
       },
-    ];
-
-    expect(createHomeMostVisitedParks(summary)).toEqual([
-      {
-        parkName: "Pallas",
-        parkSlug: "pallas",
-        visitCount: 3,
-      },
-    ]);
-  });
-
-  it("keeps the backend-provided latest visit entry order without extra sorting or truncation", () => {
-    const summary = buildSummary();
-    summary.latestVisitEntries = Array.from({ length: 12 }, (_, index) => ({
-      id: index + 1,
-      createdAt: `2024-06-${String(index + 10).padStart(2, "0")}T10:00:00.000Z`,
-      updatedAt: `2024-06-${String(index + 10).padStart(2, "0")}T10:00:00.000Z`,
-      visitedOn: `2024-06-${String(index + 10).padStart(2, "0")}`,
-      park: {
-        name: `Park ${index + 1}`,
-        slug: `park-${index + 1}`,
-      },
-    }));
-
-    const latestVisitEntries = createHomeLatestVisitEntriesFromSummary(summary);
-
-    expect(latestVisitEntries).toHaveLength(12);
-    expect(latestVisitEntries.map((visit) => visit.parkSlug)).toEqual([
-      "park-1",
-      "park-2",
-      "park-3",
-      "park-4",
-      "park-5",
-      "park-6",
-      "park-7",
-      "park-8",
-      "park-9",
-      "park-10",
-      "park-11",
-      "park-12",
-    ]);
-  });
-
-  it("keeps the backend-provided recent visit order without extra truncation", () => {
-    const summary = buildSummary();
-    summary.recentVisits = Array.from({ length: 12 }, (_, index) => ({
-      park: {
-        name: `Park ${index + 1}`,
-        slug: `park-${index + 1}`,
-      },
-      visitedSummary: {
-        lastVisitedOn: `2024-06-${String(index + 10).padStart(2, "0")}`,
-        visitCount: index + 1,
-        visited: true,
-      },
-    }));
-
-    const recentVisits = createHomeRecentVisitsFromSummary(summary);
-
-    expect(recentVisits).toHaveLength(12);
-    expect(recentVisits.map((visit) => visit.parkSlug)).toEqual([
-      "park-1",
-      "park-2",
-      "park-3",
-      "park-4",
-      "park-5",
-      "park-6",
-      "park-7",
-      "park-8",
-      "park-9",
-      "park-10",
-      "park-11",
-      "park-12",
-    ]);
-  });
-
-  it("maps latest trips from the home summary", () => {
-    const summary = buildSummary();
-    summary.latestTrips = [
-      {
-        name: "Keski-Suomen kesaretki",
-        slug: "keski-suomen-kesaretki",
-        startDate: "2024-07-20",
-      },
-      {
-        name: "Lapin ruska",
-        slug: "lapin-ruska",
-        startDate: "2024-09-14",
-      },
-    ];
-
-    expect(createHomeLatestTripsFromSummary(summary)).toEqual([
-      {
-        tripName: "Keski-Suomen kesaretki",
-        tripSlug: "keski-suomen-kesaretki",
-        startDate: "2024-07-20",
-      },
-      {
-        tripName: "Lapin ruska",
-        tripSlug: "lapin-ruska",
-        startDate: "2024-09-14",
-      },
-    ]);
-  });
-
-  it("falls back to empty home summary arrays when a stale cached response is missing newer fields", () => {
-    const staleSummary = {
-      ...buildSummary(),
-      latestTrips: undefined,
-      latestVisitEntries: undefined,
-      mostVisitedParks: undefined,
-      recentVisits: undefined,
-    } as unknown as HomeSummary;
-
-    expect(createHomeMostVisitedParks(staleSummary)).toEqual([]);
-    expect(createHomeRecentVisitsFromSummary(staleSummary)).toEqual([]);
-    expect(createHomeLatestVisitEntriesFromSummary(staleSummary)).toEqual([]);
-    expect(createHomeLatestTripsFromSummary(staleSummary)).toEqual([]);
-  });
-
-  it("sorts recent visits from the visit list by newest visited date", () => {
-    expect(
-      createHomeRecentVisitsFromVisitList([
-        {
-          id: 2,
-          createdAt: "2024-06-15T10:00:00.000Z",
-          updatedAt: "2024-06-15T10:00:00.000Z",
-          visitedOn: "2024-06-15",
-          park: {
-            name: "Nuuksio",
-            slug: "nuuksio",
-          },
-        },
-        {
-          id: 1,
-          createdAt: "2024-06-14T10:00:00.000Z",
-          updatedAt: "2024-06-14T10:00:00.000Z",
-          visitedOn: "2024-06-16",
-          park: {
-            name: "Pallas",
-            slug: "pallas",
-          },
-        },
-      ] as never),
-    ).toEqual([
-      {
-        id: 1,
-        parkName: "Pallas",
-        parkSlug: "pallas",
-        visitedOn: "2024-06-16",
-      },
-      {
-        id: 2,
-        parkName: "Nuuksio",
-        parkSlug: "nuuksio",
-        visitedOn: "2024-06-15",
-      },
+      { label: "Magneettijahti", visited: 0, total: 0, href: "/kaynnit?view=parks" },
     ]);
   });
 
@@ -465,46 +255,6 @@ describe("createHomeProgressItems", () => {
         tags: [getPublicParkTag("riisitunturi")],
       },
     });
-  });
-
-  it("sorts latest visit entries from the visit list by newest creation time", () => {
-    expect(
-      createHomeLatestVisitEntriesFromVisitList([
-        {
-          id: 2,
-          createdAt: "2024-06-15T10:00:00.000Z",
-          updatedAt: "2024-06-15T10:00:00.000Z",
-          visitedOn: "2024-06-15",
-          park: {
-            name: "Nuuksio",
-            slug: "nuuksio",
-          },
-        },
-        {
-          id: 1,
-          createdAt: "2024-06-16T10:00:00.000Z",
-          updatedAt: "2024-06-16T10:00:00.000Z",
-          visitedOn: "2024-06-14",
-          park: {
-            name: "Pallas",
-            slug: "pallas",
-          },
-        },
-      ] as never),
-    ).toEqual([
-      {
-        id: 1,
-        parkName: "Pallas",
-        parkSlug: "pallas",
-        createdAt: "2024-06-16T10:00:00.000Z",
-      },
-      {
-        id: 2,
-        parkName: "Nuuksio",
-        parkSlug: "nuuksio",
-        createdAt: "2024-06-15T10:00:00.000Z",
-      },
-    ]);
   });
 
   it("fetches the home summary through the cacheable API client", async () => {

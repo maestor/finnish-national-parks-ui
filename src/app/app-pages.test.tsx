@@ -260,81 +260,6 @@ vi.mock("@/hooks/use-auth", () => ({
     user: null,
   }),
 }));
-vi.mock("@/components/dashboard/home-visit-stats", () => ({
-  HomeVisitStats: ({
-    totalVisits,
-    progressItems,
-  }: {
-    totalVisits: number;
-    progressItems: { label: string; visited: number; total: number }[];
-  }) => (
-    <div data-testid="home-visit-stats">
-      total:{totalVisits}|items:{progressItems.length}|first:{progressItems[0]?.label ?? "none"}
-    </div>
-  ),
-}));
-
-vi.mock("@/components/dashboard/most-visited-parks", () => ({
-  MostVisitedParks: ({
-    parks,
-  }: {
-    parks: { parkName: string; parkSlug: string; visitCount: number }[];
-  }) => (
-    <div data-testid="most-visited-parks">
-      parks:{parks.length}|top:{parks[0] ? `${parks[0].parkName}:${parks[0].visitCount}` : "none"}
-    </div>
-  ),
-}));
-
-vi.mock("@/components/dashboard/recent-visits", () => ({
-  RecentVisits: ({
-    visits,
-    showEditLinks,
-  }: {
-    visits: { id?: number; parkName: string; parkSlug: string; visitedOn: string | null }[];
-    showEditLinks?: boolean;
-  }) => (
-    <div data-testid="recent-visits">
-      visits:{visits.length}|edit:{String(showEditLinks)}
-    </div>
-  ),
-}));
-
-vi.mock("@/components/dashboard/latest-visit-entries", () => ({
-  LatestVisitEntries: ({
-    visits,
-    showEditLinks,
-  }: {
-    visits: { id?: number; parkName: string; parkSlug: string; createdAt: string }[];
-    showEditLinks?: boolean;
-  }) => (
-    <div data-testid="latest-visit-entries">
-      visits:{visits.length}|edit:{String(showEditLinks)}
-    </div>
-  ),
-}));
-
-vi.mock("@/components/home/home-summary-panels", () => ({
-  HomeSummaryPanels: ({
-    fallbackRecentVisits,
-    fallbackLatestVisitEntries,
-    fallbackMostVisitedParks,
-    fallbackLatestTrips,
-    backToStartLabel,
-  }: {
-    fallbackRecentVisits: { parkName: string }[];
-    fallbackLatestVisitEntries: { parkName: string }[];
-    fallbackMostVisitedParks: { parkName: string }[];
-    fallbackLatestTrips: { tripName: string }[];
-    backToStartLabel: string;
-  }) => (
-    <div data-testid="home-summary-panels">
-      recent:{fallbackRecentVisits.length}|latest:{fallbackLatestVisitEntries.length}|parks:
-      {fallbackMostVisitedParks.length}|trips:{fallbackLatestTrips.length}|back:{backToStartLabel}
-    </div>
-  ),
-}));
-
 vi.mock("@/components/home/home-intro", () => ({
   HomeIntro: ({
     title,
@@ -924,15 +849,14 @@ describe("App pages", () => {
     });
   });
 
-  it("renders the root page with visit statistics and authenticated edit affordances", async () => {
+  it("renders the root page with statistics, featured memories and canonical links", async () => {
     vi.mocked(apiPublicFetch).mockResolvedValueOnce({
       totalVisits: 1,
       uniqueVisitedParks: 1,
       progressByType: [
         {
           totalParks: 1,
-          totalVisits: 1,
-          type: publicPark.type,
+          type: { name: publicPark.type.name, slug: publicPark.type.slug },
           visible: true,
           visitedParks: 1,
         },
@@ -941,43 +865,29 @@ describe("App pages", () => {
         {
           category: publicPark.category,
           totalParks: 1,
-          totalVisits: 1,
           visitedParks: 1,
         },
       ],
-      mostVisitedParks: [
-        {
-          lastVisitedOn: "2024-06-15",
-          park: visitWithPark.park,
-          visitCount: 1,
-        },
-      ],
-      recentVisits: [
-        {
-          park: visitWithPark.park,
-          visitedSummary: {
-            visited: true,
-            visitCount: 1,
-            lastVisitedOn: "2024-06-15",
-          },
-        },
-      ],
-      latestVisitEntries: [
-        {
-          id: visitWithPark.id,
-          park: visitWithPark.park,
-          visitedOn: visitWithPark.visitedOn,
-          createdAt: visitWithPark.createdAt,
-          updatedAt: visitWithPark.updatedAt,
-        },
-      ],
-      latestTrips: [
-        {
-          name: "Keski-Suomen kesaretki",
-          slug: "keski-suomen-kesaretki",
-          startDate: "2024-07-20",
-        },
-      ],
+      latestTrip: {
+        id: 1,
+        name: "Keski-Suomen kesaretki",
+        slug: "keski-suomen-kesaretki",
+        dateRange: { start: "2024-07-20", end: "2024-07-20" },
+        visitCount: 1,
+        stopCount: 0,
+        descriptionExcerpt: null,
+        featuredImage: null,
+      },
+      latestStandaloneVisit: {
+        id: visitWithPark.id,
+        park: visitWithPark.park,
+        visitedOn: visitWithPark.visitedOn,
+        descriptionExcerpt: "Retkimuisto",
+        featuredImage: null,
+        imageCount: 0,
+      },
+      magnetProgress: { visitedParks: 1, totalParks: 1 },
+      seasonalVisitCounts: { spring: 0, summer: 1, autumn: 0, winter: 0 },
       updatedAt: visitWithPark.updatedAt,
       version: 3,
     });
@@ -999,11 +909,23 @@ describe("App pages", () => {
     expect(screen.getByTestId("home-about-section")).toHaveTextContent(
       "title:home.aboutTitle|paragraphs:1|back:home.backToStart",
     );
-    expect(screen.getByTestId("home-visit-stats")).toHaveTextContent(
-      "total:1|items:2|first:home.statistics.allParks",
+    expect(
+      screen.getByRole("heading", { name: "home.statistics.title", level: 2 }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "home.featured.latestTrip", level: 3 }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Keski-Suomen kesaretki" })).toHaveAttribute(
+      "href",
+      "/retki/keski-suomen-kesaretki",
     );
-    expect(screen.getByTestId("home-summary-panels")).toHaveTextContent(
-      "recent:1|latest:1|parks:1|trips:1|back:home.backToStart",
+    expect(screen.getByRole("link", { name: visitWithPark.park.name })).toHaveAttribute(
+      "href",
+      `/paikka/${visitWithPark.park.slug}?visit=${visitWithPark.id}#visit-history`,
+    );
+    expect(screen.getByRole("link", { name: /home.statistics.magnetHunt/ })).toHaveAttribute(
+      "href",
+      "/kaynnit?view=parks",
     );
     expect(screen.getByTestId("home-social-links")).toHaveTextContent(
       "linkedin:home.social.linkedin|ui:home.social.githubUi|api:home.social.githubApi|copyright:home.social.copyright",
@@ -1013,9 +935,35 @@ describe("App pages", () => {
     );
     expect(
       screen
-        .getByTestId("home-summary-panels")
+        .getByRole("heading", { name: "home.statistics.title" })
         .compareDocumentPosition(screen.getByTestId("home-about-section")),
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it("keeps summaries, archive links and zero progress when the public catalog has no memories", async () => {
+    vi.mocked(apiPublicFetch).mockResolvedValueOnce({
+      totalVisits: 0,
+      uniqueVisitedParks: 0,
+      progressByType: [],
+      progressByCategory: [],
+      seasonalVisitCounts: { spring: 0, summer: 0, autumn: 0, winter: 0 },
+      latestTrip: null,
+      latestStandaloneVisit: null,
+      magnetProgress: { totalParks: 0, visitedParks: 0 },
+      version: 0,
+      updatedAt: null,
+    });
+    await renderPublicRoute(await HomePage());
+    expect(
+      screen.getByRole("heading", { name: "home.statistics.title", level: 2 }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("home.featured.emptyTrip")).toBeInTheDocument();
+    expect(screen.getByText("home.featured.emptyVisit")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "home.featured.allTrips" })).toHaveAttribute(
+      "href",
+      "/retket",
+    );
+    expect(screen.getAllByText("0 / 0")).toHaveLength(2);
   });
 
   it("renders the parks map page from the map summary endpoint", async () => {
@@ -1046,10 +994,10 @@ describe("App pages", () => {
         uniqueVisitedParks: 0,
         progressByType: [],
         progressByCategory: [],
-        mostVisitedParks: [],
-        recentVisits: [],
-        latestVisitEntries: [],
-        latestTrips: [],
+        latestTrip: null,
+        latestStandaloneVisit: null,
+        magnetProgress: { totalParks: 0, visitedParks: 0 },
+        seasonalVisitCounts: { spring: 0, summer: 0, autumn: 0, winter: 0 },
         updatedAt: "2024-06-15T12:00:00.000Z",
         version: 1,
       })
@@ -1204,10 +1152,10 @@ describe("App pages", () => {
         uniqueVisitedParks: 0,
         progressByType: [],
         progressByCategory: [],
-        mostVisitedParks: [],
-        recentVisits: [],
-        latestVisitEntries: [],
-        latestTrips: [],
+        latestTrip: null,
+        latestStandaloneVisit: null,
+        magnetProgress: { totalParks: 0, visitedParks: 0 },
+        seasonalVisitCounts: { spring: 0, summer: 0, autumn: 0, winter: 0 },
         updatedAt: visitWithPark.updatedAt,
         version: 3,
       })

@@ -3,6 +3,7 @@
 import { TentTree } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
+  PUBLIC_CONTENT_PANEL_CLASS_NAME,
   PUBLIC_EYEBROW_BADGE_CLASS_NAME,
   PUBLIC_HERO_DESCRIPTION_CLASS_NAME,
   PUBLIC_HERO_HEADING_STACK_CLASS_NAME,
@@ -33,7 +34,10 @@ export const TripArchivePage = ({ initialResponse }: TripArchivePageProps) => {
         </div>
       </section>
 
-      <section className={PUBLIC_PANEL_CLASS_NAME} aria-labelledby="trip-archive-list-title">
+      <section
+        className={PUBLIC_CONTENT_PANEL_CLASS_NAME}
+        aria-labelledby="trip-archive-list-title"
+      >
         <h2 id="trip-archive-list-title" className="sr-only">
           {t("listLabel")}
         </h2>
