@@ -1,11 +1,31 @@
 import { render, screen } from "@testing-library/react";
+import type { ComponentProps } from "react";
 import { describe, expect, it } from "vitest";
 import { HomeVisitStats } from "./home-visit-stats";
+
+const Stats = (
+  props: Partial<ComponentProps<typeof HomeVisitStats>> &
+    Pick<
+      ComponentProps<typeof HomeVisitStats>,
+      "sectionTitle" | "totalVisitsLabel" | "totalVisits" | "backToStartLabel" | "progressItems"
+    >,
+) => (
+  <HomeVisitStats
+    featuredMemories={null}
+    seasonalVisitsLabel="Käynnit kausittain"
+    seasonalVisits={{ spring: 0, summer: 0, autumn: 0, winter: 0 }}
+    springLabel="Kevät"
+    summerLabel="Kesä"
+    autumnLabel="Syksy"
+    winterLabel="Talvi"
+    {...props}
+  />
+);
 
 describe("HomeVisitStats", () => {
   it("renders the total visits card and progress bars", () => {
     render(
-      <HomeVisitStats
+      <Stats
         sectionTitle="Käynnit"
         totalVisitsLabel="Käyntejä yhteensä"
         totalVisits={12}
@@ -15,15 +35,13 @@ describe("HomeVisitStats", () => {
             label: "Kaikki puistot",
             visited: 5,
             total: 10,
-            mapFilter: "all",
-            mapVisitStatus: "visited",
+            href: "/paikat?filter=all&visitStatus=visited",
           },
           {
             label: "Kansallispuistot",
             visited: 3,
             total: 8,
-            mapFilter: "national-park",
-            mapVisitStatus: "visited",
+            href: "/paikat?filter=national-park&visitStatus=visited",
           },
         ]}
       />,
@@ -50,12 +68,19 @@ describe("HomeVisitStats", () => {
 
   it("renders the seasonal visits card when seasonal data is provided", () => {
     render(
-      <HomeVisitStats
+      <Stats
         sectionTitle="Käynnit"
         totalVisitsLabel="Käyntejä yhteensä"
         totalVisits={85}
         backToStartLabel="Takaisin alkuun"
-        progressItems={[{ label: "Kaikki puistot", visited: 5, total: 10 }]}
+        progressItems={[
+          {
+            label: "Kaikki puistot",
+            visited: 5,
+            total: 10,
+            href: "/paikat?filter=all&visitStatus=visited",
+          },
+        ]}
         seasonalVisitsLabel="Käynnit kausittain"
         seasonalVisits={{ spring: 27, summer: 37, autumn: 16, winter: 5 }}
         springLabel="Kevät"
@@ -76,23 +101,9 @@ describe("HomeVisitStats", () => {
     expect(screen.getByLabelText("Talvi")).toBeInTheDocument();
   });
 
-  it("does not render seasonal visits card when seasonal data is missing", () => {
+  it("keeps the summary visible when there are no progress items", () => {
     render(
-      <HomeVisitStats
-        sectionTitle="Käynnit"
-        totalVisitsLabel="Käyntejä yhteensä"
-        totalVisits={12}
-        backToStartLabel="Takaisin alkuun"
-        progressItems={[{ label: "Kaikki puistot", visited: 5, total: 10 }]}
-      />,
-    );
-
-    expect(screen.queryByText("Käynnit kausittain")).not.toBeInTheDocument();
-  });
-
-  it("renders nothing when there are no progress items", () => {
-    const { container } = render(
-      <HomeVisitStats
+      <Stats
         sectionTitle="Käynnit"
         totalVisitsLabel="Käyntejä yhteensä"
         totalVisits={0}
@@ -101,20 +112,28 @@ describe("HomeVisitStats", () => {
       />,
     );
 
-    expect(container.firstChild).toBeNull();
+    expect(screen.getByRole("heading", { name: "Käynnit", level: 2 })).toBeInTheDocument();
+    expect(screen.getByText("Käyntejä yhteensä")).toBeInTheDocument();
   });
 
   it("renders zero-progress items without dividing by zero", () => {
-    render(
-      <HomeVisitStats
+    const { container } = render(
+      <Stats
         sectionTitle="Käynnit"
         totalVisitsLabel="Käyntejä yhteensä"
         totalVisits={0}
         backToStartLabel="Takaisin alkuun"
-        progressItems={[{ label: "Kaikki puistot", visited: 0, total: 0 }]}
+        progressItems={[
+          { label: "Magneettijahti", visited: 0, total: 0, href: "/kaynnit?view=parks" },
+        ]}
       />,
     );
 
     expect(screen.getByText("0 / 0")).toBeInTheDocument();
+    expect(container.querySelector("[style]")).toHaveStyle({ width: "0%" });
+    expect(screen.getByRole("link", { name: /Magneettijahti/ })).toHaveAttribute(
+      "href",
+      "/kaynnit?view=parks",
+    );
   });
 });

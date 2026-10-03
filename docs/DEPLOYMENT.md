@@ -49,6 +49,12 @@ The wildcard robots rule already allows `OAI-SearchBot` on public pages. OpenAI 
 - The OAuth start and callback routes are proxied through the frontend host so the session cookie can be stored on the frontend domain.
 - Admin invitation links use the same proxied OAuth start and callback; no additional Google redirect URI is required.
 
+## Home-summary v2 rollout
+
+The new home read model deliberately removes the four legacy list fields. Prepare paired API/UI previews, merge the API first and UI second, and promote the complete pair in one coordinated release. There is a brief incompatible window between API and UI promotion; do not publish the API change as an independent release with the old frontend still serving traffic. A release requiring no incompatible window needs coordinated traffic switching before promotion.
+
+Immediately after promotion, use the existing admin-session, same-origin `POST /api/revalidate-public-cache` flow with `{ "expireImmediately": true }`. It expires `home-summary` and revalidates `/` along with the existing public tags/paths. The API's v2 ETag rejects old validators, but it cannot evict Next's cached v1 JSON; changing a tag alone does not change the fetch cache identity. Also invoke this flow after direct catalog imports affecting denominators or magnet flags. There is no legacy response adapter or service-worker cache change.
+
 ## Current PWA note
 
 Production builds register the Serwist service worker. Development keeps registration disabled so local iteration does not get polluted by stale caches.

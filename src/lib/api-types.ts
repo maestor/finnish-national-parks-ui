@@ -1465,7 +1465,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Visit payload is invalid for the requested trip ordering */
+                /** @description Visit cannot be created for the requested trip or ordering */
                 422: {
                     headers: {
                         [name: string]: unknown;
@@ -1639,11 +1639,44 @@ export interface paths {
                             /** Format: date-time */
                             updatedAt: string | null;
                             version: number;
-                            latestTrips: {
+                            latestTrip: {
+                                dateRange: {
+                                    end: string;
+                                    start: string;
+                                } | null;
+                                descriptionExcerpt: string | null;
+                                featuredImage: {
+                                    height: number | null;
+                                    /** Format: uri */
+                                    url: string;
+                                    width: number | null;
+                                } | null;
+                                id: number;
                                 name: string;
                                 slug: string;
-                                startDate: string | null;
-                            }[];
+                                stopCount: number;
+                                visitCount: number;
+                            } | null;
+                            latestStandaloneVisit: {
+                                id: number;
+                                park: {
+                                    name: string;
+                                    slug: string;
+                                };
+                                visitedOn: string;
+                                imageCount: number;
+                                descriptionExcerpt: string | null;
+                                featuredImage: {
+                                    height: number | null;
+                                    /** Format: uri */
+                                    url: string;
+                                    width: number | null;
+                                } | null;
+                            } | null;
+                            magnetProgress: {
+                                visitedParks: number;
+                                totalParks: number;
+                            };
                             progressByCategory: {
                                 category: {
                                     name: string;
@@ -1651,52 +1684,17 @@ export interface paths {
                                     slug: "outdoor-recreation-area" | "cultural-history-area" | "hiking-and-wilderness-areas" | "national-park" | "nature-reserve-area" | "trails-and-routes";
                                 };
                                 totalParks: number;
-                                totalVisits: number;
                                 visitedParks: number;
-                            }[];
-                            latestVisitEntries: {
-                                /** Format: date-time */
-                                createdAt: string;
-                                id: number;
-                                park: {
-                                    name: string;
-                                    slug: string;
-                                };
-                                /** Format: date-time */
-                                updatedAt: string;
-                                visitedOn: string;
-                            }[];
-                            mostVisitedParks: {
-                                lastVisitedOn: string | null;
-                                park: {
-                                    name: string;
-                                    slug: string;
-                                };
-                                visitCount: number;
                             }[];
                             progressByType: {
                                 totalParks: number;
-                                totalVisits: number;
                                 type: {
-                                    code: number;
-                                    id: number;
                                     name: string;
                                     /** @enum {string} */
                                     slug: "outdoor-recreation-area" | "cultural-history-area" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
                                 };
                                 visible: boolean;
                                 visitedParks: number;
-                            }[];
-                            recentVisits: {
-                                park: {
-                                    name: string;
-                                    slug: string;
-                                };
-                                visitedSummary: {
-                                    lastVisitedOn: string | null;
-                                    visitCount: number;
-                                    visited: boolean;
-                                };
                             }[];
                             seasonalVisitCounts: {
                                 autumn: number;
@@ -2154,8 +2152,6 @@ export interface paths {
                             nextCursor: string | null;
                             total: number;
                             trips: {
-                                /** Format: date-time */
-                                createdAt: string;
                                 dateRange: {
                                     end: string;
                                     start: string;
@@ -2172,6 +2168,8 @@ export interface paths {
                                 slug: string;
                                 stopCount: number;
                                 visitCount: number;
+                                /** Format: date-time */
+                                createdAt: string;
                             }[];
                         };
                     };
@@ -6354,7 +6352,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Visit payload is invalid for the requested trip ordering */
+                /** @description Visit cannot be assigned to the requested trip or ordering */
                 422: {
                     headers: {
                         [name: string]: unknown;
@@ -7252,6 +7250,1146 @@ export interface paths {
                     };
                 };
                 /** @description Invalid trip route waypoint payload */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/trip-stops/{id}/images/upload-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        contentType: "image/jpeg" | "image/png" | "image/webp";
+                        fileSizeBytes: number;
+                        originalName: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Created a direct upload plan for one trip stop image */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: date-time */
+                            expiresAt: string;
+                            headers: {
+                                "content-type": string;
+                            };
+                            key: string;
+                            /** @enum {string} */
+                            method: "PUT";
+                            /** Format: uri */
+                            uploadUrl: string;
+                        };
+                    };
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Trip stop was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Declared file size exceeds the allowed upload limit */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Invalid upload request */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trip-stops/{id}/images/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        fullHeight?: number | null;
+                        fullWidth?: number | null;
+                        key: string;
+                        originalName?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Returned the existing image for an idempotent direct-upload completion retry */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            image: {
+                                id: number;
+                                /** Format: uri */
+                                fullUrl: string;
+                                /** Format: uri */
+                                thumbUrl: string;
+                                fullWidth: number | null;
+                                fullHeight: number | null;
+                                thumbWidth: number | null;
+                                thumbHeight: number | null;
+                                originalName: string | null;
+                                displayOrder: number;
+                                createdAt: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Stored one directly uploaded trip stop image */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            image: {
+                                id: number;
+                                /** Format: uri */
+                                fullUrl: string;
+                                /** Format: uri */
+                                thumbUrl: string;
+                                fullWidth: number | null;
+                                fullHeight: number | null;
+                                thumbWidth: number | null;
+                                thumbHeight: number | null;
+                                originalName: string | null;
+                                displayOrder: number;
+                                createdAt: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Trip stop was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Stored file size exceeds the allowed upload limit */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Upload is missing or invalid */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trip-stops/{id}/images": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        images?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Uploaded trip stop images */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            errors: {
+                                originalName: string;
+                                reason: string;
+                            }[];
+                            images: {
+                                id: number;
+                                /** Format: uri */
+                                fullUrl: string;
+                                /** Format: uri */
+                                thumbUrl: string;
+                                fullWidth: number | null;
+                                fullHeight: number | null;
+                                thumbWidth: number | null;
+                                thumbHeight: number | null;
+                                originalName: string | null;
+                                displayOrder: number;
+                                createdAt: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description No images provided */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Trip stop was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description File too large */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Invalid file type, image limit, or all uploads failed */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Server-side multipart uploads are disabled for this runtime */
+                501: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trip-stops/{tripStopId}/images/{imageId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    imageId: number | null;
+                    tripStopId: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted trip stop image */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Image or trip stop was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trip-stops/{id}/images/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        imageIds: number[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Reordered trip stop images */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Trip stop was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Invalid image order */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/visits/{id}/images/upload-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        contentType: "image/jpeg" | "image/png" | "image/webp";
+                        fileSizeBytes: number;
+                        originalName: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Created a direct upload plan for one visit image */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: date-time */
+                            expiresAt: string;
+                            headers: {
+                                "content-type": string;
+                            };
+                            key: string;
+                            /** @enum {string} */
+                            method: "PUT";
+                            /** Format: uri */
+                            uploadUrl: string;
+                        };
+                    };
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Visit was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Declared file size exceeds the allowed upload limit */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Invalid upload request */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/visits/{id}/images/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        fullHeight?: number | null;
+                        fullWidth?: number | null;
+                        key: string;
+                        originalName?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Returned the existing image for an idempotent direct-upload completion retry */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            image: {
+                                id: number;
+                                /** Format: uri */
+                                fullUrl: string;
+                                /** Format: uri */
+                                thumbUrl: string;
+                                fullWidth: number | null;
+                                fullHeight: number | null;
+                                thumbWidth: number | null;
+                                thumbHeight: number | null;
+                                originalName: string | null;
+                                displayOrder: number;
+                                createdAt: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Stored one directly uploaded visit image */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            image: {
+                                id: number;
+                                /** Format: uri */
+                                fullUrl: string;
+                                /** Format: uri */
+                                thumbUrl: string;
+                                fullWidth: number | null;
+                                fullHeight: number | null;
+                                thumbWidth: number | null;
+                                thumbHeight: number | null;
+                                originalName: string | null;
+                                displayOrder: number;
+                                createdAt: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Visit was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Stored file size exceeds the allowed upload limit */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Upload is missing or invalid */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/visits/{id}/images": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        images?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Uploaded visit images */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            errors: {
+                                originalName: string;
+                                reason: string;
+                            }[];
+                            images: {
+                                id: number;
+                                /** Format: uri */
+                                fullUrl: string;
+                                /** Format: uri */
+                                thumbUrl: string;
+                                fullWidth: number | null;
+                                fullHeight: number | null;
+                                thumbWidth: number | null;
+                                thumbHeight: number | null;
+                                originalName: string | null;
+                                displayOrder: number;
+                                createdAt: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description No images provided */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Visit was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description File too large */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Invalid file type or all uploads failed */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Server-side multipart uploads are disabled for this runtime */
+                501: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/visits/{visitId}/images/{imageId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    imageId: number | null;
+                    visitId: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted visit image */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Image or visit was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth not configured */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/visits/{id}/images/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number | null;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        imageIds: number[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Reordered visit images */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Visit was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Invalid image order */
                 422: {
                     headers: {
                         [name: string]: unknown;

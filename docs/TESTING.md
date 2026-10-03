@@ -102,7 +102,9 @@ npm run test:e2e
 npm run test:e2e:all
 ```
 
-Playwright automatically starts the dev server (`npm run dev`) if not already running.
+Playwright normally starts the dev server (`npm run dev`) if not already running. When server startup is not authorized, first confirm the existing UI at port 4300 and run with a temporary config that sets `webServer: undefined`.
+
+The home smoke flow checks feature headings, independent archive links and navigation to Magneettijahti. Reduced-motion checks cover shared cards on `/` and `/retket` with a published-memory dataset. Home behavior tests cover independent empty slots, missing notes/media, failed images, Finnish deep links and zero progress; archive tests protect ordinary/modified navigation and Back-state handling.
 
 **Responsive verification note:**
 

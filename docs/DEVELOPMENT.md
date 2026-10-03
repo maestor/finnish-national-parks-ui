@@ -213,7 +213,7 @@ The backend handles:
 - Park detail admin updates (`PATCH /api/parks/{slug}`)
 - Park visit history API (`/api/parks/{slug}/visits`)
 - Visit management API (`/api/visits`, `/api/visits/{id}`, image routes under `/api/visits/{id}`)
-- Cacheable landing and map API (`/api/home-summary`, `/api/map-summary`) plus the lightweight visits timeline API (`/api/visits-timeline`)
+- Tag-cached frontend reads of landing and map API (`/api/home-summary`, `/api/map-summary`) plus the lightweight visits timeline API (`/api/visits-timeline`)
 
 Visit and trip-stop image uploads:
 
@@ -250,7 +250,9 @@ Public API terminology and access caveat:
 
 ### Public Page Data Strategy
 
-- The public home page (`/`) reads `GET /api/home-summary`.
+- The public home page (`/`) reads one purpose-specific `GET /api/home-summary`: total/seasonal visits, catalog progress, combined magnet totals, and nullable `latestTrip` / `latestStandaloneVisit` previews. It does not fetch trip details or galleries. A retketön visit has no publicly visible trip association, including a published visit assigned to a draft trip; hidden trip metadata never reaches this preview. Selection follows trip start date or visit date with creation time and ID as descending ties.
+- Home and archive use `PublicMemoryCard` for the same aspect-video image surface, three-line excerpt, focus/hover treatment, and failed-image placeholder. Home feature labels are h3 and memory titles h4; archive titles remain h2. Cards disable detail prefetch; archive navigation state is saved only on ordinary clicks. The magnet progress row links to `/kaynnit?view=parks` and counts distinct visited national parks plus other magnet places, including a valid zero denominator.
+- `public-page-styles.ts` shares the panel surface while separating padding: `PUBLIC_CONTENT_PANEL_CLASS_NAME` uses `p-3 sm:p-6` for the home statistics/about panels and the archive list/loading container. Heroes retain `PUBLIC_PANEL_CLASS_NAME` with `p-5 sm:p-6`; `sm` starts at 640px.
 - The public map page (`/paikat`) reads `GET /api/map-summary`.
 - The home and map pages call Next.js `connection()` before reading their summaries, keeping page rendering at request time so production builds do not need the backend. The summary requests remain explicit `force-cache` reads with `home-summary` and `map-summary` tags, so repeated public requests can reuse cached data until a successful mutation revalidates the tags and page paths.
 - The public visits page (`/kaynnit`) reads `GET /api/visits-timeline`; its optional map view (`?view=map`) additionally reads `GET /api/map-summary` for marker coordinates, and its visited national parks view (`?view=parks`) joins the same map summary to the visit timeline so park logos and the current total national park count stay available server-side.
@@ -438,7 +440,7 @@ See `AGENTS.md` for the full convention list. Key rules:
 - Port: **3004**
 - Auth endpoints: `/auth/google`, `/auth/google/callback`, `/auth/dev-login` (local AI-agent use only), `/auth/me`, `/auth/logout`; `/auth/me` includes the current `isSuperAdmin` flag. Invitation links use `/auth/google?invite=<token>` and the same OAuth callback.
 - API endpoints: `/api/parks`, `/api/parks/{slug}`, `/api/parks/{slug}/visits`, `/api/parks/{slug}/removed`, `/api/visits`, `/api/visits/{id}`, `/api/admin/visits`, `/api/admin/trips`, and `/api/admin/trips/{id}/preview/*`
-- Cacheable frontend endpoints: `/api/home-summary`, `/api/map-summary`, `/api/visits-timeline`
+- Frontend tag-cached reads (API publication summaries remain `private, no-store`): `/api/home-summary`, `/api/map-summary`, `/api/visits-timeline`
 - Catalog and visit `GET` data is public to end users through the frontend, but direct backend `/api/*` access generally requires the server-side API key outside localhost. Backend-anonymous reads are limited to `GET /health`, `GET /openapi.json`, and `GET /assets/logos/*`; admin mutations require an authenticated admin session, with the documented public trip-planner POSTs as the deliberate exception.
 - OpenAPI doc: `http://localhost:3004/openapi.json`
 - Trips and visits use independent `draft` / `published` status. New UI forms offer immediate publication and private draft saving; withdrawal hides each record without deleting it. A published visit remains public when assigned to a draft trip, while its trip relationship stays private until the trip is published.

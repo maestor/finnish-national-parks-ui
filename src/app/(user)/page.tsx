@@ -2,19 +2,12 @@ import { connection } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { HomeVisitStats } from "@/components/dashboard/home-visit-stats";
 import { HomeAboutSection } from "@/components/home/home-about-section";
+import { HomeFeaturedMemories } from "@/components/home/home-featured-memories";
 import { HomeIntro } from "@/components/home/home-intro";
 import { HomeSocialLinks } from "@/components/home/home-social-links";
-import { HomeSummaryPanels } from "@/components/home/home-summary-panels";
 import { WebsiteStructuredData } from "@/components/home/website-structured-data";
 import { PUBLIC_PAGE_SHELL_CLASS_NAME } from "@/components/layout/public-page-styles";
-import {
-  createHomeLatestTripsFromSummary,
-  createHomeLatestVisitEntriesFromSummary,
-  createHomeMostVisitedParks,
-  createHomeProgressItems,
-  createHomeRecentVisitsFromSummary,
-  fetchHomeSummary,
-} from "@/lib/frontend-summaries";
+import { createHomeProgressItems, fetchHomeSummary } from "@/lib/frontend-summaries";
 import { buildPageMetadata } from "@/lib/page-metadata";
 
 export const generateMetadata = async () => {
@@ -32,11 +25,11 @@ const HomePage = async () => {
   await connection();
   const [t, metadataT] = await Promise.all([getTranslations("home"), getTranslations("metadata")]);
   const summary = await fetchHomeSummary();
-  const progressItems = createHomeProgressItems(summary, t("statistics.allParks"));
-  const mostVisitedParks = createHomeMostVisitedParks(summary);
-  const recentVisits = createHomeRecentVisitsFromSummary(summary);
-  const latestVisitEntries = createHomeLatestVisitEntriesFromSummary(summary);
-  const latestTrips = createHomeLatestTripsFromSummary(summary);
+  const progressItems = createHomeProgressItems(
+    summary,
+    t("statistics.allParks"),
+    t("statistics.magnetHunt"),
+  );
 
   const descriptionParagraphs = t("description")
     .split("\n\n")
@@ -54,6 +47,12 @@ const HomePage = async () => {
       />
 
       <HomeVisitStats
+        featuredMemories={
+          <HomeFeaturedMemories
+            latestTrip={summary.latestTrip}
+            latestStandaloneVisit={summary.latestStandaloneVisit}
+          />
+        }
         sectionTitle={t("statistics.title")}
         totalVisitsLabel={t("statistics.totalVisits")}
         totalVisits={summary.totalVisits}
@@ -65,27 +64,6 @@ const HomePage = async () => {
         summerLabel={t("statistics.seasons.summer")}
         autumnLabel={t("statistics.seasons.autumn")}
         winterLabel={t("statistics.seasons.winter")}
-      />
-      <HomeSummaryPanels
-        recentVisitsTitle={t("recentVisits.title")}
-        recentVisitsEmptyMessage={t("recentVisits.empty")}
-        latestEntriesTitle={t("latestEntries.title")}
-        latestEntriesEmptyMessage={t("latestEntries.empty")}
-        mostVisitedParksTitle={t("mostVisitedParks.title")}
-        mostVisitedParksEmptyMessage={t("mostVisitedParks.empty")}
-        mostVisitedParksVisitCountLabel={t("mostVisitedParks.visitCount")}
-        latestTripsTitle={t("latestTrips.title")}
-        latestTripsEmptyMessage={t("latestTrips.empty")}
-        backToStartLabel={t("backToStart")}
-        showAllLabel={t("showAll")}
-        recentVisitsShowAllAriaLabel={t("recentVisits.showAllLabel")}
-        latestEntriesShowAllAriaLabel={t("latestEntries.showAllLabel")}
-        mostVisitedParksShowAllAriaLabel={t("mostVisitedParks.showAllLabel")}
-        latestTripsShowAllAriaLabel={t("latestTrips.showAllLabel")}
-        fallbackRecentVisits={recentVisits}
-        fallbackLatestVisitEntries={latestVisitEntries}
-        fallbackMostVisitedParks={mostVisitedParks}
-        fallbackLatestTrips={latestTrips}
       />
 
       <HomeAboutSection

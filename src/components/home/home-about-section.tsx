@@ -1,6 +1,6 @@
 import { CircleHelp } from "lucide-react";
 import {
-  PUBLIC_PANEL_CLASS_NAME,
+  PUBLIC_CONTENT_PANEL_CLASS_NAME,
   PUBLIC_PANEL_ICON_SURFACE_CLASS_NAME,
 } from "@/components/layout/public-page-styles";
 import { BackToStartLink } from "./back-to-start-link";
@@ -23,7 +23,7 @@ export const HomeAboutSection = ({
     aria-labelledby="home-about-title"
     className="scroll-mt-24 sm:scroll-mt-28"
   >
-    <div className={PUBLIC_PANEL_CLASS_NAME}>
+    <div className={PUBLIC_CONTENT_PANEL_CLASS_NAME}>
       <div className="flex items-center gap-3">
         <span className={PUBLIC_PANEL_ICON_SURFACE_CLASS_NAME}>
           <CircleHelp className="h-4 w-4 text-primary" aria-hidden="true" />
