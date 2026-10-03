@@ -19,6 +19,7 @@ interface VisitAccordionProps {
   parkSlug: string;
   visits: Visit[];
   isEditable?: boolean;
+  isPreview?: boolean;
 }
 
 interface SeasonPresentation {
@@ -96,6 +97,7 @@ export const VisitAccordion = ({
   visits,
   parkSlug,
   isEditable = false,
+  isPreview = false,
   initialOpenVisitId = null,
 }: VisitAccordionProps) => {
   const t = useTranslations("park");
@@ -142,6 +144,11 @@ export const VisitAccordion = ({
         const isOpen = openId === visit.id;
         const season = getSeasonPresentation(visit.visitedOn);
         const authorDetails = visit.author ? getVisitAuthorDetails(visit) : null;
+        const draftStatusBadge = visit.status === "draft" && (
+          <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-950 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100">
+            {t("draftStatus")}
+          </span>
+        );
         const visitHref = createParkVisitHref({
           parkSlug,
           visitId: visit.id,
@@ -162,13 +169,14 @@ export const VisitAccordion = ({
                 </span>
                 <span className={VISIT_BADGE_CLASS_NAME}>{t("visitNumber", { number })}</span>
                 <span className="text-base">{formatFinnishDate(visit.visitedOn)}</span>
+                {draftStatusBadge}
                 {!!visit.route && (
                   <span className={ROUTE_BADGE_CLASS_NAME}>
                     <Route className="h-3.5 w-3.5" aria-hidden="true" />
                     {visit.route}
                   </span>
                 )}
-                {visit.trip !== null && (
+                {visit.trip !== null && isPreview !== true && (
                   <Link href={appRoutes.trip(visit.trip.slug)} className={TRIP_LINK_CLASS_NAME}>
                     <TentTree className="h-3.5 w-3.5" aria-hidden="true" />
                     {visit.trip.name}
@@ -176,11 +184,13 @@ export const VisitAccordion = ({
                 )}
               </span>
               <span className="flex shrink-0 items-center gap-1.5">
-                <CopyLinkButton
-                  href={visitHref}
-                  label={t("copyVisitLink")}
-                  copiedLabel={t("visitLinkCopied")}
-                />
+                {visit.status !== "draft" && isPreview !== true && (
+                  <CopyLinkButton
+                    href={visitHref}
+                    label={t("copyVisitLink")}
+                    copiedLabel={t("visitLinkCopied")}
+                  />
+                )}
                 {isEditable === true && <EditVisitLink visitId={visit.id} />}
               </span>
             </div>
@@ -210,6 +220,7 @@ export const VisitAccordion = ({
                   </span>
                   <span className={VISIT_BADGE_CLASS_NAME}>{t("visitNumber", { number })}</span>
                   <span className="text-base">{formatFinnishDate(visit.visitedOn)}</span>
+                  {draftStatusBadge}
                   {!!visit.route && (
                     <span className={ROUTE_BADGE_CLASS_NAME}>
                       <Route className="h-3.5 w-3.5" aria-hidden="true" />
@@ -222,7 +233,7 @@ export const VisitAccordion = ({
                       {t("imageCount", { count: imageCount })}
                     </span>
                   )}
-                  {visit.trip !== null && (
+                  {visit.trip !== null && isPreview !== true && (
                     <Link
                       href={appRoutes.trip(visit.trip.slug)}
                       className={TRIP_LINK_CLASS_NAME}
@@ -239,12 +250,14 @@ export const VisitAccordion = ({
                 />
               </button>
               <span className="flex shrink-0 items-center gap-1.5">
-                <CopyLinkButton
-                  href={visitHref}
-                  label={t("copyVisitLink")}
-                  copiedLabel={t("visitLinkCopied")}
-                  onClick={(event) => event.stopPropagation()}
-                />
+                {visit.status !== "draft" && isPreview !== true && (
+                  <CopyLinkButton
+                    href={visitHref}
+                    label={t("copyVisitLink")}
+                    copiedLabel={t("visitLinkCopied")}
+                    onClick={(event) => event.stopPropagation()}
+                  />
+                )}
                 {isEditable === true && <EditVisitLink visitId={visit.id} />}
               </span>
             </div>
@@ -271,7 +284,11 @@ export const VisitAccordion = ({
                         <Images className="h-4 w-4 text-muted-foreground" />
                         {t("imagesTitle")}
                       </h3>
-                      <VisitImageGallery images={visit.images} centerThumbnailsWhenStatic />
+                      <VisitImageGallery
+                        images={visit.images}
+                        centerThumbnailsWhenStatic
+                        privateMedia={isPreview || visit.status === "draft"}
+                      />
                     </>
                   )}
                   {authorDetails !== null && (

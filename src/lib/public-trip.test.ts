@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { apiPublicFetch } from "./api";
+import { apiAuthFetch, apiPublicFetch } from "./api";
 import { getPublicTripTag } from "./public-cache";
 import {
+  fetchAdminTripPreview,
+  fetchAdminTripPreviewRoute,
+  fetchAdminTripPreviewStopImages,
+  fetchAdminTripPreviewVisitImages,
   fetchPublicTripBySlug,
   fetchPublicTripRoute,
   fetchPublicTripStopImages,
@@ -9,11 +13,13 @@ import {
 import { PUBLIC_TRIP_REQUEST_TIMEOUT_MS } from "./public-trip-timeout";
 
 vi.mock("./api", () => ({
+  apiAuthFetch: vi.fn(),
   apiPublicFetch: vi.fn(),
 }));
 
 describe("public trip fetches", () => {
   beforeEach(() => {
+    vi.mocked(apiAuthFetch).mockReset();
     vi.mocked(apiPublicFetch).mockReset();
   });
 
@@ -90,5 +96,73 @@ describe("public trip fetches", () => {
       "/api/trips/slug/kesaretki/stops/31/images?offset=24",
       expect.objectContaining({ cache: "no-store" }),
     );
+  });
+
+  it("loads saved trip preview content through the authenticated API", async () => {
+    vi.mocked(apiAuthFetch).mockResolvedValueOnce({ slug: "kesaretki" });
+
+    await fetchAdminTripPreview(7);
+
+    expect(apiAuthFetch).toHaveBeenCalledWith("/api/admin/trips/7/preview", {
+      cache: "no-store",
+    });
+  });
+
+  it("uses an abort timeout for preview routes and preserves a caller signal", async () => {
+    const timeoutSignal = new AbortController().signal;
+    const timeoutSpy = vi.spyOn(AbortSignal, "timeout").mockReturnValue(timeoutSignal);
+    const callerSignal = new AbortController().signal;
+    vi.mocked(apiAuthFetch).mockResolvedValue({ data: null, error: null, success: true });
+
+    await fetchAdminTripPreviewRoute(7);
+    await fetchAdminTripPreviewRoute(7, { signal: callerSignal });
+
+    expect(timeoutSpy).toHaveBeenCalledWith(PUBLIC_TRIP_REQUEST_TIMEOUT_MS);
+    expect(apiAuthFetch).toHaveBeenNthCalledWith(
+      1,
+      "/api/admin/trips/7/preview/route",
+      expect.objectContaining({ signal: timeoutSignal }),
+    );
+    expect(apiAuthFetch).toHaveBeenNthCalledWith(
+      2,
+      "/api/admin/trips/7/preview/route",
+      expect.objectContaining({ signal: callerSignal }),
+    );
+    timeoutSpy.mockRestore();
+  });
+
+  it("loads preview visit and stop image pages with offsets and caller signals", async () => {
+    const callerSignal = new AbortController().signal;
+    const timeoutSignal = new AbortController().signal;
+    const timeoutSpy = vi.spyOn(AbortSignal, "timeout").mockReturnValue(timeoutSignal);
+    vi.mocked(apiAuthFetch).mockResolvedValue({ images: [], nextOffset: null });
+
+    await fetchAdminTripPreviewVisitImages(7, 19);
+    await fetchAdminTripPreviewVisitImages(7, 19, { offset: 12, signal: callerSignal });
+    await fetchAdminTripPreviewStopImages(7, 23);
+    await fetchAdminTripPreviewStopImages(7, 23, { offset: 24, signal: callerSignal });
+
+    expect(apiAuthFetch).toHaveBeenNthCalledWith(
+      1,
+      "/api/admin/trips/7/preview/visits/19/images?limit=12&offset=0",
+      expect.objectContaining({ cache: "no-store", signal: timeoutSignal }),
+    );
+    expect(apiAuthFetch).toHaveBeenNthCalledWith(
+      2,
+      "/api/admin/trips/7/preview/visits/19/images?limit=12&offset=12",
+      expect.objectContaining({ cache: "no-store", signal: callerSignal }),
+    );
+    expect(apiAuthFetch).toHaveBeenNthCalledWith(
+      3,
+      "/api/admin/trips/7/preview/stops/23/images?limit=12&offset=0",
+      expect.objectContaining({ cache: "no-store", signal: timeoutSignal }),
+    );
+    expect(apiAuthFetch).toHaveBeenNthCalledWith(
+      4,
+      "/api/admin/trips/7/preview/stops/23/images?limit=12&offset=24",
+      expect.objectContaining({ cache: "no-store", signal: callerSignal }),
+    );
+    expect(timeoutSpy).toHaveBeenCalledTimes(2);
+    timeoutSpy.mockRestore();
   });
 });

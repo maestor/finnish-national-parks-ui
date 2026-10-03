@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { PublicCacheRefreshNotice } from "@/components/admin/public-cache-refresh-notice";
 import { CoordinateOverrideFields } from "@/components/location/coordinate-override-fields";
 import { useSnackbar } from "@/components/providers/snackbar-provider";
 import { Button } from "@/components/ui/button";
@@ -53,9 +54,11 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
     formatCoordinateInputValue(visitToEdit?.location ?? null),
   );
   const [note, setNote] = useState(visitToEdit?.note ?? "");
+  const [status, setStatus] = useState(visitToEdit?.status ?? "draft");
   const [isPreview, setIsPreview] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [cacheRefreshFailed, setCacheRefreshFailed] = useState(false);
   const [savedSnapshot, setSavedSnapshot] = useState({
     visitedOn: visitToEdit?.visitedOn ?? "",
     route: visitToEdit?.route ?? "",
@@ -72,7 +75,6 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
     location.lon !== savedSnapshot.location.lon ||
     note !== savedSnapshot.note;
   const isNoteTooLong = note.length > LONG_TEXTAREA_MAX_LENGTH;
-  const isSubmitDisabled = isSubmitting || isNoteTooLong || (isEditing && !isEditDirty);
   const hasParkSlugError = errors.parkSlug !== undefined;
   const hasVisitedOnError = errors.visitedOn !== undefined;
   const hasLocationError = errors.location !== undefined;
@@ -82,6 +84,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
   };
 
   const revalidateVisitPublicViews = async ({
+    expireImmediately = false,
     parkSlug,
     previousTripSlug = null,
     nextTripSlug = null,
@@ -89,26 +92,44 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
     nextTripSlug?: string | null;
     parkSlug: string;
     previousTripSlug?: string | null;
+    expireImmediately?: boolean;
   }) => {
     const tripSlugs = [...new Set([previousTripSlug, nextTripSlug].filter(Boolean))];
 
     if (tripSlugs.length === 0) {
-      await revalidatePublicCache({ parkSlug });
-      return;
+      return revalidatePublicCache({ expireImmediately, parkSlug });
     }
 
-    await Promise.all(
+    const results = await Promise.all(
       tripSlugs.map((tripSlug, index) =>
         revalidatePublicCache({
           parkSlug: index === 0 ? parkSlug : null,
           tripSlug,
+          expireImmediately,
         }),
       ),
     );
+    return results.every(Boolean);
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const submitter = (event.nativeEvent as SubmitEvent).submitter;
+    const requestedStatus =
+      submitter instanceof HTMLButtonElement && submitter.name === "status"
+        ? (submitter.value as "draft" | "published")
+        : undefined;
+    const previewAfterSave =
+      submitter instanceof HTMLButtonElement &&
+      submitter.name === "intent" &&
+      submitter.value === "preview";
+    if (
+      requestedStatus === "draft" &&
+      status === "published" &&
+      !window.confirm(t("withdrawConfirm"))
+    ) {
+      return;
+    }
     setErrors({});
 
     const validationErrors: Record<string, string> = {};
@@ -129,7 +150,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
       return;
     }
 
-    if (isEditing && !isEditDirty) {
+    if (isEditing && !isEditDirty && requestedStatus === undefined) {
       return;
     }
 
@@ -143,16 +164,20 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
           author: author || null,
           location: parsedLocation.kind === "value" ? parsedLocation.value : null,
           note: note || null,
+          ...(requestedStatus ? { status: requestedStatus } : {}),
         };
         await apiFetch(`/api/visits/${visitToEdit.id}`, {
           method: "PATCH",
           body: JSON.stringify(payload),
         });
-        await revalidateVisitPublicViews({
+        const cacheRefreshed = await revalidateVisitPublicViews({
+          expireImmediately: requestedStatus !== undefined,
           parkSlug: visitToEdit.park.slug,
           previousTripSlug: visitToEdit.trip?.slug ?? null,
           nextTripSlug: visitToEdit.trip?.slug ?? null,
         });
+        setCacheRefreshFailed(!cacheRefreshed);
+        if (requestedStatus) setStatus(requestedStatus);
         setSavedSnapshot({
           visitedOn,
           route: route || "",
@@ -164,10 +189,14 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
         });
         showSnackbar({
           action: { href: appRoutes.controlPanel.visits, label: t("viewAllVisits") },
-          message: t("updateSuccess"),
+          message: cacheRefreshed ? t("updateSuccess") : t("savedCacheRefreshFailed"),
           tone: "success",
         });
-        router.refresh();
+        if (previewAfterSave) {
+          router.push(appRoutes.controlPanel.previewVisit(visitToEdit.id));
+        } else {
+          router.refresh();
+        }
       } else {
         const payload: VisitCreateRequest = {
           visitedOn,
@@ -175,18 +204,22 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
           author: author || null,
           location: parsedLocation.kind === "value" ? parsedLocation.value : null,
           note: note || null,
+          status: requestedStatus ?? "published",
         };
         const createdVisit = await apiFetch<Visit>(`/api/parks/${parkSlug}/visits`, {
           method: "POST",
           body: JSON.stringify(payload),
         });
-        await revalidateVisitPublicViews({
-          parkSlug,
-        });
+        const cacheRefreshed =
+          payload.status === "published"
+            ? await revalidateVisitPublicViews({ parkSlug, expireImmediately: true })
+            : true;
         shouldResetSubmittingState = false;
         router.push(
           createPathWithSearchParams(appRoutes.controlPanel.editVisit(createdVisit.id), {
             created: 1,
+            status: payload.status,
+            refreshFailed: cacheRefreshed ? null : 1,
           }),
         );
       }
@@ -231,6 +264,16 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
 
   return (
     <form onSubmit={handleSubmit} className="mt-6 max-w-xl space-y-6">
+      {cacheRefreshFailed && visitToEdit !== undefined && (
+        <PublicCacheRefreshNotice
+          parkSlug={visitToEdit.park.slug}
+          tripSlugs={[visitToEdit.trip?.slug]}
+          failureMessage={t("savedCacheRefreshFailed")}
+          retryLabel={t("retryCacheRefresh")}
+          retryingLabel={t("retryingCacheRefresh")}
+          successMessage={t("cacheRefreshRetried")}
+        />
+      )}
       <div className="space-y-2">
         <Label htmlFor="park" required>
           {t("parkLabel")}
@@ -349,10 +392,52 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
         )}
       </div>
 
-      <div className="flex items-center gap-4">
-        <Button type="submit" disabled={isSubmitDisabled}>
-          {isSubmitting ? "..." : t("submit")}
+      {!isEditing && <p className="text-sm text-muted-foreground">{t("publishOrDraftHelp")}</p>}
+      {isEditing && (
+        <p className="text-sm font-medium">
+          {status === "published" ? t("publishedStatus") : t("draftStatus")}
+        </p>
+      )}
+      <div className="flex flex-wrap items-center gap-4">
+        <Button
+          type="submit"
+          disabled={isSubmitting || isNoteTooLong || (isEditing && !isEditDirty)}
+        >
+          {isSubmitting ? "..." : isEditing ? t("submit") : t("publish")}
         </Button>
+        {isEditing === true && isEditDirty === true && (
+          <Button
+            type="submit"
+            name="intent"
+            value="preview"
+            variant="outline"
+            disabled={isSubmitting || isNoteTooLong}
+          >
+            {t("saveAndPreview")}
+          </Button>
+        )}
+        {!isEditing && (
+          <Button
+            type="submit"
+            name="status"
+            value="draft"
+            variant="outline"
+            disabled={isSubmitting || isNoteTooLong}
+          >
+            {t("saveDraft")}
+          </Button>
+        )}
+        {isEditing && (
+          <Button
+            type="submit"
+            name="status"
+            value={status === "published" ? "draft" : "published"}
+            variant="outline"
+            disabled={isSubmitting}
+          >
+            {status === "published" ? t("withdraw") : t("publish")}
+          </Button>
+        )}
         {isEditing && (
           <Button
             type="button"

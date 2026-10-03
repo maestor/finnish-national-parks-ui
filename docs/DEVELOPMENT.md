@@ -345,6 +345,10 @@ Use `apiPublicFetch<T>(path, options?)` for cacheable public server-side reads:
 - Does **not** forward request cookies
 - Can be tagged with Next.js cache tags for explicit revalidation after writes
 
+Use `apiAuthFetch<T>(path, { cache: "no-store" })` for server-rendered admin reads. The trip and visit admin lists and edit pages use `/api/admin/*` projections that include drafts and stored publication status; public `/api/trips`, `/api/visits`, and park visit responses remain filtered to effectively public content. An authenticated admin's park page separately loads `/api/admin/parks/:slug/visits` through a no-store proxy, so draft visit rows and their **Luonnos** labels never enter the shared public response. The trip editor only offers published visits for new assignments; the API enforces the same rule. Browser preview route and gallery requests go through same-origin `proxyBackendRequest(..., { requireAdmin: true })` routes.
+
+Saved-content previews live at the canonical Finnish URLs `/hallinta/kaynnit/[id]/esikatselu` and `/hallinta/retket/[id]/esikatselu`. Their English implementation routes are under `/control-panel/.../preview`. Both are dynamic, noindex, and fetch private no-store API data. Trip preview route and gallery requests use authenticated preview endpoints; preview images bypass Next image optimization so private signed URLs do not create shared derivatives. Public trip rendering keeps its existing anonymous endpoints and cache tags.
+
 ---
 
 ## Regenerating API Types
@@ -394,7 +398,7 @@ These are contributor defaults, not optional polish:
 
 - Session verification is centralized in `src/lib/session-auth.ts`. Tokens must be HS256-signed with `AUTH_JWT_SECRET`, carry `iss: "reissuvihko-api"` and `aud: "reissuvihko-ui"` (overridable via `AUTH_JWT_ISSUER` / `AUTH_JWT_AUDIENCE`), and contain the complete API identity shape: finite `exp`, non-empty `sub`, valid `email`, string `name` and `picture`, and `role: "admin"`. All claims are validated before admin shell access, backend mutations, or public-cache revalidation.
 - `src/proxy.ts` gates `/hallinta/*` page shells on a valid session. Route handlers that proxy admin mutations additionally require the `role: "admin"` claim via `proxyBackendRequest(request, path, { requireAdmin: true })`; missing/invalid sessions get 401 and non-admin sessions 403. The Ylläpitäjät page also checks `isSuperAdmin` from `/auth/me`, and the backend repeats that authorization for every admin-management request.
-- Admin-gated proxy routes: park mutations (`/api/parks/[slug]`, `/removed`, `/visits`), visit mutations (`/api/visits/[id]` and all image sub-routes), `GET /api/admin/parks/visibility`, `GET/PATCH/DELETE /api/admin/admins`, `POST /api/admin/invitations`, and `POST /api/revalidate-public-cache`. Public reads and the public trip-planner POSTs stay unauthenticated.
+- Admin-gated proxy routes: park mutations (`/api/parks/[slug]`, `/removed`, `/visits`), visit mutations (`/api/visits/[id]` and all image sub-routes), visit/trip admin list and detail reads, trip preview data/route/gallery reads, `GET /api/admin/parks/visibility`, `GET/PATCH/DELETE /api/admin/admins`, `POST /api/admin/invitations`, and `POST /api/revalidate-public-cache`. Public reads and the public trip-planner POSTs stay unauthenticated.
 - Non-`GET` proxy and cache-revalidation requests must carry an `Origin` header whose complete origin (scheme, host, and port) matches the request origin; missing, malformed, or mismatched origins get 403 (CSRF defense-in-depth on top of the `SameSite=Lax` session cookie). Browser same-origin fetches supply this header automatically; no server-originated non-`GET` proxy caller is supported.
 - Proxy routes forward only an allowlist of client headers (`accept`, `content-type`, `cookie`) to the backend. Client-sent `authorization` headers are never forwarded; the proxy always sets the server-side `API_KEY` itself.
 
@@ -433,10 +437,12 @@ See `AGENTS.md` for the full convention list. Key rules:
 
 - Port: **3004**
 - Auth endpoints: `/auth/google`, `/auth/google/callback`, `/auth/dev-login` (local AI-agent use only), `/auth/me`, `/auth/logout`; `/auth/me` includes the current `isSuperAdmin` flag. Invitation links use `/auth/google?invite=<token>` and the same OAuth callback.
-- API endpoints: `/api/parks`, `/api/parks/{slug}`, `/api/parks/{slug}/visits`, `/api/parks/{slug}/removed`, `/api/visits`, `/api/visits/{id}`
+- API endpoints: `/api/parks`, `/api/parks/{slug}`, `/api/parks/{slug}/visits`, `/api/parks/{slug}/removed`, `/api/visits`, `/api/visits/{id}`, `/api/admin/visits`, `/api/admin/trips`, and `/api/admin/trips/{id}/preview/*`
 - Cacheable frontend endpoints: `/api/home-summary`, `/api/map-summary`, `/api/visits-timeline`
 - Catalog and visit `GET` data is public to end users through the frontend, but direct backend `/api/*` access generally requires the server-side API key outside localhost. Backend-anonymous reads are limited to `GET /health`, `GET /openapi.json`, and `GET /assets/logos/*`; admin mutations require an authenticated admin session, with the documented public trip-planner POSTs as the deliberate exception.
 - OpenAPI doc: `http://localhost:3004/openapi.json`
+- Trips and visits use independent `draft` / `published` status. New UI forms offer immediate publication and private draft saving; withdrawal hides each record without deleting it. A published visit remains public when assigned to a draft trip, while its trip relationship stays private until the trip is published.
+- API status behavior must be deployed before the UI: migration `0040` keeps existing rows published, while new API creates without status default to draft. Keep the admin editing pause described in the API deployment guide during the API/UI deployment gap.
 
 ## Production Deployment Notes
 

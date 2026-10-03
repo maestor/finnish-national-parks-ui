@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
+import { PublicCacheRefreshNotice } from "@/components/admin/public-cache-refresh-notice";
 import { LocationSuggestionInput } from "@/components/location/location-suggestion-input";
 import { useSnackbar } from "@/components/providers/snackbar-provider";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ import {
 import { revalidatePublicCache } from "@/lib/public-cache";
 import { appRoutes, createPathWithSearchParams } from "@/lib/routes";
 import type {
+  AdminTripDetail,
   Trip,
   TripCreateRequest,
   TripDetail,
@@ -30,7 +32,7 @@ import type {
 } from "@/lib/trips";
 
 interface TripFormProps {
-  tripToEdit?: Trip;
+  tripToEdit?: AdminTripDetail;
 }
 
 type TripFormLocationMessageKey =
@@ -74,15 +76,25 @@ const trimToNull = (value: string) => {
   return trimmed === "" ? null : trimmed;
 };
 
-const revalidateTripPages = async (...tripSlugs: Array<string | null | undefined>) => {
+const revalidateTripPages = async (
+  tripSlugs: Array<string | null | undefined>,
+  expireImmediately = false,
+  parkSlugs: Array<string | null | undefined> = [],
+) => {
   const uniqueTripSlugs = [...new Set(tripSlugs.filter((slug): slug is string => Boolean(slug)))];
+  const uniqueParkSlugs = [...new Set(parkSlugs.filter((slug): slug is string => Boolean(slug)))];
 
-  if (uniqueTripSlugs.length === 0) {
-    await revalidatePublicCache();
-    return;
-  }
+  const targetTripSlugs = uniqueTripSlugs.length > 0 ? uniqueTripSlugs : [null];
+  const targetParkSlugs = uniqueParkSlugs.length > 0 ? uniqueParkSlugs : [null];
 
-  await Promise.all(uniqueTripSlugs.map((tripSlug) => revalidatePublicCache({ tripSlug })));
+  const results = await Promise.all(
+    targetTripSlugs.flatMap((tripSlug) =>
+      targetParkSlugs.map((parkSlug) =>
+        revalidatePublicCache({ tripSlug, parkSlug, expireImmediately }),
+      ),
+    ),
+  );
+  return results.every(Boolean);
 };
 
 export const TripForm = ({ tripToEdit }: TripFormProps) => {
@@ -93,6 +105,7 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
 
   const [name, setName] = useState(tripToEdit?.name ?? "");
   const [description, setDescription] = useState(tripToEdit?.description ?? "");
+  const [status, setStatus] = useState(tripToEdit?.status ?? "draft");
   const [startingPointQuery, setStartingPointQuery] = useState(
     tripToEdit?.startingPoint?.label ?? "",
   );
@@ -103,6 +116,7 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
     useState<UserLocationStatus>("idle");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [cacheRefreshFailed, setCacheRefreshFailed] = useState(false);
   const [savedSnapshot, setSavedSnapshot] = useState({
     name: tripToEdit?.name ?? "",
     description: tripToEdit?.description ?? "",
@@ -121,7 +135,6 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
     description !== savedSnapshot.description ||
     getLocationKey(startingPoint) !== savedSnapshot.startingPointKey;
   const isDescriptionTooLong = description.length > LONG_TEXTAREA_MAX_LENGTH;
-  const isSubmitDisabled = isSubmitting || isDescriptionTooLong || (isEditing && !isEditDirty);
 
   const handleBack = () => {
     router.back();
@@ -179,6 +192,22 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const submitter = (event.nativeEvent as SubmitEvent).submitter;
+    const requestedStatus =
+      submitter instanceof HTMLButtonElement && submitter.name === "status"
+        ? (submitter.value as "draft" | "published")
+        : undefined;
+    const previewAfterSave =
+      submitter instanceof HTMLButtonElement &&
+      submitter.name === "intent" &&
+      submitter.value === "preview";
+    if (
+      requestedStatus === "draft" &&
+      status === "published" &&
+      !window.confirm(t("withdrawConfirm"))
+    ) {
+      return;
+    }
     setErrors({});
 
     const nextErrors: Record<string, string> = {};
@@ -196,7 +225,7 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
       return;
     }
 
-    if (isEditing && !isEditDirty) {
+    if (isEditing && !isEditDirty && requestedStatus === undefined) {
       return;
     }
 
@@ -221,10 +250,21 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
 
         const updatedTrip = await apiFetch<TripDetail>(`/api/trips/${tripToEdit.id}`, {
           method: "PATCH",
-          body: JSON.stringify(payload),
+          body: JSON.stringify({
+            ...payload,
+            ...(requestedStatus ? { status: requestedStatus } : {}),
+          }),
         });
 
-        await revalidateTripPages(tripToEdit.slug, updatedTrip.slug);
+        const cacheRefreshed = await revalidateTripPages(
+          [tripToEdit.slug, updatedTrip.slug],
+          requestedStatus !== undefined,
+          tripToEdit.itinerary.flatMap((item) =>
+            item.kind === "visit" ? [item.visit.park.slug] : [],
+          ),
+        );
+        setCacheRefreshFailed(!cacheRefreshed);
+        setStatus(updatedTrip.status ?? status);
         setName(updatedTrip.name);
         setDescription(updatedTrip.description ?? "");
         setStartingPoint(updatedTrip.startingPoint);
@@ -236,15 +276,20 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
         });
         showSnackbar({
           action: { href: appRoutes.controlPanel.trips, label: t("viewAllTrips") },
-          message: t("updateSuccess"),
+          message: cacheRefreshed ? t("updateSuccess") : t("savedCacheRefreshFailed"),
           tone: "success",
         });
-        router.refresh();
+        if (previewAfterSave) {
+          router.push(appRoutes.controlPanel.previewTrip(tripToEdit.id));
+        } else {
+          router.refresh();
+        }
       } else {
         const payload = {
           description: trimToNull(description),
           name: trimmedName,
           startingPoint,
+          status: requestedStatus ?? "published",
         } satisfies TripCreateRequest;
 
         const createdTrip = await apiFetch<Trip>("/api/trips", {
@@ -252,11 +297,16 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
           body: JSON.stringify(payload),
         });
 
-        await revalidateTripPages(createdTrip.slug);
+        const cacheRefreshed =
+          payload.status === "published"
+            ? await revalidateTripPages([createdTrip.slug], true)
+            : true;
         shouldResetSubmittingState = false;
         router.push(
           createPathWithSearchParams(appRoutes.controlPanel.editTrip(createdTrip.id), {
             created: 1,
+            status: payload.status,
+            refreshFailed: cacheRefreshed ? null : 1,
           }),
         );
       }
@@ -285,7 +335,13 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
 
     try {
       await apiFetch(`/api/trips/${tripToEdit.id}`, { method: "DELETE" });
-      await revalidateTripPages(tripToEdit.slug);
+      await revalidateTripPages(
+        [tripToEdit.slug],
+        true,
+        tripToEdit.itinerary.flatMap((item) =>
+          item.kind === "visit" ? [item.visit.park.slug] : [],
+        ),
+      );
       router.push(appRoutes.controlPanel.trips);
       router.refresh();
     } catch (error) {
@@ -300,6 +356,18 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="mt-6 max-w-4xl space-y-6">
+      {cacheRefreshFailed && tripToEdit !== undefined && (
+        <PublicCacheRefreshNotice
+          tripSlugs={[tripToEdit.slug]}
+          parkSlugs={tripToEdit.itinerary.flatMap((item) =>
+            item.kind === "visit" ? [item.visit.park.slug] : [],
+          )}
+          failureMessage={t("savedCacheRefreshFailed")}
+          retryLabel={t("retryCacheRefresh")}
+          retryingLabel={t("retryingCacheRefresh")}
+          successMessage={t("cacheRefreshRetried")}
+        />
+      )}
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
           <label htmlFor="trip-name" className="text-sm font-medium">
@@ -372,10 +440,52 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
         />
       </div>
 
+      {!isEditing && <p className="text-sm text-muted-foreground">{t("publishOrDraftHelp")}</p>}
+      {isEditing && (
+        <p className="text-sm font-medium">
+          {status === "published" ? t("publishedStatus") : t("draftStatus")}
+        </p>
+      )}
       <div className="flex flex-wrap items-center gap-4">
-        <Button type="submit" disabled={isSubmitDisabled}>
-          {isSubmitting ? "..." : t("submit")}
+        <Button
+          type="submit"
+          disabled={isSubmitting || isDescriptionTooLong || (isEditing && !isEditDirty)}
+        >
+          {isSubmitting ? "..." : isEditing ? t("submit") : t("publish")}
         </Button>
+        {isEditing === true && isEditDirty === true && (
+          <Button
+            type="submit"
+            name="intent"
+            value="preview"
+            variant="outline"
+            disabled={isSubmitting || isDescriptionTooLong}
+          >
+            {t("saveAndPreview")}
+          </Button>
+        )}
+        {!isEditing && (
+          <Button
+            type="submit"
+            name="status"
+            value="draft"
+            variant="outline"
+            disabled={isSubmitting || isDescriptionTooLong}
+          >
+            {t("saveDraft")}
+          </Button>
+        )}
+        {isEditing && (
+          <Button
+            type="submit"
+            name="status"
+            value={status === "published" ? "draft" : "published"}
+            variant="outline"
+            disabled={isSubmitting}
+          >
+            {status === "published" ? t("withdraw") : t("publish")}
+          </Button>
+        )}
         {tripToEdit !== undefined && (
           <>
             <Link

@@ -4,6 +4,7 @@ class ApiError extends Error {
   constructor(
     public status: number,
     message: string,
+    public details: unknown = null,
   ) {
     super(message);
     this.name = "ApiError";
@@ -124,9 +125,16 @@ const performApiFetch = async <T>(
   if (!response.ok) {
     const body = await response.text().catch(() => "Unknown error");
     const message = getMessageFromErrorBody(body);
+    let details: unknown = null;
+    try {
+      details = JSON.parse(body) as unknown;
+    } catch {
+      details = null;
+    }
     throw new ApiError(
       response.status,
       message ? `API error ${response.status}: ${message}` : `API error ${response.status}`,
+      details,
     );
   }
 

@@ -99,7 +99,9 @@ describe("VisitForm", () => {
     fireEvent.change(screen.getByLabelText(/controlPanel.visits.form.dateLabel/i), {
       target: { value: "2024-06-16" },
     });
-    await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.submit/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /controlPanel.visits.form.publish/i }),
+    );
 
     expect(apiFetch).toHaveBeenCalledWith("/api/parks/pallas/visits", {
       method: "POST",
@@ -109,12 +111,18 @@ describe("VisitForm", () => {
         author: null,
         location: null,
         note: null,
+        status: "published",
       }),
     });
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/hallinta/kaynnit/42/muokkaa?created=1");
+      expect(mockPush).toHaveBeenCalledWith(
+        "/hallinta/kaynnit/42/muokkaa?created=1&status=published",
+      );
     });
-    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "pallas" });
+    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({
+      parkSlug: "pallas",
+      expireImmediately: true,
+    });
     expect(mockRefresh).not.toHaveBeenCalled();
   });
 
@@ -141,14 +149,16 @@ describe("VisitForm", () => {
     );
 
     const submitButton = screen.getByRole("button", {
-      name: /controlPanel.visits.form.submit/i,
+      name: /controlPanel.visits.form.publish/i,
     });
     await userEvent.click(submitButton);
 
     expect(submitButton).toBeDisabled();
     expect(submitButton).toHaveTextContent("...");
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/hallinta/kaynnit/42/muokkaa?created=1");
+      expect(mockPush).toHaveBeenCalledWith(
+        "/hallinta/kaynnit/42/muokkaa?created=1&status=published",
+      );
     });
     expect(submitButton).toBeDisabled();
   });
@@ -162,7 +172,7 @@ describe("VisitForm", () => {
     expect(screen.getByLabelText(/controlPanel.visits.form.authorLabel/i)).toBeInTheDocument();
     expect(screen.getByText(/controlPanel.visits.form.noteLabel/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /controlPanel.visits.form.submit/i }),
+      screen.getByRole("button", { name: /controlPanel.visits.form.publish/i }),
     ).toBeInTheDocument();
     expect(screen.queryByLabelText(/controlPanel.visits.form.tripLabel/i)).not.toBeInTheDocument();
     expect(
@@ -179,7 +189,7 @@ describe("VisitForm", () => {
   it("keeps today's date while validating a missing park", async () => {
     render(<VisitForm parks={parks} />);
 
-    const submitButton = screen.getByRole("button", { name: /controlPanel.visits.form.submit/i });
+    const submitButton = screen.getByRole("button", { name: /controlPanel.visits.form.publish/i });
     fireEvent.click(submitButton);
 
     expect(
@@ -259,12 +269,40 @@ describe("VisitForm", () => {
     });
     expect(mockRefresh).toHaveBeenCalled();
     expect(mockRevalidatePublicCache).toHaveBeenCalledWith({
+      expireImmediately: false,
       parkSlug: "pallas",
       tripSlug: "keski-suomen-kesaretki",
     });
     expect(
       screen.getByRole("link", { name: "controlPanel.visits.form.viewAllVisits" }),
     ).toHaveAttribute("href", "/hallinta/kaynnit");
+  });
+
+  it("saves dirty visit fields before opening the private preview", async () => {
+    const { apiFetch } = await import("@/lib/api");
+    vi.mocked(apiFetch).mockResolvedValueOnce(undefined);
+
+    render(<VisitForm parks={parks} visitToEdit={visitToEdit} />);
+    await userEvent.clear(screen.getByLabelText(/controlPanel.visits.form.routeLabel/i));
+    await userEvent.type(screen.getByLabelText(/controlPanel.visits.form.routeLabel/i), "Hetta");
+    await userEvent.click(
+      screen.getByRole("button", { name: /controlPanel.visits.form.saveAndPreview/i }),
+    );
+
+    expect(apiFetch).toHaveBeenCalledWith("/api/visits/1", {
+      method: "PATCH",
+      body: JSON.stringify({
+        visitedOn: "2024-06-15",
+        route: "Hetta",
+        author: "Maija Meikäläinen",
+        location: { lat: 67.55, lon: 24.12 },
+        note: "Great hike",
+      }),
+    });
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith("/hallinta/kaynnit/1/esikatselu");
+    });
+    expect(mockRefresh).not.toHaveBeenCalled();
   });
 
   it("shows the API error when creating a visit fails", async () => {
@@ -277,7 +315,9 @@ describe("VisitForm", () => {
       screen.getByLabelText(/controlPanel.visits.form.parkLabel/i),
       "pallas",
     );
-    await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.submit/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /controlPanel.visits.form.publish/i }),
+    );
 
     expect(await screen.findByText("create failed")).toBeInTheDocument();
     expect(mockPush).not.toHaveBeenCalled();
@@ -317,7 +357,9 @@ describe("VisitForm", () => {
       "24.9",
     );
 
-    await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.submit/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /controlPanel.visits.form.publish/i }),
+    );
 
     expect(apiFetch).toHaveBeenCalledWith("/api/parks/pallas/visits", {
       method: "POST",
@@ -327,6 +369,7 @@ describe("VisitForm", () => {
         author: null,
         location: { lat: 68.1, lon: 24.9 },
         note: null,
+        status: "published",
       }),
     });
   });
@@ -343,7 +386,9 @@ describe("VisitForm", () => {
       "68.1",
     );
 
-    await userEvent.click(screen.getByRole("button", { name: /controlPanel.visits.form.submit/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /controlPanel.visits.form.publish/i }),
+    );
 
     expect(
       await screen.findByText("controlPanel.visits.form.validation.locationInvalid"),
@@ -416,6 +461,7 @@ describe("VisitForm", () => {
 
     expect(apiFetch).toHaveBeenCalledWith("/api/visits/1", { method: "DELETE" });
     expect(mockRevalidatePublicCache).toHaveBeenCalledWith({
+      expireImmediately: false,
       parkSlug: "pallas",
       tripSlug: "keski-suomen-kesaretki",
     });

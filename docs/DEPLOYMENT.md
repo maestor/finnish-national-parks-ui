@@ -22,8 +22,9 @@ NEXT_PUBLIC_MAP_STYLE_URL=https://demotiles.maplibre.org/style.json
 Set `NEXT_PUBLIC_SITE_URL` to the preferred public origin (use your custom domain if applicable) and redeploy. Metadata, canonical links, and the sitemap share this origin. Without it, the app uses `VERCEL_PROJECT_PRODUCTION_URL`, then `VERCEL_URL`, then localhost. Redirect secondary domains to the preferred domain in Vercel; canonical links do not perform redirects.
 
 - `/robots.txt` advertises `/sitemap.xml` and allows public pages and rendering assets. API/auth paths are excluded from crawling.
-- `/sitemap.xml` reads the anonymous-user catalogue and all trip archive pages through the server-side API client, without session cookies. It is generated on request, while its public reads use the shared force-cached, tag-revalidated fetchers; it excludes admin/login/tokenized share URLs and fails on upstream errors instead of returning a misleading partial sitemap. It does not emit guessed modification dates or signed media URLs. A dedicated lightweight API sitemap feed should replace archive pagination if the catalogue grows enough to approach function time limits or 50,000 URLs.
+- `/sitemap.xml` reads the anonymous-user catalogue and published trip archive pages through the server-side API client, without session cookies. It is generated on request, while its public reads use the shared force-cached, tag-revalidated fetchers; it excludes admin/preview/login/tokenized share URLs and fails on upstream errors instead of returning a misleading partial sitemap. Publication invalidation refreshes the sitemap path. It does not emit guessed modification dates or signed media URLs. A dedicated lightweight API sitemap feed should replace archive pagination if the catalogue grows enough to approach function time limits or 50,000 URLs.
 - Public pages have Finnish descriptions and canonical URLs without UI filter query parameters. Missing/hidden park fallback metadata is noindex. Login, admin, offline, and tokenized share responses carry `X-Robots-Tag: noindex, nofollow`; these pages remain crawlable so crawlers can read the directive. Vercel previews receive the same header globally. These rules do not replace authentication.
+- Saved trip and visit preview routes also declare `robots: noindex, nofollow`; their authenticated API data, route calculations, galleries, and signed images use no-store/private handling. API publication-dependent summaries use `private, no-store`, while catalog-only responses retain their existing cache policy.
 - Keep `public/googleff9155aacaf6c1d0.html` deployed after ownership verification.
 
 After deploying:
@@ -87,6 +88,8 @@ The frontend proxy routes in this repo avoid sending the backend cookie directly
 ## Backend auth setup
 
 The backend must know the frontend's real public URL for OAuth redirects and post-login redirects. Apply the current database migrations before enabling the control panel; existing email-only admins are enrolled through `/hallinta/kayttajat` after an enrolled admin signs in.
+
+For publication-status releases, deploy the API migration and status-aware handlers before the UI. Existing records are backfilled as published, but the new API defaults omitted create status to draft; keep admin editing paused during the gap until the UI sends explicit `draft` or `published` intent. Never roll back to API handlers that expose drafts after drafts have been created.
 
 Typical values you will need on the backend side:
 

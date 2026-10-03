@@ -38,6 +38,12 @@ export type VisitCreateRequest = NonNullable<
 export type VisitWithPark =
   paths["/api/visits"]["get"]["responses"][200]["content"]["application/json"]["visits"][number];
 
+export type AdminVisitWithPark =
+  paths["/api/admin/visits"]["get"]["responses"][200]["content"]["application/json"]["visits"][number];
+
+export type AdminParkVisits =
+  paths["/api/admin/parks/{slug}/visits"]["get"]["responses"][200]["content"]["application/json"];
+
 export type VisitUpdateRequest = NonNullable<
   paths["/api/visits/{id}"]["patch"]["requestBody"]
 >["content"]["application/json"];

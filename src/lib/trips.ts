@@ -4,8 +4,14 @@ import { formatFinnishDateRange } from "./fi-date";
 export type Trip =
   paths["/api/trips"]["get"]["responses"][200]["content"]["application/json"]["trips"][number];
 
+export type AdminTrip =
+  paths["/api/admin/trips"]["get"]["responses"][200]["content"]["application/json"]["trips"][number];
+
 export type TripDetail =
   paths["/api/trips/{id}"]["get"]["responses"][200]["content"]["application/json"];
+
+export type AdminTripDetail =
+  paths["/api/admin/trips/{id}"]["get"]["responses"][200]["content"]["application/json"];
 
 export type PublicTripDetail =
   paths["/api/trips/slug/{slug}"]["get"]["responses"][200]["content"]["application/json"];

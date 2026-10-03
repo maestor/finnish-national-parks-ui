@@ -7,6 +7,7 @@ export const getPublicParkTag = (slug: string) => `public-park:${slug}`;
 export const getPublicTripTag = (slug: string) => `public-trip:${slug}`;
 
 interface RevalidatePublicCacheOptions {
+  expireImmediately?: boolean;
   parkSlug?: string | null;
   tripSlug?: string | null;
 }
@@ -14,6 +15,7 @@ interface RevalidatePublicCacheOptions {
 export const revalidatePublicCache = async ({
   parkSlug = null,
   tripSlug = null,
+  expireImmediately = false,
 }: RevalidatePublicCacheOptions = {}): Promise<boolean> => {
   try {
     const response = await fetch("/api/revalidate-public-cache", {
@@ -22,7 +24,7 @@ export const revalidatePublicCache = async ({
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ parkSlug, tripSlug }),
+      body: JSON.stringify({ expireImmediately, parkSlug, tripSlug }),
     });
 
     return response.ok;

@@ -2,9 +2,11 @@
 
 import { NotebookPen } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { VisitAccordion } from "@/components/park/visit-accordion";
 import { useAuth } from "@/hooks/use-auth";
-import type { Visit } from "@/lib/parks";
+import { apiFetch } from "@/lib/api";
+import type { AdminParkVisits, Visit } from "@/lib/parks";
 import { appRoutes, createPathWithSearchParams } from "@/lib/routes";
 
 interface ParkVisitHistoryProps {
@@ -25,6 +27,34 @@ export const ParkVisitHistory = ({
   visits,
 }: ParkVisitHistoryProps) => {
   const auth = useAuth();
+  const [visibleVisits, setVisibleVisits] = useState<Visit[]>(visits);
+
+  useEffect(() => {
+    if (!auth.isAuthenticated) {
+      setVisibleVisits(visits);
+      return;
+    }
+
+    let isCurrent = true;
+
+    void apiFetch<AdminParkVisits>(`/api/admin/parks/${encodeURIComponent(parkSlug)}/visits`, {
+      cache: "no-store",
+    })
+      .then((response) => {
+        if (isCurrent) {
+          setVisibleVisits(response.visits);
+        }
+      })
+      .catch(() => {
+        if (isCurrent) {
+          setVisibleVisits(visits);
+        }
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [auth.isAuthenticated, parkSlug, visits]);
 
   return (
     <section
@@ -62,10 +92,10 @@ export const ParkVisitHistory = ({
         )}
       </div>
 
-      {visits.length > 0 ? (
+      {visibleVisits.length > 0 ? (
         <div className="mt-4">
           <VisitAccordion
-            visits={visits}
+            visits={visibleVisits}
             parkSlug={parkSlug}
             isEditable={auth.isAuthenticated}
             initialOpenVisitId={initialOpenVisitId}

@@ -23,9 +23,11 @@ describe("routes", () => {
     expect(appRoutes.controlPanel.trips).toBe("/hallinta/retket");
     expect(appRoutes.controlPanel.newTrip).toBe("/hallinta/retket/uusi");
     expect(appRoutes.controlPanel.editTrip("7")).toBe("/hallinta/retket/7/muokkaa");
+    expect(appRoutes.controlPanel.previewTrip("7")).toBe("/hallinta/retket/7/esikatselu");
     expect(appRoutes.controlPanel.visits).toBe("/hallinta/kaynnit");
     expect(appRoutes.controlPanel.newVisit).toBe("/hallinta/kaynnit/uusi");
     expect(appRoutes.controlPanel.editVisit("42")).toBe("/hallinta/kaynnit/42/muokkaa");
+    expect(appRoutes.controlPanel.previewVisit("42")).toBe("/hallinta/kaynnit/42/esikatselu");
     expect(appRoutes.controlPanel.dateRangeReview).toBe("/hallinta/ajanjaksokatsaus");
     expect(appRoutes.controlPanel.yearReview).toBe("/hallinta/vuosikatsaus");
     expect(appRoutes.controlPanel.admins).toBe("/hallinta/kayttajat");
@@ -61,11 +63,17 @@ describe("routes", () => {
     expect(normalizeAppPath("/control-panel/trips")).toBe("/hallinta/retket");
     expect(normalizeAppPath("/control-panel/trips/new")).toBe("/hallinta/retket/uusi");
     expect(normalizeAppPath("/control-panel/trips/7/edit")).toBe("/hallinta/retket/7/muokkaa");
+    expect(normalizeAppPath("/control-panel/trips/7/preview")).toBe(
+      "/hallinta/retket/7/esikatselu",
+    );
     expect(normalizeAppPath("/control-panel/visits")).toBe("/hallinta/kaynnit");
     expect(normalizeAppPath("/control-panel/visits/new?park=pallas")).toBe(
       "/hallinta/kaynnit/uusi?park=pallas",
     );
     expect(normalizeAppPath("/control-panel/visits/42/edit")).toBe("/hallinta/kaynnit/42/muokkaa");
+    expect(normalizeAppPath("/control-panel/visits/42/preview")).toBe(
+      "/hallinta/kaynnit/42/esikatselu",
+    );
     expect(normalizeAppPath("/control-panel/date-range-review")).toBe("/hallinta/ajanjaksokatsaus");
     expect(normalizeAppPath("/date-range-review/share/93d27350-b7a4-48ba-a93f-16f38d44aa03")).toBe(
       "/ajanjaksokatsaus/jako/93d27350-b7a4-48ba-a93f-16f38d44aa03",

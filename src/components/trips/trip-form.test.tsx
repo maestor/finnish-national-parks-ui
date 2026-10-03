@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SnackbarProvider } from "@/components/providers/snackbar-provider";
 import { LONG_TEXTAREA_MAX_LENGTH } from "@/components/ui/textarea-with-counter";
-import type { Trip } from "@/lib/trips";
+import type { AdminTripDetail } from "@/lib/trips";
 import { TripForm } from "./trip-form";
 
 const mockPush = vi.fn();
@@ -14,7 +14,8 @@ const { mockResolveLocationFromCoordinate, mockRevalidatePublicCache } = vi.hois
   mockRevalidatePublicCache: vi.fn(async () => true),
 }));
 
-vi.mock("@/lib/api", () => ({
+vi.mock("@/lib/api", async () => ({
+  ...(await vi.importActual<typeof import("@/lib/api")>("@/lib/api")),
   apiFetch: vi.fn(),
 }));
 
@@ -43,13 +44,15 @@ const tripToEdit = {
   description: "Kolmen paivan kierros kansallispuistoihin.",
   startingPoint: null,
   visitCount: 2,
+  status: "published",
+  itinerary: [],
   dateRange: {
     start: "2024-06-15",
     end: "2024-06-17",
   },
   createdAt: "2024-06-18T00:00:00Z",
   updatedAt: "2024-06-18T00:00:00Z",
-} satisfies Trip;
+} satisfies AdminTripDetail;
 
 const tripWithStartingPoint = {
   ...tripToEdit,
@@ -58,12 +61,12 @@ const tripWithStartingPoint = {
     displayName: "Jyvaskyla",
     label: "Jyvaskyla",
   },
-} satisfies Trip;
+} satisfies AdminTripDetail;
 
 const tripWithTooLongDescription = {
   ...tripToEdit,
   description: "a".repeat(LONG_TEXTAREA_MAX_LENGTH + 1),
-} satisfies Trip;
+} satisfies AdminTripDetail;
 
 const render = (ui: Parameters<typeof renderTestingLibrary>[0]) =>
   renderTestingLibrary(<SnackbarProvider>{ui}</SnackbarProvider>);
@@ -95,7 +98,7 @@ describe("TripForm", () => {
       screen.getByLabelText(/controlPanel.trips.form.descriptionLabel/i),
       "Yhdessa koottu retkiviikko.",
     );
-    await userEvent.click(screen.getByRole("button", { name: /controlPanel.trips.form.submit/i }));
+    await userEvent.click(screen.getByRole("button", { name: /controlPanel.trips.form.publish/i }));
 
     expect(apiFetch).toHaveBeenCalledWith("/api/trips", {
       method: "POST",
@@ -103,12 +106,17 @@ describe("TripForm", () => {
         description: "Yhdessa koottu retkiviikko.",
         name: "Lapin kierros",
         startingPoint: null,
+        status: "published",
       }),
     });
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/hallinta/retket/12/muokkaa?created=1");
+      expect(mockPush).toHaveBeenCalledWith(
+        "/hallinta/retket/12/muokkaa?created=1&status=published",
+      );
     });
     expect(mockRevalidatePublicCache).toHaveBeenCalledWith({
+      expireImmediately: true,
+      parkSlug: null,
       tripSlug: "keski-suomen-kesaretki",
     });
   });
@@ -116,7 +124,7 @@ describe("TripForm", () => {
   it("validates that name is required", async () => {
     render(<TripForm />);
 
-    fireEvent.click(screen.getByRole("button", { name: /controlPanel.trips.form.submit/i }));
+    fireEvent.click(screen.getByRole("button", { name: /controlPanel.trips.form.publish/i }));
 
     expect(screen.getByText("controlPanel.trips.form.validation.nameRequired")).toBeInTheDocument();
   });
@@ -149,12 +157,43 @@ describe("TripForm", () => {
       expect(screen.getByRole("status")).toHaveTextContent("controlPanel.trips.form.updateSuccess");
     });
     expect(mockRevalidatePublicCache).toHaveBeenNthCalledWith(1, {
+      expireImmediately: false,
+      parkSlug: null,
       tripSlug: "keski-suomen-kesaretki",
     });
     expect(mockRevalidatePublicCache).toHaveBeenNthCalledWith(2, {
+      expireImmediately: false,
+      parkSlug: null,
       tripSlug: "lapin-kierros",
     });
     expect(mockRefresh).toHaveBeenCalled();
+  });
+
+  it("saves dirty trip fields before opening the private preview", async () => {
+    const { apiFetch } = await import("@/lib/api");
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ...tripToEdit,
+      name: "Lapin kierros",
+    });
+
+    render(<TripForm tripToEdit={tripToEdit} />);
+    await userEvent.clear(screen.getByLabelText(/controlPanel.trips.form.nameLabel/i));
+    await userEvent.type(
+      screen.getByLabelText(/controlPanel.trips.form.nameLabel/i),
+      "Lapin kierros",
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: /controlPanel.trips.form.saveAndPreview/i }),
+    );
+
+    expect(apiFetch).toHaveBeenCalledWith("/api/trips/7", {
+      method: "PATCH",
+      body: JSON.stringify({ name: "Lapin kierros" }),
+    });
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith("/hallinta/retket/7/esikatselu");
+    });
+    expect(mockRefresh).not.toHaveBeenCalled();
   });
 
   it("requires a selected starting point when free text is entered", async () => {
@@ -166,7 +205,7 @@ describe("TripForm", () => {
       }),
       "Tampere",
     );
-    await userEvent.click(screen.getByRole("button", { name: /controlPanel.trips.form.submit/i }));
+    await userEvent.click(screen.getByRole("button", { name: /controlPanel.trips.form.publish/i }));
 
     expect(
       screen.getByText("controlPanel.trips.form.validation.startingPointSelectionRequired"),

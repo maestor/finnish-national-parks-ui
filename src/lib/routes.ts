@@ -21,9 +21,12 @@ export const appRoutes = {
     trips: `${CONTROL_PANEL_ROOT}/retket`,
     newTrip: `${CONTROL_PANEL_ROOT}/retket/uusi`,
     editTrip: (tripId: string | number) => `${CONTROL_PANEL_ROOT}/retket/${tripId}/muokkaa`,
+    previewTrip: (tripId: string | number) => `${CONTROL_PANEL_ROOT}/retket/${tripId}/esikatselu`,
     visits: `${CONTROL_PANEL_ROOT}/kaynnit`,
     newVisit: `${CONTROL_PANEL_ROOT}/kaynnit/uusi`,
     editVisit: (visitId: string | number) => `${CONTROL_PANEL_ROOT}/kaynnit/${visitId}/muokkaa`,
+    previewVisit: (visitId: string | number) =>
+      `${CONTROL_PANEL_ROOT}/kaynnit/${visitId}/esikatselu`,
     dateRangeReview: `${CONTROL_PANEL_ROOT}/ajanjaksokatsaus`,
     yearReview: `${CONTROL_PANEL_ROOT}/vuosikatsaus`,
     admins: `${CONTROL_PANEL_ROOT}/kayttajat`,
@@ -212,6 +215,18 @@ const normalizePathname = (pathname: string) => {
   const controlPanelVisitEditMatch = /^\/control-panel\/visits\/([^/]+)\/edit$/.exec(pathname);
   if (controlPanelVisitEditMatch) {
     return appRoutes.controlPanel.editVisit(controlPanelVisitEditMatch[1]);
+  }
+
+  const controlPanelTripPreviewMatch = /^\/control-panel\/trips\/([^/]+)\/preview$/.exec(pathname);
+  if (controlPanelTripPreviewMatch) {
+    return appRoutes.controlPanel.previewTrip(controlPanelTripPreviewMatch[1]);
+  }
+
+  const controlPanelVisitPreviewMatch = /^\/control-panel\/visits\/([^/]+)\/preview$/.exec(
+    pathname,
+  );
+  if (controlPanelVisitPreviewMatch) {
+    return appRoutes.controlPanel.previewVisit(controlPanelVisitPreviewMatch[1]);
   }
 
   return pathname;

@@ -38,7 +38,7 @@ describe("public cache helpers", () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ parkSlug: "pallas", tripSlug: "kesaretki" }),
+      body: JSON.stringify({ expireImmediately: false, parkSlug: "pallas", tripSlug: "kesaretki" }),
     });
   });
 

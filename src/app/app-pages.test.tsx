@@ -41,6 +41,9 @@ import ParksPage, { generateMetadata as generateParksMetadata } from "./control-
 import EditTripPage, {
   generateMetadata as generateEditTripMetadata,
 } from "./control-panel/trips/[id]/edit/page";
+import TripPreviewPage, {
+  generateMetadata as generateTripPreviewMetadata,
+} from "./control-panel/trips/[id]/preview/page";
 import NewTripPage, {
   generateMetadata as generateNewTripMetadata,
 } from "./control-panel/trips/new/page";
@@ -48,6 +51,9 @@ import TripsPage, { generateMetadata as generateTripsMetadata } from "./control-
 import EditVisitPage, {
   generateMetadata as generateEditVisitMetadata,
 } from "./control-panel/visits/[id]/edit/page";
+import VisitPreviewPage, {
+  generateMetadata as generateVisitPreviewMetadata,
+} from "./control-panel/visits/[id]/preview/page";
 import NewVisitPage, {
   generateMetadata as generateNewVisitMetadata,
 } from "./control-panel/visits/new/page";
@@ -1963,7 +1969,7 @@ describe("App pages", () => {
   });
 
   it("renders the visits list page", async () => {
-    vi.mocked(apiFetch).mockResolvedValueOnce({ visits: [visitWithPark] });
+    vi.mocked(apiAuthFetch).mockResolvedValueOnce({ visits: [visitWithPark] });
 
     await renderControlPanelRoute(await VisitsPage());
 
@@ -1977,7 +1983,7 @@ describe("App pages", () => {
   });
 
   it("renders the trips list page", async () => {
-    vi.mocked(apiFetch).mockResolvedValueOnce({ trips: [trip] });
+    vi.mocked(apiAuthFetch).mockResolvedValueOnce({ trips: [trip] });
 
     await renderControlPanelRoute(await TripsPage());
 
@@ -2011,14 +2017,14 @@ describe("App pages", () => {
   });
 
   it("renders the edit trip page with the created notice", async () => {
-    vi.mocked(apiFetch)
+    vi.mocked(apiAuthFetch)
       .mockResolvedValueOnce(trip)
       .mockResolvedValueOnce({ visits: [visitWithPark] });
 
     await renderControlPanelRoute(
       await EditTripPage({
         params: Promise.resolve({ id: "7" }),
-        searchParams: Promise.resolve({ created: "1" }),
+        searchParams: Promise.resolve({ created: "1", status: "published" }),
       }),
     );
 
@@ -2028,7 +2034,9 @@ describe("App pages", () => {
     expect(
       screen.getByRole("link", { name: "controlPanel.trips.editTrip.viewTripPage" }),
     ).toHaveAttribute("href", "/retki/keski-suomen-kesaretki");
-    expect(screen.getByText("controlPanel.trips.editTrip.createdNotice")).toBeInTheDocument();
+    expect(
+      screen.getByText("controlPanel.trips.editTrip.publishedCreatedNotice"),
+    ).toBeInTheDocument();
     expect(screen.getByTestId("trip-form")).toHaveTextContent("trip:7");
     expect(screen.getByTestId("trip-visit-assignments")).toHaveTextContent("trip:7|visits:1");
   });
@@ -2039,8 +2047,44 @@ describe("App pages", () => {
     );
   });
 
+  it("renders an authenticated preview of a saved trip", async () => {
+    vi.mocked(apiAuthFetch).mockResolvedValueOnce(trip);
+
+    await renderControlPanelRoute(
+      await TripPreviewPage({ params: Promise.resolve({ id: String(trip.id) }) }),
+    );
+
+    expect(screen.getByText("controlPanel.trips.preview.banner")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "controlPanel.trips.preview.backToEdit" }),
+    ).toHaveAttribute("href", `/hallinta/retket/${trip.id}/muokkaa`);
+    expect(screen.getByTestId("public-trip-page")).toHaveTextContent(`slug:${trip.slug}`);
+    expect(apiAuthFetch).toHaveBeenCalledWith(`/api/admin/trips/${trip.id}/preview`, {
+      cache: "no-store",
+    });
+  });
+
+  it("rejects invalid and missing trip previews", async () => {
+    await expect(TripPreviewPage({ params: Promise.resolve({ id: "0" }) })).rejects.toThrow(
+      "NEXT_NOT_FOUND",
+    );
+    expect(apiAuthFetch).not.toHaveBeenCalled();
+
+    vi.mocked(apiAuthFetch).mockRejectedValueOnce(new ApiError(404, "Not found"));
+    await expect(
+      TripPreviewPage({ params: Promise.resolve({ id: String(trip.id) }) }),
+    ).rejects.toThrow("NEXT_NOT_FOUND");
+  });
+
+  it("builds private metadata for trip previews", async () => {
+    await expect(generateTripPreviewMetadata()).resolves.toEqual({
+      title: "controlPanel.trips.preview.title",
+      robots: { index: false, follow: false },
+    });
+  });
+
   it("calls notFound when the edit trip page cannot find the requested trip", async () => {
-    vi.mocked(apiFetch)
+    vi.mocked(apiAuthFetch)
       .mockResolvedValueOnce(null)
       .mockResolvedValueOnce({ visits: [visitWithPark] });
 
@@ -2082,12 +2126,12 @@ describe("App pages", () => {
   });
 
   it("renders the edit visit page with the created notice and edit helpers", async () => {
-    vi.mocked(apiFetch).mockResolvedValueOnce(visitWithPark);
+    vi.mocked(apiAuthFetch).mockResolvedValueOnce(visitWithPark);
 
     await renderControlPanelRoute(
       await EditVisitPage({
         params: Promise.resolve({ id: "10" }),
-        searchParams: Promise.resolve({ created: "1" }),
+        searchParams: Promise.resolve({ created: "1", status: "published" }),
       }),
     );
 
@@ -2097,11 +2141,13 @@ describe("App pages", () => {
     expect(
       screen.getByRole("link", { name: "controlPanel.visits.editVisit.viewParkPage" }),
     ).toHaveAttribute("href", "/paikka/pallas");
-    expect(screen.getByText("controlPanel.visits.editVisit.createdNotice")).toBeInTheDocument();
+    expect(
+      screen.getByText("controlPanel.visits.editVisit.publishedCreatedNotice"),
+    ).toBeInTheDocument();
     expect(screen.getByTestId("visit-form")).toHaveTextContent("parks:0|edit:10|default:none");
     expect(screen.getByTestId("visit-image-section")).toHaveTextContent("visit:10|images:1");
-    expect(apiFetch).toHaveBeenCalledWith("/api/visits/10");
-    expect(apiFetch).toHaveBeenCalledTimes(1);
+    expect(apiAuthFetch).toHaveBeenCalledWith("/api/admin/visits/10", { cache: "no-store" });
+    expect(apiAuthFetch).toHaveBeenCalledTimes(1);
   });
 
   it("builds metadata for the edit visit page", async () => {
@@ -2110,8 +2156,45 @@ describe("App pages", () => {
     );
   });
 
+  it("renders an authenticated preview of a saved visit", async () => {
+    vi.mocked(apiAuthFetch).mockResolvedValueOnce({ ...visitWithPark, status: "draft" });
+
+    await renderControlPanelRoute(
+      await VisitPreviewPage({ params: Promise.resolve({ id: String(visitWithPark.id) }) }),
+    );
+
+    expect(screen.getByText("controlPanel.visits.preview.banner")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: publicPark.name })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "controlPanel.visits.preview.backToEdit" }),
+    ).toHaveAttribute("href", `/hallinta/kaynnit/${visitWithPark.id}/muokkaa`);
+    expect(screen.getByTestId("visit-accordion")).toHaveTextContent("visits:1|editable:undefined");
+    expect(apiAuthFetch).toHaveBeenCalledWith(`/api/admin/visits/${visitWithPark.id}`, {
+      cache: "no-store",
+    });
+  });
+
+  it("rejects invalid and missing visit previews", async () => {
+    await expect(
+      VisitPreviewPage({ params: Promise.resolve({ id: "not-a-number" }) }),
+    ).rejects.toThrow("NEXT_NOT_FOUND");
+    expect(apiAuthFetch).not.toHaveBeenCalled();
+
+    vi.mocked(apiAuthFetch).mockRejectedValueOnce(new ApiError(404, "Not found"));
+    await expect(
+      VisitPreviewPage({ params: Promise.resolve({ id: String(visitWithPark.id) }) }),
+    ).rejects.toThrow("NEXT_NOT_FOUND");
+  });
+
+  it("builds private metadata for visit previews", async () => {
+    await expect(generateVisitPreviewMetadata()).resolves.toEqual({
+      title: "controlPanel.visits.preview.title",
+      robots: { index: false, follow: false },
+    });
+  });
+
   it("calls notFound when the edit visit page cannot find the requested visit", async () => {
-    vi.mocked(apiFetch).mockResolvedValueOnce(null);
+    vi.mocked(apiAuthFetch).mockResolvedValueOnce(null);
 
     await expect(
       EditVisitPage({
