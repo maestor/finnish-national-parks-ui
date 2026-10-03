@@ -25,7 +25,7 @@ export const PUBLIC_HERO_HEADING_STACK_CLASS_NAME = "space-y-2";
 export const PUBLIC_HERO_TITLE_CLASS_NAME = "mt-1 text-3xl font-bold tracking-tight sm:text-4xl";
 
 export const PUBLIC_HERO_DESCRIPTION_CLASS_NAME =
-  "max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base";
+  "text-sm leading-6 text-muted-foreground sm:text-base";
 
 export const PUBLIC_EMPTY_STATE_PANEL_CLASS_NAME =
   "rounded-[2rem] border border-dashed border-white/45 bg-white/54 p-8 text-center backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/40";

@@ -418,7 +418,7 @@ const PublicVisitsTimeline = ({
     <div className={PUBLIC_PAGE_SHELL_CLASS_NAME}>
       <section className={PUBLIC_PANEL_CLASS_NAME}>
         <div className="flex flex-col gap-4">
-          <div className={cn("max-w-3xl", PUBLIC_HERO_HEADING_STACK_CLASS_NAME)}>
+          <div className={PUBLIC_HERO_HEADING_STACK_CLASS_NAME}>
             <div className={PUBLIC_EYEBROW_BADGE_CLASS_NAME}>
               <Footprints className="h-4 w-4" aria-hidden="true" />
               <span>{t("eyebrow")}</span>
