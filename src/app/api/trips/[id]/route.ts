@@ -8,7 +8,7 @@ interface RouteContext {
 
 export const GET = async (request: Request, { params }: RouteContext) => {
   const { id } = await params;
-  return proxyBackendRequest(request, `/api/trips/${id}`);
+  return proxyBackendRequest(request, `/api/trips/${id}`, { requireAdmin: true });
 };
 
 export const PATCH = async (request: Request, { params }: RouteContext) => {

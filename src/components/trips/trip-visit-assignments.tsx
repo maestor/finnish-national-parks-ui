@@ -503,6 +503,10 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
 
   const availableVisits = visitsState
     .filter((visit) => {
+      if (visit.status !== "published") {
+        return false;
+      }
+
       if (visit.trip !== null) {
         return false;
       }

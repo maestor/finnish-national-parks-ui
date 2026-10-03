@@ -301,7 +301,9 @@ describe("api proxy routes", () => {
 
     await getTrip(request, { params: Promise.resolve({ id: "7" }) });
 
-    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/trips/7");
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/trips/7", {
+      requireAdmin: true,
+    });
   });
 
   it("proxies trip deletion", async () => {

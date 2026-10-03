@@ -69,6 +69,8 @@ Project-specific expectations:
 - Test `generateMetadata` for page modules when titles or other metadata are part of the user-visible route contract
 - Mock heavy child components where needed, but keep the page or layout composition real
 - Use these tests to cover route-level success, empty, error, and not-found behavior before dropping to helper-only tests
+- Trip and visit preview page tests should cover saved admin reads, noindex metadata, 404 versus operational errors, and canonical Finnish route shims. Admin preview API proxies must deny missing/non-admin sessions and preserve no-store responses.
+- Park visit history tests should prove public visitors receive only public visits, authenticated admins load their park's admin projection, and draft entries show a visible **Luonnos** label. Trip assignment tests should exclude draft visits from the available choices.
 
 ### 2. E2E Tests (Playwright)
 
@@ -230,6 +232,7 @@ When a change touches security, resilience, or resource usage, add the cheapest 
 - **External origins and uploads** — Verify that remote asset and upload flows only use the documented allowlist or trusted target set, especially when changing image, map, or presigned-upload behavior.
 - **Secrets and client safety** — Prefer tests that prove server-only secrets stay server-only and that client code uses redirects, cookies, and public routes instead of raw privileged credentials.
 - **Offline and media-heavy features** — When changing service worker, caching, or image optimization behavior, add focused verification for the user-visible fallback and the expected network-saving path.
+- **Publication and preview** — Cover explicit publish/draft creation payloads, independent trip and visit status transitions, dirty-save behavior, private preview route/gallery requests, and signed-image optimizer bypass. Do not treat mocked UI tests as proof of API or storage privacy.
 
 ---
 

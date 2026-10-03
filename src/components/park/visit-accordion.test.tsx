@@ -140,6 +140,21 @@ describe("VisitAccordion", () => {
     expect(toggleButtons.length).toBe(4);
   });
 
+  it("labels draft visits clearly", () => {
+    const visit = visits[0];
+    if (!visit) {
+      throw new Error("Expected a visit fixture");
+    }
+
+    render(
+      <VisitAccordion visits={[{ ...visit, status: "draft" }]} parkSlug="pallas" isEditable />,
+    );
+
+    expect(screen.getByText("park.draftStatus")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "controlPanel.visits.edit" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "park.copyVisitLink" })).not.toBeInTheDocument();
+  });
+
   it("opens the newest expandable visit by default", () => {
     render(<VisitAccordion visits={visits} parkSlug="pallas" />);
 

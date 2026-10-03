@@ -37,7 +37,13 @@ import { useAuth } from "@/hooks/use-auth";
 import { apiPublicFetch } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { formatFinnishDate, formatFinnishDateRange } from "@/lib/fi-date";
-import { fetchPublicTripRoute, fetchPublicTripStopImages } from "@/lib/public-trip";
+import {
+  fetchAdminTripPreviewRoute,
+  fetchAdminTripPreviewStopImages,
+  fetchAdminTripPreviewVisitImages,
+  fetchPublicTripRoute,
+  fetchPublicTripStopImages,
+} from "@/lib/public-trip";
 import {
   createTripItineraryItemKey,
   tripStopHasExpandableDetails,
@@ -56,6 +62,7 @@ import { DeferredMap } from "../map/deferred-map";
 import { LazyPublicTripMap } from "./lazy-public-trip-map";
 
 interface PublicTripPageProps {
+  isPreview?: boolean;
   trip: PublicTripDetail;
 }
 
@@ -102,7 +109,7 @@ const getTripVisitImagesPath = (slug: string, visitId: number) =>
 
 const getItineraryDetailsPanelId = (itemKey: string) => `trip-itinerary-details-${itemKey}`;
 
-export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
+export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps) => {
   const t = useTranslations("tripPage");
   const auth = useAuth();
   const [routeStatus, setRouteStatus] = useState<PublicTripRouteStatus>(trip.route);
@@ -113,7 +120,7 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
   const routeControllerRef = useRef<AbortController | null>(null);
   const route = routeStatus.data;
   const startingPoint = trip.startingPoint;
-  const shouldShowEditTripLink = auth.isAuthenticated === true;
+  const shouldShowEditTripLink = isPreview !== true && auth.isAuthenticated === true;
   const shouldShowStopCount = trip.stopCount > 0;
   const shouldShowImageCount = trip.imageCount > 0;
   const shouldShowRouteContent = routeStatus.success && route !== null;
@@ -297,13 +304,16 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
       loadImages(
         `visit:${visitId}`,
         (signal) =>
-          apiPublicFetch<PublicTripVisitImagesResponse>(
-            getTripVisitImagesPath(trip.slug, visitId) + (offset === 0 ? "" : `?offset=${offset}`),
-            { signal },
-          ),
+          isPreview === true
+            ? fetchAdminTripPreviewVisitImages(trip.id, visitId, { offset, signal })
+            : apiPublicFetch<PublicTripVisitImagesResponse>(
+                getTripVisitImagesPath(trip.slug, visitId) +
+                  (offset === 0 ? "" : `?offset=${offset}`),
+                { signal },
+              ),
         offset,
       ),
-    [loadImages, trip.slug],
+    [isPreview, loadImages, trip.id, trip.slug],
   );
 
   const loadStopImages = useCallback(
@@ -311,12 +321,13 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
       loadImages(
         `stop:${stopId}`,
         (signal) =>
-          fetchPublicTripStopImages(trip.slug, stopId, { offset, signal }).then(
-            (response: PublicTripStopImagesResponse) => response,
-          ),
+          (isPreview === true
+            ? fetchAdminTripPreviewStopImages(trip.id, stopId, { offset, signal })
+            : fetchPublicTripStopImages(trip.slug, stopId, { offset, signal })
+          ).then((response: PublicTripStopImagesResponse) => response),
         offset,
       ),
-    [loadImages, trip.slug],
+    [isPreview, loadImages, trip.id, trip.slug],
   );
 
   const loadRoute = useCallback(() => {
@@ -327,7 +338,11 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
     setRouteLoadState("loading");
     const controller = new AbortController();
     routeControllerRef.current = controller;
-    const request = fetchPublicTripRoute(trip.slug, { signal: controller.signal })
+    const request = (
+      isPreview === true
+        ? fetchAdminTripPreviewRoute(trip.id, { signal: controller.signal })
+        : fetchPublicTripRoute(trip.slug, { signal: controller.signal })
+    )
       .then((response) => {
         if (controller.signal.aborted) {
           return;
@@ -348,7 +363,7 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
 
     routeRequestRef.current = request;
     return request;
-  }, [routeStatus.data, trip.slug]);
+  }, [isPreview, routeStatus.data, trip.id, trip.slug]);
 
   useEffect(() => {
     if (tripSlugRef.current !== trip.slug) {
@@ -488,6 +503,7 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
             sizes="(max-width: 1024px) calc(100vw - 2rem), 1024px"
             className="object-cover object-center"
             onError={() => setFailedFeaturedImageKey(trip.featuredImage?.fullUrl ?? null)}
+            privateMedia={isPreview}
             priority
           />
         )}
@@ -545,14 +561,16 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
                 {trip.imageCount} {t("imageCount", { count: trip.imageCount })}
               </span>
             )}
-            <CopyLinkButton
-              href={appRoutes.trip(trip.slug)}
-              label={t("copyTripPageLink")}
-              copiedLabel={t("tripPageLinkCopied")}
-              tooltipSide="top"
-              className={HERO_ICON_BUTTON_CLASS_NAME}
-              iconClassName="h-3.5 w-3.5"
-            />
+            {isPreview !== true && (
+              <CopyLinkButton
+                href={appRoutes.trip(trip.slug)}
+                label={t("copyTripPageLink")}
+                copiedLabel={t("tripPageLinkCopied")}
+                tooltipSide="top"
+                className={HERO_ICON_BUTTON_CLASS_NAME}
+                iconClassName="h-3.5 w-3.5"
+              />
+            )}
             {shouldShowEditTripLink === true && (
               <EditIconLink
                 href={appRoutes.controlPanel.editTrip(trip.id)}
@@ -729,15 +747,19 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
                                   </span>
                                 </div>
                                 <h3 className="mt-2 text-lg font-semibold tracking-tight">
-                                  <Link
-                                    href={createParkVisitHref({
-                                      parkSlug: item.visit.park.slug,
-                                      visitId: item.visit.id,
-                                    })}
-                                    className="rounded-sm underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                  >
-                                    {item.visit.park.name}
-                                  </Link>
+                                  {isPreview === true ? (
+                                    item.visit.park.name
+                                  ) : (
+                                    <Link
+                                      href={createParkVisitHref({
+                                        parkSlug: item.visit.park.slug,
+                                        visitId: item.visit.id,
+                                      })}
+                                      className="rounded-sm underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    >
+                                      {item.visit.park.name}
+                                    </Link>
+                                  )}
                                 </h3>
                                 <p className="mt-1 text-sm text-muted-foreground">
                                   {item.visit.park.typeLabel}
@@ -843,7 +865,9 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
                                       </button>
                                     </div>
                                   )}
-                                  {images.length > 0 && <VisitImageGallery images={images} />}
+                                  {images.length > 0 && (
+                                    <VisitImageGallery images={images} privateMedia={isPreview} />
+                                  )}
                                   {visitDetails?.isLoadingMore === true && (
                                     <p className="text-sm text-muted-foreground">
                                       {t("loadingMoreVisitImages")}
@@ -1042,7 +1066,10 @@ export const PublicTripPage = ({ trip }: PublicTripPageProps) => {
                                     </div>
                                   )}
                                   {stopImages.length > 0 && (
-                                    <VisitImageGallery images={stopImages} />
+                                    <VisitImageGallery
+                                      images={stopImages}
+                                      privateMedia={isPreview}
+                                    />
                                   )}
                                   {stopDetails?.isLoadingMore === true && (
                                     <p className="text-sm text-muted-foreground">

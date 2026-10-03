@@ -9,13 +9,18 @@ import type { VisitWithPark } from "@/lib/parks";
 import { appRoutes } from "@/lib/routes";
 
 interface VisitListProps {
-  visits: VisitWithPark[];
+  visits: Array<
+    VisitWithPark & {
+      trip: (NonNullable<VisitWithPark["trip"]> & { status?: "draft" | "published" }) | null;
+    }
+  >;
 }
 
 export const VisitList = ({ visits }: VisitListProps) => {
   const t = useTranslations("controlPanel.visits.list");
   const [query, setQuery] = useState("");
   const [selectedParkSlug, setSelectedParkSlug] = useState("");
+  const [selectedPublicationStatus, setSelectedPublicationStatus] = useState("");
   const renderStatusBadge = (isComplete: boolean) => (
     <span
       className={`inline-flex min-w-20 items-center justify-center rounded-full border px-2.5 py-1 text-xs font-medium ${
@@ -55,12 +60,15 @@ export const VisitList = ({ visits }: VisitListProps) => {
   const normalizedQuery = query.trim().toLocaleLowerCase("fi-FI");
   const filteredVisits = sortedVisits.filter((visit) => {
     const matchesPark = selectedParkSlug ? visit.park.slug === selectedParkSlug : true;
+    const matchesStatus = selectedPublicationStatus
+      ? visit.status === selectedPublicationStatus
+      : true;
     const haystack = [visit.park.name, visit.route ?? "", visit.visitedOn]
       .join(" ")
       .toLocaleLowerCase("fi-FI");
     const matchesQuery = normalizedQuery ? haystack.includes(normalizedQuery) : true;
 
-    return matchesPark && matchesQuery;
+    return matchesPark && matchesQuery && matchesStatus;
   });
 
   if (sortedVisits.length === 0) {
@@ -89,6 +97,7 @@ export const VisitList = ({ visits }: VisitListProps) => {
         onReset={() => {
           setQuery("");
           setSelectedParkSlug("");
+          setSelectedPublicationStatus("");
         }}
         selects={[
           {
@@ -97,6 +106,17 @@ export const VisitList = ({ visits }: VisitListProps) => {
             options: parkOptions,
             value: selectedParkSlug,
             onChange: setSelectedParkSlug,
+          },
+          {
+            id: "visits-status-filter",
+            label: t("filters.statusLabel"),
+            options: [
+              { label: t("filters.statusAll"), value: "" },
+              { label: t("draftStatus"), value: "draft" },
+              { label: t("publishedStatus"), value: "published" },
+            ],
+            value: selectedPublicationStatus,
+            onChange: setSelectedPublicationStatus,
           },
         ]}
       />
@@ -113,6 +133,7 @@ export const VisitList = ({ visits }: VisitListProps) => {
                 <th className="px-4 py-3 text-left font-medium">{t("parkName")}</th>
                 <th className="px-4 py-3 text-left font-medium">{t("route")}</th>
                 <th className="px-4 py-3 text-left font-medium">{t("visitDate")}</th>
+                <th className="px-4 py-3 text-left font-medium">{t("publicationStatus")}</th>
                 <th className="px-4 py-3 text-center font-medium">{t("noteStatus")}</th>
                 <th className="px-4 py-3 text-center font-medium">{t("imageStatus")}</th>
                 <th className="px-4 py-3 text-right font-medium" />
@@ -131,6 +152,25 @@ export const VisitList = ({ visits }: VisitListProps) => {
                   </td>
                   <td className="px-4 py-3">{visit.route ?? "–"}</td>
                   <td className="px-4 py-3">{visit.visitedOn}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col items-start gap-1">
+                      <span>
+                        {visit.status === "draft"
+                          ? t("draftStatus")
+                          : visit.status === "published"
+                            ? t("publishedStatus")
+                            : t("statusUnavailable")}
+                      </span>
+                      {visit.status === "published" && visit.trip?.status === "draft" && (
+                        <Link
+                          href={appRoutes.controlPanel.editTrip(visit.trip.id)}
+                          className="text-xs underline underline-offset-4"
+                        >
+                          {t("draftTripAssociation")}
+                        </Link>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-4 py-3 text-center">
                     {renderStatusBadge(Boolean(visit.note?.trim()))}
                   </td>

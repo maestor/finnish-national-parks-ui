@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { VisitList } from "@/components/visits/visit-list";
-import { apiFetch } from "@/lib/api";
+import { apiAuthFetch } from "@/lib/api";
 import { buildPageMetadata } from "@/lib/page-metadata";
-import type { VisitWithPark } from "@/lib/parks";
+import type { AdminVisitWithPark } from "@/lib/parks";
 import { appRoutes } from "@/lib/routes";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +18,9 @@ export const generateMetadata = async () => {
 
 const VisitsPage = async () => {
   const t = await getTranslations("controlPanel.visits");
-  const { visits } = await apiFetch<{ visits: VisitWithPark[] }>("/api/visits");
+  const { visits } = await apiAuthFetch<{ visits: AdminVisitWithPark[] }>("/api/admin/visits", {
+    cache: "no-store",
+  });
 
   return (
     <div>

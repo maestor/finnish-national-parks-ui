@@ -97,6 +97,32 @@ describe("VisitList", () => {
     ).toHaveLength(2);
   });
 
+  it("keeps a published visit marked as published when its trip is a draft", () => {
+    const visitWithDraftTrip = {
+      ...visits[0],
+      status: "published",
+      trip: {
+        id: 12,
+        name: "Luonnosretki",
+        slug: "luonnosretki",
+        status: "draft",
+      },
+    } as VisitWithPark;
+
+    render(<VisitList visits={[visitWithDraftTrip]} />);
+
+    const row = screen.getByRole("link", { name: "Pallas-Yllästunturi" }).closest("tr");
+    expect(row).not.toBeNull();
+    expect(
+      within(row as HTMLElement).getByText("controlPanel.visits.list.publishedStatus"),
+    ).toBeInTheDocument();
+    expect(
+      within(row as HTMLElement).getByRole("link", {
+        name: "controlPanel.visits.list.draftTripAssociation",
+      }),
+    ).toHaveAttribute("href", "/hallinta/retket/12/muokkaa");
+  });
+
   it("shows empty state when no visits exist", () => {
     render(<VisitList visits={[]} />);
 

@@ -120,6 +120,7 @@ const currentTrip = {
 const visits = [
   {
     id: 10,
+    status: "published",
     park: {
       slug: "pallas",
       name: "Pallas-Yllästunturi",
@@ -138,6 +139,7 @@ const visits = [
   },
   {
     id: 11,
+    status: "published",
     park: {
       slug: "nuuksio",
       name: "Nuuksio",
@@ -160,6 +162,7 @@ const visits = [
   },
   {
     id: 12,
+    status: "published",
     park: {
       slug: "repovesi",
       name: "Repovesi",
@@ -186,6 +189,7 @@ const visitsWithTwoAvailable = [
   ...visits,
   {
     id: 13,
+    status: "published",
     park: {
       slug: "liesjarvi",
       name: "Liesjarvi",
@@ -377,6 +381,33 @@ describe("TripVisitAssignments", () => {
     expect(screen.getByText("Lounaspaikka Jyvaskyla")).toBeInTheDocument();
     expect(screen.getAllByText("Pallas-Yllästunturi").length).toBeGreaterThan(0);
     expect(within(availableSection).queryByText("Repovesi")).not.toBeInTheDocument();
+  });
+
+  it("does not offer draft visits as trip assignments", () => {
+    const visit = visits[0];
+    if (!visit) {
+      throw new Error("Expected a visit fixture");
+    }
+
+    const draftVisit: VisitWithPark = {
+      ...visit,
+      id: 13,
+      route: "Luonnoksen reitti",
+      status: "draft",
+    };
+
+    render(<TripVisitAssignments trip={currentTrip} visits={[...visits, draftVisit]} />);
+    const availableSection = screen
+      .getByRole("heading", {
+        name: "controlPanel.trips.assignments.availableTitle",
+      })
+      .closest("section");
+
+    if (!(availableSection instanceof HTMLElement)) {
+      throw new Error("Expected available visits section");
+    }
+
+    expect(within(availableSection).queryByText("Luonnoksen reitti")).not.toBeInTheDocument();
   });
 
   it("truncates long stop notes in the itinerary table preview", () => {

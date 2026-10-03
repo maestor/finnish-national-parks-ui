@@ -1,4 +1,4 @@
-import { apiPublicFetch } from "./api";
+import { apiAuthFetch, apiPublicFetch } from "./api";
 import { getPublicTripTag } from "./public-cache";
 import { PUBLIC_TRIP_REQUEST_TIMEOUT_MS } from "./public-trip-timeout";
 import type {
@@ -47,4 +47,36 @@ export const fetchPublicTripStopImages = async (
       cache: "no-store",
       signal: signal ?? AbortSignal.timeout(PUBLIC_TRIP_REQUEST_TIMEOUT_MS),
     },
+  );
+
+export const fetchAdminTripPreview = async (tripId: number): Promise<PublicTripDetail> =>
+  apiAuthFetch<PublicTripDetail>(`/api/admin/trips/${tripId}/preview`, { cache: "no-store" });
+
+export const fetchAdminTripPreviewRoute = async (
+  tripId: number,
+  { signal }: FetchPublicTripBySlugOptions = {},
+): Promise<PublicTripRouteResponse> =>
+  apiAuthFetch<PublicTripRouteResponse>(`/api/admin/trips/${tripId}/preview/route`, {
+    cache: "no-store",
+    signal: signal ?? AbortSignal.timeout(PUBLIC_TRIP_REQUEST_TIMEOUT_MS),
+  });
+
+export const fetchAdminTripPreviewVisitImages = async (
+  tripId: number,
+  visitId: number,
+  { offset = 0, signal }: FetchPublicTripStopImagesOptions = {},
+): Promise<PublicTripStopImagesResponse> =>
+  apiAuthFetch<PublicTripStopImagesResponse>(
+    `/api/admin/trips/${tripId}/preview/visits/${visitId}/images?limit=12&offset=${offset}`,
+    { cache: "no-store", signal: signal ?? AbortSignal.timeout(PUBLIC_TRIP_REQUEST_TIMEOUT_MS) },
+  );
+
+export const fetchAdminTripPreviewStopImages = async (
+  tripId: number,
+  stopId: number,
+  { offset = 0, signal }: FetchPublicTripStopImagesOptions = {},
+): Promise<PublicTripStopImagesResponse> =>
+  apiAuthFetch<PublicTripStopImagesResponse>(
+    `/api/admin/trips/${tripId}/preview/stops/${stopId}/images?limit=12&offset=${offset}`,
+    { cache: "no-store", signal: signal ?? AbortSignal.timeout(PUBLIC_TRIP_REQUEST_TIMEOUT_MS) },
   );

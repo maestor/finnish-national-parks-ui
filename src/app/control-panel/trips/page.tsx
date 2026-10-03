@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { TripManagement } from "@/components/trips/trip-management";
-import { apiFetch } from "@/lib/api";
+import { apiAuthFetch } from "@/lib/api";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import { appRoutes } from "@/lib/routes";
-import type { Trip } from "@/lib/trips";
+import type { AdminTrip } from "@/lib/trips";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +18,9 @@ export const generateMetadata = async () => {
 
 const TripsPage = async () => {
   const t = await getTranslations("controlPanel.trips");
-  const { trips } = await apiFetch<{ trips: Trip[] }>("/api/trips");
+  const { trips } = await apiAuthFetch<{ trips: AdminTrip[] }>("/api/admin/trips", {
+    cache: "no-store",
+  });
 
   return (
     <div>

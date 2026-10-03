@@ -15,6 +15,7 @@ interface TripManagementProps {
 export const TripManagement = ({ trips }: TripManagementProps) => {
   const t = useTranslations("controlPanel.trips.list");
   const [query, setQuery] = useState("");
+  const [selectedPublicationStatus, setSelectedPublicationStatus] = useState("");
 
   const sortedTrips = useMemo(() => sortTrips(trips), [trips]);
   const normalizedQuery = query.trim().toLocaleLowerCase("fi-FI");
@@ -24,7 +25,11 @@ export const TripManagement = ({ trips }: TripManagementProps) => {
       .join(" ")
       .toLocaleLowerCase("fi-FI");
 
-    return normalizedQuery ? haystack.includes(normalizedQuery) : true;
+    const matchesQuery = normalizedQuery ? haystack.includes(normalizedQuery) : true;
+    const matchesStatus = selectedPublicationStatus
+      ? trip.status === selectedPublicationStatus
+      : true;
+    return matchesQuery && matchesStatus;
   });
 
   if (sortedTrips.length === 0) {
@@ -50,7 +55,23 @@ export const TripManagement = ({ trips }: TripManagementProps) => {
         queryPlaceholder={t("filters.searchPlaceholder")}
         resultCountLabel={t("filters.results", { count: filteredTrips.length })}
         resetLabel={t("filters.reset")}
-        onReset={() => setQuery("")}
+        onReset={() => {
+          setQuery("");
+          setSelectedPublicationStatus("");
+        }}
+        selects={[
+          {
+            id: "trips-status-filter",
+            label: t("filters.statusLabel"),
+            options: [
+              { label: t("filters.statusAll"), value: "" },
+              { label: t("draftStatus"), value: "draft" },
+              { label: t("publishedStatus"), value: "published" },
+            ],
+            value: selectedPublicationStatus,
+            onChange: setSelectedPublicationStatus,
+          },
+        ]}
       />
 
       {filteredTrips.length === 0 ? (
@@ -65,6 +86,7 @@ export const TripManagement = ({ trips }: TripManagementProps) => {
                 <th className="px-4 py-3 text-left font-medium">{t("tripName")}</th>
                 <th className="px-4 py-3 text-left font-medium">{t("dateRange")}</th>
                 <th className="px-4 py-3 text-left font-medium">{t("visitCount")}</th>
+                <th className="px-4 py-3 text-left font-medium">{t("publicationStatus")}</th>
                 <th className="px-4 py-3 text-right font-medium" />
               </tr>
             </thead>
@@ -84,6 +106,13 @@ export const TripManagement = ({ trips }: TripManagementProps) => {
                   </td>
                   <td className="px-4 py-3">{formatTripDateRange(trip) ?? t("noDateRange")}</td>
                   <td className="px-4 py-3">{t("visitCountValue", { count: trip.visitCount })}</td>
+                  <td className="px-4 py-3">
+                    {trip.status === "draft"
+                      ? t("draftStatus")
+                      : trip.status === "published"
+                        ? t("publishedStatus")
+                        : t("statusUnavailable")}
+                  </td>
                   <td className="px-4 py-3 text-right">
                     <EditIconLink
                       href={appRoutes.controlPanel.editTrip(trip.id)}

@@ -11,6 +11,7 @@ import type { VisitImage } from "@/lib/parks";
 
 interface VisitImageGalleryProps {
   images: VisitImage[];
+  privateMedia?: boolean;
   className?: string;
   dialogLabel?: string;
   centerThumbnailsWhenStatic?: boolean;
@@ -33,6 +34,7 @@ const SWIPE_THRESHOLD = 48;
 
 export const VisitImageGallery = ({
   images,
+  privateMedia = false,
   className,
   dialogLabel,
   centerThumbnailsWhenStatic = false,
@@ -273,6 +275,7 @@ export const VisitImageGallery = ({
                       fill
                       sizes="100vw"
                       className="max-h-[calc(100dvh-7rem)] w-auto max-w-full object-contain select-none sm:max-h-[calc(100dvh-11rem)] sm:rounded-[1.4rem]"
+                      privateMedia={privateMedia}
                       draggable={false}
                       onTouchStart={handleLightboxTouchStart}
                       onTouchEnd={handleLightboxTouchEnd}
@@ -411,6 +414,7 @@ export const VisitImageGallery = ({
                         className="object-cover"
                         draggable={false}
                         unoptimized
+                        privateMedia={privateMedia}
                       />
                     </div>
                   </button>
