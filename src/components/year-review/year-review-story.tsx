@@ -171,16 +171,16 @@ const getCardKey = (card: RenderableYearReviewCard) => {
 };
 
 const CARD_CONTAINER_CLASS_NAME =
-  "group relative isolate overflow-hidden rounded-3xl border border-white/55 px-6 py-6 text-foreground shadow-[0_28px_72px_rgba(15,23,42,0.18)] backdrop-blur-xl transition-all duration-500 dark:border-white/10 dark:shadow-[0_32px_80px_rgba(2,6,23,0.34)] sm:px-8 sm:py-8";
+  "group relative isolate overflow-hidden rounded-3xl border border-border px-6 py-6 text-foreground shadow-[0_28px_72px_rgba(var(--shadow-rgb),0.18)] backdrop-blur-xl transition-all duration-500 dark:shadow-[0_32px_80px_rgba(var(--shadow-rgb),0.34)] sm:px-8 sm:py-8";
 
 const CARD_INNER_GRID_CLASS_NAME =
   "relative z-10 flex min-h-112 flex-col justify-between gap-8 sm:min-h-128";
 
 const METRIC_TILE_CLASS_NAME =
-  "rounded-2xl border border-white/26 bg-black/16 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-sm";
+  "rounded-2xl border border-border bg-control px-4 py-3 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.18)] backdrop-blur-sm";
 
 const STORY_EYEBROW_BADGE_CLASS_NAME =
-  "inline-flex items-center gap-2 rounded-full border border-white/28 bg-black/16 px-3 py-1 text-sm font-medium text-primary-foreground/84 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-sm";
+  "inline-flex items-center gap-2 rounded-full border border-border bg-control px-3 py-1 text-sm font-medium text-muted-foreground shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.18)] backdrop-blur-sm";
 
 const STORY_BLOCK_REVEAL_CLASS_NAME = "year-review-reveal motion-safe:animate-year-review-enter";
 
@@ -192,24 +192,15 @@ const STORY_BLOCK_PENDING_CLASS_NAME = "year-review-reveal";
 const STORY_MEDIA_PENDING_CLASS_NAME = "year-review-media-reveal";
 
 const CARD_THEME_CLASS_NAMES: Record<RenderableYearReviewCard["kind"], string> = {
-  empty:
-    "bg-[linear-gradient(145deg,rgba(15,23,42,0.98),rgba(12,74,110,0.92),rgba(21,128,61,0.86))] text-primary-foreground",
-  intro:
-    "bg-[linear-gradient(145deg,rgba(20,83,45,0.98),rgba(12,74,110,0.92),rgba(15,23,42,0.94))] text-primary-foreground",
-  milestone:
-    "bg-[linear-gradient(145deg,rgba(15,23,42,0.98),rgba(30,64,175,0.84),rgba(14,116,144,0.8))] text-primary-foreground",
-  "photo-highlight":
-    "bg-[linear-gradient(145deg,rgba(15,23,42,0.98),rgba(14,116,144,0.86),rgba(22,101,52,0.84))] text-primary-foreground",
-  profile:
-    "bg-[linear-gradient(145deg,rgba(30,41,59,0.98),rgba(12,74,110,0.88),rgba(21,128,61,0.84))] text-primary-foreground",
-  "trip-highlight":
-    "bg-[linear-gradient(145deg,rgba(68,64,60,0.98),rgba(22,101,52,0.84),rgba(14,116,144,0.82))] text-primary-foreground",
-  "new-parks":
-    "bg-[linear-gradient(145deg,rgba(20,83,45,0.98),rgba(64,94,16,0.86),rgba(12,74,110,0.8))] text-primary-foreground",
-  seasonal:
-    "bg-[linear-gradient(145deg,rgba(30,41,59,0.98),rgba(14,116,144,0.82),rgba(22,101,52,0.8))] text-primary-foreground",
-  summary:
-    "bg-[linear-gradient(145deg,rgba(20,83,45,0.98),rgba(12,74,110,0.86),rgba(15,23,42,0.94))] text-primary-foreground",
+  empty: "theme-memory text-foreground",
+  intro: "theme-memory text-foreground",
+  milestone: "theme-memory text-foreground",
+  "photo-highlight": "theme-memory text-foreground",
+  profile: "theme-memory text-foreground",
+  "trip-highlight": "theme-memory text-foreground",
+  "new-parks": "theme-memory text-foreground",
+  seasonal: "theme-memory text-foreground",
+  summary: "theme-memory text-foreground",
 };
 
 const getRevealStyle = (shouldAnimate: boolean, delayMs: number): CSSProperties | undefined =>
@@ -280,9 +271,9 @@ const StoryFeaturedImagePanel = ({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-3xl border border-white/24 bg-black/12 shadow-[0_24px_56px_rgba(15,23,42,0.24)]",
+        "relative overflow-hidden rounded-3xl border border-border bg-control shadow-[0_24px_56px_rgba(var(--shadow-rgb),0.24)]",
         getMediaRevealClassName(shouldAnimateEntry),
-        isPortrait && "mx-auto w-full max-w-96 bg-slate-950/34",
+        isPortrait && "mx-auto w-full max-w-96 bg-control",
         wrapperClassName,
       )}
       style={getRevealStyle(shouldAnimateEntry, delayMs)}
@@ -302,7 +293,7 @@ const StoryFeaturedImagePanel = ({
           !isPortrait && (active ? "motion-safe:scale-100" : "motion-safe:scale-105"),
         )}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/84 via-slate-950/16 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-hero/84 via-hero/16 to-transparent" />
       {children}
     </div>
   );
@@ -371,7 +362,7 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
           <div className="min-w-0">
             <p className="text-sm text-muted-foreground">
               {mode === "preview" && (
-                <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.22em] text-primary">
+                <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.22em] text-link">
                   {t("story.previewBadge")}
                 </span>
               )}
@@ -420,14 +411,14 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                 aria-label={t("story.goToCard", { current: index + 1, total: cards.length })}
                 aria-current={index === activeIndex ? "step" : undefined}
                 className={cn(
-                  "relative h-1.5 flex-1 overflow-hidden rounded-full bg-white/16 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                  index === activeIndex && "shadow-[0_0_18px_rgba(74,222,128,0.32)]",
+                  "relative h-1.5 flex-1 overflow-hidden rounded-full bg-control transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                  index === activeIndex && "shadow-[0_0_18px_rgba(var(--highlight-rgb),0.32)]",
                 )}
               >
                 <span
                   aria-hidden="true"
                   className={cn(
-                    "absolute inset-y-0 left-0 rounded-full bg-linear-to-r from-emerald-300 via-primary to-emerald-100 transition-all duration-500 motion-safe:duration-700",
+                    "absolute inset-y-0 left-0 rounded-full theme-progress transition-all duration-500 motion-safe:duration-700",
                     index === activeIndex ? "w-full" : "w-0",
                   )}
                 />
@@ -469,17 +460,17 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
               <div className="pointer-events-none absolute inset-0 overflow-hidden">
                 <div
                   className={cn(
-                    "absolute -top-12 right-0 h-44 w-44 rounded-full bg-white/12 blur-3xl transition-opacity duration-500",
+                    "absolute -top-12 right-0 h-44 w-44 rounded-full bg-control blur-3xl transition-opacity duration-500",
                     isActive ? "opacity-100 motion-safe:animate-year-review-float" : "opacity-55",
                   )}
                 />
                 <div
                   className={cn(
-                    "absolute bottom-0 left-0 h-52 w-52 rounded-full bg-emerald-300/18 blur-3xl transition-opacity duration-500",
+                    "absolute bottom-0 left-0 h-52 w-52 rounded-full bg-primary/18 blur-3xl transition-opacity duration-500",
                     isActive ? "opacity-100 motion-safe:animate-year-review-glow" : "opacity-45",
                   )}
                 />
-                <div className="absolute inset-x-0 top-0 h-px bg-white/45" />
+                <div className="absolute inset-x-0 top-0 h-px bg-control" />
               </div>
 
               <div className={CARD_INNER_GRID_CLASS_NAME}>
@@ -493,14 +484,14 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                         <Sparkles className="h-4 w-4" aria-hidden="true" />
                         <span>{t("eyebrow")}</span>
                       </div>
-                      <HeadingTag className="max-w-3xl text-4xl font-black tracking-tight text-primary-foreground sm:text-6xl">
+                      <HeadingTag className="max-w-3xl text-4xl font-black tracking-tight text-foreground sm:text-6xl">
                         {card.year}
                       </HeadingTag>
                       <div className="max-w-2xl space-y-3">
-                        <h3 className="text-2xl font-semibold tracking-tight text-primary-foreground sm:text-3xl">
+                        <h3 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
                           {t("story.emptyTitle")}
                         </h3>
-                        <p className="text-sm leading-6 text-primary-foreground/82 sm:text-base">
+                        <p className="text-sm leading-6 text-muted-foreground sm:text-base">
                           {t("story.emptyDescription")}
                         </p>
                       </div>
@@ -517,10 +508,10 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                         .slice(0, 3)
                         .map((item) => (
                           <div key={item.labelKey} className={METRIC_TILE_CLASS_NAME}>
-                            <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
+                            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                               {t(item.labelKey)}
                             </p>
-                            <p className="mt-2 text-3xl font-black tracking-tight text-primary-foreground">
+                            <p className="mt-2 text-3xl font-black tracking-tight text-foreground">
                               {item.value}
                             </p>
                           </div>
@@ -539,10 +530,10 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                         <Sparkles className="h-4 w-4" aria-hidden="true" />
                         <span>{t("eyebrow")}</span>
                       </div>
-                      <HeadingTag className="max-w-3xl text-4xl font-black tracking-tight text-primary-foreground sm:text-6xl">
+                      <HeadingTag className="max-w-3xl text-4xl font-black tracking-tight text-foreground sm:text-6xl">
                         {t("story.introTitle", { year: card.year })}
                       </HeadingTag>
-                      <p className="max-w-2xl text-sm leading-6 text-primary-foreground/82 sm:text-base">
+                      <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
                         {t("story.introCaption")}
                       </p>
                     </div>
@@ -555,14 +546,14 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                       style={getRevealStyle(shouldAnimateCardEntry, 160)}
                     >
                       <div>
-                        <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary-foreground/70">
+                        <p className="text-sm font-semibold uppercase tracking-[0.24em] text-muted-foreground">
                           {t("story.primaryStatLabel")}
                         </p>
                         <div className="mt-3 flex items-end gap-3">
-                          <p className="text-7xl font-black tracking-[-0.04em] text-primary-foreground sm:text-8xl">
+                          <p className="text-7xl font-black tracking-[-0.04em] text-foreground sm:text-8xl">
                             {card.primaryStat.value}
                           </p>
-                          <p className="pb-2 text-sm font-semibold uppercase tracking-[0.22em] text-primary-foreground/72 sm:text-base">
+                          <p className="pb-2 text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground sm:text-base">
                             {t("story.visitCountLabel", { count: card.primaryStat.value })}
                           </p>
                         </div>
@@ -571,10 +562,10 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                       <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
                         {getIntroHighlights(story).map((item) => (
                           <div key={item.labelKey} className={METRIC_TILE_CLASS_NAME}>
-                            <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
+                            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                               {t(item.labelKey)}
                             </p>
-                            <p className="mt-2 text-3xl font-black tracking-tight text-primary-foreground">
+                            <p className="mt-2 text-3xl font-black tracking-tight text-foreground">
                               {item.value}
                             </p>
                           </div>
@@ -598,7 +589,7 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                         }
                         icon={<CalendarDays className="h-5 w-5" aria-hidden="true" />}
                         title={
-                          <h3 className="max-w-3xl text-3xl font-black tracking-tight text-primary-foreground sm:text-5xl">
+                          <h3 className="max-w-3xl text-3xl font-black tracking-tight text-foreground sm:text-5xl">
                             {card.visit.park.name}
                           </h3>
                         }
@@ -642,22 +633,22 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                       <div className="grid gap-3 sm:grid-cols-2 lg:content-start">
                         {card.visit.route !== null && (
                           <div className={METRIC_TILE_CLASS_NAME}>
-                            <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
+                            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                               {t("story.routeLabel")}
                             </p>
-                            <p className="mt-2 text-xl font-semibold text-primary-foreground">
+                            <p className="mt-2 text-xl font-semibold text-foreground">
                               {card.visit.route}
                             </p>
                           </div>
                         )}
                         {card.visit.trip !== null && (
                           <div className={METRIC_TILE_CLASS_NAME}>
-                            <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
+                            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                               {t("story.tripLabel")}
                             </p>
                             <Link
                               href={appRoutes.trip(card.visit.trip.slug)}
-                              className="mt-2 inline-flex text-xl font-semibold text-primary-foreground underline decoration-white/32 underline-offset-4 transition-colors hover:text-white"
+                              className="mt-2 inline-flex text-xl font-semibold text-foreground underline decoration-input underline-offset-4 transition-colors hover:text-foreground"
                             >
                               {card.visit.trip.name}
                             </Link>
@@ -673,10 +664,10 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                               "sm:col-span-2",
                           )}
                         >
-                          <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
+                          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                             {t("stats.images")}
                           </p>
-                          <p className="mt-2 text-4xl font-black tracking-tight text-primary-foreground">
+                          <p className="mt-2 text-4xl font-black tracking-tight text-foreground">
                             {card.visit.imageCount}
                           </p>
                         </div>
@@ -710,7 +701,7 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                         badge={t("story.photoTitle")}
                         icon={<Camera className="h-5 w-5" aria-hidden="true" />}
                         title={
-                          <h3 className="text-3xl font-black tracking-tight text-primary-foreground sm:text-5xl">
+                          <h3 className="text-3xl font-black tracking-tight text-foreground sm:text-5xl">
                             {t("story.photoHeading")}
                           </h3>
                         }
@@ -741,7 +732,7 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                       <div className="space-y-3">
                         {card.visit ? (
                           <>
-                            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary-foreground/70">
+                            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                               {t("story.photoVisitTitle")}
                             </p>
                             <div className="space-y-2">
@@ -751,36 +742,36 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                               >
                                 {card.visit.park.name}
                               </Link>
-                              <p className="text-sm text-primary-foreground/78">
+                              <p className="text-sm text-muted-foreground">
                                 {formatVisitDate(card.visit.visitedOn)}
                               </p>
                             </div>
                             <div className="grid gap-3 sm:grid-cols-2">
                               <div className={METRIC_TILE_CLASS_NAME}>
-                                <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
+                                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                                   {t("story.photoVisitCount")}
                                 </p>
-                                <p className="mt-2 text-4xl font-black tracking-tight text-primary-foreground">
+                                <p className="mt-2 text-4xl font-black tracking-tight text-foreground">
                                   {card.visit.imageCount}
                                 </p>
                               </div>
                               <div className={METRIC_TILE_CLASS_NAME}>
-                                <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
+                                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                                   {t("stats.images")}
                                 </p>
-                                <p className="mt-2 text-4xl font-black tracking-tight text-primary-foreground">
+                                <p className="mt-2 text-4xl font-black tracking-tight text-foreground">
                                   {card.totalImageCount}
                                 </p>
                               </div>
                             </div>
                             {card.visit.route !== null && (
-                              <p className="text-sm text-primary-foreground/78">
+                              <p className="text-sm text-muted-foreground">
                                 <span className="font-semibold">{t("story.routeLabel")}:</span>{" "}
                                 {card.visit.route}
                               </p>
                             )}
                             {card.visit.trip !== null && (
-                              <p className="text-sm text-primary-foreground/78">
+                              <p className="text-sm text-muted-foreground">
                                 <span className="font-semibold">{t("story.tripLabel")}:</span>{" "}
                                 <Link
                                   href={appRoutes.trip(card.visit.trip.slug)}
@@ -793,7 +784,7 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                           </>
                         ) : (
                           <div className={METRIC_TILE_CLASS_NAME}>
-                            <p className="text-sm text-primary-foreground/78">
+                            <p className="text-sm text-muted-foreground">
                               {t("story.notAvailable")}
                             </p>
                           </div>
@@ -813,7 +804,7 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                         badge={t("story.profileTitle")}
                         icon={<Compass className="h-5 w-5" aria-hidden="true" />}
                         title={
-                          <h3 className="text-3xl font-black tracking-tight text-primary-foreground sm:text-5xl">
+                          <h3 className="text-3xl font-black tracking-tight text-foreground sm:text-5xl">
                             {t("story.profileCaption")}
                           </h3>
                         }
@@ -828,42 +819,42 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                       style={getRevealStyle(shouldAnimateCardEntry, 180)}
                     >
                       <div className={METRIC_TILE_CLASS_NAME}>
-                        <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
+                        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                           {t("stats.newParks")}
                         </p>
-                        <p className="mt-2 text-4xl font-black tracking-tight text-primary-foreground">
+                        <p className="mt-2 text-4xl font-black tracking-tight text-foreground">
                           {story.summary.newParkCount}
                         </p>
                       </div>
                       <div className={METRIC_TILE_CLASS_NAME}>
-                        <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
+                        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                           {t("stats.parks")}
                         </p>
-                        <p className="mt-2 text-4xl font-black tracking-tight text-primary-foreground">
+                        <p className="mt-2 text-4xl font-black tracking-tight text-foreground">
                           {story.summary.distinctParkCount}
                         </p>
                       </div>
                       <div className={METRIC_TILE_CLASS_NAME}>
-                        <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
+                        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                           {repeatSpotlight ? t("story.returnedPlace") : t("story.topType")}
                         </p>
-                        <p className="mt-2 text-xl font-semibold text-primary-foreground">
+                        <p className="mt-2 text-xl font-semibold text-foreground">
                           {repeatSpotlight?.name ?? card.topTypeLabel ?? t("story.notAvailable")}
                         </p>
                         {repeatSpotlight && (
-                          <p className="mt-2 text-sm text-primary-foreground/78">
+                          <p className="mt-2 text-sm text-muted-foreground">
                             {repeatSpotlight.visitCount}{" "}
                             {t("story.visitCountLabel", { count: repeatSpotlight.visitCount })}
                           </p>
                         )}
                       </div>
                       <div className={METRIC_TILE_CLASS_NAME}>
-                        <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
+                        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                           {t("story.busiestRhythm")}
                         </p>
-                        <div className="mt-2 space-y-2 text-sm text-primary-foreground/82">
+                        <div className="mt-2 space-y-2 text-sm text-muted-foreground">
                           <p>
-                            <span className="font-semibold text-primary-foreground">
+                            <span className="font-semibold text-foreground">
                               {t("story.busiestMonth")}
                             </span>
                             {`: ${
@@ -873,7 +864,7 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                             }`}
                           </p>
                           <p>
-                            <span className="font-semibold text-primary-foreground">
+                            <span className="font-semibold text-foreground">
                               {t("story.busiestWeekday")}
                             </span>
                             {`: ${
@@ -898,7 +889,7 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                         badge={t("story.tripHighlightTitle")}
                         icon={<MapPinned className="h-5 w-5" aria-hidden="true" />}
                         title={
-                          <h3 className="max-w-3xl text-3xl font-black tracking-tight text-primary-foreground sm:text-5xl">
+                          <h3 className="max-w-3xl text-3xl font-black tracking-tight text-foreground sm:text-5xl">
                             {card.trip.name}
                           </h3>
                         }
@@ -923,34 +914,34 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                     >
                       <div className="grid gap-3 sm:grid-cols-2 lg:content-start">
                         <div className={METRIC_TILE_CLASS_NAME}>
-                          <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
+                          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                             {t("stats.visits")}
                           </p>
-                          <p className="mt-2 text-4xl font-black tracking-tight text-primary-foreground">
+                          <p className="mt-2 text-4xl font-black tracking-tight text-foreground">
                             {card.trip.visitCount}
                           </p>
                         </div>
                         <div className={METRIC_TILE_CLASS_NAME}>
-                          <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
+                          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                             {t("stats.images")}
                           </p>
-                          <p className="mt-2 text-4xl font-black tracking-tight text-primary-foreground">
+                          <p className="mt-2 text-4xl font-black tracking-tight text-foreground">
                             {card.trip.imageCount}
                           </p>
                         </div>
 
                         <div className={cn(METRIC_TILE_CLASS_NAME, "sm:col-span-2")}>
-                          <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
+                          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                             {t("story.tripLabel")}
                           </p>
                           <Link
                             href={appRoutes.trip(card.trip.slug)}
-                            className="mt-2 inline-flex text-2xl font-semibold text-primary-foreground underline decoration-white/32 underline-offset-4 transition-colors hover:text-white"
+                            className="mt-2 inline-flex text-2xl font-semibold text-foreground underline decoration-input underline-offset-4 transition-colors hover:text-foreground"
                           >
                             {card.trip.name}
                           </Link>
                           {card.trip.dateRange !== null && (
-                            <p className="mt-2 text-sm text-primary-foreground/78">
+                            <p className="mt-2 text-sm text-muted-foreground">
                               {formatFinnishDateRange(
                                 card.trip.dateRange.start,
                                 card.trip.dateRange.end,
@@ -1000,7 +991,7 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                         badge={t("story.newParksTitle")}
                         icon={<Trees className="h-5 w-5" aria-hidden="true" />}
                         title={
-                          <h3 className="text-3xl font-black tracking-tight text-primary-foreground sm:text-5xl">
+                          <h3 className="text-3xl font-black tracking-tight text-foreground sm:text-5xl">
                             {t("story.newParksHeading", { count: card.parks.length })}
                           </h3>
                         }
@@ -1013,7 +1004,7 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                         <ReviewStoryPlaceCard
                           key={parkMoment.park.slug}
                           className={cn(
-                            "overflow-hidden rounded-3xl border border-white/24 bg-black/14 shadow-[0_24px_56px_rgba(15,23,42,0.2)]",
+                            "overflow-hidden rounded-3xl border border-border bg-control shadow-[0_24px_56px_rgba(var(--shadow-rgb),0.2)]",
                             getMediaRevealClassName(shouldAnimateCardEntry),
                           )}
                           style={getRevealStyle(shouldAnimateCardEntry, 180 + parkIndex * 90)}
@@ -1055,7 +1046,7 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                         badge={t("story.seasonalTitle")}
                         icon={<Trees className="h-5 w-5" aria-hidden="true" />}
                         title={
-                          <h3 className="text-3xl font-black tracking-tight text-primary-foreground sm:text-5xl">
+                          <h3 className="text-3xl font-black tracking-tight text-foreground sm:text-5xl">
                             {t("story.seasonalCaption")}
                           </h3>
                         }
@@ -1089,17 +1080,17 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                               style={getRevealStyle(shouldAnimateCardEntry, 150 + seasonIndex * 90)}
                             >
                               <div className="flex items-center justify-between gap-4">
-                                <p className="flex items-center gap-2 font-semibold text-primary-foreground">
+                                <p className="flex items-center gap-2 font-semibold text-foreground">
                                   <span aria-hidden="true" className="text-base leading-none">
                                     {seasonMeta.emoji}
                                   </span>
                                   {t(getSeasonLabelKey(season))}
                                 </p>
-                                <p className="text-sm text-primary-foreground/78">
+                                <p className="text-sm text-muted-foreground">
                                   {`${value} ${t("stats.visitCount")} (${widthPercent}%)`}
                                 </p>
                               </div>
-                              <div className="mt-3 h-3 rounded-full bg-white/12">
+                              <div className="mt-3 h-3 rounded-full bg-control">
                                 <div
                                   className={cn(
                                     "h-3 rounded-full transition-[width] duration-700",
@@ -1131,7 +1122,7 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                         badge={t("story.summaryTitle")}
                         icon={<Trophy className="h-5 w-5" aria-hidden="true" />}
                         title={
-                          <h3 className="text-3xl font-black tracking-tight text-primary-foreground sm:text-5xl">
+                          <h3 className="text-3xl font-black tracking-tight text-foreground sm:text-5xl">
                             {story.year}
                           </h3>
                         }
@@ -1148,10 +1139,10 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                     >
                       {getSummaryHighlights(story).map((item) => (
                         <div key={item.labelKey} className={METRIC_TILE_CLASS_NAME}>
-                          <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
+                          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                             {t(item.labelKey)}
                           </p>
-                          <p className="mt-2 text-2xl font-black tracking-tight text-primary-foreground">
+                          <p className="mt-2 text-2xl font-black tracking-tight text-foreground">
                             {item.value}
                           </p>
                         </div>
@@ -1170,10 +1161,7 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
         footer={t("story.footer")}
         footerHint={t("story.footerHint")}
         footerIcon={
-          <Route
-            className="mr-2 inline h-4 w-4 align-text-bottom text-primary"
-            aria-hidden="true"
-          />
+          <Route className="mr-2 inline h-4 w-4 align-text-bottom text-link" aria-hidden="true" />
         }
         mode={mode}
         siteTitle={layoutT("siteTitle")}

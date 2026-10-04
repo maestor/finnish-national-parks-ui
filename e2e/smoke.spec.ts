@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test("home page loads", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveTitle(/Reissuvihko/);
-  await expect(page.getByRole("heading", { name: "Käynnit", level: 2 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Reissukooste", level: 2 })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Viimeisin retki", level: 3 })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Viimeisin piipahdus", level: 3 })).toBeVisible();
   await expect(page.getByRole("link", { name: "Kaikki retket", exact: true })).toHaveAttribute(
@@ -43,10 +43,16 @@ for (const path of ["/", "/retket"]) {
   });
 }
 
-test("control panel page loads", async ({ page }) => {
+test("signed-out control panel navigation redirects to the Finnish login page", async ({
+  page,
+}) => {
   await page.goto("/control-panel");
-  await expect(page).toHaveTitle(/Hallintapaneeli/);
-  await expect(page.getByRole("heading", { name: /Yleiskatsaus/i })).toBeVisible();
+  await expect(page).toHaveURL(/\/kirjaudu$/);
+  await expect(page.getByRole("heading", { name: "Kirjaudu", level: 1 })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Kirjaudu hallintaan" })).toHaveAttribute(
+    "href",
+    "/auth/login",
+  );
 });
 
 test("not found page works", async ({ page }) => {

@@ -97,7 +97,7 @@ export const AdminUserList = () => {
   return (
     <section
       aria-labelledby="admin-user-list-title"
-      className="mt-8 max-w-4xl space-y-4 rounded-3xl border border-white/45 bg-white/70 p-5 shadow-[0_18px_40px_rgba(148,163,184,0.16)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/56 dark:shadow-[0_24px_52px_rgba(2,6,23,0.28)]"
+      className="mt-8 max-w-4xl space-y-4 rounded-3xl border border-border bg-control p-5 shadow-[0_18px_40px_rgba(var(--shadow-rgb),0.16)] backdrop-blur-xl dark:shadow-[0_24px_52px_rgba(var(--shadow-rgb),0.28)]"
     >
       <div>
         <h2 id="admin-user-list-title" className="text-lg font-semibold">

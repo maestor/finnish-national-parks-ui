@@ -102,7 +102,7 @@ export const DateRangeReviewPublishControls = ({
   const hasSharePath = sharePath !== null;
 
   return (
-    <section className="rounded-3xl border border-white/45 bg-white/70 p-5 shadow-[0_18px_40px_rgba(148,163,184,0.16)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/56 dark:shadow-[0_24px_52px_rgba(2,6,23,0.28)]">
+    <section className="rounded-3xl border border-border theme-panel p-5 shadow-[0_18px_40px_rgba(var(--shadow-rgb),0.16)] backdrop-blur-xl dark:shadow-[0_24px_52px_rgba(var(--shadow-rgb),0.28)]">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-2">
@@ -111,7 +111,7 @@ export const DateRangeReviewPublishControls = ({
                 "inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em]",
                 isPublished
                   ? "bg-emerald-600/12 text-emerald-800 dark:bg-emerald-400/16 dark:text-emerald-100"
-                  : "bg-slate-900/7 text-slate-700 dark:bg-white/10 dark:text-slate-200",
+                  : "bg-control text-link",
               )}
             >
               {isPublished ? t("publishedStatus") : t("draftStatus")}
@@ -132,7 +132,7 @@ export const DateRangeReviewPublishControls = ({
                 label={t("copyShareLink")}
                 copiedLabel={t("shareLinkCopied")}
                 tooltipSide="top"
-                className="inline-flex items-center justify-center rounded-md border border-white/45 bg-white/78 p-2 text-foreground shadow-sm transition-colors hover:bg-white/92 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/58 dark:hover:bg-slate-950/74"
+                className="inline-flex items-center justify-center rounded-md border border-border bg-control p-2 text-foreground shadow-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 iconClassName="h-4 w-4"
               />
               <Link

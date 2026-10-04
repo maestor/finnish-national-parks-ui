@@ -23,7 +23,7 @@ export const ParkManagement = ({ parks, removedParks }: ParkManagementProps) => 
       <p className="mt-2 text-muted-foreground">{t("description")}</p>
 
       <div
-        className="mt-6 inline-flex rounded-[1.2rem] border border-white/45 bg-white/56 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/42 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+        className="mt-6 inline-flex rounded-[1.2rem] border border-border bg-control p-1 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.4)] backdrop-blur-sm dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]"
         role="tablist"
         aria-label={t("viewTabs.ariaLabel")}
       >
@@ -34,8 +34,8 @@ export const ParkManagement = ({ parks, removedParks }: ParkManagementProps) => 
           onClick={() => setActiveView("list")}
           className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
             activeView === "list"
-              ? "bg-white/86 text-foreground shadow-[0_10px_20px_rgba(148,163,184,0.16)] dark:bg-slate-950/68"
-              : "text-muted-foreground hover:bg-white/62 hover:text-foreground dark:hover:bg-slate-950/56"
+              ? "theme-memory text-foreground shadow-[0_10px_20px_rgba(var(--shadow-rgb),0.16)]"
+              : "text-muted-foreground hover:bg-accent hover:text-foreground"
           }`}
         >
           {t("viewTabs.list")}
@@ -47,8 +47,8 @@ export const ParkManagement = ({ parks, removedParks }: ParkManagementProps) => 
           onClick={() => setActiveView("map")}
           className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
             activeView === "map"
-              ? "bg-white/86 text-foreground shadow-[0_10px_20px_rgba(148,163,184,0.16)] dark:bg-slate-950/68"
-              : "text-muted-foreground hover:bg-white/62 hover:text-foreground dark:hover:bg-slate-950/56"
+              ? "theme-memory text-foreground shadow-[0_10px_20px_rgba(var(--shadow-rgb),0.16)]"
+              : "text-muted-foreground hover:bg-accent hover:text-foreground"
           }`}
         >
           {t("viewTabs.map")}
@@ -59,7 +59,7 @@ export const ParkManagement = ({ parks, removedParks }: ParkManagementProps) => 
         {activeView === "list" ? (
           <ParkList parks={parks} removedParks={removedParks} />
         ) : (
-          <div className="flex h-218.75 flex-col overflow-hidden rounded-[1.6rem] border border-white/45 bg-white/56 shadow-[0_18px_36px_rgba(148,163,184,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/38 dark:shadow-[0_22px_40px_rgba(2,6,23,0.28)]">
+          <div className="flex h-218.75 flex-col overflow-hidden rounded-[1.6rem] border border-border bg-control shadow-[0_18px_36px_rgba(var(--shadow-rgb),0.14)] backdrop-blur-xl dark:shadow-[0_22px_40px_rgba(var(--shadow-rgb),0.28)]">
             <AdminParkMap parks={parks} removedParks={removedParks} />
           </div>
         )}

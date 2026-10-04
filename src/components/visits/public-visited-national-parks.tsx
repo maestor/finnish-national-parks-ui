@@ -22,7 +22,7 @@ interface PublicVisitedNationalParksProps {
 }
 
 const SUMMARY_STAT_CARD_CLASS_NAME =
-  "rounded-3xl border border-white/45 bg-white/72 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-white/10 dark:bg-slate-950/56 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
+  "rounded-3xl border border-border theme-memory p-4 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]";
 export const MAGNET_NATIONAL_PARKS_SECTION_ID = "magneettijahti-kansallispuistot";
 export const MAGNET_OTHER_PLACES_SECTION_ID = "magneettijahti-muut-paikat";
 export const MAGNET_MISSING_SECTION_ID = "magneettijahti-puuttuvat";
@@ -78,7 +78,7 @@ const MagnetGroupCards = ({
       style={{ scrollMarginTop: sectionScrollMarginTop }}
     >
       <div className="flex items-center gap-2 px-1">
-        <TentTree className="h-4 w-4 text-primary" aria-hidden="true" />
+        <TentTree className="h-4 w-4 text-link" aria-hidden="true" />
         <h2 id={headingId} className="text-lg font-semibold tracking-tight">
           {title}
         </h2>
@@ -88,16 +88,16 @@ const MagnetGroupCards = ({
         {model.visitedParks.map((park) => (
           <article
             key={park.park.slug}
-            className="rounded-[2rem] border border-white/50 bg-white/70 p-5 shadow-[0_20px_48px_rgba(148,163,184,0.16)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/50 dark:shadow-[0_24px_52px_rgba(2,6,23,0.32)]"
+            className="rounded-[2rem] border border-border theme-memory p-5 shadow-[0_20px_48px_rgba(var(--shadow-rgb),0.16)] backdrop-blur-xl dark:shadow-[0_24px_52px_rgba(var(--shadow-rgb),0.32)]"
           >
             <div className="space-y-4">
               <div className="flex items-center gap-2 sm:gap-4">
-                <div className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.2rem] border border-emerald-700/15 bg-[linear-gradient(145deg,#166534_0%,#0f766e_55%,#2563eb_100%)] text-lg font-semibold text-primary-foreground shadow-[0_10px_24px_rgba(37,99,235,0.24)]">
+                <div className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.2rem] border border-border theme-action text-lg font-semibold text-action-foreground shadow-[0_10px_24px_rgba(var(--shadow-rgb),0.24)]">
                   {park.order}.
                 </div>
 
                 {park.park.logoUrl ? (
-                  <div className="relative h-14 w-20 shrink-0 overflow-hidden sm:h-20 sm:w-28 sm:rounded-3xl sm:border sm:border-white/45 sm:bg-white/76 sm:shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:sm:border-white/10 dark:sm:bg-slate-950/56 dark:sm:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                  <div className="relative h-14 w-20 shrink-0 overflow-hidden sm:h-20 sm:w-28 sm:rounded-3xl sm:border sm:border-border sm:bg-control sm:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] dark:sm:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]">
                     <AppImage
                       alt={park.park.name}
                       className="object-contain sm:p-3"
@@ -125,7 +125,7 @@ const MagnetGroupCards = ({
               </div>
 
               <div className="w-full space-y-5">
-                <div className="rounded-[1.6rem] border border-emerald-700/15 bg-[linear-gradient(145deg,rgba(22,101,52,0.08),rgba(37,99,235,0.08),rgba(255,255,255,0.78))] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.56)] dark:border-emerald-300/15 dark:bg-[linear-gradient(145deg,rgba(22,101,52,0.2),rgba(37,99,235,0.14),rgba(15,23,42,0.72))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                <div className="rounded-[1.6rem] border border-border theme-panel px-4 py-4 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.56)]  dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]">
                   <p className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
                     {t("parks.item.firstVisit")}
                   </p>
@@ -135,7 +135,7 @@ const MagnetGroupCards = ({
                 </div>
 
                 {park.laterVisits.length > 0 ? (
-                  <details className="group rounded-[1.6rem] border border-white/45 bg-white/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)] dark:border-white/10 dark:bg-slate-950/48 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                  <details className="group rounded-[1.6rem] border border-border bg-control shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.5)] dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]">
                     <summary className="cursor-pointer list-none px-4 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                       <span className="text-sm font-medium">
                         {t("parks.item.otherVisits", { count: park.laterVisits.length })}
@@ -149,10 +149,10 @@ const MagnetGroupCards = ({
                               parkSlug: park.park.slug,
                               visitId: visit.id,
                             })}
-                            className="flex items-center justify-between gap-3 rounded-2xl border border-white/40 bg-white/76 px-3 py-3 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.5)] transition-colors hover:bg-white/92 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] dark:hover:bg-slate-950/74"
+                            className="flex items-center justify-between gap-3 rounded-2xl border border-border theme-memory px-3 py-3 text-sm shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.5)] transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]"
                           >
                             <span>{formatFinnishDate(visit.visitedOn)}</span>
-                            <span className="text-xs font-medium text-primary">
+                            <span className="text-xs font-medium text-link">
                               {t("item.viewVisit")}
                             </span>
                           </Link>
@@ -195,13 +195,13 @@ const MissingMagnetParks = ({
       style={{ scrollMarginTop: sectionScrollMarginTop }}
     >
       <div className="flex items-center gap-2 px-1">
-        <TentTree className="h-4 w-4 text-primary" aria-hidden="true" />
+        <TentTree className="h-4 w-4 text-link" aria-hidden="true" />
         <h2 id={headingId} className="text-lg font-semibold tracking-tight">
           {t("parks.sections.missing")}
         </h2>
       </div>
 
-      <div className="rounded-[2rem] border border-white/50 bg-white/70 p-3 shadow-[0_20px_48px_rgba(148,163,184,0.16)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/50 dark:shadow-[0_24px_52px_rgba(2,6,23,0.32)]">
+      <div className="rounded-[2rem] border border-border bg-control p-3 shadow-[0_20px_48px_rgba(var(--shadow-rgb),0.16)] backdrop-blur-xl dark:shadow-[0_24px_52px_rgba(var(--shadow-rgb),0.32)]">
         <ul className="grid gap-2 md:grid-cols-2">
           {parks.map((park) => (
             <li key={park.park.slug}>
@@ -209,9 +209,9 @@ const MissingMagnetParks = ({
                 href={createParkVisitHref({
                   parkSlug: park.park.slug,
                 })}
-                className="flex items-center gap-3 rounded-[1.4rem] border border-white/35 bg-white/72 px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)] transition-colors hover:bg-white/88 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/56 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] dark:hover:bg-slate-950/72"
+                className="flex items-center gap-3 rounded-[1.4rem] border border-border theme-memory px-3 py-3 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.5)] transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]"
               >
-                <div className="relative h-12 w-16 shrink-0 overflow-hidden rounded-2xl border border-white/35 bg-white/72 dark:border-white/10 dark:bg-slate-950/56">
+                <div className="relative h-12 w-16 shrink-0 overflow-hidden rounded-2xl border border-border bg-control">
                   {park.park.logoUrl ? (
                     <AppImage
                       alt={park.park.name}
@@ -263,10 +263,10 @@ export const PublicVisitedNationalParks = ({ model }: PublicVisitedNationalParks
 
   if (!hasNationalParks && !hasOtherMagnetPlaces) {
     return (
-      <section className="rounded-[2rem] border border-dashed border-white/45 bg-white/54 p-8 text-center backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/40">
+      <section className="rounded-[2rem] border border-dashed border-border theme-panel p-8 text-center backdrop-blur-sm">
         <div className="mx-auto flex max-w-lg flex-col items-center gap-3">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-[1.3rem] border border-white/50 bg-white/78 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-            <TentTree className="h-5 w-5 text-primary" aria-hidden="true" />
+          <div className="inline-flex h-12 w-12 items-center justify-center rounded-[1.3rem] border border-border bg-control shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.08)]">
+            <TentTree className="h-5 w-5 text-link" aria-hidden="true" />
           </div>
           <h2 className="text-xl font-semibold tracking-tight">{t("views.parks")}</h2>
           <p className="text-sm leading-6 text-muted-foreground">{t("parks.empty")}</p>
@@ -302,11 +302,11 @@ export const PublicVisitedNationalParks = ({ model }: PublicVisitedNationalParks
 
   return (
     <>
-      <section className="rounded-[2rem] border border-white/55 bg-[linear-gradient(145deg,rgba(255,255,255,0.82),rgba(219,234,254,0.66),rgba(220,252,231,0.72))] p-5 shadow-[0_24px_60px_rgba(59,130,246,0.16)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(145deg,rgba(2,6,23,0.76),rgba(15,23,42,0.86),rgba(6,78,59,0.38))] dark:shadow-[0_28px_64px_rgba(2,6,23,0.34)] sm:p-6">
+      <section className="rounded-[2rem] border border-border theme-memory p-5 shadow-[0_24px_60px_rgba(59,130,246,0.16)] backdrop-blur-xl dark:shadow-[0_28px_64px_rgba(var(--shadow-rgb),0.34)] sm:p-6">
         <div className="flex flex-col gap-5">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div className="max-w-2xl space-y-2">
-              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200/60 bg-white/62 px-3 py-1 text-sm font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-emerald-300/15 dark:bg-slate-950/48 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+              <div className="inline-flex items-center gap-2 rounded-full border border-border bg-control px-3 py-1 text-sm font-medium text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)]  dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.08)]">
                 <TentTree className="h-4 w-4" aria-hidden="true" />
                 <span>{t("parks.summary.title")}</span>
               </div>
@@ -318,7 +318,7 @@ export const PublicVisitedNationalParks = ({ model }: PublicVisitedNationalParks
               </p>
             </div>
 
-            <div className="rounded-[1.8rem] border border-emerald-700/15 bg-white/74 px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.58)] dark:border-emerald-300/15 dark:bg-slate-950/56 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+            <div className="rounded-[1.8rem] border border-border bg-control px-4 py-4 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.58)]  dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]">
               <div className="space-y-3">
                 <div>
                   <p className="text-xs font-medium tracking-[0.18em] text-muted-foreground uppercase">
@@ -332,7 +332,7 @@ export const PublicVisitedNationalParks = ({ model }: PublicVisitedNationalParks
                 </div>
 
                 {(model.otherMagnetPlaces.totalParks > 0 || hasOtherMagnetPlaces) && (
-                  <div className="border-t border-white/35 pt-3 dark:border-white/10">
+                  <div className="border-t border-border pt-3">
                     <p className="text-xs font-medium tracking-[0.18em] text-muted-foreground uppercase">
                       {t("parks.otherPlaces.progressLabel")}
                     </p>
@@ -362,11 +362,11 @@ export const PublicVisitedNationalParks = ({ model }: PublicVisitedNationalParks
               aria-valuemax={100}
               aria-valuemin={0}
               aria-valuenow={combinedProgressPercent}
-              className="relative h-4 overflow-hidden rounded-full border border-white/45 bg-white/62 shadow-[inset_0_1px_0_rgba(255,255,255,0.52)] dark:border-white/10 dark:bg-slate-950/54 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+              className="relative h-4 overflow-hidden rounded-full border border-input bg-progress-track shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.52)] dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]"
               role="progressbar"
             >
               <div
-                className="h-full rounded-full bg-[linear-gradient(90deg,#166534_0%,#0f766e_42%,#2563eb_100%)] shadow-[0_10px_24px_rgba(37,99,235,0.24)] transition-[width]"
+                className="h-full rounded-full theme-progress  transition-[width]"
                 style={{ width: `${combinedProgressPercent}%` }}
               />
             </div>
@@ -374,7 +374,7 @@ export const PublicVisitedNationalParks = ({ model }: PublicVisitedNationalParks
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className={SUMMARY_STAT_CARD_CLASS_NAME}>
-              <div className="flex items-center gap-2 text-primary">
+              <div className="flex items-center gap-2 text-link">
                 <CalendarRange className="h-4 w-4" aria-hidden="true" />
                 <p className="text-sm font-medium">{t("parks.summary.firstPark")}</p>
               </div>
@@ -384,7 +384,7 @@ export const PublicVisitedNationalParks = ({ model }: PublicVisitedNationalParks
             </div>
 
             <div className={SUMMARY_STAT_CARD_CLASS_NAME}>
-              <div className="flex items-center gap-2 text-primary">
+              <div className="flex items-center gap-2 text-link">
                 <Sparkles className="h-4 w-4" aria-hidden="true" />
                 <p className="text-sm font-medium">{t("parks.summary.latestPark")}</p>
               </div>

@@ -217,7 +217,7 @@ const createUserLocationMarkerElement = () => {
   marker.setAttribute("aria-hidden", "true");
 
   const centerDot = document.createElement("span");
-  centerDot.className = "h-2.5 w-2.5 rounded-full bg-white";
+  centerDot.className = "h-2.5 w-2.5 rounded-full bg-control";
   marker.appendChild(centerDot);
 
   return marker;
@@ -323,7 +323,7 @@ const createPopupNode = (
 
   const typeRow = document.createElement("p");
   typeRow.className =
-    "flex items-center gap-1.5 rounded-xl border border-sky-200/45 bg-[linear-gradient(145deg,rgba(255,255,255,0.84),rgba(237,245,249,0.92))] px-3 py-2 shadow-[0_10px_20px_rgba(148,163,184,0.1),inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-white/10 dark:bg-[linear-gradient(145deg,rgba(15,23,42,0.76),rgba(2,6,23,0.58))] dark:shadow-[0_14px_24px_rgba(2,6,23,0.22),inset_0_1px_0_rgba(255,255,255,0.06)]";
+    "flex items-center gap-1.5 rounded-xl border border-border theme-panel px-3 py-2 shadow-[0_10px_20px_rgba(var(--shadow-rgb),0.1),inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] dark:shadow-[0_14px_24px_rgba(var(--shadow-rgb),0.22),inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]";
   typeRow.appendChild(
     createSvgIcon({
       className: "h-3.5 w-3.5 shrink-0",
@@ -340,7 +340,7 @@ const createPopupNode = (
   if (park.address) {
     const loc = document.createElement("p");
     loc.className =
-      "truncate rounded-xl border border-sky-200/45 bg-[linear-gradient(145deg,rgba(255,255,255,0.84),rgba(237,245,249,0.92))] px-3 py-2 shadow-[0_10px_20px_rgba(148,163,184,0.1),inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-white/10 dark:bg-[linear-gradient(145deg,rgba(15,23,42,0.76),rgba(2,6,23,0.58))] dark:shadow-[0_14px_24px_rgba(2,6,23,0.22),inset_0_1px_0_rgba(255,255,255,0.06)]";
+      "truncate rounded-xl border border-border theme-panel px-3 py-2 shadow-[0_10px_20px_rgba(var(--shadow-rgb),0.1),inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] dark:shadow-[0_14px_24px_rgba(var(--shadow-rgb),0.22),inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]";
     loc.textContent = park.address;
     loc.title = park.address;
     details.appendChild(loc);
@@ -352,7 +352,7 @@ const createPopupNode = (
   if (hasArea || hasYear) {
     const metaRow = document.createElement("p");
     metaRow.className =
-      "rounded-xl border border-sky-200/45 bg-[linear-gradient(145deg,rgba(255,255,255,0.84),rgba(237,245,249,0.92))] px-3 py-2 shadow-[0_10px_20px_rgba(148,163,184,0.1),inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-white/10 dark:bg-[linear-gradient(145deg,rgba(15,23,42,0.76),rgba(2,6,23,0.58))] dark:shadow-[0_14px_24px_rgba(2,6,23,0.22),inset_0_1px_0_rgba(255,255,255,0.06)]";
+      "rounded-xl border border-border theme-panel px-3 py-2 shadow-[0_10px_20px_rgba(var(--shadow-rgb),0.1),inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] dark:shadow-[0_14px_24px_rgba(var(--shadow-rgb),0.22),inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]";
 
     const parts: string[] = [];
     if (hasYear) {
@@ -376,7 +376,7 @@ const createPopupNode = (
       officialLink.target = "_blank";
       officialLink.rel = "noopener noreferrer";
       officialLink.className =
-        "inline-flex items-center gap-1 rounded-full border border-sky-200/70 bg-white/74 px-3 py-1.5 font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 dark:border-sky-300/15 dark:bg-slate-950/62 dark:hover:bg-slate-950/78";
+        "inline-flex items-center gap-1 rounded-full border border-border bg-control px-3 py-1.5 font-medium text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] transition-colors hover:bg-accent";
       officialLink.appendChild(document.createTextNode(labels.officialLink));
       officialLink.appendChild(
         createSvgIcon({
@@ -402,7 +402,7 @@ const createPopupNode = (
       pdfLink.target = "_blank";
       pdfLink.rel = "noopener noreferrer";
       pdfLink.className =
-        "inline-flex items-center gap-1 rounded-full border border-sky-200/70 bg-white/74 px-3 py-1.5 font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 dark:border-sky-300/15 dark:bg-slate-950/62 dark:hover:bg-slate-950/78";
+        "inline-flex items-center gap-1 rounded-full border border-border bg-control px-3 py-1.5 font-medium text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] transition-colors hover:bg-accent";
       pdfLink.appendChild(document.createTextNode(labels.pdfBrochure));
       pdfLink.appendChild(
         createSvgIcon({
@@ -430,13 +430,13 @@ const createPopupNode = (
 
   const summaryRow = document.createElement("div");
   summaryRow.className =
-    "mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/35 pt-3 text-xs dark:border-white/10";
+    "mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-xs";
 
   if (!onToggleRemoved) {
     const visitCount = park.visitedSummary.visitCount;
     const visitsCount = document.createElement("span");
     visitsCount.className =
-      "inline-flex items-center rounded-full border border-white/45 bg-white/72 px-3 py-1 font-medium text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] dark:border-white/10 dark:bg-slate-950/56 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
+      "inline-flex items-center rounded-full border border-border bg-control px-3 py-1 font-medium text-foreground shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.45)] dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]";
     visitsCount.textContent = `${labels.visits} (${visitCount})`;
     summaryRow.appendChild(visitsCount);
   }
@@ -444,7 +444,7 @@ const createPopupNode = (
   const parkLink = document.createElement("a");
   parkLink.href = appRoutes.park(park.slug);
   parkLink.className =
-    "inline-flex items-center rounded-full border border-sky-200/70 bg-white/74 px-3 py-1.5 font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 dark:border-sky-300/15 dark:bg-slate-950/62 dark:hover:bg-slate-950/78";
+    "inline-flex items-center rounded-full border border-border bg-control px-3 py-1.5 font-medium text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] transition-colors hover:bg-accent";
   parkLink.textContent = labels.openParkPage;
   parkLink.addEventListener("click", (e) => e.stopPropagation());
   summaryRow.appendChild(parkLink);
@@ -459,7 +459,7 @@ const createPopupNode = (
       park: park.slug,
     });
     addLink.className =
-      "inline-flex items-center gap-1 rounded-full border border-emerald-200/70 bg-white/74 px-3 py-1.5 font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 dark:border-emerald-300/15 dark:bg-slate-950/62 dark:hover:bg-slate-950/78";
+      "inline-flex items-center gap-1 rounded-full border border-input bg-control px-3 py-1.5 font-medium text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] transition-colors hover:bg-accent ";
     addLink.appendChild(
       createSvgIcon({
         className: "h-3.5 w-3.5",
@@ -480,11 +480,11 @@ const createPopupNode = (
     toggleBtn.type = "button";
     if (isRemoved) {
       toggleBtn.className =
-        "inline-flex items-center gap-1 rounded-full border border-emerald-200/70 bg-white/74 px-3 py-1.5 font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 dark:border-emerald-300/15 dark:bg-slate-950/62 dark:hover:bg-slate-950/78";
+        "inline-flex items-center gap-1 rounded-full border border-input bg-control px-3 py-1.5 font-medium text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] transition-colors hover:bg-accent ";
       toggleBtn.textContent = toggleLabels.show;
     } else {
       toggleBtn.className =
-        "inline-flex items-center gap-1 rounded-full border border-red-200/70 bg-white/74 px-3 py-1.5 font-medium text-red-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 dark:border-red-300/15 dark:bg-slate-950/62 dark:hover:bg-slate-950/78 dark:text-red-400";
+        "inline-flex items-center gap-1 rounded-full border border-red-200/70 bg-control px-3 py-1.5 font-medium text-destructive shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] transition-colors hover:bg-accent dark:border-red-300/15";
       toggleBtn.textContent = toggleLabels.hide;
     }
     toggleBtn.addEventListener("click", (e) => {
@@ -1023,7 +1023,7 @@ export const ParkMap = ({
       >
         {locationStatusMessage !== null && (
           <output
-            className="rounded-2xl border border-white/55 bg-white/88 px-3 py-2 text-xs font-medium text-foreground shadow-[0_10px_24px_rgba(148,163,184,0.18)] backdrop-blur-md dark:border-white/10 dark:bg-slate-950/78 dark:shadow-[0_16px_32px_rgba(2,6,23,0.28)]"
+            className="rounded-2xl border border-border bg-control px-3 py-2 text-xs font-medium text-foreground shadow-[0_10px_24px_rgba(var(--shadow-rgb),0.18)] backdrop-blur-md dark:shadow-[0_16px_32px_rgba(var(--shadow-rgb),0.28)]"
             aria-live="polite"
           >
             {locationStatusMessage}

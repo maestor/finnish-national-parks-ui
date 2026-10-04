@@ -53,6 +53,37 @@ describe("TripArchiveList", () => {
     expect(apiFetchMock).not.toHaveBeenCalled();
   });
 
+  it("loads the opening two desktop rows immediately and keeps later and appended covers lazy", async () => {
+    const withImages = (ids: number[], nextCursor: string | null): PublicTripArchiveResponse => ({
+      ...createResponse(ids, nextCursor),
+      total: 6,
+      trips: ids.map((id) => ({
+        ...createTrip(id),
+        featuredImage: {
+          url: `https://images.example.com/trip-${id}.jpg`,
+          width: 1280,
+          height: 720,
+        },
+      })),
+    });
+    apiFetchMock.mockResolvedValueOnce(withImages([6], null));
+    const user = userEvent.setup();
+    const { container } = render(
+      <TripArchiveList initialResponse={withImages([1, 2, 3, 4, 5], "next-cursor")} />,
+    );
+
+    expect(
+      [...container.querySelectorAll("img")].map((image) => image.getAttribute("loading")),
+    ).toEqual(["eager", "eager", "eager", "eager", "lazy"]);
+
+    await user.click(screen.getByRole("button", { name: "tripsArchive.loadMore" }));
+    await screen.findByRole("heading", { name: "Retki 6" });
+
+    expect(
+      [...container.querySelectorAll("img")].map((image) => image.getAttribute("loading")),
+    ).toEqual(["eager", "eager", "eager", "eager", "lazy", "lazy"]);
+  });
+
   it("retries an initial failure", async () => {
     apiFetchMock.mockResolvedValueOnce(createResponse([1], null));
     const user = userEvent.setup();

@@ -23,11 +23,11 @@ interface VisibleSection {
 }
 
 const SECTION_NAV_CONTAINER_CLASS_NAME =
-  "rounded-full border border-white/45 bg-white/76 p-1 shadow-[0_14px_30px_rgba(15,23,42,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/72 dark:shadow-[0_16px_32px_rgba(2,6,23,0.28)]";
+  "rounded-full border border-border bg-control p-1 shadow-[0_14px_30px_rgba(var(--shadow-rgb),0.14)] backdrop-blur-xl dark:shadow-[0_16px_32px_rgba(var(--shadow-rgb),0.28)]";
 const SECTION_NAV_LINK_CLASS_NAME =
-  "inline-flex min-w-0 items-center justify-center rounded-full px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:text-sm";
+  "inline-flex min-w-0 items-center justify-center rounded-full px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:text-sm";
 const ACTIVE_SECTION_NAV_LINK_CLASS_NAME =
-  "bg-white text-foreground shadow-[0_10px_22px_rgba(148,163,184,0.2)] dark:bg-slate-900 dark:text-white";
+  "theme-action text-action-foreground shadow-[0_10px_22px_rgba(var(--shadow-rgb),0.2)]";
 const HEADER_VISIBLE_OFFSET_PX = 56;
 const HEADER_HIDDEN_OFFSET_PX = 0;
 
@@ -185,7 +185,7 @@ export const StickySectionNavigation = ({
               <Link
                 key={item.id}
                 aria-current={isActive ? "location" : undefined}
-                className={`${SECTION_NAV_LINK_CLASS_NAME} ${isActive ? ACTIVE_SECTION_NAV_LINK_CLASS_NAME : "hover:bg-white/72 hover:text-foreground dark:hover:bg-slate-900/72 dark:hover:text-white"}`}
+                className={`${SECTION_NAV_LINK_CLASS_NAME} ${isActive ? ACTIVE_SECTION_NAV_LINK_CLASS_NAME : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}
                 href={`#${item.id}`}
                 onClick={(event) => {
                   const targetSection = document.getElementById(item.id);

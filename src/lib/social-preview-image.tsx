@@ -38,7 +38,7 @@ const BrandIllustration = ({ compact = false }: { compact?: boolean }): ReactEle
           position: "absolute",
           inset: compact ? 14 : 18,
           borderRadius: 999,
-          background: "rgba(248,250,252,0.12)",
+          background: "rgba(232,229,215,0.12)",
         }}
       />
       <div
@@ -48,7 +48,7 @@ const BrandIllustration = ({ compact = false }: { compact?: boolean }): ReactEle
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          boxShadow: "0 24px 48px rgba(15, 23, 42, 0.24)",
+          boxShadow: "0 24px 48px rgba(8, 23, 32, 0.24)",
         }}
       >
         <AppIconArtwork
@@ -78,8 +78,8 @@ const SquareSocialPreviewImage = ({
         justifyContent: "center",
         gap: 48,
         padding: "110px 96px",
-        background: "linear-gradient(145deg, #166534 0%, #0f766e 52%, #2563eb 100%)",
-        color: "#f8fafc",
+        background: "linear-gradient(135deg, #1d3b2c 0%, #193940 45%, #1f4260 100%)",
+        color: "#e8e5d7",
         position: "relative",
         overflow: "hidden",
       }}
@@ -89,7 +89,7 @@ const SquareSocialPreviewImage = ({
           position: "absolute",
           inset: 60,
           borderRadius: 80,
-          border: "1px solid rgba(248,250,252,0.14)",
+          border: "1px solid rgba(232,229,215,0.14)",
         }}
       />
       <BrandIllustration />
@@ -117,7 +117,7 @@ const SquareSocialPreviewImage = ({
           style={{
             fontSize: 42,
             lineHeight: 1.3,
-            color: "rgba(248,250,252,0.92)",
+            color: "rgba(232,229,215,0.92)",
           }}
         >
           {description}
@@ -143,8 +143,8 @@ const HighlightChips = ({ highlights }: { highlights: string[] }): ReactElement 
           key={highlight}
           style={{
             borderRadius: 999,
-            border: "1px solid rgba(248,250,252,0.32)",
-            background: "rgba(248,250,252,0.12)",
+            border: "1px solid rgba(232,229,215,0.32)",
+            background: "rgba(232,229,215,0.12)",
             padding: "14px 28px",
             fontSize: 34,
             fontWeight: 700,
@@ -177,8 +177,8 @@ const LandscapeSocialPreviewImage = ({
         justifyContent: "space-between",
         gap: 56,
         padding: "72px 84px",
-        background: "linear-gradient(145deg, #166534 0%, #0f766e 52%, #2563eb 100%)",
-        color: "#f8fafc",
+        background: "linear-gradient(135deg, #1d3b2c 0%, #193940 45%, #1f4260 100%)",
+        color: "#e8e5d7",
         position: "relative",
         overflow: "hidden",
       }}
@@ -188,7 +188,7 @@ const LandscapeSocialPreviewImage = ({
           position: "absolute",
           inset: 32,
           borderRadius: 48,
-          border: "1px solid rgba(248,250,252,0.14)",
+          border: "1px solid rgba(232,229,215,0.14)",
         }}
       />
       {imageUrl ? (
@@ -200,8 +200,8 @@ const LandscapeSocialPreviewImage = ({
             position: "relative",
             overflow: "hidden",
             borderRadius: 40,
-            border: "1px solid rgba(248,250,252,0.18)",
-            boxShadow: "0 30px 70px rgba(15, 23, 42, 0.28)",
+            border: "1px solid rgba(232,229,215,0.18)",
+            boxShadow: "0 30px 70px rgba(8, 23, 32, 0.28)",
             flexShrink: 0,
           }}
         >
@@ -221,7 +221,7 @@ const LandscapeSocialPreviewImage = ({
               position: "absolute",
               inset: 0,
               background:
-                "linear-gradient(180deg, rgba(15,23,42,0.06) 0%, rgba(15,23,42,0.18) 45%, rgba(15,23,42,0.74) 100%)",
+                "linear-gradient(180deg, rgba(8,23,32,0.06) 0%, rgba(8,23,32,0.18) 45%, rgba(8,23,32,0.74) 100%)",
             }}
           />
         </div>
@@ -261,7 +261,7 @@ const LandscapeSocialPreviewImage = ({
           style={{
             fontSize: 34,
             lineHeight: 1.35,
-            color: "rgba(248,250,252,0.92)",
+            color: "rgba(232,229,215,0.92)",
           }}
         >
           {description}

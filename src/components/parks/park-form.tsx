@@ -36,7 +36,7 @@ interface ParkFormState {
 }
 
 const INPUT_CLASS_NAME =
-  "flex w-full rounded-xl border border-white/45 bg-white/78 px-3 py-2 text-sm ring-offset-background shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
+  "flex w-full rounded-xl border border-input bg-control px-3 py-2 text-sm ring-offset-background shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]";
 
 const createInitialState = (park: ParkDetail): ParkFormState => ({
   areaKm2: park.areaKm2 === null ? "" : String(park.areaKm2),
@@ -310,7 +310,7 @@ export const ParkForm = ({ park }: ParkFormProps) => {
         </div>
 
         <div className="space-y-3 md:col-span-2">
-          <div className="rounded-3xl border border-white/45 bg-white/70 px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] dark:border-white/10 dark:bg-slate-950/50 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+          <div className="rounded-3xl border border-border bg-control px-4 py-4 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.45)] dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]">
             <div className="flex items-start gap-3">
               <input
                 id="park-has-magnet"
@@ -318,7 +318,7 @@ export const ParkForm = ({ park }: ParkFormProps) => {
                 checked={isNationalPark ? true : formState.hasMagnet}
                 disabled={isPending || isNationalPark}
                 onChange={(event) => setFieldValue("hasMagnet", event.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-white/45 text-primary focus-visible:ring-2 focus-visible:ring-ring dark:border-white/20"
+                className="mt-0.5 h-4 w-4 rounded border-border text-link focus-visible:ring-2 focus-visible:ring-ring"
               />
               <div className="space-y-1">
                 <Label htmlFor="park-has-magnet">{t("hasMagnetLabel")}</Label>

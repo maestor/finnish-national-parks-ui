@@ -55,12 +55,11 @@ export const HomeSocialLinks = ({
   ] as const;
 
   return (
-    <section
-      aria-label={sectionLabel}
-      className="border-t border-slate-300/70 pt-4 text-left dark:border-white/12"
-    >
-      <p className="text-sm font-semibold tracking-[0.2em] text-foreground/85 uppercase">{title}</p>
-      <div className="mt-4 flex flex-wrap items-center gap-3">
+    <section aria-label={sectionLabel} className="border-t border-border pt-4 text-left">
+      <p className="text-sm font-semibold tracking-[0.2em] text-muted-foreground uppercase">
+        {title}
+      </p>
+      <div className="mt-4 flex flex-wrap items-center gap-3 max-[374px]:gap-2">
         {socialLinks.map(
           ({ href, label, text, lightIconSrc, darkIconSrc, iconWidth, iconHeight }) => (
             <a
@@ -71,7 +70,7 @@ export const HomeSocialLinks = ({
               aria-label={label}
               title={label}
               className={cn(
-                "inline-flex min-h-12 items-center gap-3 rounded-full border border-slate-300/85 bg-slate-50/95 px-4 py-2.5 text-foreground shadow-[0_12px_24px_rgba(148,163,184,0.12)] transition-transform hover:-translate-y-0.5 hover:border-slate-400/85 hover:bg-white hover:shadow-[0_14px_28px_rgba(148,163,184,0.16)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transform-none dark:border-white/18 dark:bg-slate-900/88 dark:text-white dark:shadow-[0_16px_32px_rgba(2,6,23,0.28)] dark:hover:border-white/28 dark:hover:bg-slate-900",
+                "inline-flex min-h-12 items-center gap-3 rounded-full border border-border bg-control px-4 py-2.5 text-foreground shadow-[0_12px_24px_rgba(var(--shadow-rgb),0.12)] transition-transform hover:-translate-y-0.5 hover:border-border hover:bg-accent hover:shadow-[0_14px_28px_rgba(var(--shadow-rgb),0.16)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring max-[374px]:gap-2 max-[374px]:px-2.5 motion-reduce:transform-none dark:shadow-[0_16px_32px_rgba(var(--shadow-rgb),0.28)]",
               )}
             >
               <span className="relative flex h-5 w-5 shrink-0 items-center justify-center">

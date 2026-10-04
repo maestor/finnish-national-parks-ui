@@ -40,13 +40,13 @@ const EditParkPage = async ({ params, searchParams }: EditParkPageProps) => {
       <div className="mt-3 flex flex-wrap items-center gap-4 text-sm">
         <Link
           href={appRoutes.controlPanel.parks}
-          className="font-medium text-primary underline underline-offset-4 hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="font-medium text-link underline underline-offset-4 hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           {t("backToList")}
         </Link>
         <Link
           href={appRoutes.park(park.slug)}
-          className="font-medium text-primary underline underline-offset-4 hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="font-medium text-link underline underline-offset-4 hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           {t("viewParkPage")}
         </Link>

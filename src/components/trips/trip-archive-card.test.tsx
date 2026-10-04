@@ -42,7 +42,7 @@ describe("TripArchiveCard", () => {
 
     const dateBadge = screen.getByText("15.-18.6.2024").closest("span");
     expect(dateBadge).not.toBeNull();
-    expect(dateBadge).toHaveClass("text-primary");
+    expect(dateBadge).toHaveClass("text-link");
     expect(dateBadge).not.toHaveClass("rounded-full");
     expect(dateBadge?.querySelector("svg")).toBeNull();
     expect(visitBadge?.querySelector("svg")).toHaveClass("lucide-calendar-range");
@@ -71,6 +71,7 @@ describe("TripArchiveCard", () => {
     const image = container.querySelector("img");
 
     expect(image).not.toBeNull();
+    expect(image).toHaveAttribute("loading", "lazy");
 
     fireEvent.error(image as HTMLImageElement);
 

@@ -78,23 +78,23 @@ interface ImageDetailsState extends PublicTripVisitImagesResponse {
 }
 
 const ROUTE_BADGE_CLASS_NAME =
-  "inline-flex items-center gap-1.5 rounded-full border border-emerald-200/70 bg-[linear-gradient(145deg,rgba(22,101,52,0.12),rgba(16,185,129,0.18))] px-2.5 py-1 text-sm leading-none font-semibold text-emerald-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-emerald-300/15 dark:bg-[linear-gradient(145deg,rgba(22,101,52,0.24),rgba(16,185,129,0.16))] dark:text-emerald-200 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]";
+  "inline-flex items-center gap-1.5 rounded-full border border-border theme-memory px-2.5 py-1 text-sm leading-none font-semibold text-emerald-900 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)]  dark:text-emerald-200 dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.08)]";
 const IMAGE_BADGE_CLASS_NAME =
-  "inline-flex items-center gap-1.5 rounded-full border border-sky-200/70 bg-[linear-gradient(145deg,rgba(22,101,52,0.08),rgba(37,99,235,0.12))] px-2.5 py-1 text-sm leading-none font-semibold text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-sky-300/15 dark:bg-[linear-gradient(145deg,rgba(22,101,52,0.18),rgba(37,99,235,0.16))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]";
+  "inline-flex items-center gap-1.5 rounded-full border border-border theme-memory px-2.5 py-1 text-sm leading-none font-semibold text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.08)]";
 const ITINERARY_NUMBER_BADGE_CLASS_NAME =
-  "inline-flex h-8 min-w-8 items-center justify-center rounded-full border border-sky-200/75 bg-white/88 px-2 text-sm font-semibold text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.56)] dark:border-sky-300/15 dark:bg-slate-950/58";
+  "inline-flex h-8 min-w-8 items-center justify-center rounded-full border border-border bg-control px-2 text-sm font-semibold text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.56)]";
 const HERO_ICON_BUTTON_CLASS_NAME =
-  "inline-flex items-center justify-center rounded-full border border-white/45 bg-white/76 p-2 text-foreground/72 shadow-[0_8px_20px_rgba(148,163,184,0.18)] backdrop-blur-sm transition-colors hover:bg-white/92 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/56 dark:text-sky-100/72 dark:shadow-[0_12px_24px_rgba(2,6,23,0.24)] dark:hover:bg-slate-950/72";
+  "inline-flex items-center justify-center rounded-full border border-border bg-control p-2 text-muted-foreground shadow-[0_8px_20px_rgba(var(--shadow-rgb),0.18)] backdrop-blur-sm transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-control dark:shadow-[0_12px_24px_rgba(var(--shadow-rgb),0.24)]";
 const DETAIL_SECTION_HEADING_CLASS_NAME =
-  "flex items-center gap-2 border-b border-white/35 pb-2 text-base font-semibold dark:border-white/10";
+  "flex items-center gap-2 border-b border-border pb-2 text-base font-semibold";
 const VISIT_TOGGLE_BUTTON_CLASS_NAME =
-  "inline-flex items-center gap-2 rounded-full border border-sky-200/70 bg-white/76 px-3 py-1.5 text-xs font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-sky-300/15 dark:bg-slate-950/56 dark:hover:bg-slate-950/72";
+  "inline-flex items-center gap-2 rounded-full border border-border bg-control px-3 py-1.5 text-xs font-medium text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 const VISIT_CARD_CLASS_NAME =
-  "overflow-hidden rounded-3xl border border-emerald-200/70 bg-[linear-gradient(160deg,rgba(255,255,255,0.82),rgba(236,253,245,0.92))] shadow-[0_16px_34px_rgba(34,197,94,0.12),0_10px_24px_rgba(148,163,184,0.12)] dark:border-emerald-300/15 dark:bg-[linear-gradient(160deg,rgba(15,23,42,0.78),rgba(6,78,59,0.22))] dark:shadow-[0_20px_38px_rgba(2,6,23,0.28)]";
+  "overflow-hidden rounded-3xl border border-border theme-memory shadow-[0_16px_34px_rgba(var(--shadow-rgb),0.12),0_10px_24px_rgba(var(--shadow-rgb),0.12)]  dark:shadow-[0_20px_38px_rgba(var(--shadow-rgb),0.28)]";
 const VISIT_KIND_BADGE_CLASS_NAME =
-  "inline-flex items-center rounded-full border border-emerald-200/70 bg-emerald-50 px-2.5 py-1 text-xs font-semibold tracking-wide text-emerald-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] dark:border-emerald-300/20 dark:bg-emerald-400/10 dark:text-emerald-200";
+  "inline-flex items-center rounded-full border border-border bg-emerald-50 px-2.5 py-1 text-xs font-semibold tracking-wide text-emerald-900 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.65)]  dark:bg-emerald-400/10 dark:text-emerald-200";
 const STOP_KIND_BADGE_CLASS_NAME =
-  "inline-flex items-center rounded-full border border-amber-200/70 bg-amber-50 px-2.5 py-1 text-xs font-semibold tracking-wide text-amber-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] dark:border-amber-300/20 dark:bg-amber-300/10 dark:text-amber-200";
+  "inline-flex items-center rounded-full border border-amber-200/70 bg-amber-50 px-2.5 py-1 text-xs font-semibold tracking-wide text-amber-900 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.65)] dark:border-amber-300/20 dark:bg-amber-300/10 dark:text-amber-200";
 
 const ROUTE_KM_FORMATTER = new Intl.NumberFormat("fi-FI", {
   maximumFractionDigits: 0,
@@ -509,22 +509,21 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
         )}
         {hasFeaturedImage === true && (
           <div
-            className="absolute inset-0 bg-gradient-to-r from-slate-950/55 via-slate-950/15 to-slate-950/10"
+            className="absolute inset-0 bg-gradient-to-r from-hero/55 via-hero/15 to-hero/10"
             aria-hidden="true"
           />
         )}
         <div
           className={cn(
             "relative",
-            hasFeaturedImage && "rounded-2xl bg-slate-950/38 p-4 text-white sm:p-6",
+            hasFeaturedImage && "rounded-2xl bg-hero/50 p-4 text-hero-foreground sm:p-6",
           )}
         >
           <div className={PUBLIC_HERO_HEADING_STACK_CLASS_NAME}>
             <div
               className={cn(
                 PUBLIC_EYEBROW_BADGE_CLASS_NAME,
-                hasFeaturedImage &&
-                  "border-emerald-300/60 bg-slate-950/90 text-emerald-300 dark:border-emerald-300/60 dark:bg-slate-950/90 dark:text-emerald-300",
+                hasFeaturedImage && "border-input bg-hero bg-none text-hero-foreground",
               )}
             >
               <TentTree className="h-4 w-4" aria-hidden="true" />
@@ -535,8 +534,7 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
               <p
                 className={cn(
                   PUBLIC_META_DATE_CLASS_NAME,
-                  hasFeaturedImage &&
-                    "w-fit rounded-full bg-slate-950/90 px-3 py-1 text-emerald-300 dark:bg-slate-950/90 dark:text-emerald-300",
+                  hasFeaturedImage && "w-fit rounded-full bg-hero px-3 py-1 text-hero-foreground",
                 )}
               >
                 {formatFinnishDateRange(trip.dateRange.start, trip.dateRange.end)}
@@ -597,7 +595,7 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
           aria-labelledby="trip-description-title"
         >
           <div className="flex items-center gap-2">
-            <FileText className="h-4 w-4 text-primary" aria-hidden="true" />
+            <FileText className="h-4 w-4 text-link" aria-hidden="true" />
             <h2 id="trip-description-title" className="text-lg font-semibold tracking-tight">
               {t("descriptionTitle")}
             </h2>
@@ -618,7 +616,7 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
           aria-labelledby="trip-route-title"
         >
           <div className="flex items-center gap-2">
-            <Route className="h-4 w-4 text-primary" aria-hidden="true" />
+            <Route className="h-4 w-4 text-link" aria-hidden="true" />
             <h2 id="trip-route-title" className="text-lg font-semibold tracking-tight">
               {t("routeTitle")}
             </h2>
@@ -654,9 +652,9 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
                 />
               </DeferredMap>
               {routeLoadState === "loading" && (
-                <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-slate-950/20 p-4 dark:bg-slate-950/45">
+                <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-hero/20 p-4 dark:bg-hero/45">
                   <p
-                    className="rounded-2xl border border-slate-300/80 bg-white/95 px-4 py-3 text-center text-sm font-semibold text-slate-950 shadow-xl dark:border-slate-200/35 dark:bg-slate-900/95 dark:text-white"
+                    className="rounded-2xl border border-border bg-control px-4 py-3 text-center text-sm font-semibold text-link shadow-xl"
                     role="status"
                     aria-live="polite"
                   >
@@ -687,7 +685,7 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
         aria-labelledby="trip-itinerary-title"
       >
         <div className="flex items-center gap-2">
-          <Signpost className="h-4 w-4 text-primary" aria-hidden="true" />
+          <Signpost className="h-4 w-4 text-link" aria-hidden="true" />
           <h2 id="trip-itinerary-title" className="text-lg font-semibold tracking-tight">
             {t("itineraryTitle")}
           </h2>
@@ -738,7 +736,7 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-start justify-between gap-3">
                               <div className="min-w-0">
-                                <p className="text-sm font-medium text-primary">
+                                <p className="text-sm font-medium text-link">
                                   {formatFinnishDate(item.visit.visitedOn)}
                                 </p>
                                 <div className="mt-2">
@@ -821,7 +819,7 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
                           >
                             <div
                               id={getItineraryDetailsPanelId(itemKey)}
-                              className={`space-y-3 border-t border-emerald-200/70 bg-white/45 px-5 py-4 transition-opacity duration-300 dark:border-emerald-300/15 dark:bg-slate-950/28 ${isOpen ? "opacity-100" : "opacity-0"}`}
+                              className={`space-y-3 border-t border-border bg-control px-5 py-4 transition-opacity duration-300  ${isOpen ? "opacity-100" : "opacity-0"}`}
                             >
                               {item.visit.note !== null && (
                                 <section className="space-y-3">
@@ -832,7 +830,7 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
                                     />
                                     {t("detailsTitle")}
                                   </h4>
-                                  <div className="prose prose-sm text-foreground dark:prose-invert max-w-none">
+                                  <div className="prose prose-sm text-foreground theme-prose max-w-none">
                                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                       {item.visit.note}
                                     </ReactMarkdown>
@@ -858,7 +856,7 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
                                       <p role="alert">{t("visitDetailsLoadFailed")}</p>
                                       <button
                                         type="button"
-                                        className="font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        className="font-medium text-link underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                         onClick={() => void loadVisitImages(item.visit.id)}
                                       >
                                         {t("retryVisitDetails")}
@@ -878,7 +876,7 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
                                       <p role="alert">{t("visitDetailsLoadFailed")}</p>
                                       <button
                                         type="button"
-                                        className="font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        className="font-medium text-link underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                         onClick={() =>
                                           visitDetails.nextOffset !== null &&
                                           void loadVisitImages(
@@ -898,7 +896,7 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
                                     visitDetails.loadMoreFailed === false && (
                                       <button
                                         type="button"
-                                        className="text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        className="text-sm font-medium text-link underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                         onClick={() =>
                                           void loadVisitImages(
                                             item.visit.id,
@@ -946,7 +944,7 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
                         itineraryItemRefs.current.delete(itemKey);
                       }}
                       className={cn(
-                        "rounded-3xl border border-white/45 bg-white/60 shadow-[0_12px_24px_rgba(148,163,184,0.12)] dark:border-white/10 dark:bg-slate-950/38 dark:shadow-[0_16px_28px_rgba(2,6,23,0.24)]",
+                        "rounded-3xl border border-border theme-memory shadow-[0_12px_24px_rgba(var(--shadow-rgb),0.12)] dark:shadow-[0_16px_28px_rgba(var(--shadow-rgb),0.24)]",
                         trip.itinerary.length >= TRIP_ITINERARY_PROGRESSIVE_THRESHOLD &&
                           "public-trip-itinerary-item",
                       )}
@@ -959,7 +957,7 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-start justify-between gap-3">
                               <div className="min-w-0">
-                                <p className="text-sm font-medium text-primary">
+                                <p className="text-sm font-medium text-link">
                                   {formatFinnishDate(item.stop.visitedOn)}
                                 </p>
                                 <div className="mt-2">
@@ -1021,7 +1019,7 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
                           >
                             <div
                               id={getItineraryDetailsPanelId(itemKey)}
-                              className={`space-y-3 border-t border-white/35 bg-white/30 px-5 py-4 transition-opacity duration-300 dark:border-white/10 dark:bg-slate-950/22 ${isOpen ? "opacity-100" : "opacity-0"}`}
+                              className={`space-y-3 border-t border-border bg-control px-5 py-4 transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0"}`}
                             >
                               {item.stop.note !== null && (
                                 <section className="space-y-3">
@@ -1032,7 +1030,7 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
                                     />
                                     {t("detailsTitle")}
                                   </h4>
-                                  <div className="prose prose-sm text-foreground dark:prose-invert max-w-none">
+                                  <div className="prose prose-sm text-foreground theme-prose max-w-none">
                                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                       {item.stop.note}
                                     </ReactMarkdown>
@@ -1058,7 +1056,7 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
                                       <p role="alert">{t("visitDetailsLoadFailed")}</p>
                                       <button
                                         type="button"
-                                        className="font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        className="font-medium text-link underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                         onClick={() => void loadStopImages(item.stop.id)}
                                       >
                                         {t("retryVisitDetails")}
@@ -1081,7 +1079,7 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
                                       <p role="alert">{t("visitDetailsLoadFailed")}</p>
                                       <button
                                         type="button"
-                                        className="font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        className="font-medium text-link underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                         onClick={() =>
                                           stopDetails.nextOffset !== null &&
                                           void loadStopImages(item.stop.id, stopDetails.nextOffset)
@@ -1098,7 +1096,7 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
                                     stopDetails.loadMoreFailed === false && (
                                       <button
                                         type="button"
-                                        className="text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        className="text-sm font-medium text-link underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                         onClick={() =>
                                           void loadStopImages(
                                             item.stop.id,

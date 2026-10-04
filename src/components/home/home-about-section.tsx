@@ -26,7 +26,7 @@ export const HomeAboutSection = ({
     <div className={PUBLIC_CONTENT_PANEL_CLASS_NAME}>
       <div className="flex items-center gap-3">
         <span className={PUBLIC_PANEL_ICON_SURFACE_CLASS_NAME}>
-          <CircleHelp className="h-4 w-4 text-primary" aria-hidden="true" />
+          <CircleHelp className="h-4 w-4 text-link" aria-hidden="true" />
         </span>
         <h2 id="home-about-title" className="text-lg font-semibold tracking-tight">
           {title}

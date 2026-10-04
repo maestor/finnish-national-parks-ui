@@ -120,23 +120,18 @@ const getDateRangeReviewParkGridClassName = (count: number) => {
 };
 
 const CARD_THEME_CLASS_NAMES: Record<DateRangeReviewCard["kind"], string> = {
-  intro: "bg-[linear-gradient(145deg,#14532d_0%,#0f766e_52%,#1d4ed8_100%)] text-primary-foreground",
-  "new-parks":
-    "bg-[linear-gradient(145deg,rgba(20,83,45,0.98),rgba(64,94,16,0.86),rgba(12,74,110,0.8))] text-primary-foreground",
-  "photo-highlight":
-    "bg-[linear-gradient(145deg,rgba(15,23,42,0.98),rgba(14,116,144,0.86),rgba(22,101,52,0.84))] text-primary-foreground",
-  "revisited-parks":
-    "bg-[linear-gradient(145deg,rgba(20,83,45,0.98),rgba(12,74,110,0.88),rgba(21,128,61,0.84))] text-primary-foreground",
-  "trip-summary":
-    "bg-[linear-gradient(145deg,rgba(68,64,60,0.98),rgba(22,101,52,0.84),rgba(14,116,144,0.82))] text-primary-foreground",
-  "other-visits":
-    "bg-[linear-gradient(145deg,rgba(49,46,129,0.98),rgba(21,94,117,0.9),rgba(20,83,45,0.82))] text-primary-foreground",
+  intro: "theme-memory text-foreground",
+  "new-parks": "theme-memory text-foreground",
+  "photo-highlight": "theme-memory text-foreground",
+  "revisited-parks": "theme-memory text-foreground",
+  "trip-summary": "theme-memory text-foreground",
+  "other-visits": "theme-memory text-foreground",
 };
 
 const MetricTile = ({ label, value }: { label: string; value: number }) => (
-  <div className="rounded-[1.45rem] border border-white/16 bg-white/10 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
-    <p className="text-xs uppercase tracking-[0.18em] text-primary-foreground/70">{label}</p>
-    <p className="mt-2 text-3xl font-black tracking-tight text-primary-foreground">{value}</p>
+  <div className="rounded-[1.45rem] border border-border bg-control p-4 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.12)]">
+    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
+    <p className="mt-2 text-3xl font-black tracking-tight text-foreground">{value}</p>
   </div>
 );
 
@@ -165,7 +160,7 @@ const ReviewImage = ({
     resolution === "thumb" ? getThumbnailDimensions(image) : getImageDimensions(image);
 
   return (
-    <div className="overflow-hidden rounded-[1.75rem] border border-white/18 bg-white/10 shadow-[0_24px_60px_rgba(15,23,42,0.28)]">
+    <div className="overflow-hidden rounded-[1.75rem] border border-border bg-control shadow-[0_24px_60px_rgba(var(--shadow-rgb),0.28)]">
       <AppImage
         alt={image.alt ?? alt}
         className={cn("h-72 w-full object-cover", imageClassName)}
@@ -226,7 +221,7 @@ const ReviewVisitList = ({
 
   return (
     <div className="space-y-2.5">
-      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary-foreground/70">
+      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
         {title}
       </p>
       <ul
@@ -237,7 +232,7 @@ const ReviewVisitList = ({
           <li
             key={`${visit.park.slug}-${visit.visitedOn}`}
             className={cn(
-              "rounded-3xl border border-white/18 bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]",
+              "rounded-3xl border border-border bg-control shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.12)]",
               compact ? "px-3 py-2.5" : "px-3.5 py-3",
             )}
           >
@@ -255,14 +250,12 @@ const ReviewVisitList = ({
                 <div className="flex flex-wrap items-center gap-1.5">
                   <ParkTypeBadge
                     className={cn(
-                      "border-white/28 bg-white/14 text-primary-foreground shadow-none dark:border-white/28 dark:bg-white/14",
+                      "border-border bg-control text-foreground shadow-none",
                       compact ? "px-1.5 py-0.5 text-[0.6875rem]" : "px-2 py-0.5 text-xs",
                     )}
                     label={visit.park.typeLabel}
                   />
-                  <span
-                    className={cn("text-primary-foreground/78", compact ? "text-xs" : "text-sm")}
-                  >
+                  <span className={cn("text-muted-foreground", compact ? "text-xs" : "text-sm")}>
                     {formatFinnishDate(visit.visitedOn)}
                   </span>
                 </div>
@@ -297,17 +290,17 @@ const StoryCard = ({
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
       <div
         className={cn(
-          "absolute -top-12 right-0 h-44 w-44 rounded-full bg-white/12 blur-3xl transition-opacity duration-500",
+          "absolute -top-12 right-0 h-44 w-44 rounded-full bg-control blur-3xl transition-opacity duration-500",
           active ? "opacity-100 motion-safe:animate-year-review-float" : "opacity-55",
         )}
       />
       <div
         className={cn(
-          "absolute bottom-0 left-0 h-52 w-52 rounded-full bg-emerald-300/18 blur-3xl transition-opacity duration-500",
+          "absolute bottom-0 left-0 h-52 w-52 rounded-full bg-primary/18 blur-3xl transition-opacity duration-500",
           active ? "opacity-100 motion-safe:animate-year-review-glow" : "opacity-45",
         )}
       />
-      <div className="absolute inset-x-0 top-0 h-px bg-white/45" />
+      <div className="absolute inset-x-0 top-0 h-px bg-control" />
     </div>
     <div className="relative z-10 space-y-6">{children}</div>
   </section>
@@ -377,7 +370,7 @@ export const DateRangeReviewStory = ({
       <div data-testid="date-range-review-story" className="space-y-5">
         <section className={PUBLIC_EMPTY_STATE_PANEL_CLASS_NAME}>
           <div className="mx-auto max-w-2xl space-y-4">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200/60 bg-[linear-gradient(145deg,rgba(22,101,52,0.12),rgba(37,99,235,0.12))] px-3 py-1 text-sm font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-emerald-300/15 dark:bg-[linear-gradient(145deg,rgba(22,101,52,0.22),rgba(37,99,235,0.2))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+            <div className="inline-flex items-center gap-2 rounded-full border border-border theme-memory px-3 py-1 text-sm font-medium text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)]  dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.08)]">
               {t("eyebrow")}
             </div>
             <HeadingTag className="text-3xl font-bold tracking-tight">{overview.name}</HeadingTag>
@@ -451,14 +444,14 @@ export const DateRangeReviewStory = ({
                 aria-label={t("story.goToCard", { current: index + 1, total: cards.length })}
                 aria-current={index === activeIndex ? "step" : undefined}
                 className={cn(
-                  "relative h-1.5 flex-1 overflow-hidden rounded-full bg-white/16 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                  index === activeIndex && "shadow-[0_0_18px_rgba(74,222,128,0.32)]",
+                  "relative h-1.5 flex-1 overflow-hidden rounded-full bg-control transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                  index === activeIndex && "shadow-[0_0_18px_rgba(var(--highlight-rgb),0.32)]",
                 )}
               >
                 <span
                   aria-hidden="true"
                   className={cn(
-                    "absolute inset-y-0 left-0 rounded-full bg-linear-to-r from-emerald-300 via-primary to-emerald-100 transition-all duration-500 motion-safe:duration-700",
+                    "absolute inset-y-0 left-0 rounded-full theme-progress transition-all duration-500 motion-safe:duration-700",
                     index === activeIndex ? "w-full" : "w-0",
                   )}
                 />
@@ -500,17 +493,17 @@ export const DateRangeReviewStory = ({
                     style={getRevealStyle(shouldAnimateCardEntry, 0)}
                   >
                     <div className="space-y-3">
-                      <div className="inline-flex items-center gap-2 rounded-full border border-white/28 bg-black/16 px-3 py-1 text-sm font-medium text-primary-foreground/84 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-sm">
+                      <div className="inline-flex items-center gap-2 rounded-full border border-border bg-control px-3 py-1 text-sm font-medium text-muted-foreground shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.18)] backdrop-blur-sm">
                         <Sparkles className="h-4 w-4" aria-hidden="true" />
                         <span>{t("eyebrow")}</span>
                       </div>
                       <HeadingTag className="text-4xl font-black tracking-tight sm:text-5xl">
                         {card.name}
                       </HeadingTag>
-                      <p className="text-sm leading-6 text-primary-foreground/82 sm:text-base">
+                      <p className="text-sm leading-6 text-muted-foreground sm:text-base">
                         {t("story.introCaption")}
                       </p>
-                      <div className="flex flex-wrap items-center gap-3 text-sm text-primary-foreground/78">
+                      <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                         <span className="inline-flex items-center gap-2">
                           <CalendarRange className="h-4 w-4" aria-hidden="true" />
                           {formatFinnishDateRange(card.dateRange.startDate, card.dateRange.endDate)}
@@ -526,27 +519,27 @@ export const DateRangeReviewStory = ({
                     )}
                     style={getRevealStyle(shouldAnimateCardEntry, 160)}
                   >
-                    <div className="rounded-[1.8rem] border border-white/16 bg-white/10 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
-                      <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
+                    <div className="rounded-[1.8rem] border border-border bg-control p-5 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.12)]">
+                      <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                         {t("story.primaryStatLabel")}
                       </p>
                       <div className="mt-4 flex items-end gap-3">
-                        <p className="text-7xl font-black tracking-[-0.04em] text-primary-foreground sm:text-8xl">
+                        <p className="text-7xl font-black tracking-[-0.04em] text-foreground sm:text-8xl">
                           {card.primaryStat.value}
                         </p>
-                        <p className="pb-2 text-sm font-semibold uppercase tracking-[0.22em] text-primary-foreground/72">
+                        <p className="pb-2 text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
                           {t("story.visitCountLabel", { count: card.primaryStat.value })}
                         </p>
                       </div>
-                      <div className="mt-5 border-t border-white/16 pt-4">
-                        <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/70">
+                      <div className="mt-5 border-t border-border pt-4">
+                        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                           {t("stats.trips")}
                         </p>
                         <div className="mt-2 flex items-end gap-3">
-                          <p className="text-4xl font-black tracking-tight text-primary-foreground sm:text-5xl">
+                          <p className="text-4xl font-black tracking-tight text-foreground sm:text-5xl">
                             {card.tripCount}
                           </p>
-                          <p className="pb-1 text-sm font-semibold uppercase tracking-[0.22em] text-primary-foreground/72">
+                          <p className="pb-1 text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
                             {t("story.tripCountLabel", { count: card.tripCount })}
                           </p>
                         </div>
@@ -624,7 +617,7 @@ export const DateRangeReviewStory = ({
                     <div className="space-y-3">
                       {card.visit ? (
                         <>
-                          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary-foreground/70">
+                          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                             {t("story.photoVisitTitle")}
                           </p>
                           <div className="space-y-2">
@@ -634,7 +627,7 @@ export const DateRangeReviewStory = ({
                             >
                               {card.visit.park.name}
                             </Link>
-                            <p className="text-sm text-primary-foreground/78">
+                            <p className="text-sm text-muted-foreground">
                               {formatFinnishDate(card.visit.visitedOn)}
                             </p>
                           </div>
@@ -649,13 +642,13 @@ export const DateRangeReviewStory = ({
                             />
                           </div>
                           {card.visit.route !== null && (
-                            <p className="text-sm text-primary-foreground/78">
+                            <p className="text-sm text-muted-foreground">
                               <span className="font-semibold">{t("story.routeLabel")}:</span>{" "}
                               {card.visit.route}
                             </p>
                           )}
                           {card.visit.trip !== null && (
-                            <p className="text-sm text-primary-foreground/78">
+                            <p className="text-sm text-muted-foreground">
                               <span className="font-semibold">{t("story.tripLabel")}:</span>{" "}
                               <Link
                                 href={appRoutes.trip(card.visit.trip.slug)}
@@ -667,7 +660,7 @@ export const DateRangeReviewStory = ({
                           )}
                         </>
                       ) : (
-                        <p className="text-sm leading-6 text-primary-foreground/82">
+                        <p className="text-sm leading-6 text-muted-foreground">
                           {t("story.photoFallback")}
                         </p>
                       )}
@@ -735,7 +728,7 @@ export const DateRangeReviewStory = ({
                         name={park.park.name}
                         dateText={formatFinnishLongDate(park.visitedOn)}
                         className={cn(
-                          "border-white/18 bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]",
+                          "border-border bg-control shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.12)]",
                           getMediaRevealClassName(shouldAnimateCardEntry),
                         )}
                         style={getRevealStyle(shouldAnimateCardEntry, 180 + parkIndex * 90)}
@@ -811,12 +804,12 @@ export const DateRangeReviewStory = ({
                         dateText={formatFinnishLongDate(park.visitedOn)}
                         extraContent={
                           <>
-                            <p className="text-sm text-primary-foreground/78">
+                            <p className="text-sm text-muted-foreground">
                               {t("story.revisitedParkPreviousVisit", {
                                 date: formatFinnishLongDate(park.previousVisitDate),
                               })}
                             </p>
-                            <p className="text-sm text-primary-foreground/78">
+                            <p className="text-sm text-muted-foreground">
                               {t("story.revisitedParkTotalVisits", {
                                 count: park.revisitCount + 1,
                               })}
@@ -824,7 +817,7 @@ export const DateRangeReviewStory = ({
                           </>
                         }
                         className={cn(
-                          "border-white/18 bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]",
+                          "border-border bg-control shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.12)]",
                           getMediaRevealClassName(shouldAnimateCardEntry),
                         )}
                         style={getRevealStyle(shouldAnimateCardEntry, 180 + parkIndex * 90)}
@@ -1028,10 +1021,7 @@ export const DateRangeReviewStory = ({
         footer={t("story.footer")}
         footerHint={t("story.footerHint")}
         footerIcon={
-          <Route
-            className="mr-2 inline h-4 w-4 align-text-bottom text-primary"
-            aria-hidden="true"
-          />
+          <Route className="mr-2 inline h-4 w-4 align-text-bottom text-link" aria-hidden="true" />
         }
         mode={mode}
         siteTitle={layoutT("siteTitle")}

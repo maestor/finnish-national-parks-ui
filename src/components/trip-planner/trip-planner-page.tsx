@@ -68,9 +68,9 @@ const TripPlannerMap = dynamic(
 );
 
 const INPUT_CLASS_NAME =
-  "flex h-11 w-full rounded-xl border border-white/45 bg-white/78 px-3 py-2 text-sm text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] placeholder:text-muted-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
+  "flex h-11 w-full rounded-xl border border-border bg-control px-3 py-2 text-sm text-foreground shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.45)] placeholder:text-muted-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]";
 const INLINE_SLIDER_CLASS_NAME =
-  "relative -top-1 h-2 w-full cursor-pointer appearance-none rounded-full bg-sky-100 accent-primary dark:bg-slate-800";
+  "relative -top-1 h-2 w-full cursor-pointer appearance-none rounded-full bg-progress-track accent-primary";
 const FILTER_GROUP_CLASS_NAME = "flex min-w-0 flex-col gap-1";
 const DEFAULT_DISTANCE_FILTER_KM = 25;
 const DEFAULT_VISIT_STATUS_FILTER: VisitStatusFilter = "not-visited";
@@ -85,13 +85,12 @@ const LOCATION_REQUEST_OPTIONS = {
   timeout: 10000,
 } as const;
 const SUGGESTION_LIST_CLASS_NAME =
-  "absolute left-0 right-0 top-[calc(100%+0.5rem)] z-20 overflow-hidden rounded-[1.35rem] border border-white/55 bg-white/96 shadow-[0_20px_40px_rgba(148,163,184,0.24)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/94 dark:shadow-[0_24px_48px_rgba(2,6,23,0.42)]";
+  "absolute left-0 right-0 top-[calc(100%+0.5rem)] z-20 overflow-hidden rounded-[1.35rem] border border-border bg-control shadow-[0_20px_40px_rgba(var(--shadow-rgb),0.24)] backdrop-blur-xl dark:shadow-[0_24px_48px_rgba(var(--shadow-rgb),0.42)]";
 const SUGGESTION_OPTION_CLASS_NAME =
-  "cursor-pointer px-3 py-2 text-sm text-foreground transition-colors hover:bg-white/82 dark:hover:bg-slate-900/82";
+  "cursor-pointer px-3 py-2 text-sm text-foreground transition-colors hover:bg-accent";
 const RESULTS_LOADING_PLACEHOLDER_CLASS_NAME =
-  "overflow-hidden rounded-2xl border border-white/45 bg-white/68 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] dark:border-white/10 dark:bg-slate-950/44 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
-const RESULTS_LOADING_BAR_CLASS_NAME =
-  "rounded-full bg-white/78 motion-safe:animate-pulse dark:bg-slate-800/88";
+  "overflow-hidden rounded-2xl border border-border bg-control p-4 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.45)] dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]";
+const RESULTS_LOADING_BAR_CLASS_NAME = "rounded-full bg-control motion-safe:animate-pulse";
 
 const DISTANCE_FORMATTER = new Intl.NumberFormat("fi-FI", {
   maximumFractionDigits: 1,
@@ -577,7 +576,7 @@ const TripPlannerSuggestionInput = ({
         {shouldShowLocateButton === true && (
           <button
             type="button"
-            className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white/72 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-60 dark:hover:bg-slate-900/72"
+            className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-60"
             aria-label={locateButtonLabel}
             title={locateButtonLabel}
             onClick={onLocate}
@@ -628,7 +627,7 @@ const TripPlannerSuggestionInput = ({
               aria-selected={highlightedIndex === index}
               className={cn(
                 SUGGESTION_OPTION_CLASS_NAME,
-                highlightedIndex === index && "bg-white/82 text-foreground dark:bg-slate-900/86",
+                highlightedIndex === index && "bg-control text-foreground",
               )}
               onMouseEnter={() => setHighlightedIndex(index)}
               onPointerDown={(event) => {
@@ -1020,7 +1019,7 @@ export const TripPlannerPage = () => {
                 label={
                   <>
                     <span>{t("originLabel")}</span>
-                    <span className="text-primary" aria-hidden="true">
+                    <span className="text-link" aria-hidden="true">
                       {" *"}
                     </span>
                   </>
@@ -1089,7 +1088,7 @@ export const TripPlannerPage = () => {
                 className={cn(
                   "shrink-0 rounded-xl",
                   isMobileFiltersOpen &&
-                    "border-primary/40 bg-primary/12 text-primary hover:bg-primary/18 dark:border-primary/40 dark:bg-primary/16",
+                    "border-primary/40 bg-primary/12 text-link hover:bg-primary/18 dark:border-primary/40 dark:bg-primary/16",
                 )}
                 aria-controls={resultsFiltersId}
                 aria-expanded={isMobileFiltersOpen}
@@ -1129,7 +1128,7 @@ export const TripPlannerPage = () => {
                           </p>
 
                           <div
-                            className="inline-flex rounded-[1.1rem] border border-white/45 bg-white/60 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/42 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                            className="inline-flex rounded-[1.1rem] border border-border bg-control p-1 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.4)] backdrop-blur-sm dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]"
                             role="tablist"
                             aria-label={t("viewTabs.ariaLabel")}
                           >
@@ -1143,8 +1142,8 @@ export const TripPlannerPage = () => {
                               className={cn(
                                 "rounded-xl px-3 py-1.5 text-sm font-medium transition-colors",
                                 activeView === "map"
-                                  ? "bg-white/86 text-foreground shadow-[0_8px_18px_rgba(148,163,184,0.16)] dark:bg-slate-950/68"
-                                  : "text-muted-foreground hover:bg-white/62 hover:text-foreground dark:hover:bg-slate-950/56",
+                                  ? "theme-memory text-foreground shadow-[0_8px_18px_rgba(var(--shadow-rgb),0.16)]"
+                                  : "text-muted-foreground hover:bg-accent hover:text-foreground",
                               )}
                             >
                               {t("viewTabs.map")}
@@ -1159,8 +1158,8 @@ export const TripPlannerPage = () => {
                               className={cn(
                                 "rounded-xl px-3 py-1.5 text-sm font-medium transition-colors",
                                 activeView === "list"
-                                  ? "bg-white/86 text-foreground shadow-[0_8px_18px_rgba(148,163,184,0.16)] dark:bg-slate-950/68"
-                                  : "text-muted-foreground hover:bg-white/62 hover:text-foreground dark:hover:bg-slate-950/56",
+                                  ? "theme-memory text-foreground shadow-[0_8px_18px_rgba(var(--shadow-rgb),0.16)]"
+                                  : "text-muted-foreground hover:bg-accent hover:text-foreground",
                               )}
                             >
                               {t("viewTabs.list")}
@@ -1173,7 +1172,7 @@ export const TripPlannerPage = () => {
                     {shouldShowRouteSummary === true && (
                       <div
                         className={cn(
-                          "rounded-2xl border border-white/45 bg-white/74 px-4 py-3 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] dark:border-white/10 dark:bg-slate-950/46 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]",
+                          "rounded-2xl border border-border bg-control px-4 py-3 text-sm shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.45)] dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]",
                           !isMobileResultsLayout && "md:justify-self-end",
                           isMobileResultsLayout &&
                             shouldShowFilters &&
@@ -1323,11 +1322,11 @@ export const TripPlannerPage = () => {
                     aria-labelledby="trip-planner-view-list"
                   >
                     {totalParkCount === 0 ? (
-                      <p className="rounded-xl border border-dashed border-white/45 bg-white/50 px-4 py-6 text-sm text-muted-foreground dark:border-white/10 dark:bg-slate-950/38">
+                      <p className="rounded-xl border border-dashed border-border bg-control px-4 py-6 text-sm text-muted-foreground">
                         {getNoResultsLabel(result.mode)}
                       </p>
                     ) : shouldShowFilteredEmptyState === true ? (
-                      <div className="rounded-xl border border-dashed border-white/45 bg-white/50 px-4 py-6 dark:border-white/10 dark:bg-slate-950/38">
+                      <div className="rounded-xl border border-dashed border-border bg-control px-4 py-6">
                         <p className="text-sm text-muted-foreground">{t("filteredEmpty")}</p>
                         <Button
                           className="mt-4 rounded-xl"
@@ -1374,12 +1373,12 @@ export const TripPlannerPage = () => {
                     />
 
                     {totalParkCount === 0 ? (
-                      <p className="rounded-xl border border-dashed border-white/45 bg-white/50 px-4 py-6 text-sm text-muted-foreground dark:border-white/10 dark:bg-slate-950/38">
+                      <p className="rounded-xl border border-dashed border-border bg-control px-4 py-6 text-sm text-muted-foreground">
                         {getNoResultsLabel(result.mode)}
                       </p>
                     ) : (
                       shouldShowFilteredEmptyState === true && (
-                        <div className="rounded-xl border border-dashed border-white/45 bg-white/50 px-4 py-6 dark:border-white/10 dark:bg-slate-950/38">
+                        <div className="rounded-xl border border-dashed border-border bg-control px-4 py-6">
                           <p className="text-sm text-muted-foreground">{t("filteredEmpty")}</p>
                           <Button
                             className="mt-4 rounded-xl"
@@ -1434,7 +1433,7 @@ const TripPlannerResultsSection = ({
       <ul className="grid gap-3">
         {parks.map((park) => (
           <li key={park.slug}>
-            <article className="rounded-[1.35rem] border border-white/45 bg-white/66 p-4 shadow-[0_14px_30px_rgba(148,163,184,0.16)] backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/48 dark:shadow-[0_20px_40px_rgba(2,6,23,0.3)]">
+            <article className="rounded-[1.35rem] border border-border theme-panel p-4 shadow-[0_14px_30px_rgba(var(--shadow-rgb),0.16)] backdrop-blur-sm dark:shadow-[0_20px_40px_rgba(var(--shadow-rgb),0.3)]">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
@@ -1458,7 +1457,7 @@ const TripPlannerResultsSection = ({
 
                   <p className="text-sm text-muted-foreground">
                     <span>{getParkTypeDisplayName(park)}</span>
-                    <span className="mx-2 text-foreground/80 dark:text-white/85" aria-hidden="true">
+                    <span className="mx-2 text-muted-foreground" aria-hidden="true">
                       •
                     </span>
                     <span>{park.address}</span>

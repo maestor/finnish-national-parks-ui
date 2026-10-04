@@ -48,7 +48,7 @@ export const AdminInvitationForm = () => {
   return (
     <div className="mt-6 max-w-2xl space-y-6">
       <form
-        className="space-y-4 rounded-3xl border border-white/45 bg-white/70 p-5 shadow-[0_18px_40px_rgba(148,163,184,0.16)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/56 dark:shadow-[0_24px_52px_rgba(2,6,23,0.28)]"
+        className="space-y-4 rounded-3xl border border-border bg-control p-5 shadow-[0_18px_40px_rgba(var(--shadow-rgb),0.16)] backdrop-blur-xl dark:shadow-[0_24px_52px_rgba(var(--shadow-rgb),0.28)]"
         onSubmit={(event) => {
           void handleSubmit(event);
         }}
@@ -65,7 +65,7 @@ export const AdminInvitationForm = () => {
             required
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="flex min-h-10 w-full rounded-xl border border-white/45 bg-white/78 px-3 py-2 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+            className="flex min-h-10 w-full rounded-xl border border-border bg-control px-3 py-2 text-sm shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]"
           />
           <p className="text-sm leading-6 text-muted-foreground">{t("emailHint")}</p>
         </div>
@@ -98,13 +98,13 @@ export const AdminInvitationForm = () => {
                 readOnly
                 value={invitation.invitationUrl}
                 onFocus={(event) => event.currentTarget.select()}
-                className="min-h-10 min-w-0 flex-1 rounded-xl border border-white/45 bg-white/78 px-3 py-2 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                className="min-h-10 min-w-0 flex-1 rounded-xl border border-input bg-control px-3 py-2 text-sm shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]"
               />
               <CopyLinkButton
                 href={invitation.invitationUrl}
                 label={t("copyLink")}
                 copiedLabel={t("linkCopied")}
-                className="inline-flex min-h-10 items-center justify-center rounded-md border border-white/45 bg-white/78 px-4 py-2 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-white/92 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/58 dark:hover:bg-slate-950/74"
+                className="inline-flex min-h-10 items-center justify-center rounded-md border border-border bg-control px-4 py-2 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 iconClassName="h-4 w-4"
               />
             </div>

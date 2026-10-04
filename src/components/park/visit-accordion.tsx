@@ -35,17 +35,17 @@ interface VisitAuthorDetails {
 }
 
 const VISIT_CARD_CLASS_NAME =
-  "rounded-lg rounded-[1.75rem] border border-white/45 bg-white/68 shadow-[0_20px_44px_rgba(148,163,184,0.16)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/44 dark:shadow-[0_24px_52px_rgba(2,6,23,0.32)]";
+  "rounded-lg rounded-[1.75rem] border border-border theme-memory shadow-[0_20px_44px_rgba(var(--shadow-rgb),0.16)] backdrop-blur-xl dark:shadow-[0_24px_52px_rgba(var(--shadow-rgb),0.32)]";
 const VISIT_BADGE_CLASS_NAME =
-  "inline-flex items-center justify-center rounded-full bg-[linear-gradient(145deg,rgba(22,101,52,0.12),rgba(37,99,235,0.12))] px-2.5 py-1 text-sm leading-none font-bold text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:bg-[linear-gradient(145deg,rgba(22,101,52,0.22),rgba(37,99,235,0.18))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]";
+  "inline-flex items-center justify-center rounded-full theme-memory px-2.5 py-1 text-sm leading-none font-bold text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.08)]";
 const DETAIL_SECTION_HEADING_CLASS_NAME =
-  "flex items-center gap-2 border-b border-white/35 pb-2 text-base font-semibold dark:border-white/10";
+  "flex items-center gap-2 border-b border-border pb-2 text-base font-semibold";
 const ROUTE_BADGE_CLASS_NAME =
-  "inline-flex items-center gap-1.5 rounded-full border border-emerald-200/70 bg-[linear-gradient(145deg,rgba(22,101,52,0.12),rgba(16,185,129,0.18))] px-2.5 py-1 text-sm leading-none font-semibold text-emerald-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-emerald-300/15 dark:bg-[linear-gradient(145deg,rgba(22,101,52,0.24),rgba(16,185,129,0.16))] dark:text-emerald-200 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]";
+  "inline-flex items-center gap-1.5 rounded-full border border-emerald-200/70 theme-memory px-2.5 py-1 text-sm leading-none font-semibold text-emerald-900 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] dark:border-emerald-300/15 dark:text-emerald-200 dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.08)]";
 const IMAGE_BADGE_CLASS_NAME =
-  "inline-flex items-center gap-1.5 rounded-full border border-sky-200/70 bg-[linear-gradient(145deg,rgba(22,101,52,0.08),rgba(37,99,235,0.12))] px-2.5 py-1 text-sm leading-none font-semibold text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-sky-300/15 dark:bg-[linear-gradient(145deg,rgba(22,101,52,0.18),rgba(37,99,235,0.16))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]";
+  "inline-flex items-center gap-1.5 rounded-full border border-border theme-memory px-2.5 py-1 text-sm leading-none font-semibold text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.08)]";
 const TRIP_LINK_CLASS_NAME =
-  "inline-flex items-center gap-1.5 rounded-full border border-sky-200/70 bg-[linear-gradient(145deg,rgba(14,165,233,0.12),rgba(37,99,235,0.14))] px-2.5 py-1 text-sm leading-none font-semibold text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-[linear-gradient(145deg,rgba(14,165,233,0.18),rgba(37,99,235,0.2))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-sky-300/15 dark:bg-[linear-gradient(145deg,rgba(2,132,199,0.2),rgba(37,99,235,0.16))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]";
+  "inline-flex items-center gap-1.5 rounded-full border border-border theme-memory px-2.5 py-1 text-sm leading-none font-semibold text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] transition-colors hover:theme-memory focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.08)]";
 
 const hasExpandableContent = (visit: Visit) => {
   const hasImages = (visit.images?.length ?? 0) > 0;
@@ -206,7 +206,7 @@ export const VisitAccordion = ({
               <button
                 type="button"
                 onClick={() => toggle(visit.id, isExpandable)}
-                className="flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-3 text-left transition-colors hover:text-foreground/88"
+                className="flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-3 text-left transition-colors hover:text-muted-foreground"
                 aria-expanded={isOpen}
                 title={isOpen ? t("hideDetails") : t("showDetails")}
                 aria-label={isOpen ? t("hideDetails") : t("showDetails")}
@@ -266,14 +266,14 @@ export const VisitAccordion = ({
               style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
             >
               <div className="overflow-hidden min-h-0">
-                <div className="space-y-3 border-t border-white/35 bg-white/30 px-4 py-3 dark:border-white/10 dark:bg-slate-950/22">
+                <div className="space-y-3 border-t border-border bg-control px-4 py-3">
                   {!!visit.note && (
                     <>
                       <h3 className={DETAIL_SECTION_HEADING_CLASS_NAME}>
                         <FileText className="h-4 w-4 text-muted-foreground" />
                         {t("detailsTitle")}
                       </h3>
-                      <div className="prose prose-sm text-foreground dark:prose-invert max-w-none">
+                      <div className="prose prose-sm text-foreground theme-prose max-w-none">
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>{visit.note}</ReactMarkdown>
                       </div>
                     </>

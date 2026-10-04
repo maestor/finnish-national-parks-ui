@@ -15,10 +15,16 @@ import { appRoutes } from "@/lib/routes";
 interface TripMemoryCardProps {
   trip: Omit<PublicTripArchiveItem, "createdAt">;
   headingLevel: 2 | 4;
+  imageLoading?: "eager" | "lazy";
   onClick?: MouseEventHandler<HTMLAnchorElement>;
 }
 
-export const TripMemoryCard = ({ trip, headingLevel, onClick }: TripMemoryCardProps) => {
+export const TripMemoryCard = ({
+  trip,
+  headingLevel,
+  imageLoading,
+  onClick,
+}: TripMemoryCardProps) => {
   const t = useTranslations("tripsArchive");
   return (
     <PublicMemoryCard
@@ -28,11 +34,12 @@ export const TripMemoryCard = ({ trip, headingLevel, onClick }: TripMemoryCardPr
       headingLevel={headingLevel}
       onClick={onClick}
       featuredImage={trip.featuredImage}
+      imageLoading={imageLoading}
       descriptionExcerpt={trip.descriptionExcerpt}
       descriptionPlaceholder={t("descriptionPlaceholder")}
       readMore={t("readMore")}
       metadata={
-        <div className="mt-3 flex flex-wrap gap-2 text-sm text-foreground/75 dark:text-sky-100/75">
+        <div className="mt-3 flex flex-wrap gap-2 text-sm text-muted-foreground">
           <span className={PUBLIC_META_DATE_CLASS_NAME}>
             {trip.dateRange !== null ? (
               <time dateTime={trip.dateRange.start}>
@@ -61,13 +68,15 @@ export const TripMemoryCard = ({ trip, headingLevel, onClick }: TripMemoryCardPr
 interface TripArchiveCardProps {
   onDetailNavigate: () => void;
   trip: PublicTripArchiveItem;
+  imageLoading?: "eager" | "lazy";
 }
 
-export const TripArchiveCard = ({ onDetailNavigate, trip }: TripArchiveCardProps) => (
+export const TripArchiveCard = ({ onDetailNavigate, trip, imageLoading }: TripArchiveCardProps) => (
   <li className="flex min-w-0">
     <TripMemoryCard
       trip={trip}
       headingLevel={2}
+      imageLoading={imageLoading}
       onClick={(event) => {
         if (
           event.button === 0 &&

@@ -119,7 +119,7 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
   const resultCountLabel = t("filters.results", { count: filteredParks.length });
   if (sortedParks.length === 0 && sortedRemovedParks.length === 0) {
     return (
-      <div className="mt-6 rounded-3xl border border-dashed border-white/45 bg-white/48 p-8 text-center backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/38">
+      <div className="mt-6 rounded-3xl border border-dashed border-border bg-control p-8 text-center backdrop-blur-sm">
         <p className="text-muted-foreground">{t("emptyAll")}</p>
       </div>
     );
@@ -128,7 +128,7 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
   return (
     <div className="mt-6 space-y-4">
       <div
-        className="inline-flex rounded-[1.2rem] border border-white/45 bg-white/56 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/42 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+        className="inline-flex rounded-[1.2rem] border border-border bg-control p-1 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.4)] backdrop-blur-sm dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]"
         role="tablist"
         aria-label={t("tabs.ariaLabel")}
       >
@@ -139,8 +139,8 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
           onClick={() => setActiveTab("visible")}
           className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
             activeTab === "visible"
-              ? "bg-white/86 text-foreground shadow-[0_10px_20px_rgba(148,163,184,0.16)] dark:bg-slate-950/68"
-              : "text-muted-foreground hover:bg-white/62 hover:text-foreground dark:hover:bg-slate-950/56"
+              ? "theme-memory text-foreground shadow-[0_10px_20px_rgba(var(--shadow-rgb),0.16)]"
+              : "text-muted-foreground hover:bg-accent hover:text-foreground"
           }`}
         >
           {t("tabs.visible")}
@@ -152,15 +152,15 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
           onClick={() => setActiveTab("hidden")}
           className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
             activeTab === "hidden"
-              ? "bg-white/86 text-foreground shadow-[0_10px_20px_rgba(148,163,184,0.16)] dark:bg-slate-950/68"
-              : "text-muted-foreground hover:bg-white/62 hover:text-foreground dark:hover:bg-slate-950/56"
+              ? "theme-memory text-foreground shadow-[0_10px_20px_rgba(var(--shadow-rgb),0.16)]"
+              : "text-muted-foreground hover:bg-accent hover:text-foreground"
           }`}
         >
           {t("tabs.hidden")}
         </button>
       </div>
 
-      <p className="rounded-[1.3rem] border border-amber-500/25 bg-[linear-gradient(118deg,rgba(245,158,11,0.16),rgba(251,191,36,0.08))] px-4 py-3 text-sm text-amber-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] dark:border-amber-300/18 dark:bg-[linear-gradient(118deg,rgba(245,158,11,0.16),rgba(120,53,15,0.08))] dark:text-amber-100 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+      <p className="rounded-[1.3rem] border border-amber-500/25 bg-[linear-gradient(118deg,rgba(245,158,11,0.16),rgba(251,191,36,0.08))] px-4 py-3 text-sm text-amber-950 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.4)] dark:border-amber-300/18 dark:text-amber-100 dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]">
         {notice}
       </p>
 
@@ -187,19 +187,19 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
       />
 
       {displayedParks.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-white/45 bg-white/48 p-8 text-center backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/38">
+        <div className="rounded-3xl border border-dashed border-border bg-control p-8 text-center backdrop-blur-sm">
           <p className="text-muted-foreground">
             {activeTab === "visible" ? t("emptyVisible") : t("emptyHidden")}
           </p>
         </div>
       ) : filteredParks.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-white/45 bg-white/48 p-8 text-center backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/38">
+        <div className="rounded-3xl border border-dashed border-border bg-control p-8 text-center backdrop-blur-sm">
           <p className="text-muted-foreground">{t("emptyFiltered")}</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-[1.6rem] border border-white/45 bg-white/56 shadow-[0_18px_36px_rgba(148,163,184,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/38 dark:shadow-[0_22px_40px_rgba(2,6,23,0.28)]">
+        <div className="overflow-x-auto rounded-[1.6rem] border border-border theme-panel shadow-[0_18px_36px_rgba(var(--shadow-rgb),0.14)] backdrop-blur-xl dark:shadow-[0_22px_40px_rgba(var(--shadow-rgb),0.28)]">
           <table className="min-w-168 w-full text-sm">
-            <thead className="bg-white/74 dark:bg-slate-950/56">
+            <thead className="bg-control">
               <tr>
                 <th className="px-4 py-3 text-left font-medium">{t("parkName")}</th>
                 <th className="px-4 py-3 text-left font-medium">{t("parkType")}</th>
@@ -213,10 +213,7 @@ export const ParkList = ({ parks, removedParks }: ParkListProps) => {
                 const isVisibleTab = activeTab === "visible";
 
                 return (
-                  <tr
-                    key={park.slug}
-                    className="transition-colors hover:bg-white/56 dark:hover:bg-slate-950/42"
-                  >
+                  <tr key={park.slug} className="transition-colors hover:bg-accent">
                     <td className="px-4 py-3">
                       <Link
                         href={

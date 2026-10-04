@@ -66,7 +66,7 @@ export const DateRangeReviewShareList = ({ shares }: DateRangeReviewShareListPro
 
   if (localShares.length === 0) {
     return (
-      <section className="rounded-3xl border border-dashed border-white/45 bg-white/58 p-8 text-center backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/42">
+      <section className="rounded-3xl border border-dashed border-border theme-panel p-8 text-center backdrop-blur-sm">
         <div className="mx-auto max-w-2xl space-y-3">
           <h2 className="text-xl font-semibold tracking-tight">{t("emptySharesTitle")}</h2>
           <p className="text-sm leading-6 text-muted-foreground">{t("emptySharesDescription")}</p>
@@ -97,7 +97,7 @@ export const DateRangeReviewShareList = ({ shares }: DateRangeReviewShareListPro
           return (
             <article
               key={share.shareId}
-              className="rounded-3xl border border-white/45 bg-white/70 p-5 shadow-[0_18px_40px_rgba(148,163,184,0.16)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/56 dark:shadow-[0_24px_52px_rgba(2,6,23,0.28)]"
+              className="rounded-3xl border border-border bg-control p-5 shadow-[0_18px_40px_rgba(var(--shadow-rgb),0.16)] backdrop-blur-xl dark:shadow-[0_24px_52px_rgba(var(--shadow-rgb),0.28)]"
             >
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="space-y-3">
@@ -123,7 +123,7 @@ export const DateRangeReviewShareList = ({ shares }: DateRangeReviewShareListPro
                 <div className="flex flex-wrap gap-3">
                   <Link
                     href={previewHref}
-                    className="inline-flex h-10 items-center justify-center rounded-md border border-white/45 bg-white/78 px-4 py-2 text-sm font-medium text-foreground shadow-[0_10px_24px_rgba(148,163,184,0.18)] backdrop-blur-md transition-colors hover:bg-white/92 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/58 dark:hover:bg-slate-950/74 dark:shadow-[0_16px_32px_rgba(2,6,23,0.28)]"
+                    className="inline-flex h-10 items-center justify-center rounded-md border border-border bg-control px-4 py-2 text-sm font-medium text-foreground shadow-[0_10px_24px_rgba(var(--shadow-rgb),0.18)] backdrop-blur-md transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:shadow-[0_16px_32px_rgba(var(--shadow-rgb),0.28)]"
                   >
                     {t("moveToPreview")}
                   </Link>
@@ -132,7 +132,7 @@ export const DateRangeReviewShareList = ({ shares }: DateRangeReviewShareListPro
                     label={t("copyShareLink")}
                     copiedLabel={t("shareLinkCopied")}
                     tooltipSide="top"
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-white/45 bg-white/78 text-foreground shadow-[0_10px_24px_rgba(148,163,184,0.18)] backdrop-blur-md transition-colors hover:bg-white/92 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/58 dark:hover:bg-slate-950/74 dark:shadow-[0_16px_32px_rgba(2,6,23,0.28)]"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-border bg-control text-foreground shadow-[0_10px_24px_rgba(var(--shadow-rgb),0.18)] backdrop-blur-md transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:shadow-[0_16px_32px_rgba(var(--shadow-rgb),0.28)]"
                     iconClassName="h-4 w-4"
                   />
                   <Link

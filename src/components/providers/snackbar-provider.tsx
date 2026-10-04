@@ -82,7 +82,7 @@ export const SnackbarProvider = ({ children }: SnackbarProviderProps) => {
           <div
             aria-atomic="true"
             className={cn(
-              "pointer-events-auto flex w-full items-start gap-3 rounded-2xl border px-4 py-3 shadow-[0_18px_44px_rgba(15,23,42,0.22)] backdrop-blur-xl",
+              "pointer-events-auto flex w-full items-start gap-3 rounded-2xl border px-4 py-3 shadow-[0_18px_44px_rgba(var(--shadow-rgb),0.22)] backdrop-blur-xl",
               isError
                 ? "border-red-300/60 bg-red-50/95 text-red-950 dark:border-red-400/25 dark:bg-red-950/90 dark:text-red-100"
                 : "border-emerald-300/60 bg-emerald-50/95 text-emerald-950 dark:border-emerald-400/25 dark:bg-emerald-950/90 dark:text-emerald-100",
