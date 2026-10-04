@@ -23,6 +23,7 @@ import {
 import { useStoryProgressNavigation } from "@/components/story/use-story-progress-navigation";
 import { AppImage } from "@/components/ui/app-image";
 import { Button } from "@/components/ui/button";
+import { PROGRESS_FILL_CLASS_NAME, PROGRESS_TRACK_CLASS_NAME } from "@/components/ui/theme-styles";
 import { cn } from "@/lib/cn";
 import { formatFinnishDateRange, formatFinnishLongDate } from "@/lib/fi-date";
 import { appRoutes } from "@/lib/routes";
@@ -411,14 +412,16 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                 aria-label={t("story.goToCard", { current: index + 1, total: cards.length })}
                 aria-current={index === activeIndex ? "step" : undefined}
                 className={cn(
-                  "relative h-1.5 flex-1 overflow-hidden rounded-full bg-control transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                  PROGRESS_TRACK_CLASS_NAME,
+                  "relative h-1.5 flex-1 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                   index === activeIndex && "shadow-[0_0_18px_rgba(var(--highlight-rgb),0.32)]",
                 )}
               >
                 <span
                   aria-hidden="true"
                   className={cn(
-                    "absolute inset-y-0 left-0 rounded-full theme-progress transition-all duration-500 motion-safe:duration-700",
+                    PROGRESS_FILL_CLASS_NAME,
+                    "absolute inset-y-0 left-0 transition-all duration-500 motion-safe:duration-700",
                     index === activeIndex ? "w-full" : "w-0",
                   )}
                 />

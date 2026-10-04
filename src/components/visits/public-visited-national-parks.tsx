@@ -9,6 +9,7 @@ import {
   type StickySectionNavigationItem,
 } from "@/components/navigation/sticky-section-navigation";
 import { AppImage } from "@/components/ui/app-image";
+import { PROGRESS_FILL_CLASS_NAME, PROGRESS_TRACK_CLASS_NAME } from "@/components/ui/theme-styles";
 import { formatFinnishDate } from "@/lib/fi-date";
 import {
   createParkVisitHref,
@@ -362,11 +363,11 @@ export const PublicVisitedNationalParks = ({ model }: PublicVisitedNationalParks
               aria-valuemax={100}
               aria-valuemin={0}
               aria-valuenow={combinedProgressPercent}
-              className="relative h-4 overflow-hidden rounded-full border border-input bg-progress-track shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.52)] dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]"
+              className={`relative h-4 ${PROGRESS_TRACK_CLASS_NAME}`}
               role="progressbar"
             >
               <div
-                className="h-full rounded-full theme-progress  transition-[width]"
+                className={`h-full ${PROGRESS_FILL_CLASS_NAME} transition-[width]`}
                 style={{ width: `${combinedProgressPercent}%` }}
               />
             </div>

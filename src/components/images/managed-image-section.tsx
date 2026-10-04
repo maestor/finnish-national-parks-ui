@@ -7,6 +7,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { useSnackbar } from "@/components/providers/snackbar-provider";
 import { AppImage } from "@/components/ui/app-image";
 import { Button } from "@/components/ui/button";
+import { NATIVE_PROGRESS_CLASS_NAME } from "@/components/ui/theme-styles";
 import { VisitImageGallery } from "@/components/visits/visit-image-gallery";
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/cn";
@@ -959,7 +960,7 @@ export const ManagedImageSection = ({
               )}
             </div>
             <progress
-              className="h-2 w-full accent-primary"
+              className={`h-2 w-full ${NATIVE_PROGRESS_CLASS_NAME}`}
               max={pendingImages.length}
               value={completedCount}
               aria-label={messages.uploading}
