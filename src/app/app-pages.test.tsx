@@ -879,11 +879,21 @@ describe("App pages", () => {
         descriptionExcerpt: null,
         featuredImage: null,
       },
+      featuredVisit: {
+        id: 999,
+        park: { name: "Erityinen paikka", slug: "erityinen-paikka" },
+        visitedOn: "2026-09-12",
+        route: null,
+        descriptionExcerpt: "Muisto",
+        featuredImage: null,
+        imageCount: 0,
+      },
       latestStandaloneVisit: {
         id: visitWithPark.id,
         park: visitWithPark.park,
         visitedOn: visitWithPark.visitedOn,
         descriptionExcerpt: "Retkimuisto",
+        route: visitWithPark.route,
         featuredImage: null,
         imageCount: 0,
       },
@@ -928,6 +938,15 @@ describe("App pages", () => {
       "href",
       "/kaynnit?view=parks",
     );
+    const special = screen.getByRole("region", { name: "home.specialVisit.title" });
+    expect(screen.getByRole("link", { name: "Erityinen paikka" })).toHaveAttribute(
+      "href",
+      "/paikka/erityinen-paikka?visit=999#visit-history",
+    );
+    const stats = screen.getByRole("heading", { name: "home.statistics.title" });
+    const about = screen.getByTestId("home-about-section");
+    expect(stats.compareDocumentPosition(special) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(special.compareDocumentPosition(about) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.getByTestId("home-social-links")).toHaveTextContent(
       "linkedin:home.social.linkedin|ui:home.social.githubUi|api:home.social.githubApi|copyright:home.social.copyright",
     );
@@ -949,6 +968,7 @@ describe("App pages", () => {
       progressByCategory: [],
       seasonalVisitCounts: { spring: 0, summer: 0, autumn: 0, winter: 0 },
       latestTrip: null,
+      featuredVisit: null,
       latestStandaloneVisit: null,
       magnetProgress: { totalParks: 0, visitedParks: 0 },
       version: 0,
@@ -996,6 +1016,7 @@ describe("App pages", () => {
         progressByType: [],
         progressByCategory: [],
         latestTrip: null,
+        featuredVisit: null,
         latestStandaloneVisit: null,
         magnetProgress: { totalParks: 0, visitedParks: 0 },
         seasonalVisitCounts: { spring: 0, summer: 0, autumn: 0, winter: 0 },
@@ -1154,6 +1175,7 @@ describe("App pages", () => {
         progressByType: [],
         progressByCategory: [],
         latestTrip: null,
+        featuredVisit: null,
         latestStandaloneVisit: null,
         magnetProgress: { totalParks: 0, visitedParks: 0 },
         seasonalVisitCounts: { spring: 0, summer: 0, autumn: 0, winter: 0 },
@@ -1820,7 +1842,14 @@ describe("App pages", () => {
   });
 
   it("renders the control panel overview page", async () => {
+    vi.mocked(apiAuthFetch).mockResolvedValueOnce({ visitId: null, candidates: [] });
     await renderControlPanelRoute(await ControlPanelPage());
+    expect(apiAuthFetch).toHaveBeenCalledWith("/api/admin/home-featured-visit", {
+      cache: "no-store",
+    });
+    expect(
+      screen.getByRole("searchbox", { name: "controlPanel.dashboard.featuredVisit.searchLabel" }),
+    ).toBeInTheDocument();
 
     expect(
       screen.getByRole("heading", { name: "controlPanel.dashboard.title" }),

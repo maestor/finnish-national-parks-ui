@@ -18,6 +18,7 @@ import {
 import { ParkTypeBadge } from "@/components/park/park-type-badge";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
+import { IMAGE_OVERLAY_LABEL_CLASS_NAME } from "@/components/ui/theme-styles";
 import { cn } from "@/lib/cn";
 import { formatFinnishDate, formatFinnishDateRange } from "@/lib/fi-date";
 import { renderMultilineText } from "@/lib/multiline-text";
@@ -345,7 +346,7 @@ const PublicVisitsTimelineContent = ({
           dateTime={visit.visitedOn}
           className={
             image
-              ? "shrink-0 rounded-full bg-black/80 px-1.5 py-1 text-xs font-medium whitespace-nowrap text-white"
+              ? `shrink-0 rounded-full px-1.5 py-1 text-xs font-medium whitespace-nowrap ${IMAGE_OVERLAY_LABEL_CLASS_NAME}`
               : "text-sm font-medium text-link"
           }
         >
@@ -355,7 +356,7 @@ const PublicVisitsTimelineContent = ({
           <span
             aria-label={t("item.imageCount", { count: visit.imageCount })}
             role="img"
-            className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-black/80 px-1.5 py-1 text-xs font-medium text-white"
+            className={`inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-1 text-xs font-medium ${IMAGE_OVERLAY_LABEL_CLASS_NAME}`}
           >
             <Images className="h-3 w-3" aria-hidden="true" />
             {visit.imageCount}

@@ -5,6 +5,7 @@ import { HomeAboutSection } from "@/components/home/home-about-section";
 import { HomeFeaturedMemories } from "@/components/home/home-featured-memories";
 import { HomeIntro } from "@/components/home/home-intro";
 import { HomeSocialLinks } from "@/components/home/home-social-links";
+import { HomeSpecialVisit } from "@/components/home/home-special-visit";
 import { WebsiteStructuredData } from "@/components/home/website-structured-data";
 import { PUBLIC_PAGE_SHELL_CLASS_NAME } from "@/components/layout/public-page-styles";
 import { createHomeProgressItems, fetchHomeSummary } from "@/lib/frontend-summaries";
@@ -65,6 +66,8 @@ const HomePage = async () => {
         autumnLabel={t("statistics.seasons.autumn")}
         winterLabel={t("statistics.seasons.winter")}
       />
+
+      <HomeSpecialVisit visit={summary.featuredVisit} />
 
       <HomeAboutSection
         title={t("aboutTitle")}

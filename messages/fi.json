@@ -104,7 +104,12 @@
       "emptyTrip": "Ei vielä julkaistuja retkiä.",
       "emptyVisit": "Ei vielä retkettömiä käyntejä.",
       "notePlaceholder": "Tältä käynniltä ei ole vielä muistiinpanoja.",
-      "readVisit": "Lue käynnistä lisää"
+      "readVisit": "Tutustu käyntiin tarkemmin"
+    },
+    "specialVisit": {
+      "title": "Erityinen vierailu",
+      "description": "Tässä osiossa esittelemme käynnin, joka on syystä tai toisesta jäänyt lämpiminä muistoina mielen syövereihin. Kohde vaihtuu ylläpidon mielenmaiseman mukaan säännöllisen epäsäännöllisesti.",
+      "ribbon": "Tyytyväisyystakuu"
     }
   },
   "park": {
@@ -285,7 +290,7 @@
     "visitCount": "{count, plural, one {käynti} other {käyntiä}}",
     "stopCount": "{count, plural, one {pysähdys} other {pysähdystä}}",
     "descriptionPlaceholder": "Tarina reissusta toistaiseksi laiskan päivittäjän ajatushautomossa, syntymässä toivottavasti pian!",
-    "readMore": "Lue lisää",
+    "readMore": "Tutustu retkeen tarkemmin",
     "loadedCount": "Näytetään {count, plural, one {# retki} other {# retkeä}} / {total, plural, one {# retki} other {# retkeä}}.",
     "appendedCount": "Ladattu {count, plural, one {# uusi retki} other {# uutta retkeä}}."
   },
@@ -364,7 +369,29 @@
     "sectionLabel": "Hallinnan osio",
     "dashboard": {
       "title": "Hallinta",
-      "description": "Täällä voit muokata paikkoja, hallita retkiä ja ylläpitää käyntikirjauksia."
+      "description": "Täällä voit muokata paikkoja, hallita retkiä ja ylläpitää käyntikirjauksia.",
+      "featuredVisit": {
+        "title": "Erityinen vierailu etusivulla",
+        "description": "Valitse etusivulla nostettava käynti. Vain julkaistut käynnit näkyvissä paikoissa ovat valittavissa. Ilman valintaa osio ei näy etusivulla.",
+        "label": "Valitse käynti",
+        "none": "Ei erityistä vierailua",
+        "unavailable": "Valittu käynti ei ole enää julkinen",
+        "empty": "Valittavissa ei ole julkaistuja käyntejä.",
+        "save": "Tallenna valinta",
+        "saving": "Tallennetaan...",
+        "saved": "Valinta tallennettu ja etusivu päivitetty.",
+        "saveFailed": "Valinnan tallentaminen epäonnistui. Yritä uudelleen.",
+        "cacheFailed": "Valinta tallennettiin, mutta etusivun päivitys epäonnistui. Yritä päivitystä uudelleen.",
+        "retryCache": "Päivitä etusivu uudelleen",
+        "selectedTitle": "Valittu vierailu",
+        "clear": "Poista valinta",
+        "searchLabel": "Hae käyntiä",
+        "searchPlaceholder": "Paikan nimi, päivämäärä tai vuosi",
+        "resultsLabel": "Hakutulosten määrä",
+        "resultCount": "Näytetään {shown} / {total} käyntiä",
+        "noResults": "Hakua vastaavia käyntejä ei löytynyt.",
+        "showMore": "Näytä lisää"
+      }
     },
     "adminUsers": {
       "title": "Ylläpitäjät",

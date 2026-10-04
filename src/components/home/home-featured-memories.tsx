@@ -1,16 +1,10 @@
-import { ArrowRight, Footprints, Images, Route } from "lucide-react";
+import { ArrowRight, Footprints, Route } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import {
-  PUBLIC_META_BADGE_CLASS_NAME,
-  PUBLIC_META_DATE_CLASS_NAME,
-} from "@/components/layout/public-page-styles";
 import { TripMemoryCard } from "@/components/trips/trip-archive-card";
-import { PublicMemoryCard } from "@/components/ui/public-memory-card";
-import { formatFinnishDate } from "@/lib/fi-date";
 import type { HomeSummary } from "@/lib/frontend-summaries";
-import { createParkVisitHref } from "@/lib/public-visits";
 import { appRoutes } from "@/lib/routes";
+import { HomeVisitMemoryCard } from "./home-visit-memory-card";
 
 type HomeFeaturedMemoriesProps = Pick<HomeSummary, "latestTrip" | "latestStandaloneVisit">;
 
@@ -24,7 +18,6 @@ export const HomeFeaturedMemories = ({
   latestStandaloneVisit: visit,
 }: HomeFeaturedMemoriesProps) => {
   const t = useTranslations("home.featured");
-  const parkT = useTranslations("park");
   return (
     <div className="mt-6 grid gap-6 md:grid-cols-2">
       <section aria-labelledby="home-latest-trip" className="flex min-w-0 flex-col">
@@ -62,27 +55,11 @@ export const HomeFeaturedMemories = ({
           </Link>
         </div>
         {visit ? (
-          <PublicMemoryCard
-            id={`home-visit-${visit.id}`}
-            title={visit.park.name}
+          <HomeVisitMemoryCard
+            visit={visit}
+            idPrefix="home-visit"
             headingLevel={4}
-            href={createParkVisitHref({ parkSlug: visit.park.slug, visitId: visit.id })}
-            featuredImage={visit.featuredImage}
             imageLoading="eager"
-            descriptionExcerpt={visit.descriptionExcerpt}
-            descriptionPlaceholder={t("notePlaceholder")}
-            readMore={t("readVisit")}
-            metadata={
-              <div className="mt-3 flex flex-wrap gap-2 text-sm text-muted-foreground">
-                <span className={PUBLIC_META_DATE_CLASS_NAME}>
-                  <time dateTime={visit.visitedOn}>{formatFinnishDate(visit.visitedOn)}</time>
-                </span>
-                <span className={PUBLIC_META_BADGE_CLASS_NAME}>
-                  <Images className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                  {parkT("imageCount", { count: visit.imageCount })}
-                </span>
-              </div>
-            }
           />
         ) : (
           <p className={EMPTY_CLASS_NAME}>{t("emptyVisit")}</p>

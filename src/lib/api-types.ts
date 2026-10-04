@@ -1613,6 +1613,138 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/home-featured-visit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Saved selection and eligible published visits */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            visitId: number | null;
+                            candidates: {
+                                id: number;
+                                park: {
+                                    name: string;
+                                    slug: string;
+                                };
+                                visitedOn: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Authentication unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        visitId: number | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Saved selection */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            visitId: number | null;
+                        };
+                    };
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Visit is not public */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Authentication unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
     "/api/home-summary": {
         parameters: {
             query?: never;
@@ -1664,6 +1796,24 @@ export interface paths {
                                     slug: string;
                                 };
                                 visitedOn: string;
+                                route: string | null;
+                                imageCount: number;
+                                descriptionExcerpt: string | null;
+                                featuredImage: {
+                                    height: number | null;
+                                    /** Format: uri */
+                                    url: string;
+                                    width: number | null;
+                                } | null;
+                            } | null;
+                            featuredVisit: {
+                                id: number;
+                                park: {
+                                    name: string;
+                                    slug: string;
+                                };
+                                visitedOn: string;
+                                route: string | null;
                                 imageCount: number;
                                 descriptionExcerpt: string | null;
                                 featuredImage: {

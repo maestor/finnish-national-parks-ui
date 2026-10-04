@@ -4,6 +4,10 @@ export const PANEL_SURFACE_CLASS_NAME =
 
 export const MEMORY_SURFACE_CLASS_NAME = "theme-memory border border-border shadow-panel";
 
+/** Opaque surface keeps small photo-overlay text readable over any image. */
+export const IMAGE_OVERLAY_LABEL_CLASS_NAME =
+  "border border-border bg-control text-foreground shadow-[0_2px_8px_rgba(var(--shadow-rgb),0.2)]";
+
 export const CONTROL_SURFACE_CLASS_NAME =
   "border border-input bg-control text-foreground backdrop-blur-md";
 
