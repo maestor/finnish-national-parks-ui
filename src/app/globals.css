@@ -275,6 +275,23 @@
 @utility theme-progress {
   background-image: var(--progress-image);
 }
+@utility theme-progress-native {
+  appearance: none;
+  border: 0;
+
+  &::-webkit-progress-bar {
+    background-color: hsl(var(--progress-track));
+    border-radius: inherit;
+  }
+  &::-webkit-progress-value {
+    background-image: var(--progress-image);
+    border-radius: inherit;
+  }
+  &::-moz-progress-bar {
+    background-image: var(--progress-image);
+    border-radius: inherit;
+  }
+}
 @utility theme-rail {
   background-image: var(--rail-image);
 }

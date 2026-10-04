@@ -6,7 +6,7 @@ import {
   PUBLIC_PANEL_ICON_SURFACE_CLASS_NAME,
 } from "@/components/layout/public-page-styles";
 import { ForestWaterIcon } from "@/components/ui/forest-water-icon";
-import { PROGRESS_FILL_CLASS_NAME } from "@/components/ui/theme-styles";
+import { PROGRESS_FILL_CLASS_NAME, PROGRESS_TRACK_CLASS_NAME } from "@/components/ui/theme-styles";
 import type { HomeProgressItem } from "@/lib/frontend-summaries";
 
 interface SeasonalVisitCounts {
@@ -136,9 +136,9 @@ export const HomeVisitStats = ({
                     {item.visited} / {item.total}
                   </span>
                 </div>
-                <div className="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-progress-track">
+                <div className={`mt-3 h-2.5 w-full ${PROGRESS_TRACK_CLASS_NAME}`}>
                   <div
-                    className={`h-full rounded-full ${PROGRESS_FILL_CLASS_NAME} transition-all motion-reduce:transition-none`}
+                    className={`h-full ${PROGRESS_FILL_CLASS_NAME} transition-all motion-reduce:transition-none`}
                     style={{ width: `${percentage}%` }}
                   />
                 </div>
