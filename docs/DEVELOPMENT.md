@@ -432,6 +432,7 @@ See `AGENTS.md` for the full convention list. Key rules:
 - The shared icon artwork and image responses live in `src/lib/pwa-icon.tsx`
 - Changes to offline, caching, or service-worker registration behavior must be verified against the intended production experience and documented in the same PR.
 - Runtime caching is intentionally narrow: only same-origin `/_next/static/` assets, app icons, and the favicon may enter Cache Storage. API, auth, admin, review-share, RSC/navigation, optimized-image, signed-media, and cross-origin requests are NetworkOnly. Worker activation removes the old broad runtime caches (`apis`, page/RSC, cross-origin, and image caches) while preserving the active precache and unrelated origin storage.
+- Development disables worker registration and removes leftover registrations matching this app's worker URL, their scoped `serwist-precache-v2` caches and `public-static-v2`; unrelated caches, cookies and other browser storage are preserved. After running a local production build, hard-refresh once if normal refreshes combine stale client bundles with current server HTML. See [the PWA note](DEPLOYMENT.md#current-pwa-note).
 - `@serwist/turbopack` currently pins Browserslist exactly. The root `browserslist` override holds its transitive build-tool dependency at the patched 4.28.9 release until Serwist ships a compatible update; do not remove it without rerunning `npm audit --omit=dev` and the production build.
 
 ---
