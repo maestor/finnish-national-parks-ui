@@ -4,6 +4,8 @@ Featured-image UI tests should cover lazy candidate loading, selection/cancel/sa
 Admin invitation UI tests cover the accessible email form, generated link output, copy action, and already-enrolled error state. Admin management UI tests cover super-admin visibility, role changes, self-action hiding, removal confirmation, and error states. Backend integration tests cover token expiry/use, identity matching, admin-row provisioning, super-admin authorization, role changes, self-protection, and removal.
 Trip archive UI tests should cover the server-rendered first batch, cursor append/deduplication, initial and later-page retry states, empty/end states, accessible card links, and the no-store same-origin proxy. Browser verification should inspect `/retket` at desktop and 354px mobile in both themes when an authorized local runtime is available.
 
+Visit timeline behavior tests cover automatic thumbnails for standalone/trip visits, imageless cards, chronological batches without splitting trips, automatic scroll-triggered append/status without focus changes, observer cleanup, and reset on year/month/view changes. Inspect `/kaynnit` at desktop and `354x708` in both themes. API ordering, reorder/delete, publication privacy and resource budgets are verified in the sibling API.
+
 This project follows **behavior-first TDD**: write the realistic usage story first, turn it into a failing test, implement the smallest change to pass, then refactor.
 
 Read the `intelligence-testing` skill (`.agents/skills/intelligence-testing/`) for the full philosophy. This document applies it to this codebase.

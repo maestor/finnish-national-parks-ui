@@ -152,6 +152,9 @@
     "title": "Käynnit",
     "description": "Selaa käymiämme kohteita aikajanalla tai kartalla avulla ja vilkaise samalla miten tunnusmagneettien metsästys etenee.\nVoit rajata sisältöä vuoden mukaan ja tarkentaa tarvittaessa yksittäiseen kuukauteen.",
     "backToTop": "Takaisin ylös",
+    "timeline": {
+      "loadedCount": "Näytetään {count} / {total} käyntiä"
+    },
     "errorTitle": "Käyntien lataus epäonnistui",
     "views": {
       "label": "Käyntinäkymät",
@@ -161,7 +164,7 @@
     },
     "filters": {
       "title": "Rajaa käyntejä",
-      "visibleCount": "käyntiä näkyvissä",
+      "visibleCount": "käyntiä",
       "yearsLabel": "Suodata käyntejä vuoden mukaan",
       "monthsLabel": "Suodata käyntejä kuukauden mukaan",
       "yearSelectLabel": "Vuosi",

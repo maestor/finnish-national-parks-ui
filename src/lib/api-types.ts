@@ -1848,6 +1848,10 @@ export interface paths {
                     content: {
                         "application/json": {
                             visits: {
+                                featuredImage: {
+                                    /** Format: uri */
+                                    url: string;
+                                } | null;
                                 /** Format: date-time */
                                 createdAt: string;
                                 id: number;
