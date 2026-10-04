@@ -35,6 +35,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { ApiError } from "@/lib/api";
 import { cn } from "@/lib/cn";
+import { renderMultilineText } from "@/lib/multiline-text";
 import {
   type FilterableParkTypeSlug,
   HIKING_AND_WILDERNESS_AREAS_CATEGORY_SLUG,
@@ -247,23 +248,6 @@ const formatCoordinateQuery = (coordinate: { lat: number; lon: number }) =>
 
 const getTripPlannerSuggestionKey = ({ coordinate, label }: TripPlannerSuggestion) =>
   `${label}-${formatCoordinateQuery(coordinate)}`;
-
-const renderMultilineText = (text: string) => {
-  let offset = 0;
-
-  return text.split("\n").map((line) => {
-    const key = `${offset}-${line}`;
-    const shouldInsertBreak = offset > 0;
-    offset += line.length + 1;
-
-    return (
-      <span key={key}>
-        {shouldInsertBreak && <br />}
-        {line}
-      </span>
-    );
-  });
-};
 
 const renderSuggestionOptionLabel = (suggestion: TripPlannerSuggestion) => {
   if (suggestion.displayName === suggestion.label) {

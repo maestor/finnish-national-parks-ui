@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/cn";
 import { formatFinnishDate, formatFinnishDateRange } from "@/lib/fi-date";
+import { renderMultilineText } from "@/lib/multiline-text";
 import {
   createParkVisitHref,
   createPublicVisitsHref,
@@ -424,7 +425,9 @@ const PublicVisitsTimeline = ({
               <span>{t("eyebrow")}</span>
             </div>
             <h1 className={PUBLIC_HERO_TITLE_CLASS_NAME}>{t("title")}</h1>
-            <p className={`mt-3 ${PUBLIC_HERO_DESCRIPTION_CLASS_NAME}`}>{t("description")}</p>
+            <p className={`mt-3 ${PUBLIC_HERO_DESCRIPTION_CLASS_NAME}`}>
+              {renderMultilineText(t("description"))}
+            </p>
           </div>
           <nav aria-label={t("views.label")} className="flex flex-wrap gap-2">
             <Link
