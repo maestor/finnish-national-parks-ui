@@ -11,6 +11,7 @@ import {
   PUBLIC_PAGE_SHELL_CLASS_NAME,
   PUBLIC_PANEL_CLASS_NAME,
 } from "@/components/layout/public-page-styles";
+import { renderMultilineText } from "@/lib/multiline-text";
 import type { PublicTripArchiveResponse } from "@/lib/public-trips";
 import { TripArchiveList } from "./trip-archive-list";
 
@@ -30,7 +31,9 @@ export const TripArchivePage = ({ initialResponse }: TripArchivePageProps) => {
             <span>{t("eyebrow")}</span>
           </div>
           <h1 className={PUBLIC_HERO_TITLE_CLASS_NAME}>{t("title")}</h1>
-          <p className={PUBLIC_HERO_DESCRIPTION_CLASS_NAME}>{t("description")}</p>
+          <p className={PUBLIC_HERO_DESCRIPTION_CLASS_NAME}>
+            {renderMultilineText(t("description"))}
+          </p>
         </div>
       </section>
 

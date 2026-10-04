@@ -4,6 +4,7 @@ import {
   PUBLIC_HERO_DESCRIPTION_CLASS_NAME,
   PUBLIC_HERO_TITLE_CLASS_NAME,
 } from "@/components/layout/public-page-styles";
+import { renderMultilineText } from "@/lib/multiline-text";
 import { appRoutes } from "@/lib/routes";
 
 interface HomeIntroProps {
@@ -22,7 +23,7 @@ export const HomeIntro = ({ title, summary, openMapLabel, infoLabel }: HomeIntro
       <h1 id="home-intro-title" className={PUBLIC_HERO_TITLE_CLASS_NAME}>
         {title}
       </h1>
-      <p className={`mt-3 ${PUBLIC_HERO_DESCRIPTION_CLASS_NAME}`}>{summary}</p>
+      <p className={`mt-3 ${PUBLIC_HERO_DESCRIPTION_CLASS_NAME}`}>{renderMultilineText(summary)}</p>
 
       <div className="mt-5 flex flex-wrap gap-3">
         <a href="#home-about" className={actionClassName}>

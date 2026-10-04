@@ -6,6 +6,7 @@ import {
   PUBLIC_PANEL_CLASS_NAME,
 } from "@/components/layout/public-page-styles";
 import { cn } from "@/lib/cn";
+import { renderMultilineText } from "@/lib/multiline-text";
 
 export const REVIEW_STORY_COPY_CLASS_NAME =
   "max-w-3xl text-sm leading-6 text-primary-foreground/84 sm:text-base";
@@ -136,7 +137,7 @@ export const ReviewStoryFooter = ({
         </Link>
         <p className={cn(PUBLIC_HERO_DESCRIPTION_CLASS_NAME, "sm:text-center")}>
           {footerIcon}
-          {footer}
+          {renderMultilineText(footer)}
         </p>
         <Link
           href="/"
@@ -150,7 +151,7 @@ export const ReviewStoryFooter = ({
         <p className="text-sm text-muted-foreground">{footer}</p>
         <p className={`mt-2 ${PUBLIC_HERO_DESCRIPTION_CLASS_NAME}`}>
           {footerIcon}
-          {footerHint}
+          {renderMultilineText(footerHint)}
         </p>
       </>
     )}

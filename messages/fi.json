@@ -2,7 +2,7 @@
   "metadata": {
     "title": "Reissuvihko",
     "homeTitle": "Reissuvihko - retkimuistoja Suomen luonnosta",
-    "description": "Reissuvihko kokoaa tekijöidensä käynnit Suomen retkeilypaikoista, tarinat kuvineen muistoina retkistä sekä etenemisen ja reissusuunnittelun samoihin kuoriin.",
+    "description": "Reissuvihko kokoaa tekijöidensä käynnit Suomen retkeilypaikoista, tarinat kuvineen muistoina retkistä sekä yksittäisistä käynneistä Suomen luonnossa. Voit myös selata paikkoja kartalla ja reissusuunnittella omat retkesi. Hyppää mukaan hakemaan inspiraatiota ja ideoimaan vaikka omia reissuja ulkoilun merkeissä!",
     "parkDescription": "Tarkastele paikan {park} tietoja ja vierailuja Reissuvihkossa.",
     "parksDescription": "Tutustu Suomen kansallispuistoihin ja muihin retkikohteisiin kartalla. Löydä paikkojen tiedot ja tekijöiden käyntikertomukset Reissuvihkosta.",
     "visitsDescription": "Selaa Reissuvihkon tekijöiden retkikäyntejä, valokuvia ja muistoja Suomen kansallispuistoista ja muista retkikohteista.",
@@ -45,7 +45,7 @@
   "home": {
     "title": "Reissuvihko",
     "mapTitle": "Paikkakartta",
-    "summary": "Reissuvihko kokoaa tekijöidensä käynnit Suomen retkeilypaikoista, tarinat kuvineen muistoina retkistä sekä etenemisen ja reissusuunnittelun samoihin kuoriin.",
+    "summary": "Reissuvihko kokoaa tekijöidensä käynnit Suomen retkeilypaikoista, tarinat kuvineen muistoina retkistä sekä yksittäisistä käynneistä Suomen luonnossa. Voit myös selata paikkoja kartalla ja reissusuunnittella omat retkesi.\n\nHyppää mukaan hakemaan inspiraatiota ja ideoimaan vaikka omia reissuja ulkoilun merkeissä!",
     "aboutTitle": "Mistä on kyse",
     "description": "Vuokko ja Kalle tutustuivat toisiinsa vuonna 2017 ja yhteiseen matkaan on kuulunut aina jaettu intohimo luonnossa liikkumiseen.\n\nKäytyjä kansallispuistoja on keräilty jo tovi sähkökaapin oveen kiinnitettävien magneettien muodossa ja kaikenlaisilla muillakin metsäreiteillä on vierailtu aina mahdollisuuksien mukaan.\n\nKallen pitkä tausta ohjelmointialalla ja tekoälyavusteisen tekemisen harjoittelu synnytti Reissuvihkon: Nyt paikkakäynnit muistoineen ovat näppärästi dokumentoitu yhdelle sivustolle.\n\nTervetuloa seuraamaan meidän matkaa luonnon äärellä ja hakemaan vaikka inspiraatiota omiin retkiin!",
     "openMap": "Siirry kartalle",
@@ -150,7 +150,7 @@
   "visits": {
     "eyebrow": "Käyntien aikajana",
     "title": "Käynnit",
-    "description": "Selaa kirjattuja käyntejä aikajanalla tai kartalla tai katso kansallispuistot omana magneettikokoelmanaan. Aikajana- ja karttanäkymässä voit rajata sisältöä vuoden mukaan ja tarkentaa tarvittaessa yksittäiseen kuukauteen.",
+    "description": "Selaa käymiämme kohteita aikajanalla tai kartalla avulla ja vilkaise samalla miten tunnusmagneettien metsästys etenee.\nVoit rajata sisältöä vuoden mukaan ja tarkentaa tarvittaessa yksittäiseen kuukauteen.",
     "backToTop": "Takaisin ylös",
     "errorTitle": "Käyntien lataus epäonnistui",
     "views": {
@@ -268,7 +268,7 @@
   "tripsArchive": {
     "eyebrow": "Retkikertomukset",
     "title": "Retket",
-    "description": "Joskus päätämme lähteä retkelle sisältäen useita käyntejä ja pysähdyksiä, niistä lisää täällä.",
+    "description": "Joskus päätämme lähteä retkelle joka sisältää useita käyntejä ja pysähdyksiä, niistä lisää täällä.\nRetkisivut sisältävät tarkemmat tarinat ja kuvat retkistä sekä kuljetun reitin.",
     "listLabel": "Retkien luettelo",
     "loading": "Ladataan retkiä...",
     "loadingMore": "Ladataan lisää retkiä…",
