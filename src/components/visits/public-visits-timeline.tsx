@@ -1,10 +1,11 @@
 "use client";
 
-import { ArrowUp, CalendarRange, Camera, Footprints, Images, Route, TentTree } from "lucide-react";
+import { ArrowUp, CalendarRange, Footprints, Images, Route, TentTree } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { type ChangeEvent, useRef } from "react";
+import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import {
   PUBLIC_EMPTY_STATE_PANEL_CLASS_NAME,
   PUBLIC_EYEBROW_BADGE_CLASS_NAME,
@@ -60,7 +61,7 @@ const DISABLED_FILTER_PILL_CLASS_NAME =
 const TIMELINE_BACK_TO_TOP_BUTTON_CLASS_NAME =
   "inline-flex items-center gap-2 rounded-full border border-border bg-control px-4 py-2 text-sm font-medium text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.52)] transition-colors hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]";
 
-const PublicVisitsTimeline = ({
+const PublicVisitsTimelineContent = ({
   availableYears,
   error = null,
   filteredCount,
@@ -81,6 +82,54 @@ const PublicVisitsTimeline = ({
   const yearRefs = useRef<Array<HTMLAnchorElement | null>>([]);
   const monthRefs = useRef<Array<HTMLAnchorElement | null>>([]);
   const visitRefs = useRef<Array<HTMLAnchorElement | null>>([]);
+  const [visibleItemCount, setVisibleItemCount] = useState(12);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  let remainingItems = visibleItemCount;
+  const visibleSections = sections.flatMap((section) => {
+    const months = section.months.flatMap((month) => {
+      const items = month.items.slice(0, remainingItems);
+      remainingItems -= items.length;
+      return items.length > 0 ? [{ ...month, items }] : [];
+    });
+    return months.length > 0 ? [{ ...section, months }] : [];
+  });
+  const totalItemCount = sections.reduce(
+    (total, section) =>
+      total + section.months.reduce((count, month) => count + month.items.length, 0),
+    0,
+  );
+  const renderedVisitCount = visibleSections.reduce(
+    (total, section) =>
+      total +
+      section.months.reduce(
+        (count, month) =>
+          count +
+          month.items.reduce(
+            (visits, item) => visits + (item.kind === "trip" ? item.visits.length : 1),
+            0,
+          ),
+        0,
+      ),
+    0,
+  );
+  const hasMoreItems = visibleItemCount < totalItemCount;
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    const batchLimit = visibleItemCount;
+    if (!sentinel) return;
+
+    let appended = false;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (appended || !entries.some((entry) => entry.isIntersecting)) return;
+        appended = true;
+        setVisibleItemCount(Math.min(batchLimit + 12, totalItemCount));
+      },
+      { rootMargin: "0px 0px 400px 0px" },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [totalItemCount, visibleItemCount]);
   const selectedYearIndex = selectedYear === null ? 0 : availableYears.indexOf(selectedYear) + 1;
   const selectedMonthIndex = selectedMonth ?? 0;
   const getScrollBehavior = () => {
@@ -249,10 +298,11 @@ const PublicVisitsTimeline = ({
 
   const renderVisitBadges = (visit: {
     imageCount: number;
+    featuredImage: { url: string } | null;
     park: { typeLabel: string };
     route: string | null;
   }) => {
-    const hasImages = visit.imageCount > 0;
+    const hasImages = visit.imageCount > 0 && !visit.featuredImage;
 
     return (
       <div className="mt-3 flex flex-wrap gap-2">
@@ -263,7 +313,7 @@ const PublicVisitsTimeline = ({
             {visit.route}
           </span>
         )}
-        {hasImages && (
+        {hasImages === true && (
           <span
             aria-label={t("item.imageCount", {
               count: visit.imageCount,
@@ -276,6 +326,51 @@ const PublicVisitsTimeline = ({
           </span>
         )}
       </div>
+    );
+  };
+
+  const renderVisitPreview = (
+    visit: PublicVisitTimelineVisitItem["visit"],
+    imagelessHeaderPadding: string,
+  ) => {
+    const image = visit.featuredImage;
+    const header = (
+      <div
+        className={cn(
+          "flex items-start justify-between",
+          image ? "absolute inset-x-3 top-3 gap-1.5" : cn("gap-3", imagelessHeaderPadding),
+        )}
+      >
+        <time
+          dateTime={visit.visitedOn}
+          className={
+            image
+              ? "shrink-0 rounded-full bg-black/80 px-1.5 py-1 text-xs font-medium whitespace-nowrap text-white"
+              : "text-sm font-medium text-link"
+          }
+        >
+          {formatFinnishDate(visit.visitedOn)}
+        </time>
+        {image !== null && (
+          <span
+            aria-label={t("item.imageCount", { count: visit.imageCount })}
+            role="img"
+            className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-black/80 px-1.5 py-1 text-xs font-medium text-white"
+          >
+            <Images className="h-3 w-3" aria-hidden="true" />
+            {visit.imageCount}
+          </span>
+        )}
+        <span className="sr-only">{t("item.viewVisit")}</span>
+      </div>
+    );
+    return image ? (
+      <div className="relative aspect-video bg-muted">
+        <Image src={image.url} alt="" fill unoptimized loading="lazy" className="object-cover" />
+        {header}
+      </div>
+    ) : (
+      header
     );
   };
 
@@ -296,25 +391,17 @@ const PublicVisitsTimeline = ({
                 parkSlug: visit.visit.park.slug,
                 visitId: visit.visit.id,
               })}
-              className="group block rounded-[1.8rem] px-5 pt-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              prefetch={false}
+              title={t("item.viewVisit")}
+              className="group block overflow-hidden rounded-[1.8rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               ref={(element) => {
                 visitRefs.current[currentVisitFocusIndex] = element;
               }}
               onKeyDown={(event) => handleVisitKeyDown(event, currentVisitFocusIndex)}
             >
-              <div className="min-w-0">
-                <div className="flex items-start justify-between gap-3">
-                  <p className="text-sm font-medium text-link">
-                    {formatFinnishDate(visit.visit.visitedOn)}
-                  </p>
-                  <span className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full border border-border bg-control px-3 py-1 text-xs font-medium whitespace-nowrap text-muted-foreground shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.48)] dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]">
-                    <Camera className="h-3.5 w-3.5" aria-hidden="true" />
-                    {t("item.viewVisit")}
-                  </span>
-                </div>
-                <h4 className="mt-3 text-xl font-semibold tracking-tight">
-                  {visit.visit.park.name}
-                </h4>
+              {renderVisitPreview(visit.visit, "px-5 pt-5")}
+              <div className={cn("min-w-0 px-5", visit.visit.featuredImage ? "pt-4" : "pt-3")}>
+                <h4 className="text-xl font-semibold tracking-tight">{visit.visit.park.name}</h4>
               </div>
             </Link>
 
@@ -362,6 +449,7 @@ const PublicVisitsTimeline = ({
               </span>
               <Link
                 href={appRoutes.trip(trip.slug)}
+                prefetch={false}
                 className="inline-flex items-center rounded-full border border-border bg-control px-3 py-1 text-xs font-medium text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] transition-colors hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {t("trip.viewTrip")}
@@ -381,23 +469,19 @@ const PublicVisitsTimeline = ({
                       parkSlug: visit.park.slug,
                       visitId: visit.id,
                     })}
-                    className="block rounded-3xl border border-border bg-control px-4 py-4 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.52)] transition-colors hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]"
+                    prefetch={false}
+                    title={t("item.viewVisit")}
+                    className="block overflow-hidden rounded-3xl border border-border bg-control shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.52)] transition-colors hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]"
                     ref={(element) => {
                       visitRefs.current[currentVisitFocusIndex] = element;
                     }}
                     onKeyDown={(event) => handleVisitKeyDown(event, currentVisitFocusIndex)}
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <p className="text-sm font-medium text-link">
-                        {formatFinnishDate(visit.visitedOn)}
-                      </p>
-                      <span className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full border border-border bg-control px-3 py-1 text-xs font-medium whitespace-nowrap text-muted-foreground shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.48)] dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]">
-                        <Camera className="h-3.5 w-3.5" aria-hidden="true" />
-                        {t("item.viewVisit")}
-                      </span>
+                    {renderVisitPreview(visit, "px-4 pt-4")}
+                    <div className={cn("px-4 pb-4", visit.featuredImage ? "pt-4" : "pt-2")}>
+                      <h5 className="text-lg font-semibold tracking-tight">{visit.park.name}</h5>
+                      {renderVisitBadges(visit)}
                     </div>
-                    <h5 className="mt-2 text-lg font-semibold tracking-tight">{visit.park.name}</h5>
-                    {renderVisitBadges(visit)}
                   </Link>
                 </li>
               );
@@ -672,7 +756,7 @@ const PublicVisitsTimeline = ({
 
       {filteredCount > 0 && view === "timeline" && (
         <div className="relative space-y-8 before:absolute before:bottom-0 before:left-4 before:top-0 before:w-px before:-translate-x-1/2 before:theme-rail before:content-[''] md:before:bottom-13 md:before:left-1/2 md:before:-translate-x-1/2">
-          {sections.map((section) => (
+          {visibleSections.map((section) => (
             <section key={section.year} aria-labelledby={`visits-year-${section.year}`}>
               <div className="flex items-center gap-3 pl-12 pr-4 md:px-0">
                 <div className="h-px flex-1 bg-border/70" aria-hidden="true" />
@@ -738,6 +822,18 @@ const PublicVisitsTimeline = ({
             </section>
           ))}
 
+          {hasMoreItems && (
+            <div
+              key={visibleItemCount}
+              ref={sentinelRef}
+              aria-hidden="true"
+              className="h-px w-full"
+            />
+          )}
+          <p role="status" className="sr-only">
+            {t("timeline.loadedCount", { count: renderedVisitCount, total: filteredCount })}
+          </p>
+
           <div className="flex items-center gap-3 pl-12 pr-4 md:px-0">
             <div className="h-px flex-1 bg-border/70" aria-hidden="true" />
             <button
@@ -755,5 +851,12 @@ const PublicVisitsTimeline = ({
     </div>
   );
 };
+
+const PublicVisitsTimeline = (props: PublicVisitsTimelineProps) => (
+  <PublicVisitsTimelineContent
+    key={`${props.view ?? "timeline"}:${props.selectedYear}:${props.selectedMonth}`}
+    {...props}
+  />
+);
 
 export { PublicVisitsTimeline };

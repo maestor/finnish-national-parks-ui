@@ -535,6 +535,7 @@ const timelineVisit = {
   visitedOn: personalVisit.visitedOn,
   route: personalVisit.route,
   createdAt: personalVisit.createdAt,
+  featuredImage: null,
   imageCount: personalVisit.images.length,
   trip: null,
   tripStopOrder: null,

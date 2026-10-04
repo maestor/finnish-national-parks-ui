@@ -16,6 +16,7 @@ const createTimelineVisit = (
   visitedOn: "2024-06-15",
   route: null,
   createdAt: "2024-06-15T10:00:00Z",
+  featuredImage: null,
   imageCount: 0,
   trip: null,
   tripStopOrder: null,

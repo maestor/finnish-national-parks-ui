@@ -10,6 +10,23 @@ import {
 } from "@/lib/public-visits";
 import { PublicVisitsTimeline } from "./public-visits-timeline";
 
+const timelineObservers: Array<{
+  callback: IntersectionObserverCallback;
+  disconnect: ReturnType<typeof vi.fn>;
+  observe: ReturnType<typeof vi.fn>;
+}> = [];
+
+const intersectTimelineEnd = (isIntersecting = true) => {
+  const observer = timelineObservers[timelineObservers.length - 1];
+  if (!observer) throw new Error("No timeline observer is active");
+  act(() =>
+    observer.callback(
+      [{ isIntersecting } as IntersectionObserverEntry],
+      {} as IntersectionObserver,
+    ),
+  );
+};
+
 vi.mock("@/components/visits/lazy-visits-map", () => ({
   LazyVisitsMap: ({
     markers,
@@ -126,6 +143,19 @@ vi.mock("next/navigation", () => ({
 
 describe("PublicVisitsTimeline", () => {
   beforeEach(() => {
+    timelineObservers.length = 0;
+    vi.stubGlobal(
+      "IntersectionObserver",
+      class {
+        constructor(callback: IntersectionObserverCallback) {
+          timelineObservers.push({ callback, disconnect: this.disconnect, observe: this.observe });
+        }
+        disconnect = vi.fn();
+        observe = vi.fn();
+        unobserve = vi.fn();
+      },
+    );
+
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-06-04T09:00:00Z"));
     mockPush.mockReset();
@@ -164,12 +194,159 @@ describe("PublicVisitsTimeline", () => {
     });
   });
 
-  const visits: FrontendTimelineVisit[] = [
+  it("shows lazy thumbnails in standalone and trip visits without changing their details", () => {
+    renderTimeline(
+      [
+        {
+          ...visits[0],
+          featuredImage: { url: "https://example.test/loose-thumb.jpg" },
+          imageCount: 1,
+        },
+        {
+          ...visits[1],
+          featuredImage: { url: "https://example.test/trip-thumb.jpg" },
+          trip: { id: 7, name: "Kesäretki", slug: "kesaretki" },
+        },
+        visits[2],
+      ],
+      { selectedYear: null, selectedMonth: null },
+    );
+    const looseLink = screen.getByRole("link", { name: /Nuuksio/ });
+    const tripLink = screen.getByRole("link", { name: /Pallas-Yllastunturi/ });
+    expect(within(looseLink).getByAltText("")).toHaveAttribute(
+      "src",
+      "https://example.test/loose-thumb.jpg",
+    );
+    expect(within(tripLink).getByAltText("")).toHaveAttribute(
+      "src",
+      "https://example.test/trip-thumb.jpg",
+    );
+    expect(within(looseLink).getByAltText("")).toHaveAttribute("loading", "lazy");
+    expect(within(tripLink).getByAltText("")).toHaveAttribute("loading", "lazy");
+    expect(looseLink).toHaveAttribute("href", "/paikka/nuuksio?visit=1#visit-history");
+    expect(looseLink.parentElement).toHaveTextContent("Punarinnankierros");
+    expect(screen.getAllByAltText("")).toHaveLength(2);
+    for (const [link, date] of [
+      [looseLink, "15.6.2024"],
+      [tripLink, "10.8.2024"],
+    ] as const) {
+      const imageSurface = within(link).getByAltText("").parentElement;
+      if (!imageSurface) throw new Error("Missing visit image surface");
+      expect(within(imageSurface).getByText(date)).toBeVisible();
+      expect(within(link).getByText("visits.item.viewVisit")).toHaveClass("sr-only");
+      expect(link).toHaveAccessibleName(/visits\.item\.viewVisit/);
+      expect(link).toHaveAttribute("title", "visits.item.viewVisit");
+      const imageCount = within(imageSurface).getByLabelText("visits.item.imageCount");
+      expect(imageCount).toHaveTextContent("1");
+      expect(
+        within(link.closest("li") as HTMLElement).getAllByLabelText("visits.item.imageCount"),
+      ).toHaveLength(1);
+      expect(within(link).getAllByText(date)).toHaveLength(1);
+      expect(imageSurface).not.toContainElement(within(link).getByRole("heading"));
+    }
+    const imagelessLink = screen.getByRole("link", { name: /Oulanka/ });
+    expect(within(imagelessLink).getByText("5.2.2025")).toBeVisible();
+    expect(within(imagelessLink).getByText("visits.item.viewVisit")).toHaveClass("sr-only");
+    expect(imagelessLink).toHaveAccessibleName(/visits\.item\.viewVisit/);
+    expect(imagelessLink).toHaveAttribute("title", "visits.item.viewVisit");
+  });
+
+  it("automatically appends chronological batches without splitting trips or moving focus", () => {
+    const manyVisits = Array.from({ length: 13 }, (_, index) => ({
+      ...visits[0],
+      id: index + 100,
+      visitedOn: `2024-06-${String(30 - index).padStart(2, "0")}`,
+      park: { ...visits[0].park, name: `Paikka ${index}`, slug: `paikka-${index}` },
+    }));
+    const tripVisits = [0, 1].map((index) => ({
+      ...visits[0],
+      id: index + 200,
+      visitedOn: "2023-05-01",
+      park: { ...visits[0].park, name: `Retkipaikka ${index}`, slug: `retkipaikka-${index}` },
+      trip: { id: 9, name: "Kevätretki", slug: "kevatretki" },
+      tripStopOrder: index + 1,
+    }));
+    renderTimeline([...manyVisits, ...tripVisits], { selectedYear: null, selectedMonth: null });
+    expect(screen.getByRole("link", { name: /Paikka 11/ })).toBeVisible();
+    expect(screen.queryByRole("link", { name: /Paikka 12/ })).not.toBeInTheDocument();
+    expect(screen.queryByText("Kevätretki")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "visits.timeline.showMore" }),
+    ).not.toBeInTheDocument();
+    screen.getByRole("link", { name: /Paikka 11/ }).focus();
+    intersectTimelineEnd(false);
+    expect(screen.queryByRole("link", { name: /Paikka 12/ })).not.toBeInTheDocument();
+    intersectTimelineEnd();
+    expect(screen.getByRole("link", { name: /Paikka 11/ })).toHaveFocus();
+    expect(screen.getByRole("link", { name: /Retkipaikka 0/ })).toBeVisible();
+    expect(screen.getByRole("link", { name: /Retkipaikka 1/ })).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: "visits.timeline.showMore" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("visits.timeline.loadedCount");
+    expect(timelineObservers).toHaveLength(1);
+    expect(timelineObservers[0]?.disconnect).toHaveBeenCalledOnce();
+  });
+
+  it("resets appended batches when year, month or view changes", () => {
+    const manyVisits = Array.from({ length: 25 }, (_, index) => ({
+      ...visits[0],
+      id: index + 100,
+      visitedOn: `2024-06-${String(30 - index).padStart(2, "0")}`,
+      park: { ...visits[0].park, name: `Paikka ${index}`, slug: `paikka-${index}` },
+    }));
+    const model = buildPublicVisitsTimelineModel(manyVisits, {
+      selectedYear: null,
+      selectedMonth: null,
+    });
+    const props = {
+      availableYears: model.availableYears,
+      filteredCount: 25,
+      monthOptions: model.monthOptions,
+      sections: model.sections,
+      selectedMonth: null,
+      selectedYear: null,
+      totalCount: 25,
+    };
+    const { rerender, unmount } = render(<PublicVisitsTimeline {...props} />);
+    const initialObserver = timelineObservers[0];
+    intersectTimelineEnd();
+    expect(screen.getByRole("link", { name: /Paikka 23/ })).toBeVisible();
+    expect(screen.queryByRole("link", { name: /Paikka 24/ })).not.toBeInTheDocument();
+    act(() =>
+      initialObserver?.callback(
+        [{ isIntersecting: true } as IntersectionObserverEntry],
+        {} as IntersectionObserver,
+      ),
+    );
+    expect(screen.queryByRole("link", { name: /Paikka 24/ })).not.toBeInTheDocument();
+    expect(initialObserver?.disconnect).toHaveBeenCalledOnce();
+    intersectTimelineEnd();
+    expect(screen.getByRole("link", { name: /Paikka 24/ })).toBeVisible();
+    rerender(<PublicVisitsTimeline {...props} selectedYear={2024} />);
+    expect(screen.queryByRole("link", { name: /Paikka 12/ })).not.toBeInTheDocument();
+    intersectTimelineEnd();
+    rerender(<PublicVisitsTimeline {...props} selectedYear={2024} selectedMonth={6} />);
+    expect(screen.queryByRole("link", { name: /Paikka 12/ })).not.toBeInTheDocument();
+    intersectTimelineEnd();
+    rerender(<PublicVisitsTimeline {...props} selectedYear={2024} selectedMonth={6} view="map" />);
+    expect(screen.getByTestId("visits-map")).toBeVisible();
+    rerender(
+      <PublicVisitsTimeline {...props} selectedYear={2024} selectedMonth={6} view="timeline" />,
+    );
+    expect(screen.queryByRole("link", { name: /Paikka 12/ })).not.toBeInTheDocument();
+    const activeObserver = timelineObservers[timelineObservers.length - 1];
+    unmount();
+    expect(activeObserver?.disconnect).toHaveBeenCalledOnce();
+  });
+
+  const visits: [FrontendTimelineVisit, FrontendTimelineVisit, FrontendTimelineVisit] = [
     {
       id: 1,
       visitedOn: "2024-06-15",
       route: "Punarinnankierros",
       createdAt: "2024-06-15T10:00:00Z",
+      featuredImage: null,
       imageCount: 0,
       trip: null,
       tripStopOrder: null,
@@ -184,6 +361,7 @@ describe("PublicVisitsTimeline", () => {
       visitedOn: "2024-08-10",
       route: null,
       createdAt: "2024-08-10T10:00:00Z",
+      featuredImage: null,
       imageCount: 1,
       trip: null,
       tripStopOrder: null,
@@ -198,6 +376,7 @@ describe("PublicVisitsTimeline", () => {
       visitedOn: "2025-02-05",
       route: "Talvipolku",
       createdAt: "2025-02-05T10:00:00Z",
+      featuredImage: null,
       imageCount: 0,
       trip: null,
       tripStopOrder: null,
@@ -521,7 +700,6 @@ describe("PublicVisitsTimeline", () => {
     );
     expect(imageBadge).toHaveTextContent("1");
     expect(screen.queryByLabelText("visits.item.note")).not.toBeInTheDocument();
-    expect(screen.getAllByText("visits.item.viewVisit")).toHaveLength(3);
   });
 
   it("shows the park type badge in the shared detail badge row when metadata is available", () => {
@@ -541,20 +719,6 @@ describe("PublicVisitsTimeline", () => {
 
     expect(badgeRow).toHaveClass("mt-3", "flex", "flex-wrap", "gap-2");
     expect(within(badgeRow).getByText("Kansallispuisto")).toBeInTheDocument();
-  });
-
-  it("keeps the view-visit label on the same top row as the date", () => {
-    renderTimeline(visits, { selectedYear: null, selectedMonth: null });
-
-    const nuuksioHeading = screen.getByRole("heading", { name: "Nuuksio" });
-    const topRow = nuuksioHeading.previousElementSibling;
-
-    if (!(topRow instanceof HTMLElement)) {
-      throw new Error("Expected visit top row");
-    }
-
-    expect(topRow).toHaveClass("flex", "items-start", "justify-between", "gap-3");
-    expect(within(topRow).getByText("15.6.2024")).toBeInTheDocument();
   });
 
   it("uses centered mobile month headers and aligns the mobile spine with visit markers", () => {
@@ -720,6 +884,7 @@ describe("PublicVisitsTimeline", () => {
           visitedOn: "2024-06-15",
           route: "Punarinnankierros",
           createdAt: "2024-06-15T10:00:00Z",
+          featuredImage: null,
           imageCount: 0,
           trip: null,
           tripStopOrder: null,
@@ -734,6 +899,7 @@ describe("PublicVisitsTimeline", () => {
           visitedOn: "2025-07-15",
           route: null,
           createdAt: "2025-07-15T10:00:00Z",
+          featuredImage: null,
           imageCount: 1,
           trip: null,
           tripStopOrder: null,
@@ -748,6 +914,7 @@ describe("PublicVisitsTimeline", () => {
           visitedOn: "2024-08-10",
           route: null,
           createdAt: "2024-08-10T10:00:00Z",
+          featuredImage: null,
           imageCount: 1,
           trip: null,
           tripStopOrder: null,
@@ -762,6 +929,7 @@ describe("PublicVisitsTimeline", () => {
           visitedOn: "2026-01-05",
           route: null,
           createdAt: "2026-01-05T10:00:00Z",
+          featuredImage: null,
           imageCount: 0,
           trip: null,
           tripStopOrder: null,
@@ -912,6 +1080,7 @@ describe("PublicVisitsTimeline", () => {
           visitedOn: "2024-06-15",
           route: "Punarinnankierros",
           createdAt: "2024-06-15T10:00:00Z",
+          featuredImage: null,
           imageCount: 0,
           trip: null,
           tripStopOrder: null,
@@ -926,6 +1095,7 @@ describe("PublicVisitsTimeline", () => {
           visitedOn: "2024-08-10",
           route: null,
           createdAt: "2024-08-10T10:00:00Z",
+          featuredImage: null,
           imageCount: 1,
           trip: null,
           tripStopOrder: null,
@@ -1005,6 +1175,7 @@ describe("PublicVisitsTimeline", () => {
           visitedOn: "2024-06-15",
           route: "Punarinnankierros",
           createdAt: "2024-06-15T10:00:00Z",
+          featuredImage: null,
           imageCount: 0,
           trip: null,
           tripStopOrder: null,
@@ -1051,6 +1222,7 @@ describe("PublicVisitsTimeline", () => {
           visitedOn: "2024-06-15",
           route: "Punarinnankierros",
           createdAt: "2024-06-15T10:00:00Z",
+          featuredImage: null,
           imageCount: 0,
           trip: {
             id: 7,
@@ -1069,6 +1241,7 @@ describe("PublicVisitsTimeline", () => {
           visitedOn: "2024-06-18",
           route: null,
           createdAt: "2024-06-18T10:00:00Z",
+          featuredImage: null,
           imageCount: 2,
           trip: {
             id: 7,
