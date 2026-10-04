@@ -15,7 +15,7 @@ import { appRoutes } from "@/lib/routes";
 type HomeFeaturedMemoriesProps = Pick<HomeSummary, "latestTrip" | "latestStandaloneVisit">;
 
 const ARCHIVE_LINK_CLASS_NAME =
-  "ml-auto inline-flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-border bg-control px-3.5 py-2 text-xs font-medium transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+  "ml-auto inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-border bg-control px-3.5 py-1 text-xs font-medium transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
 const EMPTY_CLASS_NAME =
   "flex flex-1 items-center justify-center rounded-[2rem] border border-border bg-control p-6 text-sm text-muted-foreground";
 
@@ -28,7 +28,7 @@ export const HomeFeaturedMemories = ({
   return (
     <div className="mt-6 grid gap-6 md:grid-cols-2">
       <section aria-labelledby="home-latest-trip" className="flex min-w-0 flex-col">
-        <div className="mb-3 flex min-w-0 items-center justify-between gap-3">
+        <div className="mb-3 flex min-w-0 items-end justify-between gap-3">
           <h3
             id="home-latest-trip"
             className="flex min-w-0 flex-1 items-center gap-2 text-sm font-semibold"
@@ -48,7 +48,7 @@ export const HomeFeaturedMemories = ({
         )}
       </section>
       <section aria-labelledby="home-latest-visit" className="flex min-w-0 flex-col">
-        <div className="mb-3 flex min-w-0 items-center justify-between gap-3">
+        <div className="mb-3 flex min-w-0 items-end justify-between gap-3">
           <h3
             id="home-latest-visit"
             className="flex min-w-0 flex-1 items-center gap-2 text-sm font-semibold"
