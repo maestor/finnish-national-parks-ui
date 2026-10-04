@@ -18,10 +18,9 @@ interface ControlPanelYearReviewPageProps {
 
 const YEAR_LINK_CLASS_NAME =
   "inline-flex items-center rounded-full border px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
-const ACTIVE_YEAR_LINK_CLASS_NAME =
-  "border-emerald-700/15 bg-[linear-gradient(145deg,#166534_0%,#0f766e_55%,#2563eb_100%)] text-primary-foreground";
+const ACTIVE_YEAR_LINK_CLASS_NAME = "border-border theme-action text-action-foreground";
 const INACTIVE_YEAR_LINK_CLASS_NAME =
-  "border-white/45 bg-white/70 text-foreground/80 hover:bg-white/88 dark:border-white/10 dark:bg-slate-950/52 dark:text-sky-100/78 dark:hover:bg-slate-950/72";
+  "border-border bg-control text-muted-foreground hover:bg-accent";
 
 const YEAR_FORMATTER = new Intl.DateTimeFormat("en-CA", {
   timeZone: "Europe/Helsinki",
@@ -71,7 +70,7 @@ const ControlPanelYearReviewPage = async ({ searchParams }: ControlPanelYearRevi
 
   return (
     <div className="max-w-5xl space-y-6">
-      <section className="rounded-3xl border border-white/45 bg-white/70 p-6 shadow-[0_20px_48px_rgba(148,163,184,0.16)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/56 dark:shadow-[0_28px_60px_rgba(2,6,23,0.3)]">
+      <section className="rounded-3xl border border-border theme-panel p-6 shadow-[0_20px_48px_rgba(var(--shadow-rgb),0.16)] backdrop-blur-xl dark:shadow-[0_28px_60px_rgba(var(--shadow-rgb),0.3)]">
         <h1 className="text-2xl font-bold tracking-tight">{controlPanelT("yearReview.title")}</h1>
         <p className="mt-2 max-w-3xl text-muted-foreground">
           {controlPanelT("yearReview.description")}

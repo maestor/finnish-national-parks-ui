@@ -23,7 +23,7 @@ interface TooltipProps {
 
 const toneClassNames = {
   default:
-    "border-white/55 bg-white/94 text-popover-foreground shadow-[0_16px_32px_rgba(148,163,184,0.22)] dark:border-white/10 dark:bg-slate-950/94 dark:text-popover-foreground dark:shadow-[0_18px_36px_rgba(2,6,23,0.36)]",
+    "border-border bg-control text-popover-foreground shadow-[0_16px_32px_rgba(var(--shadow-rgb),0.22)] dark:text-popover-foreground dark:shadow-[0_18px_36px_rgba(var(--shadow-rgb),0.36)]",
   success:
     "border-emerald-300/70 bg-emerald-50/96 text-emerald-900 shadow-[0_10px_24px_rgba(5,150,105,0.18)] dark:border-emerald-300/20 dark:bg-emerald-950/92 dark:text-emerald-100",
 } as const;

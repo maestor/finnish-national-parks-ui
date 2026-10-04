@@ -271,8 +271,13 @@ export const TripArchiveList = ({ initialResponse }: TripArchiveListProps) => {
           aria-label={t("listLabel")}
           className="grid min-w-0 grid-cols-1 gap-6 md:grid-cols-2"
         >
-          {trips.map((trip) => (
-            <TripArchiveCard key={trip.id} trip={trip} onDetailNavigate={saveArchiveState} />
+          {trips.map((trip, index) => (
+            <TripArchiveCard
+              key={trip.id}
+              trip={trip}
+              imageLoading={index < 4 ? "eager" : "lazy"}
+              onDetailNavigate={saveArchiveState}
+            />
           ))}
         </ul>
       )}

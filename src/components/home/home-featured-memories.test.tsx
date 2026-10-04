@@ -27,6 +27,21 @@ const visit: NonNullable<HomeSummary["latestStandaloneVisit"]> = {
 };
 
 describe("HomeFeaturedMemories", () => {
+  it("loads both featured covers immediately for the opening viewport", () => {
+    const { container } = render(
+      <HomeFeaturedMemories
+        latestTrip={{ ...trip, featuredImage: visit.featuredImage }}
+        latestStandaloneVisit={visit}
+      />,
+    );
+
+    const images = container.querySelectorAll("img");
+    expect(images).toHaveLength(2);
+    for (const image of images) {
+      expect(image).toHaveAttribute("loading", "eager");
+    }
+  });
+
   it("provides independent archive links and exact memory destinations with the home heading hierarchy", () => {
     render(<HomeFeaturedMemories latestTrip={trip} latestStandaloneVisit={visit} />);
     expect(

@@ -15,9 +15,9 @@ import { appRoutes } from "@/lib/routes";
 type HomeFeaturedMemoriesProps = Pick<HomeSummary, "latestTrip" | "latestStandaloneVisit">;
 
 const ARCHIVE_LINK_CLASS_NAME =
-  "ml-auto inline-flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-white/55 bg-white/70 px-3.5 py-2 text-xs font-medium transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/56 dark:text-sky-100/80";
+  "ml-auto inline-flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-border bg-control px-3.5 py-2 text-xs font-medium transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
 const EMPTY_CLASS_NAME =
-  "flex flex-1 items-center justify-center rounded-[2rem] border border-white/45 bg-white/62 p-6 text-sm text-muted-foreground dark:border-white/10 dark:bg-slate-950/48";
+  "flex flex-1 items-center justify-center rounded-[2rem] border border-border bg-control p-6 text-sm text-muted-foreground";
 
 export const HomeFeaturedMemories = ({
   latestTrip,
@@ -33,7 +33,7 @@ export const HomeFeaturedMemories = ({
             id="home-latest-trip"
             className="flex min-w-0 flex-1 items-center gap-2 text-sm font-semibold"
           >
-            <Route className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+            <Route className="h-4 w-4 shrink-0 text-icon stroke-[2.25]" aria-hidden="true" />
             {t("latestTrip")}
           </h3>
           <Link href={appRoutes.trips} prefetch={false} className={ARCHIVE_LINK_CLASS_NAME}>
@@ -42,7 +42,7 @@ export const HomeFeaturedMemories = ({
           </Link>
         </div>
         {latestTrip ? (
-          <TripMemoryCard trip={latestTrip} headingLevel={4} />
+          <TripMemoryCard trip={latestTrip} headingLevel={4} imageLoading="eager" />
         ) : (
           <p className={EMPTY_CLASS_NAME}>{t("emptyTrip")}</p>
         )}
@@ -53,7 +53,7 @@ export const HomeFeaturedMemories = ({
             id="home-latest-visit"
             className="flex min-w-0 flex-1 items-center gap-2 text-sm font-semibold"
           >
-            <Footprints className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+            <Footprints className="h-4 w-4 shrink-0 text-icon stroke-[2.25]" aria-hidden="true" />
             {t("latestVisit")}
           </h3>
           <Link href={appRoutes.visits} prefetch={false} className={ARCHIVE_LINK_CLASS_NAME}>
@@ -68,11 +68,12 @@ export const HomeFeaturedMemories = ({
             headingLevel={4}
             href={createParkVisitHref({ parkSlug: visit.park.slug, visitId: visit.id })}
             featuredImage={visit.featuredImage}
+            imageLoading="eager"
             descriptionExcerpt={visit.descriptionExcerpt}
             descriptionPlaceholder={t("notePlaceholder")}
             readMore={t("readVisit")}
             metadata={
-              <div className="mt-3 flex flex-wrap gap-2 text-sm text-foreground/75 dark:text-sky-100/75">
+              <div className="mt-3 flex flex-wrap gap-2 text-sm text-muted-foreground">
                 <span className={PUBLIC_META_DATE_CLASS_NAME}>
                   <time dateTime={visit.visitedOn}>{formatFinnishDate(visit.visitedOn)}</time>
                 </span>

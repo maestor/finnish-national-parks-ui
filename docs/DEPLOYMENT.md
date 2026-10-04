@@ -57,7 +57,7 @@ Immediately after promotion, use the existing admin-session, same-origin `POST /
 
 ## Current PWA note
 
-Production builds register the Serwist service worker. Development keeps registration disabled so local iteration does not get polluted by stale caches.
+Production builds register the Serwist service worker. Development disables registration and removes a leftover registration for this app's worker, its scoped `serwist-precache-v2` cache and `public-static-v2`. Other origin caches and browser storage are preserved. If a normal localhost refresh loads stale JavaScript and reports old/new class-name hydration mismatches, hard-refresh once to load the development cleanup; subsequent normal refreshes should use current bundles. Production registration and caching are unchanged.
 
 When validating a deployment, include one real browser pass for:
 

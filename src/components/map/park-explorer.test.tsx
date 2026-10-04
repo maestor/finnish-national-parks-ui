@@ -250,7 +250,7 @@ describe("ParkExplorer", () => {
     expect(await screen.findByText("count:1")).toBeInTheDocument();
     expect(screen.getByText("reset:1")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "home.filters.nationalParks" })).toHaveClass(
-      "text-primary-foreground",
+      "text-action-foreground",
     );
     expect(screen.getByRole("button", { name: "home.filters.notVisited" })).toBeInTheDocument();
     expect(replaceMock).toHaveBeenCalledWith("/paikat", { scroll: false });
@@ -265,7 +265,7 @@ describe("ParkExplorer", () => {
     expect(screen.getByText("count:0")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "home.filters.hikingAndWildernessAreas" }),
-    ).toHaveClass("text-primary-foreground");
+    ).toHaveClass("text-action-foreground");
     expect(replaceMock).toHaveBeenCalledWith("/paikat", { scroll: false });
   });
 
@@ -277,7 +277,7 @@ describe("ParkExplorer", () => {
 
     expect(screen.getByText("count:5")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "home.filters.all" })).toHaveClass(
-      "text-primary-foreground",
+      "text-action-foreground",
     );
     expect(screen.getByRole("button", { name: "home.filters.notVisited" })).toBeInTheDocument();
     expect(replaceMock).toHaveBeenCalledWith("/paikat", { scroll: false });
@@ -291,7 +291,7 @@ describe("ParkExplorer", () => {
 
     expect(screen.getByText("count:0")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "home.filters.culturalHistoryAreas" })).toHaveClass(
-      "text-primary-foreground",
+      "text-action-foreground",
     );
     expect(replaceMock).toHaveBeenCalledWith("/paikat", { scroll: false });
   });
@@ -304,7 +304,7 @@ describe("ParkExplorer", () => {
 
     expect(screen.getByText("count:2")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "home.filters.all" })).toHaveClass(
-      "text-primary-foreground",
+      "text-action-foreground",
     );
     expect(replaceMock).not.toHaveBeenCalled();
   });
@@ -515,7 +515,7 @@ describe("ParkExplorer", () => {
       within(mobileFilters).getByRole("button", {
         name: "home.filters.close",
       }),
-    ).toHaveClass("text-cyan-950");
+    ).toHaveClass("text-link");
 
     await user.click(
       within(mobileFilters).getByRole("button", {
@@ -559,7 +559,7 @@ describe("ParkExplorer", () => {
       name: "home.filters.saveAndClose",
     });
 
-    expect(saveAndCloseButton).toHaveClass("text-primary-foreground");
+    expect(saveAndCloseButton).toHaveClass("text-action-foreground");
 
     await user.click(saveAndCloseButton);
 

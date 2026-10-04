@@ -9,16 +9,16 @@ import { cn } from "@/lib/cn";
 import { renderMultilineText } from "@/lib/multiline-text";
 
 export const REVIEW_STORY_COPY_CLASS_NAME =
-  "max-w-3xl text-sm leading-6 text-primary-foreground/84 sm:text-base";
+  "max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base";
 
 export const REVIEW_STORY_MICRO_BADGE_CLASS_NAME =
-  "inline-flex items-center gap-2 rounded-full border border-white/26 bg-black/16 px-3 py-1 text-xs font-medium tracking-[0.16em] text-primary-foreground/78 uppercase backdrop-blur-sm";
+  "inline-flex items-center gap-2 rounded-full border border-border bg-control px-3 py-1 text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase backdrop-blur-sm";
 
 export const REVIEW_STORY_ICON_SURFACE_CLASS_NAME =
-  "inline-flex h-11 w-11 items-center justify-center rounded-[1.1rem] border border-white/24 bg-black/18 text-primary-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-sm";
+  "inline-flex h-11 w-11 items-center justify-center rounded-[1.1rem] border border-border bg-control text-foreground shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.18)] backdrop-blur-sm";
 
 export const REVIEW_STORY_PANEL_LINK_CLASS_NAME =
-  "inline-flex text-xl font-semibold text-primary-foreground underline decoration-white/32 underline-offset-4 transition-colors hover:text-white";
+  "inline-flex text-xl font-semibold text-foreground underline decoration-input underline-offset-4 transition-colors hover:text-foreground";
 
 export const getReviewStoryParkGridClassName = (count: number) => {
   if (count >= 3) {
@@ -55,7 +55,7 @@ export const ReviewStorySectionHeader = ({
     <div className="space-y-3">
       <div
         className={cn(
-          "text-3xl font-black tracking-tight text-primary-foreground sm:text-5xl",
+          "text-3xl font-black tracking-tight text-foreground sm:text-5xl",
           titleClassName,
         )}
       >
@@ -91,7 +91,7 @@ export const ReviewStoryPlaceCard = ({
 }: ReviewStoryPlaceCardProps) => (
   <article
     className={cn(
-      "overflow-hidden rounded-3xl border border-white/24 bg-black/14 shadow-[0_24px_56px_rgba(15,23,42,0.2)]",
+      "overflow-hidden rounded-3xl border border-border bg-control shadow-[0_24px_56px_rgba(var(--shadow-rgb),0.2)]",
       "public-story-place-card",
       className,
     )}
@@ -102,7 +102,7 @@ export const ReviewStoryPlaceCard = ({
       <Link href={href} className={cn(REVIEW_STORY_PANEL_LINK_CLASS_NAME, linkClassName)}>
         {name}
       </Link>
-      <p className="text-sm text-primary-foreground/82">{dateText}</p>
+      <p className="text-sm text-muted-foreground">{dateText}</p>
       {extraContent}
     </div>
   </article>
@@ -130,7 +130,7 @@ export const ReviewStoryFooter = ({
       <div className="flex flex-col gap-4 sm:grid sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center">
         <Link
           href="/"
-          className="inline-flex items-center gap-3 self-start rounded-full border border-white/45 bg-white/82 px-3 py-2 text-foreground shadow-[0_12px_28px_rgba(148,163,184,0.22)] backdrop-blur-md transition-colors hover:bg-white/94 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/56 dark:hover:bg-slate-950/76 dark:shadow-[0_16px_32px_rgba(2,6,23,0.38)] sm:justify-self-start"
+          className="inline-flex items-center gap-3 self-start rounded-full border border-border bg-control px-3 py-2 text-foreground shadow-[0_12px_28px_rgba(var(--shadow-rgb),0.22)] backdrop-blur-md transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:shadow-[0_16px_32px_rgba(var(--shadow-rgb),0.38)] sm:justify-self-start"
         >
           <HeaderBrandMark className="h-10 w-10" />
           <span className="text-base font-semibold">{siteTitle}</span>
@@ -141,7 +141,7 @@ export const ReviewStoryFooter = ({
         </p>
         <Link
           href="/"
-          className="inline-flex items-center justify-center rounded-full border border-border/60 px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-primary/45 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:justify-self-end"
+          className="inline-flex items-center justify-center rounded-full border border-border/60 px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-primary/45 hover:text-link focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:justify-self-end"
         >
           {browseAppLabel}
         </Link>

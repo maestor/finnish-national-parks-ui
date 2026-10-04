@@ -115,7 +115,7 @@ export const TripImagePicker = ({
     <dialog
       ref={dialogRef}
       aria-labelledby="trip-image-picker-title"
-      className="m-auto max-h-[min(90dvh,48rem)] w-[min(92vw,54rem)] rounded-2xl border border-border bg-background p-0 text-foreground shadow-2xl backdrop:bg-slate-950/60"
+      className="m-auto max-h-[min(90dvh,48rem)] w-[min(92vw,54rem)] rounded-2xl border border-border bg-background p-0 text-foreground shadow-2xl backdrop:bg-hero/60"
       onCancel={(event) => {
         event.preventDefault();
         close();

@@ -29,7 +29,7 @@ const LoginPage = async ({
           {t("login")}
         </h1>
         {hasError === true && (
-          <p className="text-sm text-red-500" role="alert">
+          <p className="text-sm text-destructive" role="alert">
             {errorMessage}
           </p>
         )}

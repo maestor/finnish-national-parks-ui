@@ -173,10 +173,10 @@ export const ParkVisibilityBadge = () => {
 
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-sm leading-none font-medium shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] ${
+      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-sm leading-none font-medium shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] ${
         isVisible
-          ? "border-emerald-200/60 bg-[linear-gradient(145deg,rgba(22,101,52,0.12),rgba(16,185,129,0.14))] text-emerald-900 dark:border-emerald-300/15 dark:bg-[linear-gradient(145deg,rgba(22,101,52,0.22),rgba(5,150,105,0.18))] dark:text-emerald-100"
-          : "border-amber-200/60 bg-[linear-gradient(145deg,rgba(245,158,11,0.14),rgba(180,83,9,0.08))] text-amber-950 dark:border-amber-300/18 dark:bg-[linear-gradient(145deg,rgba(180,83,9,0.2),rgba(120,53,15,0.18))] dark:text-amber-100"
+          ? "border-emerald-200/60 theme-memory text-emerald-900 dark:border-emerald-300/15 dark:text-emerald-100"
+          : "border-amber-200/60 bg-[linear-gradient(145deg,rgba(245,158,11,0.14),rgba(180,83,9,0.08))] text-amber-950 dark:border-amber-300/18 dark:text-amber-100"
       }`}
     >
       {isVisible ? t("visibleBadge") : t("hiddenBadge")}
@@ -202,7 +202,7 @@ export const ParkAdminSection = () => {
   const isVisible = visibility === "visible";
 
   return (
-    <section className="mt-8 rounded-[2rem] border border-white/45 bg-white/60 p-5 shadow-[0_24px_48px_rgba(148,163,184,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/42 dark:shadow-[0_28px_56px_rgba(2,6,23,0.3)]">
+    <section className="mt-8 rounded-[2rem] border border-border theme-panel p-5 shadow-[0_24px_48px_rgba(var(--shadow-rgb),0.14)] backdrop-blur-xl dark:shadow-[0_28px_56px_rgba(var(--shadow-rgb),0.3)]">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold tracking-tight">{t("title")}</h2>

@@ -52,13 +52,13 @@ interface PublicVisitsTimelineProps {
 const FILTER_LINK_CLASS_NAME =
   "inline-flex items-center rounded-full border px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 const ACTIVE_FILTER_LINK_CLASS_NAME =
-  "border-emerald-700/15 bg-[linear-gradient(145deg,#166534_0%,#0f766e_55%,#2563eb_100%)] text-primary-foreground shadow-[0_12px_28px_rgba(37,99,235,0.24)]";
+  "border-border theme-action text-action-foreground shadow-[0_12px_28px_rgba(var(--shadow-rgb),0.24)]";
 const INACTIVE_FILTER_LINK_CLASS_NAME =
-  "border-white/45 bg-white/70 text-foreground/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.52)] hover:bg-white/88 dark:border-white/10 dark:bg-slate-950/52 dark:text-sky-100/78 dark:hover:bg-slate-950/72";
+  "border-border bg-control text-muted-foreground shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.52)] hover:brightness-105";
 const DISABLED_FILTER_PILL_CLASS_NAME =
-  "cursor-not-allowed border-dashed border-border/70 bg-transparent text-muted-foreground shadow-none dark:border-white/10 dark:bg-transparent dark:text-slate-400";
+  "cursor-not-allowed border-dashed border-border/70 bg-transparent text-muted-foreground shadow-none dark:bg-transparent";
 const TIMELINE_BACK_TO_TOP_BUTTON_CLASS_NAME =
-  "inline-flex items-center gap-2 rounded-full border border-white/45 bg-white/82 px-4 py-2 text-sm font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.52)] transition-colors hover:bg-white/94 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/62 dark:text-sky-100 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] dark:hover:bg-slate-950/82";
+  "inline-flex items-center gap-2 rounded-full border border-border bg-control px-4 py-2 text-sm font-medium text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.52)] transition-colors hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]";
 
 const PublicVisitsTimeline = ({
   availableYears,
@@ -258,7 +258,7 @@ const PublicVisitsTimeline = ({
       <div className="mt-3 flex flex-wrap gap-2">
         <ParkTypeBadge label={visit.park.typeLabel} />
         {visit.route !== null && (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/70 bg-[linear-gradient(145deg,rgba(22,101,52,0.12),rgba(16,185,129,0.18))] px-2.5 py-1 text-xs font-semibold text-emerald-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-emerald-300/15 dark:bg-[linear-gradient(145deg,rgba(22,101,52,0.24),rgba(16,185,129,0.16))] dark:text-emerald-200 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-border theme-memory px-2.5 py-1 text-xs font-semibold text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)]   dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.08)]">
             <Route className="h-3.5 w-3.5" aria-hidden="true" />
             {visit.route}
           </span>
@@ -268,7 +268,7 @@ const PublicVisitsTimeline = ({
             aria-label={t("item.imageCount", {
               count: visit.imageCount,
             })}
-            className="inline-flex items-center gap-1.5 rounded-full border border-sky-200/70 bg-[linear-gradient(145deg,rgba(37,99,235,0.12),rgba(14,165,233,0.16))] px-2.5 py-1 text-xs font-semibold text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-sky-300/15 dark:bg-[linear-gradient(145deg,rgba(37,99,235,0.18),rgba(14,165,233,0.14))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+            className="inline-flex items-center gap-1.5 rounded-full border border-border theme-memory px-2.5 py-1 text-xs font-semibold text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.08)]"
             role="img"
           >
             <Images className="h-3.5 w-3.5" aria-hidden="true" />
@@ -290,7 +290,7 @@ const PublicVisitsTimeline = ({
         className="relative pl-12 md:grid md:grid-cols-[minmax(0,1fr)_2.5rem_minmax(0,1fr)] md:gap-4 md:pl-0"
       >
         <div className={cn("md:row-start-1", isLeftMonth ? "md:col-start-1" : "md:col-start-3")}>
-          <div className="rounded-[1.8rem] border border-white/45 bg-white/68 shadow-[0_20px_44px_rgba(148,163,184,0.16)] backdrop-blur-xl transition-colors hover:bg-white/82 dark:border-white/10 dark:bg-slate-950/44 dark:shadow-[0_24px_52px_rgba(2,6,23,0.32)] dark:hover:bg-slate-950/58">
+          <div className="rounded-[1.8rem] border border-border theme-memory shadow-[0_20px_44px_rgba(var(--shadow-rgb),0.16)] backdrop-blur-xl transition-colors hover:brightness-105 dark:shadow-[0_24px_52px_rgba(var(--shadow-rgb),0.32)]">
             <Link
               href={createParkVisitHref({
                 parkSlug: visit.visit.park.slug,
@@ -304,10 +304,10 @@ const PublicVisitsTimeline = ({
             >
               <div className="min-w-0">
                 <div className="flex items-start justify-between gap-3">
-                  <p className="text-sm font-medium text-primary">
+                  <p className="text-sm font-medium text-link">
                     {formatFinnishDate(visit.visit.visitedOn)}
                   </p>
-                  <span className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full border border-white/45 bg-white/72 px-3 py-1 text-xs font-medium whitespace-nowrap text-foreground/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.48)] dark:border-white/10 dark:bg-slate-950/56 dark:text-sky-100/72 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                  <span className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full border border-border bg-control px-3 py-1 text-xs font-medium whitespace-nowrap text-muted-foreground shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.48)] dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]">
                     <Camera className="h-3.5 w-3.5" aria-hidden="true" />
                     {t("item.viewVisit")}
                   </span>
@@ -325,7 +325,7 @@ const PublicVisitsTimeline = ({
         <div className="pointer-events-none absolute bottom-0 left-4 top-0 flex w-4 -translate-x-1/2 justify-center md:static md:col-start-2 md:row-start-1 md:w-auto md:translate-x-0">
           <span
             aria-hidden="true"
-            className="relative top-5 h-3.5 w-3.5 rounded-full border-2 border-background bg-primary shadow-[0_0_0_4px_rgba(255,255,255,0.75)] dark:shadow-[0_0_0_4px_rgba(2,6,23,0.72)]"
+            className="relative top-5 h-3.5 w-3.5 rounded-full border-2 border-background bg-primary shadow-[0_0_0_4px_rgba(var(--highlight-rgb),0.75)] dark:shadow-[0_0_0_4px_rgba(var(--shadow-rgb),0.72)]"
           />
         </div>
       </li>
@@ -343,10 +343,10 @@ const PublicVisitsTimeline = ({
       className="relative pl-12 md:grid md:grid-cols-[minmax(0,1fr)_2.5rem_minmax(0,1fr)] md:gap-4 md:pl-0"
     >
       <div className={cn("md:row-start-1", isLeftMonth ? "md:col-start-1" : "md:col-start-3")}>
-        <article className="overflow-hidden rounded-[2rem] border border-white/45 bg-[linear-gradient(145deg,rgba(255,255,255,0.82),rgba(219,234,254,0.62),rgba(220,252,231,0.68))] shadow-[0_22px_52px_rgba(37,99,235,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(145deg,rgba(2,6,23,0.72),rgba(15,23,42,0.84),rgba(6,78,59,0.34))] dark:shadow-[0_28px_60px_rgba(2,6,23,0.34)]">
-          <div className="border-b border-white/35 px-5 py-5 dark:border-white/8">
+        <article className="overflow-hidden rounded-[2rem] border border-border theme-memory shadow-[0_22px_52px_rgba(var(--shadow-rgb),0.14)] backdrop-blur-xl dark:shadow-[0_28px_60px_rgba(var(--shadow-rgb),0.34)]">
+          <div className="border-b border-border px-5 py-5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-700/15 bg-[linear-gradient(145deg,#166534_0%,#0f766e_55%,#2563eb_100%)] px-3 py-1 text-xs font-semibold text-primary-foreground shadow-[0_10px_24px_rgba(37,99,235,0.22)]">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border theme-action px-3 py-1 text-xs font-semibold text-action-foreground shadow-[0_10px_24px_rgba(var(--shadow-rgb),0.22)]">
                 <TentTree className="h-3.5 w-3.5" aria-hidden="true" />
                 {t("trip.label")}
               </span>
@@ -356,13 +356,13 @@ const PublicVisitsTimeline = ({
             </div>
             <h4 className="mt-3 text-2xl font-semibold tracking-tight">{trip.name}</h4>
             <div className="mt-4 flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/45 bg-white/72 px-3 py-1 text-xs font-medium text-foreground/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.48)] dark:border-white/10 dark:bg-slate-950/56 dark:text-sky-100/72 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-control px-3 py-1 text-xs font-medium text-muted-foreground shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.48)] dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]">
                 <Footprints className="h-3.5 w-3.5" aria-hidden="true" />
                 {t("trip.visitCount", { count: trip.visitCount })}
               </span>
               <Link
                 href={appRoutes.trip(trip.slug)}
-                className="inline-flex items-center rounded-full border border-sky-200/70 bg-white/76 px-3 py-1 text-xs font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-sky-300/15 dark:bg-slate-950/56 dark:hover:bg-slate-950/72"
+                className="inline-flex items-center rounded-full border border-border bg-control px-3 py-1 text-xs font-medium text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] transition-colors hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {t("trip.viewTrip")}
               </Link>
@@ -381,17 +381,17 @@ const PublicVisitsTimeline = ({
                       parkSlug: visit.park.slug,
                       visitId: visit.id,
                     })}
-                    className="block rounded-3xl border border-white/38 bg-white/74 px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.52)] transition-colors hover:bg-white/92 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/54 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] dark:hover:bg-slate-950/72"
+                    className="block rounded-3xl border border-border bg-control px-4 py-4 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.52)] transition-colors hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]"
                     ref={(element) => {
                       visitRefs.current[currentVisitFocusIndex] = element;
                     }}
                     onKeyDown={(event) => handleVisitKeyDown(event, currentVisitFocusIndex)}
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <p className="text-sm font-medium text-primary">
+                      <p className="text-sm font-medium text-link">
                         {formatFinnishDate(visit.visitedOn)}
                       </p>
-                      <span className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full border border-white/45 bg-white/72 px-3 py-1 text-xs font-medium whitespace-nowrap text-foreground/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.48)] dark:border-white/10 dark:bg-slate-950/56 dark:text-sky-100/72 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                      <span className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full border border-border bg-control px-3 py-1 text-xs font-medium whitespace-nowrap text-muted-foreground shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.48)] dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]">
                         <Camera className="h-3.5 w-3.5" aria-hidden="true" />
                         {t("item.viewVisit")}
                       </span>
@@ -409,7 +409,7 @@ const PublicVisitsTimeline = ({
       <div className="pointer-events-none absolute bottom-0 left-4 top-0 flex w-4 -translate-x-1/2 justify-center md:static md:col-start-2 md:row-start-1 md:w-auto md:translate-x-0">
         <span
           aria-hidden="true"
-          className="relative top-5 h-4 w-4 rounded-full border-2 border-background bg-emerald-600 shadow-[0_0_0_4px_rgba(255,255,255,0.75)] dark:shadow-[0_0_0_4px_rgba(2,6,23,0.72)]"
+          className="relative top-5 h-4 w-4 rounded-full border-2 border-background bg-icon shadow-[0_0_0_4px_rgba(var(--highlight-rgb),0.75)] dark:shadow-[0_0_0_4px_rgba(var(--shadow-rgb),0.72)]"
         />
       </div>
     </li>
@@ -492,7 +492,7 @@ const PublicVisitsTimeline = ({
       {!isParksView && (
         <section className={PUBLIC_PANEL_CLASS_NAME}>
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-2">
-            <CalendarRange className="h-4 w-4 text-primary" aria-hidden="true" />
+            <CalendarRange className="h-4 w-4 text-link" aria-hidden="true" />
             <h2 className="text-lg font-semibold tracking-tight">{t("filters.title")}</h2>
             <p className="text-sm text-muted-foreground">
               ({filteredCount} {t("filters.visibleCount")})
@@ -655,7 +655,7 @@ const PublicVisitsTimeline = ({
           <Link
             href={createPublicVisitsHref({ view })}
             scroll={false}
-            className="mt-4 inline-flex items-center rounded-full border border-white/45 bg-white/72 px-4 py-2 text-sm font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.52)] transition-colors hover:bg-white/88 dark:border-white/10 dark:bg-slate-950/56 dark:hover:bg-slate-950/76"
+            className="mt-4 inline-flex items-center rounded-full border border-border bg-control px-4 py-2 text-sm font-medium text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.52)] transition-colors hover:brightness-105"
           >
             {t("filters.reset")}
           </Link>
@@ -671,7 +671,7 @@ const PublicVisitsTimeline = ({
       )}
 
       {filteredCount > 0 && view === "timeline" && (
-        <div className="relative space-y-8 before:absolute before:bottom-0 before:left-4 before:top-0 before:w-px before:-translate-x-1/2 before:bg-[linear-gradient(180deg,rgba(22,101,52,0.42),rgba(37,99,235,0.18),rgba(22,101,52,0.42))] before:content-[''] md:before:bottom-13 md:before:left-1/2 md:before:-translate-x-1/2">
+        <div className="relative space-y-8 before:absolute before:bottom-0 before:left-4 before:top-0 before:w-px before:-translate-x-1/2 before:theme-rail before:content-[''] md:before:bottom-13 md:before:left-1/2 md:before:-translate-x-1/2">
           {sections.map((section) => (
             <section key={section.year} aria-labelledby={`visits-year-${section.year}`}>
               <div className="flex items-center gap-3 pl-12 pr-4 md:px-0">
@@ -714,7 +714,7 @@ const PublicVisitsTimeline = ({
                         </div>
                       </div>
 
-                      <ol className="relative mt-4 space-y-4 before:absolute before:bottom-0 before:left-4 before:top-0 before:w-px before:-translate-x-1/2 before:bg-[linear-gradient(180deg,rgba(22,101,52,0.38),rgba(37,99,235,0.12))] before:content-[''] md:before:left-1/2 md:before:-translate-x-1/2">
+                      <ol className="relative mt-4 space-y-4 before:absolute before:bottom-0 before:left-4 before:top-0 before:w-px before:-translate-x-1/2 before:theme-rail before:content-[''] md:before:left-1/2 md:before:-translate-x-1/2">
                         {monthSection.items.map((item) => {
                           if (item.kind === "trip") {
                             return renderTripCard(

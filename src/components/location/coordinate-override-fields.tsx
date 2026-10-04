@@ -61,7 +61,7 @@ export const CoordinateOverrideFields = ({
   };
 
   return (
-    <div className="space-y-4 rounded-3xl border border-white/45 bg-white/52 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] dark:border-white/10 dark:bg-slate-950/32 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+    <div className="space-y-4 rounded-3xl border border-border bg-control p-4 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.4)] dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.05)]">
       <LocationSuggestionInput
         assistiveMessage={description}
         id={searchInputId}

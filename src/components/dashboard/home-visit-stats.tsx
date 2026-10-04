@@ -1,4 +1,3 @@
-import { BarChart3 } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { BackToStartLink } from "@/components/home/back-to-start-link";
@@ -6,6 +5,8 @@ import {
   PUBLIC_CONTENT_PANEL_CLASS_NAME,
   PUBLIC_PANEL_ICON_SURFACE_CLASS_NAME,
 } from "@/components/layout/public-page-styles";
+import { ForestWaterIcon } from "@/components/ui/forest-water-icon";
+import { PROGRESS_FILL_CLASS_NAME } from "@/components/ui/theme-styles";
 import type { HomeProgressItem } from "@/lib/frontend-summaries";
 
 interface SeasonalVisitCounts {
@@ -31,11 +32,11 @@ interface HomeVisitStatsProps {
 }
 
 const CARD_CLASS_NAME =
-  "w-full rounded-[1.4rem] border border-white/55 px-2.5 py-3 md:px-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)] backdrop-blur-sm dark:border-white/10 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]";
+  "w-full rounded-[1.4rem] border border-border px-2.5 py-3 md:px-3.5 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.5)] backdrop-blur-sm dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.08)]";
 
-const TOTAL_VISITS_CARD_CLASS_NAME = `${CARD_CLASS_NAME} bg-[linear-gradient(118deg,rgba(22,101,52,0.16)_0%,rgba(15,118,110,0.12)_46%,rgba(37,99,235,0.18)_100%)] dark:bg-[linear-gradient(118deg,rgba(22,101,52,0.24)_0%,rgba(15,118,110,0.2)_46%,rgba(37,99,235,0.26)_100%)]`;
+const TOTAL_VISITS_CARD_CLASS_NAME = `${CARD_CLASS_NAME} theme-total`;
 
-const SEASONAL_CARD_CLASS_NAME = `${CARD_CLASS_NAME} bg-[linear-gradient(118deg,rgba(22,101,52,0.10)_0%,rgba(15,118,110,0.08)_46%,rgba(37,99,235,0.12)_100%)] dark:bg-[linear-gradient(118deg,rgba(22,101,52,0.18)_0%,rgba(15,118,110,0.14)_46%,rgba(37,99,235,0.20)_100%)]`;
+const SEASONAL_CARD_CLASS_NAME = `${CARD_CLASS_NAME} theme-seasonal`;
 
 export const HomeVisitStats = ({
   sectionTitle,
@@ -88,7 +89,7 @@ export const HomeVisitStats = ({
         <div className="grid grid-cols-[minmax(0,.85fr)_minmax(0,1.35fr)] items-center gap-x-2.5 gap-y-4 md:grid-cols-[minmax(0,1fr)_150px_252px] md:gap-3">
           <div className="col-span-2 flex min-w-0 items-center gap-3 md:col-span-1 md:self-start">
             <span className={PUBLIC_PANEL_ICON_SURFACE_CLASS_NAME}>
-              <BarChart3 className="h-4 w-4 text-primary" aria-hidden="true" />
+              <ForestWaterIcon />
             </span>
             <h2 id="home-visit-stats-title" className="text-xl font-semibold tracking-tight">
               {sectionTitle}
@@ -96,16 +97,16 @@ export const HomeVisitStats = ({
           </div>
 
           <div className={`${TOTAL_VISITS_CARD_CLASS_NAME} h-24.5 min-w-0 md:h-24`}>
-            <p className="text-xs text-foreground/70 dark:text-sky-100/78">{totalVisitsLabel}</p>
+            <p className="text-xs text-muted-foreground">{totalVisitsLabel}</p>
             <p className="mt-1 text-[2rem] font-semibold tracking-tight">{totalVisits}</p>
           </div>
           <div className={`${SEASONAL_CARD_CLASS_NAME} h-24.5 min-w-0 md:h-24`}>
-            <p className="text-xs text-foreground/70 dark:text-sky-100/78">{seasonalVisitsLabel}</p>
+            <p className="text-xs text-muted-foreground">{seasonalVisitsLabel}</p>
             <div className="mt-1.5 grid grid-cols-4 gap-0.75 md:gap-1.25">
               {seasonItems.map((season) => (
                 <div
                   key={season.key}
-                  className="flex flex-col items-center gap-0.5 rounded-xl border border-white/40 bg-white/50 px-px py-0.75 md:px-1 dark:border-white/8 dark:bg-slate-950/30"
+                  className="flex flex-col items-center gap-0.5 rounded-xl border border-border bg-control px-px py-0.75 md:px-1"
                 >
                   <span
                     role="img"
@@ -131,13 +132,13 @@ export const HomeVisitStats = ({
               <>
                 <div className="flex items-center justify-between gap-4 text-sm">
                   <span className="font-medium">{item.label}</span>
-                  <span className="text-foreground/68 dark:text-sky-100/72">
+                  <span className="text-muted-foreground">
                     {item.visited} / {item.total}
                   </span>
                 </div>
-                <div className="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-emerald-950/8 dark:bg-white/10">
+                <div className="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-progress-track">
                   <div
-                    className="h-full rounded-full bg-[linear-gradient(90deg,rgb(22,101,52)_0%,rgb(15,118,110)_52%,rgb(37,99,235)_100%)] transition-all motion-reduce:transition-none"
+                    className={`h-full rounded-full ${PROGRESS_FILL_CLASS_NAME} transition-all motion-reduce:transition-none`}
                     style={{ width: `${percentage}%` }}
                   />
                 </div>
@@ -145,13 +146,13 @@ export const HomeVisitStats = ({
             );
 
             const itemClassName =
-              "block rounded-[1.45rem] border border-white/45 bg-white/62 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)] backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/48 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
+              "block rounded-[1.45rem] border border-border bg-control px-4 py-3 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.5)] backdrop-blur-sm dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]";
 
             return (
               <Link
                 key={item.label}
                 href={item.href}
-                className={`${itemClassName} transition-[transform,border-color,box-shadow] hover:-translate-y-px hover:border-sky-300/80 hover:shadow-[0_14px_28px_rgba(148,163,184,0.16),inset_0_1px_0_rgba(255,255,255,0.58)] motion-reduce:transition-none motion-reduce:hover:translate-y-0 dark:hover:border-sky-300/24 dark:hover:shadow-[0_18px_34px_rgba(2,6,23,0.28),inset_0_1px_0_rgba(255,255,255,0.08)]`}
+                className={`${itemClassName} transition-[transform,border-color,box-shadow] hover:-translate-y-px hover:border-border hover:shadow-[0_14px_28px_rgba(var(--shadow-rgb),0.16),inset_0_1px_0_rgba(var(--highlight-rgb),0.58)] motion-reduce:transition-none motion-reduce:hover:translate-y-0 dark:hover:shadow-[0_18px_34px_rgba(var(--shadow-rgb),0.28),inset_0_1px_0_rgba(var(--highlight-rgb),0.08)]`}
               >
                 {itemContent}
               </Link>

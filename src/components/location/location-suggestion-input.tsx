@@ -21,13 +21,13 @@ import {
 } from "@/lib/trip-planner";
 
 const INPUT_CLASS_NAME =
-  "flex h-11 w-full rounded-xl border border-white/45 bg-white/78 px-3 py-2 text-sm text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] placeholder:text-muted-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
+  "flex h-11 w-full rounded-xl border border-border bg-control px-3 py-2 text-sm text-foreground shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.45)] placeholder:text-muted-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]";
 const MIN_SUGGESTION_QUERY_LENGTH = 2;
 const SUGGESTION_DEBOUNCE_MS = 250;
 const SUGGESTION_LIST_CLASS_NAME =
-  "absolute left-0 right-0 top-[calc(100%+0.5rem)] z-20 overflow-hidden rounded-[1.35rem] border border-white/55 bg-white/96 shadow-[0_20px_40px_rgba(148,163,184,0.24)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/94 dark:shadow-[0_24px_48px_rgba(2,6,23,0.42)]";
+  "absolute left-0 right-0 top-[calc(100%+0.5rem)] z-20 overflow-hidden rounded-[1.35rem] border border-border bg-control shadow-[0_20px_40px_rgba(var(--shadow-rgb),0.24)] backdrop-blur-xl dark:shadow-[0_24px_48px_rgba(var(--shadow-rgb),0.42)]";
 const SUGGESTION_OPTION_CLASS_NAME =
-  "cursor-pointer px-3 py-2 text-sm text-foreground transition-colors hover:bg-white/82 dark:hover:bg-slate-900/82";
+  "cursor-pointer px-3 py-2 text-sm text-foreground transition-colors hover:bg-accent";
 
 const normalizeSuggestionQuery = (query: string) => query.trim().replaceAll(/\s+/g, " ");
 
@@ -325,7 +325,7 @@ export const LocationSuggestionInput = ({
         {shouldShowLocateButton === true && (
           <button
             type="button"
-            className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white/72 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-60 dark:hover:bg-slate-900/72"
+            className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-60"
             aria-label={locateButtonLabel}
             title={locateButtonLabel}
             onClick={onLocate}
@@ -376,7 +376,7 @@ export const LocationSuggestionInput = ({
               aria-selected={highlightedIndex === index}
               className={cn(
                 SUGGESTION_OPTION_CLASS_NAME,
-                highlightedIndex === index && "bg-white/82 text-foreground dark:bg-slate-900/86",
+                highlightedIndex === index && "bg-control text-foreground",
               )}
               onMouseEnter={() => setHighlightedIndex(index)}
               onPointerDown={(event) => {

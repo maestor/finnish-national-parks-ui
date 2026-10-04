@@ -49,7 +49,7 @@ const ROUTE_SOURCE_ID = "trip-planner-route";
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 const EARTH_RADIUS_KM = 6371;
 const POPUP_DETAIL_ROW_CLASS_NAME =
-  "rounded-xl border border-sky-200/45 bg-[linear-gradient(145deg,rgba(255,255,255,0.84),rgba(237,245,249,0.92))] px-3 py-2 shadow-[0_10px_20px_rgba(148,163,184,0.1),inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-white/10 dark:bg-[linear-gradient(145deg,rgba(15,23,42,0.76),rgba(2,6,23,0.58))] dark:shadow-[0_14px_24px_rgba(2,6,23,0.22),inset_0_1px_0_rgba(255,255,255,0.06)]";
+  "rounded-xl border border-border theme-panel px-3 py-2 shadow-[0_10px_20px_rgba(var(--shadow-rgb),0.1),inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] dark:shadow-[0_14px_24px_rgba(var(--shadow-rgb),0.22),inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]";
 
 const getVisibleBounds = (
   baseBoundingBox:
@@ -169,7 +169,7 @@ const createStrokeIcon = (pathDefinition: string) => {
 const createEndpointMarkerElement = (label: string, toneClassName: string) => {
   const marker = document.createElement("div");
   marker.className =
-    "flex h-4 w-4 items-center justify-center rounded-full border-2 border-white shadow-sm";
+    "flex h-4 w-4 items-center justify-center rounded-full border-2 border-border shadow-sm";
   marker.classList.add(toneClassName);
   marker.setAttribute("aria-hidden", "true");
   marker.title = label;
@@ -228,7 +228,7 @@ const createPopupNode = (park: TripPlannerUiParkResult, labels: PopupLabels) => 
   const actionLink = document.createElement("a");
   actionLink.href = appRoutes.park(park.slug);
   actionLink.className =
-    "inline-flex items-center self-center rounded-full border border-sky-200/70 bg-white/74 px-3 py-1.5 text-xs font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/92 dark:border-sky-300/15 dark:bg-slate-950/62 dark:hover:bg-slate-950/78";
+    "inline-flex items-center self-center rounded-full border border-border bg-control px-3 py-1.5 text-xs font-medium text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] transition-colors hover:bg-accent";
   actionLink.textContent = labels.openParkPage;
   actionLink.addEventListener("click", (event) => event.stopPropagation());
   const actionRow = document.createElement("div");
@@ -583,7 +583,7 @@ export const TripPlannerMap = ({
 
   return (
     <div
-      className="relative overflow-hidden rounded-[1.45rem] border border-white/45 bg-white/66 dark:border-white/10 dark:bg-slate-950/44"
+      className="relative overflow-hidden rounded-[1.45rem] border border-border bg-control"
       style={{ height: 500 }}
     >
       <div

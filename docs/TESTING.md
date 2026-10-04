@@ -106,6 +106,8 @@ Playwright normally starts the dev server (`npm run dev`) if not already running
 
 The home smoke flow checks feature headings, independent archive links and navigation to Magneettijahti. Reduced-motion checks cover shared cards on `/` and `/retket` with a published-memory dataset. Home behavior tests cover independent empty slots, missing notes/media, failed images, Finnish deep links and zero progress; archive tests protect ordinary/modified navigation and Back-state handling.
 
+The signed-out control-panel smoke checks the canonical `/kirjaudu` redirect and login action. It does not assume an authenticated browser session or expose admin pages without login; authenticated rendering remains covered by owning behavior tests and local admin browser inspection.
+
 **Responsive verification note:**
 
 - Treat `354x708` CSS pixels as the smallest supported mobile viewport for this app. It matches the team's OnePlus Nord 3 baseline where small-screen layout issues tend to surface first.

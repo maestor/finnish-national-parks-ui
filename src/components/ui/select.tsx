@@ -13,7 +13,7 @@ export const Select = ({ className, wrapperClassName, children, ...props }: Sele
     <div className={cn("relative", wrapperClassName)}>
       <select
         className={cn(
-          "flex h-10 w-full appearance-none rounded-xl border border-white/45 bg-white/78 py-2 ps-3 pe-10 text-sm ring-offset-background shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]",
+          "flex h-10 w-full appearance-none rounded-xl border border-input bg-control py-2 ps-3 pe-10 text-sm ring-offset-background shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]",
           className,
         )}
         {...props}
@@ -21,7 +21,7 @@ export const Select = ({ className, wrapperClassName, children, ...props }: Sele
         {children}
       </select>
       <ChevronDown
-        className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+        className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-icon"
         aria-hidden="true"
       />
     </div>

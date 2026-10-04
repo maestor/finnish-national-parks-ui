@@ -49,13 +49,13 @@ const EditVisitPage = async ({ params, searchParams }: EditVisitPageProps) => {
       <div className="mt-3 flex flex-col items-start gap-2">
         <Link
           href={appRoutes.park(visitToEdit.park.slug)}
-          className="inline-flex text-sm font-medium text-primary underline underline-offset-4 hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="inline-flex text-sm font-medium text-link underline underline-offset-4 hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           {t("viewParkPage")}
         </Link>
         <Link
           href={appRoutes.controlPanel.previewVisit(visitToEdit.id)}
-          className="inline-flex text-sm font-medium text-primary underline underline-offset-4 hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="inline-flex text-sm font-medium text-link underline underline-offset-4 hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           {t("previewSavedContent")}
         </Link>

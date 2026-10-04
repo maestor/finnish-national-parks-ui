@@ -260,7 +260,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
   };
 
   const inputClassName =
-    "flex w-full rounded-xl border border-white/45 bg-white/78 px-3 py-2 text-sm ring-offset-background shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
+    "flex w-full rounded-xl border border-input bg-control px-3 py-2 text-sm ring-offset-background shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]";
 
   return (
     <form onSubmit={handleSubmit} className="mt-6 max-w-xl space-y-6">
@@ -377,7 +377,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
           </div>
         </div>
         {isPreview ? (
-          <div className="prose prose-sm dark:prose-invert max-w-none min-h-30 rounded-xl border border-white/45 bg-white/78 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+          <div className="prose prose-sm theme-prose max-w-none min-h-30 rounded-xl border border-border bg-control px-3 py-2 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.45)] dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{note || "_"}</ReactMarkdown>
           </div>
         ) : (

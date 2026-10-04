@@ -38,13 +38,13 @@ type ParkTypeMapFilter =
   | FilterableParkTypeSlug;
 
 const FILTER_PANEL_CLASS_NAME =
-  "pointer-events-auto flex max-h-[calc(100dvh-12rem)] flex-col gap-1.5 overflow-y-auto overscroll-contain rounded-[2rem] border border-white/45 bg-white/60 p-2.5 shadow-[0_22px_48px_rgba(148,163,184,0.2)] backdrop-blur-xl sm:max-h-none sm:gap-2 sm:p-3 dark:border-white/10 dark:bg-slate-950/50 dark:shadow-[0_26px_56px_rgba(2,6,23,0.38)]";
+  "pointer-events-auto flex max-h-[calc(100dvh-12rem)] flex-col gap-1.5 overflow-y-auto overscroll-contain rounded-[2rem] border border-border theme-panel p-2.5 shadow-[0_22px_48px_rgba(var(--shadow-rgb),0.2)] backdrop-blur-xl sm:max-h-none sm:gap-2 sm:p-3 dark:shadow-[0_26px_56px_rgba(var(--shadow-rgb),0.38)]";
 const FILTER_BUTTON_CLASS_NAME =
-  "h-8 w-full justify-center rounded-2xl border px-3 text-center leading-tight shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] transition-all hover:-translate-y-px sm:h-9";
+  "h-8 w-full justify-center rounded-2xl border px-3 text-center leading-tight shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.18)] transition-all hover:-translate-y-px sm:h-9";
 const ACTIVE_FILTER_BUTTON_CLASS_NAME =
-  "border-transparent bg-[linear-gradient(145deg,#166534_0%,#0f766e_55%,#2563eb_100%)] text-primary-foreground shadow-[0_14px_28px_rgba(37,99,235,0.24)] hover:brightness-105";
+  "border-input theme-action text-action-foreground shadow-[0_14px_28px_rgba(var(--shadow-rgb),0.24)] hover:brightness-105";
 const INACTIVE_FILTER_BUTTON_CLASS_NAME =
-  "border-sky-200/70 bg-[linear-gradient(135deg,rgba(255,255,255,0.82),rgba(236,246,255,0.92))] text-cyan-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.72),0_10px_22px_rgba(148,163,184,0.14)] hover:border-sky-300/90 hover:bg-[linear-gradient(135deg,rgba(255,255,255,0.9),rgba(224,242,254,0.96))] dark:border-sky-300/15 dark:bg-[linear-gradient(135deg,rgba(15,23,42,0.84),rgba(15,32,59,0.76))] dark:text-sky-50 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_14px_28px_rgba(2,6,23,0.28)] dark:hover:border-cyan-300/30 dark:hover:bg-[linear-gradient(135deg,rgba(15,23,42,0.94),rgba(18,47,84,0.86))]";
+  "border-input bg-control text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.72),0_10px_22px_rgba(var(--shadow-rgb),0.14)] hover:border-input hover:bg-accent dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.08),0_14px_28px_rgba(var(--shadow-rgb),0.28)]";
 
 const isTrailPark = (park: FilterableMapPark) =>
   park.category.slug === TRAILS_AND_ROUTES_CATEGORY_SLUG;
@@ -446,8 +446,8 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
           {option.label}
         </Button>
       ))}
-      <fieldset className="mt-1 rounded-3xl border border-white/45 bg-white/56 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] dark:border-white/10 dark:bg-slate-950/42 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
-        <legend className="mx-auto rounded-full border border-white/60 bg-white/88 px-3 py-1 text-center text-[0.7rem] font-semibold tracking-[0.18em] text-slate-700 uppercase shadow-[0_10px_20px_rgba(148,163,184,0.14)] dark:border-white/12 dark:bg-slate-900/88 dark:text-sky-100 dark:shadow-[0_14px_24px_rgba(2,6,23,0.24)]">
+      <fieldset className="mt-1 rounded-3xl border border-border bg-control p-1.5 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.45)] dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.05)]">
+        <legend className="mx-auto rounded-full border border-border bg-control px-3 py-1 text-center text-[0.7rem] font-semibold tracking-[0.18em] text-link uppercase shadow-[0_10px_20px_rgba(var(--shadow-rgb),0.14)] dark:shadow-[0_14px_24px_rgba(var(--shadow-rgb),0.24)]">
           {t("visitStatusLabel")}
         </legend>
         <Button
@@ -506,7 +506,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
           {hasPendingMobileFilterChanges ? t("saveAndClose") : t("close")}
         </Button>
       ) : null}
-      <span className="pt-1 text-center text-xs font-medium text-foreground/70 dark:text-sky-100/82">
+      <span className="pt-1 text-center text-xs font-medium text-muted-foreground">
         {t("results", { count: previewFilteredParks.length })}
       </span>
     </div>

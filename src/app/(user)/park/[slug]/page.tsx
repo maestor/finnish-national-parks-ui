@@ -116,7 +116,7 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
   if (!publicPark) {
     return (
       <article className="mx-auto max-w-5xl px-4 py-8">
-        <div className="rounded-[2rem] border border-white/45 bg-white/65 px-6 py-5 shadow-[0_24px_48px_rgba(148,163,184,0.16)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/45 dark:shadow-[0_28px_56px_rgba(2,6,23,0.34)]">
+        <div className="rounded-[2rem] border border-border bg-control px-6 py-5 shadow-[0_24px_48px_rgba(var(--shadow-rgb),0.16)] backdrop-blur-xl dark:shadow-[0_28px_56px_rgba(var(--shadow-rgb),0.34)]">
           <p className="text-muted-foreground">{t("detailTitle")}</p>
         </div>
       </article>
@@ -149,7 +149,7 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
   return (
     <ParkAdminControlsProvider parkSlug={slug}>
       <article className="mx-auto max-w-5xl px-4 py-8">
-        <section className="rounded-[2rem] border border-white/45 bg-white/65 px-6 py-6 shadow-[0_24px_48px_rgba(148,163,184,0.16)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/45 dark:shadow-[0_28px_56px_rgba(2,6,23,0.34)]">
+        <section className="rounded-[2rem] border border-border theme-panel px-6 py-6 shadow-[0_24px_48px_rgba(var(--shadow-rgb),0.16)] backdrop-blur-xl dark:shadow-[0_28px_56px_rgba(var(--shadow-rgb),0.34)]">
           <div className="flex flex-wrap items-center justify-center gap-3">
             {logoUrl !== null && (
               <div className="relative h-28 w-48 shrink-0">
@@ -171,7 +171,7 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
                 label={t("copyParkPageLink")}
                 copiedLabel={t("parkPageLinkCopied")}
                 tooltipSide="top"
-                className="inline-flex items-center justify-center rounded-full border border-white/45 bg-white/76 p-2 text-foreground/72 shadow-[0_8px_20px_rgba(148,163,184,0.18)] backdrop-blur-sm transition-colors hover:bg-white/92 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/56 dark:text-sky-100/72 dark:shadow-[0_12px_24px_rgba(2,6,23,0.24)] dark:hover:bg-slate-950/72"
+                className="inline-flex items-center justify-center rounded-full border border-border bg-control p-2 text-muted-foreground shadow-[0_8px_20px_rgba(var(--shadow-rgb),0.18)] backdrop-blur-sm transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:shadow-[0_12px_24px_rgba(var(--shadow-rgb),0.24)]"
                 iconClassName="h-3.5 w-3.5"
               />
             </div>
@@ -181,14 +181,14 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
             {facts.map((fact) => (
               <div
                 key={fact.label}
-                className="flex h-full min-h-23 flex-col rounded-2xl border border-sky-200/45 bg-[linear-gradient(145deg,rgba(255,255,255,0.82),rgba(237,245,249,0.92))] px-4 py-3 shadow-[0_14px_28px_rgba(148,163,184,0.12),inset_0_1px_0_rgba(255,255,255,0.58)] dark:border-white/8 dark:bg-[linear-gradient(145deg,rgba(15,23,42,0.72),rgba(2,6,23,0.52))] dark:shadow-[0_18px_34px_rgba(2,6,23,0.2),inset_0_1px_0_rgba(255,255,255,0.06)]"
+                className="flex h-full min-h-23 flex-col rounded-2xl border border-border theme-panel px-4 py-3 shadow-[0_14px_28px_rgba(var(--shadow-rgb),0.12),inset_0_1px_0_rgba(var(--highlight-rgb),0.58)] dark:shadow-[0_18px_34px_rgba(var(--shadow-rgb),0.2),inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]"
               >
                 <p className="text-xs text-muted-foreground">{fact.label}</p>
                 <p className="mt-3 text-sm font-medium">{fact.value}</p>
               </div>
             ))}
             {hasAboutLinks === true && (
-              <div className="flex h-full min-h-23 flex-col rounded-2xl border border-sky-200/45 bg-[linear-gradient(145deg,rgba(255,255,255,0.82),rgba(237,245,249,0.92))] px-4 py-3 shadow-[0_14px_28px_rgba(148,163,184,0.12),inset_0_1px_0_rgba(255,255,255,0.58)] dark:border-white/8 dark:bg-[linear-gradient(145deg,rgba(15,23,42,0.72),rgba(2,6,23,0.52))] dark:shadow-[0_18px_34px_rgba(2,6,23,0.2),inset_0_1px_0_rgba(255,255,255,0.06)]">
+              <div className="flex h-full min-h-23 flex-col rounded-2xl border border-border theme-panel px-4 py-3 shadow-[0_14px_28px_rgba(var(--shadow-rgb),0.12),inset_0_1px_0_rgba(var(--highlight-rgb),0.58)] dark:shadow-[0_18px_34px_rgba(var(--shadow-rgb),0.2),inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]">
                 <p className="text-xs text-muted-foreground">{t("aboutTitle")}</p>
                 <div className="mt-2 flex flex-col gap-1">
                   {parkUrl !== null && (
@@ -196,7 +196,7 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
                       href={parkUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-sm font-medium text-primary transition-colors hover:text-primary/80"
+                      className="inline-flex items-center gap-1.5 text-sm font-medium text-link transition-colors hover:text-primary/80"
                       aria-label={`${t("officialLink")} (avautuu uuteen välilehteen)`}
                     >
                       <span>{t("officialLink")}</span>
@@ -208,7 +208,7 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
                       href={mapUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-sm font-medium text-primary transition-colors hover:text-primary/80"
+                      className="inline-flex items-center gap-1.5 text-sm font-medium text-link transition-colors hover:text-primary/80"
                       aria-label={`${t("pdfBrochure")} (avautuu uuteen välilehteen)`}
                     >
                       <span>{t("pdfBrochure")}</span>
@@ -222,16 +222,16 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
         </section>
 
         {hasBoundaryGeoJson && (
-          <section className="mt-8 rounded-[2rem] border border-white/45 bg-white/58 p-5 shadow-[0_24px_48px_rgba(148,163,184,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/42 dark:shadow-[0_28px_56px_rgba(2,6,23,0.3)]">
+          <section className="mt-8 rounded-[2rem] border border-border theme-panel p-5 shadow-[0_24px_48px_rgba(var(--shadow-rgb),0.14)] backdrop-blur-xl dark:shadow-[0_28px_56px_rgba(var(--shadow-rgb),0.3)]">
             <div className="mb-3 flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-primary" aria-hidden="true" />
+                <MapPin className="h-4 w-4 text-link" aria-hidden="true" />
                 <h2 className="text-lg font-semibold tracking-tight">{t("boundaryMapTitle")}</h2>
               </div>
               <Link
                 href={createPathWithSearchParams(appRoutes.parks, { park: slug })}
                 prefetch
-                className="rounded-full border border-sky-200/70 bg-white/60 px-3 py-1.5 text-sm font-medium text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] transition-colors hover:bg-white/82 dark:border-sky-300/15 dark:bg-slate-950/44 dark:hover:bg-slate-950/62"
+                className="rounded-full border border-border bg-control px-3 py-1.5 text-sm font-medium text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] transition-colors hover:bg-accent"
               >
                 {t("showInFinlandsMap")}
               </Link>

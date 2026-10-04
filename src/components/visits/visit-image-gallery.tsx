@@ -234,13 +234,13 @@ export const VisitImageGallery = ({
           >
             <button
               type="button"
-              className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.18),transparent_32%),linear-gradient(180deg,rgba(2,6,23,0.92),rgba(2,6,23,0.98))] backdrop-blur-md"
+              className="absolute inset-0 theme-overlay backdrop-blur-md"
               onClick={() => setActiveIndex(null)}
               aria-label={t("closeBackdrop")}
             />
             <div className="relative flex h-full w-full flex-col overflow-hidden">
               <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between gap-3 px-3 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] sm:px-6 sm:pt-6">
-                <p className="hidden rounded-full border border-white/15 bg-white/10 px-3 py-1 text-center text-sm text-white/88 shadow-[0_18px_38px_rgba(15,23,42,0.28)] backdrop-blur-md sm:inline-flex">
+                <p className="hidden rounded-full border border-input bg-hero/80 px-3 py-1 text-center text-sm text-hero-foreground shadow-[0_18px_38px_rgba(var(--shadow-rgb),0.28)] backdrop-blur-md sm:inline-flex">
                   {t("position", { current: activeImage.index + 1, total: images.length })}
                 </p>
                 <div className="flex-1 sm:hidden" />
@@ -248,7 +248,7 @@ export const VisitImageGallery = ({
                   type="button"
                   ref={closeButtonRef}
                   onClick={() => setActiveIndex(null)}
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-[0_18px_38px_rgba(15,23,42,0.28)] backdrop-blur-md transition-colors hover:bg-white/16 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-input bg-hero/80 text-hero-foreground shadow-[0_18px_38px_rgba(var(--shadow-rgb),0.28)] backdrop-blur-md transition-colors hover:bg-hero focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hero-focus"
                   aria-label={t("close")}
                 >
                   <X className="h-5 w-5" aria-hidden="true" />
@@ -260,14 +260,14 @@ export const VisitImageGallery = ({
                   <button
                     type="button"
                     onClick={showPreviousImage}
-                    className="absolute left-6 top-1/2 z-10 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-[0_20px_40px_rgba(15,23,42,0.34)] backdrop-blur-md transition-colors hover:bg-white/16 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:inline-flex"
+                    className="absolute left-6 top-1/2 z-10 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-input bg-hero/80 text-hero-foreground shadow-[0_20px_40px_rgba(var(--shadow-rgb),0.34)] backdrop-blur-md transition-colors hover:bg-hero focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hero-focus sm:inline-flex"
                     aria-label={t("previous")}
                   >
                     <ChevronLeft className="h-5 w-5" aria-hidden="true" />
                   </button>
                 )}
 
-                <div className="flex h-full w-full items-center justify-center overflow-hidden sm:mx-auto sm:max-h-[calc(100dvh-8rem)] sm:max-w-6xl sm:rounded-[2rem] sm:border sm:border-white/10 sm:bg-white/[0.06] sm:p-4 sm:shadow-[0_32px_70px_rgba(2,6,23,0.4)] sm:backdrop-blur-xl">
+                <div className="flex h-full w-full items-center justify-center overflow-hidden sm:mx-auto sm:max-h-[calc(100dvh-8rem)] sm:max-w-6xl sm:rounded-[2rem] sm:border sm:border-input sm:bg-hero/80 sm:p-4 sm:shadow-[0_32px_70px_rgba(var(--shadow-rgb),0.4)] sm:backdrop-blur-xl">
                   <div className="relative h-full w-full max-h-[calc(100dvh-7rem)] sm:max-h-[calc(100dvh-11rem)] sm:max-w-6xl">
                     <AppImage
                       src={activeImage.image.fullUrl}
@@ -288,7 +288,7 @@ export const VisitImageGallery = ({
                 <button
                   type="button"
                   onClick={showNextImage}
-                  className="absolute right-6 top-1/2 z-10 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-[0_20px_40px_rgba(15,23,42,0.34)] backdrop-blur-md transition-colors hover:bg-white/16 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:inline-flex"
+                  className="absolute right-6 top-1/2 z-10 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-input bg-hero/80 text-hero-foreground shadow-[0_20px_40px_rgba(var(--shadow-rgb),0.34)] backdrop-blur-md transition-colors hover:bg-hero focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hero-focus sm:inline-flex"
                   aria-label={t("next")}
                 >
                   <ChevronRight className="h-5 w-5" aria-hidden="true" />
@@ -300,14 +300,14 @@ export const VisitImageGallery = ({
                   <button
                     type="button"
                     onClick={showPreviousImage}
-                    className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-[0_18px_38px_rgba(15,23,42,0.28)] backdrop-blur-md transition-colors hover:bg-white/16 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-input bg-hero/80 text-hero-foreground shadow-[0_18px_38px_rgba(var(--shadow-rgb),0.28)] backdrop-blur-md transition-colors hover:bg-hero focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hero-focus"
                     aria-label={t("previous")}
                   >
                     <ChevronLeft className="h-5 w-5" aria-hidden="true" />
                   </button>
                 )}
 
-                <p className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-center text-sm text-white/88 shadow-[0_18px_38px_rgba(15,23,42,0.28)] backdrop-blur-md">
+                <p className="rounded-full border border-input bg-hero/80 px-3 py-1 text-center text-sm text-hero-foreground shadow-[0_18px_38px_rgba(var(--shadow-rgb),0.28)] backdrop-blur-md">
                   {t("position", { current: activeImage.index + 1, total: images.length })}
                 </p>
 
@@ -315,7 +315,7 @@ export const VisitImageGallery = ({
                   <button
                     type="button"
                     onClick={showNextImage}
-                    className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-[0_18px_38px_rgba(15,23,42,0.28)] backdrop-blur-md transition-colors hover:bg-white/16 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-input bg-hero/80 text-hero-foreground shadow-[0_18px_38px_rgba(var(--shadow-rgb),0.28)] backdrop-blur-md transition-colors hover:bg-hero focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hero-focus"
                     aria-label={t("next")}
                   >
                     <ChevronRight className="h-5 w-5" aria-hidden="true" />
@@ -337,7 +337,7 @@ export const VisitImageGallery = ({
               <button
                 type="button"
                 onClick={() => scrollThumbnails("previous")}
-                className="absolute left-2 top-1/2 z-10 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-background/90 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="absolute left-2 top-1/2 z-10 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-background/90 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hero-focus"
                 aria-label={t("scrollPrevious")}
               >
                 <ChevronLeft className="h-4 w-4" aria-hidden="true" />
@@ -345,7 +345,7 @@ export const VisitImageGallery = ({
               <button
                 type="button"
                 onClick={() => scrollThumbnails("next")}
-                className="absolute right-2 top-1/2 z-10 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-background/90 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="absolute right-2 top-1/2 z-10 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-background/90 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hero-focus"
                 aria-label={t("scrollNext")}
               >
                 <ChevronRight className="h-4 w-4" aria-hidden="true" />
@@ -400,7 +400,7 @@ export const VisitImageGallery = ({
                       setActiveIndex(index);
                     }}
                     className={cn(
-                      "block w-full overflow-hidden rounded-xl border bg-muted text-left shadow-sm transition-transform hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                      "block w-full overflow-hidden rounded-xl border bg-muted text-left shadow-sm transition-transform hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hero-focus focus-visible:ring-offset-2",
                       thumbnailButtonProps?.className,
                     )}
                     aria-label={t("open", { index: index + 1 })}

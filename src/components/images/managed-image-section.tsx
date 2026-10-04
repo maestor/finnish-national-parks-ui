@@ -698,7 +698,7 @@ export const ManagedImageSection = ({
     <section className="mt-8 max-w-3xl space-y-6">
       <div className="space-y-2">
         <h2 className="flex items-center gap-2 text-lg font-semibold tracking-tight">
-          <Images className="h-5 w-5 text-primary" aria-hidden="true" />
+          <Images className="h-5 w-5 text-link" aria-hidden="true" />
           {sectionTitle}
         </h2>
         {helperText !== undefined && <p className="text-sm text-muted-foreground">{helperText}</p>}
@@ -766,7 +766,7 @@ export const ManagedImageSection = ({
                           event.stopPropagation();
                           void handleDelete(image.id);
                         }}
-                        className="pointer-events-auto inline-flex h-8 w-8 items-center justify-center rounded-full bg-destructive/90 text-white shadow-sm transition-colors disabled:opacity-50 hover:bg-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                        className="pointer-events-auto inline-flex h-8 w-8 items-center justify-center rounded-full bg-destructive/90 text-destructive-foreground shadow-sm transition-colors disabled:opacity-50 hover:bg-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-control"
                         disabled={isBusy}
                         aria-label={messages.deleteImage}
                       >
@@ -977,7 +977,7 @@ export const ManagedImageSection = ({
 
         {preparationErrors.length > 0 && (
           <ul
-            className="space-y-1 break-words rounded-[1.3rem] border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-red-700 dark:text-red-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+            className="space-y-1 break-words rounded-[1.3rem] border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-red-700 dark:text-red-300 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.35)] dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.04)]"
             role="alert"
           >
             {preparationErrors.map((error) => (

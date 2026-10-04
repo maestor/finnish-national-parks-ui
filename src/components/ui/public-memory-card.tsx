@@ -5,6 +5,7 @@ import Link from "next/link";
 import { type MouseEventHandler, type ReactNode, useState } from "react";
 import { PUBLIC_HERO_DESCRIPTION_CLASS_NAME } from "@/components/layout/public-page-styles";
 import { AppImage } from "@/components/ui/app-image";
+import { MEMORY_SURFACE_CLASS_NAME } from "@/components/ui/theme-styles";
 import type { PublicTripArchiveItem } from "@/lib/public-trips";
 
 interface PublicMemoryCardProps {
@@ -13,6 +14,7 @@ interface PublicMemoryCardProps {
   title: string;
   headingLevel: 2 | 4;
   featuredImage: PublicTripArchiveItem["featuredImage"];
+  imageLoading?: "eager" | "lazy";
   descriptionExcerpt: string | null;
   descriptionPlaceholder: string;
   readMore: string;
@@ -26,6 +28,7 @@ export const PublicMemoryCard = ({
   title,
   headingLevel,
   featuredImage,
+  imageLoading = "lazy",
   descriptionExcerpt,
   descriptionPlaceholder,
   readMore,
@@ -49,14 +52,14 @@ export const PublicMemoryCard = ({
     >
       <article
         aria-labelledby={titleId}
-        className="relative flex h-full w-full min-w-0 flex-col overflow-hidden rounded-[2rem] border border-white/45 bg-white/68 p-5 shadow-[0_22px_52px_rgba(37,99,235,0.14)] backdrop-blur-xl transition-[background-color,border-color,box-shadow,transform] duration-200 group-hover:-translate-y-1 group-hover:border-primary/45 group-hover:bg-white/82 group-hover:shadow-[0_28px_64px_rgba(37,99,235,0.24)] dark:border-white/10 dark:bg-slate-950/44 sm:p-6 dark:shadow-[0_28px_60px_rgba(2,6,23,0.34)] dark:group-hover:border-emerald-300/30 dark:group-hover:bg-slate-950/58 dark:group-hover:shadow-[0_34px_72px_rgba(2,6,23,0.5)] motion-reduce:transition-none motion-reduce:group-hover:translate-y-0"
+        className={`relative flex h-full w-full min-w-0 flex-col overflow-hidden rounded-[2rem] p-5 ${MEMORY_SURFACE_CLASS_NAME} backdrop-blur-xl transition-[background-color,border-color,box-shadow,transform] duration-200 group-hover:-translate-y-1 group-hover:border-input group-hover:shadow-[0_28px_64px_rgba(var(--shadow-rgb),0.24)] sm:p-6 motion-reduce:transition-none motion-reduce:group-hover:translate-y-0`}
       >
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 z-0 rounded-[2rem] bg-[linear-gradient(145deg,rgba(255,255,255,0.82),rgba(219,234,254,0.62),rgba(220,252,231,0.68))] transition-opacity duration-200 group-hover:opacity-0 dark:bg-[linear-gradient(145deg,rgba(2,6,23,0.72),rgba(15,23,42,0.84),rgba(6,78,59,0.34))] motion-reduce:transition-none"
+          className="pointer-events-none absolute inset-0 z-0 rounded-[2rem] theme-memory transition-opacity duration-200 group-hover:opacity-0 motion-reduce:transition-none"
         />
         <div
-          className="relative z-10 flex aspect-video w-full shrink-0 items-center justify-center overflow-hidden bg-slate-200/65 dark:bg-slate-900/70"
+          className="relative z-10 flex aspect-video w-full shrink-0 items-center justify-center overflow-hidden bg-control"
           aria-hidden="true"
         >
           {shouldShowFeaturedImage ? (
@@ -64,12 +67,13 @@ export const PublicMemoryCard = ({
               src={featuredImage.url}
               alt=""
               fill
+              loading={imageLoading}
               sizes="(max-width: 767px) calc(100vw - 2rem), (max-width: 1023px) calc(50vw - 3rem), 480px"
               className="object-cover object-center transition-transform duration-300 group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
               onError={() => setFailedImageUrl(featuredImage.url)}
             />
           ) : (
-            <TentTree className="h-12 w-12 text-primary" />
+            <TentTree className="h-12 w-12 text-link" />
           )}
         </div>
 

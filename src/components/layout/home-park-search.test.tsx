@@ -322,7 +322,7 @@ describe("HomeParkSearch", () => {
 
   it("renders the desktop search icon with visible foreground contrast styling", () => {
     const { container } = renderSearch();
-    const icon = container.querySelector('svg[class*="text-foreground/60"]');
+    const icon = container.querySelector('svg[class*="text-icon"]');
     const input = screen.getByRole("combobox", { name: "layout.parkSearch.label" });
 
     expect(icon).toBeInTheDocument();

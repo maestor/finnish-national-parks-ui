@@ -44,10 +44,9 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const MAX_AUTO_RANGE_DAYS = 184;
 const TAB_LINK_CLASS_NAME =
   "inline-flex items-center rounded-full border px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
-const ACTIVE_TAB_LINK_CLASS_NAME =
-  "border-emerald-700/15 bg-[linear-gradient(145deg,#166534_0%,#0f766e_55%,#2563eb_100%)] text-primary-foreground";
+const ACTIVE_TAB_LINK_CLASS_NAME = "border-border theme-action text-action-foreground";
 const INACTIVE_TAB_LINK_CLASS_NAME =
-  "border-white/45 bg-white/70 text-foreground/80 hover:bg-white/88 dark:border-white/10 dark:bg-slate-950/52 dark:text-sky-100/78 dark:hover:bg-slate-950/72";
+  "border-border bg-control text-muted-foreground hover:bg-accent";
 
 const normalizeSearchParam = (value?: string | string[]) => {
   if (Array.isArray(value)) {
@@ -150,9 +149,9 @@ const ControlPanelDateRangeReviewPage = async ({
 
     return (
       <div className="max-w-5xl space-y-6">
-        <section className="rounded-3xl border border-white/45 bg-white/70 p-6 shadow-[0_20px_48px_rgba(148,163,184,0.16)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/56 dark:shadow-[0_28px_60px_rgba(2,6,23,0.3)]">
+        <section className="rounded-3xl border border-border theme-panel p-6 shadow-[0_20px_48px_rgba(var(--shadow-rgb),0.16)] backdrop-blur-xl dark:shadow-[0_28px_60px_rgba(var(--shadow-rgb),0.3)]">
           <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200/60 bg-emerald-500/8 px-3 py-1 text-sm font-medium text-primary dark:border-emerald-300/15 dark:bg-emerald-400/10">
+            <div className="inline-flex items-center gap-2 rounded-full border border-border theme-memory px-3 py-1 text-sm font-medium text-link  ">
               <Sparkles className="h-4 w-4" aria-hidden="true" />
               <span>{t("eyebrow")}</span>
             </div>
@@ -226,9 +225,9 @@ const ControlPanelDateRangeReviewPage = async ({
   const hasEnoughVisits = visits.length >= 3;
   return (
     <div className="max-w-5xl space-y-6">
-      <section className="rounded-3xl border border-white/45 bg-white/70 p-6 shadow-[0_20px_48px_rgba(148,163,184,0.16)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/56 dark:shadow-[0_28px_60px_rgba(2,6,23,0.3)]">
+      <section className="rounded-3xl border border-border theme-panel p-6 shadow-[0_20px_48px_rgba(var(--shadow-rgb),0.16)] backdrop-blur-xl dark:shadow-[0_28px_60px_rgba(var(--shadow-rgb),0.3)]">
         <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200/60 bg-emerald-500/8 px-3 py-1 text-sm font-medium text-primary dark:border-emerald-300/15 dark:bg-emerald-400/10">
+          <div className="inline-flex items-center gap-2 rounded-full border border-border theme-memory px-3 py-1 text-sm font-medium text-link  ">
             <Sparkles className="h-4 w-4" aria-hidden="true" />
             <span>{t("eyebrow")}</span>
           </div>
@@ -269,7 +268,7 @@ const ControlPanelDateRangeReviewPage = async ({
               name="name"
               defaultValue={formValues.name}
               placeholder={t("form.namePlaceholder")}
-              className="h-11 w-full rounded-2xl border border-white/45 bg-white/84 px-4 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] outline-none transition-colors focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/56"
+              className="h-11 w-full rounded-2xl border border-input bg-control px-4 text-sm shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.45)] outline-none transition-colors focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring"
               required
             />
           </div>
@@ -281,7 +280,7 @@ const ControlPanelDateRangeReviewPage = async ({
               name="startDate"
               type="date"
               defaultValue={formValues.startDate}
-              className="h-11 w-full rounded-2xl border border-white/45 bg-white/84 px-4 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] outline-none transition-colors focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/56"
+              className="h-11 w-full rounded-2xl border border-input bg-control px-4 text-sm shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.45)] outline-none transition-colors focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring"
               required
             />
           </div>
@@ -293,7 +292,7 @@ const ControlPanelDateRangeReviewPage = async ({
               name="endDate"
               type="date"
               defaultValue={formValues.endDate}
-              className="h-11 w-full rounded-2xl border border-white/45 bg-white/84 px-4 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] outline-none transition-colors focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/56"
+              className="h-11 w-full rounded-2xl border border-input bg-control px-4 text-sm shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.45)] outline-none transition-colors focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring"
               required
             />
           </div>
@@ -329,7 +328,7 @@ const ControlPanelDateRangeReviewPage = async ({
 
       {preview !== null && (
         <>
-          <section className="rounded-3xl border border-white/45 bg-white/70 p-5 shadow-[0_18px_40px_rgba(148,163,184,0.16)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/56 dark:shadow-[0_24px_52px_rgba(2,6,23,0.28)]">
+          <section className="rounded-3xl border border-border theme-panel p-5 shadow-[0_18px_40px_rgba(var(--shadow-rgb),0.16)] backdrop-blur-xl dark:shadow-[0_24px_52px_rgba(var(--shadow-rgb),0.28)]">
             <p className="text-sm text-muted-foreground">
               {controlPanelT("dateRangeReview.generatedAt", {
                 date: formatDateTime(preview.generatedAt),
@@ -362,7 +361,7 @@ const ControlPanelDateRangeReviewPage = async ({
       )}
 
       {preview === null && previewError === null && (
-        <section className="rounded-3xl border border-dashed border-white/45 bg-white/58 p-8 text-center backdrop-blur-sm dark:border-white/10 dark:bg-slate-950/42">
+        <section className="rounded-3xl border border-dashed border-border theme-panel p-8 text-center backdrop-blur-sm">
           <div className="mx-auto max-w-2xl space-y-3">
             <h2 className="text-xl font-semibold tracking-tight">
               {hasEnoughVisits

@@ -26,14 +26,14 @@ import { HomeParkSearch } from "./home-park-search";
 import { ThemeToggle } from "./theme-toggle";
 
 const DESKTOP_NAV_LINK_CLASS =
-  "inline-flex items-center rounded-full px-3 py-2 text-sm font-medium text-foreground/80 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
-const DESKTOP_ACTIVE_NAV_LINK_CLASS = "bg-white/75 text-foreground shadow-sm dark:bg-slate-950/45";
+  "inline-flex items-center rounded-full px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+const DESKTOP_ACTIVE_NAV_LINK_CLASS = "bg-control text-foreground shadow-sm";
 const DESKTOP_ICON_BUTTON_CLASS =
-  "inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/45 bg-white/76 text-foreground shadow-[0_10px_24px_rgba(148,163,184,0.2)] backdrop-blur-md transition-colors hover:bg-white/92 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/44 dark:hover:bg-slate-950/64 dark:shadow-[0_16px_32px_rgba(2,6,23,0.34)]";
+  "inline-flex h-9 w-9 items-center justify-center rounded-full border border-input bg-control text-icon [&_.lucide]:stroke-[2.25] shadow-[0_10px_24px_rgba(var(--shadow-rgb),0.2)] backdrop-blur-md transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:shadow-[0_16px_32px_rgba(var(--shadow-rgb),0.34)]";
 const MOBILE_SHEET_ITEM_CLASS =
-  "flex w-full items-center gap-3 rounded-[1.35rem] border border-transparent px-3 py-3 text-left text-sm font-medium text-foreground transition-colors hover:border-white/45 hover:bg-white/58 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:border-white/10 dark:hover:bg-slate-900/70";
+  "flex w-full items-center gap-3 [&_.lucide]:text-icon [&_.lucide]:stroke-[2.25] rounded-[1.35rem] border border-transparent px-3 py-3 text-left text-sm font-medium text-foreground transition-colors hover:border-border hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 const MOBILE_TOPBAR_ICON_BUTTON_CLASS =
-  "inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/45 bg-white/82 text-foreground shadow-[0_12px_28px_rgba(148,163,184,0.22)] backdrop-blur-md transition-colors hover:bg-white/94 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/56 dark:hover:bg-slate-950/76 dark:shadow-[0_16px_32px_rgba(2,6,23,0.38)]";
+  "inline-flex h-11 w-11 items-center justify-center rounded-full border border-input bg-control text-icon [&_.lucide]:stroke-[2.25] shadow-[0_12px_28px_rgba(var(--shadow-rgb),0.22)] backdrop-blur-md transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:shadow-[0_16px_32px_rgba(var(--shadow-rgb),0.38)]";
 const MOBILE_MENU_ANIMATION_MS = 180;
 const HEADER_HIDE_SCROLL_THRESHOLD_PX = 96;
 const HEADER_SCROLL_DELTA_THRESHOLD_PX = 12;
@@ -250,7 +250,7 @@ export const Header = () => {
             <button
               type="button"
               className={cn(
-                "absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.26),rgba(15,23,42,0.5))] backdrop-blur-[2px] transition-opacity duration-180 ease-out motion-reduce:transition-none",
+                "absolute inset-0 theme-overlay backdrop-blur-[2px] transition-opacity duration-180 ease-out motion-reduce:transition-none",
                 isMobileMenuVisible ? "opacity-100" : "opacity-0",
               )}
               onClick={closeMobileMenu}
@@ -262,11 +262,11 @@ export const Header = () => {
               aria-modal="true"
               aria-labelledby="mobile-header-menu-title"
               className={cn(
-                "relative inset-auto m-0 flex h-[calc(100dvh-1rem)] w-[min(22rem,calc(100vw-1rem))] max-w-none flex-col gap-4 overflow-hidden rounded-[2rem] border border-white/45 bg-white/82 p-4 shadow-[0_32px_72px_rgba(148,163,184,0.3)] backdrop-blur-2xl transition-transform duration-180 ease-out motion-reduce:transition-none dark:border-white/10 dark:bg-slate-950/82 dark:shadow-[0_36px_76px_rgba(2,6,23,0.48)]",
+                "relative inset-auto m-0 flex h-[calc(100dvh-1rem)] w-[min(22rem,calc(100vw-1rem))] max-w-none flex-col gap-4 overflow-hidden rounded-[2rem] border border-border bg-control p-4 shadow-[0_32px_72px_rgba(var(--shadow-rgb),0.3)] backdrop-blur-2xl transition-transform duration-180 ease-out motion-reduce:transition-none dark:shadow-[0_36px_76px_rgba(var(--shadow-rgb),0.48)]",
                 isMobileMenuVisible ? "translate-x-0" : "translate-x-full",
               )}
             >
-              <div className="rounded-[1.6rem] border border-white/45 bg-[linear-gradient(118deg,rgba(22,101,52,0.14)_0%,rgba(15,118,110,0.1)_46%,rgba(37,99,235,0.16)_100%)] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] dark:border-white/10 dark:bg-[linear-gradient(118deg,rgba(22,101,52,0.22)_0%,rgba(15,118,110,0.18)_46%,rgba(37,99,235,0.24)_100%)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+              <div className="rounded-[1.6rem] border border-border theme-memory p-3 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.45)] dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.08)]">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-3">
                     <HeaderBrandMark className="h-10 w-10" />
@@ -274,9 +274,7 @@ export const Header = () => {
                       <p id="mobile-header-menu-title" className="truncate text-base font-semibold">
                         {t("nav.menu")}
                       </p>
-                      <p className="truncate text-sm text-foreground/70 dark:text-sky-100/78">
-                        {t("siteTitle")}
-                      </p>
+                      <p className="truncate text-sm text-muted-foreground">{t("siteTitle")}</p>
                     </div>
                   </div>
                   <button
@@ -290,7 +288,7 @@ export const Header = () => {
                 </div>
               </div>
 
-              <div className="rounded-[1.6rem] border border-white/40 bg-white/56 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.42)] dark:border-white/8 dark:bg-slate-950/44 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+              <div className="rounded-[1.6rem] border border-border bg-control p-2 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.42)] dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]">
                 <nav className="flex flex-col gap-1">
                   <Link
                     href={appRoutes.home}
@@ -349,7 +347,7 @@ export const Header = () => {
                 </nav>
               </div>
 
-              <div className="rounded-[1.6rem] border border-white/40 bg-white/56 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.42)] dark:border-white/8 dark:bg-slate-950/44 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+              <div className="rounded-[1.6rem] border border-border bg-control p-2 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.42)] dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]">
                 <div className="flex flex-col gap-1">
                   <ThemeToggle
                     showLabel
@@ -391,18 +389,15 @@ export const Header = () => {
           isHeaderVisible ? "translate-y-0" : "-translate-y-full",
         )}
       >
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 theme-header" />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[linear-gradient(118deg,rgba(22,101,52,0.16)_0%,rgba(15,118,110,0.12)_46%,rgba(37,99,235,0.18)_100%)] dark:bg-[linear-gradient(118deg,rgba(22,101,52,0.28)_0%,rgba(15,118,110,0.24)_46%,rgba(37,99,235,0.3)_100%)]"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.22),transparent_32%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.1),transparent_32%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.22),transparent_32%)]"
         />
         <div className="relative container mx-auto flex h-14 items-center gap-2 px-4 md:gap-3">
           <Link
             href={appRoutes.home}
-            className="flex min-w-0 items-center gap-3 rounded-full border border-white/35 bg-white/70 py-1 pl-2 pr-3 text-foreground shadow-sm backdrop-blur-sm transition-colors hover:bg-white/85 dark:border-white/10 dark:bg-slate-950/30 dark:hover:bg-slate-950/45"
+            className="flex min-w-0 items-center gap-3 rounded-full border border-border bg-control py-1 pl-2 pr-3 text-foreground shadow-sm backdrop-blur-sm transition-colors hover:bg-accent"
           >
             <HeaderBrandMark testId="header-brand-mark" />
             <span className="truncate font-bold tracking-tight">{t("siteTitle")}</span>

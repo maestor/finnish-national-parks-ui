@@ -1667,15 +1667,15 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
           >
             <button
               type="button"
-              className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
+              className="absolute inset-0 bg-hero/55 backdrop-blur-sm"
               onClick={() => handleCloseStopForm()}
               aria-label={t("closeStopDialog")}
             />
             <div className="relative flex h-full w-full items-center justify-center px-4 py-6 sm:px-6">
-              <section className="relative flex max-h-full w-full max-w-4xl flex-col overflow-hidden rounded-[1.8rem] border border-white/45 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.94))] shadow-[0_32px_80px_rgba(15,23,42,0.28)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(2,6,23,0.94),rgba(15,23,42,0.92))]">
-                <div className="flex items-start justify-between gap-4 border-b border-white/35 px-5 py-4 dark:border-white/10 sm:px-6">
+              <section className="relative flex max-h-full w-full max-w-4xl flex-col overflow-hidden rounded-[1.8rem] border border-border theme-panel shadow-[0_32px_80px_rgba(var(--shadow-rgb),0.28)] backdrop-blur-xl">
+                <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4 sm:px-6">
                   <div className="flex items-start gap-3">
-                    <Milestone className="mt-0.5 h-5 w-5 text-primary" aria-hidden="true" />
+                    <Milestone className="mt-0.5 h-5 w-5 text-link" aria-hidden="true" />
                     <div>
                       <h4
                         id={
@@ -1707,7 +1707,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                     type="button"
                     onClick={() => handleCloseStopForm()}
                     disabled={isBusy}
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/35 bg-white/80 text-foreground/72 shadow-[0_8px_20px_rgba(148,163,184,0.18)] transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-white/10 dark:bg-slate-950/56 dark:text-sky-100/72 dark:hover:bg-slate-950/72"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-control text-muted-foreground shadow-[0_8px_20px_rgba(var(--shadow-rgb),0.18)] transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     aria-label={t("closeStopDialog")}
                   >
                     <X className="h-4 w-4" aria-hidden="true" />
@@ -1854,7 +1854,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                             onChange={(event) => setStopDisplayName(event.target.value)}
                             disabled={isBusy}
                             placeholder={t("stopDisplayNamePlaceholder")}
-                            className="flex h-10 w-full rounded-xl border border-white/45 bg-white/78 px-3 py-2 text-sm ring-offset-background shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                            className="flex h-10 w-full rounded-xl border border-input bg-control px-3 py-2 text-sm ring-offset-background shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]"
                           />
                           <p className="text-sm text-muted-foreground">
                             {t("stopDisplayNameHint")}
@@ -1872,7 +1872,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                             onValueChange={setStopNote}
                             disabled={isBusy}
                             placeholder={t("stopNotePlaceholder")}
-                            className="flex w-full resize-y rounded-xl border border-white/45 bg-white/78 px-3 py-2 text-sm ring-offset-background shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-white/10 dark:bg-slate-950/58 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                            className="flex w-full resize-y rounded-xl border border-input bg-control px-3 py-2 text-sm ring-offset-background shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]"
                           />
                         </div>
 
@@ -1895,7 +1895,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/35 px-5 py-4 dark:border-white/10 sm:px-6">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-4 sm:px-6">
                   <button
                     type="button"
                     onClick={() => handleCloseStopForm()}
@@ -1980,10 +1980,10 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       />
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-        <section className="min-w-0 space-y-4 rounded-[1.6rem] border border-white/45 bg-white/56 p-4 shadow-[0_18px_36px_rgba(148,163,184,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/38 dark:shadow-[0_22px_40px_rgba(2,6,23,0.28)]">
-          <div className="rounded-[1.3rem] border border-dashed border-white/45 bg-white/40 p-4 dark:border-white/10 dark:bg-slate-950/28">
+        <section className="min-w-0 space-y-4 rounded-[1.6rem] border border-border theme-panel p-4 shadow-[0_18px_36px_rgba(var(--shadow-rgb),0.14)] backdrop-blur-xl dark:shadow-[0_22px_40px_rgba(var(--shadow-rgb),0.28)]">
+          <div className="rounded-[1.3rem] border border-dashed border-border bg-control p-4">
             <div className="flex items-start gap-3">
-              <MapPinned className="mt-0.5 h-5 w-5 text-primary" aria-hidden="true" />
+              <MapPinned className="mt-0.5 h-5 w-5 text-link" aria-hidden="true" />
               <div className="space-y-1">
                 <p className="font-medium">{t("startingPointTitle")}</p>
                 <p className="text-sm text-muted-foreground">{t("startingPointDescription")}</p>
@@ -2038,13 +2038,13 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
           </div>
 
           {itinerary.length === 0 ? (
-            <div className="rounded-[1.3rem] border border-dashed border-white/45 bg-white/40 p-6 text-center text-sm text-muted-foreground dark:border-white/10 dark:bg-slate-950/28">
+            <div className="rounded-[1.3rem] border border-dashed border-border bg-control p-6 text-center text-sm text-muted-foreground">
               {t("assignedEmpty")}
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-[1.3rem] border border-white/35 dark:border-white/8">
+            <div className="overflow-x-auto rounded-[1.3rem] border border-border">
               <table className="min-w-192 w-full text-sm">
-                <thead className="bg-white/70 dark:bg-slate-950/52">
+                <thead className="bg-control">
                   <tr>
                     <th className="w-20 px-4 py-3 text-center font-medium" title={t("table.order")}>
                       <span aria-hidden="true" title={t("table.order")}>
@@ -2073,7 +2073,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                         key={itemKey}
                         data-itinerary-item-key={itemKey}
                         className={[
-                          "transition-[background-color,box-shadow] duration-150 hover:bg-white/56 dark:hover:bg-slate-950/42",
+                          "transition-[background-color,box-shadow] duration-150 hover:bg-accent",
                           isDragging
                             ? "relative z-10 bg-emerald-50/85 shadow-[0_10px_24px_rgba(16,185,129,0.16)] dark:bg-emerald-500/12 dark:shadow-[0_12px_28px_rgba(16,185,129,0.12)]"
                             : "",
@@ -2093,7 +2093,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                               aria-label={t("table.reorderItem", { targetName: itemLabel })}
                               aria-describedby="trip-itinerary-reorder-hint"
                               className={[
-                                "h-8 w-8 touch-none select-none cursor-grab rounded-full border border-white/35 bg-white/72 text-foreground/70 hover:bg-white/92 active:cursor-grabbing dark:border-white/10 dark:bg-slate-950/48 dark:text-sky-100/72 dark:hover:bg-slate-950/68",
+                                "h-8 w-8 touch-none select-none cursor-grab rounded-full border border-border bg-control text-muted-foreground hover:bg-accent active:cursor-grabbing",
                                 isDragging
                                   ? "ring-2 ring-emerald-500/60 ring-offset-2 ring-offset-background dark:ring-emerald-300/50 dark:ring-offset-slate-950"
                                   : "",
@@ -2116,7 +2116,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                         <td className="px-4 py-3 align-top">
                           <div className="space-y-1">
                             <div className="flex flex-wrap items-center gap-2">
-                              <span className="inline-flex items-center rounded-full bg-sky-100 px-2.5 py-1 text-xs font-medium text-sky-900 dark:bg-sky-950/60 dark:text-sky-200">
+                              <span className="inline-flex items-center rounded-full theme-memory px-2.5 py-1 text-xs font-medium text-link">
                                 {isVisit
                                   ? t("visitBadge")
                                   : isRouteWaypoint
@@ -2133,7 +2133,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                                   </p>
                                 )}
                                 {item.visit.excludeFromRoute === true && (
-                                  <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                                  <p className="text-sm font-medium text-link">
                                     {t("excludedFromRoute")}
                                   </p>
                                 )}
@@ -2247,9 +2247,9 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
         </section>
 
         <div className="min-w-0">
-          <section className="space-y-3 rounded-[1.6rem] border border-white/45 bg-white/56 p-4 shadow-[0_18px_36px_rgba(148,163,184,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/38 dark:shadow-[0_22px_40px_rgba(2,6,23,0.28)]">
+          <section className="space-y-3 rounded-[1.6rem] border border-border theme-panel p-4 shadow-[0_18px_36px_rgba(var(--shadow-rgb),0.14)] backdrop-blur-xl dark:shadow-[0_22px_40px_rgba(var(--shadow-rgb),0.28)]">
             <div className="flex items-start gap-3">
-              <Plus className="mt-0.5 h-5 w-5 text-primary" aria-hidden="true" />
+              <Plus className="mt-0.5 h-5 w-5 text-link" aria-hidden="true" />
               <div>
                 <h3 className="text-lg font-semibold">{t("availableTitle")}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -2259,16 +2259,16 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
             </div>
 
             {availableVisits.length === 0 ? (
-              <div className="rounded-[1.3rem] border border-dashed border-white/45 bg-white/40 p-6 text-center text-sm text-muted-foreground dark:border-white/10 dark:bg-slate-950/28">
+              <div className="rounded-[1.3rem] border border-dashed border-border bg-control p-6 text-center text-sm text-muted-foreground">
                 {t("availableEmpty")}
               </div>
             ) : (
               <div
                 data-testid="available-visits-scroll-area"
-                className="max-h-144 overflow-x-auto overflow-y-auto rounded-[1.3rem] border border-white/35 dark:border-white/8"
+                className="max-h-144 overflow-x-auto overflow-y-auto rounded-[1.3rem] border border-border"
               >
                 <table className="min-w-144 w-full table-fixed text-sm">
-                  <thead className="sticky top-0 z-10 bg-white/70 dark:bg-slate-950/52">
+                  <thead className="sticky top-0 z-10 bg-control">
                     <tr>
                       <th className="px-4 py-3 text-left font-medium">{t("table.target")}</th>
                       <th className="w-28 px-4 py-3 text-left font-medium">{t("table.details")}</th>
@@ -2279,10 +2279,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                   </thead>
                   <tbody className="divide-y divide-white/30 dark:divide-white/8">
                     {availableVisits.map((visit) => (
-                      <tr
-                        key={visit.id}
-                        className="transition-colors hover:bg-white/56 dark:hover:bg-slate-950/42"
-                      >
+                      <tr key={visit.id} className="transition-colors hover:bg-accent">
                         <td className="px-4 py-3">
                           <div className="space-y-1">
                             <p className="font-medium">{visit.park.name}</p>
