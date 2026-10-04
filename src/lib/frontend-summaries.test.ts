@@ -150,6 +150,7 @@ const buildSummary = (): HomeSummary => ({
   ],
   latestTrip: null,
   latestStandaloneVisit: null,
+  featuredVisit: null,
   magnetProgress: { visitedParks: 3, totalParks: 8 },
   updatedAt: "2024-06-15T12:00:00.000Z",
   version: 1,

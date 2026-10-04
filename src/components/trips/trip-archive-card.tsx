@@ -3,10 +3,7 @@
 import { CalendarRange, Signpost } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { MouseEventHandler } from "react";
-import {
-  PUBLIC_META_BADGE_CLASS_NAME,
-  PUBLIC_META_DATE_CLASS_NAME,
-} from "@/components/layout/public-page-styles";
+import { PUBLIC_META_BADGE_CLASS_NAME } from "@/components/layout/public-page-styles";
 import { PublicMemoryCard } from "@/components/ui/public-memory-card";
 import { formatFinnishDateRange } from "@/lib/fi-date";
 import type { PublicTripArchiveItem } from "@/lib/public-trips";
@@ -38,17 +35,17 @@ export const TripMemoryCard = ({
       descriptionExcerpt={trip.descriptionExcerpt}
       descriptionPlaceholder={t("descriptionPlaceholder")}
       readMore={t("readMore")}
+      dateLabel={
+        trip.dateRange !== null ? (
+          <time dateTime={trip.dateRange.start}>
+            {formatFinnishDateRange(trip.dateRange.start, trip.dateRange.end)}
+          </time>
+        ) : (
+          t("missingDate")
+        )
+      }
       metadata={
         <div className="mt-3 flex flex-wrap gap-2 text-sm text-muted-foreground">
-          <span className={PUBLIC_META_DATE_CLASS_NAME}>
-            {trip.dateRange !== null ? (
-              <time dateTime={trip.dateRange.start}>
-                {formatFinnishDateRange(trip.dateRange.start, trip.dateRange.end)}
-              </time>
-            ) : (
-              t("missingDate")
-            )}
-          </span>
           <span className={PUBLIC_META_BADGE_CLASS_NAME}>
             <CalendarRange className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
             {trip.visitCount} {t("visitCount", { count: trip.visitCount })}

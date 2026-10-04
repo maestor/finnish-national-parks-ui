@@ -17,6 +17,7 @@ const visit: NonNullable<HomeSummary["latestStandaloneVisit"]> = {
   id: 12,
   park: { name: "Vernissa", slug: "vernissa" },
   visitedOn: "2026-09-12",
+  route: "Rantapolku, 4 km",
   imageCount: 1,
   descriptionExcerpt: "Syksyinen käynti",
   featuredImage: {
@@ -65,6 +66,7 @@ describe("HomeFeaturedMemories", () => {
       "/kaynnit",
     );
     expect(screen.getByText("tripsArchive.descriptionPlaceholder")).toBeInTheDocument();
+    expect(screen.getByText("Rantapolku, 4 km")).toBeVisible();
     expect(screen.getByText("tripsArchive.missingDate")).toBeInTheDocument();
     expect(document.querySelector("a a")).toBeNull();
   });
@@ -89,10 +91,11 @@ describe("HomeFeaturedMemories", () => {
     const { container } = render(
       <HomeFeaturedMemories
         latestTrip={null}
-        latestStandaloneVisit={{ ...visit, descriptionExcerpt: null }}
+        latestStandaloneVisit={{ ...visit, descriptionExcerpt: null, route: null }}
       />,
     );
     expect(screen.getByText("home.featured.notePlaceholder")).toHaveClass("italic");
+    expect(screen.queryByText("Rantapolku, 4 km")).not.toBeInTheDocument();
     fireEvent.error(container.querySelector("img") as HTMLImageElement);
     expect(container.querySelector("img")).toBeNull();
     expect(screen.getByRole("link", { name: "Vernissa" })).toBeInTheDocument();

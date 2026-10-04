@@ -16,6 +16,10 @@ import { DELETE as deleteAdminUser, PATCH as patchAdminUser } from "./admin/admi
 import { GET as getAdminUsers } from "./admin/admins/route";
 import { DELETE as deleteAdminDateRangeReviewShare } from "./admin/date-range-review/shares/[shareId]/route";
 import { GET as getAdminDateRangeReviewShares } from "./admin/date-range-review/shares/route";
+import {
+  GET as getHomeFeaturedVisit,
+  PATCH as patchHomeFeaturedVisit,
+} from "./admin/home-featured-visit/route";
 import { POST as postAdminInvitation } from "./admin/invitations/route";
 import { GET as getAdminParkVisibility } from "./admin/parks/visibility/route";
 import {
@@ -59,6 +63,23 @@ import {
 describe("api proxy routes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it("protects both featured-visit selection proxy routes with admin access", async () => {
+    for (const [method, handler] of [
+      ["GET", getHomeFeaturedVisit],
+      ["PATCH", patchHomeFeaturedVisit],
+    ] as const) {
+      const request = new Request("https://frontend.example/api/admin/home-featured-visit", {
+        method,
+      });
+      await handler(request);
+      expect(proxyBackendRequestMock).toHaveBeenLastCalledWith(
+        request,
+        "/api/admin/home-featured-visit",
+        { requireAdmin: true },
+      );
+    }
   });
 
   it("proxies park visibility updates", async () => {

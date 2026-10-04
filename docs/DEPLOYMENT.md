@@ -55,6 +55,10 @@ The new home read model deliberately removes the four legacy list fields. Prepar
 
 Immediately after promotion, use the existing admin-session, same-origin `POST /api/revalidate-public-cache` flow with `{ "expireImmediately": true }`. It expires `home-summary` and revalidates `/` along with the existing public tags/paths. The API's v2 ETag rejects old validators, but it cannot evict Next's cached v1 JSON; changing a tag alone does not change the fetch cache identity. Also invoke this flow after direct catalog imports affecting denominators or magnet flags. There is no legacy response adapter or service-worker cache change.
 
+## Featured-visit rollout
+
+Merge/deploy the API first with migration `0042_home_featured_visit.sql`, then the UI. The home summary adds nullable `featuredVisit`; its home ETag representation is now v3. Immediately expire the frontend `home-summary` cache through the same-origin authenticated `POST /api/revalidate-public-cache` flow with `{ "expireImmediately": true }` after promotion. The selection starts empty, and admin saves perform the same immediate expiration. Service-worker behavior is unchanged.
+
 ## Current PWA note
 
 Production builds register the Serwist service worker. Development disables registration and removes a leftover registration for this app's worker, its scoped `serwist-precache-v2` cache and `public-static-v2`. Other origin caches and browser storage are preserved. If a normal localhost refresh loads stale JavaScript and reports old/new class-name hydration mismatches, hard-refresh once to load the development cleanup; subsequent normal refreshes should use current bundles. Production registration and caching are unchanged.

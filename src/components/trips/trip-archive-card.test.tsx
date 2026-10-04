@@ -33,6 +33,10 @@ describe("TripArchiveCard", () => {
       "aria-describedby",
       "trip-card-7-read-more",
     );
+    expect(screen.getByRole("link", { name: trip.name })).toHaveAttribute(
+      "title",
+      "tripsArchive.readMore",
+    );
     expect(screen.getByText("tripsArchive.readMore")).toHaveClass("sr-only");
 
     const visitBadge = screen.getByText("3 tripsArchive.visitCount").closest("span");
@@ -42,8 +46,10 @@ describe("TripArchiveCard", () => {
 
     const dateBadge = screen.getByText("15.-18.6.2024").closest("span");
     expect(dateBadge).not.toBeNull();
-    expect(dateBadge).toHaveClass("text-link");
-    expect(dateBadge).not.toHaveClass("rounded-full");
+    expect(dateBadge).toHaveClass("rounded-full", "text-foreground");
+    expect(dateBadge?.closest(".aspect-video")).not.toBeNull();
+    expect(dateBadge?.closest('[aria-hidden="true"]')).toBeNull();
+    expect(screen.getAllByText("15.-18.6.2024")).toHaveLength(1);
     expect(dateBadge?.querySelector("svg")).toBeNull();
     expect(visitBadge?.querySelector("svg")).toHaveClass("lucide-calendar-range");
   });
@@ -78,6 +84,7 @@ describe("TripArchiveCard", () => {
     expect(container.querySelector(".aspect-video")).toBeInTheDocument();
     expect(screen.queryByRole("img", { name: "" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: trip.name })).toBeInTheDocument();
+    expect(screen.getByText("15.-18.6.2024")).toBeVisible();
   });
 
   it("keeps the placeholder instead of retrying a failed image", async () => {
