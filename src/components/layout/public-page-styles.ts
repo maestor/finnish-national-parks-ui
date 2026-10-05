@@ -17,6 +17,9 @@ export const PUBLIC_EYEBROW_BADGE_CLASS_NAME =
 export const PUBLIC_META_BADGE_CLASS_NAME =
   "inline-flex items-center gap-1.5 rounded-full border border-border bg-control px-3 py-1 text-xs font-medium text-muted-foreground shadow-[0_1px_2px_rgba(var(--shadow-rgb),0.12),inset_0_1px_0_rgba(var(--highlight-rgb),0.48)] dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]";
 
+export const PUBLIC_HERO_ICON_BUTTON_CLASS_NAME =
+  "inline-flex items-center justify-center rounded-full border border-border bg-control p-2 text-muted-foreground shadow-[0_8px_20px_rgba(var(--shadow-rgb),0.18)] backdrop-blur-sm transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-control dark:shadow-[0_12px_24px_rgba(var(--shadow-rgb),0.24)]";
+
 export const PUBLIC_META_DATE_CLASS_NAME =
   "inline-flex items-center gap-1.5 text-sm font-medium text-link";
 

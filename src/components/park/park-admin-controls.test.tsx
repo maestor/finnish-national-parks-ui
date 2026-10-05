@@ -7,6 +7,7 @@ import { apiFetch } from "@/lib/api";
 import {
   ParkAdminControlsProvider,
   ParkAdminSection,
+  ParkEditLink,
   ParkVisibilityBadge,
 } from "./park-admin-controls";
 
@@ -60,11 +61,23 @@ describe("Park admin controls", () => {
       <>
         <ParkVisibilityBadge />
         <ParkAdminSection />
+        <ParkEditLink />
       </>,
     );
 
     expect(screen.queryByText("park.admin.visibleBadge")).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "park.admin.title" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "park.admin.editAction" })).not.toBeInTheDocument();
+  });
+
+  it("offers a hero edit link as soon as admin authentication resolves", () => {
+    mockUseAuth.mockReturnValue({ isAuthenticated: true, isLoading: false });
+    vi.mocked(apiFetch).mockReturnValue(new Promise(() => {}));
+    renderControls(<ParkEditLink />);
+    expect(screen.getByRole("link", { name: "park.admin.editAction" })).toHaveAttribute(
+      "href",
+      "/hallinta/paikat/pallas/muokkaa",
+    );
   });
 
   it("shows the current visibility badge and admin actions for authenticated users", async () => {

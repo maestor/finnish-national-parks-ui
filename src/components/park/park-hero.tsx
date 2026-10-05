@@ -1,6 +1,7 @@
 "use client";
 
 import { type ReactNode, useState } from "react";
+import { PUBLIC_PANEL_CLASS_NAME } from "@/components/layout/public-page-styles";
 import { AppImage } from "@/components/ui/app-image";
 import { cn } from "@/lib/cn";
 
@@ -16,8 +17,9 @@ export const ParkHero = ({ children, featuredImage, privateMedia = false }: Park
   return (
     <section
       className={cn(
-        "group/park-hero rounded-[2rem] border border-border theme-panel px-6 py-6 shadow-[0_24px_48px_rgba(var(--shadow-rgb),0.16)] backdrop-blur-xl dark:shadow-[0_28px_56px_rgba(var(--shadow-rgb),0.34)]",
-        hasImage && "relative flex min-h-104 items-center overflow-hidden sm:min-h-120",
+        "group/park-hero",
+        PUBLIC_PANEL_CLASS_NAME,
+        hasImage && "relative min-h-104 overflow-hidden sm:min-h-120",
       )}
       data-featured-image={hasImage ? "true" : undefined}
     >
@@ -42,8 +44,8 @@ export const ParkHero = ({ children, featuredImage, privateMedia = false }: Park
       )}
       <div
         className={cn(
-          "relative w-full",
-          hasImage && "rounded-2xl bg-hero/65 p-4 text-hero-foreground sm:p-6",
+          "@container relative w-full",
+          hasImage && "rounded-2xl bg-hero/50 p-4 text-hero-foreground sm:p-6",
         )}
       >
         {children}
