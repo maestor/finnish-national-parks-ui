@@ -117,7 +117,7 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
 
   if (!publicPark) {
     return (
-      <article className="mx-auto max-w-5xl px-4 py-8">
+      <article className="mx-auto max-w-5xl px-4 py-6">
         <div className="rounded-[2rem] border border-border bg-control px-6 py-5 shadow-[0_24px_48px_rgba(var(--shadow-rgb),0.16)] backdrop-blur-xl dark:shadow-[0_28px_56px_rgba(var(--shadow-rgb),0.34)]">
           <p className="text-muted-foreground">{t("detailTitle")}</p>
         </div>
@@ -150,7 +150,7 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
 
   return (
     <ParkAdminControlsProvider parkSlug={slug}>
-      <article className="mx-auto max-w-5xl px-4 py-8">
+      <article className="mx-auto max-w-5xl px-4 py-6">
         <ParkHero
           featuredImage={publicPark.featuredImage ?? null}
           privateMedia={parkResult?.usedAuthenticatedFallback}
@@ -232,7 +232,7 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
 
         <StickySectionNavigation
           ariaLabel={t("sectionNavigationLabel")}
-          className="mt-8"
+          className="mt-6"
           items={[
             ...(hasBoundaryGeoJson
               ? [{ id: "park-location", label: t("sectionNav.location") }]
@@ -244,7 +244,7 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
         {hasBoundaryGeoJson && (
           <section
             id="park-location"
-            className="mt-8 scroll-mt-28 rounded-[2rem] border border-border theme-panel p-5 shadow-[0_24px_48px_rgba(var(--shadow-rgb),0.14)] backdrop-blur-xl dark:shadow-[0_28px_56px_rgba(var(--shadow-rgb),0.3)]"
+            className="mt-6 scroll-mt-28 rounded-[2rem] border border-border theme-panel p-5 shadow-[0_24px_48px_rgba(var(--shadow-rgb),0.14)] backdrop-blur-xl dark:shadow-[0_28px_56px_rgba(var(--shadow-rgb),0.3)]"
           >
             <div className="mb-3 flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-2">
