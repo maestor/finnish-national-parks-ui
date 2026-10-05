@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { ParkFeaturedImageSection } from "@/components/parks/park-featured-image-section";
 import { ParkForm } from "@/components/parks/park-form";
 import { SnackbarNotice } from "@/components/providers/snackbar-notice";
 import { apiAuthFetch } from "@/lib/api";
@@ -53,6 +54,7 @@ const EditParkPage = async ({ params, searchParams }: EditParkPageProps) => {
       </div>
       {updated === "1" && <SnackbarNotice message={t("updatedNotice")} />}
       <ParkForm park={park} />
+      <ParkFeaturedImageSection key={park.slug} slug={park.slug} />
     </div>
   );
 };

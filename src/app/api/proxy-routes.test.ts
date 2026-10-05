@@ -21,6 +21,11 @@ import {
   PATCH as patchHomeFeaturedVisit,
 } from "./admin/home-featured-visit/route";
 import { POST as postAdminInvitation } from "./admin/invitations/route";
+import {
+  GET as getParkFeaturedImage,
+  PATCH as patchParkFeaturedImage,
+} from "./admin/parks/[slug]/featured-image/route";
+import { GET as getParkImageCandidates } from "./admin/parks/[slug]/images/route";
 import { GET as getAdminParkVisibility } from "./admin/parks/visibility/route";
 import {
   DELETE as deleteDateRangeReviewPublish,
@@ -63,6 +68,48 @@ import {
 describe("api proxy routes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it("protects park cover reads and writes and sanitizes candidate pagination", async () => {
+    const params = Promise.resolve({ slug: "pallas" });
+    for (const [method, handler] of [
+      ["GET", getParkFeaturedImage],
+      ["PATCH", patchParkFeaturedImage],
+    ] as const) {
+      const request = new Request(
+        "https://frontend.example/api/admin/parks/pallas/featured-image",
+        { method },
+      );
+      await handler(request, { params });
+      expect(proxyBackendRequestMock).toHaveBeenLastCalledWith(
+        request,
+        "/api/admin/parks/pallas/featured-image",
+        { requireAdmin: true },
+      );
+    }
+    await getParkImageCandidates(
+      new Request(
+        "https://frontend.example/api/admin/parks/pallas/images?offset=48&limit=48&unknown=secret",
+      ),
+      { params },
+    );
+    expect(proxyBackendRequestMock).toHaveBeenLastCalledWith(
+      expect.any(Request),
+      "/api/admin/parks/pallas/images",
+      { requireAdmin: true },
+    );
+    expect(proxyBackendRequestMock.mock.calls.at(-1)).toHaveProperty(
+      "0.url",
+      "https://frontend.example/api/admin/parks/pallas/images?offset=48&limit=48",
+    );
+    await getParkImageCandidates(
+      new Request("https://frontend.example/api/admin/parks/pallas/images"),
+      { params },
+    );
+    expect(proxyBackendRequestMock.mock.calls.at(-1)).toHaveProperty(
+      "0.url",
+      "https://frontend.example/api/admin/parks/pallas/images?",
+    );
   });
 
   it("protects both featured-visit selection proxy routes with admin access", async () => {

@@ -407,6 +407,8 @@ vi.mock("@/components/auth/post-login-return-redirector", () => ({
 
 const publicPark = {
   slug: "pallas",
+  featuredImage: null,
+  hasMagnet: true,
   name: "Pallas-Yllästunturi",
   address: "Pallasjärventie 14, 99300 Muonio",
   areaKm2: 14,
@@ -1235,6 +1237,14 @@ describe("App pages", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Pallas-Yllästunturi" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "park.sectionNav.location" })).toHaveAttribute(
+      "href",
+      "#park-location",
+    );
+    expect(screen.getByRole("link", { name: "park.sectionNav.visits" })).toHaveAttribute(
+      "href",
+      "#visit-history",
+    );
     expect(connectionMock).toHaveBeenCalled();
     expect(screen.getByText("Maailmanperintökohde")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "park.copyParkPageLink" })).toBeInTheDocument();
@@ -1247,6 +1257,35 @@ describe("App pages", () => {
       "slug:pallas|visits:1|open:none",
     );
     expect(screen.getByTestId("park-admin-section")).toBeInTheDocument();
+  });
+
+  it("renders the chosen park cover behind all existing details", async () => {
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({ ...publicPark, featuredImage: personalVisit.images[0] })
+      .mockResolvedValueOnce({ visits: [] });
+    await renderPublicRoute(await ParkDetailPage({ params: Promise.resolve({ slug: "pallas" }) }));
+    const title = screen.getByRole("heading", { name: "Pallas-Yllästunturi" });
+    expect(title.closest("section")).toHaveAttribute("data-featured-image", "true");
+    expect(
+      document.querySelector(`img[src="${personalVisit.images[0].fullUrl}"]`),
+    ).toBeInTheDocument();
+    expect(screen.getByText(publicPark.address)).toBeInTheDocument();
+    expect(screen.getByText("1938")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /park.officialLink/ })).toHaveAttribute(
+      "href",
+      publicPark.parkUrl,
+    );
+  });
+
+  it("preserves the fallback for a cached park detail from before cover selection existed", async () => {
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({ ...publicPark, featuredImage: undefined })
+      .mockResolvedValueOnce({ visits: [] });
+    await renderPublicRoute(await ParkDetailPage({ params: Promise.resolve({ slug: "pallas" }) }));
+    expect(
+      screen.getByRole("heading", { name: "Pallas-Yllästunturi" }).closest("section"),
+    ).not.toHaveAttribute("data-featured-image");
+    expect(screen.queryByRole("navigation", { name: "park.sectionNavigationLabel" })).toBeNull();
   });
 
   it("copies the park page link from the park detail header", async () => {
@@ -1915,6 +1954,7 @@ describe("App pages", () => {
   });
 
   it("renders the park edit page with navigation helpers", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({ featuredImage: null, hasImages: true });
     vi.mocked(apiAuthFetch).mockResolvedValueOnce(publicPark);
 
     await renderControlPanelRoute(
