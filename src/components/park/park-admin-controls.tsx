@@ -11,6 +11,8 @@ import {
   useMemo,
   useState,
 } from "react";
+import { EditIconLink } from "@/components/admin/edit-icon-link";
+import { PUBLIC_HERO_ICON_BUTTON_CLASS_NAME } from "@/components/layout/public-page-styles";
 import { useSnackbar } from "@/components/providers/snackbar-provider";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
@@ -158,6 +160,23 @@ export const ParkAdminControlsProvider = ({
 
   return (
     <ParkAdminControlsContext.Provider value={value}>{children}</ParkAdminControlsContext.Provider>
+  );
+};
+
+export const ParkEditLink = () => {
+  const t = useTranslations("park.admin");
+  const { isAuthenticated, parkSlug } = useParkAdminControls();
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  return (
+    <EditIconLink
+      href={appRoutes.controlPanel.parkEdit(parkSlug)}
+      label={t("editAction")}
+      className={PUBLIC_HERO_ICON_BUTTON_CLASS_NAME}
+    />
   );
 };
 

@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SnackbarProvider } from "@/components/providers/snackbar-provider";
 import { ApiError, apiAuthFetch, apiFetch, apiPublicFetch } from "@/lib/api";
@@ -153,6 +154,7 @@ vi.mock("@/components/park/park-visit-history", () => ({
 vi.mock("@/components/park/park-admin-controls", () => ({
   ParkAdminControlsProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   ParkVisibilityBadge: () => null,
+  ParkEditLink: () => null,
   ParkAdminSection: () => <div data-testid="park-admin-section" />,
 }));
 
@@ -1219,6 +1221,7 @@ describe("App pages", () => {
       .mockResolvedValueOnce({
         ...publicPark,
         boundaryGeoJson: { type: "FeatureCollection", features: [] },
+        map: { url: "https://example.com/brochure.pdf" },
       })
       .mockResolvedValueOnce({
         visitedSummary: {
@@ -1253,13 +1256,21 @@ describe("App pages", () => {
       "/paikat?park=pallas",
     );
     expect(await screen.findByTestId("park-boundary-map")).toHaveTextContent("Pallas-Yllästunturi");
+    const location = screen
+      .getByRole("heading", { name: "park.boundaryMapTitle" })
+      .closest("section") as HTMLElement;
+    expect(within(location).getByText(publicPark.address)).toBeInTheDocument();
+    expect(within(location).getByRole("link", { name: /park.pdfBrochure/ })).toHaveAttribute(
+      "href",
+      "https://example.com/brochure.pdf",
+    );
     expect(screen.getByTestId("park-visit-history")).toHaveTextContent(
       "slug:pallas|visits:1|open:none",
     );
     expect(screen.getByTestId("park-admin-section")).toBeInTheDocument();
   });
 
-  it("renders the chosen park cover behind all existing details", async () => {
+  it("keeps key facts in the covered hero and location details below it", async () => {
     vi.mocked(apiFetch)
       .mockResolvedValueOnce({ ...publicPark, featuredImage: personalVisit.images[0] })
       .mockResolvedValueOnce({ visits: [] });
@@ -1271,6 +1282,26 @@ describe("App pages", () => {
     ).toBeInTheDocument();
     expect(screen.getByText(publicPark.address)).toBeInTheDocument();
     expect(screen.getByText("1938")).toBeInTheDocument();
+    const hero = title.closest("section") as HTMLElement;
+    expect(within(hero).getByText("park.eyebrow")).toBeInTheDocument();
+    expect(within(hero).getByText("14 km²")).toBeInTheDocument();
+    const user = userEvent.setup();
+    const yearBadge = within(hero).getByText("1938").parentElement as HTMLElement;
+    await user.hover(yearBadge);
+    expect(screen.getByRole("tooltip")).toHaveTextContent("park.established");
+    await user.unhover(yearBadge);
+    const areaBadge = within(hero).getByText("14 km²").parentElement as HTMLElement;
+    await user.click(areaBadge);
+    expect(areaBadge).toHaveFocus();
+    expect(screen.getByRole("tooltip")).toHaveTextContent("park.area");
+    const location = screen
+      .getByRole("heading", { name: "park.location" })
+      .closest("section") as HTMLElement;
+    expect(within(location).getByText(publicPark.address)).toBeInTheDocument();
+    expect(within(location).getByRole("link", { name: /park.officialLink/ })).toHaveAttribute(
+      "rel",
+      "noopener noreferrer",
+    );
     expect(screen.getByRole("link", { name: /park.officialLink/ })).toHaveAttribute(
       "href",
       publicPark.parkUrl,
@@ -1285,7 +1316,30 @@ describe("App pages", () => {
     expect(
       screen.getByRole("heading", { name: "Pallas-Yllästunturi" }).closest("section"),
     ).not.toHaveAttribute("data-featured-image");
-    expect(screen.queryByRole("navigation", { name: "park.sectionNavigationLabel" })).toBeNull();
+    expect(screen.getByRole("link", { name: "park.sectionNav.location" })).toHaveAttribute(
+      "href",
+      "#park-location",
+    );
+  });
+
+  it("keeps a minimal park usable without optional facts or external links", async () => {
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({
+        ...publicPark,
+        areaKm2: null,
+        establishmentYear: null,
+        parkUrl: null,
+      })
+      .mockResolvedValueOnce({ visits: [] });
+    await renderPublicRoute(await ParkDetailPage({ params: Promise.resolve({ slug: "pallas" }) }));
+    expect(screen.getByRole("heading", { name: publicPark.name })).toBeInTheDocument();
+    expect(screen.getByText(publicPark.displayTypeName as string)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "park.copyParkPageLink" })).toBeInTheDocument();
+    expect(screen.getByText(publicPark.address)).toBeInTheDocument();
+    expect(screen.queryByText("park.established")).not.toBeInTheDocument();
+    expect(screen.queryByText("park.area")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /park.officialLink/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /park.pdfBrochure/ })).not.toBeInTheDocument();
   });
 
   it("copies the park page link from the park detail header", async () => {
@@ -1407,7 +1461,9 @@ describe("App pages", () => {
   });
 
   it("renders a simple fallback when the park detail page cannot load the park", async () => {
-    vi.mocked(apiFetch).mockResolvedValueOnce(null).mockResolvedValueOnce(null);
+    vi.mocked(apiFetch)
+      .mockRejectedValueOnce(new Error("backend offline"))
+      .mockResolvedValueOnce(null);
 
     await renderPublicRoute(
       await ParkDetailPage({

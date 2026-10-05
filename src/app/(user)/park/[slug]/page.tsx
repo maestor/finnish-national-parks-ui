@@ -1,13 +1,23 @@
-import { ExternalLink, FileDown, MapPin } from "lucide-react";
+import { CalendarRange, ExternalLink, FileDown, MapPin, Scan } from "lucide-react";
 import Link from "next/link";
 import { connection } from "next/server";
 import { getTranslations } from "next-intl/server";
+import { PublicMetaBadge } from "@/components/layout/public-meta-badge";
+import {
+  PUBLIC_EYEBROW_BADGE_CLASS_NAME,
+  PUBLIC_HERO_ICON_BUTTON_CLASS_NAME,
+  PUBLIC_HERO_TITLE_CLASS_NAME,
+  PUBLIC_META_BADGE_CLASS_NAME,
+} from "@/components/layout/public-page-styles";
 import { DeferredMap } from "@/components/map/deferred-map";
 import { LazyParkBoundaryMap } from "@/components/map/lazy-park-boundary-map";
 import { StickySectionNavigation } from "@/components/navigation/sticky-section-navigation";
-import { ParkAdminControlsProvider, ParkAdminSection } from "@/components/park/park-admin-controls";
+import {
+  ParkAdminControlsProvider,
+  ParkAdminSection,
+  ParkEditLink,
+} from "@/components/park/park-admin-controls";
 import { ParkHero } from "@/components/park/park-hero";
-import { ParkTypeBadge } from "@/components/park/park-type-badge";
 import { ParkVisitHistory } from "@/components/park/park-visit-history";
 import { AppImage } from "@/components/ui/app-image";
 import { CopyLinkButton } from "@/components/ui/copy-link-button";
@@ -117,7 +127,7 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
 
   if (!publicPark) {
     return (
-      <article className="mx-auto max-w-5xl px-4 py-6">
+      <article className="mx-auto w-full min-w-0 max-w-5xl px-4 py-6">
         <div className="rounded-[2rem] border border-border bg-control px-6 py-5 shadow-[0_24px_48px_rgba(var(--shadow-rgb),0.16)] backdrop-blur-xl dark:shadow-[0_28px_56px_rgba(var(--shadow-rgb),0.34)]">
           <p className="text-muted-foreground">{t("detailTitle")}</p>
         </div>
@@ -125,39 +135,29 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
     );
   }
 
-  const facts = [
-    { label: t("location"), value: publicPark.address },
-    ...(publicPark.areaKm2 !== null
-      ? [{ label: t("area"), value: `${publicPark.areaKm2} km²` }]
-      : []),
-    ...(publicPark.establishmentYear !== null
-      ? [
-          {
-            label: t("established"),
-            value: String(publicPark.establishmentYear),
-          },
-        ]
-      : []),
-  ];
-
   const visits = parkVisits?.visits ?? [];
   const logoUrl = publicPark.logo?.url ?? null;
   const mapUrl = publicPark.map?.url ?? null;
   const parkUrl = publicPark.parkUrl ?? null;
   const boundaryGeoJson = publicPark.boundaryGeoJson ?? null;
-  const hasAboutLinks = parkUrl !== null || mapUrl !== null;
   const hasBoundaryGeoJson = boundaryGeoJson !== null;
 
   return (
     <ParkAdminControlsProvider parkSlug={slug}>
-      <article className="mx-auto max-w-5xl px-4 py-6">
+      <article className="mx-auto w-full min-w-0 max-w-5xl px-4 py-6">
         <ParkHero
           featuredImage={publicPark.featuredImage ?? null}
           privateMedia={parkResult?.usedAuthenticatedFallback}
         >
-          <div className="flex flex-wrap items-center justify-center gap-3">
+          <div
+            className={`${PUBLIC_EYEBROW_BADGE_CLASS_NAME} group-data-[featured-image=true]/park-hero:border-input group-data-[featured-image=true]/park-hero:bg-hero group-data-[featured-image=true]/park-hero:bg-none group-data-[featured-image=true]/park-hero:text-hero-foreground`}
+          >
+            <MapPin className="h-4 w-4" aria-hidden="true" />
+            <span>{t("eyebrow")}</span>
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-y-3">
             {logoUrl !== null && (
-              <div className="relative h-28 w-48 shrink-0">
+              <div className="relative mx-auto h-28 w-48 shrink-0 @min-[36rem]:order-2">
                 <AppImage
                   src={logoUrl}
                   alt={publicPark.name}
@@ -168,65 +168,37 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
                 />
               </div>
             )}
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              <h1 className="text-center text-3xl font-bold tracking-tight">{publicPark.name}</h1>
-              <ParkTypeBadge label={getParkTypeDisplayName(publicPark)} />
-              <CopyLinkButton
-                href={appRoutes.park(slug)}
-                label={t("copyParkPageLink")}
-                copiedLabel={t("parkPageLinkCopied")}
-                tooltipSide="top"
-                className="inline-flex items-center justify-center rounded-full border border-border bg-control p-2 text-muted-foreground shadow-[0_8px_20px_rgba(var(--shadow-rgb),0.18)] backdrop-blur-sm transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:shadow-[0_12px_24px_rgba(var(--shadow-rgb),0.24)]"
-                iconClassName="h-3.5 w-3.5"
-              />
+            <div className="min-w-0 flex-[1_1_24rem]">
+              <h1 className={`${PUBLIC_HERO_TITLE_CLASS_NAME} wrap-break-word hyphens-auto`}>
+                {publicPark.name}
+              </h1>
+              <div className="mt-5 flex flex-wrap items-center gap-2">
+                <span className={PUBLIC_META_BADGE_CLASS_NAME}>
+                  {getParkTypeDisplayName(publicPark)}
+                </span>
+                {publicPark.establishmentYear !== null && (
+                  <PublicMetaBadge label={t("established")}>
+                    <CalendarRange className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span>{publicPark.establishmentYear}</span>
+                  </PublicMetaBadge>
+                )}
+                {publicPark.areaKm2 !== null && (
+                  <PublicMetaBadge label={t("area")}>
+                    <Scan className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span>{publicPark.areaKm2} km²</span>
+                  </PublicMetaBadge>
+                )}
+                <CopyLinkButton
+                  href={appRoutes.park(slug)}
+                  label={t("copyParkPageLink")}
+                  copiedLabel={t("parkPageLinkCopied")}
+                  tooltipSide="top"
+                  className={PUBLIC_HERO_ICON_BUTTON_CLASS_NAME}
+                  iconClassName="h-3.5 w-3.5"
+                />
+                <ParkEditLink />
+              </div>
             </div>
-          </div>
-
-          <div className="mt-6 grid grid-cols-2 items-stretch gap-4 sm:grid-cols-4">
-            {facts.map((fact) => (
-              <div
-                key={fact.label}
-                className="flex h-full min-h-23 flex-col rounded-2xl border border-border theme-panel group-data-[featured-image=true]/park-hero:bg-hero/65 group-data-[featured-image=true]/park-hero:bg-none px-4 py-3 shadow-[0_14px_28px_rgba(var(--shadow-rgb),0.12),inset_0_1px_0_rgba(var(--highlight-rgb),0.58)] dark:shadow-[0_18px_34px_rgba(var(--shadow-rgb),0.2),inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]"
-              >
-                <p className="text-xs text-muted-foreground group-data-[featured-image=true]/park-hero:text-hero-foreground/80">
-                  {fact.label}
-                </p>
-                <p className="mt-3 text-sm font-medium">{fact.value}</p>
-              </div>
-            ))}
-            {hasAboutLinks === true && (
-              <div className="flex h-full min-h-23 flex-col rounded-2xl border border-border theme-panel group-data-[featured-image=true]/park-hero:bg-hero/65 group-data-[featured-image=true]/park-hero:bg-none px-4 py-3 shadow-[0_14px_28px_rgba(var(--shadow-rgb),0.12),inset_0_1px_0_rgba(var(--highlight-rgb),0.58)] dark:shadow-[0_18px_34px_rgba(var(--shadow-rgb),0.2),inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]">
-                <p className="text-xs text-muted-foreground group-data-[featured-image=true]/park-hero:text-hero-foreground/80">
-                  {t("aboutTitle")}
-                </p>
-                <div className="mt-2 flex flex-col gap-1">
-                  {parkUrl !== null && (
-                    <a
-                      href={parkUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-sm font-medium text-link transition-colors hover:text-primary/80 group-data-[featured-image=true]/park-hero:text-hero-foreground"
-                      aria-label={`${t("officialLink")} (${t("opensInNewTab")})`}
-                    >
-                      <span>{t("officialLink")}</span>
-                      <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                    </a>
-                  )}
-                  {mapUrl !== null && (
-                    <a
-                      href={mapUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-sm font-medium text-link transition-colors hover:text-primary/80 group-data-[featured-image=true]/park-hero:text-hero-foreground"
-                      aria-label={`${t("pdfBrochure")} (${t("opensInNewTab")})`}
-                    >
-                      <span>{t("pdfBrochure")}</span>
-                      <FileDown className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                    </a>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
         </ParkHero>
 
@@ -234,31 +206,31 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
           ariaLabel={t("sectionNavigationLabel")}
           className="mt-6"
           items={[
-            ...(hasBoundaryGeoJson
-              ? [{ id: "park-location", label: t("sectionNav.location") }]
-              : []),
+            { id: "park-location", label: t("sectionNav.location") },
             { id: "visit-history", label: t("sectionNav.visits") },
           ]}
         />
 
-        {hasBoundaryGeoJson && (
-          <section
-            id="park-location"
-            className="mt-6 scroll-mt-28 rounded-[2rem] border border-border theme-panel p-5 shadow-[0_24px_48px_rgba(var(--shadow-rgb),0.14)] backdrop-blur-xl dark:shadow-[0_28px_56px_rgba(var(--shadow-rgb),0.3)]"
-          >
-            <div className="mb-3 flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-link" aria-hidden="true" />
-                <h2 className="text-lg font-semibold tracking-tight">{t("boundaryMapTitle")}</h2>
-              </div>
-              <Link
-                href={createPathWithSearchParams(appRoutes.parks, { park: slug })}
-                prefetch
-                className="rounded-full border border-border bg-control px-3 py-1.5 text-sm font-medium text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] transition-colors hover:bg-accent"
-              >
-                {t("showInFinlandsMap")}
-              </Link>
+        <section
+          id="park-location"
+          className="mt-6 scroll-mt-28 rounded-[2rem] border border-border theme-panel p-5 shadow-[0_24px_48px_rgba(var(--shadow-rgb),0.14)] backdrop-blur-xl dark:shadow-[0_28px_56px_rgba(var(--shadow-rgb),0.3)]"
+        >
+          <div className="mb-3 flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-link" aria-hidden="true" />
+              <h2 className="text-lg font-semibold tracking-tight">
+                {t(hasBoundaryGeoJson ? "boundaryMapTitle" : "location")}
+              </h2>
             </div>
+            <Link
+              href={createPathWithSearchParams(appRoutes.parks, { park: slug })}
+              prefetch
+              className="rounded-full border border-border bg-control px-3 py-1.5 text-sm font-medium text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] transition-colors hover:bg-accent"
+            >
+              {t("showInFinlandsMap")}
+            </Link>
+          </div>
+          {hasBoundaryGeoJson && (
             <DeferredMap className="min-h-80" label={t("boundaryMapTitle")}>
               <LazyParkBoundaryMap
                 boundaryGeoJson={boundaryGeoJson}
@@ -267,8 +239,38 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
                 parkName={publicPark.name}
               />
             </DeferredMap>
-          </section>
-        )}
+          )}
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <span className={`${PUBLIC_META_BADGE_CLASS_NAME} max-w-full`}>
+              <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <span className="wrap-break-word">{publicPark.address}</span>
+            </span>
+            {parkUrl !== null && (
+              <a
+                href={parkUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-md px-2 text-sm font-medium text-link underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label={`${t("officialLink")} (${t("opensInNewTab")})`}
+              >
+                <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                <span>{t("officialLink")}</span>
+              </a>
+            )}
+            {mapUrl !== null && (
+              <a
+                href={mapUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-md px-2 text-sm font-medium text-link underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label={`${t("pdfBrochure")} (${t("opensInNewTab")})`}
+              >
+                <FileDown className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                <span>{t("pdfBrochure")}</span>
+              </a>
+            )}
+          </div>
+        </section>
 
         <ParkVisitHistory
           title={t("visitHistory")}

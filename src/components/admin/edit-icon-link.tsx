@@ -2,6 +2,7 @@
 
 import { Pencil } from "lucide-react";
 import Link from "next/link";
+import { Tooltip } from "@/components/ui/tooltip";
 
 interface EditIconLinkProps {
   href: string;
@@ -19,8 +20,18 @@ export const EditIconLink = ({
   onClick,
 }: EditIconLinkProps) => {
   return (
-    <Link href={href} className={className} title={label} aria-label={label} onClick={onClick}>
-      <Pencil className={iconClassName} aria-hidden="true" />
-    </Link>
+    <Tooltip content={label} side="top">
+      {({ isOpen, tooltipId }) => (
+        <Link
+          href={href}
+          className={className}
+          aria-label={label}
+          aria-describedby={isOpen ? tooltipId : undefined}
+          onClick={onClick}
+        >
+          <Pencil className={iconClassName} aria-hidden="true" />
+        </Link>
+      )}
+    </Tooltip>
   );
 };

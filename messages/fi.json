@@ -113,10 +113,10 @@
     }
   },
   "park": {
+    "eyebrow": "Paikka",
     "detailTitle": "Paikan tiedot",
     "visitHistory": "Käyntihistoria",
     "officialLink": "Web-sivu",
-    "aboutTitle": "Tietoja kohteesta",
     "pdfBrochure": "PDF esite",
     "location": "Sijainti",
     "area": "Pinta-ala",

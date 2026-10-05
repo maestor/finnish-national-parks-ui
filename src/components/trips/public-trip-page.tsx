@@ -20,6 +20,7 @@ import {
   PUBLIC_EYEBROW_BADGE_CLASS_NAME,
   PUBLIC_HERO_DESCRIPTION_CLASS_NAME,
   PUBLIC_HERO_HEADING_STACK_CLASS_NAME,
+  PUBLIC_HERO_ICON_BUTTON_CLASS_NAME,
   PUBLIC_HERO_TITLE_CLASS_NAME,
   PUBLIC_META_BADGE_CLASS_NAME,
   PUBLIC_META_DATE_CLASS_NAME,
@@ -83,8 +84,6 @@ const IMAGE_BADGE_CLASS_NAME =
   "inline-flex items-center gap-1.5 rounded-full border border-border theme-memory px-2.5 py-1 text-sm leading-none font-semibold text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.08)]";
 const ITINERARY_NUMBER_BADGE_CLASS_NAME =
   "inline-flex h-8 min-w-8 items-center justify-center rounded-full border border-border bg-control px-2 text-sm font-semibold text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.56)]";
-const HERO_ICON_BUTTON_CLASS_NAME =
-  "inline-flex items-center justify-center rounded-full border border-border bg-control p-2 text-muted-foreground shadow-[0_8px_20px_rgba(var(--shadow-rgb),0.18)] backdrop-blur-sm transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-control dark:shadow-[0_12px_24px_rgba(var(--shadow-rgb),0.24)]";
 const DETAIL_SECTION_HEADING_CLASS_NAME =
   "flex items-center gap-2 border-b border-border pb-2 text-base font-semibold";
 const VISIT_TOGGLE_BUTTON_CLASS_NAME =
@@ -565,7 +564,7 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
                 label={t("copyTripPageLink")}
                 copiedLabel={t("tripPageLinkCopied")}
                 tooltipSide="top"
-                className={HERO_ICON_BUTTON_CLASS_NAME}
+                className={PUBLIC_HERO_ICON_BUTTON_CLASS_NAME}
                 iconClassName="h-3.5 w-3.5"
               />
             )}
@@ -573,7 +572,7 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
               <EditIconLink
                 href={appRoutes.controlPanel.editTrip(trip.id)}
                 label={t("editTrip")}
-                className={HERO_ICON_BUTTON_CLASS_NAME}
+                className={PUBLIC_HERO_ICON_BUTTON_CLASS_NAME}
                 iconClassName="h-3.5 w-3.5"
               />
             )}
