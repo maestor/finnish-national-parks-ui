@@ -7,6 +7,8 @@ import { CoordinateOverrideFields } from "@/components/location/coordinate-overr
 import { useSnackbar } from "@/components/providers/snackbar-provider";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { MarkdownEditor } from "@/components/ui/markdown-editor";
+import { LONG_TEXTAREA_MAX_LENGTH } from "@/components/ui/textarea-with-counter";
 import { apiFetch } from "@/lib/api";
 import {
   type CoordinateInputValue,
@@ -23,6 +25,7 @@ interface ParkFormProps {
 
 interface ParkFormState {
   areaKm2: string;
+  description: string;
   displayTypeName: string;
   establishmentYear: string;
   hasMagnet: boolean;
@@ -40,6 +43,7 @@ const INPUT_CLASS_NAME =
 
 const createInitialState = (park: ParkDetail): ParkFormState => ({
   areaKm2: park.areaKm2 === null ? "" : String(park.areaKm2),
+  description: park.description ?? "",
   displayTypeName: park.displayTypeName ?? "",
   establishmentYear: park.establishmentYear === null ? "" : String(park.establishmentYear),
   hasMagnet: park.hasMagnet,
@@ -81,7 +85,10 @@ export const ParkForm = ({ park }: ParkFormProps) => {
   const [isNavigationPending, startTransition] = useTransition();
   const isPending = isSubmitting || isNavigationPending;
 
+  const isDescriptionTooLong = formState.description.length > LONG_TEXTAREA_MAX_LENGTH;
+
   const isDirty =
+    formState.description !== initialState.description ||
     formState.areaKm2 !== initialState.areaKm2 ||
     formState.displayTypeName !== initialState.displayTypeName ||
     formState.establishmentYear !== initialState.establishmentYear ||
@@ -149,11 +156,14 @@ export const ParkForm = ({ park }: ParkFormProps) => {
       return;
     }
 
-    if (!isDirty) {
+    if (!isDirty || isDescriptionTooLong) {
       return;
     }
 
     const payload: ParkUpdateRequest = {};
+    if (formState.description !== initialState.description) {
+      payload.description = trimToNull(formState.description);
+    }
     if (formState.name !== initialState.name) {
       payload.name = formState.name.trim();
     }
@@ -200,9 +210,9 @@ export const ParkForm = ({ park }: ParkFormProps) => {
       });
 
       await Promise.all([
-        revalidatePublicCache({ parkSlug: park.slug }),
+        revalidatePublicCache({ parkSlug: park.slug, expireImmediately: true }),
         updatedPark.slug !== park.slug
-          ? revalidatePublicCache({ parkSlug: updatedPark.slug })
+          ? revalidatePublicCache({ parkSlug: updatedPark.slug, expireImmediately: true })
           : Promise.resolve(true),
       ]);
 
@@ -389,8 +399,18 @@ export const ParkForm = ({ park }: ParkFormProps) => {
         </div>
       </div>
 
+      <MarkdownEditor
+        id="park-description"
+        label={t("descriptionLabel")}
+        description={t("descriptionHelp")}
+        placeholder={t("descriptionPlaceholder")}
+        value={formState.description}
+        onValueChange={(value) => setFieldValue("description", value)}
+        inputClassName={INPUT_CLASS_NAME}
+      />
+
       <div className="flex flex-wrap items-center gap-4">
-        <Button type="submit" disabled={isPending || !isDirty}>
+        <Button type="submit" disabled={isPending || !isDirty || isDescriptionTooLong}>
           {isPending ? "..." : t("submit")}
         </Button>
         <button

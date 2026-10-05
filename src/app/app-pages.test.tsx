@@ -1216,6 +1216,50 @@ describe("App pages", () => {
     expect(login.container.querySelector("main")).toBeNull();
   });
 
+  it("shows Markdown and deduplicated experienced seasons between location and history", async () => {
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({
+        ...publicPark,
+        description: "**Metsäpolut**\n\n- [Reitti](https://example.com/reitti)",
+        parkUrl: null,
+      })
+      .mockResolvedValueOnce({
+        visits: ["2024-06-15", "2025-07-15", "2025-01-01", "2025-04-01", "2025-09-01"].map(
+          (visitedOn, id) => ({ ...personalVisit, id, visitedOn }),
+        ),
+      });
+    await renderPublicRoute(await ParkDetailPage({ params: Promise.resolve({ slug: "pallas" }) }));
+    const about = screen
+      .getByRole("heading", { name: "park.aboutTitle" })
+      .closest("section") as HTMLElement;
+    expect(about.previousElementSibling).toHaveAttribute("id", "park-location");
+    expect(within(about).getByText("Metsäpolut").tagName).toBe("STRONG");
+    expect(within(about).getByRole("link", { name: "Reitti" })).toHaveAttribute(
+      "href",
+      "https://example.com/reitti",
+    );
+    const seasons = within(about).getByRole("list", { name: "park.experiencedSeasons" });
+    expect(seasons).toHaveTextContent("❄️");
+    expect(seasons).toHaveTextContent("🌱");
+    expect(seasons).toHaveTextContent("☀️");
+    expect(seasons).toHaveTextContent("🍂");
+    expect(
+      within(seasons)
+        .getAllByText(/^park.seasons./)
+        .map((item) => item.textContent),
+    ).toEqual([
+      "park.seasons.winter",
+      "park.seasons.spring",
+      "park.seasons.summer",
+      "park.seasons.autumn",
+    ]);
+    expect(within(about).queryByRole("heading", { name: "park.materialsTitle" })).toBeNull();
+    expect(screen.getByRole("link", { name: "park.sectionNav.about" })).toHaveAttribute(
+      "href",
+      "#park-about",
+    );
+  });
+
   it("renders the park detail page with main content and visit history", async () => {
     vi.mocked(apiFetch)
       .mockResolvedValueOnce({
@@ -1260,7 +1304,11 @@ describe("App pages", () => {
       .getByRole("heading", { name: "park.boundaryMapTitle" })
       .closest("section") as HTMLElement;
     expect(within(location).getByText(publicPark.address)).toBeInTheDocument();
-    expect(within(location).getByRole("link", { name: /park.pdfBrochure/ })).toHaveAttribute(
+    const about = screen
+      .getByRole("heading", { name: "park.aboutTitle" })
+      .closest("section") as HTMLElement;
+    expect(within(about).getByRole("heading", { name: "park.materialsTitle" })).toBeInTheDocument();
+    expect(within(about).getByRole("link", { name: /park.pdfBrochure/ })).toHaveAttribute(
       "href",
       "https://example.com/brochure.pdf",
     );
@@ -1308,6 +1356,65 @@ describe("App pages", () => {
     );
   });
 
+  it.each([
+    { parkUrl: "https://example.com/park", mapUrl: "https://example.com/map.pdf" },
+    { parkUrl: "https://example.com/park", mapUrl: null },
+    { parkUrl: null, mapUrl: "https://example.com/map.pdf" },
+  ])(
+    "puts materials beneath the address without an about section for an unvisited park: %j",
+    async ({ parkUrl, mapUrl }) => {
+      vi.mocked(apiFetch)
+        .mockResolvedValueOnce({
+          ...publicPark,
+          description: "  ",
+          parkUrl,
+          map: mapUrl ? { url: mapUrl } : null,
+        })
+        .mockResolvedValueOnce({ visits: [] });
+      await renderPublicRoute(
+        await ParkDetailPage({ params: Promise.resolve({ slug: "pallas" }) }),
+      );
+      const location = screen
+        .getByRole("heading", { name: "park.location" })
+        .closest("section") as HTMLElement;
+      expect(screen.queryByRole("heading", { name: "park.aboutTitle" })).toBeNull();
+      expect(screen.queryByRole("link", { name: "park.sectionNav.about" })).toBeNull();
+      expect(screen.queryByRole("heading", { name: "park.materialsTitle" })).toBeNull();
+      const address = within(location).getByText(publicPark.address);
+      for (const [url, label] of [
+        [parkUrl, /park.officialLink/],
+        [mapUrl, /park.pdfBrochure/],
+      ] as const) {
+        if (url !== null) {
+          const link = within(location).getByRole("link", { name: label });
+          expect(link).toHaveAttribute("href", url);
+          expect(link).toHaveAttribute("target", "_blank");
+          expect(link).toHaveAttribute("rel", "noopener noreferrer");
+          expect(
+            address.compareDocumentPosition(link) & Node.DOCUMENT_POSITION_FOLLOWING,
+          ).toBeTruthy();
+        } else {
+          expect(screen.queryByRole("link", { name: label })).toBeNull();
+        }
+      }
+    },
+  );
+
+  it("keeps description and materials in the about section even without visits", async () => {
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({ ...publicPark, description: "Polkuja järven rannalla." })
+      .mockResolvedValueOnce({ visits: [] });
+    await renderPublicRoute(await ParkDetailPage({ params: Promise.resolve({ slug: "pallas" }) }));
+    const about = screen.getByRole("region", { name: "park.aboutTitle" });
+    expect(within(about).getByText("Polkuja järven rannalla.")).toBeInTheDocument();
+    expect(within(about).getByRole("link", { name: /park.officialLink/ })).toHaveAttribute(
+      "href",
+      publicPark.parkUrl,
+    );
+    expect(within(about).queryByRole("list", { name: "park.experiencedSeasons" })).toBeNull();
+    expect(screen.getAllByRole("link", { name: /park.officialLink/ })).toHaveLength(1);
+  });
+
   it("preserves the fallback for a cached park detail from before cover selection existed", async () => {
     vi.mocked(apiFetch)
       .mockResolvedValueOnce({ ...publicPark, featuredImage: undefined })
@@ -1340,6 +1447,8 @@ describe("App pages", () => {
     expect(screen.queryByText("park.area")).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /park.officialLink/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /park.pdfBrochure/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "park.aboutTitle" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "park.sectionNav.about" })).toBeNull();
   });
 
   it("copies the park page link from the park detail header", async () => {

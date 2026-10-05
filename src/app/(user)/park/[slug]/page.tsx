@@ -1,4 +1,4 @@
-import { CalendarRange, ExternalLink, FileDown, MapPin, Scan } from "lucide-react";
+import { CalendarRange, MapPin, Scan } from "lucide-react";
 import Link from "next/link";
 import { connection } from "next/server";
 import { getTranslations } from "next-intl/server";
@@ -12,12 +12,15 @@ import {
 import { DeferredMap } from "@/components/map/deferred-map";
 import { LazyParkBoundaryMap } from "@/components/map/lazy-park-boundary-map";
 import { StickySectionNavigation } from "@/components/navigation/sticky-section-navigation";
+import { ParkAbout } from "@/components/park/park-about";
 import {
   ParkAdminControlsProvider,
   ParkAdminSection,
   ParkEditLink,
 } from "@/components/park/park-admin-controls";
 import { ParkHero } from "@/components/park/park-hero";
+import { ParkMaterialLinks } from "@/components/park/park-material-links";
+import { ParkTypeBadge } from "@/components/park/park-type-badge";
 import { ParkVisitHistory } from "@/components/park/park-visit-history";
 import { AppImage } from "@/components/ui/app-image";
 import { CopyLinkButton } from "@/components/ui/copy-link-button";
@@ -26,6 +29,8 @@ import { fetchPublicParkDetail, fetchPublicParkVisits } from "@/lib/frontend-sum
 import { buildPageMetadata } from "@/lib/page-metadata";
 import { getParkTypeDisplayName, type ParkDetail, type ParkVisits } from "@/lib/parks";
 import { appRoutes, createPathWithSearchParams } from "@/lib/routes";
+
+import { getVisitSeason, SEASONS } from "@/lib/seasons";
 
 interface ParkDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -139,6 +144,10 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
   const logoUrl = publicPark.logo?.url ?? null;
   const mapUrl = publicPark.map?.url ?? null;
   const parkUrl = publicPark.parkUrl ?? null;
+  const description = publicPark.description?.trim() || null;
+  const experiencedSeasons = new Set(visits.map((visit) => getVisitSeason(visit.visitedOn)));
+  const seasons = SEASONS.filter((season) => experiencedSeasons.has(season));
+  const hasAbout = description !== null || seasons.length > 0;
   const boundaryGeoJson = publicPark.boundaryGeoJson ?? null;
   const hasBoundaryGeoJson = boundaryGeoJson !== null;
 
@@ -173,9 +182,7 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
                 {publicPark.name}
               </h1>
               <div className="mt-5 flex flex-wrap items-center gap-2">
-                <span className={PUBLIC_META_BADGE_CLASS_NAME}>
-                  {getParkTypeDisplayName(publicPark)}
-                </span>
+                <ParkTypeBadge label={getParkTypeDisplayName(publicPark)} />
                 {publicPark.establishmentYear !== null && (
                   <PublicMetaBadge label={t("established")}>
                     <CalendarRange className="h-3.5 w-3.5" aria-hidden="true" />
@@ -207,6 +214,7 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
           className="mt-6"
           items={[
             { id: "park-location", label: t("sectionNav.location") },
+            ...(hasAbout ? [{ id: "park-about", label: t("sectionNav.about") }] : []),
             { id: "visit-history", label: t("sectionNav.visits") },
           ]}
         />
@@ -245,32 +253,22 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
               <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               <span className="wrap-break-word">{publicPark.address}</span>
             </span>
-            {parkUrl !== null && (
-              <a
-                href={parkUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex min-h-11 items-center gap-1.5 rounded-md px-2 text-sm font-medium text-link underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label={`${t("officialLink")} (${t("opensInNewTab")})`}
-              >
-                <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                <span>{t("officialLink")}</span>
-              </a>
-            )}
-            {mapUrl !== null && (
-              <a
-                href={mapUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex min-h-11 items-center gap-1.5 rounded-md px-2 text-sm font-medium text-link underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label={`${t("pdfBrochure")} (${t("opensInNewTab")})`}
-              >
-                <FileDown className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                <span>{t("pdfBrochure")}</span>
-              </a>
-            )}
           </div>
+          {hasAbout === false && (parkUrl !== null || mapUrl !== null) && (
+            <div className="mt-3">
+              <ParkMaterialLinks parkUrl={parkUrl} mapUrl={mapUrl} />
+            </div>
+          )}
         </section>
+
+        {hasAbout === true && (
+          <ParkAbout
+            description={description}
+            seasons={seasons}
+            parkUrl={parkUrl}
+            mapUrl={mapUrl}
+          />
+        )}
 
         <ParkVisitHistory
           title={t("visitHistory")}

@@ -72,6 +72,17 @@ const render = (ui: Parameters<typeof renderTestingLibrary>[0]) =>
   renderTestingLibrary(<SnackbarProvider>{ui}</SnackbarProvider>);
 
 describe("TripForm", () => {
+  it("previews Markdown and returns to the unchanged description field", async () => {
+    render(<TripForm tripToEdit={tripToEdit} />);
+    const field = screen.getByLabelText("controlPanel.trips.form.descriptionLabel");
+    fireEvent.change(field, { target: { value: "**Polkuja**" } });
+    await userEvent.click(screen.getByRole("button", { name: "markdownEditor.preview" }));
+    expect(screen.getByText("Polkuja").tagName).toBe("STRONG");
+    await userEvent.click(screen.getByRole("button", { name: "markdownEditor.edit" }));
+    expect(screen.getByLabelText("controlPanel.trips.form.descriptionLabel")).toHaveValue(
+      "**Polkuja**",
+    );
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     mockResolveLocationFromCoordinate.mockReset();

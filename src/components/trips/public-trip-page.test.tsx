@@ -290,6 +290,22 @@ const setStickyNavigationHeight = (height: number) => {
 };
 
 describe("PublicTripPage", () => {
+  it("renders a trip description as Markdown with links and lists", () => {
+    render(
+      <PublicTripPage
+        trip={{ ...trip, description: "**Polkuja**\n\n- [Reitti](https://example.com/reitti)" }}
+      />,
+    );
+    const description = screen
+      .getByRole("heading", { name: "tripPage.descriptionTitle" })
+      .closest("section") as HTMLElement;
+    expect(within(description).getByText("Polkuja").tagName).toBe("STRONG");
+    expect(within(description).getByRole("link", { name: "Reitti" })).toHaveAttribute(
+      "href",
+      "https://example.com/reitti",
+    );
+    expect(within(description).getByRole("list")).toBeInTheDocument();
+  });
   beforeEach(() => {
     authState.isAuthenticated = false;
     setWindowScrollY(0);
@@ -380,7 +396,9 @@ describe("PublicTripPage", () => {
     expect(screen.getByRole("heading", { name: "Kesaretki" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "tripPage.archiveLink" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "tripPage.descriptionTitle" })).toBeInTheDocument();
-    expect(screen.getByText("Kesäinen kierros pohjoiseen.")).toHaveClass("max-w-none!");
+    expect(screen.getByText("Kesäinen kierros pohjoiseen.").parentElement).toHaveClass(
+      "max-w-none",
+    );
     expect(screen.getByText("2 tripPage.visitCount")).toBeInTheDocument();
     expect(screen.getByText("1 tripPage.stopCount")).toBeInTheDocument();
     expect(screen.getByText("3 tripPage.imageCount")).toBeInTheDocument();
@@ -1152,7 +1170,7 @@ describe("PublicTripPage", () => {
 
     const description = screen.getByText(/Ensimmainen rivi/);
     expect(description).toHaveClass("whitespace-pre-line");
-    expect(description).toHaveClass("max-w-none!");
+    expect(description.parentElement).toHaveClass("max-w-none");
     expect(description).toHaveTextContent("Ensimmainen rivi Toinen rivi");
     expect(screen.queryByText("1 tripPage.stopCount")).not.toBeInTheDocument();
     expect(screen.queryByText("3 tripPage.imageCount")).not.toBeInTheDocument();

@@ -27,6 +27,7 @@ import { PROGRESS_FILL_CLASS_NAME, PROGRESS_TRACK_CLASS_NAME } from "@/component
 import { cn } from "@/lib/cn";
 import { formatFinnishDateRange, formatFinnishLongDate } from "@/lib/fi-date";
 import { appRoutes } from "@/lib/routes";
+import { SEASON_EMOJIS } from "@/lib/seasons";
 import type {
   YearReviewCard,
   YearReviewMostVisitedPark,
@@ -74,19 +75,19 @@ const SEASON_CARD_META: Record<
 > = {
   spring: {
     barClassName: "bg-emerald-300",
-    emoji: "🌱",
+    emoji: SEASON_EMOJIS.spring,
   },
   summer: {
     barClassName: "bg-amber-300",
-    emoji: "☀️",
+    emoji: SEASON_EMOJIS.summer,
   },
   autumn: {
     barClassName: "bg-amber-600",
-    emoji: "🍂",
+    emoji: SEASON_EMOJIS.autumn,
   },
   winter: {
     barClassName: "bg-sky-300",
-    emoji: "❄️",
+    emoji: SEASON_EMOJIS.winter,
   },
 };
 

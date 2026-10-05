@@ -13,12 +13,9 @@ import {
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { EditIconLink } from "@/components/admin/edit-icon-link";
 import {
   PUBLIC_EYEBROW_BADGE_CLASS_NAME,
-  PUBLIC_HERO_DESCRIPTION_CLASS_NAME,
   PUBLIC_HERO_HEADING_STACK_CLASS_NAME,
   PUBLIC_HERO_ICON_BUTTON_CLASS_NAME,
   PUBLIC_HERO_TITLE_CLASS_NAME,
@@ -33,6 +30,7 @@ import {
 } from "@/components/navigation/sticky-section-navigation";
 import { AppImage } from "@/components/ui/app-image";
 import { CopyLinkButton } from "@/components/ui/copy-link-button";
+import { MarkdownContent } from "@/components/ui/markdown-content";
 import { VisitImageGallery } from "@/components/visits/visit-image-gallery";
 import { useAuth } from "@/hooks/use-auth";
 import { apiPublicFetch } from "@/lib/api";
@@ -599,11 +597,7 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
               {t("descriptionTitle")}
             </h2>
           </div>
-          <p
-            className={`mt-4 whitespace-pre-line ${PUBLIC_HERO_DESCRIPTION_CLASS_NAME} max-w-none!`}
-          >
-            {trip.description}
-          </p>
+          <MarkdownContent className="mt-4">{trip.description}</MarkdownContent>
         </section>
       )}
 
@@ -829,11 +823,7 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
                                     />
                                     {t("detailsTitle")}
                                   </h4>
-                                  <div className="prose prose-sm text-foreground theme-prose max-w-none">
-                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                      {item.visit.note}
-                                    </ReactMarkdown>
-                                  </div>
+                                  <MarkdownContent>{item.visit.note}</MarkdownContent>
                                 </section>
                               )}
                               {item.visit.imageCount > 0 && (
@@ -1029,11 +1019,7 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
                                     />
                                     {t("detailsTitle")}
                                   </h4>
-                                  <div className="prose prose-sm text-foreground theme-prose max-w-none">
-                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                      {item.stop.note}
-                                    </ReactMarkdown>
-                                  </div>
+                                  <MarkdownContent>{item.stop.note}</MarkdownContent>
                                 </section>
                               )}
                               {item.stop.imageCount > 0 && (
