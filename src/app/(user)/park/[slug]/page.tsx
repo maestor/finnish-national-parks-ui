@@ -4,7 +4,9 @@ import { connection } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { DeferredMap } from "@/components/map/deferred-map";
 import { LazyParkBoundaryMap } from "@/components/map/lazy-park-boundary-map";
+import { StickySectionNavigation } from "@/components/navigation/sticky-section-navigation";
 import { ParkAdminControlsProvider, ParkAdminSection } from "@/components/park/park-admin-controls";
+import { ParkHero } from "@/components/park/park-hero";
 import { ParkTypeBadge } from "@/components/park/park-type-badge";
 import { ParkVisitHistory } from "@/components/park/park-visit-history";
 import { AppImage } from "@/components/ui/app-image";
@@ -115,7 +117,7 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
 
   if (!publicPark) {
     return (
-      <article className="mx-auto max-w-5xl px-4 py-8">
+      <article className="mx-auto max-w-5xl px-4 py-6">
         <div className="rounded-[2rem] border border-border bg-control px-6 py-5 shadow-[0_24px_48px_rgba(var(--shadow-rgb),0.16)] backdrop-blur-xl dark:shadow-[0_28px_56px_rgba(var(--shadow-rgb),0.34)]">
           <p className="text-muted-foreground">{t("detailTitle")}</p>
         </div>
@@ -148,8 +150,11 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
 
   return (
     <ParkAdminControlsProvider parkSlug={slug}>
-      <article className="mx-auto max-w-5xl px-4 py-8">
-        <section className="rounded-[2rem] border border-border theme-panel px-6 py-6 shadow-[0_24px_48px_rgba(var(--shadow-rgb),0.16)] backdrop-blur-xl dark:shadow-[0_28px_56px_rgba(var(--shadow-rgb),0.34)]">
+      <article className="mx-auto max-w-5xl px-4 py-6">
+        <ParkHero
+          featuredImage={publicPark.featuredImage ?? null}
+          privateMedia={parkResult?.usedAuthenticatedFallback}
+        >
           <div className="flex flex-wrap items-center justify-center gap-3">
             {logoUrl !== null && (
               <div className="relative h-28 w-48 shrink-0">
@@ -181,23 +186,27 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
             {facts.map((fact) => (
               <div
                 key={fact.label}
-                className="flex h-full min-h-23 flex-col rounded-2xl border border-border theme-panel px-4 py-3 shadow-[0_14px_28px_rgba(var(--shadow-rgb),0.12),inset_0_1px_0_rgba(var(--highlight-rgb),0.58)] dark:shadow-[0_18px_34px_rgba(var(--shadow-rgb),0.2),inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]"
+                className="flex h-full min-h-23 flex-col rounded-2xl border border-border theme-panel group-data-[featured-image=true]/park-hero:bg-hero/65 group-data-[featured-image=true]/park-hero:bg-none px-4 py-3 shadow-[0_14px_28px_rgba(var(--shadow-rgb),0.12),inset_0_1px_0_rgba(var(--highlight-rgb),0.58)] dark:shadow-[0_18px_34px_rgba(var(--shadow-rgb),0.2),inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]"
               >
-                <p className="text-xs text-muted-foreground">{fact.label}</p>
+                <p className="text-xs text-muted-foreground group-data-[featured-image=true]/park-hero:text-hero-foreground/80">
+                  {fact.label}
+                </p>
                 <p className="mt-3 text-sm font-medium">{fact.value}</p>
               </div>
             ))}
             {hasAboutLinks === true && (
-              <div className="flex h-full min-h-23 flex-col rounded-2xl border border-border theme-panel px-4 py-3 shadow-[0_14px_28px_rgba(var(--shadow-rgb),0.12),inset_0_1px_0_rgba(var(--highlight-rgb),0.58)] dark:shadow-[0_18px_34px_rgba(var(--shadow-rgb),0.2),inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]">
-                <p className="text-xs text-muted-foreground">{t("aboutTitle")}</p>
+              <div className="flex h-full min-h-23 flex-col rounded-2xl border border-border theme-panel group-data-[featured-image=true]/park-hero:bg-hero/65 group-data-[featured-image=true]/park-hero:bg-none px-4 py-3 shadow-[0_14px_28px_rgba(var(--shadow-rgb),0.12),inset_0_1px_0_rgba(var(--highlight-rgb),0.58)] dark:shadow-[0_18px_34px_rgba(var(--shadow-rgb),0.2),inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]">
+                <p className="text-xs text-muted-foreground group-data-[featured-image=true]/park-hero:text-hero-foreground/80">
+                  {t("aboutTitle")}
+                </p>
                 <div className="mt-2 flex flex-col gap-1">
                   {parkUrl !== null && (
                     <a
                       href={parkUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-sm font-medium text-link transition-colors hover:text-primary/80"
-                      aria-label={`${t("officialLink")} (avautuu uuteen välilehteen)`}
+                      className="inline-flex items-center gap-1.5 text-sm font-medium text-link transition-colors hover:text-primary/80 group-data-[featured-image=true]/park-hero:text-hero-foreground"
+                      aria-label={`${t("officialLink")} (${t("opensInNewTab")})`}
                     >
                       <span>{t("officialLink")}</span>
                       <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
@@ -208,8 +217,8 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
                       href={mapUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-sm font-medium text-link transition-colors hover:text-primary/80"
-                      aria-label={`${t("pdfBrochure")} (avautuu uuteen välilehteen)`}
+                      className="inline-flex items-center gap-1.5 text-sm font-medium text-link transition-colors hover:text-primary/80 group-data-[featured-image=true]/park-hero:text-hero-foreground"
+                      aria-label={`${t("pdfBrochure")} (${t("opensInNewTab")})`}
                     >
                       <span>{t("pdfBrochure")}</span>
                       <FileDown className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
@@ -219,10 +228,24 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
               </div>
             )}
           </div>
-        </section>
+        </ParkHero>
+
+        <StickySectionNavigation
+          ariaLabel={t("sectionNavigationLabel")}
+          className="mt-6"
+          items={[
+            ...(hasBoundaryGeoJson
+              ? [{ id: "park-location", label: t("sectionNav.location") }]
+              : []),
+            { id: "visit-history", label: t("sectionNav.visits") },
+          ]}
+        />
 
         {hasBoundaryGeoJson && (
-          <section className="mt-8 rounded-[2rem] border border-border theme-panel p-5 shadow-[0_24px_48px_rgba(var(--shadow-rgb),0.14)] backdrop-blur-xl dark:shadow-[0_28px_56px_rgba(var(--shadow-rgb),0.3)]">
+          <section
+            id="park-location"
+            className="mt-6 scroll-mt-28 rounded-[2rem] border border-border theme-panel p-5 shadow-[0_24px_48px_rgba(var(--shadow-rgb),0.14)] backdrop-blur-xl dark:shadow-[0_28px_56px_rgba(var(--shadow-rgb),0.3)]"
+          >
             <div className="mb-3 flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-link" aria-hidden="true" />

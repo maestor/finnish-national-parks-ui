@@ -982,6 +982,314 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/parks/{slug}/images": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                    offset?: number | null;
+                };
+                header?: never;
+                path: {
+                    slug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Park image candidates */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            images: {
+                                image: {
+                                    id: number;
+                                    /** Format: uri */
+                                    fullUrl: string;
+                                    /** Format: uri */
+                                    thumbUrl: string;
+                                    fullWidth: number | null;
+                                    fullHeight: number | null;
+                                    thumbWidth: number | null;
+                                    thumbHeight: number | null;
+                                    originalName: string | null;
+                                    displayOrder: number;
+                                    createdAt: string;
+                                };
+                                isPubliclyVisible: boolean;
+                                reference: {
+                                    imageId: number;
+                                    /** @enum {string} */
+                                    source: "visit-image";
+                                };
+                                sourceId: number;
+                                sourceLabel: string;
+                                visitedOn: string;
+                            }[];
+                            nextOffset: number | null;
+                        };
+                    };
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Park not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth or storage unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/parks/{slug}/featured-image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    slug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Saved park featured image */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            featuredImage: {
+                                image: {
+                                    id: number;
+                                    /** Format: uri */
+                                    fullUrl: string;
+                                    /** Format: uri */
+                                    thumbUrl: string;
+                                    fullWidth: number | null;
+                                    fullHeight: number | null;
+                                    thumbWidth: number | null;
+                                    thumbHeight: number | null;
+                                    originalName: string | null;
+                                    displayOrder: number;
+                                    createdAt: string;
+                                };
+                                isPubliclyVisible: boolean;
+                                reference: {
+                                    imageId: number;
+                                    /** @enum {string} */
+                                    source: "visit-image";
+                                };
+                                sourceId: number;
+                                sourceLabel: string;
+                                visitedOn: string;
+                            } | null;
+                            hasImages: boolean;
+                        };
+                    };
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Park not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth or storage unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    slug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        featuredImage: {
+                            imageId: number;
+                            /** @enum {string} */
+                            source: "visit-image";
+                        } | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Updated park featured image */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            featuredImage: {
+                                image: {
+                                    id: number;
+                                    /** Format: uri */
+                                    fullUrl: string;
+                                    /** Format: uri */
+                                    thumbUrl: string;
+                                    fullWidth: number | null;
+                                    fullHeight: number | null;
+                                    thumbWidth: number | null;
+                                    thumbHeight: number | null;
+                                    originalName: string | null;
+                                    displayOrder: number;
+                                    createdAt: string;
+                                };
+                                isPubliclyVisible: boolean;
+                                reference: {
+                                    imageId: number;
+                                    /** @enum {string} */
+                                    source: "visit-image";
+                                };
+                                sourceId: number;
+                                sourceLabel: string;
+                                visitedOn: string;
+                            } | null;
+                        };
+                    };
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Park not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Unavailable image */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description OAuth or storage unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
     "/api/parks/{slug}": {
         parameters: {
             query?: never;
@@ -1056,6 +1364,20 @@ export interface paths {
                                 /** @enum {string} */
                                 slug: "outdoor-recreation-area" | "cultural-history-area" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
                             };
+                            featuredImage: {
+                                id: number;
+                                /** Format: uri */
+                                fullUrl: string;
+                                /** Format: uri */
+                                thumbUrl: string;
+                                fullWidth: number | null;
+                                fullHeight: number | null;
+                                thumbWidth: number | null;
+                                thumbHeight: number | null;
+                                originalName: string | null;
+                                displayOrder: number;
+                                createdAt: string;
+                            } | null;
                             boundaryGeoJson?: {
                                 features: {
                                     geometry: {
@@ -1193,6 +1515,20 @@ export interface paths {
                                 /** @enum {string} */
                                 slug: "outdoor-recreation-area" | "cultural-history-area" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
                             };
+                            featuredImage: {
+                                id: number;
+                                /** Format: uri */
+                                fullUrl: string;
+                                /** Format: uri */
+                                thumbUrl: string;
+                                fullWidth: number | null;
+                                fullHeight: number | null;
+                                thumbWidth: number | null;
+                                thumbHeight: number | null;
+                                originalName: string | null;
+                                displayOrder: number;
+                                createdAt: string;
+                            } | null;
                             boundaryGeoJson?: {
                                 features: {
                                     geometry: {

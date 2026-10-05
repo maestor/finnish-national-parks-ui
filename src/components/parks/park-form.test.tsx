@@ -5,6 +5,7 @@ import { SnackbarProvider } from "@/components/providers/snackbar-provider";
 import { apiFetch } from "@/lib/api";
 import type { ParkDetail } from "@/lib/parks";
 import { revalidatePublicCache } from "@/lib/public-cache";
+import { ParkFeaturedImageSection } from "./park-featured-image-section";
 import { ParkForm } from "./park-form";
 
 const replaceMock = vi.fn();
@@ -37,6 +38,7 @@ const park = {
   displayTypeName: "Maailmanperintökohde",
   locationLabel: "Pallasjärventie 14",
   logo: null,
+  featuredImage: null,
   parkUrl: "https://example.com/pallas",
   map: null,
   hasMagnet: true,
@@ -66,6 +68,65 @@ const otherMagnetPlace = {
 describe("ParkForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(apiFetch).mockReset();
+  });
+
+  it("keeps unsaved park text when a featured image is saved independently", async () => {
+    HTMLDialogElement.prototype.showModal = vi.fn(function showModal(this: HTMLDialogElement) {
+      this.open = true;
+    });
+    HTMLDialogElement.prototype.close = vi.fn(function close(this: HTMLDialogElement) {
+      this.open = false;
+    });
+    const image = {
+      id: 10,
+      fullUrl: "https://example.com/full.jpg",
+      thumbUrl: "https://example.com/thumb.jpg",
+      fullWidth: 1200,
+      fullHeight: 800,
+      thumbWidth: 300,
+      thumbHeight: 200,
+      originalName: "cover.jpg",
+      displayOrder: 0,
+      createdAt: "2026-06-07T09:00:00Z",
+    };
+    const candidate = {
+      image,
+      reference: { source: "visit-image", imageId: 10 },
+      sourceId: 4,
+      sourceLabel: park.name,
+      visitedOn: "2026-06-07",
+      isPubliclyVisible: true,
+    };
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({ featuredImage: null, hasImages: true })
+      .mockResolvedValueOnce({ images: [candidate], nextOffset: null })
+      .mockResolvedValueOnce({ featuredImage: candidate });
+    const user = userEvent.setup();
+    render(
+      <>
+        <ParkForm park={park} />
+        <ParkFeaturedImageSection slug={park.slug} />
+      </>,
+    );
+    const name = screen.getByLabelText(/controlPanel\.parks\.edit\.form\.nameLabel/);
+    await user.clear(name);
+    await user.type(name, "Tallentamaton nimi");
+    await user.click(
+      await screen.findByRole("button", { name: "controlPanel.parks.featuredImage.choose" }),
+    );
+    await user.click(await screen.findByRole("button", { name: /cover.jpg/ }));
+    await user.click(
+      screen.getByRole("button", { name: "controlPanel.parks.featuredImage.picker.save" }),
+    );
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(name).toHaveValue("Tallentamaton nimi");
+    expect(apiFetch).toHaveBeenCalledTimes(3);
+    expect(apiFetch).toHaveBeenLastCalledWith("/api/admin/parks/pallas/featured-image", {
+      body: JSON.stringify({ featuredImage: candidate.reference }),
+      method: "PATCH",
+    });
+    expect(replaceMock).not.toHaveBeenCalled();
   });
 
   it("submits the edited park details and redirects to the updated edit route", async () => {

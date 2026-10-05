@@ -165,3 +165,10 @@ export const getVisitStatusColor = (park: MapPark): string => {
   }
   return "#64748b";
 };
+
+export type ParkImageCandidate =
+  paths["/api/admin/parks/{slug}/featured-image"]["get"]["responses"][200]["content"]["application/json"]["featuredImage"];
+export type ParkImageSelection = NonNullable<ParkImageCandidate>;
+
+export type ParkFeaturedImageSettings =
+  paths["/api/admin/parks/{slug}/featured-image"]["get"]["responses"][200]["content"]["application/json"];

@@ -59,7 +59,7 @@ export const ParkVisitHistory = ({
   return (
     <section
       id="visit-history"
-      className="mt-8 scroll-mt-24 rounded-[2rem] border border-border bg-control p-5 shadow-[0_24px_48px_rgba(var(--shadow-rgb),0.14)] backdrop-blur-xl dark:shadow-[0_28px_56px_rgba(var(--shadow-rgb),0.3)]"
+      className="mt-8 scroll-mt-28 rounded-[2rem] border border-border bg-control p-5 shadow-[0_24px_48px_rgba(var(--shadow-rgb),0.14)] backdrop-blur-xl dark:shadow-[0_28px_56px_rgba(var(--shadow-rgb),0.3)]"
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">

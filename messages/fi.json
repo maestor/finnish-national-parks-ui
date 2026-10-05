@@ -150,7 +150,13 @@
       "visibilityVisibleSuccess": "Paikka palautettiin näkyviin.",
       "editAction": "Muokkaa paikan tietoja",
       "updating": "Päivitetään..."
-    }
+    },
+    "sectionNavigationLabel": "Paikan osiot",
+    "sectionNav": {
+      "location": "Sijainti",
+      "visits": "Vierailut"
+    },
+    "opensInNewTab": "avautuu uuteen välilehteen"
   },
   "visits": {
     "eyebrow": "Käyntien aikajana",
@@ -566,7 +572,34 @@
       "emptyAll": "Ei hallittavia paikkoja.",
       "emptyVisible": "Ei näkyvissä olevia paikkoja.",
       "emptyHidden": "Ei piilotettuja paikkoja.",
-      "emptyFiltered": "Yksikään paikka ei vastaa nykyisiä suodattimia."
+      "emptyFiltered": "Yksikään paikka ei vastaa nykyisiä suodattimia.",
+      "featuredImage": {
+        "title": "Pääkuva",
+        "description": "Valitse kuva paikan julkaistuista käynneistä. Kuvaa käytetään paikan sivun taustakuvana.",
+        "empty": "Ei pääkuvaa",
+        "choose": "Valitse pääkuva",
+        "change": "Vaihda pääkuva",
+        "remove": "Poista pääkuva",
+        "picker": {
+          "title": "Valitse paikan pääkuva",
+          "description": "Valitse kuva paikan julkaistuista käynneistä.",
+          "close": "Sulje kuvavalitsin",
+          "cancel": "Peruuta",
+          "save": "Tallenna pääkuva",
+          "selected": "Valittu",
+          "saving": "Tallennetaan...",
+          "loadMore": "Näytä lisää",
+          "empty": "Paikan julkaistuilla käynneillä ei ole vielä kuvia.",
+          "error": "Kuvien lataaminen tai pääkuvan tallentaminen epäonnistui. Yritä uudelleen.",
+          "loading": "Ladataan kuvia...",
+          "unpublished": "Ei julkisesti näkyvissä"
+        },
+        "loadFailed": "Pääkuvan lataaminen epäonnistui.",
+        "retry": "Yritä uudelleen",
+        "removeFailed": "Pääkuvan poistaminen epäonnistui. Yritä uudelleen.",
+        "refreshFailed": "Pääkuva tallennettiin, mutta sivun päivittäminen epäonnistui.",
+        "retryRefresh": "Päivitä sivu"
+      }
     },
     "trips": {
       "title": "Retket",
@@ -612,7 +645,9 @@
           "saving": "Tallennetaan...",
           "loadMore": "Näytä lisää",
           "empty": "Retken käynneillä tai pysähdyksillä ei ole vielä kuvia.",
-          "error": "Kuvien lataaminen epäonnistui. Yritä uudelleen."
+          "error": "Kuvien lataaminen epäonnistui. Yritä uudelleen.",
+          "loading": "Ladataan kuvia...",
+          "unpublished": "Ei julkisesti näkyvissä"
         }
       },
       "assignments": {
