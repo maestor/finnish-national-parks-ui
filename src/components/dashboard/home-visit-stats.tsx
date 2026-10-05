@@ -8,6 +8,7 @@ import {
 import { ForestWaterIcon } from "@/components/ui/forest-water-icon";
 import { PROGRESS_FILL_CLASS_NAME, PROGRESS_TRACK_CLASS_NAME } from "@/components/ui/theme-styles";
 import type { HomeProgressItem } from "@/lib/frontend-summaries";
+import { SEASON_EMOJIS } from "@/lib/seasons";
 
 interface SeasonalVisitCounts {
   spring: number;
@@ -55,28 +56,28 @@ export const HomeVisitStats = ({
   const seasonItems = [
     {
       key: "spring",
-      emoji: "🌱",
+      emoji: SEASON_EMOJIS.spring,
       label: springLabel,
       count: seasonalVisits.spring,
       badgeClass: "bg-emerald-600/15 text-emerald-800 dark:bg-emerald-400/15 dark:text-emerald-300",
     },
     {
       key: "summer",
-      emoji: "☀️",
+      emoji: SEASON_EMOJIS.summer,
       label: summerLabel,
       count: seasonalVisits.summer,
       badgeClass: "bg-amber-500/15 text-amber-800 dark:bg-amber-300/15 dark:text-amber-200",
     },
     {
       key: "autumn",
-      emoji: "🍂",
+      emoji: SEASON_EMOJIS.autumn,
       label: autumnLabel,
       count: seasonalVisits.autumn,
       badgeClass: "bg-orange-600/15 text-orange-800 dark:bg-orange-400/15 dark:text-orange-200",
     },
     {
       key: "winter",
-      emoji: "❄️",
+      emoji: SEASON_EMOJIS.winter,
       label: winterLabel,
       count: seasonalVisits.winter,
       badgeClass: "bg-sky-600/15 text-sky-800 dark:bg-cyan-400/15 dark:text-cyan-200",

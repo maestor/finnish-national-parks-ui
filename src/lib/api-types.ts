@@ -1364,6 +1364,7 @@ export interface paths {
                                 /** @enum {string} */
                                 slug: "outdoor-recreation-area" | "cultural-history-area" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
                             };
+                            description: string | null;
                             featuredImage: {
                                 id: number;
                                 /** Format: uri */
@@ -1443,6 +1444,7 @@ export interface paths {
             requestBody?: {
                 content: {
                     "application/json": {
+                        description?: string | null;
                         areaKm2?: number | null;
                         displayTypeName?: string | null;
                         establishmentYear?: number | null;
@@ -1515,6 +1517,7 @@ export interface paths {
                                 /** @enum {string} */
                                 slug: "outdoor-recreation-area" | "cultural-history-area" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
                             };
+                            description: string | null;
                             featuredImage: {
                                 id: number;
                                 /** Format: uri */

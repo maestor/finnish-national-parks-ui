@@ -1,4 +1,4 @@
-import { render as renderTestingLibrary, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render as renderTestingLibrary, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SnackbarProvider } from "@/components/providers/snackbar-provider";
@@ -39,6 +39,7 @@ const park = {
   locationLabel: "Pallasjärventie 14",
   logo: null,
   featuredImage: null,
+  description: null,
   parkUrl: "https://example.com/pallas",
   map: null,
   hasMagnet: true,
@@ -69,6 +70,57 @@ describe("ParkForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(apiFetch).mockReset();
+  });
+
+  it("previews and saves only the edited Markdown description", async () => {
+    const user = userEvent.setup();
+    vi.mocked(apiFetch).mockResolvedValueOnce({ ...park, description: "**Polkuja**" });
+    render(<ParkForm park={park} />);
+    await user.type(
+      screen.getByLabelText("controlPanel.parks.edit.form.descriptionLabel"),
+      "**Polkuja**",
+    );
+    await user.click(screen.getByRole("button", { name: "markdownEditor.preview" }));
+    expect(screen.getByText("Polkuja").tagName).toBe("STRONG");
+    await user.click(screen.getByRole("button", { name: "markdownEditor.edit" }));
+    expect(screen.getByLabelText("controlPanel.parks.edit.form.descriptionLabel")).toHaveValue(
+      "**Polkuja**",
+    );
+    await user.click(screen.getByRole("button", { name: "controlPanel.parks.edit.form.submit" }));
+    await waitFor(() =>
+      expect(apiFetch).toHaveBeenCalledWith("/api/parks/pallas", {
+        method: "PATCH",
+        body: JSON.stringify({ description: "**Polkuja**" }),
+      }),
+    );
+    expect(revalidatePublicCache).toHaveBeenCalledWith({
+      parkSlug: "pallas",
+      expireImmediately: true,
+    });
+  });
+
+  it("clears an existing description with null", async () => {
+    const user = userEvent.setup();
+    vi.mocked(apiFetch).mockResolvedValueOnce(park);
+    render(<ParkForm park={{ ...park, description: "Vanha kuvaus" }} />);
+    await user.clear(screen.getByLabelText("controlPanel.parks.edit.form.descriptionLabel"));
+    await user.click(screen.getByRole("button", { name: "controlPanel.parks.edit.form.submit" }));
+    await waitFor(() =>
+      expect(apiFetch).toHaveBeenCalledWith("/api/parks/pallas", {
+        method: "PATCH",
+        body: JSON.stringify({ description: null }),
+      }),
+    );
+  });
+
+  it("blocks saving an over-limit description until it is shortened", () => {
+    render(<ParkForm park={{ ...park, description: "a".repeat(5001) }} />);
+    const description = screen.getByLabelText("controlPanel.parks.edit.form.descriptionLabel");
+    const submit = screen.getByRole("button", { name: "controlPanel.parks.edit.form.submit" });
+    expect(description).toHaveAttribute("aria-invalid", "true");
+    expect(submit).toBeDisabled();
+    fireEvent.change(description, { target: { value: "a".repeat(5000) } });
+    expect(submit).toBeEnabled();
   });
 
   it("keeps unsaved park text when a featured image is saved independently", async () => {
@@ -162,8 +214,14 @@ describe("ParkForm", () => {
       });
     });
 
-    expect(revalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "pallas" });
-    expect(revalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "pallas-yllastunturi" });
+    expect(revalidatePublicCache).toHaveBeenCalledWith({
+      parkSlug: "pallas",
+      expireImmediately: true,
+    });
+    expect(revalidatePublicCache).toHaveBeenCalledWith({
+      parkSlug: "pallas-yllastunturi",
+      expireImmediately: true,
+    });
     expect(replaceMock).toHaveBeenCalledWith(
       "/hallinta/paikat/pallas-yllastunturi/muokkaa?updated=1",
     );
@@ -244,7 +302,10 @@ describe("ParkForm", () => {
       postalOffice: null,
     });
     expect(revalidatePublicCache).toHaveBeenCalledTimes(1);
-    expect(revalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "pallas" });
+    expect(revalidatePublicCache).toHaveBeenCalledWith({
+      parkSlug: "pallas",
+      expireImmediately: true,
+    });
   });
 
   it("does not submit when nothing changed", async () => {

@@ -3,18 +3,14 @@
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { PublicCacheRefreshNotice } from "@/components/admin/public-cache-refresh-notice";
 import { CoordinateOverrideFields } from "@/components/location/coordinate-override-fields";
 import { useSnackbar } from "@/components/providers/snackbar-provider";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { MarkdownEditor } from "@/components/ui/markdown-editor";
 import { Select } from "@/components/ui/select";
-import {
-  LONG_TEXTAREA_MAX_LENGTH,
-  TextareaWithCounter,
-} from "@/components/ui/textarea-with-counter";
+import { LONG_TEXTAREA_MAX_LENGTH } from "@/components/ui/textarea-with-counter";
 import { apiFetch } from "@/lib/api";
 import { getCurrentFinnishDate } from "@/lib/fi-date";
 import {
@@ -55,7 +51,6 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
   );
   const [note, setNote] = useState(visitToEdit?.note ?? "");
   const [status, setStatus] = useState(visitToEdit?.status ?? "draft");
-  const [isPreview, setIsPreview] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [cacheRefreshFailed, setCacheRefreshFailed] = useState(false);
@@ -355,42 +350,14 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
         />
       </div>
 
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="note">{t("noteLabel")}</Label>
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setIsPreview(!isPreview)}
-              className="text-xs text-muted-foreground underline hover:text-foreground"
-            >
-              {isPreview ? t("edit") : t("preview")}
-            </button>
-            <a
-              href="https://www.markdownguide.org/basic-syntax/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-muted-foreground underline hover:text-foreground"
-            >
-              {t("markdownGuide")}
-            </a>
-          </div>
-        </div>
-        {isPreview ? (
-          <div className="prose prose-sm theme-prose max-w-none min-h-30 rounded-xl border border-border bg-control px-3 py-2 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.45)] dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{note || "_"}</ReactMarkdown>
-          </div>
-        ) : (
-          <TextareaWithCounter
-            id="note"
-            value={note}
-            onValueChange={setNote}
-            placeholder={t("notePlaceholder")}
-            rows={5}
-            className={`${inputClassName} resize-y`}
-          />
-        )}
-      </div>
+      <MarkdownEditor
+        id="note"
+        label={t("noteLabel")}
+        value={note}
+        onValueChange={setNote}
+        placeholder={t("notePlaceholder")}
+        inputClassName={inputClassName}
+      />
 
       {!isEditing && <p className="text-sm text-muted-foreground">{t("publishOrDraftHelp")}</p>}
       {isEditing && (

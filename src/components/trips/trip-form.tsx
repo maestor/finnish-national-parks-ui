@@ -8,10 +8,8 @@ import { PublicCacheRefreshNotice } from "@/components/admin/public-cache-refres
 import { LocationSuggestionInput } from "@/components/location/location-suggestion-input";
 import { useSnackbar } from "@/components/providers/snackbar-provider";
 import { Button } from "@/components/ui/button";
-import {
-  LONG_TEXTAREA_MAX_LENGTH,
-  TextareaWithCounter,
-} from "@/components/ui/textarea-with-counter";
+import { MarkdownEditor } from "@/components/ui/markdown-editor";
+import { LONG_TEXTAREA_MAX_LENGTH } from "@/components/ui/textarea-with-counter";
 import { apiFetch } from "@/lib/api";
 import {
   formatCoordinateQuery,
@@ -426,19 +424,14 @@ export const TripForm = ({ tripToEdit }: TripFormProps) => {
         </div>
       </div>
 
-      <div className="space-y-2">
-        <label htmlFor="trip-description" className="text-sm font-medium">
-          {t("descriptionLabel")}
-        </label>
-        <TextareaWithCounter
-          id="trip-description"
-          value={description}
-          onValueChange={setDescription}
-          placeholder={t("descriptionPlaceholder")}
-          rows={5}
-          className={`${INPUT_CLASS_NAME} resize-y`}
-        />
-      </div>
+      <MarkdownEditor
+        id="trip-description"
+        label={t("descriptionLabel")}
+        value={description}
+        onValueChange={setDescription}
+        placeholder={t("descriptionPlaceholder")}
+        inputClassName={INPUT_CLASS_NAME}
+      />
 
       {!isEditing && <p className="text-sm text-muted-foreground">{t("publishOrDraftHelp")}</p>}
       {isEditing && (

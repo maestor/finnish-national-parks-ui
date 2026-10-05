@@ -4,15 +4,15 @@ import { ChevronDown, FileText, Images, Route, TentTree, User } from "lucide-rea
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { CopyLinkButton } from "@/components/ui/copy-link-button";
+import { MarkdownContent } from "@/components/ui/markdown-content";
 import { EditVisitLink } from "@/components/visits/edit-visit-link";
 import { VisitImageGallery } from "@/components/visits/visit-image-gallery";
 import { formatFinnishDate } from "@/lib/fi-date";
 import type { Visit } from "@/lib/parks";
 import { createParkVisitHref } from "@/lib/public-visits";
 import { appRoutes } from "@/lib/routes";
+import { getVisitSeason, SEASON_EMOJIS } from "@/lib/seasons";
 
 interface VisitAccordionProps {
   initialOpenVisitId?: number | null;
@@ -53,30 +53,30 @@ const hasExpandableContent = (visit: Visit) => {
 };
 
 const getSeasonPresentation = (dateStr: string): SeasonPresentation => {
-  const month = new Date(dateStr).getMonth() + 1;
-  if (month >= 3 && month <= 5) {
+  const season = getVisitSeason(dateStr);
+  if (season === "spring") {
     return {
-      emoji: "🌱",
+      emoji: SEASON_EMOJIS.spring,
       borderClass: "border-l-emerald-600 dark:border-l-emerald-400",
       badgeClass: "bg-emerald-600/15 text-emerald-800 dark:bg-emerald-400/15 dark:text-emerald-300",
     };
   }
-  if (month >= 6 && month <= 8) {
+  if (season === "summer") {
     return {
-      emoji: "☀️",
+      emoji: SEASON_EMOJIS.summer,
       borderClass: "border-l-amber-500 dark:border-l-amber-300",
       badgeClass: "bg-amber-500/15 text-amber-800 dark:bg-amber-300/15 dark:text-amber-200",
     };
   }
-  if (month >= 9 && month <= 11) {
+  if (season === "autumn") {
     return {
-      emoji: "🍂",
+      emoji: SEASON_EMOJIS.autumn,
       borderClass: "border-l-orange-600 dark:border-l-orange-400",
       badgeClass: "bg-orange-600/15 text-orange-800 dark:bg-orange-400/15 dark:text-orange-200",
     };
   }
   return {
-    emoji: "❄️",
+    emoji: SEASON_EMOJIS.winter,
     borderClass: "border-l-sky-600 dark:border-l-cyan-400",
     badgeClass: "bg-sky-600/15 text-sky-800 dark:bg-cyan-400/15 dark:text-cyan-200",
   };
@@ -273,9 +273,7 @@ export const VisitAccordion = ({
                         <FileText className="h-4 w-4 text-muted-foreground" />
                         {t("detailsTitle")}
                       </h3>
-                      <div className="prose prose-sm text-foreground theme-prose max-w-none">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{visit.note}</ReactMarkdown>
-                      </div>
+                      <MarkdownContent>{visit.note}</MarkdownContent>
                     </>
                   )}
                   {hasImages && (

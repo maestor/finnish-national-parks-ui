@@ -113,6 +113,15 @@
     }
   },
   "park": {
+    "aboutTitle": "Kohteesta",
+    "materialsTitle": "Materiaalit",
+    "experiencedSeasons": "Koetut vuodenajat",
+    "seasons": {
+      "winter": "Talvi",
+      "spring": "Kevät",
+      "summer": "Kesä",
+      "autumn": "Syksy"
+    },
     "eyebrow": "Paikka",
     "detailTitle": "Paikan tiedot",
     "visitHistory": "Käyntihistoria",
@@ -154,6 +163,7 @@
     "sectionNavigationLabel": "Paikan osiot",
     "sectionNav": {
       "location": "Sijainti",
+      "about": "Kohteesta",
       "visits": "Vierailut"
     },
     "opensInNewTab": "avautuu uuteen välilehteen"
@@ -540,6 +550,9 @@
         "form": {
           "nameLabel": "Nimi",
           "slugLabel": "Slug",
+          "descriptionLabel": "Kuvaus",
+          "descriptionHelp": "Kuvaus näkyy paikan julkisella sivulla. Voit käyttää Markdown-muotoilua.",
+          "descriptionPlaceholder": "Kirjoita paikan kuvaus Markdown-muodossa...",
           "hasMagnetLabel": "Paikasta saa magneetin",
           "hasMagnetNationalParkHint": "Kansallispuistoista saa aina magneetin, joten tätä tietoa ei voi muuttaa täällä.",
           "locationLabel": "Osoite",
@@ -874,9 +887,6 @@
         "authorPlaceholder": "Esim. Maija Meikäläinen",
         "noteLabel": "Muistiinpanot",
         "notePlaceholder": "Kirjoita muistiinpanoja markdown-muodossa...",
-        "markdownGuide": "Markdown-opas",
-        "preview": "Esikatselu",
-        "edit": "Muokkaa",
         "submit": "Tallenna muutokset",
         "saveAndPreview": "Tallenna ja esikatsele",
         "publish": "Julkaise",
@@ -1008,6 +1018,13 @@
     "visits": "Vierailut",
     "openParkPage": "Avaa paikan sivu",
     "addVisit": "Lisää käynti"
+  },
+  "markdownEditor": {
+    "guide": "Markdown-opas",
+    "preview": "Esikatselu",
+    "edit": "Muokkaa",
+    "emptyPreview": "Ei vielä sisältöä.",
+    "opensInNewTab": "avautuu uuteen välilehteen"
   },
   "yearReview": {
     "eyebrow": "Vuosikatsaus",

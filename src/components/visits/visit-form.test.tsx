@@ -415,7 +415,7 @@ describe("VisitForm", () => {
     const textarea = screen.getByPlaceholderText("controlPanel.visits.form.notePlaceholder");
     fireEvent.change(textarea, { target: { value: "# Hello" } });
 
-    const previewButton = screen.getByText("controlPanel.visits.form.preview");
+    const previewButton = screen.getByText("markdownEditor.preview");
     fireEvent.click(previewButton);
 
     expect(screen.getByRole("heading", { name: "Hello" })).toBeInTheDocument();
@@ -427,8 +427,8 @@ describe("VisitForm", () => {
     const noteField = screen.getByPlaceholderText("controlPanel.visits.form.notePlaceholder");
     await userEvent.type(noteField, "Retkimuistiinpanot");
 
-    await userEvent.click(screen.getByRole("button", { name: "controlPanel.visits.form.preview" }));
-    await userEvent.click(screen.getByRole("button", { name: "controlPanel.visits.form.edit" }));
+    await userEvent.click(screen.getByRole("button", { name: "markdownEditor.preview" }));
+    await userEvent.click(screen.getByRole("button", { name: "markdownEditor.edit" }));
 
     expect(screen.getByPlaceholderText("controlPanel.visits.form.notePlaceholder")).toHaveValue(
       "Retkimuistiinpanot",
