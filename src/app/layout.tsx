@@ -92,6 +92,12 @@ const RootLayout = async ({
       >
         {/* React hoists this to <head>; warms up the OSM tile connection before the map loads. */}
         <link rel="preconnect" href="https://tile.openstreetmap.org" />
+        <a
+          href="#main-content"
+          className="sr-only rounded-md bg-background font-semibold text-foreground shadow-lg focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-100 focus:px-4 focus:py-3 focus:outline-2 focus:outline-offset-2 focus:outline-ring"
+        >
+          {messages.layout.skipToContent}
+        </a>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <SerwistProvider swUrl="/serwist/sw.js" disable={shouldDisableSerwist}>
             <ThemeProvider
@@ -106,7 +112,13 @@ const RootLayout = async ({
                     <div className="relative flex min-h-screen flex-col">
                       <NavigationProgress />
                       <Header />
-                      <main className="flex flex-1 flex-col">{children}</main>
+                      <main
+                        id="main-content"
+                        tabIndex={-1}
+                        className="flex flex-1 scroll-mt-14 flex-col"
+                      >
+                        {children}
+                      </main>
                     </div>
                   </HomeMapControlsProvider>
                 </Suspense>

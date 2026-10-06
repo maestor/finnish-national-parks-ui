@@ -164,6 +164,10 @@ Legacy English URLs such as `/parks`, `/visits`, `/park/[slug]`, `/trip-planner`
 
 **Shim convention:** page implementations live in English-named directories (`(user)/parks/`, `(user)/park/[slug]/`, `(user)/visits/`, `(user)/trip-planner/`, `control-panel/**`, `login/`). The canonical Finnish route directories hold one-line re-export shims (for example `src/app/hallinta/page.tsx` → `export { default } from "../control-panel/page"`). Keep this pattern when adding routes: implement in the English-named directory, expose the Finnish canonical route as a shim, and add a legacy redirect to `legacyAppRedirects` in `src/lib/routes.ts` when an English URL already exists.
 
+### Keyboard access to content
+
+The root layout renders **Siirry sisältöön** (`layout.skipToContent`) before the header as the first keyboard focus stop. The native `#main-content` link is visually hidden until focused, then appears above the header with theme-aware colors and a visible focus outline. The shared `<main id="main-content" tabIndex={-1}>` receives focus on activation without adding an ordinary Tab stop; subsequent Tab presses continue inside the page content. Its scroll margin keeps the target below the sticky header. Keep this link outside the shell's Suspense boundary so it is available while the shell loads.
+
 ### Page breadcrumbs
 
 `AppBreadcrumbs` resolves explicit page paths through `appRoutes` and `normalizeAppPath`; it does not infer ancestors by splitting URL segments. Place it as the first content item inside the owning public rounded hero, or inside the control-panel content column above the title. The front page and full-width park map omit breadcrumbs and reserve no space for them. Pass park/trip names from data the page already loaded; keep editor labels based on saved data rather than unsaved form state. No breadcrumb data requests or registration effects are needed.

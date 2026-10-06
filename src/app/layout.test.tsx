@@ -141,6 +141,12 @@ describe("RootLayout", () => {
     expect(screen.getByTestId("theme-provider")).toBeInTheDocument();
     expect(screen.getByTestId("home-map-controls-provider")).toBeInTheDocument();
     expect(screen.getByTestId("app-header")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Siirry sisältöön" })).toHaveAttribute(
+      "href",
+      "#main-content",
+    );
+    expect(screen.getByRole("main")).toHaveAttribute("id", "main-content");
+    expect(screen.getByRole("main")).toHaveAttribute("tabindex", "-1");
     expect(screen.getByRole("main")).toHaveTextContent("page");
     expect(screen.getByTestId("page-content")).toBeInTheDocument();
 
