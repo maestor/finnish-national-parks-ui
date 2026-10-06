@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { AppBreadcrumbs } from "@/components/layout/app-breadcrumbs";
 import { ParkFeaturedImageSection } from "@/components/parks/park-featured-image-section";
 import { ParkForm } from "@/components/parks/park-form";
 import { SnackbarNotice } from "@/components/providers/snackbar-notice";
@@ -36,15 +37,14 @@ const EditParkPage = async ({ params, searchParams }: EditParkPageProps) => {
 
   return (
     <div>
+      <AppBreadcrumbs
+        path={appRoutes.controlPanel.parkEdit(slug)}
+        entityName={park.name}
+        className="mb-4"
+      />
       <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
       <p className="mt-2 text-muted-foreground">{t("description")}</p>
       <div className="mt-3 flex flex-wrap items-center gap-4 text-sm">
-        <Link
-          href={appRoutes.controlPanel.parks}
-          className="font-medium text-link underline underline-offset-4 hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-        >
-          {t("backToList")}
-        </Link>
         <Link
           href={appRoutes.park(park.slug)}
           className="font-medium text-link underline underline-offset-4 hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"

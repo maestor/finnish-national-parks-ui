@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { AppBreadcrumbs } from "@/components/layout/app-breadcrumbs";
 import { VisitAccordion } from "@/components/park/visit-accordion";
 import { ApiError, apiAuthFetch } from "@/lib/api";
 import type { AdminVisitWithPark } from "@/lib/parks";
@@ -35,6 +36,7 @@ const VisitPreviewPage = async ({ params }: VisitPreviewPageProps) => {
 
   return (
     <main className="space-y-6">
+      <AppBreadcrumbs path={appRoutes.controlPanel.previewVisit(visit.id)} className="mb-4" />
       <div className="rounded-3xl border border-amber-300/60 bg-amber-50/90 p-5 text-amber-950 dark:border-amber-300/20 dark:bg-amber-300/10 dark:text-amber-100">
         <p className="font-semibold">{t("banner")}</p>
         <p className="mt-1 text-sm">{t("description")}</p>

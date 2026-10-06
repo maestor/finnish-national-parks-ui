@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
+import { AppBreadcrumbs } from "@/components/layout/app-breadcrumbs";
 import { TripManagement } from "@/components/trips/trip-management";
 import { apiAuthFetch } from "@/lib/api";
 import { buildPageMetadata } from "@/lib/page-metadata";
@@ -24,6 +25,7 @@ const TripsPage = async () => {
 
   return (
     <div>
+      <AppBreadcrumbs path={appRoutes.controlPanel.trips} className="mb-4" />
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
         <Link

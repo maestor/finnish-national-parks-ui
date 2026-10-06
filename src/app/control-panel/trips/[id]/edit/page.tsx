@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { PublicCacheRefreshNotice } from "@/components/admin/public-cache-refresh-notice";
+import { AppBreadcrumbs } from "@/components/layout/app-breadcrumbs";
 import { SnackbarNotice } from "@/components/providers/snackbar-notice";
 import { TripFeaturedImageSection } from "@/components/trips/trip-featured-image-section";
 import { TripForm } from "@/components/trips/trip-form";
@@ -53,6 +54,7 @@ const EditTripPage = async ({ params, searchParams }: EditTripPageProps) => {
 
   return (
     <div>
+      <AppBreadcrumbs path={appRoutes.controlPanel.editTrip(id)} className="mb-4" />
       <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
       <p className="mt-2 text-muted-foreground">{t("description")}</p>
       <div className="mt-3 flex flex-col items-start gap-2">

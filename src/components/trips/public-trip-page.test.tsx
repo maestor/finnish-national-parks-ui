@@ -390,10 +390,28 @@ describe("PublicTripPage", () => {
     });
   });
 
+  it("leaves the breadcrumb to the owning admin route in preview mode", () => {
+    render(<PublicTripPage trip={trip} isPreview />);
+    expect(
+      screen.queryByRole("navigation", { name: "layout.breadcrumbs.label" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: trip.name })).toBeInTheDocument();
+  });
+
   it("renders the trip summary, route section, and itinerary", () => {
     render(<PublicTripPage trip={trip} />);
 
     expect(screen.getByRole("heading", { name: "Kesaretki" })).toBeInTheDocument();
+    const trail = screen.getByRole("navigation", { name: "layout.breadcrumbs.label" });
+    expect(trail.closest("section")).toBe(
+      screen.getByRole("heading", { name: trip.name }).closest("section"),
+    );
+    expect(trail.parentElement?.firstElementChild).toBe(trail);
+    expect(within(trail).getByText(trip.name)).toHaveAttribute("aria-current", "page");
+    expect(within(trail).getByRole("link", { name: "layout.nav.trips" })).toHaveAttribute(
+      "href",
+      "/retket",
+    );
     expect(screen.queryByRole("link", { name: "tripPage.archiveLink" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "tripPage.descriptionTitle" })).toBeInTheDocument();
     expect(screen.getByText("Kesäinen kierros pohjoiseen.").parentElement).toHaveClass(

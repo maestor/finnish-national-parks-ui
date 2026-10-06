@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { PublicCacheRefreshNotice } from "@/components/admin/public-cache-refresh-notice";
+import { AppBreadcrumbs } from "@/components/layout/app-breadcrumbs";
 import { SnackbarNotice } from "@/components/providers/snackbar-notice";
 import { VisitForm } from "@/components/visits/visit-form";
 import { VisitImageSection } from "@/components/visits/visit-image-section";
@@ -44,6 +45,7 @@ const EditVisitPage = async ({ params, searchParams }: EditVisitPageProps) => {
 
   return (
     <div>
+      <AppBreadcrumbs path={appRoutes.controlPanel.editVisit(id)} className="mb-4" />
       <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
       <p className="mt-2 text-muted-foreground">{t("description")}</p>
       <div className="mt-3 flex flex-col items-start gap-2">

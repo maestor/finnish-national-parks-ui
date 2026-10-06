@@ -683,8 +683,8 @@ describe("PublicVisitsTimeline", () => {
   it("shows a continuous month spine with the park type as the first detail badge", () => {
     renderTimeline(visits, { selectedYear: null, selectedMonth: null });
 
-    const monthTimeline = screen.getAllByRole("list")[0]?.closest("ol");
     const nuuksioVisitItem = screen.getByRole("heading", { name: "Nuuksio" }).closest("li");
+    const monthTimeline = nuuksioVisitItem?.closest("ol");
     const imageBadge = screen.getByLabelText("visits.item.imageCount");
     const routeBadge = screen.getByText("Punarinnankierros");
 

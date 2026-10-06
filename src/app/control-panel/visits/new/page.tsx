@@ -1,8 +1,10 @@
 import { getTranslations } from "next-intl/server";
+import { AppBreadcrumbs } from "@/components/layout/app-breadcrumbs";
 import { VisitForm } from "@/components/visits/visit-form";
 import { apiFetch } from "@/lib/api";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import type { Park } from "@/lib/parks";
+import { appRoutes } from "@/lib/routes";
 
 export const generateMetadata = async () => {
   const [t, metadataT] = await Promise.all([
@@ -23,6 +25,7 @@ const NewVisitPage = async ({ searchParams }: NewVisitPageProps) => {
 
   return (
     <div>
+      <AppBreadcrumbs path={appRoutes.controlPanel.newVisit} className="mb-4" />
       <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
       <p className="mt-2 text-muted-foreground">{t("description")}</p>
       <VisitForm parks={parks} defaultParkSlug={park} />

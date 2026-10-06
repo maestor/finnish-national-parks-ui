@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
+import { AppBreadcrumbs } from "@/components/layout/app-breadcrumbs";
 import { YearReviewPublishControls } from "@/components/year-review/year-review-publish-controls";
 import { YearReviewStory } from "@/components/year-review/year-review-story";
 import { cn } from "@/lib/cn";
@@ -70,6 +71,7 @@ const ControlPanelYearReviewPage = async ({ searchParams }: ControlPanelYearRevi
 
   return (
     <div className="max-w-5xl space-y-6">
+      <AppBreadcrumbs path={appRoutes.controlPanel.yearReview} className="mb-4" />
       <section className="rounded-3xl border border-border theme-panel p-6 shadow-[0_20px_48px_rgba(var(--shadow-rgb),0.16)] backdrop-blur-xl dark:shadow-[0_28px_60px_rgba(var(--shadow-rgb),0.3)]">
         <h1 className="text-2xl font-bold tracking-tight">{controlPanelT("yearReview.title")}</h1>
         <p className="mt-2 max-w-3xl text-muted-foreground">
