@@ -67,7 +67,7 @@ const HomePage = async () => {
         winterLabel={t("statistics.seasons.winter")}
       />
 
-      <HomeSpecialVisit visit={summary.featuredVisit} />
+      <HomeSpecialVisit visit={summary.featuredVisit} park={summary.featuredPark} />
 
       <HomeAboutSection
         title={t("aboutTitle")}

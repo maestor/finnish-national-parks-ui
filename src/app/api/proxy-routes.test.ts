@@ -3,6 +3,10 @@ import {
   TRIP_PLANNER_NEARBY_REQUEST_TIMEOUT_MS,
   TRIP_PLANNER_SEARCH_REQUEST_TIMEOUT_MS,
 } from "@/lib/trip-planner-timeout";
+import {
+  GET as getHomeFeaturedPark,
+  PATCH as patchHomeFeaturedPark,
+} from "./admin/home-featured-park/route";
 
 const { proxyBackendRequestMock } = vi.hoisted(() => ({
   proxyBackendRequestMock: vi.fn(async () => new Response(null, { status: 204 })),
@@ -124,6 +128,22 @@ describe("api proxy routes", () => {
       expect(proxyBackendRequestMock).toHaveBeenLastCalledWith(
         request,
         "/api/admin/home-featured-visit",
+        { requireAdmin: true },
+      );
+    }
+  });
+  it("protects both featured-park selection proxy routes with admin access", async () => {
+    for (const [method, handler] of [
+      ["GET", getHomeFeaturedPark],
+      ["PATCH", patchHomeFeaturedPark],
+    ] as const) {
+      const request = new Request("https://frontend.example/api/admin/home-featured-park", {
+        method,
+      });
+      await handler(request);
+      expect(proxyBackendRequestMock).toHaveBeenLastCalledWith(
+        request,
+        "/api/admin/home-featured-park",
         { requireAdmin: true },
       );
     }

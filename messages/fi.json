@@ -113,9 +113,16 @@
       "readVisit": "Tutustu käyntiin tarkemmin"
     },
     "specialVisit": {
-      "title": "Erityinen vierailu",
-      "description": "Tässä osiossa esittelemme käynnin, joka on syystä tai toisesta jäänyt lämpiminä muistoina mielen syövereihin. Kohde vaihtuu ylläpidon mielenmaiseman mukaan säännöllisen epäsäännöllisesti.",
-      "ribbon": "Tyytyväisyystakuu"
+      "title": "Poimintoja matkan varrelta",
+      "description": "Tässä osiossa nostamme esiin poikkeuksellisella lämmöllä muistettavia kokemuksia ja tuttuja paikkoja, joihin palaa aina innolla uudestaan. Poiminnat vaihtuvat fiilispohjalta säännöllisen epäsäännöllisesti.",
+      "ribbon": "Tyytyväisyystakuu",
+      "visitSubtitle": "Erityinen vierailu",
+      "parkSubtitle": "Luottopaikka",
+      "allParks": "Kaikki paikat",
+      "parkRibbon": "Nuohottu huolella",
+      "parkDescriptionPlaceholder": "Tästä paikasta ei ole vielä kuvausta.",
+      "readPark": "Tutustu paikkaan tarkemmin",
+      "visitCount": "{count} käyntiä"
     }
   },
   "park": {
@@ -394,7 +401,7 @@
       "description": "Täällä voit muokata paikkoja, hallita retkiä ja ylläpitää käyntikirjauksia.",
       "featuredVisit": {
         "title": "Erityinen vierailu etusivulla",
-        "description": "Valitse etusivulla nostettava käynti. Vain julkaistut käynnit näkyvissä paikoissa ovat valittavissa. Ilman valintaa osio ei näy etusivulla.",
+        "description": "Valitse etusivulla nostettava käynti. Vain julkaistut käynnit näkyvissä paikoissa ovat valittavissa. Ilman valintaa käyntikortti ei näy etusivulla.",
         "label": "Valitse käynti",
         "none": "Ei erityistä vierailua",
         "unavailable": "Valittu käynti ei ole enää julkinen",
@@ -413,6 +420,29 @@
         "resultCount": "Näytetään {shown} / {total} käyntiä",
         "noResults": "Hakua vastaavia käyntejä ei löytynyt.",
         "showMore": "Näytä lisää"
+      },
+      "featuredPark": {
+        "title": "Luottopaikka etusivulla",
+        "description": "Valitse tuttu paikka etusivulle. Vain näkyvät paikat, joissa on vähintään kaksi julkaistua käyntiä, ovat valittavissa. Yksittäisen käynnin voit nostaa erityiseksi vierailuksi. Ilman valintaa paikkakortti ei näy etusivulla.",
+        "label": "Valitse paikka",
+        "none": "Ei luottopaikkaa",
+        "unavailable": "Valittu paikka ei ole enää valittavissa",
+        "empty": "Valittavissa ei ole paikkoja, joissa on vähintään kaksi julkaistua käyntiä.",
+        "save": "Tallenna valinta",
+        "saving": "Tallennetaan...",
+        "saved": "Valinta tallennettu ja etusivu päivitetty.",
+        "saveFailed": "Valinnan tallentaminen epäonnistui. Yritä uudelleen.",
+        "cacheFailed": "Valinta tallennettiin, mutta etusivun päivitys epäonnistui. Yritä päivitystä uudelleen.",
+        "retryCache": "Päivitä etusivu uudelleen",
+        "selectedTitle": "Valittu paikka",
+        "clear": "Poista valinta",
+        "searchLabel": "Hae paikkaa",
+        "searchPlaceholder": "Paikan nimi",
+        "resultsLabel": "Hakutulosten määrä",
+        "resultCount": "Näytetään {shown} / {total} paikkaa",
+        "noResults": "Hakua vastaavia paikkoja ei löytynyt.",
+        "showMore": "Näytä lisää",
+        "visitCount": "{count} käyntiä"
       }
     },
     "adminUsers": {
