@@ -138,6 +138,7 @@ const setMagnetSectionScrollPositions = ({
 };
 
 vi.mock("next/navigation", () => ({
+  usePathname: () => "/kaynnit",
   useRouter: () => ({ push: mockPush }),
 }));
 

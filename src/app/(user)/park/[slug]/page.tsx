@@ -228,7 +228,13 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
           items={[
             { id: "park-location", label: t("sectionNav.location") },
             ...(hasAbout ? [{ id: "park-about", label: t("sectionNav.about") }] : []),
-            { id: "visit-history", label: t("sectionNav.visits") },
+            {
+              id: "visit-history",
+              initialTargetId: visits.some((visit) => visit.id === initialOpenVisitId)
+                ? `park-visit-${initialOpenVisitId}`
+                : undefined,
+              label: t("sectionNav.visits"),
+            },
           ]}
         />
 

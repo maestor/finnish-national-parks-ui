@@ -659,7 +659,7 @@ describe("PublicTripPage", () => {
     expect(routeLink).not.toHaveAttribute("aria-current");
   });
 
-  it("switches to the itinerary chip on small screens when the itinerary occupies more of the viewport", () => {
+  it("keeps the route chip active on small screens until the itinerary reaches the navigation", () => {
     Object.defineProperty(window, "innerHeight", {
       configurable: true,
       value: 640,
@@ -693,6 +693,19 @@ describe("PublicTripPage", () => {
       fireEvent.scroll(window);
     });
 
+    expect(routeLink).toHaveAttribute("aria-current", "location");
+    expect(itineraryLink).not.toHaveAttribute("aria-current");
+
+    setSectionScrollPositions({
+      descriptionTop: -1680,
+      itineraryTop: 44,
+      navBottom: 40,
+      routeTop: -556,
+    });
+    act(() => {
+      setWindowScrollY(1456);
+      fireEvent.scroll(window);
+    });
     expect(itineraryLink).toHaveAttribute("aria-current", "location");
     expect(routeLink).not.toHaveAttribute("aria-current");
   });
