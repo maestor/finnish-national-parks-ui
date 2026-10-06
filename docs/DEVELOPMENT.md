@@ -420,6 +420,7 @@ These are contributor defaults, not optional polish:
 - `next.config.ts` sets baseline security headers on all routes: a Content-Security-Policy, `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options: DENY`, a `Permissions-Policy` that keeps geolocation self-only, and HSTS in production.
 - The CSP allows exactly the external origins the app needs: the R2 image bucket (also the presigned upload target), the OSM tile origin, and the configured map style origin. When adding a new external origin (tiles, embeds, storage), extend the CSP and `images.remotePatterns` in the same change.
 - `script-src 'unsafe-inline'` is required today (Next.js inline bootstrap + next-themes); move to a nonce-based policy before tightening it.
+- Production CSP excludes `unsafe-eval`. The shared `src/lib/env.ts` module sets Zod's `jitless` mode in the browser before creating schemas, preventing its caught `Function("")` capability probe from generating a CSP violation. Server-side Zod compilation keeps its default setting.
 - Backend fetches in `src/lib/api.ts` and `src/lib/backend-proxy.ts` use a 10-second `AbortSignal.timeout` so a hung backend cannot pin server components or route handlers; proxy timeouts surface as 504.
 - `AUTH_JWT_SECRET` must be at least 32 characters; the env schema rejects shorter secrets at boot.
 
