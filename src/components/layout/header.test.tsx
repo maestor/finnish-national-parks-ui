@@ -62,6 +62,7 @@ describe("Header", () => {
     searchParamsState.value = "";
     themeState.value = "light";
     setThemeMock.mockReset();
+    window.history.replaceState(null, "", "/");
     setWindowScrollY(0);
     document.documentElement.style.removeProperty("--page-sticky-nav-top");
   });
@@ -132,6 +133,56 @@ describe("Header", () => {
 
     expect(header).toHaveClass("translate-y-0");
     expect(document.documentElement.style.getPropertyValue("--page-sticky-nav-top")).toBe("3.5rem");
+  });
+
+  it.each(["wheel", "touchmove", "keydown", "pointerdown"])(
+    "keeps the header visible during initial anchor positioning until a %s scroll gesture",
+    (gesture) => {
+      window.history.replaceState(null, "", "/paikka/sipoo#park-about");
+      const { container } = render(<Header />);
+      const header = container.querySelector("header");
+
+      setWindowScrollY(650);
+      fireEvent.scroll(window);
+      expect(header).toHaveClass("translate-y-0");
+      setWindowScrollY(540);
+      fireEvent.scroll(window);
+      setWindowScrollY(600);
+      fireEvent.scroll(window);
+      expect(header).toHaveClass("translate-y-0");
+      expect(document.documentElement.style.getPropertyValue("--page-sticky-nav-top")).toBe(
+        "3.5rem",
+      );
+
+      if (gesture === "wheel") fireEvent.wheel(window, { deltaY: 200 });
+      if (gesture === "touchmove") fireEvent.touchMove(window);
+      if (gesture === "keydown") fireEvent.keyDown(window, { key: "PageDown" });
+      if (gesture === "pointerdown") fireEvent.pointerDown(window);
+      setWindowScrollY(800);
+      fireEvent.scroll(window);
+      expect(header).toHaveClass("-translate-y-full");
+      setWindowScrollY(650);
+      fireEvent.scroll(window);
+      expect(header).toHaveClass("translate-y-0");
+    },
+  );
+
+  it("keeps anchor positioning protected while typing or tabbing through controls", () => {
+    window.history.replaceState(null, "", "/paikka/sipoo#park-about");
+    const { container } = render(
+      <>
+        <Header />
+        <input aria-label="Search" />
+      </>,
+    );
+    fireEvent.keyDown(screen.getByRole("textbox", { name: "Search" }), { key: " " });
+    fireEvent.keyDown(window, { key: "Tab" });
+    const preventedScrollKey = new KeyboardEvent("keydown", { key: "PageDown", cancelable: true });
+    preventedScrollKey.preventDefault();
+    fireEvent(window, preventedScrollKey);
+    setWindowScrollY(650);
+    fireEvent.scroll(window);
+    expect(container.querySelector("header")).toHaveClass("translate-y-0");
   });
 
   it("keeps the header hidden while downward scrolling continues after it has collapsed", async () => {

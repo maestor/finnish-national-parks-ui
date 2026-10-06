@@ -158,6 +158,7 @@ export const VisitAccordion = ({
           return (
             <div
               key={visit.id}
+              id={`park-visit-${visit.id}`}
               className={`flex items-center justify-between ${VISIT_CARD_CLASS_NAME} ${season.borderClass} ${isHighlighted ? "ring-2 ring-primary/35 ring-offset-2 ring-offset-background dark:ring-offset-slate-950/44" : ""} border-l-4 px-4 py-3`}
             >
               <span className="flex flex-wrap items-center gap-2.5 text-sm font-medium">
@@ -200,6 +201,7 @@ export const VisitAccordion = ({
         return (
           <div
             key={visit.id}
+            id={`park-visit-${visit.id}`}
             className={`overflow-hidden ${VISIT_CARD_CLASS_NAME} ${season.borderClass} ${isHighlighted ? "ring-2 ring-primary/35 ring-offset-2 ring-offset-background dark:ring-offset-slate-950/44" : ""} border-l-4`}
           >
             <div className="flex items-center gap-3 px-4 py-3">

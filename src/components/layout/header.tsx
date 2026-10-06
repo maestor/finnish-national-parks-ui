@@ -39,6 +39,7 @@ const HEADER_HIDE_SCROLL_THRESHOLD_PX = 96;
 const HEADER_SCROLL_DELTA_THRESHOLD_PX = 12;
 const PAGE_STICKY_NAV_TOP_VISIBLE = "3.5rem";
 const PAGE_STICKY_NAV_TOP_HIDDEN = "0rem";
+const SCROLL_KEYS = new Set(["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "]);
 
 interface DesktopNavItem {
   ariaCurrent?: "page" | "location";
@@ -63,6 +64,7 @@ export const Header = () => {
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const openAnimationFrameRef = useRef<number | null>(null);
   const lastScrollYRef = useRef(0);
+  const hasUserScrollIntentRef = useRef(true);
 
   const openMobileMenu = () => {
     if (openAnimationFrameRef.current !== null) {
@@ -137,6 +139,7 @@ export const Header = () => {
     void pathname;
     setIsHeaderVisible(!isImmersiveSharePage);
     lastScrollYRef.current = window.scrollY;
+    hasUserScrollIntentRef.current = window.location.hash === "";
   }, [isImmersiveSharePage, pathname]);
 
   useEffect(() => {
@@ -152,6 +155,11 @@ export const Header = () => {
 
     const handleScroll = () => {
       const currentScrollY = Math.max(window.scrollY, 0);
+      // Native fragment scrolling and hydration corrections are not user gestures.
+      if (!hasUserScrollIntentRef.current) {
+        lastScrollYRef.current = currentScrollY;
+        return;
+      }
       const scrollDelta = currentScrollY - lastScrollYRef.current;
 
       if (Math.abs(scrollDelta) < HEADER_SCROLL_DELTA_THRESHOLD_PX) {
@@ -164,11 +172,34 @@ export const Header = () => {
       lastScrollYRef.current = currentScrollY;
     };
 
+    const handleUserScrollIntent = () => {
+      hasUserScrollIntentRef.current = true;
+    };
+    const handleScrollKey = (event: KeyboardEvent) => {
+      if (
+        !SCROLL_KEYS.has(event.key) ||
+        event.defaultPrevented ||
+        (event.target instanceof HTMLElement &&
+          (event.target.isContentEditable || event.target.closest("input, textarea, select")))
+      ) {
+        return;
+      }
+      handleUserScrollIntent();
+    };
+
     lastScrollYRef.current = window.scrollY;
     window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("wheel", handleUserScrollIntent, { passive: true });
+    window.addEventListener("touchmove", handleUserScrollIntent, { passive: true });
+    window.addEventListener("pointerdown", handleUserScrollIntent, { passive: true });
+    window.addEventListener("keydown", handleScrollKey);
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("wheel", handleUserScrollIntent);
+      window.removeEventListener("touchmove", handleUserScrollIntent);
+      window.removeEventListener("pointerdown", handleUserScrollIntent);
+      window.removeEventListener("keydown", handleScrollKey);
     };
   }, [isImmersiveSharePage, isMobileMenuVisible]);
 

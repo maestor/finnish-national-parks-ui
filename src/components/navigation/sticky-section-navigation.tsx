@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 export interface StickySectionNavigationItem {
   id: string;
+  initialTargetId?: string;
   label: string;
 }
 
@@ -14,12 +16,6 @@ interface StickySectionNavigationProps {
   items: StickySectionNavigationItem[];
   onHeightChange?: (height: number) => void;
   topOffset?: string;
-}
-
-interface VisibleSection {
-  id: string;
-  top: number;
-  visibleHeight: number;
 }
 
 const SECTION_NAV_CONTAINER_CLASS_NAME =
@@ -34,36 +30,8 @@ const HEADER_HIDDEN_OFFSET_PX = 0;
 const getActiveSectionIdFromViewport = (
   sectionElements: HTMLElement[],
   stickyNavBottom: number,
-  viewportHeight: number,
 ) => {
   const viewportTop = stickyNavBottom + 8;
-  const viewportBottom = viewportHeight;
-  let mostVisibleSection: VisibleSection | null = null;
-
-  for (const sectionElement of sectionElements) {
-    const { bottom, top } = sectionElement.getBoundingClientRect();
-    const visibleHeight = Math.max(
-      0,
-      Math.min(bottom, viewportBottom) - Math.max(top, viewportTop),
-    );
-
-    if (
-      mostVisibleSection === null ||
-      visibleHeight > mostVisibleSection.visibleHeight ||
-      (visibleHeight === mostVisibleSection.visibleHeight && top > mostVisibleSection.top)
-    ) {
-      mostVisibleSection = {
-        id: sectionElement.id,
-        top,
-        visibleHeight,
-      };
-    }
-  }
-
-  if (mostVisibleSection !== null && mostVisibleSection.visibleHeight > 0) {
-    return mostVisibleSection.id;
-  }
-
   return (
     [...sectionElements]
       .reverse()
@@ -79,8 +47,14 @@ export const StickySectionNavigation = ({
   onHeightChange,
   topOffset = "var(--page-sticky-nav-top, 0.5rem)",
 }: StickySectionNavigationProps) => {
+  const pathname = usePathname();
   const [activeSectionId, setActiveSectionId] = useState<string | null>(items[0]?.id ?? null);
   const sectionNavigationRef = useRef<HTMLElement | null>(null);
+  const initialSectionRef = useRef<{
+    pathname: string | null;
+    hash: string;
+    restored: boolean;
+  } | null>(null);
 
   useEffect(() => {
     setActiveSectionId(items[0]?.id ?? null);
@@ -106,27 +80,98 @@ export const StickySectionNavigation = ({
   }, [items, onHeightChange]);
 
   useEffect(() => {
-    if (items.length < 2) {
+    if (initialSectionRef.current === null || initialSectionRef.current.pathname !== pathname) {
+      initialSectionRef.current = { pathname, hash: window.location.hash, restored: false };
+    }
+    const initialSection = initialSectionRef.current;
+    const hash = initialSection.hash;
+    const sectionItem = items.find((item) => `#${item.id}` === hash);
+
+    if (initialSection.restored || sectionItem === undefined || items.length < 2) {
       return;
     }
+    const sectionId = sectionItem.id;
+    const initialTargetId = sectionItem.initialTargetId ?? sectionId;
 
-    const sectionElements = items
-      .map((item) => document.getElementById(item.id))
-      .filter((element): element is HTMLElement => element !== null);
+    let animationFrameId: number | null = null;
+    const restoreInitialSection = () => {
+      animationFrameId = null;
 
-    if (sectionElements.length === 0) {
+      if (window.location.hash !== hash) {
+        observer.disconnect();
+        return;
+      }
+
+      // Let the browser finish its native fragment scroll before correcting it.
+      if (document.readyState !== "complete") {
+        return;
+      }
+
+      const section = document.getElementById(initialTargetId);
+      const navigation = sectionNavigationRef.current;
+      // Streamed sections can still be absent or inside a hidden container.
+      if (section === null || navigation === null || section.getClientRects().length === 0) {
+        return;
+      }
+
+      const navigationTop = Number.parseFloat(window.getComputedStyle(navigation).top) || 0;
+      // Reserve main-header space while route-entry positioning is settling.
+      const offset = Math.max(navigationTop, HEADER_VISIBLE_OFFSET_PX) + navigation.offsetHeight;
+
+      initialSection.restored = true;
+      observer.disconnect();
+      window.scrollTo({
+        top: Math.max(window.scrollY + section.getBoundingClientRect().top - offset, 0),
+        behavior: "instant",
+      });
+      setActiveSectionId(sectionId);
+    };
+    const scheduleRestore = () => {
+      if (animationFrameId === null) {
+        animationFrameId = window.requestAnimationFrame(restoreInitialSection);
+      }
+    };
+    const observer = new MutationObserver(scheduleRestore);
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["hidden", "style"],
+    });
+    window.addEventListener("load", scheduleRestore, { once: true });
+    scheduleRestore();
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("load", scheduleRestore);
+      if (animationFrameId !== null) {
+        window.cancelAnimationFrame(animationFrameId);
+      }
+    };
+  }, [items, pathname]);
+
+  useEffect(() => {
+    if (items.length < 2) {
       return;
     }
 
     let animationFrameId: number | null = null;
 
     const updateActiveSectionFromScroll = () => {
+      const sectionElements = items
+        .map((item) => document.getElementById(item.id))
+        .filter((element): element is HTMLElement => element !== null);
       const stickyNavBottom = sectionNavigationRef.current?.getBoundingClientRect().bottom ?? 0;
-      const nextActiveSection = getActiveSectionIdFromViewport(
-        sectionElements,
-        stickyNavBottom,
-        window.innerHeight,
-      );
+      const pageHeight = document.documentElement.scrollHeight;
+      const isAtPageBottom =
+        pageHeight > window.innerHeight && window.scrollY + window.innerHeight >= pageHeight - 2;
+      const lastSection = sectionElements.at(-1);
+      const nextActiveSection =
+        isAtPageBottom &&
+        lastSection !== undefined &&
+        lastSection.getBoundingClientRect().top < window.innerHeight
+          ? lastSection.id
+          : getActiveSectionIdFromViewport(sectionElements, stickyNavBottom);
 
       if (nextActiveSection !== undefined) {
         setActiveSectionId((currentActiveSectionId) =>
@@ -147,10 +192,16 @@ export const StickySectionNavigation = ({
     };
 
     updateActiveSectionFromScroll();
+    const headerOffsetObserver = new MutationObserver(scheduleActiveSectionUpdate);
+    headerOffsetObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["style"],
+    });
     window.addEventListener("scroll", scheduleActiveSectionUpdate, { passive: true });
     window.addEventListener("resize", scheduleActiveSectionUpdate);
 
     return () => {
+      headerOffsetObserver.disconnect();
       if (animationFrameId !== null) {
         window.cancelAnimationFrame(animationFrameId);
       }
@@ -167,7 +218,7 @@ export const StickySectionNavigation = ({
   return (
     <nav
       aria-label={ariaLabel}
-      className={`sticky z-40 px-1 ${className ?? ""}`}
+      className={`sticky z-40 px-1 motion-reduce:transition-none ${className ?? ""}`}
       ref={sectionNavigationRef}
       style={{ top: topOffset }}
     >

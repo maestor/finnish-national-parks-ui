@@ -166,6 +166,7 @@ describe("VisitAccordion", () => {
     render(<VisitAccordion visits={visits} parkSlug="pallas" initialOpenVisitId={4} />);
 
     expect(getVisitToggle("15.8.2024")).toHaveAttribute("aria-expanded", "true");
+    expect(getVisitCard("15.8.2024")).toHaveAttribute("id", "park-visit-4");
     expect(getVisitToggle("1.9.2024")).toHaveAttribute("aria-expanded", "false");
   });
 
@@ -191,6 +192,7 @@ describe("VisitAccordion", () => {
     render(<VisitAccordion visits={visits} parkSlug="pallas" />);
 
     expect(screen.getByText("15.1.2024")).toBeInTheDocument();
+    expect(getVisitCard("15.1.2024")).toHaveAttribute("id", "park-visit-1");
     expect(screen.queryByRole("button", { name: /15\.1\.2024/ })).not.toBeInTheDocument();
   });
 
