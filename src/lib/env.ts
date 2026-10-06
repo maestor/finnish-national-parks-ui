@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+// Skip Zod's eval capability probe before constructing browser-side schemas.
+// Production CSP blocks it even though Zod catches the error and falls back.
+if (typeof window !== "undefined") {
+  z.config({ jitless: true });
+}
+
 const toAbsoluteUrl = (value: string): URL => {
   if (value.startsWith("http://") || value.startsWith("https://")) {
     return new URL(value);

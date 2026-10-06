@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { z } from "zod";
 
 const originalEnv = { ...process.env };
+const originalJitless = z.config().jitless;
 
 const importEnvModule = async () => {
   vi.resetModules();
@@ -13,6 +15,8 @@ describe("env", () => {
   afterEach(() => {
     process.env = { ...originalEnv };
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+    z.config({ jitless: originalJitless });
     vi.doMock("@/lib/env", () => ({
       env: {
         NEXT_PUBLIC_API_URL: "http://localhost:3004",
@@ -29,6 +33,33 @@ describe("env", () => {
       },
     }));
     vi.resetModules();
+  });
+
+  it("validates browser environment variables without attempting dynamic code evaluation", async () => {
+    process.env.NEXT_PUBLIC_API_URL = "http://localhost:3004";
+    const evaluate = vi.spyOn(globalThis, "Function").mockImplementation(
+      class extends Function {
+        constructor() {
+          super();
+          throw new EvalError("Blocked by Content Security Policy");
+        }
+      },
+    );
+
+    const { env } = await importEnvModule();
+
+    expect(env.NEXT_PUBLIC_API_URL).toBe("http://localhost:3004");
+    expect(evaluate).not.toHaveBeenCalled();
+  });
+
+  it("preserves the server's Zod compilation setting", async () => {
+    vi.stubGlobal("window", undefined);
+    process.env.NEXT_PUBLIC_API_URL = "http://localhost:3004";
+
+    const { env } = await importEnvModule();
+
+    expect(env.NEXT_PUBLIC_API_URL).toBe("http://localhost:3004");
+    expect(z.config().jitless).toBe(originalJitless);
   });
 
   it("does not require NEXT_PUBLIC_API_URL when only site metadata env is read", async () => {
