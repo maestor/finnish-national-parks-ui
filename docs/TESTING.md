@@ -112,6 +112,8 @@ The signed-out control-panel smoke checks the canonical `/kirjaudu` redirect and
 
 `e2e/breadcrumbs.spec.ts` checks legacy archive redirects, direct trip entry, the complete mobile accessibility path, visually reduced ancestors and their keyboard-focus reveal, parent navigation, front-page/map omission, and placement as the first content in public archive/planner heroes. It requires a published trip for the detail flow. Component and route tests cover the Finnish route matrix, loaded entity names, admin list/new/edit/preview trails, and one non-link current item; inspect separator baselines, wrapped titles, and both themes in the browser.
 
+`e2e/skip-to-content.spec.ts` checks the shared **Siirry sisältöön** link on `/` and `/kirjaudu` at desktop and `354x708` in both themes: it is initially visually hidden, appears on the first Tab press without clipping, focuses the main content on Enter, and lets the next Tab continue inside that content. The root-layout tests also protect the translated link and focusable main target. Inspect the focused link's stacking, contrast, and outline in the browser.
+
 **Responsive verification note:**
 
 - Treat `354x708` CSS pixels as the smallest supported mobile viewport for this app. It matches the team's OnePlus Nord 3 baseline where small-screen layout issues tend to surface first.
