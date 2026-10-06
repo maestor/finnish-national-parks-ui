@@ -87,6 +87,8 @@ The `AUTH_JWT_SECRET` must match the backend's `AUTH_JWT_SECRET` exactly. `AUTH_
 
 Use focused checks while implementing, then pause for user review. After acceptance, run `npm run verify` before committing and pushing. Pull requests targeting `main` also run the same `npm run verify` gate in GitHub Actions.
 
+Plans and prototypes confined to the shared, untracked Reissuvihko Plans vault do not enter the Git workflow: leave the current branch unchanged, even on `main`, and review the artifacts directly. Create or switch to a working branch only when the task starts changing repository files, including tracked documentation or agent instructions.
+
 The pull-request workflow grants `contents: read`, stops after 30 minutes, and cancels an older verification run for the same pull request when a newer commit arrives. Its checkout and Node setup actions are pinned to immutable official release SHAs; Dependabot updates those pins weekly. The separate weekly `Dependency Audit` workflow can be started manually, installs the locked dependency tree, and runs `npm audit --audit-level=high` with development dependencies included. It does not build the application or receive production secrets.
 
 `npm run typecheck` intentionally clears `.next/types` and `.next/dev/types`, then rebuilds the current branch's route and App Router typings through `next typegen` before running `tsc`. This keeps local verification aligned with the checked-out implementation instead of stale generated artifacts from another branch.
