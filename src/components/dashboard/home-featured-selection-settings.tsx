@@ -80,7 +80,7 @@ export const HomeFeaturedSelectionSettings = ({
   return (
     <section
       aria-labelledby={`${prefix}-settings-title`}
-      className="mt-8 rounded-2xl border border-border bg-card p-5 sm:p-6"
+      className="min-w-0 rounded-2xl border border-border bg-card p-5 sm:p-6"
     >
       <h2 id={`${prefix}-settings-title`} className="flex items-center gap-2 text-lg font-semibold">
         <Star className="h-5 w-5 text-icon" aria-hidden="true" />
