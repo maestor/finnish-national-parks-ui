@@ -185,7 +185,7 @@ describe("Header", () => {
 
     expect(screen.getByRole("link", { name: "layout.nav.login" })).toHaveAttribute(
       "href",
-      "/auth/login",
+      "/auth/login?returnTo=%2Fpaikat",
     );
     expect(screen.getByRole("link", { name: "layout.nav.login" })).toHaveAttribute(
       "title",
@@ -303,6 +303,19 @@ describe("Header", () => {
     expect(screen.queryByRole("button", { name: "layout.nav.filters" })).not.toBeInTheDocument();
     expect(screen.getByText("home-park-search")).toBeInTheDocument();
     expect(screen.getByText("home-park-search").parentElement).not.toHaveClass("hidden");
+  });
+
+  it("returns mobile navigation logins to the current page", async () => {
+    authState.isLoading = false;
+    render(<Header />);
+
+    await userEvent.click(screen.getByRole("button", { name: "layout.nav.menu" }));
+
+    const dialog = screen.getByRole("dialog", { name: "layout.nav.menu" });
+    expect(within(dialog).getByRole("link", { name: "layout.nav.login" })).toHaveAttribute(
+      "href",
+      "/auth/login?returnTo=%2Fpaikat",
+    );
   });
 
   it("opens a mobile menu sheet with navigation and session actions", async () => {

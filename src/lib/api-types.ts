@@ -102,6 +102,8 @@ export interface paths {
             parameters: {
                 query?: {
                     invite?: string;
+                    /** @description Optional public frontend path to return to after successful login, including query and fragment */
+                    returnTo?: string;
                 };
                 header?: never;
                 path?: never;

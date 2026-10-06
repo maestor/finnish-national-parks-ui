@@ -2,45 +2,42 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
+import type { paths } from "@/lib/api-types";
 
-export type AuthUser = {
-  id: string;
-  email: string;
-  isSuperAdmin: boolean;
-  name: string;
-  picture: string;
-};
+export type AuthUser = paths["/auth/me"]["get"]["responses"][200]["content"]["application/json"];
+
+export type AuthSessionResponse = { user: AuthUser | null };
 
 const AUTH_CACHE_TTL_MS = 30_000;
 
 // Concurrent hook instances (header, map, visit history, admin controls) mount
 // together and share the in-flight request. Keep the settled result briefly too,
 // so client-side navigation does not refetch the same session for every page.
-let authMeRequest: Promise<AuthUser | null> | null = null;
-let authMeCache: { expiresAt: number; user: AuthUser | null } | null = null;
+let authSessionRequest: Promise<AuthUser | null> | null = null;
+let authSessionCache: { expiresAt: number; user: AuthUser | null } | null = null;
 
 const fetchAuthUser = () => {
-  if (authMeCache && authMeCache.expiresAt > Date.now()) {
-    return Promise.resolve(authMeCache.user);
+  if (authSessionCache && authSessionCache.expiresAt > Date.now()) {
+    return Promise.resolve(authSessionCache.user);
   }
 
-  authMeRequest ??= apiFetch<AuthUser>("/auth/me")
-    .then((user) => {
-      authMeCache = { expiresAt: Date.now() + AUTH_CACHE_TTL_MS, user };
+  authSessionRequest ??= apiFetch<AuthSessionResponse>("/auth/session")
+    .then(({ user }) => {
+      authSessionCache = { expiresAt: Date.now() + AUTH_CACHE_TTL_MS, user };
       return user;
     })
     .catch(() => {
-      authMeCache = { expiresAt: Date.now() + AUTH_CACHE_TTL_MS, user: null };
+      authSessionCache = { expiresAt: Date.now() + AUTH_CACHE_TTL_MS, user: null };
       return null;
     })
     .finally(() => {
-      authMeRequest = null;
+      authSessionRequest = null;
     });
-  return authMeRequest;
+  return authSessionRequest;
 };
 
 export const clearAuthCache = () => {
-  authMeCache = null;
+  authSessionCache = null;
 };
 
 export const useAuth = () => {

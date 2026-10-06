@@ -299,6 +299,7 @@ const PublicVisitsTimelineContent = ({
 
   let monthSideIndex = 0;
   let visitFocusIndex = 0;
+  let visitImageIndex = 0;
 
   const renderVisitBadges = (visit: {
     imageCount: number;
@@ -338,6 +339,8 @@ const PublicVisitsTimelineContent = ({
     imagelessHeaderPadding: string,
   ) => {
     const image = visit.featuredImage;
+    const imageLoading = visitImageIndex < 2 ? "eager" : "lazy";
+    if (image) visitImageIndex += 1;
     const header = (
       <div
         className={cn(
@@ -370,7 +373,14 @@ const PublicVisitsTimelineContent = ({
     );
     return image ? (
       <div className="relative aspect-video bg-muted">
-        <Image src={image.url} alt="" fill unoptimized loading="lazy" className="object-cover" />
+        <Image
+          src={image.url}
+          alt=""
+          fill
+          unoptimized
+          loading={imageLoading}
+          className="object-cover"
+        />
         {header}
       </div>
     ) : (

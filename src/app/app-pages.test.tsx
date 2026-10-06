@@ -403,10 +403,6 @@ vi.mock("@/components/trips/trip-visit-assignments", () => ({
   ),
 }));
 
-vi.mock("@/components/auth/post-login-return-redirector", () => ({
-  PostLoginReturnRedirector: () => <div data-testid="post-login-return-redirector" />,
-}));
-
 const publicPark = {
   slug: "pallas",
   featuredImage: null,

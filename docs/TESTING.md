@@ -4,7 +4,7 @@ Featured-image UI tests should cover lazy candidate loading, selection/cancel/sa
 Admin invitation UI tests cover the accessible email form, generated link output, copy action, and already-enrolled error state. Admin management UI tests cover super-admin visibility, role changes, self-action hiding, removal confirmation, and error states. Backend integration tests cover token expiry/use, identity matching, admin-row provisioning, super-admin authorization, role changes, self-protection, and removal.
 Trip archive UI tests should cover the server-rendered first batch, cursor append/deduplication, initial and later-page retry states, empty/end states, accessible card links, and the no-store same-origin proxy. Browser verification should inspect `/retket` at desktop and 354px mobile in both themes when an authorized local runtime is available.
 
-Visit timeline behavior tests cover automatic thumbnails for standalone/trip visits, imageless cards, chronological batches without splitting trips, automatic scroll-triggered append/status without focus changes, observer cleanup, and reset on year/month/view changes. Inspect `/kaynnit` at desktop and `354x708` in both themes. API ordering, reorder/delete, publication privacy and resource budgets are verified in the sibling API.
+Visit timeline behavior tests cover automatic thumbnails for standalone/trip visits, eager loading for the first two thumbnails across trip/standalone boundaries with later and appended thumbnails lazy, imageless cards, chronological batches without splitting trips, automatic scroll-triggered append/status without focus changes, observer cleanup, and reset on year/month/view changes. Inspect `/kaynnit` at desktop and `354x708` in both themes. API ordering, reorder/delete, publication privacy and resource budgets are verified in the sibling API.
 
 This project follows **behavior-first TDD**: write the realistic usage story first, turn it into a failing test, implement the smallest change to pass, then refactor.
 
@@ -217,7 +217,9 @@ vi.mock("maplibre-gl", () => ({
 
 ### Mocking Auth State
 
-The `useAuth` hook fetches `/auth/me`. In component tests, mock `apiFetch` or the hook itself depending on what you're testing:
+`src/app/auth/login-flow.test.ts` exercises the real frontend login, Google-start and callback handlers with backend fetch fixtures. It proves forwarding of public return paths (including query/fragment) to the API, login-page omission of `returnTo`, preservation of API redirect destinations and OAuth/session cookies (including deletion attributes), invitations, rejection of unsafe destinations, and unchanged login-error responses. Login-link behavior tests cover keyboard, modified and middle-click activation. API integration tests verify successful Google-token/allowlist authentication and direct public return for both direct API and frontend-proxied callback configurations; frontend fixtures alone must not be treated as proof of a direct API callback flow.
+
+The `useAuth` hook fetches the frontend `/auth/session` endpoint, returning `{ user: AuthUser | null }`. Hook tests cover signed-in and anonymous state, concurrent requests, short-lived result reuse, failures, unmounting, and logout. `src/app/auth/session/route.test.ts` exercises the real proxy with backend fetch fixtures: anonymous requests skip the backend, signed-in requests retain user and super-admin details, backend 401 responses become successful anonymous sessions, service failures remain errors, and responses stay private/no-store. In component tests, mock `apiFetch` with the session envelope or mock the hook itself depending on what you're testing:
 
 ```ts
 vi.mock("@/hooks/use-auth", () => ({
