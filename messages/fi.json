@@ -401,7 +401,7 @@
       "description": "Täällä voit muokata paikkoja, hallita retkiä ja ylläpitää käyntikirjauksia.",
       "featuredVisit": {
         "title": "Erityinen vierailu etusivulla",
-        "description": "Valitse etusivulla nostettava käynti. Vain julkaistut käynnit näkyvissä paikoissa ovat valittavissa. Ilman valintaa käyntikortti ei näy etusivulla.",
+        "description": "Valitse etusivulla nostettava käynti. Vain julkaistut käynnit näkyvissä paikoissa ovat valittavissa.",
         "label": "Valitse käynti",
         "none": "Ei erityistä vierailua",
         "unavailable": "Valittu käynti ei ole enää julkinen",
@@ -423,7 +423,7 @@
       },
       "featuredPark": {
         "title": "Luottopaikka etusivulla",
-        "description": "Valitse tuttu paikka etusivulle. Vain näkyvät paikat, joissa on vähintään kaksi julkaistua käyntiä, ovat valittavissa. Yksittäisen käynnin voit nostaa erityiseksi vierailuksi. Ilman valintaa paikkakortti ei näy etusivulla.",
+        "description": "Valitse tuttu paikka etusivulle. Vain ei-piilotetut vähintään kahden käynnin paikat ovat valittavissa.",
         "label": "Valitse paikka",
         "none": "Ei luottopaikkaa",
         "unavailable": "Valittu paikka ei ole enää valittavissa",

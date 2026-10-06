@@ -32,12 +32,14 @@ const ControlPanelPage = async () => {
   ]);
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-2xl xl:max-w-none">
       <AppBreadcrumbs path={appRoutes.controlPanel.root} className="mb-4" />
       <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
       <p className="mt-2 text-muted-foreground">{t("description")}</p>
-      <HomeFeaturedVisitSettings initialSelection={selection} />
-      <HomeFeaturedParkSettings initialSelection={parkSelection} />
+      <div className="mt-8 grid items-start gap-6 xl:grid-cols-2">
+        <HomeFeaturedVisitSettings initialSelection={selection} />
+        <HomeFeaturedParkSettings initialSelection={parkSelection} />
+      </div>
     </div>
   );
 };
