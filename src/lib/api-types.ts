@@ -2086,6 +2086,135 @@ export interface paths {
         };
         trace?: never;
     };
+    "/api/admin/home-featured-park": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Saved selection and eligible repeatedly visited parks */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            parkSlug: string | null;
+                            candidates: {
+                                name: string;
+                                slug: string;
+                                visitCount: number;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Authentication unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        parkSlug: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Saved selection */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            parkSlug: string | null;
+                        };
+                    };
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Park is not eligible */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Authentication unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
     "/api/home-summary": {
         parameters: {
             query?: never;
@@ -2156,6 +2285,28 @@ export interface paths {
                                 visitedOn: string;
                                 route: string | null;
                                 imageCount: number;
+                                descriptionExcerpt: string | null;
+                                featuredImage: {
+                                    height: number | null;
+                                    /** Format: uri */
+                                    url: string;
+                                    width: number | null;
+                                } | null;
+                            } | null;
+                            featuredPark: {
+                                areaKm2: number | null;
+                                establishmentYear: number | null;
+                                displayTypeName?: string | null;
+                                name: string;
+                                slug: string;
+                                type: {
+                                    code: number;
+                                    id: number;
+                                    name: string;
+                                    /** @enum {string} */
+                                    slug: "outdoor-recreation-area" | "cultural-history-area" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
+                                };
+                                visitCount: number;
                                 descriptionExcerpt: string | null;
                                 featuredImage: {
                                     height: number | null;

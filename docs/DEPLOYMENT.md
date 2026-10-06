@@ -59,6 +59,10 @@ Immediately after promotion, use the existing admin-session, same-origin `POST /
 
 Merge/deploy the API first with migration `0042_home_featured_visit.sql`, then the UI. The home summary adds nullable `featuredVisit`; its home ETag representation is now v3. Immediately expire the frontend `home-summary` cache through the same-origin authenticated `POST /api/revalidate-public-cache` flow with `{ "expireImmediately": true }` after promotion. The selection starts empty, and admin saves perform the same immediate expiration. Service-worker behavior is unchanged.
 
+## Curated park rollout
+
+Deploy migration `0045_home_featured_park.sql` and the API before the UI. `GET /api/home-summary` adds required nullable `featuredPark`, and home ETags use representation v4. The selection starts empty. Immediately expire the UI's `home-summary` cache using the authenticated, same-origin `POST /api/revalidate-public-cache` flow with `{ "expireImmediately": true }` after promotion; API ETags cannot evict already cached Next.js JSON. Admin selections use this same immediate expiration. No service-worker or offline-storage changes.
+
 ## Current PWA note
 
 Production builds register the Serwist service worker. Development disables registration and removes a leftover registration for this app's worker, its scoped `serwist-precache-v2` cache and `public-static-v2`. Other origin caches and browser storage are preserved. If a normal localhost refresh loads stale JavaScript and reports old/new class-name hydration mismatches, hard-refresh once to load the development cleanup; subsequent normal refreshes should use current bundles. Production registration and caching are unchanged.

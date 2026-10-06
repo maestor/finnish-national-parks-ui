@@ -1,5 +1,9 @@
 import { getTranslations } from "next-intl/server";
 import {
+  type HomeFeaturedParkSelection,
+  HomeFeaturedParkSettings,
+} from "@/components/dashboard/home-featured-park-settings";
+import {
   type HomeFeaturedVisitSelection,
   HomeFeaturedVisitSettings,
 } from "@/components/dashboard/home-featured-visit-settings";
@@ -20,10 +24,12 @@ export const generateMetadata = async () => {
 
 const ControlPanelPage = async () => {
   const t = await getTranslations("controlPanel.dashboard");
-  const selection = await apiAuthFetch<HomeFeaturedVisitSelection>(
-    "/api/admin/home-featured-visit",
-    { cache: "no-store" },
-  );
+  const [selection, parkSelection] = await Promise.all([
+    apiAuthFetch<HomeFeaturedVisitSelection>("/api/admin/home-featured-visit", {
+      cache: "no-store",
+    }),
+    apiAuthFetch<HomeFeaturedParkSelection>("/api/admin/home-featured-park", { cache: "no-store" }),
+  ]);
 
   return (
     <div className="max-w-2xl">
@@ -31,6 +37,7 @@ const ControlPanelPage = async () => {
       <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
       <p className="mt-2 text-muted-foreground">{t("description")}</p>
       <HomeFeaturedVisitSettings initialSelection={selection} />
+      <HomeFeaturedParkSettings initialSelection={parkSelection} />
     </div>
   );
 };

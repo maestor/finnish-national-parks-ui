@@ -882,6 +882,16 @@ describe("App pages", () => {
         descriptionExcerpt: null,
         featuredImage: null,
       },
+      featuredPark: {
+        name: "Tuttu puisto",
+        slug: "tuttu-puisto",
+        visitCount: 9,
+        areaKm2: 12,
+        establishmentYear: 1990,
+        type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },
+        descriptionExcerpt: "Tuttu metsä",
+        featuredImage: null,
+      },
       featuredVisit: {
         id: 999,
         park: { name: "Erityinen paikka", slug: "erityinen-paikka" },
@@ -942,6 +952,10 @@ describe("App pages", () => {
       "/kaynnit?view=parks",
     );
     const special = screen.getByRole("region", { name: "home.specialVisit.title" });
+    expect(screen.getByRole("link", { name: "Tuttu puisto" })).toHaveAttribute(
+      "href",
+      "/paikka/tuttu-puisto",
+    );
     expect(screen.getByRole("link", { name: "Erityinen paikka" })).toHaveAttribute(
       "href",
       "/paikka/erityinen-paikka?visit=999#visit-history",
@@ -971,6 +985,7 @@ describe("App pages", () => {
       progressByCategory: [],
       seasonalVisitCounts: { spring: 0, summer: 0, autumn: 0, winter: 0 },
       latestTrip: null,
+      featuredPark: null,
       featuredVisit: null,
       latestStandaloneVisit: null,
       magnetProgress: { totalParks: 0, visitedParks: 0 },
@@ -1022,6 +1037,7 @@ describe("App pages", () => {
         progressByType: [],
         progressByCategory: [],
         latestTrip: null,
+        featuredPark: null,
         featuredVisit: null,
         latestStandaloneVisit: null,
         magnetProgress: { totalParks: 0, visitedParks: 0 },
@@ -1181,6 +1197,7 @@ describe("App pages", () => {
         progressByType: [],
         progressByCategory: [],
         latestTrip: null,
+        featuredPark: null,
         featuredVisit: null,
         latestStandaloneVisit: null,
         magnetProgress: { totalParks: 0, visitedParks: 0 },
@@ -2055,11 +2072,19 @@ describe("App pages", () => {
   });
 
   it("renders the control panel overview page", async () => {
-    vi.mocked(apiAuthFetch).mockResolvedValueOnce({ visitId: null, candidates: [] });
+    vi.mocked(apiAuthFetch)
+      .mockResolvedValueOnce({ visitId: null, candidates: [] })
+      .mockResolvedValueOnce({ parkSlug: null, candidates: [] });
     await renderControlPanelRoute(await ControlPanelPage());
     expect(apiAuthFetch).toHaveBeenCalledWith("/api/admin/home-featured-visit", {
       cache: "no-store",
     });
+    expect(apiAuthFetch).toHaveBeenCalledWith("/api/admin/home-featured-park", {
+      cache: "no-store",
+    });
+    expect(
+      screen.getByRole("searchbox", { name: "controlPanel.dashboard.featuredPark.searchLabel" }),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("searchbox", { name: "controlPanel.dashboard.featuredVisit.searchLabel" }),
     ).toBeInTheDocument();
