@@ -57,7 +57,7 @@ AUTH_COOKIE_NAME=__session
 AUTH_JWT_ISSUER=reissuvihko-api
 AUTH_JWT_AUDIENCE=reissuvihko-ui
 TRIP_PLANNER_CLIENT_SECRET=at-least-32-characters-planner-boundary-secret
-NEXT_PUBLIC_SITE_URL=https://reissuvihko.vercel.app
+NEXT_PUBLIC_SITE_URL=https://reissuvihko.net
 ```
 
 The `AUTH_JWT_SECRET` must match the backend's `AUTH_JWT_SECRET` exactly. `AUTH_JWT_ISSUER` and `AUTH_JWT_AUDIENCE` must match the claims the backend signs into session tokens; both default to the values above and only need to be set when the backend uses a different contract.
@@ -66,24 +66,24 @@ The `AUTH_JWT_SECRET` must match the backend's `AUTH_JWT_SECRET` exactly. `AUTH_
 
 ## Available Scripts
 
-| Command                      | Purpose                                                 |
-| ---------------------------- | ------------------------------------------------------- |
-| `npm run dev`                | Start dev server on `http://localhost:4300`             |
-| `npm run build`              | Production build                                        |
-| `npm run start`              | Start production server                                 |
-| `npm run typecheck`          | Clear and regenerate Next-generated route/page types, then run `tsc --noEmit` |
-| `npm run lint`               | Biome lint check + Tailwind canonical class check       |
-| `npm run lint:fix`           | Auto-fix Biome issues + Tailwind canonical class fixes  |
-| `npm run lint:tailwind:canonical` | Report non-canonical Tailwind class names          |
-| `npm run lint:tailwind:canonical:fix` | Rewrite Tailwind classes to canonical equivalents |
-| `npm run test`               | Run Vitest unit/component tests once                    |
-| `npm run test:coverage`      | Run Vitest with V8 coverage summary + HTML report       |
-| `npm run test:watch`         | Run Vitest in watch mode                                |
-| `npm run test:e2e`           | Run Playwright E2E (Chromium only)                      |
-| `npm run test:e2e:all`       | Run Playwright E2E (all browsers)                       |
-| `npm run verify`             | Full gate: typecheck → lint:fix → test:coverage → build |
-| `npm run generate:api-types` | Regenerate `src/lib/api-types.ts` from backend OpenAPI  |
-| `npm run copy:maplibre-worker` | Sync the MapLibre v6 worker files into `public/maplibre/` (runs automatically via `predev`/`prebuild`) |
+| Command                               | Purpose                                                                                                |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `npm run dev`                         | Start dev server on `http://localhost:4300`                                                            |
+| `npm run build`                       | Production build                                                                                       |
+| `npm run start`                       | Start production server                                                                                |
+| `npm run typecheck`                   | Clear and regenerate Next-generated route/page types, then run `tsc --noEmit`                          |
+| `npm run lint`                        | Biome lint check + Tailwind canonical class check                                                      |
+| `npm run lint:fix`                    | Auto-fix Biome issues + Tailwind canonical class fixes                                                 |
+| `npm run lint:tailwind:canonical`     | Report non-canonical Tailwind class names                                                              |
+| `npm run lint:tailwind:canonical:fix` | Rewrite Tailwind classes to canonical equivalents                                                      |
+| `npm run test`                        | Run Vitest unit/component tests once                                                                   |
+| `npm run test:coverage`               | Run Vitest with V8 coverage summary + HTML report                                                      |
+| `npm run test:watch`                  | Run Vitest in watch mode                                                                               |
+| `npm run test:e2e`                    | Run Playwright E2E (Chromium only)                                                                     |
+| `npm run test:e2e:all`                | Run Playwright E2E (all browsers)                                                                      |
+| `npm run verify`                      | Full gate: typecheck → lint:fix → test:coverage → build                                                |
+| `npm run generate:api-types`          | Regenerate `src/lib/api-types.ts` from backend OpenAPI                                                 |
+| `npm run copy:maplibre-worker`        | Sync the MapLibre v6 worker files into `public/maplibre/` (runs automatically via `predev`/`prebuild`) |
 
 Use focused checks while implementing, then pause for user review. After acceptance, run `npm run verify` before committing and pushing. Pull requests targeting `main` also run the same `npm run verify` gate in GitHub Actions.
 

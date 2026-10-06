@@ -10,7 +10,7 @@ Production env vars required by the frontend:
 NEXT_PUBLIC_API_URL=https://reissuvihko-api.vercel.app
 API_KEY=your-backend-api-key
 AUTH_JWT_SECRET=the-same-secret-as-backend
-NEXT_PUBLIC_SITE_URL=https://reissuvihko.vercel.app
+NEXT_PUBLIC_SITE_URL=https://reissuvihko.net
 
 # Optional
 AUTH_COOKIE_NAME=__session
