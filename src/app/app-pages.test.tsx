@@ -802,9 +802,12 @@ const renderPublicRoute = async (page: React.ReactNode) => {
 };
 
 const renderControlPanelRoute = async (page: React.ReactNode) => {
-  return render(
+  const result = render(
     <SnackbarProvider>{await ControlPanelLayout({ children: page })}</SnackbarProvider>,
   );
+  const trail = screen.getByRole("navigation", { name: "layout.breadcrumbs.label" });
+  expect(trail.querySelectorAll('[aria-current="page"]')).toHaveLength(1);
+  return result;
 };
 
 const createExpectedShareMetadata = (
@@ -1010,6 +1013,9 @@ describe("App pages", () => {
     await renderPublicRoute(await ParksMapPage());
 
     expect(screen.getByTestId("park-explorer")).toHaveTextContent("parks:1|error:none");
+    expect(
+      screen.queryByRole("navigation", { name: "layout.breadcrumbs.label" }),
+    ).not.toBeInTheDocument();
   });
 
   it("establishes request-time boundaries before public summary reads", async () => {
@@ -1284,6 +1290,11 @@ describe("App pages", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Pallas-Yllästunturi" })).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("navigation", { name: "layout.breadcrumbs.label" })).getByText(
+        publicPark.name,
+      ),
+    ).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("link", { name: "park.sectionNav.location" })).toHaveAttribute(
       "href",
       "#park-location",
@@ -1331,6 +1342,8 @@ describe("App pages", () => {
     expect(screen.getByText(publicPark.address)).toBeInTheDocument();
     expect(screen.getByText("1938")).toBeInTheDocument();
     const hero = title.closest("section") as HTMLElement;
+    const trail = within(hero).getByRole("navigation", { name: "layout.breadcrumbs.label" });
+    expect(trail.parentElement?.firstElementChild).toBe(trail);
     expect(within(hero).getByText("park.eyebrow")).toBeInTheDocument();
     expect(within(hero).getByText("14 km²")).toBeInTheDocument();
     const user = userEvent.setup();
@@ -2079,7 +2092,9 @@ describe("App pages", () => {
   });
 
   it("keeps the control panel layout full width on large screens", async () => {
-    const { container } = await renderControlPanelRoute(<div data-testid="control-panel-child" />);
+    const { container } = render(
+      ControlPanelLayout({ children: <div data-testid="control-panel-child" /> }),
+    );
     const layoutRoot = container.firstElementChild;
 
     expect(layoutRoot).not.toBeNull();
@@ -2133,7 +2148,10 @@ describe("App pages", () => {
       screen.getByRole("heading", { name: "controlPanel.parks.edit.title" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "controlPanel.parks.edit.backToList" }),
+      within(screen.getByRole("navigation", { name: "layout.breadcrumbs.label" })).getByRole(
+        "link",
+        { name: "layout.nav.map" },
+      ),
     ).toHaveAttribute("href", "/hallinta/paikat");
     expect(
       screen.getByRole("link", { name: "controlPanel.parks.edit.viewParkPage" }),

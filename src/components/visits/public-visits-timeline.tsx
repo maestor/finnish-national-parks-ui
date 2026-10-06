@@ -6,13 +6,16 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
+import { AppBreadcrumbs } from "@/components/layout/app-breadcrumbs";
 import {
+  PUBLIC_BREADCRUMB_PAGE_SHELL_CLASS_NAME,
   PUBLIC_EMPTY_STATE_PANEL_CLASS_NAME,
   PUBLIC_EYEBROW_BADGE_CLASS_NAME,
+  PUBLIC_HERO_BREADCRUMB_CLASS_NAME,
   PUBLIC_HERO_DESCRIPTION_CLASS_NAME,
   PUBLIC_HERO_HEADING_STACK_CLASS_NAME,
+  PUBLIC_HERO_PANEL_CLASS_NAME,
   PUBLIC_HERO_TITLE_CLASS_NAME,
-  PUBLIC_PAGE_SHELL_CLASS_NAME,
   PUBLIC_PANEL_CLASS_NAME,
 } from "@/components/layout/public-page-styles";
 import { ParkTypeBadge } from "@/components/park/park-type-badge";
@@ -501,8 +504,9 @@ const PublicVisitsTimelineContent = ({
   );
 
   return (
-    <div className={PUBLIC_PAGE_SHELL_CLASS_NAME}>
-      <section className={PUBLIC_PANEL_CLASS_NAME}>
+    <div className={PUBLIC_BREADCRUMB_PAGE_SHELL_CLASS_NAME}>
+      <section className={PUBLIC_HERO_PANEL_CLASS_NAME}>
+        <AppBreadcrumbs path={appRoutes.visits} className={PUBLIC_HERO_BREADCRUMB_CLASS_NAME} />
         <div className="flex flex-col gap-4">
           <div className={PUBLIC_HERO_HEADING_STACK_CLASS_NAME}>
             <div className={PUBLIC_EYEBROW_BADGE_CLASS_NAME}>

@@ -22,12 +22,15 @@ import {
   useRef,
   useState,
 } from "react";
+import { AppBreadcrumbs } from "@/components/layout/app-breadcrumbs";
 import {
+  PUBLIC_BREADCRUMB_PAGE_SHELL_CLASS_NAME,
   PUBLIC_EYEBROW_BADGE_CLASS_NAME,
+  PUBLIC_HERO_BREADCRUMB_CLASS_NAME,
   PUBLIC_HERO_DESCRIPTION_CLASS_NAME,
   PUBLIC_HERO_HEADING_STACK_CLASS_NAME,
+  PUBLIC_HERO_PANEL_CLASS_NAME,
   PUBLIC_HERO_TITLE_CLASS_NAME,
-  PUBLIC_PAGE_SHELL_CLASS_NAME,
   PUBLIC_PANEL_CLASS_NAME,
 } from "@/components/layout/public-page-styles";
 import { Button } from "@/components/ui/button";
@@ -926,14 +929,18 @@ export const TripPlannerPage = () => {
   };
 
   return (
-    <div className={PUBLIC_PAGE_SHELL_CLASS_NAME}>
+    <div className={PUBLIC_BREADCRUMB_PAGE_SHELL_CLASS_NAME}>
       <section
         className={cn(
-          PUBLIC_PANEL_CLASS_NAME,
-          "relative space-y-4",
+          PUBLIC_HERO_PANEL_CLASS_NAME,
+          "relative space-y-4 [&>nav]:mb-2",
           isSearchPanelExpanded ? "z-20" : "z-10",
         )}
       >
+        <AppBreadcrumbs
+          path={appRoutes.tripPlanner}
+          className={PUBLIC_HERO_BREADCRUMB_CLASS_NAME}
+        />
         <div className="flex items-start justify-between gap-3">
           <div className={cn("min-w-0 flex-1", PUBLIC_HERO_HEADING_STACK_CLASS_NAME)}>
             <div className={PUBLIC_EYEBROW_BADGE_CLASS_NAME}>

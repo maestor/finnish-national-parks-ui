@@ -2,9 +2,11 @@ import { CalendarRange, MapPin, Scan } from "lucide-react";
 import Link from "next/link";
 import { connection } from "next/server";
 import { getTranslations } from "next-intl/server";
+import { AppBreadcrumbs } from "@/components/layout/app-breadcrumbs";
 import { PublicMetaBadge } from "@/components/layout/public-meta-badge";
 import {
   PUBLIC_EYEBROW_BADGE_CLASS_NAME,
+  PUBLIC_HERO_BREADCRUMB_CLASS_NAME,
   PUBLIC_HERO_ICON_BUTTON_CLASS_NAME,
   PUBLIC_HERO_TITLE_CLASS_NAME,
   PUBLIC_META_BADGE_CLASS_NAME,
@@ -25,6 +27,7 @@ import { ParkVisitHistory } from "@/components/park/park-visit-history";
 import { AppImage } from "@/components/ui/app-image";
 import { CopyLinkButton } from "@/components/ui/copy-link-button";
 import { apiAuthFetch } from "@/lib/api";
+import { cn } from "@/lib/cn";
 import { fetchPublicParkDetail, fetchPublicParkVisits } from "@/lib/frontend-summaries";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import { getParkTypeDisplayName, type ParkDetail, type ParkVisits } from "@/lib/parks";
@@ -158,15 +161,25 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
           featuredImage={publicPark.featuredImage ?? null}
           privateMedia={parkResult?.usedAuthenticatedFallback}
         >
+          <AppBreadcrumbs
+            path={appRoutes.park(slug)}
+            entityName={publicPark.name}
+            className={PUBLIC_HERO_BREADCRUMB_CLASS_NAME}
+          />
           <div
             className={`${PUBLIC_EYEBROW_BADGE_CLASS_NAME} group-data-[featured-image=true]/park-hero:border-input group-data-[featured-image=true]/park-hero:bg-hero group-data-[featured-image=true]/park-hero:bg-none group-data-[featured-image=true]/park-hero:text-hero-foreground`}
           >
             <MapPin className="h-4 w-4" aria-hidden="true" />
             <span>{t("eyebrow")}</span>
           </div>
-          <div className="mt-2 flex flex-wrap items-center gap-y-3">
+          <div
+            className={cn(
+              "mt-2 flex flex-wrap items-start gap-y-3",
+              logoUrl !== null && "@min-[36rem]:pr-48",
+            )}
+          >
             {logoUrl !== null && (
-              <div className="relative mx-auto h-28 w-48 shrink-0 @min-[36rem]:order-2">
+              <div className="relative mx-auto h-28 w-48 shrink-0 self-center @min-[36rem]:absolute @min-[36rem]:top-1/2 @min-[36rem]:right-0 @min-[36rem]:-translate-y-1/2 @min-[36rem]:group-data-[featured-image=true]/park-hero:right-6">
                 <AppImage
                   src={logoUrl}
                   alt={publicPark.name}
@@ -177,11 +190,11 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
                 />
               </div>
             )}
-            <div className="min-w-0 flex-[1_1_24rem]">
+            <div className="min-w-0 flex-[1_1_24rem] text-center @min-[36rem]:text-left">
               <h1 className={`${PUBLIC_HERO_TITLE_CLASS_NAME} wrap-break-word hyphens-auto`}>
                 {publicPark.name}
               </h1>
-              <div className="mt-5 flex flex-wrap items-center gap-2">
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-2 @min-[36rem]:justify-start">
                 <ParkTypeBadge label={getParkTypeDisplayName(publicPark)} />
                 {publicPark.establishmentYear !== null && (
                   <PublicMetaBadge label={t("established")}>
@@ -211,7 +224,7 @@ const ParkDetailPage = async ({ params, searchParams }: ParkDetailPageProps) => 
 
         <StickySectionNavigation
           ariaLabel={t("sectionNavigationLabel")}
-          className="mt-6"
+          className="mt-4"
           items={[
             { id: "park-location", label: t("sectionNav.location") },
             ...(hasAbout ? [{ id: "park-about", label: t("sectionNav.about") }] : []),

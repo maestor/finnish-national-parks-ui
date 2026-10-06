@@ -14,10 +14,14 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { EditIconLink } from "@/components/admin/edit-icon-link";
+import { AppBreadcrumbs } from "@/components/layout/app-breadcrumbs";
 import {
+  PUBLIC_BREADCRUMB_PAGE_SHELL_CLASS_NAME,
   PUBLIC_EYEBROW_BADGE_CLASS_NAME,
+  PUBLIC_HERO_BREADCRUMB_CLASS_NAME,
   PUBLIC_HERO_HEADING_STACK_CLASS_NAME,
   PUBLIC_HERO_ICON_BUTTON_CLASS_NAME,
+  PUBLIC_HERO_PANEL_CLASS_NAME,
   PUBLIC_HERO_TITLE_CLASS_NAME,
   PUBLIC_META_BADGE_CLASS_NAME,
   PUBLIC_META_DATE_CLASS_NAME,
@@ -485,12 +489,16 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
     trip.featuredImage !== null && failedFeaturedImageKey !== trip.featuredImage.fullUrl;
 
   return (
-    <div className={PUBLIC_PAGE_SHELL_CLASS_NAME}>
+    <div
+      className={isPreview ? PUBLIC_PAGE_SHELL_CLASS_NAME : PUBLIC_BREADCRUMB_PAGE_SHELL_CLASS_NAME}
+    >
       <section
         className={cn(
-          PUBLIC_PANEL_CLASS_NAME,
+          "group/public-hero",
+          isPreview ? PUBLIC_PANEL_CLASS_NAME : PUBLIC_HERO_PANEL_CLASS_NAME,
           hasFeaturedImage && "relative min-h-104 overflow-hidden sm:min-h-120",
         )}
+        data-featured-image={hasFeaturedImage ? "true" : undefined}
       >
         {hasFeaturedImage && trip.featuredImage !== null && (
           <AppImage
@@ -514,8 +522,16 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
           className={cn(
             "relative",
             hasFeaturedImage && "rounded-2xl bg-hero/50 p-4 text-hero-foreground sm:p-6",
+            hasFeaturedImage && !isPreview && "sm:py-4",
           )}
         >
+          {!isPreview && (
+            <AppBreadcrumbs
+              path={appRoutes.trip(trip.slug)}
+              entityName={trip.name}
+              className={PUBLIC_HERO_BREADCRUMB_CLASS_NAME}
+            />
+          )}
           <div className={PUBLIC_HERO_HEADING_STACK_CLASS_NAME}>
             <div
               className={cn(

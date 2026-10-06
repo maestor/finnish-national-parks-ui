@@ -110,6 +110,8 @@ The home smoke flow checks feature headings, independent archive links and navig
 
 The signed-out control-panel smoke checks the canonical `/kirjaudu` redirect and login action. It does not assume an authenticated browser session or expose admin pages without login; authenticated rendering remains covered by owning behavior tests and local admin browser inspection.
 
+`e2e/breadcrumbs.spec.ts` checks legacy archive redirects, direct trip entry, the complete mobile accessibility path, visually reduced ancestors and their keyboard-focus reveal, parent navigation, front-page/map omission, and placement as the first content in public archive/planner heroes. It requires a published trip for the detail flow. Component and route tests cover the Finnish route matrix, loaded entity names, admin list/new/edit/preview trails, and one non-link current item; inspect separator baselines, wrapped titles, and both themes in the browser.
+
 **Responsive verification note:**
 
 - Treat `354x708` CSS pixels as the smallest supported mobile viewport for this app. It matches the team's OnePlus Nord 3 baseline where small-screen layout issues tend to surface first.

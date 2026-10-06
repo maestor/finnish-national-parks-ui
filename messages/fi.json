@@ -24,6 +24,11 @@
       "login": "Kirjaudu",
       "logout": "Kirjaudu ulos"
     },
+    "breadcrumbs": {
+      "label": "Murupolku",
+      "edit": "Muokkaa",
+      "preview": "Esikatselu"
+    },
     "parkSearch": {
       "label": "Hae paikkaa",
       "placeholder": "Hae paikkaa...",
@@ -544,7 +549,6 @@
       "edit": {
         "title": "Muokkaa paikan tietoja",
         "description": "Päivitä paikan julkiset perustiedot ja hallinnan kannalta olennaiset lisätiedot.",
-        "backToList": "Palaa paikkalistaan",
         "viewParkPage": "Siirry paikan sivulle",
         "updatedNotice": "Paikan tiedot päivitettiin onnistuneesti.",
         "form": {

@@ -4,8 +4,10 @@ import {
   type HomeFeaturedVisitSelection,
   HomeFeaturedVisitSettings,
 } from "@/components/dashboard/home-featured-visit-settings";
+import { AppBreadcrumbs } from "@/components/layout/app-breadcrumbs";
 import { apiAuthFetch } from "@/lib/api";
 import { buildPageMetadata } from "@/lib/page-metadata";
+import { appRoutes } from "@/lib/routes";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +28,7 @@ const ControlPanelPage = async () => {
 
   return (
     <div className="max-w-2xl">
+      <AppBreadcrumbs path={appRoutes.controlPanel.root} className="mb-4" />
       <PostLoginReturnRedirector />
       <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
       <p className="mt-2 text-muted-foreground">{t("description")}</p>

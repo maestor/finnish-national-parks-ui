@@ -6,7 +6,7 @@ const ControlPanelLayout = ({ children }: { children: React.ReactNode }) => {
       <aside className="w-full rounded-[1.8rem] border border-border theme-panel p-4 shadow-[0_20px_44px_rgba(var(--shadow-rgb),0.16)] backdrop-blur-xl dark:shadow-[0_24px_48px_rgba(var(--shadow-rgb),0.3)] md:w-64">
         <ControlPanelNav />
       </aside>
-      <div className="flex-1">{children}</div>
+      <div className="min-w-0 flex-1">{children}</div>
     </div>
   );
 };

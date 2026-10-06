@@ -1,18 +1,18 @@
 import { getTranslations } from "next-intl/server";
 import {
+  PUBLIC_BREADCRUMB_PAGE_SHELL_CLASS_NAME,
   PUBLIC_CONTENT_PANEL_CLASS_NAME,
   PUBLIC_EYEBROW_BADGE_CLASS_NAME,
   PUBLIC_HERO_DESCRIPTION_CLASS_NAME,
-  PUBLIC_PAGE_SHELL_CLASS_NAME,
-  PUBLIC_PANEL_CLASS_NAME,
+  PUBLIC_HERO_PANEL_CLASS_NAME,
 } from "@/components/layout/public-page-styles";
 
 export const TripArchiveLoading = async () => {
   const t = await getTranslations("tripsArchive");
 
   return (
-    <div className={PUBLIC_PAGE_SHELL_CLASS_NAME}>
-      <section className={PUBLIC_PANEL_CLASS_NAME} aria-busy="true">
+    <div className={PUBLIC_BREADCRUMB_PAGE_SHELL_CLASS_NAME}>
+      <section className={PUBLIC_HERO_PANEL_CLASS_NAME} aria-busy="true">
         <p className={PUBLIC_EYEBROW_BADGE_CLASS_NAME}>{t("eyebrow")}</p>
         <div className="mt-4 h-10 w-48 animate-pulse rounded-xl bg-muted motion-reduce:animate-none" />
         <p className={`${PUBLIC_HERO_DESCRIPTION_CLASS_NAME} mt-3`}>{t("loading")}</p>

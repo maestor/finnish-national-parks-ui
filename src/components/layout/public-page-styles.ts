@@ -1,11 +1,16 @@
 import { CONTROL_SURFACE_CLASS_NAME, PANEL_SURFACE_CLASS_NAME } from "@/components/ui/theme-styles";
+import { cn } from "@/lib/cn";
 
 export const PUBLIC_PAGE_SHELL_CLASS_NAME =
   "mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-2 py-6 sm:px-4";
 
+export const PUBLIC_BREADCRUMB_PAGE_SHELL_CLASS_NAME = cn(PUBLIC_PAGE_SHELL_CLASS_NAME, "gap-4");
+
 const PUBLIC_PANEL_SURFACE_CLASS_NAME = `rounded-[2rem] ${PANEL_SURFACE_CLASS_NAME}`;
 
 export const PUBLIC_PANEL_CLASS_NAME = `${PUBLIC_PANEL_SURFACE_CLASS_NAME} p-5 sm:p-6`;
+
+export const PUBLIC_HERO_PANEL_CLASS_NAME = cn(PUBLIC_PANEL_CLASS_NAME, "py-4 sm:py-4");
 
 export const PUBLIC_CONTENT_PANEL_CLASS_NAME = `${PUBLIC_PANEL_SURFACE_CLASS_NAME} p-3 sm:p-6`;
 
@@ -32,3 +37,6 @@ export const PUBLIC_HERO_DESCRIPTION_CLASS_NAME =
 
 export const PUBLIC_EMPTY_STATE_PANEL_CLASS_NAME =
   "rounded-[2rem] border border-dashed border-border theme-panel p-8 text-center backdrop-blur-sm";
+
+export const PUBLIC_HERO_BREADCRUMB_CLASS_NAME =
+  "mb-2 group-data-[featured-image=true]/public-hero:text-hero-foreground group-data-[featured-image=true]/public-hero:[&_a]:text-hero-foreground group-data-[featured-image=true]/public-hero:[&_a]:focus-visible:ring-hero-foreground group-data-[featured-image=true]/public-hero:[&_[aria-current=page]]:text-hero-foreground";

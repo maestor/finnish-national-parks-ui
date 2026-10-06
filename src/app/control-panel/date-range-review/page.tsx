@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { DateRangeReviewPublishControls } from "@/components/date-range-review/date-range-review-publish-controls";
 import { DateRangeReviewShareList } from "@/components/date-range-review/date-range-review-share-list";
 import { DateRangeReviewStory } from "@/components/date-range-review/date-range-review-story";
+import { AppBreadcrumbs } from "@/components/layout/app-breadcrumbs";
 import { Label } from "@/components/ui/label";
 import { ApiError } from "@/lib/api";
 import {
@@ -149,6 +150,7 @@ const ControlPanelDateRangeReviewPage = async ({
 
     return (
       <div className="max-w-5xl space-y-6">
+        <AppBreadcrumbs path={appRoutes.controlPanel.dateRangeReview} className="mb-4" />
         <section className="rounded-3xl border border-border theme-panel p-6 shadow-[0_20px_48px_rgba(var(--shadow-rgb),0.16)] backdrop-blur-xl dark:shadow-[0_28px_60px_rgba(var(--shadow-rgb),0.3)]">
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 rounded-full border border-border theme-memory px-3 py-1 text-sm font-medium text-link  ">
@@ -225,6 +227,7 @@ const ControlPanelDateRangeReviewPage = async ({
   const hasEnoughVisits = visits.length >= 3;
   return (
     <div className="max-w-5xl space-y-6">
+      <AppBreadcrumbs path={appRoutes.controlPanel.dateRangeReview} className="mb-4" />
       <section className="rounded-3xl border border-border theme-panel p-6 shadow-[0_20px_48px_rgba(var(--shadow-rgb),0.16)] backdrop-blur-xl dark:shadow-[0_28px_60px_rgba(var(--shadow-rgb),0.3)]">
         <div className="space-y-3">
           <div className="inline-flex items-center gap-2 rounded-full border border-border theme-memory px-3 py-1 text-sm font-medium text-link  ">
