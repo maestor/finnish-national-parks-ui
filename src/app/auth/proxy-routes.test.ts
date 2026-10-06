@@ -10,21 +10,12 @@ vi.mock("@/lib/backend-proxy", () => ({
 
 import { GET as getDevLogin } from "./dev-login/route";
 import { GET as getCallback } from "./google/callback/route";
-import { GET as getGoogle } from "./google/route";
 import { POST as postLogout } from "./logout/route";
 import { GET as getMe } from "./me/route";
 
 describe("auth proxy routes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  it("proxies google auth start", async () => {
-    const request = new Request("https://frontend.example/auth/google");
-
-    await getGoogle(request);
-
-    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/auth/google");
   });
 
   it("proxies local agent auth", async () => {

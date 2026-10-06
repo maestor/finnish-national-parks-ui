@@ -11,6 +11,9 @@ describe("service worker cache policy", () => {
       "network-only",
     );
     expect(getRuntimeCachePolicy({ pathname: "/auth/me", sameOrigin: true })).toBe("network-only");
+    expect(getRuntimeCachePolicy({ pathname: "/auth/session", sameOrigin: true })).toBe(
+      "network-only",
+    );
     expect(getRuntimeCachePolicy({ pathname: "/hallinta", sameOrigin: true })).toBe("network-only");
     expect(getRuntimeCachePolicy({ pathname: "/control-panel", sameOrigin: true })).toBe(
       "network-only",

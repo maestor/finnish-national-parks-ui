@@ -194,7 +194,7 @@ describe("PublicVisitsTimeline", () => {
     });
   });
 
-  it("shows lazy thumbnails in standalone and trip visits without changing their details", () => {
+  it("loads opening thumbnails eagerly in standalone and trip visits without changing their details", () => {
     renderTimeline(
       [
         {
@@ -221,8 +221,8 @@ describe("PublicVisitsTimeline", () => {
       "src",
       "https://example.test/trip-thumb.jpg",
     );
-    expect(within(looseLink).getByAltText("")).toHaveAttribute("loading", "lazy");
-    expect(within(tripLink).getByAltText("")).toHaveAttribute("loading", "lazy");
+    expect(within(looseLink).getByAltText("")).toHaveAttribute("loading", "eager");
+    expect(within(tripLink).getByAltText("")).toHaveAttribute("loading", "eager");
     expect(looseLink).toHaveAttribute("href", "/paikka/nuuksio?visit=1#visit-history");
     expect(looseLink.parentElement).toHaveTextContent("Punarinnankierros");
     expect(screen.getAllByAltText("")).toHaveLength(2);
@@ -249,6 +249,26 @@ describe("PublicVisitsTimeline", () => {
     expect(within(imagelessLink).getByText("visits.item.viewVisit")).toHaveClass("sr-only");
     expect(imagelessLink).toHaveAccessibleName(/visits\.item\.viewVisit/);
     expect(imagelessLink).toHaveAttribute("title", "visits.item.viewVisit");
+  });
+
+  it("shares the opening image budget across standalone visits, trips and appended batches", () => {
+    const imageVisits = Array.from({ length: 15 }, (_, index) => ({
+      ...visits[0],
+      id: index + 100,
+      visitedOn: `2024-06-${String(30 - index).padStart(2, "0")}`,
+      featuredImage: { url: `https://example.test/visit-${index}.jpg` },
+      imageCount: 1,
+      trip: index >= 1 && index <= 3 ? { id: 7, name: "Kesäretki", slug: "kesaretki" } : null,
+      park: { ...visits[0].park, name: `Paikka ${index}`, slug: `paikka-${index}` },
+    }));
+    renderTimeline([visits[2], ...imageVisits], { selectedYear: null, selectedMonth: null });
+
+    const loadingModes = () =>
+      screen.getAllByAltText("").map((image) => image.getAttribute("loading"));
+    expect(loadingModes()).toEqual(["eager", "eager", ...Array(11).fill("lazy")]);
+
+    intersectTimelineEnd();
+    expect(loadingModes()).toEqual(["eager", "eager", ...Array(13).fill("lazy")]);
   });
 
   it("automatically appends chronological batches without splitting trips or moving focus", () => {

@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { apiFetch } from "@/lib/api";
-import { type AuthUser, clearAuthCache, useAuth } from "./use-auth";
+import { type AuthSessionResponse, clearAuthCache, useAuth } from "./use-auth";
 
 vi.mock("@/lib/api", () => ({
   apiFetch: vi.fn(),
@@ -15,11 +15,13 @@ describe("useAuth", () => {
 
   it("loads the authenticated user state from the auth endpoint", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce({
-      id: "user-1",
-      email: "user@example.com",
-      isSuperAdmin: false,
-      name: "Test User",
-      picture: "https://example.com/user.png",
+      user: {
+        id: "user-1",
+        email: "user@example.com",
+        isSuperAdmin: false,
+        name: "Test User",
+        picture: "https://example.com/user.png",
+      },
     });
 
     const { result } = renderHook(() => useAuth());
@@ -28,7 +30,7 @@ describe("useAuth", () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    expect(apiFetch).toHaveBeenCalledWith("/auth/me");
+    expect(apiFetch).toHaveBeenCalledWith("/auth/session");
     expect(result.current.isAuthenticated).toBe(true);
     expect(result.current.user).toEqual({
       id: "user-1",
@@ -37,6 +39,27 @@ describe("useAuth", () => {
       name: "Test User",
       picture: "https://example.com/user.png",
     });
+  });
+
+  it("shares and reuses a successful anonymous session", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({ user: null });
+
+    const first = renderHook(() => useAuth());
+    const second = renderHook(() => useAuth());
+
+    await waitFor(() => {
+      expect(first.result.current.isLoading).toBe(false);
+      expect(second.result.current.isLoading).toBe(false);
+    });
+
+    const later = renderHook(() => useAuth());
+    await waitFor(() => expect(later.result.current.isLoading).toBe(false));
+
+    expect(apiFetch).toHaveBeenCalledExactlyOnceWith("/auth/session");
+    for (const hook of [first, second, later]) {
+      expect(hook.result.current.isAuthenticated).toBe(false);
+      expect(hook.result.current.user).toBeNull();
+    }
   });
 
   it("falls back to a signed-out state when the auth request fails", async () => {
@@ -54,11 +77,13 @@ describe("useAuth", () => {
 
   it("shares a single auth request between concurrent hook instances", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce({
-      id: "user-1",
-      email: "user@example.com",
-      isSuperAdmin: false,
-      name: "Test User",
-      picture: "https://example.com/user.png",
+      user: {
+        id: "user-1",
+        email: "user@example.com",
+        isSuperAdmin: false,
+        name: "Test User",
+        picture: "https://example.com/user.png",
+      },
     });
 
     const first = renderHook(() => useAuth());
@@ -76,11 +101,13 @@ describe("useAuth", () => {
 
   it("reuses a settled auth result for later hook instances", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce({
-      id: "user-1",
-      email: "user@example.com",
-      isSuperAdmin: false,
-      name: "Test User",
-      picture: "https://example.com/user.png",
+      user: {
+        id: "user-1",
+        email: "user@example.com",
+        isSuperAdmin: false,
+        name: "Test User",
+        picture: "https://example.com/user.png",
+      },
     });
 
     const first = renderHook(() => useAuth());
@@ -100,7 +127,7 @@ describe("useAuth", () => {
   });
 
   it("does not update state after unmount when the auth request resolves later", async () => {
-    let resolveUser: ((value: AuthUser) => void) | undefined;
+    let resolveUser: ((value: AuthSessionResponse) => void) | undefined;
 
     vi.mocked(apiFetch).mockImplementationOnce(
       () =>
@@ -114,11 +141,13 @@ describe("useAuth", () => {
     unmount();
     if (resolveUser) {
       resolveUser({
-        id: "user-1",
-        email: "user@example.com",
-        isSuperAdmin: false,
-        name: "Test User",
-        picture: "https://example.com/user.png",
+        user: {
+          id: "user-1",
+          email: "user@example.com",
+          isSuperAdmin: false,
+          name: "Test User",
+          picture: "https://example.com/user.png",
+        },
       });
     }
     await Promise.resolve();
@@ -151,11 +180,13 @@ describe("useAuth", () => {
 
   it("posts logout through the auth endpoint", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce({
-      id: "user-1",
-      email: "user@example.com",
-      isSuperAdmin: false,
-      name: "Test User",
-      picture: "https://example.com/user.png",
+      user: {
+        id: "user-1",
+        email: "user@example.com",
+        isSuperAdmin: false,
+        name: "Test User",
+        picture: "https://example.com/user.png",
+      },
     });
     vi.mocked(apiFetch).mockResolvedValueOnce(undefined);
 

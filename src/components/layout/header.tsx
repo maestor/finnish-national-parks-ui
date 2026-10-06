@@ -368,7 +368,11 @@ export const Header = () => {
                         <span>{t("nav.logout")}</span>
                       </button>
                     ) : (
-                      <LoginLink className={MOBILE_SHEET_ITEM_CLASS} onClick={closeMobileMenu}>
+                      <LoginLink
+                        returnToCurrentPage
+                        className={MOBILE_SHEET_ITEM_CLASS}
+                        onClick={closeMobileMenu}
+                      >
                         <LogIn className="h-4 w-4 shrink-0" aria-hidden="true" />
                         <span>{t("nav.login")}</span>
                       </LoginLink>
@@ -456,6 +460,7 @@ export const Header = () => {
                   </button>
                 ) : (
                   <LoginLink
+                    returnToCurrentPage
                     className={DESKTOP_ICON_BUTTON_CLASS}
                     ariaLabel={t("nav.login")}
                     title={t("nav.login")}

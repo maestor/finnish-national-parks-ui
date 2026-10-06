@@ -1,54 +1,23 @@
 import { appRoutePatterns, normalizeAppPath } from "./routes";
 
-const POST_LOGIN_REDIRECT_STORAGE_KEY = "post-login-redirect-path";
-
-// Only same-origin absolute paths may be returned to after login; anything
-// else (absolute URLs, protocol-relative URLs) would become an open redirect.
-const SAME_ORIGIN_PATH_PATTERN = /^\/(?!\/)/;
-
-const isReturnablePath = (path: string): boolean => {
-  if (!SAME_ORIGIN_PATH_PATTERN.test(path)) {
-    return false;
-  }
-
-  const normalizedPath = normalizeAppPath(path);
-  return (
-    !appRoutePatterns.isLoginPath(normalizedPath) &&
-    !appRoutePatterns.isControlPanelPath(normalizedPath)
-  );
-};
-
-export const storePostLoginRedirectPath = (path: string): void => {
-  if (typeof window === "undefined" || !isReturnablePath(path)) {
-    return;
-  }
-
-  try {
-    window.sessionStorage.setItem(POST_LOGIN_REDIRECT_STORAGE_KEY, normalizeAppPath(path));
-  } catch {}
-};
-
-export const consumePostLoginRedirectPath = (): string | null => {
-  if (typeof window === "undefined") {
+// Return destinations are public same-origin paths, never login/auth endpoints
+// or control-panel pages. URL parsing also resolves dot segments before checks.
+export const normalizePostLoginRedirectPath = (path: string | null): string | null => {
+  if (!path || path.length > 2048 || !/^\/(?!\/)/.test(path) || /[\\\p{Cc}]/u.test(path)) {
     return null;
   }
 
-  try {
-    const path = window.sessionStorage.getItem(POST_LOGIN_REDIRECT_STORAGE_KEY);
-    if (path) {
-      window.sessionStorage.removeItem(POST_LOGIN_REDIRECT_STORAGE_KEY);
-    }
-    return path && SAME_ORIGIN_PATH_PATTERN.test(path) ? normalizeAppPath(path) : null;
-  } catch {
-    return null;
-  }
-};
-
-export const getCurrentPathWithSearchAndHash = (): string | null => {
-  if (typeof window === "undefined") {
+  const url = new URL(path, "https://return.invalid");
+  const pathname = normalizeAppPath(url.pathname);
+  if (
+    pathname.startsWith("//") ||
+    appRoutePatterns.isLoginPath(pathname) ||
+    appRoutePatterns.isControlPanelPath(pathname) ||
+    pathname === "/auth" ||
+    pathname.startsWith("/auth/")
+  ) {
     return null;
   }
 
-  const { pathname, search, hash } = window.location;
-  return normalizeAppPath(`${pathname}${search}${hash}`);
+  return `${pathname}${url.search}${url.hash}`;
 };

@@ -275,7 +275,7 @@ Public API terminology and access caveat:
 - The public map page (`/paikat`) reads `GET /api/map-summary`.
 - The home and map pages call Next.js `connection()` before reading their summaries, keeping page rendering at request time so production builds do not need the backend. The summary requests remain explicit `force-cache` reads with `home-summary` and `map-summary` tags, so repeated public requests can reuse cached data until a successful mutation revalidates the tags and page paths.
 - The public visits page (`/kaynnit`) reads `GET /api/visits-timeline`; its optional map view (`?view=map`) additionally reads `GET /api/map-summary` for marker coordinates, and its visited national parks view (`?view=parks`) joins the same map summary to the visit timeline so park logos and the current total national park count stay available server-side.
-- Timeline visits expose an automatic nullable `featuredImage: { url }` containing the first ordered visit thumbnail (`displayOrder`, then image ID), including visits grouped into trips. No separate cover selection is stored. Existing image upload/reorder/delete invalidation refreshes the cover. Images are lazy, unoptimized 480 px derivatives in reserved aspect-video surfaces flush with the card’s top and side edges; visit and trip detail links disable prefetch. Each image overlays the visit date at top left and the image count at top right on opaque theme-aware pills shared with the home/archive cards; names and remaining badges stay in padded content below. “Näytä käynti” is a screen-reader label and native hover title on each visit link. Imageless visits retain their padded date header.
+- Timeline visits expose an automatic nullable `featuredImage: { url }` containing the first ordered visit thumbnail (`displayOrder`, then image ID), including visits grouped into trips. No separate cover selection is stored. Existing image upload/reorder/delete invalidation refreshes the cover. The first two thumbnails in displayed timeline order load eagerly, sharing one budget across standalone visits and trip groups; imageless cards do not consume that budget. Later thumbnails, including appended batches, remain lazy. Images are unoptimized 480 px derivatives in reserved aspect-video surfaces flush with the card’s top and side edges; visit and trip detail links disable prefetch. Each image overlays the visit date at top left and the image count at top right on opaque theme-aware pills shared with the home/archive cards; names and remaining badges stay in padded content below. “Näytä käynti” is a screen-reader label and native hover title on each visit link. Imageless visits retain their padded date header.
 - The timeline initially renders 12 chronological items and automatically appends 12 when its end comes within 400 px of the viewport, using the archive’s IntersectionObserver approach; a trip counts as one item and stays intact. Normal browsing has no load-more button. The loaded visit count is announced to screen readers and automatic loading preserves keyboard focus. Year/month/view changes reset the batch. The server still reads the complete lightweight timeline metadata for filters, maps and magnet history; this is rendering pagination, not API paging, so payload size still grows with history.
 - Roll out this timeline response change API first, UI second, and expire the frontend `public-visits` cache with the authenticated revalidation flow (`expireImmediately: true`) so pre-field cached metadata is refreshed.
 - The public trip archive (`/retket`) reads `GET /api/trips/archive` with an initial batch of 12 cards and appends later cursor batches through the same-origin `/api/trips/archive` proxy. The initial archive read is explicitly `force-cache`d with the shared `public-trips` tag because featured media now uses stable application URLs; later client-requested batches remain on-demand. The client never stores media URLs in Back navigation state and does not prefetch trip details.
@@ -311,22 +311,26 @@ Long public visit timelines progressively skip offscreen month sections with `co
 
 ### Public navigation background work
 
-The header disables automatic Next.js prefetching for the heavyweight public map, visits, and trip-planner routes. Navigation remains normal; intentional prefetching can be reconsidered if target-device measurements show a clear benefit. `useAuth` shares concurrent `/auth/me` requests and briefly reuses the settled result during client-side navigation; logout clears that cache. PWA caching remains unchanged.
+The header disables automatic Next.js prefetching for the heavyweight public map, visits, and trip-planner routes. Navigation remains normal; intentional prefetching can be reconsidered if target-device measurements show a clear benefit. `useAuth` shares concurrent `/auth/session` requests and reuses the settled user or anonymous result for 30 seconds during client-side navigation; logout clears that cache. PWA caching remains unchanged.
 
 ---
 
 ## Authentication Flow
 
-1. User clicks **"Kirjaudu"** → goes to `/kirjaudu`
-2. Clicks **"Kirjaudu Googlella"** → goes to frontend `/auth/login`
-3. Frontend redirects to proxied `/auth/google`
+1. Header **"Kirjaudu"** links start `/auth/login?returnTo=<current public path>`, including the query and fragment; the login-page action starts `/auth/login` without a return destination
+2. Frontend `/auth/login` validates the optional public return path and redirects to `/auth/google`
+3. Frontend `/auth/google` forwards the validated `returnTo` to the API. The API stores it in a ten-minute `__oauth_return` cookie (`HttpOnly`, `SameSite=Lax`, `Path=/`, `Secure` in production), or clears an old destination when none is provided
 4. Backend redirects to Google OAuth consent screen
-5. Google redirects back to frontend `/auth/google/callback`, which proxies the backend callback
-6. Backend validates the allowlist, sets `__session` through the frontend response, then redirects to `/hallinta`
-7. `useAuth` reads `/auth/me`, which includes the current `isSuperAdmin` status
+5. Google returns to the API `/auth/google/callback` directly, or to its frontend proxy when the API's `GOOGLE_REDIRECT_URI` points there. Local ports 3004 and 4300 share the `localhost` cookie host
+6. Backend verifies the Google token and database allowlist, sets `__session`, clears `__oauth_return`, and redirects directly to the public return path or canonical `/hallinta` when there is none. The frontend callback, when used, preserves the API's response
+7. `useAuth` reads the frontend-only `/auth/session` endpoint, which returns `{ user }` including the current `isSuperAdmin` status for a valid session
 8. `src/proxy.ts` verifies the cookie on every `/hallinta/*` request
 9. Header shows **"Hallinta"** link when authenticated
 10. Control panel has **"Kirjaudu ulos"** logout button
+
+`GET /auth/session` returns `200 { user: null }` without a backend request when the session cookie is absent, empty, or malformed. With a cookie, it proxies the unchanged backend `/auth/me` endpoint to validate the session; a backend 401 also becomes `200 { user: null }`. Other backend errors retain their status, and network failures remain failures. All session responses use `Cache-Control: private, no-store` and remain network-only in the PWA. Public admin quick links still resolve after hydration; public page HTML and protected admin authorization are unchanged.
+
+Login return destinations must be public paths of at most 2,048 characters on the configured frontend origin; external URLs, protocol-relative paths (including after dot-segment normalization), backslashes/control characters, and login, auth or control-panel destinations are rejected. The UI normalizes legacy public paths to Finnish URLs; the API independently validates the query and cookie. Login errors retain the backend's error redirect instead of returning to the public page. Auth-start and callback responses are private/no-store and remain network-only in the PWA. The control-panel home no longer performs a client-side return redirect or uses session storage for login destinations; this avoids rendering the dashboard and loading its admin data before returning to the public page. OAuth state, PKCE, allowlist checks, return destinations and session issuance remain owned by the API. Deploy the API's additive `/auth/google?returnTo=...` contract before this UI change. Deployments with separate API/UI cookie hosts must use the frontend callback configuration described by the API deployment guide.
 
 ### Local AI-agent login
 
@@ -358,7 +362,7 @@ const visit = await apiFetch<Visit>("/api/parks/pallas/visits", {
 ```
 
 - For server-side requests, sends `Authorization: Bearer <API_KEY>` directly to the backend
-- For browser-side calls, uses same-origin frontend routes such as `/auth/me` and `/api/visits/:id`
+- For browser-side calls, uses same-origin frontend routes such as `/auth/session` and `/api/visits/:id`
 - Sends cookies (`credentials: "include"`) in browser for auth and admin write endpoints
 - Throws `ApiError` on non-2xx responses
 - Handles empty-body 204 responses

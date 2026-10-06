@@ -1,5 +1,4 @@
 import { getTranslations } from "next-intl/server";
-import { PostLoginReturnRedirector } from "@/components/auth/post-login-return-redirector";
 import {
   type HomeFeaturedVisitSelection,
   HomeFeaturedVisitSettings,
@@ -29,7 +28,6 @@ const ControlPanelPage = async () => {
   return (
     <div className="max-w-2xl">
       <AppBreadcrumbs path={appRoutes.controlPanel.root} className="mb-4" />
-      <PostLoginReturnRedirector />
       <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
       <p className="mt-2 text-muted-foreground">{t("description")}</p>
       <HomeFeaturedVisitSettings initialSelection={selection} />
