@@ -18,13 +18,15 @@ export const buildPageMetadata = (
   const shareTitle = options?.absoluteTitle ? pageTitle : buildShareTitle(pageTitle, siteTitle);
   const normalizedDescription = options?.description?.replace(/\s+/g, " ").trim();
   const description =
-    normalizedDescription && normalizedDescription.length > 180
-      ? `${normalizedDescription.slice(0, 177).replace(/\s+\S*$/, "")}…`
+    normalizedDescription && normalizedDescription.length > 160
+      ? `${normalizedDescription.slice(0, 159).replace(/\s+\S*$/, "")}…`
       : normalizedDescription;
   // Canonicals and social URLs describe the page, not a UI-state variant.
   // Keep supported query parameters and fragments out of both signals even
   // if a caller passes the current browser URL by mistake.
   const pagePath = options?.pagePath?.split(/[?#]/, 1)[0];
+  // Child social metadata replaces the root objects in Next.js, including
+  // file-based images. Each page must explicitly keep a share image.
   const socialImagePath = options?.socialImagePath;
 
   return {
@@ -37,13 +39,13 @@ export const buildPageMetadata = (
       locale: "fi_FI",
       ...(pagePath ? { type: "website" as const, url: pagePath } : {}),
       ...(description ? { description } : {}),
-      ...(socialImagePath ? { images: [socialImagePath] } : {}),
+      images: [socialImagePath || "/opengraph-image"],
     },
     twitter: {
-      ...(socialImagePath ? { card: "summary_large_image" as const } : {}),
+      card: "summary_large_image",
       title: shareTitle,
       ...(description ? { description } : {}),
-      ...(socialImagePath ? { images: [socialImagePath] } : {}),
+      images: [socialImagePath || "/twitter-image"],
     },
   };
 };

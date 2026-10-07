@@ -12,7 +12,7 @@ export const contentType = "image/png";
 const OpenGraphImage = () => {
   return createSocialPreviewImageResponse({
     title: messages.metadata.title,
-    description: messages.metadata.description,
+    description: messages.metadata.socialDescription,
     variant: "square",
     width: size.width,
     height: size.height,
