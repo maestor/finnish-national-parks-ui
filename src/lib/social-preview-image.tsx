@@ -4,6 +4,10 @@ import { AppIconArtwork } from "./app-icon-artwork";
 
 export type SocialPreviewVariant = "square" | "landscape";
 
+// Mirror the dark site canvas (`.dark --background-image` in globals.css).
+const SOCIAL_PREVIEW_BACKGROUND =
+  "radial-gradient(ellipse at top left, #64704720, transparent 46%), linear-gradient(112deg, #17261f 0%, #172c2d 24%, #17344b 62%, #1c3c55 100%)";
+
 type SocialPreviewImageProps = {
   title: string;
   description: string;
@@ -78,7 +82,7 @@ const SquareSocialPreviewImage = ({
         justifyContent: "center",
         gap: 48,
         padding: "110px 96px",
-        background: "linear-gradient(135deg, #1d3b2c 0%, #193940 45%, #1f4260 100%)",
+        background: SOCIAL_PREVIEW_BACKGROUND,
         color: "#e8e5d7",
         position: "relative",
         overflow: "hidden",
@@ -177,7 +181,7 @@ const LandscapeSocialPreviewImage = ({
         justifyContent: "space-between",
         gap: 56,
         padding: "72px 84px",
-        background: "linear-gradient(135deg, #1d3b2c 0%, #193940 45%, #1f4260 100%)",
+        background: SOCIAL_PREVIEW_BACKGROUND,
         color: "#e8e5d7",
         position: "relative",
         overflow: "hidden",
