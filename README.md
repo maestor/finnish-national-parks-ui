@@ -2,7 +2,7 @@
 
 Next.js 16 frontend for exploring Finnish national parks and managing personal visits.
 
-Live site: [Reissuvihko](https://reissuvihko.net).
+Live site: [Reissuvihko](https://www.reissuvihko.net).
 
 ## Overview
 

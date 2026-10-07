@@ -57,7 +57,7 @@ AUTH_COOKIE_NAME=__session
 AUTH_JWT_ISSUER=reissuvihko-api
 AUTH_JWT_AUDIENCE=reissuvihko-ui
 TRIP_PLANNER_CLIENT_SECRET=at-least-32-characters-planner-boundary-secret
-NEXT_PUBLIC_SITE_URL=https://reissuvihko.net
+NEXT_PUBLIC_SITE_URL=https://www.reissuvihko.net
 ```
 
 The `AUTH_JWT_SECRET` must match the backend's `AUTH_JWT_SECRET` exactly. `AUTH_JWT_ISSUER` and `AUTH_JWT_AUDIENCE` must match the claims the backend signs into session tokens; both default to the values above and only need to be set when the backend uses a different contract.
@@ -205,6 +205,7 @@ Public trails begin with **Reissuvihko** (`layout.siteTitle`, `/`); nested contr
 - `src/app/opengraph-image.tsx` provides the square Open Graph share image used by chat apps such as Slack and WhatsApp.
 - `src/app/twitter-image.tsx` provides the landscape social preview for Twitter/X.
 - `src/lib/page-metadata.ts` explicitly sets both image URLs and the large-image Twitter card on each page because child social metadata replaces the root metadata objects. The home, parks map, visits timeline, trip planner, and trips archive use these branded defaults. Public trip and park details use their selected `featuredImage.fullUrl` for both networks when available; absent covers and authenticated hidden-park fallbacks use the branded defaults. These are stable API media URLs, not expiring bucket signatures, and reuse the existing public detail cache/invalidation. No additional gallery fetch or offline caching is added.
+- The square and landscape share canvases in `src/lib/social-preview-image.tsx` mirror the dark site `--background-image` in `src/app/globals.css`; update both when the dark canvas changes. The logo artwork keeps its own colors.
 - Branded image captions use `metadata.socialDescription`, independently of SEO copy. Main-page SEO descriptions live in `messages/fi.json` under `metadata`; the planner has its own compact description instead of reusing on-page instructions. `buildPageMetadata` collapses whitespace and limits HTML, Open Graph, and Twitter descriptions to 160 characters, truncating long story excerpts at a word boundary with an ellipsis. Short descriptions remain intact. The root layout uses the compact `metadata.description`.
 - Set `NEXT_PUBLIC_SITE_URL` to the deployed canonical origin so generated social image URLs resolve correctly for crawlers and link preview bots.
 - Small icon consumers such as Slack badges and launcher surfaces should prefer the favicon-style artwork rather than the larger share-card icon treatment.
