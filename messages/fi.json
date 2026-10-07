@@ -1,12 +1,14 @@
 {
   "metadata": {
     "title": "Reissuvihko",
-    "homeTitle": "Reissuvihko – retkimuistoja Suomen luonnosta",
-    "description": "Reissuvihko kokoaa tekijöidensä käynnit Suomen retkeilypaikoista, tarinat kuvineen muistoina retkistä sekä yksittäisistä käynneistä Suomen luonnossa. Voit myös selata paikkoja kartalla ja reissusuunnittella omat retkesi. Hyppää mukaan hakemaan inspiraatiota ja ideoimaan vaikka omia reissuja ulkoilun merkeissä!",
+    "homeTitle": "Reissuvihko – retkimuistoja Suomen luonnosta ja historiasta",
+    "description": "Retkimuistoja Suomen luonto- ja historiakohteista tekijöidensä tarinoimana. Tutustu tarinoihin ja kuviin, selaa karttaa ja suunnittele oma retkesi.",
+    "socialDescription": "Retkimuistoja Suomen luonto- ja historiakohteista tekijöidensä tarinoimana.",
+    "tripPlannerDescription": "Suunnittele retkesi Suomen luonto- ja historiakohteisiin. Etsi paikkoja lähtöpisteen läheltä tai matkan varrelta ja kokoa oma reittisi.",
     "parkDescription": "Tarkastele paikan {park} tietoja ja vierailuja Reissuvihkossa.",
     "parksDescription": "Tutustu Suomen kansallispuistoihin ja muihin retkikohteisiin kartalla. Löydä paikkojen tiedot ja tekijöiden käyntikertomukset Reissuvihkosta.",
-    "visitsDescription": "Selaa Reissuvihkon tekijöiden retkikäyntejä, valokuvia ja muistoja Suomen kansallispuistoista ja muista retkikohteista.",
-    "tripsDescription": "Tutustu Reissuvihkon retkiin ja matkakertomuksiin: reitit, käyntikohteet, pysähdykset ja valokuvat samassa paikassa.",
+    "visitsDescription": "Selaa Reissuvihkon tekijöiden käyntejä Suomen luonto- ja historiakohteissa. Tutustu retkimuistoihin, käyntikertomuksiin ja valokuviin.",
+    "tripsDescription": "Tutustu Reissuvihkon retkiin ja matkakertomuksiin. Löydä reitit, luonto- ja historiakohteet, pysähdykset sekä retkien tarinat ja valokuvat.",
     "tripDescription": "Tutustu retkeen {trip}: käyntikohteet, pysähdykset ja retkimuistot Reissuvihkossa."
   },
   "layout": {

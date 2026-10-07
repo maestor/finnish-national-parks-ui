@@ -92,6 +92,8 @@ export const generateMetadata = async ({ params }: ParkDetailPageProps) => {
   const metadata = buildPageMetadata(parkTitle, t("title"), {
     description: shareDescription,
     pagePath: appRoutes.park(slug),
+    socialImagePath:
+      result && !result.usedAuthenticatedFallback ? result.park.featuredImage?.fullUrl : undefined,
   });
   return result && !result.usedAuthenticatedFallback
     ? metadata

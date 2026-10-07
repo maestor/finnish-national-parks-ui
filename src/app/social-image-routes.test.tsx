@@ -178,7 +178,7 @@ describe("social image routes", () => {
     expect(openGraphSize).toEqual({ width: 1200, height: 1200 });
     expect(OpenGraphImage()).toMatchObject({
       title: expect.any(String),
-      description: expect.any(String),
+      description: "Retkimuistoja Suomen luonto- ja historiakohteista tekijöidensä tarinoimana.",
       variant: "square",
       width: 1200,
       height: 1200,
@@ -192,7 +192,7 @@ describe("social image routes", () => {
     expect(twitterSize).toEqual({ width: 1200, height: 630 });
     expect(TwitterImage()).toMatchObject({
       title: expect.any(String),
-      description: expect.any(String),
+      description: "Retkimuistoja Suomen luonto- ja historiakohteista tekijöidensä tarinoimana.",
       variant: "landscape",
       width: 1200,
       height: 630,

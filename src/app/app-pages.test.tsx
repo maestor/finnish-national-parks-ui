@@ -20,7 +20,9 @@ import PublicTripRoutePage, {
 import TripPlannerRoutePage, {
   generateMetadata as generateTripPlannerMetadata,
 } from "./(user)/trip-planner/page";
-import PublicTripsPage from "./(user)/trips/page";
+import PublicTripsPage, {
+  generateMetadata as generatePublicTripsMetadata,
+} from "./(user)/trips/page";
 import PublicVisitsPage, {
   generateMetadata as generatePublicVisitsMetadata,
 } from "./(user)/visits/page";
@@ -482,6 +484,7 @@ const trip = {
 
 const publicTrip = {
   ...trip,
+  featuredImage: null,
   imageCount: 3,
   stopCount: 1,
   route: {
@@ -824,13 +827,13 @@ const createExpectedShareMetadata = (
     locale: "fi_FI",
     ...(options?.pagePath ? { type: "website", url: options.pagePath } : {}),
     ...(options?.description ? { description: options.description } : {}),
-    ...(options?.socialImagePath ? { images: [options.socialImagePath] } : {}),
+    images: [options?.socialImagePath || "/opengraph-image"],
   },
   twitter: {
-    ...(options?.socialImagePath ? { card: "summary_large_image" } : {}),
+    card: "summary_large_image",
     title: options?.absoluteTitle ? pageTitle : `${pageTitle} | metadata.title`,
     ...(options?.description ? { description: options.description } : {}),
-    ...(options?.socialImagePath ? { images: [options.socialImagePath] } : {}),
+    images: [options?.socialImagePath || "/twitter-image"],
   },
 });
 
@@ -1158,7 +1161,7 @@ describe("App pages", () => {
   it("builds translated metadata for the trip planner page", async () => {
     await expect(generateTripPlannerMetadata()).resolves.toEqual(
       createExpectedShareMetadata("tripPlanner.title", {
-        description: "tripPlanner.description",
+        description: "metadata.tripPlannerDescription",
         pagePath: "/reissusuunnittelu",
       }),
     );
@@ -1177,6 +1180,54 @@ describe("App pages", () => {
         pagePath: "/retki/keski-suomen-kesaretki",
       }),
     );
+  });
+
+  it("builds translated metadata with branded images for the trips archive", async () => {
+    await expect(generatePublicTripsMetadata()).resolves.toEqual(
+      createExpectedShareMetadata("tripsArchive.title", {
+        description: "metadata.tripsDescription",
+        pagePath: "/retket",
+      }),
+    );
+  });
+
+  it.each([null, undefined, personalVisit.images[0]])(
+    "selects the public trip featured photo or branded fallback: %s",
+    async (featuredImage) => {
+      vi.mocked(apiPublicFetch).mockResolvedValueOnce({ ...publicTrip, featuredImage });
+      const metadata = await generatePublicTripMetadata({
+        params: Promise.resolve({ slug: publicTrip.slug }),
+      });
+      expect(metadata.openGraph?.images).toEqual([featuredImage?.fullUrl ?? "/opengraph-image"]);
+      expect(metadata.twitter?.images).toEqual([featuredImage?.fullUrl ?? "/twitter-image"]);
+      expect(metadata.twitter).toMatchObject({ card: "summary_large_image" });
+    },
+  );
+
+  it.each([null, undefined, personalVisit.images[0]])(
+    "selects the public park featured photo or branded fallback: %s",
+    async (featuredImage) => {
+      vi.mocked(apiFetch).mockResolvedValueOnce({ ...publicPark, featuredImage });
+      const metadata = await generateParkDetailMetadata({
+        params: Promise.resolve({ slug: publicPark.slug }),
+      });
+      expect(metadata.openGraph?.images).toEqual([featuredImage?.fullUrl ?? "/opengraph-image"]);
+      expect(metadata.twitter?.images).toEqual([featuredImage?.fullUrl ?? "/twitter-image"]);
+    },
+  );
+
+  it("uses branded images for an authenticated hidden park fallback", async () => {
+    vi.mocked(apiFetch).mockRejectedValueOnce(new ApiError(404, "hidden"));
+    vi.mocked(apiAuthFetch).mockResolvedValueOnce({
+      ...publicPark,
+      featuredImage: personalVisit.images[0],
+    });
+    const metadata = await generateParkDetailMetadata({
+      params: Promise.resolve({ slug: publicPark.slug }),
+    });
+    expect(metadata.openGraph?.images).toEqual(["/opengraph-image"]);
+    expect(metadata.twitter?.images).toEqual(["/twitter-image"]);
+    expect(metadata.robots).toEqual({ index: false, follow: false });
   });
 
   it("builds fallback metadata when the public trip slug is missing", async () => {

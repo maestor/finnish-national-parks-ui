@@ -134,13 +134,28 @@ describe("search discovery", () => {
     }
   });
 
+  it.each([
+    ["Lyhyt retkimuisto.", "Lyhyt retkimuisto."],
+    ["x".repeat(160), "x".repeat(160)],
+    ["x".repeat(161), `${"x".repeat(159)}…`],
+    [`${"Retkimuisto ".repeat(14)}vielä pidempi tarina`, `${"Retkimuisto ".repeat(13).trim()}…`],
+    ["  Retki\n\n  kansallispuistoon.  ", "Retki kansallispuistoon."],
+    ["   ", undefined],
+  ])("keeps SEO and social descriptions compact: %s", (description, expected) => {
+    const metadata = buildPageMetadata("Retki", "Reissuvihko", { description });
+    expect(metadata.description).toBe(expected);
+    expect(metadata.openGraph?.description).toBe(expected);
+    expect(metadata.twitter?.description).toBe(expected);
+  });
+
   it("uses a concise plain-text excerpt when a trip has a long story", () => {
     const metadata = buildPageMetadata("Kesäretki", "Reissuvihko", {
-      description: `Ensimmäinen päivä.\n\n${"Retkellä kansallispuistossa. ".repeat(30)}`,
+      description: `Ensimmäinen päivä.\n\n${"Retkellä kansallispuistossa. ".repeat(200)}`,
     });
-    expect(metadata.description?.length).toBeLessThanOrEqual(180);
+    expect(metadata.description?.length).toBeLessThanOrEqual(160);
     expect(metadata.description).toMatch(/^Ensimmäinen päivä\. Retkellä/);
     expect(metadata.description).toMatch(/…$/);
     expect(metadata.openGraph?.description).toBe(metadata.description);
+    expect(metadata.twitter?.description).toBe(metadata.description);
   });
 });
