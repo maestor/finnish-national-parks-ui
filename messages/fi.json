@@ -986,9 +986,9 @@
         "keepPageOpen": "Pidä tämä sivu auki lähetyksen ajan. Odottavat kuvat säilyvät vain tällä sivulla.",
         "stages": {
           "waiting": "Odottaa vuoroaan",
-          "requesting": "Valmistellaan lähetystä…",
-          "uploading": "Lähetetään kuvaa…",
-          "processing": "Viimeistellään kuvaa…",
+          "requesting": "Valmistellaan…",
+          "uploading": "Lähetetään…",
+          "processing": "Viimeistellään…",
           "complete": "Tallennettu",
           "failed": "Lähetys epäonnistui"
         },
