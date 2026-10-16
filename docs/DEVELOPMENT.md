@@ -325,7 +325,9 @@ Long public visit timelines progressively skip offscreen month sections with `co
 
 ### Public navigation background work
 
-The header disables automatic Next.js prefetching for the heavyweight public map, visits, and trip-planner routes. Navigation remains normal; intentional prefetching can be reconsidered if target-device measurements show a clear benefit. `useAuth` shares concurrent `/auth/session` requests and reuses the settled user or anonymous result for 30 seconds during client-side navigation; logout clears that cache. PWA caching remains unchanged.
+The header disables automatic Next.js prefetching for the heavyweight public map, visits, and trip-planner routes. The home intro's **Siirry kartalle** link and home progress links also disable prefetch so catalogue and visits data do not compete with the initial page load. Navigation remains normal; intentional prefetching can be reconsidered if target-device measurements show a clear benefit. `useAuth` shares concurrent `/auth/session` requests and reuses the settled user or anonymous result for 30 seconds during client-side navigation; logout clears that cache. PWA caching remains unchanged.
+
+The app uses the system font stacks in `globals.css`; the root layout does not load unused webfonts. Both opening home memory covers remain eager, with `fetchPriority="high"` reserved for the first (latest-trip) cover. Other memory cards retain their existing loading and default fetch-priority behavior.
 
 ---
 

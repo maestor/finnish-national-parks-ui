@@ -153,6 +153,7 @@ export const HomeVisitStats = ({
               <Link
                 key={item.label}
                 href={item.href}
+                prefetch={false}
                 className={`${itemClassName} transition-[transform,border-color,box-shadow] hover:-translate-y-px hover:border-border hover:shadow-[0_14px_28px_rgba(var(--shadow-rgb),0.16),inset_0_1px_0_rgba(var(--highlight-rgb),0.58)] motion-reduce:transition-none motion-reduce:hover:translate-y-0 dark:hover:shadow-[0_18px_34px_rgba(var(--shadow-rgb),0.28),inset_0_1px_0_rgba(var(--highlight-rgb),0.08)]`}
               >
                 {itemContent}

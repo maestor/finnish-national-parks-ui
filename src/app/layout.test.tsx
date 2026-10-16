@@ -36,11 +36,6 @@ vi.mock("next-intl/server", () => ({
   getTranslations: getTranslationsMock,
 }));
 
-vi.mock("next/font/google", () => ({
-  Geist: () => ({ variable: "font-geist-sans" }),
-  Geist_Mono: () => ({ variable: "font-geist-mono" }),
-}));
-
 vi.mock("@/components/layout/header", () => ({
   Header: () => <header data-testid="app-header">header</header>,
 }));
@@ -131,9 +126,6 @@ describe("RootLayout", () => {
     expect(layout.props["data-scroll-behavior"]).toBe("smooth");
     expect(layout.props.suppressHydrationWarning).toBe(true);
     expect(layout.props.children.type).toBe("body");
-    expect(layout.props.children.props.className).toContain("font-geist-sans");
-    expect(layout.props.children.props.className).toContain("font-geist-mono");
-
     render(layout.props.children.props.children);
 
     expect(screen.getByTestId("intl-provider")).toBeInTheDocument();
