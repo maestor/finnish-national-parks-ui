@@ -30,7 +30,7 @@ export const HomeIntro = ({ title, summary, openMapLabel, infoLabel }: HomeIntro
           <CircleHelp className="h-4 w-4 text-icon stroke-[2.25]" aria-hidden="true" />
           {infoLabel}
         </a>
-        <Link href={appRoutes.parks} className={actionClassName}>
+        <Link href={appRoutes.parks} prefetch={false} className={actionClassName}>
           <MapPin className="h-4 w-4 text-icon stroke-[2.25]" aria-hidden="true" />
           {openMapLabel}
         </Link>

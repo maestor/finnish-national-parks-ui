@@ -28,7 +28,7 @@ const visit: NonNullable<HomeSummary["latestStandaloneVisit"]> = {
 };
 
 describe("HomeFeaturedMemories", () => {
-  it("loads both featured covers immediately for the opening viewport", () => {
+  it("loads both featured covers eagerly while prioritizing only the first card", () => {
     const { container } = render(
       <HomeFeaturedMemories
         latestTrip={{ ...trip, featuredImage: visit.featuredImage }}
@@ -41,6 +41,8 @@ describe("HomeFeaturedMemories", () => {
     for (const image of images) {
       expect(image).toHaveAttribute("loading", "eager");
     }
+    expect(images[0]).toHaveAttribute("fetchpriority", "high");
+    expect(images[1]).not.toHaveAttribute("fetchpriority", "high");
   });
 
   it("provides independent archive links and exact memory destinations with the home heading hierarchy", () => {

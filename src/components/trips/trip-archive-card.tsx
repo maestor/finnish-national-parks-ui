@@ -13,6 +13,7 @@ interface TripMemoryCardProps {
   trip: Omit<PublicTripArchiveItem, "createdAt">;
   headingLevel: 2 | 4;
   imageLoading?: "eager" | "lazy";
+  imageFetchPriority?: "high" | "low" | "auto";
   onClick?: MouseEventHandler<HTMLAnchorElement>;
 }
 
@@ -20,6 +21,7 @@ export const TripMemoryCard = ({
   trip,
   headingLevel,
   imageLoading,
+  imageFetchPriority,
   onClick,
 }: TripMemoryCardProps) => {
   const t = useTranslations("tripsArchive");
@@ -32,6 +34,7 @@ export const TripMemoryCard = ({
       onClick={onClick}
       featuredImage={trip.featuredImage}
       imageLoading={imageLoading}
+      imageFetchPriority={imageFetchPriority}
       descriptionExcerpt={trip.descriptionExcerpt}
       descriptionPlaceholder={t("descriptionPlaceholder")}
       readMore={t("readMore")}

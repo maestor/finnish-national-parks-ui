@@ -27,7 +27,12 @@ export const HomeFeaturedMemories = ({
           icon={Route}
         />
         {latestTrip ? (
-          <TripMemoryCard trip={latestTrip} headingLevel={4} imageLoading="eager" />
+          <TripMemoryCard
+            trip={latestTrip}
+            headingLevel={4}
+            imageLoading="eager"
+            imageFetchPriority="high"
+          />
         ) : (
           <p className={EMPTY_CLASS_NAME}>{t("emptyTrip")}</p>
         )}
