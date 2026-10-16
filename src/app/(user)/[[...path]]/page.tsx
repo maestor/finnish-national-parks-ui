@@ -1,4 +1,4 @@
-import { connection } from "next/server";
+import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { HomeVisitStats } from "@/components/dashboard/home-visit-stats";
 import { HomeAboutSection } from "@/components/home/home-about-section";
@@ -11,7 +11,9 @@ import { PUBLIC_PAGE_SHELL_CLASS_NAME } from "@/components/layout/public-page-st
 import { createHomeProgressItems, fetchHomeSummary } from "@/lib/frontend-summaries";
 import { buildPageMetadata } from "@/lib/page-metadata";
 
-export const generateMetadata = async () => {
+export const generateMetadata = async ({ params }: { params: Promise<{ path?: string[] }> }) => {
+  const { path } = await params;
+  if (path?.length) return { robots: { index: false, follow: false } };
   const metadataT = await getTranslations("metadata");
   return buildPageMetadata(metadataT("homeTitle"), metadataT("title"), {
     absoluteTitle: true,
@@ -20,10 +22,12 @@ export const generateMetadata = async () => {
   });
 };
 
-const HomePage = async () => {
-  // Keep page rendering request-time so builds do not need the backend.
-  // fetchHomeSummary remains explicitly force-cached and tag-revalidated.
-  await connection();
+// Generate on first request, keeping builds independent of the backend.
+export const generateStaticParams = () => [];
+
+const HomePage = async ({ params }: { params: Promise<{ path?: string[] }> }) => {
+  const { path } = await params;
+  if (path?.length) notFound();
   const [t, metadataT] = await Promise.all([getTranslations("home"), getTranslations("metadata")]);
   const summary = await fetchHomeSummary();
   const progressItems = createHomeProgressItems(

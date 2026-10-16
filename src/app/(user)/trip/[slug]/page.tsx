@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import { connection } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { cache } from "react";
 import { PublicTripPage } from "@/components/trips/public-trip-page";
@@ -24,8 +23,6 @@ const fetchTripForRequest = cache(async (slug: string) => {
 });
 
 export const generateMetadata = async ({ params }: PublicTripRoutePageProps) => {
-  await connection();
-
   const [{ slug }, metadataT] = await Promise.all([params, getTranslations("metadata")]);
   const trip = await fetchTripForRequest(slug);
 
@@ -40,11 +37,9 @@ export const generateMetadata = async ({ params }: PublicTripRoutePageProps) => 
   });
 };
 
-const PublicTripRoutePage = async ({ params }: PublicTripRoutePageProps) => {
-  // Keep page rendering request-time so builds do not need the backend.
-  // Trip detail remains explicitly force-cached and tagged.
-  await connection();
+export const generateStaticParams = () => [];
 
+const PublicTripRoutePage = async ({ params }: PublicTripRoutePageProps) => {
   const { slug } = await params;
   const trip = await fetchTripForRequest(slug);
 

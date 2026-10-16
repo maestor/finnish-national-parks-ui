@@ -1,14 +1,10 @@
 import type { MetadataRoute } from "next";
-import { connection } from "next/server";
 import { fetchMapSummary } from "@/lib/frontend-summaries";
 import { fetchPublicTripArchive } from "@/lib/public-trips";
 import { appRoutes } from "@/lib/routes";
 import { siteUrl } from "@/lib/site-url";
 
-const sitemap = async (): Promise<MetadataRoute.Sitemap> => {
-  // Keep this metadata route request-time so builds do not need the backend.
-  // The underlying public reads remain force-cached and tag-revalidated.
-  await connection();
+export const buildSitemap = async (): Promise<MetadataRoute.Sitemap> => {
   const summary = await fetchMapSummary();
   const urls = new Set([
     appRoutes.home,
@@ -26,5 +22,3 @@ const sitemap = async (): Promise<MetadataRoute.Sitemap> => {
   } while (cursor);
   return [...urls].map((path) => ({ url: siteUrl(path) }));
 };
-
-export default sitemap;

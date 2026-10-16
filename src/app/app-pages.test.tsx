@@ -5,24 +5,29 @@ import { SnackbarProvider } from "@/components/providers/snackbar-provider";
 import { ApiError, apiAuthFetch, apiFetch, apiPublicFetch } from "@/lib/api";
 import type { AdminVisibilityPark, Park, Visit, VisitWithPark } from "@/lib/parks";
 import type { FrontendTimelineVisit } from "@/lib/public-visits";
+import HomePage, { generateMetadata as generateHomeMetadata } from "./(user)/[[...path]]/page";
 import PublicDateRangeReviewPage, {
   generateMetadata as generatePublicDateRangeReviewMetadata,
 } from "./(user)/date-range-review/share/[shareId]/page";
 import UserLayout from "./(user)/layout";
-import HomePage, { generateMetadata as generateHomeMetadata } from "./(user)/page";
+import PublicMapError from "./(user)/paikat/[[...path]]/error";
+import ParksMapPage, {
+  generateMetadata as generateParksMapMetadata,
+} from "./(user)/paikat/[[...path]]/page";
+import PublicParkError from "./(user)/paikka/[slug]/error";
 import ParkDetailPage, {
   generateMetadata as generateParkDetailMetadata,
-} from "./(user)/park/[slug]/page";
-import ParksMapPage, { generateMetadata as generateParksMapMetadata } from "./(user)/parks/page";
-import PublicTripRoutePage, {
-  generateMetadata as generatePublicTripMetadata,
-} from "./(user)/trip/[slug]/page";
+} from "./(user)/paikka/[slug]/page";
+import AuthenticatedParkPage, {
+  generateMetadata as generateAuthenticatedParkMetadata,
+} from "./(user)/park-access/[slug]/page";
+import PublicTripArchiveError from "./(user)/retket/[[...path]]/error";
+import PublicTripsPage, {
+  generateMetadata as generatePublicTripsMetadata,
+} from "./(user)/retket/[[...path]]/page";
 import TripPlannerRoutePage, {
   generateMetadata as generateTripPlannerMetadata,
 } from "./(user)/trip-planner/page";
-import PublicTripsPage, {
-  generateMetadata as generatePublicTripsMetadata,
-} from "./(user)/trips/page";
 import PublicVisitsPage, {
   generateMetadata as generatePublicVisitsMetadata,
 } from "./(user)/visits/page";
@@ -68,6 +73,9 @@ import ControlPanelYearReviewPage, {
 } from "./control-panel/year-review/page";
 import LoginPage from "./login/page";
 import NotFoundPage from "./not-found";
+import PublicTripRoutePage, {
+  generateMetadata as generatePublicTripMetadata,
+} from "./retki/[slug]/page";
 
 const { connectionMock, mockNotFound, mockWriteText } = vi.hoisted(() => ({
   connectionMock: vi.fn(async () => undefined),
@@ -111,6 +119,8 @@ vi.mock("next/server", async () => {
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",
+  useSearchParams: () => new URLSearchParams(window.location.search),
+  unstable_rethrow: () => undefined,
   useRouter: () => ({ push: vi.fn() }),
   notFound: mockNotFound,
 }));
@@ -839,6 +849,7 @@ const createExpectedShareMetadata = (
 
 describe("App pages", () => {
   beforeEach(() => {
+    window.history.replaceState({}, "", "/");
     vi.mocked(apiAuthFetch).mockReset();
     vi.mocked(apiFetch).mockReset();
     vi.mocked(apiPublicFetch).mockReset();
@@ -919,7 +930,7 @@ describe("App pages", () => {
       version: 3,
     });
 
-    await renderPublicRoute(await HomePage());
+    await renderPublicRoute(await HomePage({ params: Promise.resolve({}) }));
 
     expect(
       JSON.parse(document.querySelector('script[type="application/ld+json"]')?.textContent ?? ""),
@@ -995,7 +1006,7 @@ describe("App pages", () => {
       version: 0,
       updatedAt: null,
     });
-    await renderPublicRoute(await HomePage());
+    await renderPublicRoute(await HomePage({ params: Promise.resolve({}) }));
     expect(
       screen.getByRole("heading", { name: "home.statistics.title", level: 2 }),
     ).toBeInTheDocument();
@@ -1024,7 +1035,7 @@ describe("App pages", () => {
       version: 4,
     });
 
-    await renderPublicRoute(await ParksMapPage());
+    await renderPublicRoute(await ParksMapPage({ params: Promise.resolve({}) }));
 
     expect(screen.getByTestId("park-explorer")).toHaveTextContent("parks:1|error:none");
     expect(
@@ -1032,7 +1043,36 @@ describe("App pages", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("establishes request-time boundaries before public summary reads", async () => {
+  it.each([HomePage, ParksMapPage, PublicTripsPage])(
+    "rejects extra public path segments before reading the API: %s",
+    async (page) => {
+      await expect(page({ params: Promise.resolve({ path: ["extra"] }) })).rejects.toThrow(
+        "NEXT_NOT_FOUND",
+      );
+      expect(apiPublicFetch).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([generateHomeMetadata, generateParksMapMetadata, generatePublicTripsMetadata])(
+    "keeps additional path segments out of search: %s",
+    async (metadata) => {
+      await expect(metadata({ params: Promise.resolve({ path: ["extra"] }) })).resolves.toEqual({
+        robots: { index: false, follow: false },
+      });
+      expect(apiPublicFetch).not.toHaveBeenCalled();
+    },
+  );
+
+  it("retains the archive retry view without caching a failed initial read", async () => {
+    vi.mocked(apiPublicFetch).mockRejectedValueOnce(new Error("backend offline"));
+    await expect(PublicTripsPage({ params: Promise.resolve({}) })).rejects.toThrow(
+      "backend offline",
+    );
+    await renderPublicRoute(<PublicTripArchiveError />);
+    expect(screen.getByTestId("trip-archive-page")).toHaveTextContent("total:none");
+  });
+
+  it("keeps successful public summary rendering eligible for route caching", async () => {
     vi.mocked(apiPublicFetch)
       .mockResolvedValueOnce({
         totalVisits: 0,
@@ -1054,16 +1094,10 @@ describe("App pages", () => {
         version: 1,
       });
 
-    await HomePage();
-    await ParksMapPage();
+    await HomePage({ params: Promise.resolve({}) });
+    await ParksMapPage({ params: Promise.resolve({}) });
 
-    expect(connectionMock).toHaveBeenCalledTimes(2);
-    expect(connectionMock.mock.invocationCallOrder[0]).toBeLessThan(
-      vi.mocked(apiPublicFetch).mock.invocationCallOrder[0],
-    );
-    expect(connectionMock.mock.invocationCallOrder[1]).toBeLessThan(
-      vi.mocked(apiPublicFetch).mock.invocationCallOrder[1],
-    );
+    expect(connectionMock).not.toHaveBeenCalled();
   });
 
   it("renders the public trip planner page", async () => {
@@ -1072,14 +1106,14 @@ describe("App pages", () => {
     expect(screen.getByTestId("trip-planner-page")).toHaveTextContent("trip-planner");
   });
 
-  it("renders the public trip archive with a request-time boundary", async () => {
+  it("renders a cacheable public trip archive", async () => {
     vi.mocked(apiPublicFetch).mockResolvedValueOnce({
       trips: [],
       nextCursor: null,
       total: 0,
     });
 
-    await renderPublicRoute(await PublicTripsPage());
+    await renderPublicRoute(await PublicTripsPage({ params: Promise.resolve({}) }));
 
     expect(screen.getByTestId("trip-archive-page")).toHaveTextContent("total:0");
     expect(apiPublicFetch).toHaveBeenCalledWith(
@@ -1091,7 +1125,7 @@ describe("App pages", () => {
         },
       }),
     );
-    expect(connectionMock).toHaveBeenCalled();
+    expect(connectionMock).not.toHaveBeenCalled();
   });
 
   it("renders the public trip page", async () => {
@@ -1116,7 +1150,7 @@ describe("App pages", () => {
         signal: expect.any(AbortSignal),
       }),
     );
-    expect(connectionMock).toHaveBeenCalled();
+    expect(connectionMock).not.toHaveBeenCalled();
   });
 
   it("calls notFound when the public trip page cannot find the requested slug", async () => {
@@ -1131,16 +1165,17 @@ describe("App pages", () => {
     expect(mockNotFound).toHaveBeenCalled();
   });
 
-  it("shows the fallback error message when the public map summary request fails", async () => {
+  it("shows the map fallback without caching an upstream failure", async () => {
     vi.mocked(apiPublicFetch).mockRejectedValueOnce(new Error("backend offline"));
-
-    await renderPublicRoute(await ParksMapPage());
-
-    expect(screen.getByTestId("park-explorer")).toHaveTextContent("parks:0|error:backend offline");
+    await expect(ParksMapPage({ params: Promise.resolve({}) })).rejects.toThrow("backend offline");
+    await renderPublicRoute(<PublicMapError />);
+    expect(screen.getByTestId("park-explorer")).toHaveTextContent(
+      "parks:0|error:errors.generic.unknownError",
+    );
   });
 
   it("builds translated metadata for the home page", async () => {
-    await expect(generateHomeMetadata()).resolves.toEqual(
+    await expect(generateHomeMetadata({ params: Promise.resolve({}) })).resolves.toEqual(
       createExpectedShareMetadata("metadata.homeTitle", {
         absoluteTitle: true,
         pagePath: "/",
@@ -1150,7 +1185,7 @@ describe("App pages", () => {
   });
 
   it("builds translated metadata for the parks map page", async () => {
-    await expect(generateParksMapMetadata()).resolves.toEqual(
+    await expect(generateParksMapMetadata({ params: Promise.resolve({}) })).resolves.toEqual(
       createExpectedShareMetadata("home.mapTitle", {
         pagePath: "/paikat",
         description: "metadata.parksDescription",
@@ -1183,7 +1218,7 @@ describe("App pages", () => {
   });
 
   it("builds translated metadata with branded images for the trips archive", async () => {
-    await expect(generatePublicTripsMetadata()).resolves.toEqual(
+    await expect(generatePublicTripsMetadata({ params: Promise.resolve({}) })).resolves.toEqual(
       createExpectedShareMetadata("tripsArchive.title", {
         description: "metadata.tripsDescription",
         pagePath: "/retket",
@@ -1222,7 +1257,7 @@ describe("App pages", () => {
       ...publicPark,
       featuredImage: personalVisit.images[0],
     });
-    const metadata = await generateParkDetailMetadata({
+    const metadata = await generateAuthenticatedParkMetadata({
       params: Promise.resolve({ slug: publicPark.slug }),
     });
     expect(metadata.openGraph?.images).toEqual(["/opengraph-image"]);
@@ -1265,10 +1300,10 @@ describe("App pages", () => {
         visits: [],
       });
 
-    const home = await renderPublicRoute(await HomePage());
+    const home = await renderPublicRoute(await HomePage({ params: Promise.resolve({}) }));
     expect(home.container.querySelector("main")).toBeNull();
 
-    const parks = await renderPublicRoute(await ParksMapPage());
+    const parks = await renderPublicRoute(await ParksMapPage({ params: Promise.resolve({}) }));
     expect(parks.container.querySelector("main")).toBeNull();
 
     const visits = await renderPublicRoute(
@@ -1349,7 +1384,6 @@ describe("App pages", () => {
     await renderPublicRoute(
       await ParkDetailPage({
         params: Promise.resolve({ slug: "pallas" }),
-        searchParams: Promise.resolve({}),
       }),
     );
 
@@ -1367,7 +1401,7 @@ describe("App pages", () => {
       "href",
       "#visit-history",
     );
-    expect(connectionMock).toHaveBeenCalled();
+    expect(connectionMock).not.toHaveBeenCalled();
     expect(screen.getByText("Maailmanperintökohde")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "park.copyParkPageLink" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "park.showInFinlandsMap" })).toHaveAttribute(
@@ -1546,7 +1580,6 @@ describe("App pages", () => {
     await renderPublicRoute(
       await ParkDetailPage({
         params: Promise.resolve({ slug: "pallas" }),
-        searchParams: Promise.resolve({}),
       }),
     );
 
@@ -1561,7 +1594,8 @@ describe("App pages", () => {
     expect(screen.getByText("park.parkPageLinkCopied")).toBeInTheDocument();
   });
 
-  it("passes a targeted visit id to the park detail visit history", async () => {
+  it("resolves a targeted visit in the browser while sharing the park render", async () => {
+    window.history.replaceState({}, "", "/paikka/pallas?visit=10#visit-history");
     vi.mocked(apiFetch)
       .mockResolvedValueOnce({
         ...publicPark,
@@ -1579,7 +1613,6 @@ describe("App pages", () => {
     await renderPublicRoute(
       await ParkDetailPage({
         params: Promise.resolve({ slug: "pallas" }),
-        searchParams: Promise.resolve({ visit: "10" }),
       }),
     );
 
@@ -1611,7 +1644,6 @@ describe("App pages", () => {
     await renderPublicRoute(
       await ParkDetailPage({
         params: Promise.resolve({ slug: "pallas" }),
-        searchParams: Promise.resolve({}),
       }),
     );
 
@@ -1639,26 +1671,28 @@ describe("App pages", () => {
     await renderPublicRoute(
       await ParkDetailPage({
         params: Promise.resolve({ slug: "pallas" }),
-        searchParams: Promise.resolve({}),
       }),
     );
 
     expect(screen.queryByRole("img", { name: "Pallas-Yllästunturi" })).not.toBeInTheDocument();
   });
 
-  it("renders a simple fallback when the park detail page cannot load the park", async () => {
+  it("shows the park fallback without caching an upstream failure", async () => {
     vi.mocked(apiFetch)
       .mockRejectedValueOnce(new Error("backend offline"))
       .mockResolvedValueOnce(null);
-
-    await renderPublicRoute(
-      await ParkDetailPage({
-        params: Promise.resolve({ slug: "missing-park" }),
-        searchParams: Promise.resolve({}),
-      }),
-    );
-
+    await expect(
+      ParkDetailPage({ params: Promise.resolve({ slug: "missing-park" }) }),
+    ).rejects.toThrow("backend offline");
+    await renderPublicRoute(<PublicParkError />);
     expect(screen.getByText("park.detailTitle")).toBeInTheDocument();
+  });
+
+  it("never attempts authenticated reads when the shared public park is unavailable", async () => {
+    vi.mocked(apiFetch).mockRejectedValue(new ApiError(404, "hidden"));
+    await renderPublicRoute(await ParkDetailPage({ params: Promise.resolve({ slug: "hidden" }) }));
+    expect(screen.getByText("park.detailTitle")).toBeInTheDocument();
+    expect(apiAuthFetch).not.toHaveBeenCalled();
   });
 
   it("falls back to an authenticated park fetch when a removed park is hidden from the public API", async () => {
@@ -1680,9 +1714,8 @@ describe("App pages", () => {
     });
 
     await renderPublicRoute(
-      await ParkDetailPage({
+      await AuthenticatedParkPage({
         params: Promise.resolve({ slug: "pallas" }),
-        searchParams: Promise.resolve({}),
       }),
     );
 
@@ -2099,7 +2132,7 @@ describe("App pages", () => {
   it("builds park detail metadata, titles, and descriptions from the fetched park name and falls back to the slug", async () => {
     vi.mocked(apiFetch)
       .mockResolvedValueOnce({ name: "Pallas-Yllästunturi" })
-      .mockRejectedValueOnce(new Error("missing"));
+      .mockRejectedValueOnce(new ApiError(404, "missing"));
 
     await expect(
       generateParkDetailMetadata({ params: Promise.resolve({ slug: "pallas-yllastunturi" }) }),

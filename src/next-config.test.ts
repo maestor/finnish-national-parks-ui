@@ -23,6 +23,34 @@ afterEach(() => {
 });
 
 describe("next.config", () => {
+  it("routes cookie-bearing park requests to private rendering before the public cache", async () => {
+    vi.stubEnv("AUTH_COOKIE_NAME", "custom_session");
+    try {
+      const config = await loadNextConfig();
+      const rewrites = await config.rewrites?.();
+      expect(rewrites).toEqual({
+        beforeFiles: [
+          {
+            source: "/paikka/:slug",
+            has: [{ type: "cookie", key: "custom_session", value: ".+" }],
+            destination: "/park-access/:slug",
+          },
+        ],
+        afterFiles: [],
+        fallback: [],
+      });
+      const headers = await config.headers?.();
+      expect(
+        headers?.find((rule) => rule.source === "/park-access/:path*")?.headers,
+      ).toContainEqual({
+        key: "X-Robots-Tag",
+        value: "noindex, nofollow",
+      });
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
   it("keeps internal and tokenized pages out of search while leaving public pages indexable", async () => {
     vi.stubEnv("VERCEL_ENV", "production");
     try {

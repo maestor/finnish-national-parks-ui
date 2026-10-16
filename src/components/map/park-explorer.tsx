@@ -2,9 +2,10 @@
 
 import { SlidersHorizontal, X } from "lucide-react";
 import dynamic from "next/dynamic";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { SearchParamsObserver } from "@/components/providers/search-params-observer";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/cn";
@@ -148,7 +149,8 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
   const pathname = usePathname();
   const normalizedPathname = normalizeAppPath(pathname);
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const [query, setQuery] = useState("");
+  const searchParams = useMemo(() => new URLSearchParams(query), [query]);
   const [activeFilter, setActiveFilter] = useState<ParkTypeMapFilter>("all");
   const [activeVisitStatus, setActiveVisitStatus] = useState<VisitStatusFilter>("visited");
   const [isVisitStatusSelectorOpen, setIsVisitStatusSelectorOpen] = useState(false);
@@ -514,6 +516,7 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
 
   return (
     <div className="relative flex flex-1 min-h-0">
+      <SearchParamsObserver onChange={setQuery} />
       <aside
         id="park-map-filters-mobile"
         aria-label={t("panelLabel")}

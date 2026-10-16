@@ -151,11 +151,25 @@ const nextConfig: NextConfig = {
       "/date-range-review/share/:path*",
       "/year-review/share/:path*",
       "/~offline",
+      "/park-access/:path*",
     ].map((source) => ({
       source,
       headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
     })),
   ],
+  // Cookie-bearing park requests use a separate uncached render. This runs in
+  // Vercel routing, without adding middleware work to anonymous public visits.
+  rewrites: async () => ({
+    beforeFiles: [
+      {
+        source: "/paikka/:slug",
+        has: [{ type: "cookie", key: process.env.AUTH_COOKIE_NAME || "__session", value: ".+" }],
+        destination: "/park-access/:slug",
+      },
+    ],
+    afterFiles: [],
+    fallback: [],
+  }),
   redirects: async () => [...legacyAppRedirects],
 };
 
