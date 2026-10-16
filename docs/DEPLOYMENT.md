@@ -22,7 +22,7 @@ NEXT_PUBLIC_MAP_STYLE_URL=https://demotiles.maplibre.org/style.json
 Set `NEXT_PUBLIC_SITE_URL` to the preferred public origin (use your custom domain if applicable) and redeploy. Metadata, canonical links, and the sitemap share this origin. Without it, the app uses `VERCEL_PROJECT_PRODUCTION_URL`, then `VERCEL_URL`, then localhost. Redirect secondary domains to the preferred domain in Vercel; canonical links do not perform redirects.
 
 - `/robots.txt` advertises `/sitemap.xml` and allows public pages and rendering assets. API/auth paths are excluded from crawling.
-- `/sitemap.xml` reads the anonymous-user catalogue and published trip archive pages through the server-side API client, without session cookies. It is generated on request, while its public reads use the shared force-cached, tag-revalidated fetchers; it excludes admin/preview/login/tokenized share URLs and fails on upstream errors instead of returning a misleading partial sitemap. Publication invalidation refreshes the sitemap path. It does not emit guessed modification dates or signed media URLs. A dedicated lightweight API sitemap feed should replace archive pagination if the catalogue grows enough to approach function time limits or 50,000 URLs.
+- `/sitemap.xml` reads the anonymous-user catalogue and published trip archive pages through the server-side API client, without session cookies. Its XML output is generated on the first request and cached, while its public reads use the shared force-cached, tag-revalidated fetchers; it excludes admin/preview/login/tokenized share URLs and fails on upstream errors instead of returning a misleading partial sitemap. Publication invalidation refreshes the sitemap path. It does not emit guessed modification dates or signed media URLs. A dedicated lightweight API sitemap feed should replace archive pagination if the catalogue grows enough to approach function time limits or 50,000 URLs.
 - Public pages have Finnish descriptions and canonical URLs without UI filter query parameters. Missing/hidden park fallback metadata is noindex. Login, admin, offline, and tokenized share responses carry `X-Robots-Tag: noindex, nofollow`; these pages remain crawlable so crawlers can read the directive. Vercel previews receive the same header globally. These rules do not replace authentication.
 - Saved trip and visit preview routes also declare `robots: noindex, nofollow`; their authenticated API data, route calculations, galleries, and signed images use no-store/private handling. API publication-dependent summaries use `private, no-store`, while catalog-only responses retain their existing cache policy.
 - Keep `public/googleff9155aacaf6c1d0.html` deployed after ownership verification.
@@ -48,6 +48,14 @@ The wildcard robots rule already allows `OAI-SearchBot` on public pages. OpenAI 
 - Browser park search requests are also proxied through Next.js route handlers.
 - The OAuth start and callback routes are proxied through the frontend host so the session cookie can be stored on the frontend domain.
 - Admin invitation links use the same proxied OAuth start and callback; no additional Google redirect URI is required.
+
+## Public rendering cache
+
+Home, map, trip archive, public park/trip details and sitemap output generate on first visit and reuse successful rendered output. Builds do not contact the backend. Fixed PNG icons generate during the build. Existing Finnish URLs, metadata and service-worker rules are retained.
+
+Keep `AUTH_COOKIE_NAME` consistent with the API: the build's cookie-aware park rewrite sends session-bearing requests to an uncached/noindex internal route before public cache lookup. Hidden-park authorization remains in the API. After a mutation, the existing same-origin authenticated revalidation flow must succeed to immediately expire data and rendered output (including requests without `expireImmediately: true`); use its retry notice if refresh fails. Direct API imports still require explicit frontend revalidation for the affected pages.
+
+Use `npm run test:cache` for a synthetic production check of cache hits, publication refresh, private isolation and linked visits. See [production cache verification](TESTING.md#production-cache-verification).
 
 ## Home-summary v2 rollout
 

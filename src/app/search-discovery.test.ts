@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fetchMapSummary, type MapSummary } from "@/lib/frontend-summaries";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import { fetchPublicTripArchive } from "@/lib/public-trips";
+import { buildSitemap as sitemap } from "@/lib/sitemap";
 import robots from "./robots";
-import sitemap from "./sitemap";
 
 const { connectionMock } = vi.hoisted(() => ({
   connectionMock: vi.fn(async () => undefined),
@@ -71,7 +71,7 @@ describe("search discovery", () => {
       .mockResolvedValueOnce({ trips: [archiveTrip("kesaretki")], nextCursor: "next", total: 2 })
       .mockResolvedValueOnce({ trips: [archiveTrip("syysretki")], nextCursor: null, total: 2 });
     const entries = await sitemap();
-    expect(connectionMock).toHaveBeenCalledOnce();
+    expect(connectionMock).not.toHaveBeenCalled();
     expect(fetchMapSummary).toHaveBeenCalledOnce();
     expect(entries.map(({ url }) => url)).toEqual([
       "https://reissuvihko.example.com/",

@@ -1,12 +1,13 @@
-import { connection } from "next/server";
+import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { TripArchivePage } from "@/components/trips/trip-archive-page";
 import { buildPageMetadata } from "@/lib/page-metadata";
-import type { PublicTripArchiveResponse } from "@/lib/public-trips";
 import { fetchPublicTripArchive } from "@/lib/public-trips";
 import { appRoutes } from "@/lib/routes";
 
-export const generateMetadata = async () => {
+export const generateMetadata = async ({ params }: { params: Promise<{ path?: string[] }> }) => {
+  const { path } = await params;
+  if (path?.length) return { robots: { index: false, follow: false } };
   const [t, metadataT] = await Promise.all([
     getTranslations("tripsArchive"),
     getTranslations("metadata"),
@@ -18,18 +19,14 @@ export const generateMetadata = async () => {
   });
 };
 
-const TripsPage = async () => {
-  // Keep page rendering request-time so builds do not need the backend.
-  // The archive response itself remains explicitly force-cached and tagged.
-  await connection();
+// Generate on first request, keeping builds independent of the backend.
+export const generateStaticParams = () => [];
 
-  let initialResponse: PublicTripArchiveResponse | null = null;
+const TripsPage = async ({ params }: { params: Promise<{ path?: string[] }> }) => {
+  const { path } = await params;
+  if (path?.length) notFound();
 
-  try {
-    initialResponse = await fetchPublicTripArchive();
-  } catch {
-    initialResponse = null;
-  }
+  const initialResponse = await fetchPublicTripArchive();
 
   return <TripArchivePage initialResponse={initialResponse} />;
 };

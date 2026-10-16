@@ -99,13 +99,13 @@ describe("revalidate public cache route", () => {
       issuer: "reissuvihko-api",
       audience: "reissuvihko-ui",
     });
-    expect(revalidateTagMock).toHaveBeenCalledWith("home-summary", "max");
-    expect(revalidateTagMock).toHaveBeenCalledWith("map-summary", "max");
-    expect(revalidateTagMock).toHaveBeenCalledWith("public-visits", "max");
-    expect(revalidateTagMock).toHaveBeenCalledWith("public-trips", "max");
-    expect(revalidateTagMock).toHaveBeenCalledWith("admin-park-visibility", "max");
-    expect(revalidateTagMock).toHaveBeenCalledWith("public-park:pallas", "max");
-    expect(revalidateTagMock).toHaveBeenCalledWith("public-trip:kesaretki", "max");
+    expect(revalidateTagMock).toHaveBeenCalledWith("home-summary", { expire: 0 });
+    expect(revalidateTagMock).toHaveBeenCalledWith("map-summary", { expire: 0 });
+    expect(revalidateTagMock).toHaveBeenCalledWith("public-visits", { expire: 0 });
+    expect(revalidateTagMock).toHaveBeenCalledWith("public-trips", { expire: 0 });
+    expect(revalidateTagMock).toHaveBeenCalledWith("admin-park-visibility", { expire: 0 });
+    expect(revalidateTagMock).toHaveBeenCalledWith("public-park:pallas", { expire: 0 });
+    expect(revalidateTagMock).toHaveBeenCalledWith("public-trip:kesaretki", { expire: 0 });
     expect(revalidatePathMock).toHaveBeenCalledWith("/", "page");
     expect(revalidatePathMock).toHaveBeenCalledWith("/paikat", "page");
     expect(revalidatePathMock).toHaveBeenCalledWith("/retket", "page");
@@ -134,15 +134,14 @@ describe("revalidate public cache route", () => {
 
     const response = await POST(request);
 
-    expect(revalidateTagMock).toHaveBeenCalledWith("home-summary", "max");
-    expect(revalidateTagMock).toHaveBeenCalledWith("map-summary", "max");
-    expect(revalidateTagMock).toHaveBeenCalledWith("public-visits", "max");
-    expect(revalidateTagMock).toHaveBeenCalledWith("public-trips", "max");
-    expect(revalidateTagMock).toHaveBeenCalledWith("admin-park-visibility", "max");
-    expect(revalidateTagMock).not.toHaveBeenCalledWith(
-      expect.stringMatching(/^public-park:/),
-      "max",
-    );
+    expect(revalidateTagMock).toHaveBeenCalledWith("home-summary", { expire: 0 });
+    expect(revalidateTagMock).toHaveBeenCalledWith("map-summary", { expire: 0 });
+    expect(revalidateTagMock).toHaveBeenCalledWith("public-visits", { expire: 0 });
+    expect(revalidateTagMock).toHaveBeenCalledWith("public-trips", { expire: 0 });
+    expect(revalidateTagMock).toHaveBeenCalledWith("admin-park-visibility", { expire: 0 });
+    expect(revalidateTagMock).not.toHaveBeenCalledWith(expect.stringMatching(/^public-park:/), {
+      expire: 0,
+    });
     expect(revalidatePathMock).toHaveBeenCalledWith("/", "page");
     expect(revalidatePathMock).toHaveBeenCalledWith("/paikat", "page");
     expect(revalidatePathMock).toHaveBeenCalledWith("/retket", "page");
