@@ -19,7 +19,8 @@
   - branch, commit, push, PR handoff, or cleanup → `.agents/skills/git-pr-workflow/SKILL.md`
 - Read the selected `SKILL.md` completely before acting on that concern; do not load unrelated skills in advance.
 - Keep Reissuvihko-specific skill overrides in this file and repository documentation. Do not modify installed general skills or their supporting references to encode project-specific rules.
-- Do not start a local server unless the user asks or one is already running.
+- Before starting local servers, check which required servers are already running and reuse suitable existing instances. Start missing servers needed for the task without asking for additional permission; do not start duplicate instances.
+- Track every server started by the agent and stop it as soon as it is no longer needed, including before handoff and on failure or interruption when possible. Preserve pre-existing user servers and unrelated processes unless the user explicitly asks to stop them.
 
 ## Documentation routing
 
