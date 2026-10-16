@@ -11,6 +11,12 @@
     "tripsDescription": "Tutustu Reissuvihkon retkiin ja matkakertomuksiin. Löydä reitit, luonto- ja historiakohteet, pysähdykset sekä retkien tarinat ja valokuvat.",
     "tripDescription": "Tutustu retkeen {trip}: käyntikohteet, pysähdykset ja retkimuistot Reissuvihkossa."
   },
+  "agentDiscovery": {
+    "pagesTitle": "Julkiset sivut",
+    "resourcesTitle": "Muut resurssit",
+    "sitemapLabel": "Sivukartta",
+    "sitemapDescription": "Julkisten sivujen osoitteet XML-muodossa."
+  },
   "layout": {
     "siteTitle": "Reissuvihko",
     "skipToContent": "Siirry sisältöön",
