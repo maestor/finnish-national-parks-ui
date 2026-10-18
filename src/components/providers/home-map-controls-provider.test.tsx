@@ -1,18 +1,21 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { HomeMapControlsProvider, useHomeMapControls } from "./home-map-controls-provider";
 
 const { pathnameState, searchParamsState, replaceMock } = vi.hoisted(() => ({
   pathnameState: { value: "/" },
-  searchParamsState: { value: "" },
+  searchParamsState: { value: "", suspended: false },
   replaceMock: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
   usePathname: () => pathnameState.value,
   useRouter: () => ({ replace: replaceMock }),
-  useSearchParams: () => new URLSearchParams(searchParamsState.value),
+  useSearchParams: () => {
+    if (searchParamsState.suspended) throw new Promise<never>(() => {});
+    return new URLSearchParams(searchParamsState.value);
+  },
 }));
 
 const FocusProbe = () => {
@@ -68,6 +71,20 @@ const StaleClearProbe = () => {
 describe("HomeMapControlsProvider", () => {
   afterEach(() => {
     vi.useRealTimers();
+    searchParamsState.suspended = false;
+  });
+
+  it("keeps public content rendered when the query reader suspends", () => {
+    searchParamsState.suspended = true;
+    render(
+      <Suspense fallback={<p>Outer fallback</p>}>
+        <HomeMapControlsProvider>
+          <h1>Julkinen sisältö</h1>
+        </HomeMapControlsProvider>
+      </Suspense>,
+    );
+    expect(screen.getByRole("heading", { name: "Julkinen sisältö" })).toBeInTheDocument();
+    expect(screen.queryByText("Outer fallback")).toBeNull();
   });
 
   it("clears the park query param after the map consumes the focus request", async () => {

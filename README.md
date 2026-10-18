@@ -107,6 +107,7 @@ npm run typecheck     # Clear generated Next types, regenerate them, then run Ty
 npm run lint          # Biome lint check + Tailwind canonical class check
 npm run lint:fix      # Biome auto-fixes + Tailwind canonical class fixes
 npm run test          # Vitest unit tests
+npm run test:cache    # Synthetic production cache/privacy checks + headless Chromium
 npm run test:e2e      # Playwright E2E (chromium only)
 npm run test:e2e:all  # Playwright E2E (all browsers)
 ```

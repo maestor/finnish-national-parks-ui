@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
@@ -12,16 +11,6 @@ import { SnackbarProvider } from "@/components/providers/snackbar-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { resolveMetadataBase } from "@/lib/site-url";
 import messages from "../../messages/fi.json";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 const shouldDisableSerwist = process.env.NODE_ENV === "development";
 
@@ -87,9 +76,7 @@ const RootLayout = async ({
 }>) => {
   return (
     <html lang={locale} data-scroll-behavior="smooth" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-background font-sans antialiased`}
-      >
+      <body className="min-h-screen bg-background font-sans antialiased">
         {/* React hoists this to <head>; warms up the OSM tile connection before the map loads. */}
         <link rel="preconnect" href="https://tile.openstreetmap.org" />
         <a

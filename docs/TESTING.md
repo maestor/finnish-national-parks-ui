@@ -123,6 +123,14 @@ The signed-out control-panel smoke checks the canonical `/kirjaudu` redirect and
 - Treat `354x708` CSS pixels as the smallest supported mobile viewport for this app. It matches the team's OnePlus Nord 3 baseline where small-screen layout issues tend to surface first.
 - When a change affects mobile layout, sticky navigation, text wrapping, spacing, or overflow, verify the affected route at `354x708` in addition to any larger mobile preset.
 
+## Production cache verification
+
+Run `npm run test:cache` when changing public rendering, route caching, sitemap generation, fixed icons, or the cookie-aware park rewrite. It builds against a stopped synthetic API endpoint, then owns temporary loopback fixture/UI servers on ports 4398/4399. Both ports must be free. Synthetic API and JWT settings override the corresponding local settings. The command replaces the local `.next` production build and closes its browser and servers on completion or failure.
+
+The check proves rendered cache hits without repeated API reads, edit and sitemap invalidation, withdrawal with the normal mutation profile, hidden-park isolation in both request orders, upstream failure recovery, Finnish redirects, query-selected visit links on reload, and public HTML before hydration. It checks the production prerender manifest for on-demand pages and build-generated icons. Fixtures in `src/test/fixtures/public-cache.mts` are checked against generated API types.
+
+Browser checks use the project's version-matched Chromium headless shell with `headless: true`, no desktop browser channel and no personal session. Install the prerequisite with `npx playwright install chromium --only-shell` if absent. This focused check is separate from `npm run verify`; use it alongside focused Vitest tests before the review pause, and retain the normal final gate after acceptance.
+
 ## Coverage Baseline
 
 Use `npm run test:coverage` when you want the current coverage baseline for the Vitest suite.

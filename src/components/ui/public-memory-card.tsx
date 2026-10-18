@@ -20,6 +20,7 @@ interface PublicMemoryCardProps {
   imageSizes?: string;
   ribbonLabel?: string;
   imageLoading?: "eager" | "lazy";
+  imageFetchPriority?: "high" | "low" | "auto";
   descriptionExcerpt: string | null;
   descriptionPlaceholder: string;
   readMore: string;
@@ -35,6 +36,7 @@ export const PublicMemoryCard = ({
   headingLevel,
   featuredImage,
   imageLoading = "lazy",
+  imageFetchPriority,
   imageSizes = "(max-width: 767px) calc(100vw - 2rem), (max-width: 1023px) calc(50vw - 3rem), 480px",
   ribbonLabel,
   descriptionExcerpt,
@@ -84,6 +86,7 @@ export const PublicMemoryCard = ({
               alt=""
               fill
               loading={imageLoading}
+              fetchPriority={imageFetchPriority}
               sizes={imageSizes}
               className="object-cover object-center transition-transform duration-300 group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
               onError={() => setFailedImageUrl(featuredImage.url)}

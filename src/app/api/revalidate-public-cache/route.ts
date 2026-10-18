@@ -13,6 +13,7 @@ import { appRoutes } from "@/lib/routes";
 import { isAdminSession, readSessionToken, verifySessionToken } from "@/lib/session-auth";
 
 interface RevalidateRequestBody {
+  // Older callers may still send this; publication changes always expire now.
   expireImmediately?: boolean;
   parkSlug?: string | null;
   tripSlug?: string | null;
@@ -54,19 +55,19 @@ export const POST = async (request: Request) => {
 
   let parkSlug: string | null = null;
   let tripSlug: string | null = null;
-  let expireImmediately = false;
 
   try {
     const body = (await request.json()) as RevalidateRequestBody;
     parkSlug = typeof body.parkSlug === "string" && body.parkSlug.trim() ? body.parkSlug : null;
     tripSlug = typeof body.tripSlug === "string" && body.tripSlug.trim() ? body.tripSlug : null;
-    expireImmediately = body.expireImmediately === true;
   } catch {
     parkSlug = null;
     tripSlug = null;
   }
 
-  const profile = expireImmediately ? { expire: 0 } : "max";
+  // Stale JSON must not repopulate a freshly invalidated HTML route after a
+  // withdrawal or visibility change. Apply immediate expiry to every mutation.
+  const profile = { expire: 0 };
   revalidateTag(HOME_SUMMARY_TAG, profile);
   revalidateTag(MAP_SUMMARY_TAG, profile);
   revalidateTag(PUBLIC_TRIPS_TAG, profile);

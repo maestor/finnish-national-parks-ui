@@ -1,8 +1,17 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { appRoutes, normalizeAppPath } from "@/lib/routes";
+import { SearchParamsObserver } from "./search-params-observer";
 
 export interface HomeParkFocusRequest {
   requestId: number;
@@ -35,7 +44,8 @@ export const HomeMapControlsProvider = ({
   const pathname = usePathname();
   const normalizedPathname = normalizeAppPath(pathname);
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const [query, setQuery] = useState("");
+  const searchParams = useMemo(() => new URLSearchParams(query), [query]);
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const [homeParkFocusRequest, setHomeParkFocusRequest] = useState<HomeParkFocusRequest | null>(
     null,
@@ -114,6 +124,7 @@ export const HomeMapControlsProvider = ({
         clearHomeParkFocusRequest,
       }}
     >
+      <SearchParamsObserver onChange={setQuery} />
       {children}
     </HomeMapControlsContext.Provider>
   );
