@@ -120,6 +120,51 @@ describe("revalidate public cache route", () => {
     });
   });
 
+  it("expires every affected park page after an area-link backfill", async () => {
+    jwtVerifyMock.mockResolvedValueOnce({ payload: validAdminPayload } as never);
+    const response = await POST(
+      new Request("http://localhost:4300/api/revalidate-public-cache", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Origin: "http://localhost:4300",
+          cookie: "__session=test-session",
+        },
+        body: JSON.stringify({ parkSlugs: ["pallas", "nuuksio", "pallas"] }),
+      }),
+    );
+    expect(response.status).toBe(200);
+    expect(revalidateTagMock).toHaveBeenCalledWith("public-park:pallas", { expire: 0 });
+    expect(revalidateTagMock).toHaveBeenCalledWith("public-park:nuuksio", { expire: 0 });
+    expect(revalidatePathMock).toHaveBeenCalledWith("/paikka/nuuksio", "page");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/reissusuunnittelu", "page");
+    expect(
+      revalidateTagMock.mock.calls.filter(([tag]) => tag === "public-park:pallas"),
+    ).toHaveLength(1);
+  });
+
+  it("rejects oversized or invalid park lists without expiring only part of the list", async () => {
+    for (const parkSlugs of [
+      ["pallas", "../invalid"],
+      Array.from({ length: 501 }, (_, i) => `park-${i}`),
+    ]) {
+      jwtVerifyMock.mockResolvedValueOnce({ payload: validAdminPayload } as never);
+      const response = await POST(
+        new Request("http://localhost:4300/api/revalidate-public-cache", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Origin: "http://localhost:4300",
+            cookie: "__session=test-session",
+          },
+          body: JSON.stringify({ parkSlugs }),
+        }),
+      );
+      expect(response.status).toBe(400);
+    }
+    expect(revalidateTagMock).not.toHaveBeenCalled();
+  });
+
   it("still revalidates shared pages when an authenticated request body is missing or invalid", async () => {
     jwtVerifyMock.mockResolvedValueOnce({ payload: validAdminPayload } as never);
 

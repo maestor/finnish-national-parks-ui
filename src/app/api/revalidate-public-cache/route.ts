@@ -16,6 +16,7 @@ interface RevalidateRequestBody {
   // Older callers may still send this; publication changes always expire now.
   expireImmediately?: boolean;
   parkSlug?: string | null;
+  parkSlugs?: string[];
   tripSlug?: string | null;
 }
 
@@ -54,11 +55,22 @@ export const POST = async (request: Request) => {
   }
 
   let parkSlug: string | null = null;
+  let parkSlugs: string[] = [];
   let tripSlug: string | null = null;
 
   try {
     const body = (await request.json()) as RevalidateRequestBody;
     parkSlug = typeof body.parkSlug === "string" && body.parkSlug.trim() ? body.parkSlug : null;
+    if (body.parkSlugs !== undefined) {
+      if (
+        !Array.isArray(body.parkSlugs) ||
+        body.parkSlugs.length > 500 ||
+        body.parkSlugs.some((slug) => typeof slug !== "string" || !/^[a-z0-9-]+$/.test(slug))
+      ) {
+        return Response.json({ ok: false, error: "Invalid park slugs" }, { status: 400 });
+      }
+      parkSlugs = body.parkSlugs;
+    }
     tripSlug = typeof body.tripSlug === "string" && body.tripSlug.trim() ? body.tripSlug : null;
   } catch {
     parkSlug = null;
@@ -75,14 +87,15 @@ export const POST = async (request: Request) => {
   revalidateTag(ADMIN_PARK_VISIBILITY_TAG, profile);
   revalidatePath(appRoutes.home, "page");
   revalidatePath(appRoutes.parks, "page");
+  revalidatePath(appRoutes.tripPlanner, "page");
   revalidatePath(appRoutes.trips, "page");
   revalidatePath(appRoutes.visits, "page");
   revalidatePath("/sitemap.xml");
   revalidatePath(appRoutes.controlPanel.parks, "page");
 
-  if (parkSlug) {
-    revalidateTag(getPublicParkTag(parkSlug), profile);
-    revalidatePath(appRoutes.park(parkSlug), "page");
+  for (const slug of new Set([...(parkSlug ? [parkSlug] : []), ...parkSlugs])) {
+    revalidateTag(getPublicParkTag(slug), profile);
+    revalidatePath(appRoutes.park(slug), "page");
   }
 
   if (tripSlug) {
