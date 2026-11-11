@@ -1,4 +1,4 @@
-import { CalendarRange, MapPin, Scan } from "lucide-react";
+import { CalendarRange, MapPin, Route, Scan } from "lucide-react";
 import Link from "next/link";
 import { unstable_rethrow } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -212,6 +212,12 @@ export const ParkDetailPage = async ({ params, authenticated = false }: ParkDeta
                   <PublicMetaBadge label={t("area")}>
                     <Scan className="h-3.5 w-3.5" aria-hidden="true" />
                     <span>{publicPark.areaKm2} km²</span>
+                  </PublicMetaBadge>
+                )}
+                {publicPark.lengthKm != null && (
+                  <PublicMetaBadge label={t("length")}>
+                    <Route className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span>{publicPark.lengthKm.toLocaleString("fi-FI")} km</span>
                   </PublicMetaBadge>
                 )}
                 <CopyLinkButton

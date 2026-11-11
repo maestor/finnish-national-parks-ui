@@ -25,6 +25,7 @@ interface ParkFormProps {
 
 interface ParkFormState {
   areaKm2: string;
+  lengthKm: string;
   description: string;
   displayTypeName: string;
   establishmentYear: string;
@@ -43,6 +44,7 @@ const INPUT_CLASS_NAME =
 
 const createInitialState = (park: ParkDetail): ParkFormState => ({
   areaKm2: park.areaKm2 === null ? "" : String(park.areaKm2),
+  lengthKm: park.lengthKm == null ? "" : String(park.lengthKm),
   description: park.description ?? "",
   displayTypeName: park.displayTypeName ?? "",
   establishmentYear: park.establishmentYear === null ? "" : String(park.establishmentYear),
@@ -90,6 +92,7 @@ export const ParkForm = ({ park }: ParkFormProps) => {
   const isDirty =
     formState.description !== initialState.description ||
     formState.areaKm2 !== initialState.areaKm2 ||
+    formState.lengthKm !== initialState.lengthKm ||
     formState.displayTypeName !== initialState.displayTypeName ||
     formState.establishmentYear !== initialState.establishmentYear ||
     formState.hasMagnet !== initialState.hasMagnet ||
@@ -140,6 +143,7 @@ export const ParkForm = ({ park }: ParkFormProps) => {
     if (formState.areaKm2.trim() !== "" && !isFiniteNumber(parsedAreaKm2)) {
       nextErrors.areaKm2 = t("validation.areaInvalid");
     }
+    const parsedLengthKm = parseOptionalNumber(formState.lengthKm);
 
     const parsedEstablishmentYear = parseOptionalNumber(formState.establishmentYear);
     if (formState.establishmentYear.trim() !== "" && !Number.isInteger(parsedEstablishmentYear)) {
@@ -187,6 +191,9 @@ export const ParkForm = ({ park }: ParkFormProps) => {
     }
     if (formState.areaKm2 !== initialState.areaKm2) {
       payload.areaKm2 = parsedAreaKm2;
+    }
+    if (formState.lengthKm !== initialState.lengthKm) {
+      payload.lengthKm = parsedLengthKm;
     }
     if (formState.establishmentYear !== initialState.establishmentYear) {
       payload.establishmentYear = parsedEstablishmentYear;
@@ -301,6 +308,20 @@ export const ParkForm = ({ park }: ParkFormProps) => {
             className={`${INPUT_CLASS_NAME} h-10`}
           />
           {hasAreaKm2Error && <p className="text-sm text-destructive">{errors.areaKm2}</p>}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="park-length">{t("lengthLabel")}</Label>
+          <input
+            id="park-length"
+            type="number"
+            inputMode="decimal"
+            min="0"
+            step="any"
+            value={formState.lengthKm}
+            onChange={(event) => setFieldValue("lengthKm", event.target.value)}
+            className={`${INPUT_CLASS_NAME} h-10`}
+          />
         </div>
 
         <div className="space-y-2">

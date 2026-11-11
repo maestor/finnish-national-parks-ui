@@ -16,6 +16,7 @@ export const park = {
   hasMagnet: true,
   address: "Suomi",
   areaKm2: 1,
+  lengthKm: null,
   displayTypeName: "Kansallispuisto",
   locationLabel: "Suomi",
   logo: null,

@@ -422,6 +422,7 @@ const publicPark = {
   name: "Pallas-Yllästunturi",
   address: "Pallasjärventie 14, 99300 Muonio",
   areaKm2: 14,
+  lengthKm: null,
   displayTypeName: "Maailmanperintökohde",
   locationLabel: "Pallasjärventie 14",
   logo: null,
@@ -1556,10 +1557,20 @@ describe("App pages", () => {
     expect(screen.getByText(publicPark.address)).toBeInTheDocument();
     expect(screen.queryByText("park.established")).not.toBeInTheDocument();
     expect(screen.queryByText("park.area")).not.toBeInTheDocument();
+    expect(screen.queryByText("park.length")).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /park.officialLink/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /park.pdfBrochure/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "park.aboutTitle" })).toBeNull();
     expect(screen.queryByRole("link", { name: "park.sectionNav.about" })).toBeNull();
+  });
+
+  it("shows the trail length in kilometres", async () => {
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({ ...publicPark, areaKm2: null, lengthKm: 2.4 })
+      .mockResolvedValueOnce({ visits: [] });
+    await renderPublicRoute(await ParkDetailPage({ params: Promise.resolve({ slug: "pallas" }) }));
+    expect(screen.getByText("2,4 km")).toBeInTheDocument();
+    expect(screen.getByText("park.length")).toBeInTheDocument();
   });
 
   it("copies the park page link from the park detail header", async () => {

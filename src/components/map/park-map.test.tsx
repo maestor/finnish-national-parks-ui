@@ -486,6 +486,13 @@ describe("ParkMap", () => {
     expect(logo).toHaveClass("h-12", "w-auto");
   });
 
+  it("shows trail length in the map popup", () => {
+    render(<ParkMap parks={parks.map((park) => ({ ...park, areaKm2: null, lengthKm: 2.4 }))} />);
+    triggerMapLoad();
+    fireEvent.click(markerElements[0]);
+    expect(document.querySelector(".maplibregl-popup")).toHaveTextContent("2,4 km");
+  });
+
   it("builds popup content only when a park popup is first shown", () => {
     render(<ParkMap parks={parks} />);
     triggerMapLoad();

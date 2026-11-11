@@ -35,6 +35,7 @@ const park = {
   name: "Pallas-Yllästunturi",
   address: "Pallasjärventie 14, 99300 Muonio",
   areaKm2: 14,
+  lengthKm: null,
   displayTypeName: "Maailmanperintökohde",
   locationLabel: "Pallasjärventie 14",
   logo: null,
@@ -306,6 +307,19 @@ describe("ParkForm", () => {
       parkSlug: "pallas",
       expireImmediately: true,
     });
+  });
+
+  it("saves an edited trail length", async () => {
+    const user = userEvent.setup();
+    vi.mocked(apiFetch).mockResolvedValueOnce({ ...park, lengthKm: 3.2 });
+    render(<ParkForm park={{ ...park, lengthKm: 2.4 }} />);
+    const input = screen.getByLabelText(/controlPanel\.parks\.edit\.form\.lengthLabel/);
+    await user.clear(input);
+    await user.type(input, "3.2");
+    await user.click(screen.getByRole("button", { name: "controlPanel.parks.edit.form.submit" }));
+    await waitFor(() => expect(apiFetch).toHaveBeenCalled());
+    const [, options] = vi.mocked(apiFetch).mock.calls[0] ?? [];
+    expect(JSON.parse(String(options?.body))).toEqual({ lengthKm: 3.2 });
   });
 
   it("does not submit when nothing changed", async () => {

@@ -17,6 +17,7 @@ const park = {
   slug: "nuuksio",
   visitCount: 9,
   areaKm2: 55,
+  lengthKm: null,
   establishmentYear: 1994,
   type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" as const },
   descriptionExcerpt: "Tuttu metsä",
