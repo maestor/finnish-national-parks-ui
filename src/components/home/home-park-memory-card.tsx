@@ -1,4 +1,4 @@
-import { CalendarRange, Scan } from "lucide-react";
+import { CalendarRange, Route, Scan } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { PUBLIC_META_BADGE_CLASS_NAME } from "@/components/layout/public-page-styles";
 import { ParkTypeBadge } from "@/components/park/park-type-badge";
@@ -44,6 +44,13 @@ export const HomeParkMemoryCard = ({
               <Scan className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               <span className="sr-only">{parkT("area")} </span>
               {park.areaKm2.toLocaleString("fi-FI")} km²
+            </span>
+          )}
+          {park.lengthKm != null && (
+            <span className={PUBLIC_META_BADGE_CLASS_NAME} title={parkT("length")}>
+              <Route className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <span className="sr-only">{parkT("length")} </span>
+              {park.lengthKm.toLocaleString("fi-FI")} km
             </span>
           )}
         </div>

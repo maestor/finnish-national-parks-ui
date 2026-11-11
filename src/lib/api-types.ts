@@ -744,6 +744,7 @@ export interface paths {
                             parks: {
                                 address: string;
                                 areaKm2: number | null;
+                                lengthKm: number | null;
                                 boundingBox: {
                                     maxLat: number;
                                     maxLon: number;
@@ -1780,6 +1781,7 @@ export interface paths {
                         "application/json": {
                             address: string;
                             areaKm2: number | null;
+                            lengthKm: number | null;
                             boundingBox: {
                                 maxLat: number;
                                 maxLon: number;
@@ -1907,6 +1909,7 @@ export interface paths {
                     "application/json": {
                         description?: string | null;
                         areaKm2?: number | null;
+                        lengthKm?: number | null;
                         displayTypeName?: string | null;
                         establishmentYear?: number | null;
                         hasMagnet?: boolean;
@@ -1933,6 +1936,7 @@ export interface paths {
                         "application/json": {
                             address: string;
                             areaKm2: number | null;
+                            lengthKm: number | null;
                             boundingBox: {
                                 maxLat: number;
                                 maxLon: number;
@@ -2754,6 +2758,7 @@ export interface paths {
                             } | null;
                             featuredPark: {
                                 areaKm2: number | null;
+                                lengthKm: number | null;
                                 establishmentYear: number | null;
                                 displayTypeName?: string | null;
                                 name: string;
@@ -2854,6 +2859,7 @@ export interface paths {
                             parks: {
                                 address: string;
                                 areaKm2: number | null;
+                                lengthKm: number | null;
                                 boundingBox: {
                                     maxLat: number;
                                     maxLon: number;

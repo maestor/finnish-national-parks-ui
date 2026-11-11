@@ -347,9 +347,10 @@ const createPopupNode = (
   }
 
   const hasArea = park.areaKm2 != null;
+  const hasLength = park.lengthKm != null;
   const hasYear = park.establishmentYear != null;
 
-  if (hasArea || hasYear) {
+  if (hasArea || hasLength || hasYear) {
     const metaRow = document.createElement("p");
     metaRow.className =
       "rounded-xl border border-border theme-panel px-3 py-2 shadow-[0_10px_20px_rgba(var(--shadow-rgb),0.1),inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] dark:shadow-[0_14px_24px_rgba(var(--shadow-rgb),0.22),inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]";
@@ -360,6 +361,9 @@ const createPopupNode = (
     }
     if (hasArea) {
       parts.push(`${park.areaKm2} km²`);
+    }
+    if (hasLength) {
+      parts.push(`${park.lengthKm?.toLocaleString("fi-FI")} km`);
     }
 
     metaRow.textContent = parts.join(" • ");

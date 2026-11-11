@@ -67,7 +67,7 @@ type ParkMapRequiredFields = Pick<
 
 type OptionalParkMapFields = Pick<
   Park,
-  "areaKm2" | "establishmentYear" | "logo" | "parkUrl" | "map"
+  "areaKm2" | "lengthKm" | "establishmentYear" | "logo" | "parkUrl" | "map"
 >;
 
 export type MapPark = ParkMapRequiredFields &
