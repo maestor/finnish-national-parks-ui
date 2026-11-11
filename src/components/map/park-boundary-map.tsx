@@ -37,6 +37,8 @@ const OUTLINE_LAYER_ID = "park-boundary-outline";
 const TRAIL_SOURCE_ID = "park-trails";
 const TRAIL_HALO_ID = "park-trails-halo";
 const TRAIL_LINE_ID = "park-trails-line";
+const TRAIL_ACTIVE_HALO_ID = "park-trails-active-halo";
+const TRAIL_ACTIVE_LINE_ID = "park-trails-active-line";
 const TRAIL_HIT_ID = "park-trails-hit";
 const MAP_PADDING = 40;
 const MAP_MIN_ZOOM = 3;
@@ -211,6 +213,20 @@ export const ParkBoundaryMap = ({
       paint: { "line-color": "#00417c", "line-width": 4 },
     });
     map.addLayer({
+      id: TRAIL_ACTIVE_HALO_ID,
+      type: "line",
+      source: TRAIL_SOURCE_ID,
+      filter: ["==", ["get", "index"], -1],
+      paint: { "line-color": "#00417c", "line-width": 7 },
+    });
+    map.addLayer({
+      id: TRAIL_ACTIVE_LINE_ID,
+      type: "line",
+      source: TRAIL_SOURCE_ID,
+      filter: ["==", ["get", "index"], -1],
+      paint: { "line-color": "#3fb1ce", "line-width": 4 },
+    });
+    map.addLayer({
       id: TRAIL_HIT_ID,
       type: "line",
       source: TRAIL_SOURCE_ID,
@@ -234,7 +250,14 @@ export const ParkBoundaryMap = ({
       map.off("mousemove", TRAIL_HIT_ID, onMove);
       map.off("mouseleave", TRAIL_HIT_ID, onLeave);
       if (destroyedRef.current) return;
-      for (const id of [TRAIL_HIT_ID, TRAIL_LINE_ID, TRAIL_HALO_ID]) map.removeLayer(id);
+      for (const id of [
+        TRAIL_HIT_ID,
+        TRAIL_ACTIVE_LINE_ID,
+        TRAIL_ACTIVE_HALO_ID,
+        TRAIL_LINE_ID,
+        TRAIL_HALO_ID,
+      ])
+        map.removeLayer(id);
       map.removeSource(TRAIL_SOURCE_ID);
     };
   }, [isMapLoaded, linkedTrails]);
@@ -242,18 +265,9 @@ export const ParkBoundaryMap = ({
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !isMapLoaded || linkedTrails.length === 0) return;
-    map.setPaintProperty(TRAIL_LINE_ID, "line-color", [
-      "case",
-      ["==", ["get", "index"], activeTrail ?? -1],
-      "#3fb1ce",
-      "#00417c",
-    ]);
-    map.setPaintProperty(TRAIL_HALO_ID, "line-color", [
-      "case",
-      ["==", ["get", "index"], activeTrail ?? -1],
-      "#00417c",
-      "#ffffff",
-    ]);
+    const filter: maplibregl.FilterSpecification = ["==", ["get", "index"], activeTrail ?? -1];
+    map.setFilter(TRAIL_ACTIVE_HALO_ID, filter);
+    map.setFilter(TRAIL_ACTIVE_LINE_ID, filter);
   }, [activeTrail, isMapLoaded, linkedTrails]);
 
   useEffect(() => {

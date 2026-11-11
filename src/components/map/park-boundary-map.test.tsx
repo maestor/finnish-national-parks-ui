@@ -27,7 +27,7 @@ const createMockMap = ({ autoLoad = true } = {}) => {
     },
     remove: vi.fn(),
     off: vi.fn(),
-    setPaintProperty: vi.fn(),
+    setFilter: vi.fn(),
     resize: vi.fn(),
     addControl: vi.fn(),
     addSource: vi.fn(),
@@ -154,17 +154,17 @@ describe("ParkBoundaryMap", () => {
     );
     const label = screen.getByRole("button", { name: "Sammalpolku" });
     fireEvent.focus(label);
-    expect(mockMap.setPaintProperty).toHaveBeenCalledWith("park-trails-line", "line-color", [
-      "case",
-      ["==", ["get", "index"], 0],
-      "#3fb1ce",
-      "#00417c",
-    ]);
-    expect(mockMap.setPaintProperty).not.toHaveBeenCalledWith(
-      "park-trails-line",
-      "line-width",
-      expect.anything(),
+    expect(mockMap.addLayer).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "park-trails-active-line",
+        paint: { "line-color": "#3fb1ce", "line-width": 4 },
+      }),
     );
+    expect(mockMap.setFilter).toHaveBeenCalledWith("park-trails-active-line", [
+      "==",
+      ["get", "index"],
+      0,
+    ]);
     expect(screen.getByRole("status")).toHaveTextContent("2 km");
     expect(screen.getByRole("heading", { name: "Sammalpolku" })).toBeInTheDocument();
     expect(screen.getByText("Polkutie 1, 00999 Testikylä")).toBeInTheDocument();
@@ -184,6 +184,81 @@ describe("ParkBoundaryMap", () => {
     expect(screen.getByRole("status")).toHaveTextContent("Sammalpolku");
     fireEvent.mouseLeave(label);
     expect(screen.getByRole("status")).toBeEmptyDOMElement();
+  });
+
+  it("keeps the selected route above another route that shares its path", () => {
+    const geometry = {
+      type: "FeatureCollection" as const,
+      features: [
+        {
+          type: "Feature" as const,
+          geometry: {
+            type: "LineString" as const,
+            coordinates: [
+              [24, 60],
+              [24.1, 60.1],
+            ],
+          },
+        },
+      ],
+    };
+    render(
+      <ParkBoundaryMap
+        boundaryGeoJson={mockBoundaryGeoJson}
+        boundingBox={mockBoundingBox}
+        markerPoint={mockMarkerPoint}
+        parkName="Koli"
+        linkedTrails={[
+          {
+            name: "Kasken kierros",
+            slug: "kasken-kierros",
+            address: null,
+            lengthKm: 5,
+            boundaryGeoJson: geometry,
+          },
+          {
+            name: "UKK-reitti",
+            slug: "ukk-reitti",
+            address: null,
+            lengthKm: null,
+            boundaryGeoJson: geometry,
+          },
+        ]}
+      />,
+    );
+    const layers = mockMap.addLayer.mock.calls.map(([layer]) => (layer as { id: string }).id);
+    expect(layers.indexOf("park-trails-active-line")).toBeGreaterThan(
+      layers.indexOf("park-trails-line"),
+    );
+    expect(layers.indexOf("park-trails-active-halo")).toBeGreaterThan(
+      layers.indexOf("park-trails-line"),
+    );
+    fireEvent.focus(screen.getByRole("button", { name: "Kasken kierros" }));
+    expect(mockMap.setFilter).toHaveBeenCalledWith("park-trails-active-line", [
+      "==",
+      ["get", "index"],
+      0,
+    ]);
+    expect(mockMap.setFilter).toHaveBeenCalledWith("park-trails-active-halo", [
+      "==",
+      ["get", "index"],
+      0,
+    ]);
+    fireEvent.mouseEnter(screen.getByRole("button", { name: "UKK-reitti" }));
+    expect(mockMap.setFilter).toHaveBeenCalledWith("park-trails-active-line", [
+      "==",
+      ["get", "index"],
+      1,
+    ]);
+    expect(screen.getByRole("status")).toHaveTextContent("UKK-reitti");
+    fireEvent.mouseLeave(screen.getByRole("button", { name: "UKK-reitti" }));
+    expect(screen.getByRole("status")).toHaveTextContent("Kasken kierros");
+    fireEvent.blur(screen.getByRole("button", { name: "Kasken kierros" }));
+    expect(mockMap.setFilter).toHaveBeenLastCalledWith("park-trails-active-line", [
+      "==",
+      ["get", "index"],
+      -1,
+    ]);
   });
 
   it("shows trail details when the pointer moves over the route on the map", () => {
@@ -226,6 +301,11 @@ describe("ParkBoundaryMap", () => {
     }) => void;
     act(() => handler({ features: [{ properties: { index: 0 } }], lngLat: { lng: 24, lat: 60 } }));
     expect(screen.getByRole("status")).toHaveTextContent("Sammalpolku");
+    expect(mockMap.setFilter).toHaveBeenCalledWith("park-trails-active-line", [
+      "==",
+      ["get", "index"],
+      0,
+    ]);
     const leave = mockMap.on.mock.calls.find(([event]) => event === "mouseleave");
     const leaveHandler = leave?.[2] as unknown as () => void;
     act(() => leaveHandler());
