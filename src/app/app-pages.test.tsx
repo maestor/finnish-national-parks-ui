@@ -364,9 +364,15 @@ vi.mock("@/components/parks/park-management", () => ({
 }));
 
 vi.mock("@/components/parks/park-form", () => ({
-  ParkForm: ({ park }: { park: { slug: string; name: string } }) => (
+  ParkForm: ({
+    park,
+    linkedAreaSlugs,
+  }: {
+    park: { slug: string; name: string };
+    linkedAreaSlugs: string[];
+  }) => (
     <div data-testid="park-form">
-      slug:{park.slug}|name:{park.name}
+      slug:{park.slug}|name:{park.name}|areas:{linkedAreaSlugs.join(",")}
     </div>
   ),
 }));
@@ -2320,6 +2326,7 @@ describe("App pages", () => {
     );
 
     expect(screen.getByTestId("park-form")).toHaveTextContent("slug:metsapolku");
+    expect(screen.getByTestId("park-form")).toHaveTextContent("areas:pallas");
     expect(
       screen.queryByRole("heading", { name: "controlPanel.parks.edit.areaTrails.title" }),
     ).not.toBeInTheDocument();
@@ -2330,6 +2337,24 @@ describe("App pages", () => {
       "href",
       "/hallinta/paikat/pallas/muokkaa",
     );
+  });
+
+  it("offers a cache refresh retry when a park save could not refresh public pages", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({ featuredImage: null, hasImages: false });
+    vi.mocked(apiAuthFetch).mockResolvedValueOnce(publicPark).mockResolvedValueOnce({ trails: [] });
+    await renderControlPanelRoute(
+      await EditParkPage({
+        params: Promise.resolve({ slug: "pallas" }),
+        searchParams: Promise.resolve({ updated: "1", refreshFailed: "1", previousSlug: "vanha" }),
+      }),
+    );
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "controlPanel.parks.edit.refreshFailedNotice",
+    );
+    expect(
+      screen.getByRole("button", { name: "controlPanel.parks.edit.retryCacheRefresh" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("controlPanel.parks.edit.updatedNotice")).not.toBeInTheDocument();
   });
 
   it("shows no area links for an unlinked trail", async () => {

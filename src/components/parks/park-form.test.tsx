@@ -100,6 +100,30 @@ describe("ParkForm", () => {
     });
   });
 
+  it("refreshes linked areas after a trail edit and preserves retry information on failure", async () => {
+    const user = userEvent.setup();
+    vi.mocked(apiFetch).mockResolvedValueOnce({ ...park, slug: "uusi" });
+    vi.mocked(revalidatePublicCache)
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(false);
+    render(<ParkForm park={park} linkedAreaSlugs={["alue"]} />);
+    await user.type(
+      screen.getByLabelText("controlPanel.parks.edit.form.descriptionLabel"),
+      "Muutos",
+    );
+    await user.click(screen.getByRole("button", { name: "controlPanel.parks.edit.form.submit" }));
+    await waitFor(() =>
+      expect(replaceMock).toHaveBeenCalledWith(
+        "/hallinta/paikat/uusi/muokkaa?updated=1&refreshFailed=1&previousSlug=pallas",
+      ),
+    );
+    expect(revalidatePublicCache).toHaveBeenCalledWith({
+      parkSlug: "alue",
+      expireImmediately: true,
+    });
+  });
+
   it("clears an existing description with null", async () => {
     const user = userEvent.setup();
     vi.mocked(apiFetch).mockResolvedValueOnce(park);

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { PublicCacheRefreshNotice } from "@/components/admin/public-cache-refresh-notice";
 import { AppBreadcrumbs } from "@/components/layout/app-breadcrumbs";
 import { AreaTrails } from "@/components/parks/area-trails";
 import { ParkEditTabs } from "@/components/parks/park-edit-tabs";
@@ -17,7 +18,7 @@ export const dynamic = "force-dynamic";
 
 interface EditParkPageProps {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ updated?: string }>;
+  searchParams: Promise<{ updated?: string; refreshFailed?: string; previousSlug?: string }>;
 }
 
 export const generateMetadata = async () => {
@@ -31,7 +32,7 @@ export const generateMetadata = async () => {
 const EditParkPage = async ({ params, searchParams }: EditParkPageProps) => {
   const t = await getTranslations("controlPanel.parks.edit");
   const { slug } = await params;
-  const { updated } = await searchParams;
+  const { updated, refreshFailed, previousSlug } = await searchParams;
   const park = await apiAuthFetch<ParkDetail>(`/api/parks/${slug}`).catch(() => null);
 
   if (park === null) {
@@ -57,7 +58,7 @@ const EditParkPage = async ({ params, searchParams }: EditParkPageProps) => {
       : [];
   const details = (
     <>
-      <ParkForm park={park} />
+      <ParkForm park={park} linkedAreaSlugs={linkedAreas.map((area) => area.slug)} />
       <ParkFeaturedImageSection key={park.slug} slug={park.slug} />
     </>
   );
@@ -79,7 +80,16 @@ const EditParkPage = async ({ params, searchParams }: EditParkPageProps) => {
           {t("viewParkPage")}
         </Link>
       </div>
-      {updated === "1" && <SnackbarNotice message={t("updatedNotice")} />}
+      {updated === "1" && refreshFailed !== "1" && <SnackbarNotice message={t("updatedNotice")} />}
+      {refreshFailed === "1" && (
+        <PublicCacheRefreshNotice
+          parkSlugs={[park.slug, previousSlug, ...linkedAreas.map((area) => area.slug)]}
+          failureMessage={t("refreshFailedNotice")}
+          retryLabel={t("retryCacheRefresh")}
+          retryingLabel={t("retryingCacheRefresh")}
+          successMessage={t("cacheRefreshRetried")}
+        />
+      )}
       {linkedAreas.length > 0 && (
         <section
           className="mt-6 max-w-3xl rounded-2xl border border-border bg-control p-4"
