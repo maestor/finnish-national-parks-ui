@@ -28,7 +28,10 @@ export const ControlPanelNav = () => {
     { href: appRoutes.controlPanel.dateRangeReview, label: t("dateRangeReview.title") },
     { href: appRoutes.controlPanel.yearReview, label: t("yearReview.title") },
     ...(auth.user?.isSuperAdmin === true
-      ? [{ href: appRoutes.controlPanel.admins, label: t("adminUsers.title") }]
+      ? [
+          { href: appRoutes.controlPanel.admins, label: t("adminUsers.title") },
+          { href: appRoutes.controlPanel.cache, label: t("cacheManagement.title") },
+        ]
       : []),
   ];
 

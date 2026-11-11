@@ -66,6 +66,9 @@ describe("ControlPanelNav", () => {
     expect(
       within(nav).getByRole("link", { name: "controlPanel.adminUsers.title" }),
     ).toHaveAttribute("href", "/hallinta/kayttajat");
+    expect(
+      screen.getByRole("link", { name: "controlPanel.cacheManagement.title" }),
+    ).toHaveAttribute("href", "/hallinta/valimuisti");
   });
 
   it("marks the current page link with aria-current", () => {
@@ -125,5 +128,6 @@ describe("ControlPanelNav", () => {
     render(<ControlPanelNav />);
 
     expect(screen.queryByRole("link", { name: "controlPanel.adminUsers.title" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "controlPanel.cacheManagement.title" })).toBeNull();
   });
 });

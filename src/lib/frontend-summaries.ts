@@ -7,7 +7,12 @@ import {
   TRAILS_AND_ROUTES_CATEGORY_SLUG,
 } from "./park-type-filters";
 import type { FilterableMapPark, ParkDetail, ParkVisits } from "./parks";
-import { getPublicParkTag, HOME_SUMMARY_TAG, MAP_SUMMARY_TAG } from "./public-cache";
+import {
+  getPublicParkTag,
+  HOME_SUMMARY_TAG,
+  MAP_SUMMARY_TAG,
+  PUBLIC_PARK_DETAILS_TAG,
+} from "./public-cache";
 import { appRoutes } from "./routes";
 
 export type HomeSummary =
@@ -53,8 +58,9 @@ export const fetchPublicParkDetail = async (
     `/api/parks/${slug}${options?.includeBoundary ? "?includeBoundary=true" : ""}`,
     {
       cache: "force-cache",
+      headers: { "X-Reissuvihko-Cache-Version": "2" },
       next: {
-        tags: [getPublicParkTag(slug)],
+        tags: [getPublicParkTag(slug), PUBLIC_PARK_DETAILS_TAG],
       },
     },
   );
@@ -62,8 +68,9 @@ export const fetchPublicParkDetail = async (
 export const fetchPublicParkVisits = async (slug: string): Promise<ParkVisits> =>
   apiFetch<ParkVisits>(`/api/parks/${slug}/visits`, {
     cache: "force-cache",
+    headers: { "X-Reissuvihko-Cache-Version": "2" },
     next: {
-      tags: [getPublicParkTag(slug)],
+      tags: [getPublicParkTag(slug), PUBLIC_PARK_DETAILS_TAG],
     },
   });
 

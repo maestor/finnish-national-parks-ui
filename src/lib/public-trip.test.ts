@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { apiAuthFetch, apiPublicFetch } from "./api";
-import { getPublicTripTag } from "./public-cache";
+import { getPublicTripTag, PUBLIC_TRIP_DETAILS_TAG } from "./public-cache";
 import {
   fetchAdminTripPreview,
   fetchAdminTripPreviewRoute,
@@ -32,8 +32,9 @@ describe("public trip fetches", () => {
 
     expect(apiPublicFetch).toHaveBeenCalledWith("/api/trips/slug/kesaretki", {
       cache: "force-cache",
+      headers: { "X-Reissuvihko-Cache-Version": "2" },
       next: {
-        tags: [getPublicTripTag("kesaretki")],
+        tags: [getPublicTripTag("kesaretki"), PUBLIC_TRIP_DETAILS_TAG],
       },
       signal: timeoutSignal,
     });
@@ -52,8 +53,9 @@ describe("public trip fetches", () => {
 
     expect(apiPublicFetch).toHaveBeenCalledWith("/api/trips/slug/kesaretki", {
       cache: "force-cache",
+      headers: { "X-Reissuvihko-Cache-Version": "2" },
       next: {
-        tags: [getPublicTripTag("kesaretki")],
+        tags: [getPublicTripTag("kesaretki"), PUBLIC_TRIP_DETAILS_TAG],
       },
       signal: controller.signal,
     });

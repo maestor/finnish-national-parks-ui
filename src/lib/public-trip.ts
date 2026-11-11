@@ -1,5 +1,5 @@
 import { apiAuthFetch, apiPublicFetch } from "./api";
-import { getPublicTripTag } from "./public-cache";
+import { getPublicTripTag, PUBLIC_TRIP_DETAILS_TAG } from "./public-cache";
 import { PUBLIC_TRIP_REQUEST_TIMEOUT_MS } from "./public-trip-timeout";
 import type {
   PublicTripDetail,
@@ -21,8 +21,9 @@ export const fetchPublicTripBySlug = async (
 ): Promise<PublicTripDetail> =>
   apiPublicFetch<PublicTripDetail>(`/api/trips/slug/${slug}`, {
     cache: "force-cache",
+    headers: { "X-Reissuvihko-Cache-Version": "2" },
     next: {
-      tags: [getPublicTripTag(slug)],
+      tags: [getPublicTripTag(slug), PUBLIC_TRIP_DETAILS_TAG],
     },
     signal: signal ?? AbortSignal.timeout(PUBLIC_TRIP_REQUEST_TIMEOUT_MS),
   });

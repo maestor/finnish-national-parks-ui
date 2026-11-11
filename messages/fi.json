@@ -454,6 +454,45 @@
         "visitCount": "{count} käyntiä"
       }
     },
+    "cacheManagement": {
+      "title": "Välimuistin hallinta",
+      "description": "Päivitä julkisten sivujen tiedot esimerkiksi tietojen tuonnin tai uuden version julkaisun jälkeen. Seuraava kävijä saa päivitetyt tiedot.",
+      "loading": "Ladataan välimuistin hallintaa...",
+      "notAllowed": "Vain superylläpitäjä voi hallita välimuistia.",
+      "refreshing": "Päivitetään...",
+      "success": "Välimuisti päivitettiin.",
+      "error": "Välimuistin päivitys epäonnistui. Yritä uudelleen.",
+      "home": {
+        "title": "Etusivu",
+        "description": "Päivitä etusivun tilastot ja nostot.",
+        "button": "Päivitä etusivu"
+      },
+      "map": {
+        "title": "Kartta ja paikkaluettelo",
+        "description": "Päivitä kartta, reissusuunnittelu, paikkojen hallinta ja sivustokartta.",
+        "button": "Päivitä kartta"
+      },
+      "visits": {
+        "title": "Käynnit",
+        "description": "Päivitä julkinen käyntiluettelo.",
+        "button": "Päivitä käynnit"
+      },
+      "parks": {
+        "title": "Paikkasivut",
+        "description": "Päivitä kaikkien paikkojen sivut ja käyntitiedot.",
+        "button": "Päivitä paikkasivut"
+      },
+      "trips": {
+        "title": "Retket",
+        "description": "Päivitä retkiluettelo, kaikki retkisivut ja sivustokartta.",
+        "button": "Päivitä retket"
+      },
+      "all": {
+        "title": "Kaikki julkiset sivut",
+        "description": "Päivitä kaikki yllä mainitut sivut ja tiedot kerralla.",
+        "button": "Päivitä kaikki"
+      }
+    },
     "adminUsers": {
       "title": "Ylläpitäjät",
       "description": "Kutsu uusi ylläpitäjä tai yhdistä aiemmin luotu sähköpostirivi hänen Google-tiliinsä.",
