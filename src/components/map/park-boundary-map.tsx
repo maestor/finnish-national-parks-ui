@@ -40,6 +40,7 @@ const TRAIL_LINE_ID = "park-trails-line";
 const TRAIL_ACTIVE_HALO_ID = "park-trails-active-halo";
 const TRAIL_ACTIVE_LINE_ID = "park-trails-active-line";
 const TRAIL_HIT_ID = "park-trails-hit";
+const TRAIL_LINE_LAYOUT = { "line-cap": "round", "line-join": "round" } as const;
 const MAP_PADDING = 40;
 const MAP_MIN_ZOOM = 3;
 const MAP_MAX_ZOOM = 16;
@@ -64,6 +65,7 @@ export const ParkBoundaryMap = ({
   const [hoveredTrail, setHoveredTrail] = useState<number | null>(null);
   const [focusedTrail, setFocusedTrail] = useState<number | null>(null);
   const [selectedTrail, setSelectedTrail] = useState<number | null>(null);
+  const [trailFocusRequest, setTrailFocusRequest] = useState<{ index: number } | null>(null);
   const activeTrail = hoveredTrail ?? focusedTrail ?? selectedTrail;
 
   useEffect(() => {
@@ -204,27 +206,31 @@ export const ParkBoundaryMap = ({
       id: TRAIL_HALO_ID,
       type: "line",
       source: TRAIL_SOURCE_ID,
-      paint: { "line-color": "#ffffff", "line-width": 7 },
+      layout: TRAIL_LINE_LAYOUT,
+      paint: { "line-color": "#fff8e7", "line-width": 4.1, "line-opacity": 0.65 },
     });
     map.addLayer({
       id: TRAIL_LINE_ID,
       type: "line",
       source: TRAIL_SOURCE_ID,
-      paint: { "line-color": "#00417c", "line-width": 4 },
+      layout: TRAIL_LINE_LAYOUT,
+      paint: { "line-color": "#8d4b32", "line-width": 3 },
     });
     map.addLayer({
       id: TRAIL_ACTIVE_HALO_ID,
       type: "line",
       source: TRAIL_SOURCE_ID,
+      layout: TRAIL_LINE_LAYOUT,
       filter: ["==", ["get", "index"], -1],
-      paint: { "line-color": "#00417c", "line-width": 7 },
+      paint: { "line-color": "#fff8e7", "line-width": 5.5, "line-opacity": 0.95 },
     });
     map.addLayer({
       id: TRAIL_ACTIVE_LINE_ID,
       type: "line",
       source: TRAIL_SOURCE_ID,
+      layout: TRAIL_LINE_LAYOUT,
       filter: ["==", ["get", "index"], -1],
-      paint: { "line-color": "#3fb1ce", "line-width": 4 },
+      paint: { "line-color": "#65321f", "line-width": 3.5 },
     });
     map.addLayer({
       id: TRAIL_HIT_ID,
@@ -244,11 +250,21 @@ export const ParkBoundaryMap = ({
       hoverPositionRef.current = null;
       setHoveredTrail(null);
     };
+    const onClick = (event: maplibregl.MapLayerMouseEvent) => {
+      const index = event.features?.[0]?.properties?.index;
+      if (typeof index === "number") {
+        hoverPositionRef.current = event.lngLat;
+        setSelectedTrail(index);
+        setTrailFocusRequest({ index });
+      }
+    };
     map.on("mousemove", TRAIL_HIT_ID, onMove);
     map.on("mouseleave", TRAIL_HIT_ID, onLeave);
+    map.on("click", TRAIL_HIT_ID, onClick);
     return () => {
       map.off("mousemove", TRAIL_HIT_ID, onMove);
       map.off("mouseleave", TRAIL_HIT_ID, onLeave);
+      map.off("click", TRAIL_HIT_ID, onClick);
       if (destroyedRef.current) return;
       for (const id of [
         TRAIL_HIT_ID,
@@ -264,7 +280,37 @@ export const ParkBoundaryMap = ({
 
   useEffect(() => {
     const map = mapRef.current;
+    if (!map || !isMapLoaded || trailFocusRequest === null) return;
+    const trail = linkedTrails[trailFocusRequest.index];
+    const bounds = new maplibregl.LngLatBounds();
+    for (const feature of trail.boundaryGeoJson.features) {
+      if (feature.geometry.type !== "LineString") continue;
+      for (const [lng, lat] of feature.geometry.coordinates) {
+        bounds.extend([lng, lat]);
+      }
+    }
+    if (!bounds.isEmpty()) {
+      map.setMinZoom(MAP_MIN_ZOOM);
+      map.fitBounds(bounds.toArray(), {
+        padding: MAP_PADDING,
+        maxZoom: MAP_MAX_ZOOM,
+        duration: 600,
+      });
+    }
+    setTrailFocusRequest(null);
+  }, [isMapLoaded, linkedTrails, trailFocusRequest]);
+
+  useEffect(() => {
+    const map = mapRef.current;
     if (!map || !isMapLoaded || linkedTrails.length === 0) return;
+    const hasActiveTrail = activeTrail !== null;
+    const inactiveFilter: maplibregl.FilterSpecification | null =
+      activeTrail === null ? null : ["!=", ["get", "index"], activeTrail];
+    map.setFilter(TRAIL_HALO_ID, inactiveFilter);
+    map.setFilter(TRAIL_LINE_ID, inactiveFilter);
+    map.setPaintProperty(TRAIL_HALO_ID, "line-opacity", hasActiveTrail ? 0.25 : 0.65);
+    map.setPaintProperty(TRAIL_LINE_ID, "line-width", hasActiveTrail ? 2.5 : 3);
+    map.setPaintProperty(TRAIL_LINE_ID, "line-opacity", hasActiveTrail ? 0.5 : 1);
     const filter: maplibregl.FilterSpecification = ["==", ["get", "index"], activeTrail ?? -1];
     map.setFilter(TRAIL_ACTIVE_HALO_ID, filter);
     map.setFilter(TRAIL_ACTIVE_LINE_ID, filter);
@@ -285,17 +331,17 @@ export const ParkBoundaryMap = ({
     const point = coordinates[Math.floor(coordinates.length / 2)];
     if (!point || point[0] === undefined || point[1] === undefined) return;
     const content = document.createElement("div");
-    content.className = "max-w-[280px] p-3 text-foreground";
+    content.className = "p-3 text-foreground";
     const title = document.createElement("h3");
     title.className = "text-sm leading-tight font-semibold";
-    title.textContent = trail.name;
+    title.textContent =
+      trail.lengthKm === null
+        ? trail.name
+        : t("trailPopupTitle", {
+            name: trail.name,
+            length: trail.lengthKm.toLocaleString("fi-FI"),
+          });
     content.appendChild(title);
-    if (trail.lengthKm !== null) {
-      const length = document.createElement("p");
-      length.className = "mt-1 text-sm";
-      length.textContent = `${t("trailLength")} ${trail.lengthKm.toLocaleString("fi-FI")} km`;
-      content.appendChild(length);
-    }
     if (trail.address) {
       const address = document.createElement("p");
       address.className = "mt-1 text-sm";
@@ -305,7 +351,7 @@ export const ParkBoundaryMap = ({
     const popup = new maplibregl.Popup({
       closeButton: false,
       closeOnClick: false,
-      maxWidth: "280px",
+      maxWidth: "min(360px, calc(100vw - 5rem))",
       offset: 12,
     });
     popupRef.current = popup;
@@ -341,7 +387,10 @@ export const ParkBoundaryMap = ({
                 setFocusedTrail(index);
               }}
               onBlur={() => setFocusedTrail(null)}
-              onClick={() => setSelectedTrail(selectedTrail === index ? null : index)}
+              onClick={() => {
+                setSelectedTrail(selectedTrail === index ? null : index);
+                setTrailFocusRequest({ index });
+              }}
             >
               <Route className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               <span className="wrap-anywhere text-left">{trail.name}</span>
