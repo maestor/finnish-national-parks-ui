@@ -2,10 +2,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { AppBreadcrumbs } from "@/components/layout/app-breadcrumbs";
+import { AreaTrails } from "@/components/parks/area-trails";
+import { ParkEditTabs } from "@/components/parks/park-edit-tabs";
 import { ParkFeaturedImageSection } from "@/components/parks/park-featured-image-section";
 import { ParkForm } from "@/components/parks/park-form";
 import { SnackbarNotice } from "@/components/providers/snackbar-notice";
 import { apiAuthFetch } from "@/lib/api";
+import type { paths } from "@/lib/api-types";
 import { buildPageMetadata } from "@/lib/page-metadata";
 import type { ParkDetail } from "@/lib/parks";
 import { appRoutes } from "@/lib/routes";
@@ -35,6 +38,30 @@ const EditParkPage = async ({ params, searchParams }: EditParkPageProps) => {
     notFound();
   }
 
+  const isArea = park.category.slug !== "trails-and-routes" && park.catalogStatus === "active";
+  const linkedTrails = isArea
+    ? (
+        await apiAuthFetch<
+          paths["/api/admin/parks/{slug}/trails"]["get"]["responses"][200]["content"]["application/json"]
+        >(`/api/admin/parks/${slug}/trails`, { cache: "no-store" })
+      ).trails
+    : [];
+
+  const linkedAreas =
+    park.category.slug === "trails-and-routes"
+      ? (
+          await apiAuthFetch<
+            paths["/api/admin/parks/{slug}/areas"]["get"]["responses"][200]["content"]["application/json"]
+          >(`/api/admin/parks/${encodeURIComponent(slug)}/areas`, { cache: "no-store" })
+        ).areas
+      : [];
+  const details = (
+    <>
+      <ParkForm park={park} />
+      <ParkFeaturedImageSection key={park.slug} slug={park.slug} />
+    </>
+  );
+
   return (
     <div>
       <AppBreadcrumbs
@@ -53,8 +80,37 @@ const EditParkPage = async ({ params, searchParams }: EditParkPageProps) => {
         </Link>
       </div>
       {updated === "1" && <SnackbarNotice message={t("updatedNotice")} />}
-      <ParkForm park={park} />
-      <ParkFeaturedImageSection key={park.slug} slug={park.slug} />
+      {linkedAreas.length > 0 && (
+        <section
+          className="mt-6 max-w-3xl rounded-2xl border border-border bg-control p-4"
+          aria-labelledby="linked-areas-title"
+        >
+          <h2 id="linked-areas-title" className="text-lg font-semibold">
+            {t("linkedAreasTitle")}
+          </h2>
+          <ul className="mt-2 space-y-1">
+            {linkedAreas.map((area) => (
+              <li key={area.slug}>
+                <Link
+                  href={appRoutes.controlPanel.parkEdit(area.slug)}
+                  className="inline-block py-1 font-medium text-link underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                >
+                  {area.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {isArea ? (
+        <ParkEditTabs
+          key={slug}
+          details={details}
+          trails={<AreaTrails slug={slug} initialTrails={linkedTrails} />}
+        />
+      ) : (
+        details
+      )}
     </div>
   );
 };

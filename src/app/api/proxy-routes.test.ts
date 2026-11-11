@@ -30,6 +30,11 @@ import {
   PATCH as patchParkFeaturedImage,
 } from "./admin/parks/[slug]/featured-image/route";
 import { GET as getParkImageCandidates } from "./admin/parks/[slug]/images/route";
+import { GET as getAreaTrailCandidates } from "./admin/parks/[slug]/trail-candidates/route";
+import {
+  DELETE as deleteAreaTrail,
+  PUT as putAreaTrail,
+} from "./admin/parks/[slug]/trails/[trailId]/route";
 import { GET as getAdminParkVisibility } from "./admin/parks/visibility/route";
 import {
   DELETE as deleteDateRangeReviewPublish,
@@ -72,6 +77,36 @@ import {
 describe("api proxy routes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it("protects trail search and link changes, and forwards only supported search parameters", async () => {
+    const request = new Request(
+      "https://frontend.example/api/admin/parks/a/trail-candidates?q=polku&offset=25&limit=25&extra=x",
+    );
+    await getAreaTrailCandidates(request, { params: Promise.resolve({ slug: "a" }) });
+    expect(proxyBackendRequestMock).toHaveBeenLastCalledWith(
+      expect.any(Request),
+      "/api/admin/parks/a/trail-candidates",
+      { requireAdmin: true },
+    );
+    expect(proxyBackendRequestMock.mock.calls.at(-1)).toHaveProperty(
+      "0.url",
+      "https://frontend.example/api/admin/parks/a/trail-candidates?q=polku&offset=25&limit=25",
+    );
+    for (const [method, handler] of [
+      ["PUT", putAreaTrail],
+      ["DELETE", deleteAreaTrail],
+    ] as const) {
+      const mutation = new Request("https://frontend.example/api/admin/parks/a/trails/2", {
+        method,
+      });
+      await handler(mutation, { params: Promise.resolve({ slug: "a", trailId: "2" }) });
+      expect(proxyBackendRequestMock).toHaveBeenLastCalledWith(
+        mutation,
+        "/api/admin/parks/a/trails/2",
+        { requireAdmin: true },
+      );
+    }
   });
 
   it("protects park cover reads and writes and sanitizes candidate pagination", async () => {
