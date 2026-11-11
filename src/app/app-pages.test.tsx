@@ -416,6 +416,7 @@ vi.mock("@/components/trips/trip-visit-assignments", () => ({
 }));
 
 const publicPark = {
+  catalogStatus: "active",
   slug: "pallas",
   featuredImage: null,
   hasMagnet: true,
@@ -2251,7 +2252,14 @@ describe("App pages", () => {
 
   it("renders the park edit page with navigation helpers", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce({ featuredImage: null, hasImages: true });
-    vi.mocked(apiAuthFetch).mockResolvedValueOnce(publicPark);
+    vi.mocked(apiAuthFetch)
+      .mockResolvedValueOnce(publicPark)
+      .mockResolvedValueOnce({
+        trails: [
+          { trailId: 1, name: "Metsäpolku", slug: "metsapolku", effective: true },
+          { trailId: 2, name: "Pois jätetty", slug: "pois", effective: false },
+        ],
+      });
 
     await renderControlPanelRoute(
       await EditParkPage({
@@ -2274,9 +2282,76 @@ describe("App pages", () => {
     ).toHaveAttribute("href", "/paikka/pallas");
     expect(screen.getByText("controlPanel.parks.edit.updatedNotice")).toBeInTheDocument();
     expect(apiAuthFetch).toHaveBeenNthCalledWith(1, "/api/parks/pallas");
+    expect(
+      screen.getByRole("tab", { name: "controlPanel.parks.edit.tabs.details" }),
+    ).toHaveAttribute("aria-selected", "true");
+    expect(screen.queryByRole("link", { name: "Metsäpolku" })).not.toBeInTheDocument();
+    const user = userEvent.setup();
+    screen.getByRole("tab", { name: "controlPanel.parks.edit.tabs.details" }).focus();
+    await user.keyboard("{ArrowRight}");
+    expect(screen.getByRole("tab", { name: "controlPanel.parks.edit.tabs.trails" })).toHaveFocus();
+    expect(screen.getByRole("link", { name: "Metsäpolku" })).toHaveAttribute(
+      "href",
+      "/hallinta/paikat/metsapolku/muokkaa",
+    );
+    expect(screen.queryByRole("link", { name: "Pois jätetty" })).not.toBeInTheDocument();
+    await user.keyboard("{ArrowLeft}");
+    expect(screen.getByTestId("park-form")).toBeVisible();
     expect(screen.getByTestId("park-form")).toHaveTextContent(
       "slug:pallas|name:Pallas-Yllästunturi",
     );
+  });
+
+  it("opens a trail editor with links to its areas", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({ featuredImage: null, hasImages: false });
+    vi.mocked(apiAuthFetch)
+      .mockResolvedValueOnce({
+        ...publicPark,
+        slug: "metsapolku",
+        category: { name: "Reitit", slug: "trails-and-routes" },
+      })
+      .mockResolvedValueOnce({ areas: [{ name: "Kansallispuisto", slug: "pallas" }] });
+
+    await renderControlPanelRoute(
+      await EditParkPage({
+        params: Promise.resolve({ slug: "metsapolku" }),
+        searchParams: Promise.resolve({}),
+      }),
+    );
+
+    expect(screen.getByTestId("park-form")).toHaveTextContent("slug:metsapolku");
+    expect(
+      screen.queryByRole("heading", { name: "controlPanel.parks.edit.areaTrails.title" }),
+    ).not.toBeInTheDocument();
+    expect(apiAuthFetch).toHaveBeenLastCalledWith("/api/admin/parks/metsapolku/areas", {
+      cache: "no-store",
+    });
+    expect(screen.getByRole("link", { name: "Kansallispuisto" })).toHaveAttribute(
+      "href",
+      "/hallinta/paikat/pallas/muokkaa",
+    );
+  });
+
+  it("shows no area links for an unlinked trail", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({ featuredImage: null, hasImages: false });
+    vi.mocked(apiAuthFetch)
+      .mockResolvedValueOnce({
+        ...publicPark,
+        slug: "polku",
+        category: { name: "Reitit", slug: "trails-and-routes" },
+      })
+      .mockResolvedValueOnce({ areas: [] });
+    await renderControlPanelRoute(
+      await EditParkPage({
+        params: Promise.resolve({ slug: "polku" }),
+        searchParams: Promise.resolve({}),
+      }),
+    );
+    expect(
+      screen.queryByRole("heading", { name: "controlPanel.parks.edit.linkedAreasTitle" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("tab")).not.toBeInTheDocument();
+    expect(screen.getByTestId("park-form")).toBeVisible();
   });
 
   it("builds metadata for the park edit page", async () => {
