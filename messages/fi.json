@@ -1085,6 +1085,7 @@
     "boundaryAriaLabel": "{parkName} rajaus kartalla",
     "trails": "Paikan reitit",
     "trailLength": "Pituus",
+    "trailPopupTitle": "{name} • {length} km",
     "deferredMapTitle": "Kartta ladataan tarvittaessa",
     "deferredMapDescription": "Kartta valmistellaan vasta, kun se tulee näkyviin.",
     "loadDeferredMap": "Lataa kartta",

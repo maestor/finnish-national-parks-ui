@@ -1,6 +1,10 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { I18nProvider } from "@/test/i18n";
 import { ParkBoundaryMap } from "./park-boundary-map";
+
+vi.unmock("next-intl");
 
 const createMockMarker = () => ({
   setLngLat: vi.fn().mockReturnThis(),
@@ -28,6 +32,7 @@ const createMockMap = ({ autoLoad = true } = {}) => {
     remove: vi.fn(),
     off: vi.fn(),
     setFilter: vi.fn(),
+    setPaintProperty: vi.fn(),
     resize: vi.fn(),
     addControl: vi.fn(),
     addSource: vi.fn(),
@@ -51,7 +56,8 @@ global.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
 
 let mockMap = createMockMap();
 
-vi.mock("maplibre-gl", () => ({
+vi.mock("maplibre-gl", async (importOriginal) => ({
+  LngLatBounds: (await importOriginal<typeof import("maplibre-gl")>()).LngLatBounds,
   // biome-ignore lint: Vitest v4 constructor mocks must be constructible.
   Map: vi.fn(function () {
     return mockMap;
@@ -115,9 +121,160 @@ const mockMarkerPoint = {
   lon: 24.05,
 };
 
+const mockLinkedTrail = {
+  name: "Pitkä reitti",
+  slug: "pitka-reitti",
+  address: null,
+  lengthKm: 42,
+  boundaryGeoJson: {
+    type: "FeatureCollection" as const,
+    features: [
+      {
+        type: "Feature" as const,
+        geometry: {
+          type: "LineString" as const,
+          coordinates: [
+            [24.2, 60.2],
+            [24.5, 60.7],
+          ],
+        },
+      },
+      {
+        type: "Feature" as const,
+        geometry: {
+          type: "LineString" as const,
+          coordinates: [
+            [23, 59],
+            [27, 62],
+          ],
+        },
+      },
+      ...mockBoundaryGeoJson.features,
+    ],
+  },
+};
+
 describe("ParkBoundaryMap", () => {
   beforeEach(() => {
     mockMap = createMockMap();
+  });
+
+  it("fits every trail segment on button activation without moving for hover or focus", async () => {
+    const user = userEvent.setup();
+    render(
+      <ParkBoundaryMap
+        boundaryGeoJson={mockBoundaryGeoJson}
+        boundingBox={mockBoundingBox}
+        markerPoint={mockMarkerPoint}
+        parkName="Test Park"
+        linkedTrails={[mockLinkedTrail]}
+      />,
+      { wrapper: I18nProvider },
+    );
+    mockMap.fitBounds.mockClear();
+    const label = screen.getByRole("button", { name: "Pitkä reitti" });
+    await user.hover(label);
+    await user.unhover(label);
+    await user.tab();
+    expect(label).toHaveFocus();
+    expect(mockMap.fitBounds).not.toHaveBeenCalled();
+
+    await user.keyboard("{Enter}");
+    expect(label).toHaveAttribute("aria-pressed", "true");
+    expect(mockMap.fitBounds).toHaveBeenCalledWith(
+      [
+        [23, 59],
+        [27, 62],
+      ],
+      { padding: 40, maxZoom: 16, duration: 600 },
+    );
+    expect(mockMap.setMinZoom).toHaveBeenLastCalledWith(3);
+
+    mockMap.fitBounds.mockClear();
+    await user.keyboard(" ");
+    expect(label).toHaveAttribute("aria-pressed", "false");
+    expect(mockMap.fitBounds).toHaveBeenCalledTimes(1);
+  });
+
+  it("selects and refits a trail when its map line is clicked repeatedly", () => {
+    render(
+      <ParkBoundaryMap
+        boundaryGeoJson={mockBoundaryGeoJson}
+        boundingBox={mockBoundingBox}
+        markerPoint={mockMarkerPoint}
+        parkName="Test Park"
+        linkedTrails={[mockLinkedTrail]}
+      />,
+      { wrapper: I18nProvider },
+    );
+    const click = mockMap.on.mock.calls.find(([event]) => event === "click");
+    expect(click).toBeDefined();
+    const handler = click?.[2] as unknown as (event: {
+      features: { properties: { index: number } }[];
+      lngLat: { lng: number; lat: number };
+    }) => void;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      mockMap.fitBounds.mockClear();
+      act(() =>
+        handler({ features: [{ properties: { index: 0 } }], lngLat: { lng: 24.2, lat: 60.2 } }),
+      );
+      expect(screen.getByRole("button", { name: "Pitkä reitti" })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+      expect(mockMap.fitBounds).toHaveBeenCalledTimes(1);
+      expect(mockMap.fitBounds).toHaveBeenCalledWith(
+        [
+          [23, 59],
+          [27, 62],
+        ],
+        { padding: 40, maxZoom: 16, duration: 600 },
+      );
+    }
+  });
+
+  it("fits a trail requested before the map has finished loading", async () => {
+    mockMap = createMockMap({ autoLoad: false });
+    const user = userEvent.setup();
+    render(
+      <ParkBoundaryMap
+        boundaryGeoJson={mockBoundaryGeoJson}
+        boundingBox={mockBoundingBox}
+        markerPoint={mockMarkerPoint}
+        parkName="Test Park"
+        linkedTrails={[mockLinkedTrail]}
+      />,
+      { wrapper: I18nProvider },
+    );
+    await user.click(screen.getByRole("button", { name: "Pitkä reitti" }));
+    expect(mockMap.fitBounds).not.toHaveBeenCalled();
+    act(() => mockMap.triggerLoad());
+    expect(mockMap.fitBounds).toHaveBeenLastCalledWith(
+      [
+        [23, 59],
+        [27, 62],
+      ],
+      { padding: 40, maxZoom: 16, duration: 600 },
+    );
+  });
+
+  it("leaves the map view unchanged when a trail has no drawable line geometry", async () => {
+    const user = userEvent.setup();
+    render(
+      <ParkBoundaryMap
+        boundaryGeoJson={mockBoundaryGeoJson}
+        boundingBox={mockBoundingBox}
+        markerPoint={mockMarkerPoint}
+        parkName="Test Park"
+        linkedTrails={[
+          { ...mockLinkedTrail, boundaryGeoJson: { type: "FeatureCollection", features: [] } },
+        ]}
+      />,
+      { wrapper: I18nProvider },
+    );
+    mockMap.fitBounds.mockClear();
+    await user.click(screen.getByRole("button", { name: "Pitkä reitti" }));
+    expect(mockMap.fitBounds).not.toHaveBeenCalled();
   });
 
   it("highlights a linked trail and shows its details when its label receives focus or is selected", () => {
@@ -132,7 +289,7 @@ describe("ParkBoundaryMap", () => {
             name: "Sammalpolku",
             slug: "sammalpolku",
             address: "Polkutie 1, 00999 Testikylä",
-            lengthKm: 2,
+            lengthKm: 2.6,
             boundaryGeoJson: {
               type: "FeatureCollection",
               features: [
@@ -151,13 +308,14 @@ describe("ParkBoundaryMap", () => {
           },
         ]}
       />,
+      { wrapper: I18nProvider },
     );
     const label = screen.getByRole("button", { name: "Sammalpolku" });
     fireEvent.focus(label);
     expect(mockMap.addLayer).toHaveBeenCalledWith(
       expect.objectContaining({
         id: "park-trails-active-line",
-        paint: { "line-color": "#3fb1ce", "line-width": 4 },
+        paint: { "line-color": "#65321f", "line-width": 3.5 },
       }),
     );
     expect(mockMap.setFilter).toHaveBeenCalledWith("park-trails-active-line", [
@@ -165,8 +323,8 @@ describe("ParkBoundaryMap", () => {
       ["get", "index"],
       0,
     ]);
-    expect(screen.getByRole("status")).toHaveTextContent("2 km");
-    expect(screen.getByRole("heading", { name: "Sammalpolku" })).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("2,6 km");
+    expect(screen.getByRole("heading", { name: "Sammalpolku • 2,6 km" })).toBeInTheDocument();
     expect(screen.getByText("Polkutie 1, 00999 Testikylä")).toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("Polkutie 1, 00999 Testikylä");
     fireEvent.mouseEnter(label);
@@ -175,7 +333,7 @@ describe("ParkBoundaryMap", () => {
     fireEvent.blur(label);
     fireEvent.click(label);
     expect(label).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByRole("status")).toHaveTextContent("2 km");
+    expect(screen.getByRole("status")).toHaveTextContent("2,6 km");
     fireEvent.blur(label);
     fireEvent.click(label);
     expect(label).toHaveAttribute("aria-pressed", "false");
@@ -225,6 +383,7 @@ describe("ParkBoundaryMap", () => {
           },
         ]}
       />,
+      { wrapper: I18nProvider },
     );
     const layers = mockMap.addLayer.mock.calls.map(([layer]) => (layer as { id: string }).id);
     expect(layers.indexOf("park-trails-active-line")).toBeGreaterThan(
@@ -234,17 +393,19 @@ describe("ParkBoundaryMap", () => {
       layers.indexOf("park-trails-line"),
     );
     fireEvent.focus(screen.getByRole("button", { name: "Kasken kierros" }));
+    for (const id of ["park-trails-line", "park-trails-halo"]) {
+      expect(mockMap.setFilter).toHaveBeenCalledWith(id, ["!=", ["get", "index"], 0]);
+    }
+    expect(mockMap.setPaintProperty).toHaveBeenCalledWith("park-trails-line", "line-width", 2.5);
+    expect(mockMap.setPaintProperty).toHaveBeenCalledWith("park-trails-line", "line-opacity", 0.5);
+    expect(mockMap.setPaintProperty).toHaveBeenCalledWith("park-trails-halo", "line-opacity", 0.25);
     expect(mockMap.setFilter).toHaveBeenCalledWith("park-trails-active-line", [
       "==",
       ["get", "index"],
       0,
     ]);
-    expect(mockMap.setFilter).toHaveBeenCalledWith("park-trails-active-halo", [
-      "==",
-      ["get", "index"],
-      0,
-    ]);
     fireEvent.mouseEnter(screen.getByRole("button", { name: "UKK-reitti" }));
+    expect(mockMap.setFilter).toHaveBeenCalledWith("park-trails-line", ["!=", ["get", "index"], 1]);
     expect(mockMap.setFilter).toHaveBeenCalledWith("park-trails-active-line", [
       "==",
       ["get", "index"],
@@ -253,7 +414,14 @@ describe("ParkBoundaryMap", () => {
     expect(screen.getByRole("status")).toHaveTextContent("UKK-reitti");
     fireEvent.mouseLeave(screen.getByRole("button", { name: "UKK-reitti" }));
     expect(screen.getByRole("status")).toHaveTextContent("Kasken kierros");
+    mockMap.setFilter.mockClear();
+    mockMap.setPaintProperty.mockClear();
     fireEvent.blur(screen.getByRole("button", { name: "Kasken kierros" }));
+    expect(mockMap.setFilter).toHaveBeenCalledWith("park-trails-line", null);
+    expect(mockMap.setFilter).toHaveBeenCalledWith("park-trails-halo", null);
+    expect(mockMap.setPaintProperty).toHaveBeenCalledWith("park-trails-line", "line-width", 3);
+    expect(mockMap.setPaintProperty).toHaveBeenCalledWith("park-trails-line", "line-opacity", 1);
+    expect(mockMap.setPaintProperty).toHaveBeenCalledWith("park-trails-halo", "line-opacity", 0.65);
     expect(mockMap.setFilter).toHaveBeenLastCalledWith("park-trails-active-line", [
       "==",
       ["get", "index"],
@@ -292,6 +460,7 @@ describe("ParkBoundaryMap", () => {
           },
         ]}
       />,
+      { wrapper: I18nProvider },
     );
     const move = mockMap.on.mock.calls.find(([event]) => event === "mousemove");
     expect(move).toBeDefined();
@@ -300,6 +469,7 @@ describe("ParkBoundaryMap", () => {
       lngLat: { lng: number; lat: number };
     }) => void;
     act(() => handler({ features: [{ properties: { index: 0 } }], lngLat: { lng: 24, lat: 60 } }));
+    expect(screen.getByRole("heading", { name: "Sammalpolku" })).toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("Sammalpolku");
     expect(mockMap.setFilter).toHaveBeenCalledWith("park-trails-active-line", [
       "==",
@@ -320,8 +490,11 @@ describe("ParkBoundaryMap", () => {
         markerPoint={mockMarkerPoint}
         parkName="Test Park"
       />,
+      { wrapper: I18nProvider },
     );
-    expect(screen.getByRole("application", { name: "map.boundaryAriaLabel" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("application", { name: "Test Park rajaus kartalla" }),
+    ).toBeInTheDocument();
   });
 
   it("shows loading spinner before map is loaded", () => {
@@ -333,8 +506,9 @@ describe("ParkBoundaryMap", () => {
         markerPoint={mockMarkerPoint}
         parkName="Test Park"
       />,
+      { wrapper: I18nProvider },
     );
-    expect(screen.getByText("map.loading")).toBeInTheDocument();
+    expect(screen.getByText("Ladataan karttaa...")).toBeInTheDocument();
   });
 
   it("allows zooming out three levels from the fitted park bounds", () => {
@@ -345,6 +519,7 @@ describe("ParkBoundaryMap", () => {
         markerPoint={mockMarkerPoint}
         parkName="Test Park"
       />,
+      { wrapper: I18nProvider },
     );
 
     expect(mockMap.cameraForBounds).toHaveBeenCalled();
@@ -362,6 +537,7 @@ describe("ParkBoundaryMap", () => {
         markerPoint={mockMarkerPoint}
         parkName="Test Park"
       />,
+      { wrapper: I18nProvider },
     );
 
     expect(mockMap.setMinZoom).toHaveBeenCalledWith(3);
