@@ -652,6 +652,10 @@
           "retryRefresh": "Yritä päivitystä uudelleen"
         },
         "updatedNotice": "Paikan tiedot päivitettiin onnistuneesti.",
+        "refreshFailedNotice": "Paikan tiedot tallentuivat, mutta julkisten näkymien päivitys epäonnistui.",
+        "retryCacheRefresh": "Yritä julkisten näkymien päivitystä uudelleen",
+        "retryingCacheRefresh": "Päivitetään julkisia näkymiä…",
+        "cacheRefreshRetried": "Julkiset näkymät päivitettiin.",
         "linkedAreasTitle": "Reitti kuuluu alueisiin",
         "tabs": { "label": "Paikan tiedot", "details": "Yleistiedot", "trails": "Reitit" },
         "form": {

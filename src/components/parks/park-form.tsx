@@ -21,6 +21,7 @@ import { appRoutes, createPathWithSearchParams } from "@/lib/routes";
 
 interface ParkFormProps {
   park: ParkDetail;
+  linkedAreaSlugs?: string[];
 }
 
 interface ParkFormState {
@@ -75,7 +76,7 @@ const parseOptionalNumber = (value: string): number | null => {
 const isFiniteNumber = (value: number | null): value is number =>
   value !== null && Number.isFinite(value);
 
-export const ParkForm = ({ park }: ParkFormProps) => {
+export const ParkForm = ({ park, linkedAreaSlugs = [] }: ParkFormProps) => {
   const t = useTranslations("controlPanel.parks.edit.form");
   const { showSnackbar } = useSnackbar();
   const router = useRouter();
@@ -216,17 +217,18 @@ export const ParkForm = ({ park }: ParkFormProps) => {
         body: JSON.stringify(payload),
       });
 
-      await Promise.all([
-        revalidatePublicCache({ parkSlug: park.slug, expireImmediately: true }),
-        updatedPark.slug !== park.slug
-          ? revalidatePublicCache({ parkSlug: updatedPark.slug, expireImmediately: true })
-          : Promise.resolve(true),
-      ]);
+      const slugs = [...new Set([park.slug, updatedPark.slug, ...linkedAreaSlugs])];
+      const refreshResults = await Promise.all(
+        slugs.map((parkSlug) => revalidatePublicCache({ parkSlug, expireImmediately: true })),
+      );
+      const refreshFailed = !refreshResults.every(Boolean);
 
       startTransition(() => {
         router.replace(
           createPathWithSearchParams(appRoutes.controlPanel.parkEdit(updatedPark.slug), {
             updated: 1,
+            refreshFailed: refreshFailed ? 1 : null,
+            previousSlug: refreshFailed && updatedPark.slug !== park.slug ? park.slug : null,
           }),
         );
         router.refresh();
