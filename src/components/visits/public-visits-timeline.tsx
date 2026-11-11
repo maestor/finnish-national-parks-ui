@@ -17,6 +17,7 @@ import {
   PUBLIC_HERO_PANEL_CLASS_NAME,
   PUBLIC_HERO_TITLE_CLASS_NAME,
   PUBLIC_PANEL_CLASS_NAME,
+  PUBLIC_ROUTE_BADGE_CLASS_NAME,
 } from "@/components/layout/public-page-styles";
 import { ParkTypeBadge } from "@/components/park/park-type-badge";
 import { Label } from "@/components/ui/label";
@@ -313,7 +314,7 @@ const PublicVisitsTimelineContent = ({
       <div className="mt-3 flex flex-wrap gap-2">
         <ParkTypeBadge label={visit.park.typeLabel} />
         {visit.route !== null && (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-border theme-memory px-2.5 py-1 text-xs font-semibold text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)]   dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.08)]">
+          <span className={PUBLIC_ROUTE_BADGE_CLASS_NAME}>
             <Route className="h-3.5 w-3.5" aria-hidden="true" />
             {visit.route}
           </span>

@@ -240,8 +240,9 @@ describe("createHomeProgressItems", () => {
 
     expect(apiFetch).toHaveBeenCalledWith("/api/parks/riisitunturi?includeBoundary=true", {
       cache: "force-cache",
-      headers: { "X-Reissuvihko-Cache-Version": "2" },
+      headers: { "X-Reissuvihko-Cache-Version": "4" },
       next: {
+        revalidate: 3600,
         tags: [getPublicParkTag("riisitunturi"), PUBLIC_PARK_DETAILS_TAG],
       },
     });

@@ -1859,6 +1859,29 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "FeatureCollection";
                             };
+                            linkedTrails?: {
+                                name: string;
+                                slug: string;
+                                address: string | null;
+                                lengthKm: number | null;
+                                boundaryGeoJson: {
+                                    features: {
+                                        geometry: {
+                                            coordinates: number[][][];
+                                            /** @enum {string} */
+                                            type: "Polygon";
+                                        } | {
+                                            coordinates: number[][];
+                                            /** @enum {string} */
+                                            type: "LineString";
+                                        };
+                                        /** @enum {string} */
+                                        type: "Feature";
+                                    }[];
+                                    /** @enum {string} */
+                                    type: "FeatureCollection";
+                                };
+                            }[];
                             /** @enum {string} */
                             catalogStatus: "active" | "inactive";
                             lipasId: number;
@@ -2014,6 +2037,29 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "FeatureCollection";
                             };
+                            linkedTrails?: {
+                                name: string;
+                                slug: string;
+                                address: string | null;
+                                lengthKm: number | null;
+                                boundaryGeoJson: {
+                                    features: {
+                                        geometry: {
+                                            coordinates: number[][][];
+                                            /** @enum {string} */
+                                            type: "Polygon";
+                                        } | {
+                                            coordinates: number[][];
+                                            /** @enum {string} */
+                                            type: "LineString";
+                                        };
+                                        /** @enum {string} */
+                                        type: "Feature";
+                                    }[];
+                                    /** @enum {string} */
+                                    type: "FeatureCollection";
+                                };
+                            }[];
                             /** @enum {string} */
                             catalogStatus: "active" | "inactive";
                             lipasId: number;

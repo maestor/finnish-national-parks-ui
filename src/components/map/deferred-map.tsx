@@ -13,6 +13,7 @@ interface DeferredMapProps {
   label: string;
   loadImmediately?: boolean;
   showLoadAction?: boolean;
+  powerControlAtBottom?: boolean;
 }
 
 export const useDeferredMapPower = () => useContext(DeferredMapPowerContext);
@@ -24,6 +25,7 @@ const DeferredMap = ({
   label,
   loadImmediately = false,
   showLoadAction = true,
+  powerControlAtBottom = false,
 }: DeferredMapProps) => {
   const t = useTranslations("map");
   const containerRef = useRef<HTMLElement>(null);
@@ -64,7 +66,12 @@ const DeferredMap = ({
       {isLoadRequested ? (
         <DeferredMapPowerContext.Provider value={isLowPower}>
           {children}
-          <div className="pointer-events-none absolute top-3 left-3 z-10">
+          <div
+            className={cn(
+              "pointer-events-none absolute left-3 z-10",
+              powerControlAtBottom ? "bottom-12" : "top-3",
+            )}
+          >
             <label
               className={cn(
                 "pointer-events-auto flex cursor-pointer items-center gap-2 rounded-full border px-3 py-2 text-xs font-medium shadow-lg",

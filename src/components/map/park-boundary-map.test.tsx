@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ParkBoundaryMap } from "./park-boundary-map";
 
@@ -11,7 +11,9 @@ const createMockMarker = () => ({
 const createMockMap = ({ autoLoad = true } = {}) => {
   const listeners: Record<string, (() => void)[]> = {};
   return {
-    on: vi.fn((event: string, handler: () => void) => {
+    on: vi.fn((event: string, handlerOrLayer: (() => void) | string, layerHandler?: () => void) => {
+      const handler = typeof handlerOrLayer === "function" ? handlerOrLayer : layerHandler;
+      if (!handler) return;
       if (!listeners[event]) listeners[event] = [];
       listeners[event].push(handler);
       if (event === "load" && autoLoad) {
@@ -24,6 +26,8 @@ const createMockMap = ({ autoLoad = true } = {}) => {
       }
     },
     remove: vi.fn(),
+    off: vi.fn(),
+    setPaintProperty: vi.fn(),
     resize: vi.fn(),
     addControl: vi.fn(),
     addSource: vi.fn(),
@@ -55,6 +59,24 @@ vi.mock("maplibre-gl", () => ({
   // biome-ignore lint: Vitest v4 constructor mocks must be constructible.
   Marker: vi.fn(function () {
     return createMockMarker();
+  }),
+  // biome-ignore lint: Vitest v4 constructor mocks must be constructible.
+  Popup: vi.fn(function () {
+    const element = document.createElement("div");
+    const popup = {
+      setLngLat: vi.fn().mockReturnThis(),
+      setDOMContent: vi.fn((content: HTMLElement) => {
+        element.replaceChildren(content);
+        return popup;
+      }),
+      addTo: vi.fn(() => {
+        document.body.appendChild(element);
+        return popup;
+      }),
+      getElement: () => element,
+      remove: () => element.remove(),
+    };
+    return popup;
   }),
   NavigationControl: vi.fn(),
   setWorkerUrl: vi.fn(),
@@ -96,6 +118,118 @@ const mockMarkerPoint = {
 describe("ParkBoundaryMap", () => {
   beforeEach(() => {
     mockMap = createMockMap();
+  });
+
+  it("highlights a linked trail and shows its details when its label receives focus or is selected", () => {
+    render(
+      <ParkBoundaryMap
+        boundaryGeoJson={mockBoundaryGeoJson}
+        boundingBox={mockBoundingBox}
+        markerPoint={mockMarkerPoint}
+        parkName="Test Park"
+        linkedTrails={[
+          {
+            name: "Sammalpolku",
+            slug: "sammalpolku",
+            address: "Polkutie 1, 00999 Testikylä",
+            lengthKm: 2,
+            boundaryGeoJson: {
+              type: "FeatureCollection",
+              features: [
+                {
+                  type: "Feature",
+                  geometry: {
+                    type: "LineString",
+                    coordinates: [
+                      [24, 60],
+                      [24.1, 60.1],
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ]}
+      />,
+    );
+    const label = screen.getByRole("button", { name: "Sammalpolku" });
+    fireEvent.focus(label);
+    expect(mockMap.setPaintProperty).toHaveBeenCalledWith("park-trails-line", "line-color", [
+      "case",
+      ["==", ["get", "index"], 0],
+      "#3fb1ce",
+      "#00417c",
+    ]);
+    expect(mockMap.setPaintProperty).not.toHaveBeenCalledWith(
+      "park-trails-line",
+      "line-width",
+      expect.anything(),
+    );
+    expect(screen.getByRole("status")).toHaveTextContent("2 km");
+    expect(screen.getByRole("heading", { name: "Sammalpolku" })).toBeInTheDocument();
+    expect(screen.getByText("Polkutie 1, 00999 Testikylä")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Polkutie 1, 00999 Testikylä");
+    fireEvent.mouseEnter(label);
+    fireEvent.mouseLeave(label);
+    expect(screen.getByRole("status")).toHaveTextContent("Sammalpolku");
+    fireEvent.blur(label);
+    fireEvent.click(label);
+    expect(label).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("status")).toHaveTextContent("2 km");
+    fireEvent.blur(label);
+    fireEvent.click(label);
+    expect(label).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("status")).toBeEmptyDOMElement();
+    fireEvent.mouseEnter(label);
+    expect(screen.getByRole("status")).toHaveTextContent("Sammalpolku");
+    fireEvent.mouseLeave(label);
+    expect(screen.getByRole("status")).toBeEmptyDOMElement();
+  });
+
+  it("shows trail details when the pointer moves over the route on the map", () => {
+    render(
+      <ParkBoundaryMap
+        boundaryGeoJson={mockBoundaryGeoJson}
+        boundingBox={mockBoundingBox}
+        markerPoint={mockMarkerPoint}
+        parkName="Test Park"
+        linkedTrails={[
+          {
+            name: "Sammalpolku",
+            slug: "sammalpolku",
+            address: null,
+            lengthKm: null,
+            boundaryGeoJson: {
+              type: "FeatureCollection",
+              features: [
+                {
+                  type: "Feature",
+                  geometry: {
+                    type: "LineString",
+                    coordinates: [
+                      [24, 60],
+                      [24.1, 60.1],
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ]}
+      />,
+    );
+    const move = mockMap.on.mock.calls.find(([event]) => event === "mousemove");
+    expect(move).toBeDefined();
+    const handler = move?.[2] as unknown as (event: {
+      features: { properties: { index: number } }[];
+      lngLat: { lng: number; lat: number };
+    }) => void;
+    act(() => handler({ features: [{ properties: { index: 0 } }], lngLat: { lng: 24, lat: 60 } }));
+    expect(screen.getByRole("status")).toHaveTextContent("Sammalpolku");
+    const leave = mockMap.on.mock.calls.find(([event]) => event === "mouseleave");
+    const leaveHandler = leave?.[2] as unknown as () => void;
+    act(() => leaveHandler());
+    expect(screen.getByRole("status")).toBeEmptyDOMElement();
   });
 
   it("renders map container with accessible label", () => {

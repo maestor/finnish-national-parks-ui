@@ -261,12 +261,13 @@ export const ParkDetailPage = async ({ params, authenticated = false }: ParkDeta
             </Link>
           </div>
           {hasBoundaryGeoJson && (
-            <DeferredMap className="min-h-80" label={t("boundaryMapTitle")}>
+            <DeferredMap className="min-h-80" label={t("boundaryMapTitle")} powerControlAtBottom>
               <LazyParkBoundaryMap
                 boundaryGeoJson={boundaryGeoJson}
                 boundingBox={publicPark.boundingBox}
                 markerPoint={publicPark.markerPoint}
                 parkName={publicPark.name}
+                linkedTrails={publicPark.linkedTrails}
               />
             </DeferredMap>
           )}

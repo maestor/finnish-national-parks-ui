@@ -1083,6 +1083,8 @@
   "map": {
     "ariaLabel": "Suomen retkipaikkojen kartta",
     "boundaryAriaLabel": "{parkName} rajaus kartalla",
+    "trails": "Paikan reitit",
+    "trailLength": "Pituus",
     "deferredMapTitle": "Kartta ladataan tarvittaessa",
     "deferredMapDescription": "Kartta valmistellaan vasta, kun se tulee näkyviin.",
     "loadDeferredMap": "Lataa kartta",
