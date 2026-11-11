@@ -19,6 +19,9 @@ export const PUBLIC_PANEL_ICON_SURFACE_CLASS_NAME = `inline-flex h-11 w-11 items
 export const PUBLIC_EYEBROW_BADGE_CLASS_NAME =
   "inline-flex items-center gap-2 rounded-full border border-border theme-memory px-3 py-1 text-sm font-medium text-link";
 
+export const PUBLIC_ROUTE_BADGE_CLASS_NAME =
+  "inline-flex items-center gap-1.5 rounded-full border border-border theme-memory px-2.5 py-1 text-xs font-semibold text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.08)]";
+
 export const PUBLIC_META_BADGE_CLASS_NAME =
   "inline-flex items-center gap-1.5 rounded-full border border-border bg-control px-3 py-1 text-xs font-medium text-muted-foreground shadow-[0_1px_2px_rgba(var(--shadow-rgb),0.12),inset_0_1px_0_rgba(var(--highlight-rgb),0.48)] dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]";
 

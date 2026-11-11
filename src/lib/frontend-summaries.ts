@@ -58,8 +58,9 @@ export const fetchPublicParkDetail = async (
     `/api/parks/${slug}${options?.includeBoundary ? "?includeBoundary=true" : ""}`,
     {
       cache: "force-cache",
-      headers: { "X-Reissuvihko-Cache-Version": "2" },
+      headers: { "X-Reissuvihko-Cache-Version": "4" },
       next: {
+        revalidate: 3600,
         tags: [getPublicParkTag(slug), PUBLIC_PARK_DETAILS_TAG],
       },
     },
