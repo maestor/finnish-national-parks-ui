@@ -30,6 +30,7 @@ export const appRoutes = {
     dateRangeReview: `${CONTROL_PANEL_ROOT}/ajanjaksokatsaus`,
     yearReview: `${CONTROL_PANEL_ROOT}/vuosikatsaus`,
     admins: `${CONTROL_PANEL_ROOT}/kayttajat`,
+    cache: `${CONTROL_PANEL_ROOT}/valimuisti`,
   },
 } as const;
 
@@ -97,6 +98,7 @@ export const legacyAppRedirects = [
     destination: appRoutes.controlPanel.admins,
     permanent: true,
   },
+  { source: "/control-panel/cache", destination: appRoutes.controlPanel.cache, permanent: true },
   {
     source: "/date-range-review/share/:shareId",
     destination: "/ajanjaksokatsaus/jako/:shareId",
@@ -180,6 +182,9 @@ const normalizePathname = (pathname: string) => {
 
   if (pathname === "/control-panel/admins") {
     return appRoutes.controlPanel.admins;
+  }
+  if (pathname === "/control-panel/cache") {
+    return appRoutes.controlPanel.cache;
   }
 
   const parkMatch = /^\/park\/([^/]+)$/.exec(pathname);

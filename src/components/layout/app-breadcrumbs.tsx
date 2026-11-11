@@ -26,6 +26,7 @@ export const AppBreadcrumbs = ({ path, entityName, className }: AppBreadcrumbsPr
     [appRoutes.controlPanel.dateRangeReview]: "controlPanel.dateRangeReview.title",
     [appRoutes.controlPanel.yearReview]: "controlPanel.yearReview.title",
     [appRoutes.controlPanel.admins]: "controlPanel.adminUsers.title",
+    [appRoutes.controlPanel.cache]: "controlPanel.cacheManagement.title",
   };
 
   let items: BreadcrumbItem[];

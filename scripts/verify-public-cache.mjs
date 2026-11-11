@@ -37,13 +37,24 @@ let failMap = false;
 let withdrawn = false;
 let additionalTrip = false;
 let recoveringPark = false;
+let superAdmin = true;
 const fixture = createServer((request, response) => {
   const url = new URL(request.url, "http://localhost");
-  const path = url.pathname.slice(apiPrefix.length);
+  const path = url.pathname.startsWith(apiPrefix)
+    ? url.pathname.slice(apiPrefix.length)
+    : url.pathname;
   counts.set(path, (counts.get(path) ?? 0) + 1);
   let status = 200;
   let body;
-  if (path === "/api/map-summary") {
+  if (path === "/auth/me")
+    body = {
+      id: "fixture",
+      email: "fixture@example.com",
+      name: "Testaaja",
+      picture: "",
+      isSuperAdmin: superAdmin,
+    };
+  else if (path === "/api/map-summary") {
     status = failMap ? 503 : 200;
     body = failMap ? { error: "Fixture temporarily unavailable" } : mapSummary(revision);
   } else if (path === "/api/home-summary") body = homeSummary(revision);
@@ -224,6 +235,28 @@ try {
   await cached("/sitemap.xml", "/retki/new-trip");
   console.log("PASS edit/publication invalidation for pages and sitemap");
 
+  revision = 3;
+  superAdmin = false;
+  const forbiddenRefresh = await fetch(`${origin}/api/admin/cache`, {
+    method: "POST",
+    headers: { cookie: `__session=${token}`, origin, "Content-Type": "application/json" },
+    body: JSON.stringify({ scope: "all" }),
+  });
+  assert.equal(forbiddenRefresh.status, 403, "Ordinary admins cannot run bulk refresh");
+  superAdmin = true;
+  for (const scope of ["parks", "trips", "home"]) {
+    const response = await fetch(`${origin}/api/admin/cache`, {
+      method: "POST",
+      headers: { cookie: `__session=${token}`, origin, "Content-Type": "application/json" },
+      body: JSON.stringify({ scope }),
+    });
+    assert.equal(response.status, 200, `Super-admin ${scope} refresh`);
+  }
+  await cached("/paikka/fixture-park", "Testipuisto 3");
+  await cached("/retki/fixture-trip", "Testiretki 3");
+  await cached("/retket", "Testiretki 3");
+  console.log("PASS super-admin bulk refresh of cached park and trip details");
+
   for (const path of ["/extra", "/paikat/extra", "/retket/extra", "/sitemap.xml/extra"]) {
     const missing = await get(path);
     if (path.startsWith("/sitemap.xml")) assert.equal(missing.response.status, 404, path);
@@ -243,6 +276,27 @@ try {
     assert.equal(new URL(response.headers.get("location"), origin).pathname, to);
   }
   browser = await chromium.launch({ headless: true });
+  for (const [viewport, colorScheme] of [
+    [{ width: 1280, height: 900 }, "light"],
+    [{ width: 354, height: 708 }, "dark"],
+  ]) {
+    const context = await browser.newContext({ viewport, colorScheme });
+    try {
+      await context.addCookies([{ name: "__session", value: token, url: origin }]);
+      const page = await context.newPage();
+      await page.goto(`${origin}/hallinta/valimuisti`);
+      await expect(page.getByRole("heading", { name: "Välimuistin hallinta" })).toBeVisible();
+      await page.getByRole("button", { name: "Päivitä etusivu" }).click();
+      await expect(page.getByRole("status")).toHaveText("Välimuisti päivitettiin.");
+      assert(
+        await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+        "Cache page must fit the viewport",
+      );
+    } finally {
+      await context.close();
+    }
+  }
+  console.log("PASS cache management in desktop light and mobile dark modes");
   const serverRendered = await browser.newContext({
     javaScriptEnabled: false,
     viewport: { width: 1280, height: 900 },
@@ -316,7 +370,7 @@ try {
   await invalidate(false);
   const withdrawnPage = await get("/paikka/fixture-park");
   assert(
-    !withdrawnPage.body.includes("Testipuisto 2"),
+    !withdrawnPage.body.includes("Testipuisto 3"),
     "Withdrawal must remove cached park content on the next request",
   );
   console.log("PASS withdrawal with the normal mutation invalidation profile");

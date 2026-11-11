@@ -8,7 +8,7 @@ import {
   fetchPublicParkDetail,
   fetchPublicParkVisits,
 } from "./frontend-summaries";
-import { getPublicParkTag } from "./public-cache";
+import { getPublicParkTag, PUBLIC_PARK_DETAILS_TAG } from "./public-cache";
 
 vi.mock("./api", () => ({
   apiFetch: vi.fn(),
@@ -240,8 +240,9 @@ describe("createHomeProgressItems", () => {
 
     expect(apiFetch).toHaveBeenCalledWith("/api/parks/riisitunturi?includeBoundary=true", {
       cache: "force-cache",
+      headers: { "X-Reissuvihko-Cache-Version": "2" },
       next: {
-        tags: [getPublicParkTag("riisitunturi")],
+        tags: [getPublicParkTag("riisitunturi"), PUBLIC_PARK_DETAILS_TAG],
       },
     });
   });
@@ -253,8 +254,9 @@ describe("createHomeProgressItems", () => {
 
     expect(apiFetch).toHaveBeenCalledWith("/api/parks/riisitunturi/visits", {
       cache: "force-cache",
+      headers: { "X-Reissuvihko-Cache-Version": "2" },
       next: {
-        tags: [getPublicParkTag("riisitunturi")],
+        tags: [getPublicParkTag("riisitunturi"), PUBLIC_PARK_DETAILS_TAG],
       },
     });
   });

@@ -52,6 +52,7 @@ describe("page breadcrumbs", () => {
     ["/hallinta/ajanjaksokatsaus", "Ajanjaksokatsaus", "/hallinta"],
     ["/hallinta/vuosikatsaus", "Vuosikatsaus", "/hallinta"],
     ["/hallinta/kayttajat", "Ylläpitäjät", "/hallinta"],
+    ["/hallinta/valimuisti", "Välimuistin hallinta", "/hallinta"],
     ["/hallinta/retket/uusi", "Uusi retki", "/hallinta/retket"],
     ["/control-panel/visits/new", "Uusi käynti", "/hallinta/kaynnit"],
     ["/hallinta/retket/42/muokkaa", "Muokkaa retkeä", "/hallinta/retket"],

@@ -1146,7 +1146,7 @@ describe("App pages", () => {
       expect.objectContaining({
         cache: "force-cache",
         next: {
-          tags: ["public-trip:keski-suomen-kesaretki"],
+          tags: ["public-trip:keski-suomen-kesaretki", "public-trip-details"],
         },
         signal: expect.any(AbortSignal),
       }),
