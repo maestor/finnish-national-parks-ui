@@ -1864,6 +1864,16 @@ export interface paths {
                                 slug: string;
                                 address: string | null;
                                 lengthKm: number | null;
+                                source?: {
+                                    /** @enum {string} */
+                                    type: "openstreetmap";
+                                    relationId: number;
+                                    attribution: string;
+                                    /** Format: uri */
+                                    licenseUrl: string;
+                                    /** Format: uri */
+                                    sourceUrl: string;
+                                };
                                 boundaryGeoJson: {
                                     features: {
                                         geometry: {
@@ -2042,6 +2052,16 @@ export interface paths {
                                 slug: string;
                                 address: string | null;
                                 lengthKm: number | null;
+                                source?: {
+                                    /** @enum {string} */
+                                    type: "openstreetmap";
+                                    relationId: number;
+                                    attribution: string;
+                                    /** Format: uri */
+                                    licenseUrl: string;
+                                    /** Format: uri */
+                                    sourceUrl: string;
+                                };
                                 boundaryGeoJson: {
                                     features: {
                                         geometry: {
