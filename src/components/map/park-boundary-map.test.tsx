@@ -167,6 +167,65 @@ describe("ParkBoundaryMap", () => {
     mockMap = createMockMap();
   });
 
+  it("updates persistent visited layers without moving the camera or replacing geometry", () => {
+    const props = {
+      boundaryGeoJson: mockBoundaryGeoJson,
+      boundingBox: mockBoundingBox,
+      markerPoint: mockMarkerPoint,
+      parkName: "Test Park",
+      linkedTrails: [mockLinkedTrail],
+    };
+    const { rerender, unmount } = render(<ParkBoundaryMap {...props} visitedSlugs={[]} />, {
+      wrapper: I18nProvider,
+    });
+    mockMap.fitBounds.mockClear();
+    mockMap.addSource.mockClear();
+    rerender(
+      <ParkBoundaryMap
+        {...props}
+        visitedSlugs={["pitka-reitti"]}
+        selectedSlug="other"
+        previewSlug="third"
+      />,
+    );
+    expect(mockMap.setFilter).toHaveBeenCalledWith("park-trails-visited-line", [
+      "all",
+      ["in", ["get", "slug"], ["literal", ["pitka-reitti"]]],
+      ["!=", ["get", "slug"], "other"],
+      ["!=", ["get", "slug"], "third"],
+    ]);
+    expect(mockMap.setPaintProperty).toHaveBeenCalledWith(
+      "park-trails-visited-line",
+      "line-opacity",
+      0,
+    );
+    expect(mockMap.setPaintProperty).toHaveBeenCalledWith(
+      "park-trails-visited-halo",
+      "line-opacity",
+      0,
+    );
+    rerender(<ParkBoundaryMap {...props} visitedSlugs={["pitka-reitti"]} selectedSlug="other" />);
+    expect(mockMap.setPaintProperty).toHaveBeenLastCalledWith(
+      "park-trails-visited-line",
+      "line-opacity",
+      1,
+    );
+    expect(mockMap.setPaintProperty).toHaveBeenCalledWith(
+      "park-trails-visited-halo",
+      "line-opacity",
+      0.95,
+    );
+    expect(mockMap.fitBounds).not.toHaveBeenCalled();
+    expect(mockMap.addSource).not.toHaveBeenCalled();
+    expect(mockMap.addLayer).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "park-trails-preview-line",
+        paint: { "line-color": "#a75b34", "line-width": 4.5 },
+      }),
+    );
+    unmount();
+    expect(mockMap.remove).toHaveBeenCalled();
+  });
   it("fits all segments on explicit requests, including repeated selection", () => {
     const props = {
       boundaryGeoJson: mockBoundaryGeoJson,

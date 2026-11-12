@@ -94,46 +94,6 @@ describe("ParkVisitHistory", () => {
     expect(screen.getByTestId("visit-accordion")).toHaveTextContent("visits:1|editable:true");
   });
 
-  it("loads draft visits for authenticated admins on the park page", async () => {
-    mockUseAuth.mockReturnValue({
-      isAuthenticated: true,
-      isLoading: false,
-    });
-    vi.mocked(apiFetch).mockResolvedValue({
-      visits: [{ ...visits[0], status: "draft" }],
-    } as never);
-
-    render(
-      <ParkVisitHistory
-        title="Käyntihistoria"
-        addVisitLabel="Lisää käynti"
-        parkSlug="pallas"
-        visits={visits}
-      />,
-    );
-
-    expect(await screen.findByTestId("visit-accordion")).toHaveTextContent("drafts:1");
-    expect(apiFetch).toHaveBeenCalledWith("/api/admin/parks/pallas/visits", {
-      cache: "no-store",
-    });
-  });
-
-  it("keeps public visits visible when the admin-only park request fails", async () => {
-    mockUseAuth.mockReturnValue({ isAuthenticated: true, isLoading: false });
-    vi.mocked(apiFetch).mockRejectedValueOnce(new Error("Admin session expired"));
-
-    render(
-      <ParkVisitHistory
-        title="Käyntihistoria"
-        addVisitLabel="Lisää käynti"
-        parkSlug="pallas"
-        visits={visits}
-      />,
-    );
-
-    expect(await screen.findByTestId("visit-accordion")).toHaveTextContent("visits:1");
-  });
-
   it("hides visit history when the park has no visits", () => {
     mockUseAuth.mockReturnValue({ isAuthenticated: false, isLoading: false });
 

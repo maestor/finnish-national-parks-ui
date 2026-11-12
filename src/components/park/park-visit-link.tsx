@@ -10,36 +10,52 @@ import {
   useState,
 } from "react";
 import { StickySectionNavigation } from "@/components/navigation/sticky-section-navigation";
+import { useAuth } from "@/hooks/use-auth";
+import { apiFetch } from "@/lib/api";
+import type { AdminParkVisits, Visit } from "@/lib/parks";
 import { ParkVisitHistory } from "./park-visit-history";
 
-const ParkVisitVisibilityContext = createContext<{
-  visitIds: number[];
-  setVisitIds: (ids: number[]) => void;
-} | null>(null);
+const ParkVisitVisibilityContext = createContext<Visit[] | null>(null);
 
 export const ParkVisitVisibilityProvider = ({
   children,
-  initialVisitIds,
+  parkSlug,
+  initialVisits,
 }: {
   children: ReactNode;
-  initialVisitIds: number[];
+  parkSlug: string;
+  initialVisits: Visit[];
 }) => {
-  const [visitIds, setVisitIds] = useState(initialVisitIds);
+  const { isAuthenticated } = useAuth();
+  const [result, setResult] = useState<{ parkSlug: string; visits: Visit[] } | null>(null);
   useEffect(() => {
-    setVisitIds(initialVisitIds);
-  }, [initialVisitIds]);
+    if (!isAuthenticated) return;
+    let current = true;
+    void apiFetch<AdminParkVisits>(`/api/admin/parks/${encodeURIComponent(parkSlug)}/visits`, {
+      cache: "no-store",
+    })
+      .then((response) => {
+        if (current) setResult({ parkSlug, visits: response.visits });
+      })
+      .catch(() => {
+        if (current) setResult(null);
+      });
+    return () => {
+      current = false;
+    };
+  }, [isAuthenticated, parkSlug]);
+  useEffect(() => {
+    if (!isAuthenticated) setResult(null);
+  }, [isAuthenticated]);
+  const visits = isAuthenticated && result?.parkSlug === parkSlug ? result.visits : initialVisits;
   return (
-    <ParkVisitVisibilityContext.Provider value={{ visitIds, setVisitIds }}>
+    <ParkVisitVisibilityContext.Provider value={visits}>
       {children}
     </ParkVisitVisibilityContext.Provider>
   );
 };
 
-const useParkVisitVisibility = () => {
-  const context = useContext(ParkVisitVisibilityContext);
-  if (!context) throw new Error("Park visit visibility requires its provider");
-  return context;
-};
+export const useParkVisitVisibility = () => useContext(ParkVisitVisibilityContext);
 
 const useLinkedVisitId = () => {
   const searchParams = useSearchParams();
@@ -50,22 +66,15 @@ const useLinkedVisitId = () => {
 
 export const LinkedParkVisitHistory = (props: ComponentProps<typeof ParkVisitHistory>) => {
   const visitId = useLinkedVisitId();
-  const { setVisitIds } = useParkVisitVisibility();
-  return (
-    <ParkVisitHistory
-      key={visitId}
-      {...props}
-      initialOpenVisitId={visitId}
-      onVisibleVisitsChange={setVisitIds}
-    />
-  );
+  const visits = useParkVisitVisibility() ?? props.visits;
+  return <ParkVisitHistory {...props} initialOpenVisitId={visitId} visits={visits} />;
 };
 
 export const LinkedParkSectionNavigation = (
   props: ComponentProps<typeof StickySectionNavigation>,
 ) => {
   const visitId = useLinkedVisitId();
-  const { visitIds } = useParkVisitVisibility();
+  const visitIds = (useParkVisitVisibility() ?? []).map((visit) => visit.id);
   const items = props.items
     .filter((item) => item.id !== "visit-history" || visitIds.length > 0)
     .map((item) =>

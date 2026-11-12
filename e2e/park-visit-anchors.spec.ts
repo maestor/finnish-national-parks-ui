@@ -63,3 +63,36 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
     }
   });
 }
+
+test("trail dates reopen visits and support browser history", async ({ page }) => {
+  await page.goto("/paikka/sipoonkorven-kansallispuisto");
+  const location = page.locator("#park-location");
+  const trail = location.locator("fieldset").getByRole("button", { name: /Storträsk/ });
+  test.skip((await trail.count()) === 0, "Requires Sipoonkorpi trails in the local dataset");
+  await trail.click();
+  const links = location.getByTestId("selection-details").getByRole("link");
+  test.skip((await links.count()) < 2, "Requires repeated Storträsk visits");
+  const firstHref = await links.nth(0).getAttribute("href");
+  const secondHref = await links.nth(1).getAttribute("href");
+  const idFrom = (href: string | null) =>
+    new URL(href ?? "", "http://localhost:4300").searchParams.get("visit");
+  const first = page.locator(`#park-visit-${idFrom(firstHref)}`);
+  const second = page.locator(`#park-visit-${idFrom(secondHref)}`);
+  await links.nth(0).click();
+  await expect(first.getByRole("button", { expanded: true })).toBeFocused();
+  await links.nth(1).click();
+  const toggle = second.getByRole("button", { expanded: true });
+  await expect(toggle).toBeFocused();
+  await toggle.click();
+  await links.nth(1).click();
+  await expect(second.getByRole("button", { expanded: true })).toBeFocused();
+  await page.goBack();
+  await expect(first.getByRole("button", { expanded: true })).toBeFocused();
+  await page.goForward();
+  await expect(second.getByRole("button", { expanded: true })).toBeFocused();
+  await page.reload();
+  await expect(second.getByRole("button", { expanded: true })).toBeFocused();
+  await second.getByRole("button", { name: /Näytä Storträsk kartalla/ }).click();
+  await expect(page).toHaveURL(/\/paikka\/sipoonkorven-kansallispuisto#park-location$/);
+  await expect(location).toBeFocused();
+});

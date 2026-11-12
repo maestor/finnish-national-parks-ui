@@ -48,7 +48,7 @@ const visit: Visit = {
 };
 const renderPage = (visits: Visit[]) =>
   render(
-    <ParkVisitVisibilityProvider initialVisitIds={visits.map((item) => item.id)}>
+    <ParkVisitVisibilityProvider parkSlug="pallas" initialVisits={visits}>
       <LinkedParkSectionNavigation
         ariaLabel="Osat"
         items={[
@@ -99,5 +99,52 @@ describe("park visit visibility", () => {
       expect(screen.queryByRole("heading", { name: "Käyntihistoria" })).not.toBeInTheDocument();
       expect(screen.queryByRole("navigation", { name: "Osat" })).not.toBeInTheDocument();
     });
+  });
+  it("does not repeat the admin read when the visit query changes", async () => {
+    vi.mocked(apiFetch).mockResolvedValue({ visits: [visit] });
+    const page = () => (
+      <ParkVisitVisibilityProvider parkSlug="pallas" initialVisits={[visit]}>
+        <LinkedParkVisitHistory
+          visits={[visit]}
+          parkSlug="pallas"
+          title="Käyntihistoria"
+          addVisitLabel="Lisää"
+        />
+      </ParkVisitVisibilityProvider>
+    );
+    const { rerender } = render(page());
+    await waitFor(() => expect(apiFetch).toHaveBeenCalledTimes(1));
+    query.value = "visit=10";
+    rerender(page());
+    expect(apiFetch).toHaveBeenCalledTimes(1);
+  });
+  it("falls back to public visits on failure and ignores a stale response after logout", async () => {
+    let resolveRequest: (value: unknown) => void = () => {};
+    vi.mocked(apiFetch).mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveRequest = resolve;
+      }),
+    );
+    const page = () => (
+      <ParkVisitVisibilityProvider parkSlug="pallas" initialVisits={[visit]}>
+        <LinkedParkVisitHistory
+          visits={[visit]}
+          parkSlug="pallas"
+          title="Käyntihistoria"
+          addVisitLabel="Lisää"
+        />
+      </ParkVisitVisibilityProvider>
+    );
+    const { rerender } = render(page());
+    expect(screen.getByText("1 käyntiä")).toBeInTheDocument();
+    mockUseAuth.mockReturnValue({ isAuthenticated: false });
+    rerender(page());
+    await act(async () => resolveRequest({ visits: [] }));
+    expect(screen.getByText("1 käyntiä")).toBeInTheDocument();
+    vi.mocked(apiFetch).mockRejectedValueOnce(new Error("failed"));
+    mockUseAuth.mockReturnValue({ isAuthenticated: true });
+    rerender(page());
+    await waitFor(() => expect(apiFetch).toHaveBeenCalledTimes(2));
+    expect(screen.getByText("1 käyntiä")).toBeInTheDocument();
   });
 });

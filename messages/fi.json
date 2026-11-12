@@ -660,7 +660,11 @@
         "retryingCacheRefresh": "Päivitetään julkisia näkymiä…",
         "cacheRefreshRetried": "Julkiset näkymät päivitettiin.",
         "linkedAreasTitle": "Reitti kuuluu alueisiin",
-        "tabs": { "label": "Paikan tiedot", "details": "Yleistiedot", "trails": "Reitit" },
+        "tabs": {
+          "label": "Paikan tiedot",
+          "details": "Yleistiedot",
+          "trails": "Reitit"
+        },
         "form": {
           "nameLabel": "Nimi",
           "slugLabel": "Slug",
@@ -1142,7 +1146,9 @@
     "wholeArea": "Koko alue",
     "selectedTrail": "Valittu reitti",
     "selectionStatus": "Valittu: {name}",
-    "closeChooser": "Sulje reittivalinta"
+    "closeChooser": "Sulje reittivalinta",
+    "visitedTrail": "Käyty",
+    "linkedVisitCount": "{count, plural, one {# käynti} other {# käyntiä}}"
   },
   "markdownEditor": {
     "guide": "Markdown-opas",

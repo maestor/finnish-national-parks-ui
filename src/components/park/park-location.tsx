@@ -1,4 +1,6 @@
 "use client";
+import { Check } from "lucide-react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { DeferredMap } from "@/components/map/deferred-map";
@@ -6,16 +8,22 @@ import { LazyParkBoundaryMap } from "@/components/map/lazy-park-boundary-map";
 import { ParkTrailChoices } from "@/components/map/park-trail-choices";
 import { ParkLocationBadge } from "@/components/park/park-location-badge";
 import { useParkTrailNavigation } from "@/components/park/park-trail-navigation";
+import { useParkVisitVisibility } from "@/components/park/park-visit-link";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { SelectionDetails } from "@/components/ui/selection-details";
-import type { ParkDetail } from "@/lib/parks";
+import { formatFinnishDate } from "@/lib/fi-date";
+import { getParkTrailVisits } from "@/lib/park-trail-visits";
+import type { ParkDetail, Visit } from "@/lib/parks";
+import { createParkVisitHref } from "@/lib/public-visits";
 
 interface ParkLocationProps {
   boundaryGeoJson: NonNullable<ParkDetail["boundaryGeoJson"]>;
   boundingBox: ParkDetail["boundingBox"];
   markerPoint: ParkDetail["markerPoint"];
   parkName: string;
+  parkSlug?: string;
+  visits?: Visit[];
   linkedTrails: NonNullable<ParkDetail["linkedTrails"]>;
   areaContent: ReactNode;
   areaActions?: ReactNode;
@@ -24,9 +32,22 @@ export const ParkLocation = ({
   areaContent,
   areaActions,
   linkedTrails,
+  parkSlug = "",
+  visits = [],
   ...mapProps
 }: ParkLocationProps) => {
   const t = useTranslations("map");
+  const parkT = useTranslations("park");
+  const effectiveVisits = useParkVisitVisibility() ?? visits;
+  const trailVisits = getParkTrailVisits(linkedTrails, effectiveVisits);
+  const visitedSlugs = [...trailVisits]
+    .filter(([, entries]) => entries.length > 0)
+    .map(([slug]) => slug);
+  const visitNumbers = new Map(
+    [...effectiveVisits]
+      .sort((a, b) => a.visitedOn.localeCompare(b.visitedOn))
+      .map((visit, index) => [visit.id, index + 1]),
+  );
   const navigation = useParkTrailNavigation();
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const [previewSlug, setPreviewSlug] = useState<string | null>(null);
@@ -77,6 +98,7 @@ export const ParkLocation = ({
   };
   const choices = {
     trails: linkedTrails,
+    visitedSlugs,
     areaLabel: t("wholeArea"),
     selectedSlug: selected?.slug ?? null,
     previewSlug,
@@ -111,6 +133,7 @@ export const ParkLocation = ({
           <LazyParkBoundaryMap
             {...mapProps}
             linkedTrails={linkedTrails}
+            visitedSlugs={visitedSlugs}
             selectedSlug={selected?.slug ?? null}
             previewSlug={previewSlug}
             cameraRequest={request}
@@ -142,22 +165,69 @@ export const ParkLocation = ({
         actions={selected ? null : areaActions}
       >
         {selected ? (
-          <div className="mt-3 flex flex-wrap items-center gap-3">
-            <ParkLocationBadge kind="trail">
-              <span className="min-w-0 wrap-break-word">{selected.name}</span>
-              {selected.lengthKm !== null && (
-                <>
-                  <span aria-hidden="true">·</span>
-                  <span className="shrink-0">{selected.lengthKm.toLocaleString("fi-FI")} km</span>
-                </>
-              )}
-            </ParkLocationBadge>
-            {selected.address !== null && (
-              <ParkLocationBadge kind="address">
-                <span className="min-w-0 wrap-break-word">{selected.address}</span>
+          <>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <ParkLocationBadge kind="trail">
+                <span className="min-w-0 wrap-break-word">{selected.name}</span>
+                {visitedSlugs.includes(selected.slug) && (
+                  <>
+                    <Check className="h-4 w-4" aria-hidden="true" />
+                    <span className="sr-only">{t("visitedTrail")}</span>
+                  </>
+                )}
+                {selected.lengthKm !== null && (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <span className="shrink-0">{selected.lengthKm.toLocaleString("fi-FI")} km</span>
+                  </>
+                )}
               </ParkLocationBadge>
+              {selected.address !== null && (
+                <ParkLocationBadge kind="address">
+                  <span className="min-w-0 wrap-break-word">{selected.address}</span>
+                </ParkLocationBadge>
+              )}
+            </div>
+            {(trailVisits.get(selected.slug) ?? []).length > 0 && (
+              <div className="mt-2 flex flex-wrap items-center gap-x-1 text-sm">
+                <span>
+                  {t("linkedVisitCount", { count: trailVisits.get(selected.slug)?.length ?? 0 })}:
+                </span>
+                {trailVisits.get(selected.slug)?.map((visit, index) => (
+                  <span key={visit.id}>
+                    <Link
+                      href={createParkVisitHref({ parkSlug, visitId: visit.id })}
+                      prefetch={false}
+                      scroll={false}
+                      aria-label={
+                        (trailVisits.get(selected.slug) ?? []).filter(
+                          (item) => item.visitedOn === visit.visitedOn,
+                        ).length > 1
+                          ? `${formatFinnishDate(visit.visitedOn)}, ${parkT("visitNumber", { number: visitNumbers.get(visit.id) ?? 0 })}`
+                          : undefined
+                      }
+                      className="inline-flex min-h-11 items-center text-link underline underline-offset-2"
+                      onClick={(event) => {
+                        if (
+                          !event.metaKey &&
+                          !event.ctrlKey &&
+                          !event.shiftKey &&
+                          !event.altKey &&
+                          event.button === 0
+                        )
+                          window.dispatchEvent(
+                            new CustomEvent("park-visit-navigation", { detail: visit.id }),
+                          );
+                      }}
+                    >
+                      {formatFinnishDate(visit.visitedOn)}
+                    </Link>
+                    {index < (trailVisits.get(selected.slug)?.length ?? 0) - 1 ? "," : ""}
+                  </span>
+                ))}
+              </div>
             )}
-          </div>
+          </>
         ) : (
           areaContent
         )}

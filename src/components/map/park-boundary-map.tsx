@@ -30,6 +30,7 @@ interface ParkBoundaryMapProps {
   };
   parkName: string;
   linkedTrails?: NonNullable<ParkDetail["linkedTrails"]>;
+  visitedSlugs?: string[];
   selectedSlug?: string | null;
   previewSlug?: string | null;
   cameraRequest?: { slug: string | null; sequence: number } | null;
@@ -45,11 +46,17 @@ const OUTLINE_LAYER_ID = "park-boundary-outline";
 const TRAIL_SOURCE_ID = "park-trails";
 const TRAIL_HALO_ID = "park-trails-halo";
 const TRAIL_LINE_ID = "park-trails-line";
+const TRAIL_VISITED_HALO_ID = "park-trails-visited-halo";
+const TRAIL_VISITED_LINE_ID = "park-trails-visited-line";
 const TRAIL_PREVIEW_HALO_ID = "park-trails-preview-halo";
 const TRAIL_PREVIEW_LINE_ID = "park-trails-preview-line";
 const TRAIL_ACTIVE_HALO_ID = "park-trails-active-halo";
 const TRAIL_ACTIVE_LINE_ID = "park-trails-active-line";
 const TRAIL_HIT_ID = "park-trails-hit";
+const TRAIL_HALO_COLOR = "#fff8e7";
+const TRAIL_PREVIEW_COLOR = "#a75b34";
+const TRAIL_HALO_WIDTH = 5.5;
+const TRAIL_HALO_OPACITY = 0.95;
 const TRAIL_LINE_LAYOUT = { "line-cap": "round", "line-join": "round" } as const;
 const MAP_PADDING = 40;
 const MAP_MIN_ZOOM = 3;
@@ -62,6 +69,7 @@ export const ParkBoundaryMap = ({
   markerPoint,
   parkName,
   linkedTrails = EMPTY_TRAILS,
+  visitedSlugs = [],
   selectedSlug = null,
   previewSlug = null,
   cameraRequest = null,
@@ -223,7 +231,7 @@ export const ParkBoundaryMap = ({
       type: "line",
       source: TRAIL_SOURCE_ID,
       layout: TRAIL_LINE_LAYOUT,
-      paint: { "line-color": "#fff8e7", "line-width": 4.1, "line-opacity": 0.65 },
+      paint: { "line-color": TRAIL_HALO_COLOR, "line-width": 4.1, "line-opacity": 0.65 },
     });
     map.addLayer({
       id: TRAIL_LINE_ID,
@@ -233,12 +241,32 @@ export const ParkBoundaryMap = ({
       paint: { "line-color": "#8d4b32", "line-width": 3 },
     });
     map.addLayer({
+      id: TRAIL_VISITED_HALO_ID,
+      type: "line",
+      source: TRAIL_SOURCE_ID,
+      layout: TRAIL_LINE_LAYOUT,
+      filter: ["==", ["get", "slug"], ""],
+      paint: {
+        "line-color": TRAIL_HALO_COLOR,
+        "line-width": TRAIL_HALO_WIDTH,
+        "line-opacity": TRAIL_HALO_OPACITY,
+      },
+    });
+    map.addLayer({
+      id: TRAIL_VISITED_LINE_ID,
+      type: "line",
+      source: TRAIL_SOURCE_ID,
+      layout: TRAIL_LINE_LAYOUT,
+      filter: ["==", ["get", "slug"], ""],
+      paint: { "line-color": TRAIL_PREVIEW_COLOR, "line-width": 3.5 },
+    });
+    map.addLayer({
       id: TRAIL_PREVIEW_HALO_ID,
       type: "line",
       source: TRAIL_SOURCE_ID,
       layout: TRAIL_LINE_LAYOUT,
       filter: ["==", ["get", "slug"], ""],
-      paint: { "line-color": "#fff8e7", "line-width": 5.5, "line-opacity": 0.95 },
+      paint: { "line-color": TRAIL_HALO_COLOR, "line-width": 7.5, "line-opacity": 1 },
     });
     map.addLayer({
       id: TRAIL_PREVIEW_LINE_ID,
@@ -246,7 +274,7 @@ export const ParkBoundaryMap = ({
       source: TRAIL_SOURCE_ID,
       layout: TRAIL_LINE_LAYOUT,
       filter: ["==", ["get", "slug"], ""],
-      paint: { "line-color": "#a75b34", "line-width": 3.5 },
+      paint: { "line-color": TRAIL_PREVIEW_COLOR, "line-width": 4.5 },
     });
     map.addLayer({
       id: TRAIL_ACTIVE_HALO_ID,
@@ -254,7 +282,11 @@ export const ParkBoundaryMap = ({
       source: TRAIL_SOURCE_ID,
       layout: TRAIL_LINE_LAYOUT,
       filter: ["==", ["get", "slug"], ""],
-      paint: { "line-color": "#fff8e7", "line-width": 5.5, "line-opacity": 0.95 },
+      paint: {
+        "line-color": TRAIL_HALO_COLOR,
+        "line-width": TRAIL_HALO_WIDTH,
+        "line-opacity": TRAIL_HALO_OPACITY,
+      },
     });
     map.addLayer({
       id: TRAIL_ACTIVE_LINE_ID,
@@ -369,6 +401,8 @@ export const ParkBoundaryMap = ({
         TRAIL_ACTIVE_LINE_ID,
         TRAIL_ACTIVE_HALO_ID,
         TRAIL_PREVIEW_LINE_ID,
+        TRAIL_VISITED_HALO_ID,
+        TRAIL_VISITED_LINE_ID,
         TRAIL_PREVIEW_HALO_ID,
         TRAIL_LINE_ID,
         TRAIL_HALO_ID,
@@ -436,11 +470,25 @@ export const ParkBoundaryMap = ({
       ["get", "slug"],
       previewSlug !== selectedSlug ? (previewSlug ?? "") : "",
     ];
+    const visitedFilter: maplibregl.FilterSpecification = [
+      "all",
+      ["in", ["get", "slug"], ["literal", visitedSlugs]],
+      ["!=", ["get", "slug"], selectedSlug ?? ""],
+      ["!=", ["get", "slug"], previewSlug ?? ""],
+    ];
+    map.setPaintProperty(
+      TRAIL_VISITED_HALO_ID,
+      "line-opacity",
+      previewSlug === null ? TRAIL_HALO_OPACITY : 0,
+    );
+    map.setPaintProperty(TRAIL_VISITED_LINE_ID, "line-opacity", previewSlug === null ? 1 : 0);
+    map.setFilter(TRAIL_VISITED_HALO_ID, visitedFilter);
+    map.setFilter(TRAIL_VISITED_LINE_ID, visitedFilter);
     map.setFilter(TRAIL_ACTIVE_HALO_ID, selectedFilter);
     map.setFilter(TRAIL_ACTIVE_LINE_ID, selectedFilter);
     map.setFilter(TRAIL_PREVIEW_HALO_ID, previewFilter);
     map.setFilter(TRAIL_PREVIEW_LINE_ID, previewFilter);
-  }, [selectedSlug, previewSlug, isMapLoaded, linkedTrails]);
+  }, [selectedSlug, previewSlug, isMapLoaded, linkedTrails, visitedSlugs]);
 
   const hoveredTrail = linkedTrails.find((trail) => trail.slug === hoverLabel);
 

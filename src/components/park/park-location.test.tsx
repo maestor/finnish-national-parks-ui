@@ -65,6 +65,60 @@ const props = {
 };
 
 describe("ParkLocation", () => {
+  it("shows only explicitly linked visit dates for current trails", async () => {
+    const user = userEvent.setup();
+    const visits = [
+      {
+        id: 2,
+        visitedOn: "2025-05-03",
+        trails: [{ id: 1, slug: "known", name: "Tunnettu reitti" }],
+      },
+      {
+        id: 1,
+        visitedOn: "2020-09-13",
+        trails: [{ id: 2, slug: "other", name: "Tunnettu reitti" }],
+        route: "Tunnettu reitti",
+      },
+    ] as import("@/lib/parks").Visit[];
+    render(<ParkLocation {...props} parkSlug="puisto" visits={visits} />, {
+      wrapper: I18nProvider,
+    });
+    await user.click(screen.getByRole("button", { name: /Tunnettu reitti/ }));
+    const panel = screen.getByTestId("selection-details");
+    expect(within(panel).getByRole("link", { name: /3.5.2025/ })).toHaveAttribute(
+      "href",
+      "/paikka/puisto?visit=2#visit-history",
+    );
+    expect(within(panel).queryByText("13.9.2020")).not.toBeInTheDocument();
+  });
+  it("distinguishes same-day visits and clears visited state when membership disappears", async () => {
+    const user = userEvent.setup();
+    const link = { id: 1, slug: "known", name: "Tunnettu reitti" };
+    const visits = [
+      { id: 1, visitedOn: "2025-05-03", trails: [link] },
+      { id: 2, visitedOn: "2025-05-03", trails: [link] },
+      { id: 3, visitedOn: "2026-01-01" },
+    ] as import("@/lib/parks").Visit[];
+    const { rerender } = render(<ParkLocation {...props} parkSlug="puisto" visits={visits} />, {
+      wrapper: I18nProvider,
+    });
+    expect(
+      screen
+        .getByRole("button", { name: "Tunnettu reitti Käyty" })
+        .querySelectorAll(".lucide-check"),
+    ).toHaveLength(1);
+    await user.click(screen.getByRole("button", { name: "Tunnettu reitti Käyty" }));
+    const panel = screen.getByTestId("selection-details");
+    expect(within(panel).getByText(/2 käyntiä/)).toBeInTheDocument();
+    expect(within(panel).getByRole("link", { name: "3.5.2025, 1. käynti" })).toBeInTheDocument();
+    expect(within(panel).getByRole("link", { name: "3.5.2025, 2. käynti" })).toBeInTheDocument();
+    rerender(<ParkLocation {...props} parkSlug="puisto" visits={[visits[2]]} />);
+    expect(within(panel).queryByText("Ei linkitettyjä käyntejä")).not.toBeInTheDocument();
+    expect(within(panel).queryByRole("link")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Tunnettu reitti" }).querySelector(".lucide-check"),
+    ).toBeNull();
+  });
   it.each([false, true])(
     "selects a visit trail repeatedly and moves focus to the map, reduced motion: %s",
     async (reducedMotion) => {
@@ -120,6 +174,7 @@ describe("ParkLocation", () => {
       await user.click(link);
       expect(await screen.findByTestId("map-request")).toHaveTextContent("known:1");
       expect(document.getElementById("park-location")).toHaveFocus();
+      expect(window.location.hash).toBe("#park-location");
       expect(scroll).toHaveBeenLastCalledWith({
         behavior: reducedMotion ? "instant" : "smooth",
         block: "start",
