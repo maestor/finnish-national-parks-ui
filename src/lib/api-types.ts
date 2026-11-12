@@ -1093,6 +1093,127 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/parks/{slug}/visit-trails": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    slug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Park trail choices for visit editing; empty for standalone trails */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            trails: {
+                                trailId: number;
+                                name: string;
+                                slug: string;
+                                automaticMatch: boolean;
+                                effective: boolean;
+                                /** @enum {string|null} */
+                                override: "include" | "exclude" | null;
+                                overlapMetres: number | null;
+                                routeMetres: number | null;
+                                overlapRatio: number | null;
+                                calculationMethod: string | null;
+                                geometryFingerprint: string | null;
+                                geometryQuality: string | null;
+                                createdAt: string;
+                                updatedAt: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Invalid request parameters */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                name: string;
+                                message: string;
+                            } & {
+                                [key: string]: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Area or trail not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Invalid area or trail */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Authentication unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/parks/{slug}/trails": {
         parameters: {
             query?: never;
@@ -1518,6 +1639,23 @@ export interface paths {
                         "application/json": {
                             /** @example Not found */
                             error: string;
+                        };
+                    };
+                };
+                /** @description Visits still use this trail in this area */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                            /** @enum {string} */
+                            code: "TRAIL_HAS_VISITS";
+                            visits: {
+                                id: number;
+                                visitedOn: string;
+                            }[];
                         };
                     };
                 };
@@ -2317,6 +2455,11 @@ export interface paths {
                                 } | null;
                                 note: string | null;
                                 route: string | null;
+                                trails?: {
+                                    id: number;
+                                    name: string;
+                                    slug: string;
+                                }[];
                                 /** @enum {string} */
                                 status?: "draft" | "published";
                                 trip: {
@@ -2358,6 +2501,7 @@ export interface paths {
             requestBody?: {
                 content: {
                     "application/json": {
+                        trailIds?: number[];
                         author?: string | null;
                         excludeFromRoute?: boolean;
                         location?: {
@@ -2406,6 +2550,11 @@ export interface paths {
                             } | null;
                             note: string | null;
                             route: string | null;
+                            trails?: {
+                                id: number;
+                                name: string;
+                                slug: string;
+                            }[];
                             /** @enum {string} */
                             status?: "draft" | "published";
                             trip: {
@@ -2525,6 +2674,11 @@ export interface paths {
                                 } | null;
                                 note: string | null;
                                 route: string | null;
+                                trails?: {
+                                    id: number;
+                                    name: string;
+                                    slug: string;
+                                }[];
                                 /** @enum {string} */
                                 status: "draft" | "published";
                                 trip: {
@@ -7372,6 +7526,11 @@ export interface paths {
                                 } | null;
                                 note: string | null;
                                 route: string | null;
+                                trails?: {
+                                    id: number;
+                                    name: string;
+                                    slug: string;
+                                }[];
                                 /** @enum {string} */
                                 status?: "draft" | "published";
                                 trip: {
@@ -7449,6 +7608,11 @@ export interface paths {
                             } | null;
                             note: string | null;
                             route: string | null;
+                            trails?: {
+                                id: number;
+                                name: string;
+                                slug: string;
+                            }[];
                             /** @enum {string} */
                             status?: "draft" | "published";
                             trip: {
@@ -7552,6 +7716,7 @@ export interface paths {
             requestBody?: {
                 content: {
                     "application/json": {
+                        trailIds?: number[];
                         author?: string | null;
                         excludeFromRoute?: boolean;
                         location?: {
@@ -7600,6 +7765,11 @@ export interface paths {
                             } | null;
                             note: string | null;
                             route: string | null;
+                            trails?: {
+                                id: number;
+                                name: string;
+                                slug: string;
+                            }[];
                             /** @enum {string} */
                             status?: "draft" | "published";
                             trip: {
@@ -7713,6 +7883,11 @@ export interface paths {
                                 } | null;
                                 note: string | null;
                                 route: string | null;
+                                trails?: {
+                                    id: number;
+                                    name: string;
+                                    slug: string;
+                                }[];
                                 /** @enum {string} */
                                 status: "draft" | "published";
                                 trip: {
@@ -7816,6 +7991,11 @@ export interface paths {
                             } | null;
                             note: string | null;
                             route: string | null;
+                            trails?: {
+                                id: number;
+                                name: string;
+                                slug: string;
+                            }[];
                             /** @enum {string} */
                             status: "draft" | "published";
                             trip: {

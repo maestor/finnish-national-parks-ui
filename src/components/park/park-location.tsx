@@ -1,10 +1,11 @@
 "use client";
 import { useTranslations } from "next-intl";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { DeferredMap } from "@/components/map/deferred-map";
 import { LazyParkBoundaryMap } from "@/components/map/lazy-park-boundary-map";
 import { ParkTrailChoices } from "@/components/map/park-trail-choices";
 import { ParkLocationBadge } from "@/components/park/park-location-badge";
+import { useParkTrailNavigation } from "@/components/park/park-trail-navigation";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { SelectionDetails } from "@/components/ui/selection-details";
@@ -26,6 +27,7 @@ export const ParkLocation = ({
   ...mapProps
 }: ParkLocationProps) => {
   const t = useTranslations("map");
+  const navigation = useParkTrailNavigation();
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const [previewSlug, setPreviewSlug] = useState<string | null>(null);
   const [request, setRequest] = useState<{ slug: string | null; sequence: number } | null>(null);
@@ -53,15 +55,22 @@ export const ParkLocation = ({
     media.addEventListener("change", update);
     return () => media.removeEventListener("change", update);
   }, [chooserOpen]);
-  const select = (slug: string | null) => {
-    setSelectedSlug(slug);
-    setRequest((previous) => ({ slug, sequence: (previous?.sequence ?? 0) + 1 }));
-    setStatus(
-      t("selectionStatus", {
-        name: linkedTrails.find((trail) => trail.slug === slug)?.name ?? t("wholeArea"),
-      }),
-    );
-  };
+  const select = useCallback(
+    (slug: string | null) => {
+      setSelectedSlug(slug);
+      setRequest((previous) => ({ slug, sequence: (previous?.sequence ?? 0) + 1 }));
+      setStatus(
+        t("selectionStatus", {
+          name: linkedTrails.find((trail) => trail.slug === slug)?.name ?? t("wholeArea"),
+        }),
+      );
+    },
+    [linkedTrails, t],
+  );
+  const externalRequest = navigation?.request;
+  useEffect(() => {
+    if (externalRequest) select(externalRequest.slug);
+  }, [externalRequest, select]);
   const selectAndClose = (slug: string | null) => {
     select(slug);
     setChooserOpen(false);

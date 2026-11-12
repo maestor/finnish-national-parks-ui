@@ -4,6 +4,8 @@ import { renderToString } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { I18nProvider } from "@/test/i18n";
 import { ParkLocation } from "./park-location";
+import { ParkTrailNavigationProvider } from "./park-trail-navigation";
+import { VisitAccordion } from "./visit-accordion";
 
 vi.unmock("next-intl");
 Object.defineProperty(window, "matchMedia", {
@@ -63,6 +65,73 @@ const props = {
 };
 
 describe("ParkLocation", () => {
+  it.each([false, true])(
+    "selects a visit trail repeatedly and moves focus to the map, reduced motion: %s",
+    async (reducedMotion) => {
+      const user = userEvent.setup();
+      const scroll = vi.fn();
+      vi.spyOn(window, "matchMedia").mockImplementation(
+        () =>
+          ({
+            matches: reducedMotion,
+            addEventListener: vi.fn(),
+            removeEventListener: vi.fn(),
+          }) as unknown as MediaQueryList,
+      );
+      const visit = {
+        id: 42,
+        visitedOn: "2026-11-12",
+        createdAt: "2026-11-12",
+        updatedAt: "2026-11-12",
+        route: "Original route",
+        note: "Visit note",
+        author: null,
+        location: null,
+        excludeFromRoute: false,
+        trip: null,
+        tripStopOrder: null,
+        images: [],
+        trails: [
+          { id: 10, slug: "known", name: "Tunnettu reitti" },
+          { id: 20, slug: "no-geometry", name: "Ei geometriaa" },
+        ],
+      };
+      render(
+        <ParkTrailNavigationProvider trailSlugs={["known"]}>
+          <section
+            id="park-location"
+            tabIndex={-1}
+            ref={(element) => {
+              if (element) element.scrollIntoView = scroll;
+            }}
+          >
+            <ParkLocation {...props} />
+          </section>
+          <VisitAccordion parkSlug="puisto" visits={[visit]} />
+        </ParkTrailNavigationProvider>,
+        { wrapper: I18nProvider },
+      );
+      const headings = screen.getAllByRole("heading", { level: 3 });
+      expect(headings[0]).toHaveTextContent("Reitit");
+      expect(screen.getByText("Original route")).toBeInTheDocument();
+      expect(screen.getByText("Ei geometriaa")).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /Ei geometriaa/ })).not.toBeInTheDocument();
+      const link = screen.getByRole("button", { name: "Näytä Tunnettu reitti kartalla" });
+      await user.click(link);
+      expect(await screen.findByTestId("map-request")).toHaveTextContent("known:1");
+      expect(document.getElementById("park-location")).toHaveFocus();
+      expect(scroll).toHaveBeenLastCalledWith({
+        behavior: reducedMotion ? "instant" : "smooth",
+        block: "start",
+      });
+      link.focus();
+      await user.keyboard("{Enter}");
+      expect(screen.getByTestId("map-request")).toHaveTextContent("known:2");
+      await user.click(screen.getByRole("button", { name: "Piilota lisätiedot" }));
+      expect(document.getElementById("visit-details-42")).toHaveAttribute("inert");
+      vi.restoreAllMocks();
+    },
+  );
   it("renders the initial area details before client hydration and map loading", () => {
     const html = renderToString(
       <I18nProvider>

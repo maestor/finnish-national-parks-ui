@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { MarkdownEditor } from "@/components/ui/markdown-editor";
 import { Select } from "@/components/ui/select";
 import { LONG_TEXTAREA_MAX_LENGTH } from "@/components/ui/textarea-with-counter";
+import { VisitTrailFields } from "@/components/visits/visit-trail-fields";
 import { apiFetch } from "@/lib/api";
 import { getCurrentFinnishDate } from "@/lib/fi-date";
 import {
@@ -45,6 +46,13 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
     () => visitToEdit?.visitedOn ?? getCurrentFinnishDate(),
   );
   const [route, setRoute] = useState(visitToEdit?.route ?? "");
+  const [trailIds, setTrailIds] = useState<number[]>(
+    () => visitToEdit?.trails?.map((trail) => trail.id) ?? [],
+  );
+  const [savedTrailIds, setSavedTrailIds] = useState(trailIds);
+  const trailsChanged =
+    [...trailIds].sort((a, b) => a - b).join(",") !==
+    [...savedTrailIds].sort((a, b) => a - b).join(",");
   const [author, setAuthor] = useState(visitToEdit?.author ?? "");
   const [location, setLocation] = useState<CoordinateInputValue>(
     formatCoordinateInputValue(visitToEdit?.location ?? null),
@@ -63,6 +71,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
   });
   const isEditDirty =
     !visitToEdit ||
+    trailsChanged ||
     visitedOn !== savedSnapshot.visitedOn ||
     route !== savedSnapshot.route ||
     author !== savedSnapshot.author ||
@@ -159,6 +168,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
           author: author || null,
           location: parsedLocation.kind === "value" ? parsedLocation.value : null,
           note: note || null,
+          ...(trailsChanged ? { trailIds } : {}),
           ...(requestedStatus ? { status: requestedStatus } : {}),
         };
         await apiFetch(`/api/visits/${visitToEdit.id}`, {
@@ -166,12 +176,13 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
           body: JSON.stringify(payload),
         });
         const cacheRefreshed = await revalidateVisitPublicViews({
-          expireImmediately: requestedStatus !== undefined,
+          expireImmediately: requestedStatus !== undefined || trailsChanged,
           parkSlug: visitToEdit.park.slug,
           previousTripSlug: visitToEdit.trip?.slug ?? null,
           nextTripSlug: visitToEdit.trip?.slug ?? null,
         });
         setCacheRefreshFailed(!cacheRefreshed);
+        setSavedTrailIds(trailIds);
         if (requestedStatus) setStatus(requestedStatus);
         setSavedSnapshot({
           visitedOn,
@@ -200,6 +211,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
           location: parsedLocation.kind === "value" ? parsedLocation.value : null,
           note: note || null,
           status: requestedStatus ?? "published",
+          ...(trailIds.length > 0 ? { trailIds } : {}),
         };
         const createdVisit = await apiFetch<Visit>(`/api/parks/${parkSlug}/visits`, {
           method: "POST",
@@ -279,7 +291,10 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
           <Select
             id="park"
             value={parkSlug}
-            onChange={(e) => setParkSlug(e.target.value)}
+            onChange={(e) => {
+              setParkSlug(e.target.value);
+              setTrailIds([]);
+            }}
             className="h-10"
           >
             <option value="">{t("parkPlaceholder")}</option>
@@ -307,6 +322,16 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
         />
         {hasVisitedOnError && <p className="text-sm text-destructive">{errors.visitedOn}</p>}
       </div>
+
+      {parkSlug !== "" && (
+        <VisitTrailFields
+          key={parkSlug}
+          parkSlug={parkSlug}
+          selectedIds={trailIds}
+          onChange={setTrailIds}
+          disabled={isSubmitting}
+        />
+      )}
 
       <div className="space-y-2">
         <Label htmlFor="route">{t("routeLabel")}</Label>

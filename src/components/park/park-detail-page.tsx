@@ -25,6 +25,7 @@ import { ParkHero } from "@/components/park/park-hero";
 import { ParkLocation } from "@/components/park/park-location";
 import { ParkLocationBadge } from "@/components/park/park-location-badge";
 import { ParkMaterialLinks } from "@/components/park/park-material-links";
+import { ParkTrailNavigationProvider } from "@/components/park/park-trail-navigation";
 import { ParkTypeBadge } from "@/components/park/park-type-badge";
 import { ParkVisitHistory } from "@/components/park/park-visit-history";
 import {
@@ -164,179 +165,187 @@ export const ParkDetailPage = async ({ params, authenticated = false }: ParkDeta
   return (
     <ParkAdminControlsProvider parkSlug={slug}>
       <ParkVisitVisibilityProvider initialVisitIds={visits.map((visit) => visit.id)}>
-        <article className="mx-auto w-full min-w-0 max-w-5xl px-4 py-6">
-          <ParkHero
-            featuredImage={publicPark.featuredImage ?? null}
-            privateMedia={parkResult?.usedAuthenticatedFallback}
-          >
-            <AppBreadcrumbs
-              path={appRoutes.park(slug)}
-              entityName={publicPark.name}
-              className={PUBLIC_HERO_BREADCRUMB_CLASS_NAME}
-            />
-            <div
-              className={`${PUBLIC_EYEBROW_BADGE_CLASS_NAME} group-data-[featured-image=true]/park-hero:border-input group-data-[featured-image=true]/park-hero:bg-hero group-data-[featured-image=true]/park-hero:bg-none group-data-[featured-image=true]/park-hero:text-hero-foreground`}
+        <ParkTrailNavigationProvider
+          trailSlugs={
+            hasBoundaryGeoJson ? (publicPark.linkedTrails ?? []).map((trail) => trail.slug) : []
+          }
+        >
+          <article className="mx-auto w-full min-w-0 max-w-5xl px-4 py-6">
+            <ParkHero
+              featuredImage={publicPark.featuredImage ?? null}
+              privateMedia={parkResult?.usedAuthenticatedFallback}
             >
-              <MapPin className="h-4 w-4" aria-hidden="true" />
-              <span>{t("eyebrow")}</span>
-            </div>
-            <div
-              className={cn(
-                "mt-2 flex flex-wrap items-start gap-y-3",
-                logoUrl !== null && "@min-[36rem]:pr-48",
-              )}
-            >
-              {logoUrl !== null && (
-                <div className="relative mx-auto h-28 w-48 shrink-0 self-center @min-[36rem]:absolute @min-[36rem]:top-1/2 @min-[36rem]:right-0 @min-[36rem]:-translate-y-1/2 @min-[36rem]:group-data-[featured-image=true]/park-hero:right-6">
-                  <AppImage
-                    src={logoUrl}
-                    alt={publicPark.name}
-                    fill
-                    sizes="192px"
-                    className="object-contain"
-                    unoptimized
-                  />
-                </div>
-              )}
-              <div className="min-w-0 flex-[1_1_24rem] text-center @min-[36rem]:text-left">
-                <h1 className={`${PUBLIC_HERO_TITLE_CLASS_NAME} wrap-break-word hyphens-auto`}>
-                  {publicPark.name}
-                </h1>
-                <div className="mt-5 flex flex-wrap items-center justify-center gap-2 @min-[36rem]:justify-start">
-                  <ParkTypeBadge label={getParkTypeDisplayName(publicPark)} />
-                  {publicPark.establishmentYear !== null && (
-                    <PublicMetaBadge label={t("established")}>
-                      <CalendarRange className="h-3.5 w-3.5" aria-hidden="true" />
-                      <span>{publicPark.establishmentYear}</span>
-                    </PublicMetaBadge>
-                  )}
-                  {publicPark.areaKm2 !== null && (
-                    <PublicMetaBadge label={t("area")}>
-                      <Scan className="h-3.5 w-3.5" aria-hidden="true" />
-                      <span>{publicPark.areaKm2} km²</span>
-                    </PublicMetaBadge>
-                  )}
-                  {publicPark.lengthKm != null && (
-                    <PublicMetaBadge label={t("length")}>
-                      <Route className="h-3.5 w-3.5" aria-hidden="true" />
-                      <span>{publicPark.lengthKm.toLocaleString("fi-FI")} km</span>
-                    </PublicMetaBadge>
-                  )}
-                  <CopyLinkButton
-                    href={appRoutes.park(slug)}
-                    label={t("copyParkPageLink")}
-                    copiedLabel={t("parkPageLinkCopied")}
-                    tooltipSide="top"
-                    className={PUBLIC_HERO_ICON_BUTTON_CLASS_NAME}
-                    iconClassName="h-3.5 w-3.5"
-                  />
-                  <ParkEditLink />
-                </div>
-              </div>
-            </div>
-          </ParkHero>
-
-          <Suspense
-            fallback={
-              hasAbout || visits.length > 0 ? (
-                <StickySectionNavigation
-                  {...sectionNavigationProps}
-                  items={sectionNavigationProps.items.filter(
-                    (item) => item.id !== "visit-history" || visits.length > 0,
-                  )}
-                />
-              ) : null
-            }
-          >
-            <LinkedParkSectionNavigation {...sectionNavigationProps} />
-          </Suspense>
-
-          <section
-            id="park-location"
-            className="mt-6 scroll-mt-28 rounded-[2rem] border border-border theme-panel p-5 shadow-[0_24px_48px_rgba(var(--shadow-rgb),0.14)] backdrop-blur-xl dark:shadow-[0_28px_56px_rgba(var(--shadow-rgb),0.3)]"
-          >
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-link" aria-hidden="true" />
-                <h2 className="text-lg font-semibold tracking-tight">
-                  {t(hasBoundaryGeoJson ? "boundaryMapTitle" : "location")}
-                </h2>
-              </div>
-              <Link
-                href={createPathWithSearchParams(appRoutes.parks, { park: slug })}
-                prefetch={false}
-                className="rounded-full border border-border bg-control px-3 py-1.5 text-sm font-medium text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] transition-colors hover:bg-accent"
+              <AppBreadcrumbs
+                path={appRoutes.park(slug)}
+                entityName={publicPark.name}
+                className={PUBLIC_HERO_BREADCRUMB_CLASS_NAME}
+              />
+              <div
+                className={`${PUBLIC_EYEBROW_BADGE_CLASS_NAME} group-data-[featured-image=true]/park-hero:border-input group-data-[featured-image=true]/park-hero:bg-hero group-data-[featured-image=true]/park-hero:bg-none group-data-[featured-image=true]/park-hero:text-hero-foreground`}
               >
-                {t("showInFinlandsMap")}
-              </Link>
-            </div>
-            {(() => {
-              const areaContent = (
-                <ParkLocationBadge kind="address">
-                  <span className="min-w-0 wrap-break-word">{publicPark.address}</span>
-                </ParkLocationBadge>
-              );
-              const areaActions =
-                hasAbout === false && (parkUrl !== null || mapUrl !== null) ? (
-                  <ParkMaterialLinks
-                    parkUrl={parkUrl}
-                    mapUrl={mapUrl}
-                    className="gap-1 min-[350px]:flex-nowrap sm:gap-2 md:shrink-0 md:self-center"
-                    linkClassName="gap-1 whitespace-nowrap px-2 sm:gap-2 sm:px-3"
-                  />
-                ) : null;
-              if (
-                hasBoundaryGeoJson &&
-                publicPark.linkedTrails &&
-                publicPark.linkedTrails.length > 0
-              )
-                return (
-                  <ParkLocation
-                    boundaryGeoJson={boundaryGeoJson}
-                    boundingBox={publicPark.boundingBox}
-                    markerPoint={publicPark.markerPoint}
-                    parkName={publicPark.name}
-                    linkedTrails={publicPark.linkedTrails}
-                    areaContent={<div className="mt-3">{areaContent}</div>}
-                    areaActions={areaActions}
-                  />
-                );
-              return (
-                <>
-                  {hasBoundaryGeoJson && (
-                    <DeferredMap className="min-h-80" label={t("boundaryMapTitle")}>
-                      <LazyParkBoundaryMap
-                        boundaryGeoJson={boundaryGeoJson}
-                        boundingBox={publicPark.boundingBox}
-                        markerPoint={publicPark.markerPoint}
-                        parkName={publicPark.name}
-                        linkedTrails={publicPark.linkedTrails}
-                      />
-                    </DeferredMap>
-                  )}
-                  <div className="mt-4 flex flex-col items-start gap-3 md:flex-row md:items-center md:justify-between">
-                    {areaContent}
-                    {areaActions}
+                <MapPin className="h-4 w-4" aria-hidden="true" />
+                <span>{t("eyebrow")}</span>
+              </div>
+              <div
+                className={cn(
+                  "mt-2 flex flex-wrap items-start gap-y-3",
+                  logoUrl !== null && "@min-[36rem]:pr-48",
+                )}
+              >
+                {logoUrl !== null && (
+                  <div className="relative mx-auto h-28 w-48 shrink-0 self-center @min-[36rem]:absolute @min-[36rem]:top-1/2 @min-[36rem]:right-0 @min-[36rem]:-translate-y-1/2 @min-[36rem]:group-data-[featured-image=true]/park-hero:right-6">
+                    <AppImage
+                      src={logoUrl}
+                      alt={publicPark.name}
+                      fill
+                      sizes="192px"
+                      className="object-contain"
+                      unoptimized
+                    />
                   </div>
-                </>
-              );
-            })()}
-          </section>
+                )}
+                <div className="min-w-0 flex-[1_1_24rem] text-center @min-[36rem]:text-left">
+                  <h1 className={`${PUBLIC_HERO_TITLE_CLASS_NAME} wrap-break-word hyphens-auto`}>
+                    {publicPark.name}
+                  </h1>
+                  <div className="mt-5 flex flex-wrap items-center justify-center gap-2 @min-[36rem]:justify-start">
+                    <ParkTypeBadge label={getParkTypeDisplayName(publicPark)} />
+                    {publicPark.establishmentYear !== null && (
+                      <PublicMetaBadge label={t("established")}>
+                        <CalendarRange className="h-3.5 w-3.5" aria-hidden="true" />
+                        <span>{publicPark.establishmentYear}</span>
+                      </PublicMetaBadge>
+                    )}
+                    {publicPark.areaKm2 !== null && (
+                      <PublicMetaBadge label={t("area")}>
+                        <Scan className="h-3.5 w-3.5" aria-hidden="true" />
+                        <span>{publicPark.areaKm2} km²</span>
+                      </PublicMetaBadge>
+                    )}
+                    {publicPark.lengthKm != null && (
+                      <PublicMetaBadge label={t("length")}>
+                        <Route className="h-3.5 w-3.5" aria-hidden="true" />
+                        <span>{publicPark.lengthKm.toLocaleString("fi-FI")} km</span>
+                      </PublicMetaBadge>
+                    )}
+                    <CopyLinkButton
+                      href={appRoutes.park(slug)}
+                      label={t("copyParkPageLink")}
+                      copiedLabel={t("parkPageLinkCopied")}
+                      tooltipSide="top"
+                      className={PUBLIC_HERO_ICON_BUTTON_CLASS_NAME}
+                      iconClassName="h-3.5 w-3.5"
+                    />
+                    <ParkEditLink />
+                  </div>
+                </div>
+              </div>
+            </ParkHero>
 
-          {hasAbout === true && (
-            <ParkAbout
-              description={description}
-              seasons={seasons}
-              parkUrl={parkUrl}
-              mapUrl={mapUrl}
-            />
-          )}
+            <Suspense
+              fallback={
+                hasAbout || visits.length > 0 ? (
+                  <StickySectionNavigation
+                    {...sectionNavigationProps}
+                    items={sectionNavigationProps.items.filter(
+                      (item) => item.id !== "visit-history" || visits.length > 0,
+                    )}
+                  />
+                ) : null
+              }
+            >
+              <LinkedParkSectionNavigation {...sectionNavigationProps} />
+            </Suspense>
 
-          <Suspense fallback={<ParkVisitHistory {...visitHistoryProps} />}>
-            <LinkedParkVisitHistory {...visitHistoryProps} />
-          </Suspense>
-          <ParkAdminSection />
-        </article>
+            <section
+              id="park-location"
+              tabIndex={-1}
+              aria-labelledby="park-location-title"
+              className="mt-6 scroll-mt-28 rounded-[2rem] border border-border theme-panel p-5 shadow-[0_24px_48px_rgba(var(--shadow-rgb),0.14)] backdrop-blur-xl dark:shadow-[0_28px_56px_rgba(var(--shadow-rgb),0.3)]"
+            >
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-link" aria-hidden="true" />
+                  <h2 id="park-location-title" className="text-lg font-semibold tracking-tight">
+                    {t(hasBoundaryGeoJson ? "boundaryMapTitle" : "location")}
+                  </h2>
+                </div>
+                <Link
+                  href={createPathWithSearchParams(appRoutes.parks, { park: slug })}
+                  prefetch={false}
+                  className="rounded-full border border-border bg-control px-3 py-1.5 text-sm font-medium text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] transition-colors hover:bg-accent"
+                >
+                  {t("showInFinlandsMap")}
+                </Link>
+              </div>
+              {(() => {
+                const areaContent = (
+                  <ParkLocationBadge kind="address">
+                    <span className="min-w-0 wrap-break-word">{publicPark.address}</span>
+                  </ParkLocationBadge>
+                );
+                const areaActions =
+                  hasAbout === false && (parkUrl !== null || mapUrl !== null) ? (
+                    <ParkMaterialLinks
+                      parkUrl={parkUrl}
+                      mapUrl={mapUrl}
+                      className="gap-1 min-[350px]:flex-nowrap sm:gap-2 md:shrink-0 md:self-center"
+                      linkClassName="gap-1 whitespace-nowrap px-2 sm:gap-2 sm:px-3"
+                    />
+                  ) : null;
+                if (
+                  hasBoundaryGeoJson &&
+                  publicPark.linkedTrails &&
+                  publicPark.linkedTrails.length > 0
+                )
+                  return (
+                    <ParkLocation
+                      boundaryGeoJson={boundaryGeoJson}
+                      boundingBox={publicPark.boundingBox}
+                      markerPoint={publicPark.markerPoint}
+                      parkName={publicPark.name}
+                      linkedTrails={publicPark.linkedTrails}
+                      areaContent={<div className="mt-3">{areaContent}</div>}
+                      areaActions={areaActions}
+                    />
+                  );
+                return (
+                  <>
+                    {hasBoundaryGeoJson && (
+                      <DeferredMap className="min-h-80" label={t("boundaryMapTitle")}>
+                        <LazyParkBoundaryMap
+                          boundaryGeoJson={boundaryGeoJson}
+                          boundingBox={publicPark.boundingBox}
+                          markerPoint={publicPark.markerPoint}
+                          parkName={publicPark.name}
+                          linkedTrails={publicPark.linkedTrails}
+                        />
+                      </DeferredMap>
+                    )}
+                    <div className="mt-4 flex flex-col items-start gap-3 md:flex-row md:items-center md:justify-between">
+                      {areaContent}
+                      {areaActions}
+                    </div>
+                  </>
+                );
+              })()}
+            </section>
+
+            {hasAbout === true && (
+              <ParkAbout
+                description={description}
+                seasons={seasons}
+                parkUrl={parkUrl}
+                mapUrl={mapUrl}
+              />
+            )}
+
+            <Suspense fallback={<ParkVisitHistory {...visitHistoryProps} />}>
+              <LinkedParkVisitHistory {...visitHistoryProps} />
+            </Suspense>
+            <ParkAdminSection />
+          </article>
+        </ParkTrailNavigationProvider>
       </ParkVisitVisibilityProvider>
     </ParkAdminControlsProvider>
   );
