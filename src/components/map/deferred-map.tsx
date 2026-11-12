@@ -1,10 +1,8 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { createContext, type ReactNode, useContext, useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
-
-const DeferredMapPowerContext = createContext(false);
 
 interface DeferredMapProps {
   autoLoad?: boolean;
@@ -13,10 +11,7 @@ interface DeferredMapProps {
   label: string;
   loadImmediately?: boolean;
   showLoadAction?: boolean;
-  powerControlAtBottom?: boolean;
 }
-
-export const useDeferredMapPower = () => useContext(DeferredMapPowerContext);
 
 const DeferredMap = ({
   autoLoad = true,
@@ -25,12 +20,10 @@ const DeferredMap = ({
   label,
   loadImmediately = false,
   showLoadAction = true,
-  powerControlAtBottom = false,
 }: DeferredMapProps) => {
   const t = useTranslations("map");
   const containerRef = useRef<HTMLElement>(null);
   const [isLoadRequested, setIsLoadRequested] = useState(loadImmediately);
-  const [isLowPower, setIsLowPower] = useState(false);
 
   useEffect(() => {
     if (loadImmediately || autoLoad === false || isLoadRequested) {
@@ -64,32 +57,7 @@ const DeferredMap = ({
   return (
     <section ref={containerRef} className={cn("relative", className)} aria-label={label}>
       {isLoadRequested ? (
-        <DeferredMapPowerContext.Provider value={isLowPower}>
-          {children}
-          <div
-            className={cn(
-              "pointer-events-none absolute left-3 z-10",
-              powerControlAtBottom ? "bottom-12" : "top-3",
-            )}
-          >
-            <label
-              className={cn(
-                "pointer-events-auto flex cursor-pointer items-center gap-2 rounded-full border px-3 py-2 text-xs font-medium shadow-lg",
-                isLowPower
-                  ? "border-input theme-memory text-link"
-                  : "border-input bg-control text-link",
-              )}
-            >
-              <input
-                type="checkbox"
-                checked={isLowPower}
-                onChange={(event) => setIsLowPower(event.target.checked)}
-                className="h-4 w-4 rounded border-border text-icon focus:ring-2 focus:ring-ring"
-              />
-              {t("lowPowerMode")}
-            </label>
-          </div>
-        </DeferredMapPowerContext.Provider>
+        children
       ) : (
         <div className="flex h-full min-h-80 w-full items-center justify-center rounded-[1.75rem] border border-dashed border-border bg-control p-6 text-center shadow-[0_16px_34px_rgba(var(--shadow-rgb),0.12)] dark:shadow-[0_20px_40px_rgba(var(--shadow-rgb),0.24)]">
           <div className="flex max-w-sm flex-col items-center gap-3">

@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { DeferredMap, useDeferredMapPower } from "./deferred-map";
+import { DeferredMap } from "./deferred-map";
 
 const observers: MockIntersectionObserver[] = [];
 
@@ -39,11 +39,7 @@ describe("DeferredMap", () => {
       </DeferredMap>,
     );
 
-  const DeferredMapContent = () => {
-    const isLowPower = useDeferredMapPower();
-
-    return <div data-testid="deferred-map-content" data-low-power={isLowPower} />;
-  };
+  const DeferredMapContent = () => <div data-testid="deferred-map-content" />;
 
   it("waits for visibility before mounting the map", () => {
     renderDeferredMap();
@@ -76,14 +72,11 @@ describe("DeferredMap", () => {
     expect(screen.getByTestId("deferred-map-content")).toBeInTheDocument();
   });
 
-  it("supports an explicit load action and low-power mode", () => {
+  it("supports an explicit load action", () => {
     renderDeferredMap();
 
     fireEvent.click(screen.getByRole("button", { name: "map.loadDeferredMap" }));
-    expect(screen.getByTestId("deferred-map-content")).toHaveAttribute("data-low-power", "false");
-
-    fireEvent.click(screen.getByRole("checkbox", { name: "map.lowPowerMode" }));
-    expect(screen.getByTestId("deferred-map-content")).toHaveAttribute("data-low-power", "true");
+    expect(screen.getByTestId("deferred-map-content")).toBeInTheDocument();
   });
 
   it("can wait for an explicit action without observing the viewport", () => {

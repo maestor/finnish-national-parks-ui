@@ -1117,7 +1117,6 @@
     "deferredMapTitle": "Kartta ladataan tarvittaessa",
     "deferredMapDescription": "Kartta valmistellaan vasta, kun se tulee näkyviin.",
     "loadDeferredMap": "Lataa kartta",
-    "lowPowerMode": "Kevyt karttatila",
     "loading": "Ladataan karttaa...",
     "loadError": "Karttatietojen lataus epäonnistui",
     "locateUser": "Näytä nykyinen sijaintini",
