@@ -322,7 +322,7 @@ Canvas points are not individually keyboard-focusable. The header park search, v
 
 ### Optional map loading
 
-Park boundary maps and public trip maps are wrapped in `src/components/map/deferred-map.tsx`. The boundary reserves the map's layout space and starts loading shortly before it enters the viewport. Generic optional maps keep an explicit accessible load button, while public trip maps mount automatically after hydration without a manual action and can show itinerary points before the separately loaded route line arrives. The same boundary exposes a low-power toggle that sets MapLibre's pixel ratio to `1`; disabling it restores the device pixel ratio. The primary `/paikat` map remains eager because the map is its main content.
+Park boundary maps and public trip maps are wrapped in `src/components/map/deferred-map.tsx`. The boundary reserves the map's layout space and starts loading shortly before it enters the viewport. Generic optional maps keep an explicit accessible load button, while public trip maps mount automatically after hydration without a manual action and can show itinerary points before the separately loaded route line arrives. The primary `/paikat` map remains eager because the map is its main content.
 
 ### Growing public surfaces
 

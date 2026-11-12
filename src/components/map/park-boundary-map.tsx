@@ -8,7 +8,6 @@ import { useEffect, useRef, useState } from "react";
 import { PUBLIC_ROUTE_BADGE_CLASS_NAME } from "@/components/layout/public-page-styles";
 import type { ParkDetail } from "@/lib/parks";
 import { ThreeDotPulse } from "../ui/three-dot-pulse";
-import { useDeferredMapPower } from "./deferred-map";
 import { getMapStyle } from "./map-style";
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -60,7 +59,6 @@ export const ParkBoundaryMap = ({
   const hoverPositionRef = useRef<maplibregl.LngLatLike | null>(null);
   const destroyedRef = useRef(false);
   const t = useTranslations("map");
-  const lowPower = useDeferredMapPower();
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [hoveredTrail, setHoveredTrail] = useState<number | null>(null);
   const [focusedTrail, setFocusedTrail] = useState<number | null>(null);
@@ -107,15 +105,6 @@ export const ParkBoundaryMap = ({
       setIsMapLoaded(false);
     };
   }, []);
-
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !isMapLoaded || typeof map.setPixelRatio !== "function") {
-      return;
-    }
-
-    map.setPixelRatio(lowPower ? 1 : window.devicePixelRatio);
-  }, [isMapLoaded, lowPower]);
 
   useEffect(() => {
     const map = mapRef.current;
