@@ -2119,6 +2119,11 @@ export interface paths {
                                     licenseUrl: string;
                                     /** Format: uri */
                                     sourceUrl: string;
+                                    relations?: {
+                                        relationId: number;
+                                        /** Format: uri */
+                                        sourceUrl: string;
+                                    }[];
                                 };
                                 boundaryGeoJson: {
                                     features: {
@@ -2307,6 +2312,11 @@ export interface paths {
                                     licenseUrl: string;
                                     /** Format: uri */
                                     sourceUrl: string;
+                                    relations?: {
+                                        relationId: number;
+                                        /** Format: uri */
+                                        sourceUrl: string;
+                                    }[];
                                 };
                                 boundaryGeoJson: {
                                     features: {
