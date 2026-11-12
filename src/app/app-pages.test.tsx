@@ -140,25 +140,17 @@ vi.mock("@/components/map/park-boundary-map", () => ({
 }));
 
 vi.mock("@/components/park/visit-accordion", () => ({
-  VisitAccordion: ({ visits, isEditable }: { visits: { id: number }[]; isEditable?: boolean }) => (
-    <div data-testid="visit-accordion">
-      visits:{visits.length}|editable:{String(isEditable)}
-    </div>
-  ),
-}));
-
-vi.mock("@/components/park/park-visit-history", () => ({
-  ParkVisitHistory: ({
-    parkSlug,
+  VisitAccordion: ({
     visits,
+    isEditable,
     initialOpenVisitId,
   }: {
-    parkSlug: string;
     visits: { id: number }[];
+    isEditable?: boolean;
     initialOpenVisitId?: number | null;
   }) => (
-    <div data-testid="park-visit-history">
-      slug:{parkSlug}|visits:{visits.length}|open:{initialOpenVisitId ?? "none"}
+    <div data-testid="visit-accordion">
+      visits:{visits.length}|editable:{String(isEditable)}|open:{initialOpenVisitId ?? "none"}
     </div>
   ),
 }));
@@ -1429,8 +1421,8 @@ describe("App pages", () => {
       "href",
       "https://example.com/brochure.pdf",
     );
-    expect(screen.getByTestId("park-visit-history")).toHaveTextContent(
-      "slug:pallas|visits:1|open:none",
+    expect(screen.getByTestId("visit-accordion")).toHaveTextContent(
+      "visits:1|editable:false|open:none",
     );
     expect(screen.getByTestId("park-admin-section")).toBeInTheDocument();
   });
@@ -1519,6 +1511,85 @@ describe("App pages", () => {
     },
   );
 
+  it.each([
+    { parkUrl: "https://example.com/park", mapUrl: "https://example.com/map.pdf" },
+    { parkUrl: "https://example.com/park", mapUrl: null },
+    { parkUrl: null, mapUrl: "https://example.com/map.pdf" },
+  ])(
+    "keeps eligible area materials inside the switching details panel: %j",
+    async ({ parkUrl, mapUrl }) => {
+      vi.stubGlobal("matchMedia", () => ({
+        matches: false,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      }));
+      try {
+        vi.mocked(apiFetch)
+          .mockResolvedValueOnce({
+            ...publicPark,
+            description: "",
+            parkUrl,
+            map: mapUrl ? { url: mapUrl } : null,
+            boundaryGeoJson: { type: "FeatureCollection", features: [] },
+            linkedTrails: [
+              {
+                name: "Polku",
+                slug: "polku",
+                address: null,
+                lengthKm: null,
+                boundaryGeoJson: { type: "FeatureCollection", features: [] },
+              },
+            ],
+          })
+          .mockResolvedValueOnce({ visits: [] });
+        await renderPublicRoute(
+          await ParkDetailPage({ params: Promise.resolve({ slug: "pallas" }) }),
+        );
+        const panel = screen.getByTestId("selection-details");
+        expect(within(panel).getByText(publicPark.address)).toBeInTheDocument();
+        if (parkUrl)
+          expect(within(panel).getByRole("link", { name: /park.officialLink/ })).toHaveAttribute(
+            "href",
+            parkUrl,
+          );
+        if (mapUrl)
+          expect(within(panel).getByRole("link", { name: /park.pdfBrochure/ })).toHaveAttribute(
+            "href",
+            mapUrl,
+          );
+        await userEvent.click(screen.getByRole("button", { name: "Polku" }));
+        expect(within(panel).queryByText(publicPark.address)).not.toBeInTheDocument();
+        expect(within(panel).queryByRole("link")).not.toBeInTheDocument();
+        await userEvent.click(screen.getByRole("button", { name: "map.wholeArea" }));
+        expect(within(panel).getByText(publicPark.address)).toBeInTheDocument();
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    },
+  );
+
+  it("omits section navigation when the park has no about content or visits", async () => {
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({ ...publicPark, description: null })
+      .mockResolvedValueOnce({ visits: [] });
+    await renderPublicRoute(await ParkDetailPage({ params: Promise.resolve({ slug: "pallas" }) }));
+    expect(
+      screen.queryByRole("navigation", { name: "park.sectionNavigationLabel" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "park.sectionNav.visits" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "park.visitHistory" })).not.toBeInTheDocument();
+  });
+
+  it("keeps navigation for About but omits the visits link without visits", async () => {
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({ ...publicPark, description: "Polkuja järven rannalla." })
+      .mockResolvedValueOnce({ visits: [] });
+    await renderPublicRoute(await ParkDetailPage({ params: Promise.resolve({ slug: "pallas" }) }));
+    expect(screen.getByRole("link", { name: "park.sectionNav.about" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "park.sectionNav.visits" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "park.visitHistory" })).not.toBeInTheDocument();
+  });
+
   it("keeps description and materials in the about section even without visits", async () => {
     vi.mocked(apiFetch)
       .mockResolvedValueOnce({ ...publicPark, description: "Polkuja järven rannalla." })
@@ -1534,6 +1605,48 @@ describe("App pages", () => {
     expect(screen.getAllByRole("link", { name: /park.officialLink/ })).toHaveLength(1);
   });
 
+  it("leaves About-owned materials in About while linked trail selection changes", async () => {
+    vi.stubGlobal("matchMedia", () => ({
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }));
+    try {
+      vi.mocked(apiFetch)
+        .mockResolvedValueOnce({
+          ...publicPark,
+          description: "Puiston kuvaus",
+          boundaryGeoJson: { type: "FeatureCollection", features: [] },
+          linkedTrails: [
+            {
+              name: "Polku",
+              slug: "polku",
+              address: null,
+              lengthKm: null,
+              boundaryGeoJson: { type: "FeatureCollection", features: [] },
+            },
+          ],
+        })
+        .mockResolvedValueOnce({ visits: [] });
+      await renderPublicRoute(
+        await ParkDetailPage({ params: Promise.resolve({ slug: "pallas" }) }),
+      );
+      const panel = screen.getByTestId("selection-details");
+      const about = screen.getByRole("region", { name: "park.aboutTitle" });
+      expect(
+        within(panel).queryByRole("link", { name: /park.officialLink/ }),
+      ).not.toBeInTheDocument();
+      await userEvent.click(screen.getByRole("button", { name: "Polku" }));
+      expect(within(about).getByRole("link", { name: /park.officialLink/ })).toHaveAttribute(
+        "href",
+        publicPark.parkUrl,
+      );
+      expect(screen.getAllByRole("link", { name: /park.officialLink/ })).toHaveLength(1);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("preserves the fallback for a cached park detail from before cover selection existed", async () => {
     vi.mocked(apiFetch)
       .mockResolvedValueOnce({ ...publicPark, featuredImage: undefined })
@@ -1542,10 +1655,7 @@ describe("App pages", () => {
     expect(
       screen.getByRole("heading", { name: "Pallas-Yllästunturi" }).closest("section"),
     ).not.toHaveAttribute("data-featured-image");
-    expect(screen.getByRole("link", { name: "park.sectionNav.location" })).toHaveAttribute(
-      "href",
-      "#park-location",
-    );
+    expect(screen.getByRole("heading", { name: "park.location" })).toBeInTheDocument();
   });
 
   it("keeps a minimal park usable without optional facts or external links", async () => {
@@ -1634,8 +1744,8 @@ describe("App pages", () => {
       }),
     );
 
-    expect(screen.getByTestId("park-visit-history")).toHaveTextContent(
-      "slug:pallas|visits:1|open:10",
+    expect(screen.getByTestId("visit-accordion")).toHaveTextContent(
+      "visits:1|editable:false|open:10",
     );
   });
 

@@ -1,9 +1,45 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import type { ComponentProps } from "react";
+import {
+  type ComponentProps,
+  createContext,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { StickySectionNavigation } from "@/components/navigation/sticky-section-navigation";
 import { ParkVisitHistory } from "./park-visit-history";
+
+const ParkVisitVisibilityContext = createContext<{
+  visitIds: number[];
+  setVisitIds: (ids: number[]) => void;
+} | null>(null);
+
+export const ParkVisitVisibilityProvider = ({
+  children,
+  initialVisitIds,
+}: {
+  children: ReactNode;
+  initialVisitIds: number[];
+}) => {
+  const [visitIds, setVisitIds] = useState(initialVisitIds);
+  useEffect(() => {
+    setVisitIds(initialVisitIds);
+  }, [initialVisitIds]);
+  return (
+    <ParkVisitVisibilityContext.Provider value={{ visitIds, setVisitIds }}>
+      {children}
+    </ParkVisitVisibilityContext.Provider>
+  );
+};
+
+const useParkVisitVisibility = () => {
+  const context = useContext(ParkVisitVisibilityContext);
+  if (!context) throw new Error("Park visit visibility requires its provider");
+  return context;
+};
 
 const useLinkedVisitId = () => {
   const searchParams = useSearchParams();
@@ -14,18 +50,29 @@ const useLinkedVisitId = () => {
 
 export const LinkedParkVisitHistory = (props: ComponentProps<typeof ParkVisitHistory>) => {
   const visitId = useLinkedVisitId();
-  return <ParkVisitHistory key={visitId} {...props} initialOpenVisitId={visitId} />;
+  const { setVisitIds } = useParkVisitVisibility();
+  return (
+    <ParkVisitHistory
+      key={visitId}
+      {...props}
+      initialOpenVisitId={visitId}
+      onVisibleVisitsChange={setVisitIds}
+    />
+  );
 };
 
-export const LinkedParkSectionNavigation = ({
-  visitIds,
-  ...props
-}: ComponentProps<typeof StickySectionNavigation> & { visitIds: number[] }) => {
+export const LinkedParkSectionNavigation = (
+  props: ComponentProps<typeof StickySectionNavigation>,
+) => {
   const visitId = useLinkedVisitId();
-  const items = props.items.map((item) =>
-    item.id === "visit-history" && visitId !== null && visitIds.includes(visitId)
-      ? { ...item, initialTargetId: `park-visit-${visitId}` }
-      : item,
-  );
+  const { visitIds } = useParkVisitVisibility();
+  const items = props.items
+    .filter((item) => item.id !== "visit-history" || visitIds.length > 0)
+    .map((item) =>
+      item.id === "visit-history" && visitId !== null && visitIds.includes(visitId)
+        ? { ...item, initialTargetId: `park-visit-${visitId}` }
+        : item,
+    );
+  if (items.length < 2) return null;
   return <StickySectionNavigation {...props} items={items} />;
 };

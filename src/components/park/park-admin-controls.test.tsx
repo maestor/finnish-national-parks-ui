@@ -68,6 +68,7 @@ describe("Park admin controls", () => {
     expect(screen.queryByText("park.admin.visibleBadge")).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "park.admin.title" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "park.admin.editAction" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "park.addVisit" })).not.toBeInTheDocument();
   });
 
   it("offers a hero edit link as soon as admin authentication resolves", () => {
@@ -105,7 +106,10 @@ describe("Park admin controls", () => {
     expect(editLink).toHaveAttribute("href", "/hallinta/paikat/pallas/muokkaa");
     expect(editLink).toHaveClass("bg-primary", "text-primary-foreground");
     expect(editLink.parentElement?.firstElementChild).toBe(editLink);
-    expect(editLink.parentElement?.children[1]).toBe(hideButton);
+    const addVisitLink = screen.getByRole("link", { name: "park.addVisit" });
+    expect(editLink.parentElement?.children[1]).toBe(addVisitLink);
+    expect(editLink.parentElement?.children[2]).toBe(hideButton);
+    expect(addVisitLink).toHaveAttribute("href", "/hallinta/kaynnit/uusi?park=pallas");
   });
 
   it("toggles park visibility from the admin section", async () => {

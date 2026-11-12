@@ -72,7 +72,7 @@ Project-specific expectations:
 - Mock heavy child components where needed, but keep the page or layout composition real
 - Use these tests to cover route-level success, empty, error, and not-found behavior before dropping to helper-only tests
 - Trip and visit preview page tests should cover saved admin reads, noindex metadata, 404 versus operational errors, and canonical Finnish route shims. Admin preview API proxies must deny missing/non-admin sessions and preserve no-store responses.
-- Park visit history tests should prove public visitors receive only public visits, authenticated admins load their park's admin projection, and draft entries show a visible **Luonnos** label. Trip assignment tests should exclude draft visits from the available choices.
+- Park visit history tests should prove empty history and its navigation link are absent, section navigation is absent when location is the only section, public visitors receive only public visits, and authenticated admins load their park's admin projection. Draft-only history must appear with its navigation after the admin refresh, draft entries show a visible **Luonnos** label, and admin actions provide the park-prefilled add-visit link even without history. Trip assignment tests should exclude draft visits from the available choices.
 
 ### 2. E2E Tests (Playwright)
 
@@ -105,6 +105,8 @@ npm run test:e2e:all
 ```
 
 Playwright normally starts the dev server (`npm run dev`) if not already running. When server startup is not authorized, first confirm the existing UI at port 4300 and run with a temporary config that sets `webServer: undefined`.
+
+For linked-trail park locations, cover the area-to-trail-to-area flow and material eligibility in behavior and page tests. Verify camera requests, direct map picking, modal focus and lazy loading at their owning boundaries; browser checks must exercise real MapLibre hover, overlap and touch at desktop and mobile widths in both themes.
 
 The home smoke flow checks feature headings, independent archive links and navigation to Magneettijahti. Reduced-motion checks cover shared cards on `/` and `/retket` with a published-memory dataset. Home behavior tests cover independent empty slots, missing notes/media, failed images, Finnish deep links and zero progress; archive tests protect ordinary/modified navigation and Back-state handling.
 

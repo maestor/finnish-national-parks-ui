@@ -1,8 +1,8 @@
-import type { ButtonHTMLAttributes } from "react";
+import type { ComponentPropsWithRef } from "react";
 import { CONTROL_SURFACE_CLASS_NAME, FILLED_ACTION_CLASS_NAME } from "@/components/ui/theme-styles";
 import { cn } from "@/lib/cn";
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps extends ComponentPropsWithRef<"button"> {
   variant?: "default" | "outline" | "ghost" | "destructive";
   size?: "default" | "sm" | "lg" | "icon";
 }

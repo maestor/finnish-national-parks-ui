@@ -28,6 +28,8 @@ const toneClassNames = {
     "border-emerald-300/70 bg-emerald-50/96 text-emerald-900 shadow-[0_10px_24px_rgba(5,150,105,0.18)] dark:border-emerald-300/20 dark:bg-emerald-950/92 dark:text-emerald-100",
 } as const;
 
+export const TOOLTIP_CONTENT_CLASS_NAME = `pointer-events-none w-max max-w-[min(calc(100vw-1rem),20rem)] whitespace-normal break-words rounded-xl border px-3 py-1.5 text-center text-xs leading-tight font-medium backdrop-blur-sm ${toneClassNames.default}`;
+
 interface TooltipPosition {
   left: number;
   top: number;
@@ -292,8 +294,9 @@ export const Tooltip = ({
             aria-live={live}
             data-side={position?.resolvedSide ?? side}
             className={cn(
-              "pointer-events-none fixed z-[500] w-max max-w-[min(calc(100vw-1rem),20rem)] whitespace-normal break-words rounded-xl border px-3 py-1.5 text-center text-xs leading-tight font-medium backdrop-blur-sm",
-              toneClassNames[tone],
+              TOOLTIP_CONTENT_CLASS_NAME,
+              "fixed z-[500]",
+              tone === "success" && toneClassNames.success,
             )}
             style={{
               left: position?.left ?? 0,

@@ -1,0 +1,11 @@
+.park-boundary-map-with-trails {
+  container-type: inline-size;
+  container-name: park-boundary-map;
+}
+
+/* Keep expanded attribution readable without covering the overview button. */
+@container park-boundary-map (max-width: 330px) {
+  .park-boundary-map-with-trails .maplibregl-ctrl-bottom-right:has(.maplibregl-compact-show) {
+    bottom: 3.5rem;
+  }
+}
