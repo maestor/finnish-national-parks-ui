@@ -1,15 +1,18 @@
 "use client";
 
 import type { FeatureCollection } from "geojson";
-import { Route } from "lucide-react";
+import { Map as MapIcon } from "lucide-react";
 import * as maplibregl from "maplibre-gl";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
-import { PUBLIC_ROUTE_BADGE_CLASS_NAME } from "@/components/layout/public-page-styles";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { resolveTooltipPosition, TOOLTIP_CONTENT_CLASS_NAME } from "@/components/ui/tooltip";
 import type { ParkDetail } from "@/lib/parks";
 import { ThreeDotPulse } from "../ui/three-dot-pulse";
+import { MAP_FLOATING_CONTROL_BUTTON_CLASS_NAME } from "./map-floating-control-styles";
 import { getMapStyle } from "./map-style";
 import "maplibre-gl/dist/maplibre-gl.css";
+import "./park-boundary-map.css";
 
 type BoundaryGeoJson = NonNullable<ParkDetail["boundaryGeoJson"]>;
 
@@ -27,6 +30,12 @@ interface ParkBoundaryMapProps {
   };
   parkName: string;
   linkedTrails?: NonNullable<ParkDetail["linkedTrails"]>;
+  selectedSlug?: string | null;
+  previewSlug?: string | null;
+  cameraRequest?: { slug: string | null; sequence: number } | null;
+  onPreview?: (slug: string | null) => void;
+  onPick?: (slug: string) => void;
+  onReset?: () => void;
 }
 
 const EMPTY_TRAILS: NonNullable<ParkDetail["linkedTrails"]> = [];
@@ -36,6 +45,8 @@ const OUTLINE_LAYER_ID = "park-boundary-outline";
 const TRAIL_SOURCE_ID = "park-trails";
 const TRAIL_HALO_ID = "park-trails-halo";
 const TRAIL_LINE_ID = "park-trails-line";
+const TRAIL_PREVIEW_HALO_ID = "park-trails-preview-halo";
+const TRAIL_PREVIEW_LINE_ID = "park-trails-preview-line";
 const TRAIL_ACTIVE_HALO_ID = "park-trails-active-halo";
 const TRAIL_ACTIVE_LINE_ID = "park-trails-active-line";
 const TRAIL_HIT_ID = "park-trails-hit";
@@ -51,20 +62,43 @@ export const ParkBoundaryMap = ({
   markerPoint,
   parkName,
   linkedTrails = EMPTY_TRAILS,
+  selectedSlug = null,
+  previewSlug = null,
+  cameraRequest = null,
+  onPreview,
+  onPick,
+  onReset,
 }: ParkBoundaryMapProps) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markerRef = useRef<maplibregl.Marker | null>(null);
-  const popupRef = useRef<maplibregl.Popup | null>(null);
-  const hoverPositionRef = useRef<maplibregl.LngLatLike | null>(null);
   const destroyedRef = useRef(false);
   const t = useTranslations("map");
   const [isMapLoaded, setIsMapLoaded] = useState(false);
-  const [hoveredTrail, setHoveredTrail] = useState<number | null>(null);
-  const [focusedTrail, setFocusedTrail] = useState<number | null>(null);
-  const [selectedTrail, setSelectedTrail] = useState<number | null>(null);
-  const [trailFocusRequest, setTrailFocusRequest] = useState<{ index: number } | null>(null);
-  const activeTrail = hoveredTrail ?? focusedTrail ?? selectedTrail;
+  const callbacksRef = useRef({ onPreview, onPick });
+  callbacksRef.current = { onPreview, onPick };
+  const [hoverLabel, setHoverLabel] = useState<string | null>(null);
+  const hoverElement = useRef<HTMLSpanElement>(null);
+  const hoverPoint = useRef<{ x: number; y: number } | null>(null);
+  const positionLabel = useCallback(() => {
+    const label = hoverElement.current;
+    const container = mapContainerRef.current;
+    const point = hoverPoint.current;
+    if (!label || !container || !point) return;
+    const pos = resolveTooltipPosition({
+      preferredSide: "top",
+      tooltipHeight: label.offsetHeight,
+      tooltipWidth: label.offsetWidth,
+      triggerRect: { left: point.x, top: point.y, width: 0, height: 0 },
+      viewportHeight: container.clientHeight,
+      viewportWidth: container.clientWidth,
+    });
+    label.style.left = `${pos.left}px`;
+    label.style.top = `${pos.top}px`;
+  }, []);
+  useEffect(() => {
+    if (hoverLabel !== null) positionLabel();
+  }, [hoverLabel, positionLabel]);
 
   useEffect(() => {
     const container = mapContainerRef.current;
@@ -98,8 +132,6 @@ export const ParkBoundaryMap = ({
       resizeObserver.disconnect();
       markerRef.current?.remove();
       markerRef.current = null;
-      popupRef.current?.remove();
-      popupRef.current = null;
       map.remove();
       mapRef.current = null;
       setIsMapLoaded(false);
@@ -114,35 +146,30 @@ export const ParkBoundaryMap = ({
       ...boundaryGeoJson,
       features: boundaryGeoJson.features.map((feature) => ({ ...feature, properties: {} })),
     };
-    if (!map.getSource(SOURCE_ID)) {
-      map.addSource(SOURCE_ID, {
-        type: "geojson",
-        data: boundaryData,
-      });
+    map.addSource(SOURCE_ID, {
+      type: "geojson",
+      data: boundaryData,
+    });
 
-      map.addLayer({
-        id: FILL_LAYER_ID,
-        type: "fill",
-        source: SOURCE_ID,
-        paint: {
-          "fill-color": "hsl(142 76% 36%)",
-          "fill-opacity": 0.2,
-        },
-      });
+    map.addLayer({
+      id: FILL_LAYER_ID,
+      type: "fill",
+      source: SOURCE_ID,
+      paint: {
+        "fill-color": "hsl(142 76% 36%)",
+        "fill-opacity": 0.2,
+      },
+    });
 
-      map.addLayer({
-        id: OUTLINE_LAYER_ID,
-        type: "line",
-        source: SOURCE_ID,
-        paint: {
-          "line-color": "hsl(142 76% 36%)",
-          "line-width": 2,
-        },
-      });
-    } else {
-      const source = map.getSource(SOURCE_ID) as maplibregl.GeoJSONSource;
-      source.setData(boundaryData);
-    }
+    map.addLayer({
+      id: OUTLINE_LAYER_ID,
+      type: "line",
+      source: SOURCE_ID,
+      paint: {
+        "line-color": "hsl(142 76% 36%)",
+        "line-width": 2,
+      },
+    });
 
     // Fit to bounding box with padding
     const bounds: maplibregl.LngLatBoundsLike = [
@@ -184,10 +211,10 @@ export const ParkBoundaryMap = ({
     if (!map || !isMapLoaded || linkedTrails.length === 0) return;
     const data: FeatureCollection = {
       type: "FeatureCollection",
-      features: linkedTrails.flatMap((trail, index) =>
+      features: linkedTrails.flatMap((trail) =>
         trail.boundaryGeoJson.features
           .filter((feature) => feature.geometry.type === "LineString")
-          .map((feature) => ({ ...feature, properties: { index } })),
+          .map((feature) => ({ ...feature, properties: { slug: trail.slug } })),
       ),
     };
     map.addSource(TRAIL_SOURCE_ID, { type: "geojson", data });
@@ -206,11 +233,27 @@ export const ParkBoundaryMap = ({
       paint: { "line-color": "#8d4b32", "line-width": 3 },
     });
     map.addLayer({
+      id: TRAIL_PREVIEW_HALO_ID,
+      type: "line",
+      source: TRAIL_SOURCE_ID,
+      layout: TRAIL_LINE_LAYOUT,
+      filter: ["==", ["get", "slug"], ""],
+      paint: { "line-color": "#fff8e7", "line-width": 5.5, "line-opacity": 0.95 },
+    });
+    map.addLayer({
+      id: TRAIL_PREVIEW_LINE_ID,
+      type: "line",
+      source: TRAIL_SOURCE_ID,
+      layout: TRAIL_LINE_LAYOUT,
+      filter: ["==", ["get", "slug"], ""],
+      paint: { "line-color": "#a75b34", "line-width": 3.5 },
+    });
+    map.addLayer({
       id: TRAIL_ACTIVE_HALO_ID,
       type: "line",
       source: TRAIL_SOURCE_ID,
       layout: TRAIL_LINE_LAYOUT,
-      filter: ["==", ["get", "index"], -1],
+      filter: ["==", ["get", "slug"], ""],
       paint: { "line-color": "#fff8e7", "line-width": 5.5, "line-opacity": 0.95 },
     });
     map.addLayer({
@@ -218,7 +261,7 @@ export const ParkBoundaryMap = ({
       type: "line",
       source: TRAIL_SOURCE_ID,
       layout: TRAIL_LINE_LAYOUT,
-      filter: ["==", ["get", "index"], -1],
+      filter: ["==", ["get", "slug"], ""],
       paint: { "line-color": "#65321f", "line-width": 3.5 },
     });
     map.addLayer({
@@ -227,178 +270,219 @@ export const ParkBoundaryMap = ({
       source: TRAIL_SOURCE_ID,
       paint: { "line-color": "#000000", "line-opacity": 0, "line-width": 18 },
     });
-    const onMove = (event: maplibregl.MapLayerMouseEvent) => {
-      const index = event.features?.[0]?.properties?.index;
-      if (typeof index === "number") {
-        hoverPositionRef.current = event.lngLat;
-        popupRef.current?.setLngLat(event.lngLat);
-        setHoveredTrail(index);
+    let hoveredSlug: string | null = null;
+    let touchStart: { x: number; y: number } | null = null;
+    let lastTouch = 0;
+    const closestTrail = (point: maplibregl.Point) => {
+      const hits = map.queryRenderedFeatures(
+        [
+          [point.x - 9, point.y - 9],
+          [point.x + 9, point.y + 9],
+        ],
+        { layers: [TRAIL_HIT_ID] },
+      );
+      const distances = new Map<string, number>();
+      for (const feature of hits) {
+        const slug = feature.properties?.slug;
+        if (typeof slug !== "string" || feature.geometry.type !== "LineString") continue;
+        const points = feature.geometry.coordinates.map((coordinate) =>
+          map.project([coordinate[0], coordinate[1]]),
+        );
+        let distance = Number.POSITIVE_INFINITY;
+        for (let i = 1; i < points.length; i++) {
+          const a = points[i - 1];
+          const b = points[i];
+          const dx = b.x - a.x;
+          const dy = b.y - a.y;
+          const fraction = Math.max(
+            0,
+            Math.min(1, ((point.x - a.x) * dx + (point.y - a.y) * dy) / (dx * dx + dy * dy || 1)),
+          );
+          distance = Math.min(
+            distance,
+            Math.hypot(point.x - a.x - fraction * dx, point.y - a.y - fraction * dy),
+          );
+        }
+        distances.set(slug, Math.min(distances.get(slug) ?? Infinity, distance));
       }
+      return [...distances].sort((a, b) => a[1] - b[1] || a[0].localeCompare(b[0]))[0]?.[0] ?? null;
     };
-    const onLeave = () => {
-      hoverPositionRef.current = null;
-      setHoveredTrail(null);
+    const clearHover = () => {
+      hoveredSlug = null;
+      setHoverLabel(null);
+      callbacksRef.current.onPreview?.(null);
     };
-    const onClick = (event: maplibregl.MapLayerMouseEvent) => {
-      const index = event.features?.[0]?.properties?.index;
-      if (typeof index === "number") {
-        hoverPositionRef.current = event.lngLat;
-        setSelectedTrail(index);
-        setTrailFocusRequest({ index });
-      }
+    const onMove = (event: maplibregl.MapMouseEvent) => {
+      if (Date.now() - lastTouch < 700) return;
+      const slug = closestTrail(event.point);
+      hoveredSlug = slug;
+      callbacksRef.current.onPreview?.(slug);
+      hoverPoint.current = event.point;
+      setHoverLabel(slug ?? null);
+      positionLabel();
     };
-    map.on("mousemove", TRAIL_HIT_ID, onMove);
-    map.on("mouseleave", TRAIL_HIT_ID, onLeave);
-    map.on("click", TRAIL_HIT_ID, onClick);
+    const onClick = (event: maplibregl.MapMouseEvent) => {
+      if (Date.now() - lastTouch < 700) return;
+      const slug = hoveredSlug ?? closestTrail(event.point);
+      if (slug !== null) callbacksRef.current.onPick?.(slug);
+    };
+    const onTouchStart = (event: maplibregl.MapTouchEvent) => {
+      lastTouch = Date.now();
+      clearHover();
+      touchStart = event.points.length === 1 ? event.points[0] : null;
+    };
+    const onTouchEnd = (event: maplibregl.MapTouchEvent) => {
+      lastTouch = Date.now();
+      const start = touchStart;
+      touchStart = null;
+      if (!start || event.originalEvent.changedTouches.length !== 1) return;
+      const rect = map.getCanvas().getBoundingClientRect();
+      const touch = event.originalEvent.changedTouches[0];
+      const point = new maplibregl.Point(touch.clientX - rect.left, touch.clientY - rect.top);
+      if (Math.hypot(point.x - start.x, point.y - start.y) > 8) return;
+      const slug = closestTrail(point);
+      if (slug !== null) callbacksRef.current.onPick?.(slug);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") clearHover();
+    };
+    window.addEventListener("blur", clearHover);
+    window.addEventListener("keydown", onKey);
+    map.on("mousemove", onMove);
+    map.on("mouseout", clearHover);
+    map.on("movestart", clearHover);
+    map.on("click", onClick);
+    map.on("touchstart", onTouchStart);
+    map.on("touchend", onTouchEnd);
     return () => {
-      map.off("mousemove", TRAIL_HIT_ID, onMove);
-      map.off("mouseleave", TRAIL_HIT_ID, onLeave);
-      map.off("click", TRAIL_HIT_ID, onClick);
+      window.removeEventListener("blur", clearHover);
+      window.removeEventListener("keydown", onKey);
+      map.off("mousemove", onMove);
+      map.off("mouseout", clearHover);
+      map.off("movestart", clearHover);
+      map.off("click", onClick);
+      map.off("touchstart", onTouchStart);
+      map.off("touchend", onTouchEnd);
       if (destroyedRef.current) return;
       for (const id of [
         TRAIL_HIT_ID,
         TRAIL_ACTIVE_LINE_ID,
         TRAIL_ACTIVE_HALO_ID,
+        TRAIL_PREVIEW_LINE_ID,
+        TRAIL_PREVIEW_HALO_ID,
         TRAIL_LINE_ID,
         TRAIL_HALO_ID,
       ])
         map.removeLayer(id);
       map.removeSource(TRAIL_SOURCE_ID);
     };
-  }, [isMapLoaded, linkedTrails]);
+  }, [isMapLoaded, linkedTrails, positionLabel]);
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !isMapLoaded || trailFocusRequest === null) return;
-    const trail = linkedTrails[trailFocusRequest.index];
+    if (!map || !isMapLoaded || !cameraRequest) return;
+    if (cameraRequest.slug === null) {
+      const bounds: maplibregl.LngLatBoundsLike = [
+        [boundingBox.minLon, boundingBox.minLat],
+        [boundingBox.maxLon, boundingBox.maxLat],
+      ];
+      map.setMinZoom(MAP_MIN_ZOOM);
+      map.fitBounds(bounds, { padding: MAP_PADDING, duration: 0 });
+      const camera = map.cameraForBounds(bounds, { padding: MAP_PADDING });
+      if (typeof camera?.zoom === "number")
+        map.setMinZoom(Math.max(MAP_MIN_ZOOM, camera.zoom - ZOOM_OUT_LEVELS_FROM_FIT));
+      return;
+    }
+    const trail = linkedTrails.find((item) => item.slug === cameraRequest.slug);
+    if (!trail) return;
     const bounds = new maplibregl.LngLatBounds();
     for (const feature of trail.boundaryGeoJson.features) {
-      if (feature.geometry.type !== "LineString") continue;
-      for (const [lng, lat] of feature.geometry.coordinates) {
-        bounds.extend([lng, lat]);
-      }
+      if (feature.geometry.type === "LineString")
+        for (const [lng, lat] of feature.geometry.coordinates) bounds.extend([lng, lat]);
     }
     if (!bounds.isEmpty()) {
       map.setMinZoom(MAP_MIN_ZOOM);
       map.fitBounds(bounds.toArray(), {
         padding: MAP_PADDING,
         maxZoom: MAP_MAX_ZOOM,
-        duration: 600,
+        duration: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? 0 : 600,
       });
     }
-    setTrailFocusRequest(null);
-  }, [isMapLoaded, linkedTrails, trailFocusRequest]);
+  }, [isMapLoaded, linkedTrails, cameraRequest, boundingBox]);
 
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !isMapLoaded || linkedTrails.length === 0) return;
-    const hasActiveTrail = activeTrail !== null;
-    const inactiveFilter: maplibregl.FilterSpecification | null =
-      activeTrail === null ? null : ["!=", ["get", "index"], activeTrail];
+    const hasActiveTrail = selectedSlug !== null || previewSlug !== null;
+    const inactiveFilter: maplibregl.FilterSpecification | null = hasActiveTrail
+      ? [
+          "all",
+          ["!=", ["get", "slug"], selectedSlug ?? ""],
+          ["!=", ["get", "slug"], previewSlug ?? ""],
+        ]
+      : null;
     map.setFilter(TRAIL_HALO_ID, inactiveFilter);
     map.setFilter(TRAIL_LINE_ID, inactiveFilter);
     map.setPaintProperty(TRAIL_HALO_ID, "line-opacity", hasActiveTrail ? 0.25 : 0.65);
     map.setPaintProperty(TRAIL_LINE_ID, "line-width", hasActiveTrail ? 2.5 : 3);
     map.setPaintProperty(TRAIL_LINE_ID, "line-opacity", hasActiveTrail ? 0.5 : 1);
-    const filter: maplibregl.FilterSpecification = ["==", ["get", "index"], activeTrail ?? -1];
-    map.setFilter(TRAIL_ACTIVE_HALO_ID, filter);
-    map.setFilter(TRAIL_ACTIVE_LINE_ID, filter);
-  }, [activeTrail, isMapLoaded, linkedTrails]);
+    const selectedFilter: maplibregl.FilterSpecification = [
+      "==",
+      ["get", "slug"],
+      selectedSlug ?? "",
+    ];
+    const previewFilter: maplibregl.FilterSpecification = [
+      "==",
+      ["get", "slug"],
+      previewSlug !== selectedSlug ? (previewSlug ?? "") : "",
+    ];
+    map.setFilter(TRAIL_ACTIVE_HALO_ID, selectedFilter);
+    map.setFilter(TRAIL_ACTIVE_LINE_ID, selectedFilter);
+    map.setFilter(TRAIL_PREVIEW_HALO_ID, previewFilter);
+    map.setFilter(TRAIL_PREVIEW_LINE_ID, previewFilter);
+  }, [selectedSlug, previewSlug, isMapLoaded, linkedTrails]);
 
-  useEffect(() => {
-    const map = mapRef.current;
-    const trail = activeTrail === null ? undefined : linkedTrails[activeTrail];
-    if (!map || !isMapLoaded || !trail) {
-      popupRef.current?.remove();
-      popupRef.current = null;
-      return;
-    }
-    const line = trail.boundaryGeoJson.features.find(
-      (feature) => feature.geometry.type === "LineString",
-    );
-    const coordinates = line?.geometry.type === "LineString" ? line.geometry.coordinates : [];
-    const point = coordinates[Math.floor(coordinates.length / 2)];
-    if (!point || point[0] === undefined || point[1] === undefined) return;
-    const content = document.createElement("div");
-    content.className = "p-3 text-foreground";
-    const title = document.createElement("h3");
-    title.className = "text-sm leading-tight font-semibold";
-    title.textContent =
-      trail.lengthKm === null
-        ? trail.name
-        : t("trailPopupTitle", {
-            name: trail.name,
-            length: trail.lengthKm.toLocaleString("fi-FI"),
-          });
-    content.appendChild(title);
-    if (trail.address) {
-      const address = document.createElement("p");
-      address.className = "mt-1 text-sm";
-      address.textContent = trail.address;
-      content.appendChild(address);
-    }
-    const popup = new maplibregl.Popup({
-      closeButton: false,
-      closeOnClick: false,
-      maxWidth: "min(360px, calc(100vw - 5rem))",
-      offset: 12,
-    });
-    popupRef.current = popup;
-    popup
-      .setLngLat(hoverPositionRef.current ?? [point[0], point[1]])
-      .setDOMContent(content)
-      .addTo(map);
-    popup.getElement().style.pointerEvents = "none";
-    return () => {
-      popup.remove();
-      if (popupRef.current === popup) popupRef.current = null;
-    };
-  }, [activeTrail, isMapLoaded, linkedTrails, t]);
+  const hoveredTrail = linkedTrails.find((trail) => trail.slug === hoverLabel);
 
   return (
     <div>
-      {linkedTrails.length > 0 && (
-        <fieldset className="mb-3 flex flex-wrap gap-2">
-          <legend className="sr-only">{t("trails")}</legend>
-          {linkedTrails.map((trail, index) => (
-            <button
-              key={trail.slug}
-              type="button"
-              aria-pressed={selectedTrail === index}
-              className={`${PUBLIC_ROUTE_BADGE_CLASS_NAME} cursor-pointer transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${activeTrail === index ? "ring-2 ring-ring" : ""}`}
-              onMouseEnter={() => {
-                hoverPositionRef.current = null;
-                setHoveredTrail(index);
-              }}
-              onMouseLeave={() => setHoveredTrail(null)}
-              onFocus={() => {
-                hoverPositionRef.current = null;
-                setFocusedTrail(index);
-              }}
-              onBlur={() => setFocusedTrail(null)}
-              onClick={() => {
-                setSelectedTrail(selectedTrail === index ? null : index);
-                setTrailFocusRequest({ index });
-              }}
-            >
-              <Route className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-              <span className="wrap-anywhere text-left">{trail.name}</span>
-            </button>
-          ))}
-        </fieldset>
-      )}
-      <span className="sr-only" role="status">
-        {activeTrail !== null &&
-          linkedTrails[activeTrail] &&
-          `${linkedTrails[activeTrail].name}${linkedTrails[activeTrail].lengthKm !== null ? `, ${t("trailLength")} ${linkedTrails[activeTrail].lengthKm.toLocaleString("fi-FI")} km` : ""}${linkedTrails[activeTrail].address ? `, ${linkedTrails[activeTrail].address}` : ""}`}
-      </span>
-      <div className="relative w-full overflow-hidden rounded-lg border" style={{ height: 320 }}>
+      <div
+        className={
+          linkedTrails.length
+            ? "park-boundary-map-with-trails relative h-87.5 w-full overflow-hidden rounded-lg border md:h-107.5"
+            : "relative h-80 w-full overflow-hidden rounded-lg border"
+        }
+      >
         <div
           ref={mapContainerRef}
           className="h-full w-full"
           role="application"
           aria-label={t("boundaryAriaLabel", { parkName })}
         />
+        {hoveredTrail !== undefined && (
+          <span
+            ref={hoverElement}
+            className={`${TOOLTIP_CONTENT_CLASS_NAME} absolute z-10 max-w-[min(calc(100%-1rem),20rem)]`}
+          >
+            <strong className="font-semibold">
+              {hoveredTrail.name}
+              {hoveredTrail.lengthKm != null && hoveredTrail.lengthKm !== 0
+                ? ` · ${hoveredTrail.lengthKm.toLocaleString("fi-FI")} km`
+                : ""}
+            </strong>
+          </span>
+        )}
+        {linkedTrails.length > 0 && (
+          <Button
+            type="button"
+            variant="ghost"
+            className={`absolute bottom-3 left-3 ${MAP_FLOATING_CONTROL_BUTTON_CLASS_NAME}`}
+            aria-label={t("wholeArea")}
+            onClick={onReset}
+          >
+            <MapIcon aria-hidden="true" />
+          </Button>
+        )}
         {!isMapLoaded && (
           <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
             <div className="flex flex-col items-center gap-2">

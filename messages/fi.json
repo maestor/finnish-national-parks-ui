@@ -152,7 +152,6 @@
     "area": "Pinta-ala",
     "length": "Pituus",
     "established": "Perustettu",
-    "noVisits": "Ei vielä käyntejä.",
     "draftStatus": "Luonnos",
     "addVisit": "Kirjaa käynti",
     "showDetails": "Näytä lisätiedot",
@@ -1112,8 +1111,6 @@
     "ariaLabel": "Suomen retkipaikkojen kartta",
     "boundaryAriaLabel": "{parkName} rajaus kartalla",
     "trails": "Paikan reitit",
-    "trailLength": "Pituus",
-    "trailPopupTitle": "{name} • {length} km",
     "deferredMapTitle": "Kartta ladataan tarvittaessa",
     "deferredMapDescription": "Kartta valmistellaan vasta, kun se tulee näkyviin.",
     "loadDeferredMap": "Lataa kartta",
@@ -1131,7 +1128,12 @@
     "pdfBrochure": "PDF esite",
     "visits": "Vierailut",
     "openParkPage": "Avaa paikan sivu",
-    "addVisit": "Lisää käynti"
+    "addVisit": "Lisää käynti",
+    "trailCount": "Reitit ({count})",
+    "wholeArea": "Koko alue",
+    "selectedTrail": "Valittu reitti",
+    "selectionStatus": "Valittu: {name}",
+    "closeChooser": "Sulje reittivalinta"
   },
   "markdownEditor": {
     "guide": "Markdown-opas",

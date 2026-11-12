@@ -1,6 +1,10 @@
-import { render, screen } from "@testing-library/react";
+import { render as rtlRender, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { LinkedParkSectionNavigation, LinkedParkVisitHistory } from "./park-visit-link";
+import {
+  LinkedParkSectionNavigation,
+  LinkedParkVisitHistory,
+  ParkVisitVisibilityProvider,
+} from "./park-visit-link";
 
 const { query } = vi.hoisted(() => ({ query: { value: "" } }));
 vi.mock("next/navigation", () => ({
@@ -23,6 +27,15 @@ vi.mock("@/components/navigation/sticky-section-navigation", () => ({
   ),
 }));
 
+const render = (ui: React.ReactElement) =>
+  rtlRender(ui, {
+    wrapper: ({ children }) => (
+      <ParkVisitVisibilityProvider initialVisitIds={[10, 20]}>
+        {children}
+      </ParkVisitVisibilityProvider>
+    ),
+  });
+
 describe("park visit links in cached pages", () => {
   beforeEach(() => {
     query.value = "";
@@ -37,7 +50,6 @@ describe("park visit links in cached pages", () => {
           parkSlug="pallas"
           title="Vierailut"
           addVisitLabel="Lisää"
-          noVisitsLabel="Ei vierailuja"
         />
         <LinkedParkSectionNavigation
           ariaLabel="Osat"
@@ -45,7 +57,6 @@ describe("park visit links in cached pages", () => {
             { id: "park-location", label: "Sijainti" },
             { id: "visit-history", label: "Vierailut" },
           ]}
-          visitIds={[10, 20]}
         />
       </>,
     );
@@ -70,7 +81,6 @@ describe("park visit links in cached pages", () => {
           parkSlug="pallas"
           title="Vierailut"
           addVisitLabel="Lisää"
-          noVisitsLabel="Ei vierailuja"
         />,
       );
       expect(screen.getByTestId("history")).toHaveTextContent("null");
@@ -81,13 +91,21 @@ describe("park visit links in cached pages", () => {
     query.value = "visit=99";
     const props = {
       ariaLabel: "Osat",
-      items: [{ id: "visit-history", label: "Vierailut" }],
-      visitIds: [10],
+      items: [
+        { id: "park-location", label: "Sijainti" },
+        { id: "visit-history", label: "Vierailut" },
+      ],
     };
     const { rerender } = render(<LinkedParkSectionNavigation {...props} />);
-    expect(screen.getByRole("link")).toHaveAttribute("href", "#visit-history");
+    expect(screen.getByRole("link", { name: "visit-history" })).toHaveAttribute(
+      "href",
+      "#visit-history",
+    );
     query.value = "visit=10";
     rerender(<LinkedParkSectionNavigation {...props} />);
-    expect(screen.getByRole("link")).toHaveAttribute("href", "#park-visit-10");
+    expect(screen.getByRole("link", { name: "visit-history" })).toHaveAttribute(
+      "href",
+      "#park-visit-10",
+    );
   });
 });

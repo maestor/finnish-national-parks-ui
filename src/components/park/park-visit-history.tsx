@@ -12,19 +12,19 @@ import { appRoutes, createPathWithSearchParams } from "@/lib/routes";
 interface ParkVisitHistoryProps {
   addVisitLabel: string;
   initialOpenVisitId?: number | null;
-  noVisitsLabel: string;
   parkSlug: string;
   title: string;
   visits: Visit[];
+  onVisibleVisitsChange?: (visitIds: number[]) => void;
 }
 
 export const ParkVisitHistory = ({
   addVisitLabel,
   initialOpenVisitId = null,
-  noVisitsLabel,
   parkSlug,
   title,
   visits,
+  onVisibleVisitsChange,
 }: ParkVisitHistoryProps) => {
   const auth = useAuth();
   const [visibleVisits, setVisibleVisits] = useState<Visit[]>(visits);
@@ -55,6 +55,12 @@ export const ParkVisitHistory = ({
       isCurrent = false;
     };
   }, [auth.isAuthenticated, parkSlug, visits]);
+
+  useEffect(() => {
+    onVisibleVisitsChange?.(visibleVisits.map((visit) => visit.id));
+  }, [visibleVisits, onVisibleVisitsChange]);
+
+  if (visibleVisits.length === 0) return null;
 
   return (
     <section
@@ -92,20 +98,14 @@ export const ParkVisitHistory = ({
         )}
       </div>
 
-      {visibleVisits.length > 0 ? (
-        <div className="mt-4">
-          <VisitAccordion
-            visits={visibleVisits}
-            parkSlug={parkSlug}
-            isEditable={auth.isAuthenticated}
-            initialOpenVisitId={initialOpenVisitId}
-          />
-        </div>
-      ) : (
-        <p className="mt-4 rounded-2xl border border-border bg-control px-4 py-4 text-muted-foreground shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.42)] dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.06)]">
-          {noVisitsLabel}
-        </p>
-      )}
+      <div className="mt-4">
+        <VisitAccordion
+          visits={visibleVisits}
+          parkSlug={parkSlug}
+          isEditable={auth.isAuthenticated}
+          initialOpenVisitId={initialOpenVisitId}
+        />
+      </div>
     </section>
   );
 };

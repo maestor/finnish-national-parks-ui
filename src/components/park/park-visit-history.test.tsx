@@ -62,7 +62,6 @@ describe("ParkVisitHistory", () => {
       <ParkVisitHistory
         title="Käyntihistoria"
         addVisitLabel="Lisää käynti"
-        noVisitsLabel="Ei käyntejä"
         parkSlug="pallas"
         visits={visits}
       />,
@@ -83,7 +82,6 @@ describe("ParkVisitHistory", () => {
       <ParkVisitHistory
         title="Käyntihistoria"
         addVisitLabel="Lisää käynti"
-        noVisitsLabel="Ei käyntejä"
         parkSlug="pallas"
         visits={visits}
       />,
@@ -109,7 +107,6 @@ describe("ParkVisitHistory", () => {
       <ParkVisitHistory
         title="Käyntihistoria"
         addVisitLabel="Lisää käynti"
-        noVisitsLabel="Ei käyntejä"
         parkSlug="pallas"
         visits={visits}
       />,
@@ -129,7 +126,6 @@ describe("ParkVisitHistory", () => {
       <ParkVisitHistory
         title="Käyntihistoria"
         addVisitLabel="Lisää käynti"
-        noVisitsLabel="Ei käyntejä"
         parkSlug="pallas"
         visits={visits}
       />,
@@ -138,20 +134,20 @@ describe("ParkVisitHistory", () => {
     expect(await screen.findByTestId("visit-accordion")).toHaveTextContent("visits:1");
   });
 
-  it("shows the empty state when the park has no published visits", () => {
+  it("hides visit history when the park has no visits", () => {
     mockUseAuth.mockReturnValue({ isAuthenticated: false, isLoading: false });
 
     render(
       <ParkVisitHistory
         title="Käyntihistoria"
         addVisitLabel="Lisää käynti"
-        noVisitsLabel="Ei käyntejä"
         parkSlug="pallas"
         visits={[]}
       />,
     );
 
-    expect(screen.getByText("Ei käyntejä")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Käyntihistoria" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Ei käyntejä")).not.toBeInTheDocument();
     expect(screen.queryByTestId("visit-accordion")).not.toBeInTheDocument();
   });
 });
