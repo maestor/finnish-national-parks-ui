@@ -6,6 +6,9 @@ import { LONG_TEXTAREA_MAX_LENGTH } from "@/components/ui/textarea-with-counter"
 import type { Park } from "@/lib/parks";
 import { VisitForm } from "./visit-form";
 
+// Existing form scenarios exercise visit fields; trail loading/selection is covered separately.
+vi.mock("./visit-trail-fields", () => ({ VisitTrailFields: () => null }));
+
 const mockPush = vi.fn();
 const mockRefresh = vi.fn();
 const mockBack = vi.fn();

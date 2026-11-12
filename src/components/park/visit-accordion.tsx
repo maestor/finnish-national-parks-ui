@@ -4,6 +4,7 @@ import { ChevronDown, FileText, Images, Route, TentTree, User } from "lucide-rea
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { useParkTrailNavigation } from "@/components/park/park-trail-navigation";
 import { CopyLinkButton } from "@/components/ui/copy-link-button";
 import { MarkdownContent } from "@/components/ui/markdown-content";
 import { EditVisitLink } from "@/components/visits/edit-visit-link";
@@ -49,7 +50,7 @@ const TRIP_LINK_CLASS_NAME =
 
 const hasExpandableContent = (visit: Visit) => {
   const hasImages = (visit.images?.length ?? 0) > 0;
-  return !!visit.note || !!visit.author || hasImages;
+  return !!visit.note || !!visit.author || hasImages || (visit.trails?.length ?? 0) > 0;
 };
 
 const getSeasonPresentation = (dateStr: string): SeasonPresentation => {
@@ -101,6 +102,7 @@ export const VisitAccordion = ({
   initialOpenVisitId = null,
 }: VisitAccordionProps) => {
   const t = useTranslations("park");
+  const trailNavigation = useParkTrailNavigation();
   const firstExpandableVisitId =
     [...visits]
       .sort((a, b) => new Date(b.visitedOn).getTime() - new Date(a.visitedOn).getTime())
@@ -210,6 +212,7 @@ export const VisitAccordion = ({
                 onClick={() => toggle(visit.id, isExpandable)}
                 className="flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-3 text-left transition-colors hover:text-muted-foreground"
                 aria-expanded={isOpen}
+                aria-controls={`visit-details-${visit.id}`}
                 title={isOpen ? t("hideDetails") : t("showDetails")}
                 aria-label={isOpen ? t("hideDetails") : t("showDetails")}
               >
@@ -267,8 +270,42 @@ export const VisitAccordion = ({
               className="grid transition-[grid-template-rows] duration-300 ease-in-out"
               style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
             >
-              <div className="overflow-hidden min-h-0">
+              <div
+                id={`visit-details-${visit.id}`}
+                inert={!isOpen}
+                className="overflow-hidden min-h-0"
+              >
                 <div className="space-y-3 border-t border-border bg-control px-4 py-3">
+                  {(visit.trails?.length ?? 0) > 0 && (
+                    <>
+                      <h3 className={DETAIL_SECTION_HEADING_CLASS_NAME}>
+                        <Route className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                        {t("trailsTitle")}
+                      </h3>
+                      <ul className="flex flex-wrap gap-2">
+                        {visit.trails?.map((trail) => (
+                          <li key={trail.id} className="min-w-0 max-w-full">
+                            {trailNavigation?.trailSlugs.includes(trail.slug) ? (
+                              <button
+                                type="button"
+                                aria-label={t("showTrailOnMap", { name: trail.name })}
+                                onClick={() => trailNavigation.navigate(trail.slug)}
+                                className={`${ROUTE_BADGE_CLASS_NAME} min-h-11 max-w-full cursor-pointer py-2 leading-snug hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring`}
+                              >
+                                <Route className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                                <span className="min-w-0 wrap-break-word">{trail.name}</span>
+                              </button>
+                            ) : (
+                              <span className={`${ROUTE_BADGE_CLASS_NAME} max-w-full leading-snug`}>
+                                <Route className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                                <span className="min-w-0 wrap-break-word">{trail.name}</span>
+                              </span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
                   {!!visit.note && (
                     <>
                       <h3 className={DETAIL_SECTION_HEADING_CLASS_NAME}>

@@ -4,14 +4,17 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { apiFetch } from "@/lib/api";
+import { ApiError, apiFetch } from "@/lib/api";
 import type { paths } from "@/lib/api-types";
+import { formatFinnishDate } from "@/lib/fi-date";
 import { revalidatePublicCache } from "@/lib/public-cache";
 import { appRoutes } from "@/lib/routes";
 
 type LinkResponse =
   paths["/api/admin/parks/{slug}/trails"]["get"]["responses"][200]["content"]["application/json"];
 type Trail = LinkResponse["trails"][number];
+type VisitConflict =
+  paths["/api/admin/parks/{slug}/trails/{trailId}"]["delete"]["responses"][409]["content"]["application/json"];
 type SearchResponse =
   paths["/api/admin/parks/{slug}/trail-candidates"]["get"]["responses"][200]["content"]["application/json"];
 
@@ -23,12 +26,14 @@ export const AreaTrails = ({ slug, initialTrails }: { slug: string; initialTrail
   const [results, setResults] = useState<SearchResponse | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const [blockingVisits, setBlockingVisits] = useState<VisitConflict["visits"]>([]);
   const [staleSlug, setStaleSlug] = useState<string | null>(null);
   const effectiveTrails = trails.filter((trail) => trail.effective);
 
   const search = async (term: string, offset = 0) => {
     setPending(true);
     setError("");
+    setBlockingVisits([]);
     try {
       const params = new URLSearchParams({ q: term, offset: String(offset), limit: "25" });
       const response = await apiFetch<SearchResponse>(
@@ -67,6 +72,7 @@ export const AreaTrails = ({ slug, initialTrails }: { slug: string; initialTrail
       return;
     setPending(true);
     setError("");
+    setBlockingVisits([]);
     try {
       const updated = await apiFetch<Trail>(
         `/api/admin/parks/${encodeURIComponent(slug)}/trails/${trail.trailId}`,
@@ -79,11 +85,17 @@ export const AreaTrails = ({ slug, initialTrails }: { slug: string; initialTrail
       );
       await refresh(trail.slug);
     } catch (cause) {
-      setError(
-        cause instanceof Error && cause.message.includes("requires a preservation decision")
-          ? t("visitsPreventAdd")
-          : t("updateFailed"),
-      );
+      if (cause instanceof ApiError && cause.status === 409) {
+        const conflict = cause.details as VisitConflict;
+        setBlockingVisits(conflict.visits);
+        setError(t("visitsPreventRemove", { name: trail.name }));
+      } else {
+        setError(
+          cause instanceof Error && cause.message.includes("requires a preservation decision")
+            ? t("visitsPreventAdd")
+            : t("updateFailed"),
+        );
+      }
     } finally {
       setPending(false);
     }
@@ -123,6 +135,23 @@ export const AreaTrails = ({ slug, initialTrails }: { slug: string; initialTrail
             </li>
           ))}
         </ul>
+      )}
+      {blockingVisits.length > 0 && (
+        <div className="mt-3 rounded-xl border border-border bg-control p-3">
+          <h3 className="font-semibold">{t("reviewVisits")}</h3>
+          <ul className="mt-2 flex flex-wrap gap-3">
+            {blockingVisits.map((visit) => (
+              <li key={visit.id}>
+                <Link
+                  href={appRoutes.controlPanel.editVisit(visit.id)}
+                  className="inline-flex min-h-11 items-center rounded-md px-2 text-link underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                >
+                  {formatFinnishDate(visit.visitedOn)}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
       <form
         className="mt-5 space-y-2"

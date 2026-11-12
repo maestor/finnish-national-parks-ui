@@ -129,6 +129,22 @@ describe("VisitAccordion", () => {
     // Visit numbers are shown as translated badges via park.visitNumber
     const badges = screen.getAllByText(/park\.visitNumber/);
     expect(badges.length).toBe(5);
+    expect(screen.queryByRole("heading", { name: "park.trailsTitle" })).not.toBeInTheDocument();
+  });
+
+  it("opens details for a visit whose only content is assigned trails", () => {
+    render(
+      <VisitAccordion
+        parkSlug="pallas"
+        visits={[{ ...visits[0], trails: [{ id: 10, name: "Polku", slug: "polku" }] }]}
+      />,
+    );
+    expect(screen.getByRole("heading", { name: "park.trailsTitle" })).toBeInTheDocument();
+    expect(screen.getByText("Polku")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "park.hideDetails" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
   });
 
   it("shows expandable items for visits with notes, images or authors", () => {

@@ -1,10 +1,13 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
-import { apiFetch } from "@/lib/api";
+import { ApiError, apiFetch } from "@/lib/api";
 import { revalidatePublicCache } from "@/lib/public-cache";
 import { AreaTrails } from "./area-trails";
 
-vi.mock("@/lib/api", () => ({ apiFetch: vi.fn() }));
+vi.mock("@/lib/api", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/api")>()),
+  apiFetch: vi.fn(),
+}));
 vi.mock("@/lib/public-cache", () => ({ revalidatePublicCache: vi.fn(async () => true) }));
 vi.mock("next-intl", () => ({ useTranslations: () => (key: string) => key }));
 
@@ -28,6 +31,24 @@ const linked = {
 beforeEach(() => {
   vi.clearAllMocks();
   vi.spyOn(window, "confirm").mockReturnValue(true);
+});
+
+it("keeps a visited trail linked and offers the blocking visits for review", async () => {
+  vi.mocked(apiFetch).mockRejectedValueOnce(
+    new ApiError(409, "Conflict", {
+      code: "TRAIL_HAS_VISITS",
+      visits: [{ id: 42, visitedOn: "2026-11-12" }],
+    }),
+  );
+  render(<AreaTrails slug="alue" initialTrails={[linked]} />);
+  fireEvent.click(screen.getByRole("button", { name: /removeLabel/ }));
+  expect(await screen.findByRole("alert")).toHaveTextContent("visitsPreventRemove");
+  expect(screen.getByRole("link", { name: "12.11.2026" })).toHaveAttribute(
+    "href",
+    "/hallinta/kaynnit/42/muokkaa",
+  );
+  expect(screen.getByRole("link", { name: "Polku" })).toBeInTheDocument();
+  expect(revalidatePublicCache).not.toHaveBeenCalled();
 });
 
 it("lets an admin search, include and exclude a trail while refreshing public caches", async () => {

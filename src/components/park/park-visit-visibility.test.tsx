@@ -95,9 +95,9 @@ describe("park visit visibility", () => {
   it("removes history and its navigation when the refreshed visible visits become empty", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce({ visits: [] });
     renderPage([visit]);
-    await waitFor(() =>
-      expect(screen.queryByRole("heading", { name: "Käyntihistoria" })).not.toBeInTheDocument(),
-    );
-    expect(screen.queryByRole("navigation", { name: "Osat" })).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByRole("heading", { name: "Käyntihistoria" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("navigation", { name: "Osat" })).not.toBeInTheDocument();
+    });
   });
 });
