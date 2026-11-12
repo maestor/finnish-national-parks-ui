@@ -72,6 +72,7 @@ Project-specific expectations:
 - Mock heavy child components where needed, but keep the page or layout composition real
 - Use these tests to cover route-level success, empty, error, and not-found behavior before dropping to helper-only tests
 - Trip and visit preview page tests should cover saved admin reads, noindex metadata, 404 versus operational errors, and canonical Finnish route shims. Admin preview API proxies must deny missing/non-admin sessions and preserve no-store responses.
+- Park trail visit tests should cover exact current-trail slug membership, public/admin collection changes, missing trail data, map styling precedence, and repeated dated-link navigation including keyboard, history and reduced motion. Verify desktop and mobile light/dark layouts without a map legend.
 - Park visit history tests should prove empty history and its navigation link are absent, section navigation is absent when location is the only section, public visitors receive only public visits, and authenticated admins load their park's admin projection. Draft-only history must appear with its navigation after the admin refresh, draft entries show a visible **Luonnos** label, and admin actions provide the park-prefilled add-visit link even without history. Trip assignment tests should exclude draft visits from the available choices.
 
 ### 2. E2E Tests (Playwright)

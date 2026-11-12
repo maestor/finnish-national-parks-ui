@@ -3,7 +3,7 @@
 import { ChevronDown, FileText, Images, Route, TentTree, User } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParkTrailNavigation } from "@/components/park/park-trail-navigation";
 import { CopyLinkButton } from "@/components/ui/copy-link-button";
 import { MarkdownContent } from "@/components/ui/markdown-content";
@@ -118,6 +118,40 @@ export const VisitAccordion = ({
     return firstExpandableVisitId;
   });
 
+  const handledVisit = useRef<number | null>(null);
+  const revealVisit = useCallback(
+    (id: number, scroll: boolean) => {
+      if (!visits.some((visit) => visit.id === id)) return false;
+      setOpenId(id);
+      handledVisit.current = id;
+      if (scroll)
+        requestAnimationFrame(() => {
+          const card = document.getElementById(`park-visit-${id}`);
+          const target = card?.querySelector<HTMLButtonElement>("button[aria-expanded]") ?? card;
+          target?.focus({ preventScroll: true });
+          card?.scrollIntoView?.({
+            behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+              ? "instant"
+              : "smooth",
+            block: "start",
+          });
+        });
+      return true;
+    },
+    [visits],
+  );
+  useEffect(() => {
+    if (initialOpenVisitId === null) handledVisit.current = null;
+    if (initialOpenVisitId !== null && handledVisit.current !== initialOpenVisitId) {
+      revealVisit(initialOpenVisitId, true);
+    }
+  }, [initialOpenVisitId, revealVisit]);
+  useEffect(() => {
+    const navigate = (event: Event) => revealVisit((event as CustomEvent<number>).detail, true);
+    window.addEventListener("park-visit-navigation", navigate);
+    return () => window.removeEventListener("park-visit-navigation", navigate);
+  }, [revealVisit]);
+
   const sortedByDateAsc = [...visits].sort(
     (a, b) => new Date(a.visitedOn).getTime() - new Date(b.visitedOn).getTime(),
   );
@@ -161,7 +195,8 @@ export const VisitAccordion = ({
             <div
               key={visit.id}
               id={`park-visit-${visit.id}`}
-              className={`flex items-center justify-between ${VISIT_CARD_CLASS_NAME} ${season.borderClass} ${isHighlighted ? "ring-2 ring-primary/35 ring-offset-2 ring-offset-background dark:ring-offset-slate-950/44" : ""} border-l-4 px-4 py-3`}
+              tabIndex={-1}
+              className={`scroll-mt-32 flex items-center justify-between ${VISIT_CARD_CLASS_NAME} ${season.borderClass} ${isHighlighted ? "ring-2 ring-primary/35 ring-offset-2 ring-offset-background dark:ring-offset-slate-950/44" : ""} border-l-4 px-4 py-3`}
             >
               <span className="flex flex-wrap items-center gap-2.5 text-sm font-medium">
                 <span
@@ -204,7 +239,8 @@ export const VisitAccordion = ({
           <div
             key={visit.id}
             id={`park-visit-${visit.id}`}
-            className={`overflow-hidden ${VISIT_CARD_CLASS_NAME} ${season.borderClass} ${isHighlighted ? "ring-2 ring-primary/35 ring-offset-2 ring-offset-background dark:ring-offset-slate-950/44" : ""} border-l-4`}
+            tabIndex={-1}
+            className={`scroll-mt-32 overflow-hidden ${VISIT_CARD_CLASS_NAME} ${season.borderClass} ${isHighlighted ? "ring-2 ring-primary/35 ring-offset-2 ring-offset-background dark:ring-offset-slate-950/44" : ""} border-l-4`}
           >
             <div className="flex items-center gap-3 px-4 py-3">
               <button

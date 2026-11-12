@@ -6,6 +6,8 @@ import {
   ParkVisitVisibilityProvider,
 } from "./park-visit-link";
 
+vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ isAuthenticated: false }) }));
+
 const { query } = vi.hoisted(() => ({ query: { value: "" } }));
 vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(query.value),
@@ -30,7 +32,10 @@ vi.mock("@/components/navigation/sticky-section-navigation", () => ({
 const render = (ui: React.ReactElement) =>
   rtlRender(ui, {
     wrapper: ({ children }) => (
-      <ParkVisitVisibilityProvider initialVisitIds={[10, 20]}>
+      <ParkVisitVisibilityProvider
+        parkSlug="pallas"
+        initialVisits={[{ id: 10 }, { id: 20 }] as import("@/lib/parks").Visit[]}
+      >
         {children}
       </ParkVisitVisibilityProvider>
     ),

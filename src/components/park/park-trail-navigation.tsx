@@ -19,6 +19,12 @@ export const ParkTrailNavigationProvider = ({
   const [request, setRequest] = useState<TrailNavigation["request"]>(null);
   const navigate = (slug: string) => {
     setRequest((previous) => ({ slug, sequence: (previous?.sequence ?? 0) + 1 }));
+    const url = new URL(window.location.href);
+    url.searchParams.delete("visit");
+    url.hash = "park-location";
+    if (url.href !== window.location.href) {
+      window.history.pushState(null, "", `${url.pathname}${url.search}${url.hash}`);
+    }
     const location = document.getElementById("park-location");
     location?.focus({ preventScroll: true });
     location?.scrollIntoView({

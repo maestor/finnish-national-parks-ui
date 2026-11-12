@@ -164,7 +164,7 @@ export const ParkDetailPage = async ({ params, authenticated = false }: ParkDeta
 
   return (
     <ParkAdminControlsProvider parkSlug={slug}>
-      <ParkVisitVisibilityProvider initialVisitIds={visits.map((visit) => visit.id)}>
+      <ParkVisitVisibilityProvider parkSlug={slug} initialVisits={visits}>
         <ParkTrailNavigationProvider
           trailSlugs={
             hasBoundaryGeoJson ? (publicPark.linkedTrails ?? []).map((trail) => trail.slug) : []
@@ -304,6 +304,8 @@ export const ParkDetailPage = async ({ params, authenticated = false }: ParkDeta
                       boundingBox={publicPark.boundingBox}
                       markerPoint={publicPark.markerPoint}
                       parkName={publicPark.name}
+                      parkSlug={slug}
+                      visits={visits}
                       linkedTrails={publicPark.linkedTrails}
                       areaContent={<div className="mt-3">{areaContent}</div>}
                       areaActions={areaActions}

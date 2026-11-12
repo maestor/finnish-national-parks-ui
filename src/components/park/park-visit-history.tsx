@@ -2,11 +2,9 @@
 
 import { NotebookPen } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { VisitAccordion } from "@/components/park/visit-accordion";
 import { useAuth } from "@/hooks/use-auth";
-import { apiFetch } from "@/lib/api";
-import type { AdminParkVisits, Visit } from "@/lib/parks";
+import type { Visit } from "@/lib/parks";
 import { appRoutes, createPathWithSearchParams } from "@/lib/routes";
 
 interface ParkVisitHistoryProps {
@@ -15,7 +13,6 @@ interface ParkVisitHistoryProps {
   parkSlug: string;
   title: string;
   visits: Visit[];
-  onVisibleVisitsChange?: (visitIds: number[]) => void;
 }
 
 export const ParkVisitHistory = ({
@@ -24,43 +21,9 @@ export const ParkVisitHistory = ({
   parkSlug,
   title,
   visits,
-  onVisibleVisitsChange,
 }: ParkVisitHistoryProps) => {
   const auth = useAuth();
-  const [visibleVisits, setVisibleVisits] = useState<Visit[]>(visits);
-
-  useEffect(() => {
-    if (!auth.isAuthenticated) {
-      setVisibleVisits(visits);
-      return;
-    }
-
-    let isCurrent = true;
-
-    void apiFetch<AdminParkVisits>(`/api/admin/parks/${encodeURIComponent(parkSlug)}/visits`, {
-      cache: "no-store",
-    })
-      .then((response) => {
-        if (isCurrent) {
-          setVisibleVisits(response.visits);
-        }
-      })
-      .catch(() => {
-        if (isCurrent) {
-          setVisibleVisits(visits);
-        }
-      });
-
-    return () => {
-      isCurrent = false;
-    };
-  }, [auth.isAuthenticated, parkSlug, visits]);
-
-  useEffect(() => {
-    onVisibleVisitsChange?.(visibleVisits.map((visit) => visit.id));
-  }, [visibleVisits, onVisibleVisitsChange]);
-
-  if (visibleVisits.length === 0) return null;
+  if (visits.length === 0) return null;
 
   return (
     <section
@@ -100,7 +63,7 @@ export const ParkVisitHistory = ({
 
       <div className="mt-4">
         <VisitAccordion
-          visits={visibleVisits}
+          visits={visits}
           parkSlug={parkSlug}
           isEditable={auth.isAuthenticated}
           initialOpenVisitId={initialOpenVisitId}
