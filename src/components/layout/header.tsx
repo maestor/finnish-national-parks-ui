@@ -6,8 +6,8 @@ import {
   LogIn,
   LogOut,
   MapPin,
+  MapPinned,
   Menu,
-  Route,
   Settings,
   TentTree,
   X,
@@ -362,7 +362,7 @@ export const Header = () => {
                     className={MOBILE_SHEET_ITEM_CLASS}
                     onClick={closeMobileMenu}
                   >
-                    <Route className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    <MapPinned className="h-4 w-4 shrink-0" aria-hidden="true" />
                     <span>{t("nav.tripPlanner")}</span>
                   </Link>
                   {auth.isAuthenticated === true && (

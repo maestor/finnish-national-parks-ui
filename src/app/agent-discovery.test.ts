@@ -16,7 +16,7 @@ describe("agent discovery responses", () => {
     expect(body).toContain("[Paikat](https://reissuvihko.example.com/paikat)");
     expect(body).toContain("[Käynnit](https://reissuvihko.example.com/kaynnit)");
     expect(body).toContain("[Retket](https://reissuvihko.example.com/retket)");
-    expect(body).toContain("[Reitit](https://reissuvihko.example.com/reissusuunnittelu)");
+    expect(body).toContain("[Matkaopas](https://reissuvihko.example.com/reissusuunnittelu)");
     expect(body).toContain("[Sivukartta](https://reissuvihko.example.com/sitemap.xml)");
     expect(body).not.toContain("<!DOCTYPE");
     expect(body).not.toContain("/hallinta");
