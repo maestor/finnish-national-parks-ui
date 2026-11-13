@@ -36,6 +36,7 @@ import { AppImage } from "@/components/ui/app-image";
 import { CopyLinkButton } from "@/components/ui/copy-link-button";
 import { MarkdownContent } from "@/components/ui/markdown-content";
 import { VisitImageGallery } from "@/components/visits/visit-image-gallery";
+import { VisitTrailSection } from "@/components/visits/visit-trail-section";
 import { useAuth } from "@/hooks/use-auth";
 import { apiPublicFetch } from "@/lib/api";
 import { cn } from "@/lib/cn";
@@ -830,6 +831,7 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
                               id={getItineraryDetailsPanelId(itemKey)}
                               className={`space-y-3 border-t border-border bg-control px-5 py-4 transition-opacity duration-300  ${isOpen ? "opacity-100" : "opacity-0"}`}
                             >
+                              <VisitTrailSection trails={item.visit.trails} headingLevel={4} />
                               {item.visit.note !== null && (
                                 <section className="space-y-3">
                                   <h4 className={DETAIL_SECTION_HEADING_CLASS_NAME}>

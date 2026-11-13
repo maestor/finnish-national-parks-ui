@@ -9,6 +9,7 @@ import { CopyLinkButton } from "@/components/ui/copy-link-button";
 import { MarkdownContent } from "@/components/ui/markdown-content";
 import { EditVisitLink } from "@/components/visits/edit-visit-link";
 import { VisitImageGallery } from "@/components/visits/visit-image-gallery";
+import { VisitTrailSection } from "@/components/visits/visit-trail-section";
 import { formatFinnishDate } from "@/lib/fi-date";
 import type { Visit } from "@/lib/parks";
 import { createParkVisitHref } from "@/lib/public-visits";
@@ -312,36 +313,11 @@ export const VisitAccordion = ({
                 className="overflow-hidden min-h-0"
               >
                 <div className="space-y-3 border-t border-border bg-control px-4 py-3">
-                  {(visit.trails?.length ?? 0) > 0 && (
-                    <>
-                      <h3 className={DETAIL_SECTION_HEADING_CLASS_NAME}>
-                        <Route className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                        {t("trailsTitle")}
-                      </h3>
-                      <ul className="flex flex-wrap gap-2">
-                        {visit.trails?.map((trail) => (
-                          <li key={trail.id} className="min-w-0 max-w-full">
-                            {trailNavigation?.trailSlugs.includes(trail.slug) ? (
-                              <button
-                                type="button"
-                                aria-label={t("showTrailOnMap", { name: trail.name })}
-                                onClick={() => trailNavigation.navigate(trail.slug)}
-                                className={`${ROUTE_BADGE_CLASS_NAME} min-h-11 max-w-full cursor-pointer py-2 leading-snug hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring`}
-                              >
-                                <Route className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                                <span className="min-w-0 wrap-break-word">{trail.name}</span>
-                              </button>
-                            ) : (
-                              <span className={`${ROUTE_BADGE_CLASS_NAME} max-w-full leading-snug`}>
-                                <Route className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                                <span className="min-w-0 wrap-break-word">{trail.name}</span>
-                              </span>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    </>
-                  )}
+                  <VisitTrailSection
+                    trails={visit.trails}
+                    headingLevel={3}
+                    navigation={trailNavigation}
+                  />
                   {!!visit.note && (
                     <>
                       <h3 className={DETAIL_SECTION_HEADING_CLASS_NAME}>

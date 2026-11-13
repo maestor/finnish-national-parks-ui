@@ -5548,6 +5548,11 @@ export interface paths {
                                     updatedAt: string;
                                     visitedOn: string;
                                     imageCount: number;
+                                    trails?: {
+                                        id: number;
+                                        name: string;
+                                        slug: string;
+                                    }[];
                                 };
                             } | {
                                 /** @enum {string} */
@@ -6469,6 +6474,11 @@ export interface paths {
                                     updatedAt: string;
                                     visitedOn: string;
                                     imageCount: number;
+                                    trails?: {
+                                        id: number;
+                                        name: string;
+                                        slug: string;
+                                    }[];
                                 };
                             } | {
                                 /** @enum {string} */
