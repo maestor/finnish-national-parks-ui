@@ -134,6 +134,7 @@ const trip: PublicTripDetail = {
           typeLabel: "Kansallispuisto",
         },
         route: "Punarinnankierros",
+        trails: [{ id: 100, name: "Haukankierros", slug: "haukankierros" }],
         updatedAt: "2024-06-15T10:00:00Z",
         visitedOn: "2024-06-15",
         imageCount: 1,
@@ -181,6 +182,7 @@ const trip: PublicTripDetail = {
           typeLabel: "Kansallispuisto",
         },
         route: null,
+        trails: [],
         updatedAt: "2024-06-18T10:00:00Z",
         visitedOn: "2024-06-18",
         imageCount: 2,
@@ -807,6 +809,39 @@ describe("PublicTripPage", () => {
     expect(mockScrollTo).not.toHaveBeenCalled();
 
     getElementByIdSpy.mockRestore();
+  });
+
+  it("shows linked trails in the expanded visit details even when there are no notes or images", async () => {
+    const user = userEvent.setup();
+    const trailsOnlyTrip: PublicTripDetail = {
+      ...trip,
+      itinerary: trip.itinerary.map((item) =>
+        item.kind === "visit" && item.visit.id === 11
+          ? { ...item, visit: { ...item.visit, note: null, imageCount: 0 } }
+          : item,
+      ),
+    };
+    render(<PublicTripPage trip={trailsOnlyTrip} />);
+    const card = screen.getByRole("link", { name: "Nuuksio" }).closest("li");
+    if (!(card instanceof HTMLElement)) throw new Error("Expected visit card");
+    expect(
+      within(card).queryByRole("heading", { name: "park.trailsTitle" }),
+    ).not.toBeInTheDocument();
+    await user.click(within(card).getByRole("button", { name: "tripPage.showVisit" }));
+    expect(within(card).getByRole("heading", { name: "park.trailsTitle" })).toBeVisible();
+    const badge = within(card).getByText("Haukankierros");
+    expect(badge).toBeVisible();
+    expect(badge.closest("a, button")).toBeNull();
+    expect(within(card).getByRole("link", { name: "Nuuksio" })).toHaveAttribute(
+      "href",
+      "/paikka/nuuksio?visit=11#visit-history",
+    );
+    const otherCard = screen.getByRole("link", { name: "Pallas-Yllästunturi" }).closest("li");
+    if (!(otherCard instanceof HTMLElement)) throw new Error("Expected other visit card");
+    await user.click(within(otherCard).getByRole("button", { name: "tripPage.showVisit" }));
+    expect(
+      within(otherCard).queryByRole("heading", { name: "park.trailsTitle" }),
+    ).not.toBeInTheDocument();
   });
 
   it("opens trip visit details inline and loads image galleries without leaving the page", async () => {

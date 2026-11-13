@@ -5,6 +5,7 @@ import {
   ChevronUp,
   LoaderCircle,
   LocateFixed,
+  MapPinned,
   Route,
   SlidersHorizontal,
 } from "lucide-react";
@@ -944,7 +945,7 @@ export const TripPlannerPage = () => {
         <div className="flex items-start justify-between gap-3">
           <div className={cn("min-w-0 flex-1", PUBLIC_HERO_HEADING_STACK_CLASS_NAME)}>
             <div className={PUBLIC_EYEBROW_BADGE_CLASS_NAME}>
-              <Route className="h-4 w-4" aria-hidden="true" />
+              <MapPinned className="h-4 w-4" aria-hidden="true" />
               <span>{t("eyebrow")}</span>
             </div>
             <h1 className={PUBLIC_HERO_TITLE_CLASS_NAME}>{t("title")}</h1>

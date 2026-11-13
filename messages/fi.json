@@ -25,7 +25,7 @@
       "map": "Paikat",
       "visits": "Käynnit",
       "trips": "Retket",
-      "tripPlanner": "Reitit",
+      "tripPlanner": "Matkaopas",
       "controlPanel": "Hallinta",
       "filters": "Suodata karttaa",
       "menu": "Valikko",
@@ -59,7 +59,7 @@
   "home": {
     "title": "Reissuvihko",
     "mapTitle": "Paikkakartta",
-    "summary": "Reissuvihko kokoaa tekijöidensä käynnit Suomen retkeilypaikoista, tarinat kuvineen muistoina retkistä sekä yksittäisistä käynneistä Suomen luonnossa. Voit myös selata paikkoja kartalla ja reissusuunnittella omat retkesi.\n\nHyppää mukaan hakemaan inspiraatiota ja ideoimaan vaikka omia reissuja ulkoilun merkeissä!",
+    "summary": "Reissuvihko kokoaa tekijöidensä käynnit Suomen retkeilypaikoista, tarinat kuvineen muistoina retkistä sekä yksittäisistä käynneistä Suomen luonnossa. Voit myös selata paikkoja kartalla ja suunnitella omia retkiä Matkaoppaan avulla.\n\nHyppää mukaan hakemaan inspiraatiota ja ideoimaan vaikka omia reissuja ulkoilun merkeissä!",
     "aboutTitle": "Mistä on kyse",
     "description": "Vuokko ja Kalle tutustuivat toisiinsa vuonna 2017 ja yhteiseen matkaan on kuulunut aina jaettu intohimo luonnossa liikkumiseen.\n\nKäytyjä kansallispuistoja on keräilty jo tovi sähkökaapin oveen kiinnitettävien magneettien muodossa ja kaikenlaisilla muillakin metsäreiteillä on vierailtu aina mahdollisuuksien mukaan.\n\nKallen pitkä tausta ohjelmointialalla ja tekoälyavusteisen tekemisen harjoittelu synnytti Reissuvihkon: Nyt paikkakäynnit muistoineen ovat näppärästi dokumentoitu yhdelle sivustolle.\n\nTervetuloa seuraamaan meidän matkaa luonnon äärellä ja hakemaan vaikka inspiraatiota omiin retkiin!",
     "openMap": "Siirry kartalle",
@@ -335,7 +335,7 @@
   },
   "tripPlanner": {
     "eyebrow": "Matkan varrelta",
-    "title": "Reitit",
+    "title": "Matkaopas",
     "description": "Reissun päälle lähdössä? Suunnittele tästä matkasi!\nAnna lähtöpiste, ja näet paikat sen lähellä. Mikäli annat myös määränpään, näät reitin ja paikat matkan varrella.",
     "originLabel": "Lähtöpiste",
     "originPlaceholder": "Esim. Helsinki",
@@ -470,7 +470,7 @@
       },
       "map": {
         "title": "Kartta ja paikkaluettelo",
-        "description": "Päivitä kartta, reissusuunnittelu, paikkojen hallinta ja sivustokartta.",
+        "description": "Päivitä kartta, Matkaopas, paikkojen hallinta ja sivustokartta.",
         "button": "Päivitä kartta"
       },
       "visits": {
