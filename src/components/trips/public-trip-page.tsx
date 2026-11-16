@@ -6,6 +6,7 @@ import {
   ChevronDown,
   FileText,
   Images,
+  MapPin,
   Route,
   Signpost,
   TentTree,
@@ -802,7 +803,7 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
                             <div className="mt-3 flex flex-wrap gap-2">
                               {item.visit.route !== null && (
                                 <span className={ROUTE_BADGE_CLASS_NAME}>
-                                  <Route className="h-3.5 w-3.5" aria-hidden="true" />
+                                  <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
                                   {item.visit.route}
                                 </span>
                               )}

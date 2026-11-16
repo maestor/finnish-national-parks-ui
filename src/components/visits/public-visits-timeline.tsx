@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUp, CalendarRange, Footprints, Images, Route, TentTree } from "lucide-react";
+import { ArrowUp, CalendarRange, Footprints, Images, MapPin, TentTree } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -315,7 +315,7 @@ const PublicVisitsTimelineContent = ({
         <ParkTypeBadge label={visit.park.typeLabel} />
         {visit.route !== null && (
           <span className={PUBLIC_ROUTE_BADGE_CLASS_NAME}>
-            <Route className="h-3.5 w-3.5" aria-hidden="true" />
+            <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
             {visit.route}
           </span>
         )}
