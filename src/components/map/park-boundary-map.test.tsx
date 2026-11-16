@@ -167,6 +167,32 @@ describe("ParkBoundaryMap", () => {
     mockMap = createMockMap();
   });
 
+  it("draws every line of a multi-part trail with the same selection identity", () => {
+    render(
+      <ParkBoundaryMap
+        boundaryGeoJson={mockBoundaryGeoJson}
+        boundingBox={mockBoundingBox}
+        markerPoint={mockMarkerPoint}
+        parkName="Test Park"
+        linkedTrails={[mockLinkedTrail]}
+      />,
+      { wrapper: I18nProvider },
+    );
+    const lineFeatures = mockLinkedTrail.boundaryGeoJson.features.filter(
+      (feature) => feature.geometry.type === "LineString",
+    );
+    expect(mockMap.addSource).toHaveBeenCalledWith("park-trails", {
+      type: "geojson",
+      data: {
+        type: "FeatureCollection",
+        features: lineFeatures.map((feature) => ({
+          ...feature,
+          properties: { slug: "pitka-reitti" },
+        })),
+      },
+    });
+  });
+
   it("updates persistent visited layers without moving the camera or replacing geometry", () => {
     const props = {
       boundaryGeoJson: mockBoundaryGeoJson,
