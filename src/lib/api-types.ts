@@ -2124,6 +2124,13 @@ export interface paths {
                                         /** Format: uri */
                                         sourceUrl: string;
                                     }[];
+                                } | {
+                                    /** @enum {string} */
+                                    type: "openstreetmap-curated";
+                                    attribution: string;
+                                    /** Format: uri */
+                                    licenseUrl: string;
+                                    sourceUrls: string[];
                                 };
                                 boundaryGeoJson: {
                                     features: {
@@ -2317,6 +2324,13 @@ export interface paths {
                                         /** Format: uri */
                                         sourceUrl: string;
                                     }[];
+                                } | {
+                                    /** @enum {string} */
+                                    type: "openstreetmap-curated";
+                                    attribution: string;
+                                    /** Format: uri */
+                                    licenseUrl: string;
+                                    sourceUrls: string[];
                                 };
                                 boundaryGeoJson: {
                                     features: {

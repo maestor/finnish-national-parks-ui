@@ -65,6 +65,33 @@ const props = {
 };
 
 describe("ParkLocation", () => {
+  it.each([
+    {
+      type: "openstreetmap" as const,
+      relationId: 123,
+      sourceUrl: "https://www.openstreetmap.org/relation/123",
+      attribution: "© OpenStreetMap contributors",
+      licenseUrl: "https://opendatacommons.org/licenses/odbl/1-0/",
+    },
+    {
+      type: "openstreetmap-curated" as const,
+      sourceUrls: ["https://www.openstreetmap.org/way/123"],
+      attribution: "© OpenStreetMap contributors",
+      licenseUrl: "https://opendatacommons.org/licenses/odbl/1-0/",
+    },
+  ])("shows trail details without a separate source panel for $type", async (source) => {
+    const user = userEvent.setup();
+    render(<ParkLocation {...props} linkedTrails={[{ ...trails[0], source }]} />, {
+      wrapper: I18nProvider,
+    });
+    await user.click(screen.getByRole("button", { name: "Tunnettu reitti" }));
+    const panel = screen.getByTestId("selection-details");
+    expect(within(panel).getByText("Tunnettu reitti")).toBeInTheDocument();
+    expect(within(panel).getByText("2,5 km")).toBeInTheDocument();
+    expect(within(panel).queryByText("© OpenStreetMap contributors")).not.toBeInTheDocument();
+    expect(within(panel).queryByText("Reitin lähdetiedot")).not.toBeInTheDocument();
+    expect(within(panel).queryByRole("link", { name: /OSM-kohde|ODbL/ })).not.toBeInTheDocument();
+  });
   it("shows only explicitly linked visit dates for current trails", async () => {
     const user = userEvent.setup();
     const visits = [
@@ -90,6 +117,26 @@ describe("ParkLocation", () => {
       "/paikka/puisto?visit=2#visit-history",
     );
     expect(within(panel).queryByText("13.9.2020")).not.toBeInTheDocument();
+    const link = within(panel).getByRole("link", { name: /3.5.2025/ });
+    link.addEventListener("click", (event) => event.preventDefault());
+    const dispatch = vi.spyOn(window, "dispatchEvent");
+    for (const options of [
+      { metaKey: true },
+      { ctrlKey: true },
+      { shiftKey: true },
+      { altKey: true },
+      { button: 1 },
+    ]) {
+      fireEvent.click(link, options);
+      expect(dispatch).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: "park-visit-navigation" }),
+      );
+    }
+    fireEvent.click(link);
+    expect(dispatch).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "park-visit-navigation", detail: 2 }),
+    );
+    dispatch.mockRestore();
   });
   it("distinguishes same-day visits and clears visited state when membership disappears", async () => {
     const user = userEvent.setup();
