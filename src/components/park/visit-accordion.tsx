@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, FileText, Images, Route, TentTree, User } from "lucide-react";
+import { ChevronDown, FileText, Images, MapPin, TentTree, User } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -211,7 +211,7 @@ export const VisitAccordion = ({
                 {draftStatusBadge}
                 {!!visit.route && (
                   <span className={ROUTE_BADGE_CLASS_NAME}>
-                    <Route className="h-3.5 w-3.5" aria-hidden="true" />
+                    <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
                     {visit.route}
                   </span>
                 )}
@@ -265,7 +265,7 @@ export const VisitAccordion = ({
                   {draftStatusBadge}
                   {!!visit.route && (
                     <span className={ROUTE_BADGE_CLASS_NAME}>
-                      <Route className="h-3.5 w-3.5" aria-hidden="true" />
+                      <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
                       {visit.route}
                     </span>
                   )}
