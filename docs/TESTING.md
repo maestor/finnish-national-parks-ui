@@ -14,12 +14,12 @@ Read the `intelligence-testing` skill (`.agents/skills/intelligence-testing/`) f
 
 ## Testing Stack
 
-| Layer            | Tool                                        | Command            |
-| ---------------- | ------------------------------------------- | ------------------ |
-| Unit / Component | Vitest + jsdom + Testing Library            | `npm run test`     |
-| Coverage         | Vitest + V8 coverage                        | `npm run test:coverage` |
-| E2E              | Playwright                                  | `npm run test:e2e` |
-| Quality Gate     | All of the above + typecheck + lint + build | `npm run verify`   |
+| Layer            | Tool                                               | Command                 |
+| ---------------- | -------------------------------------------------- | ----------------------- |
+| Unit / Component | Vitest + jsdom + Testing Library                   | `npm run test`          |
+| Coverage         | Vitest + V8 coverage                               | `npm run test:coverage` |
+| E2E              | Playwright                                         | `npm run test:e2e`      |
+| Quality Gate     | Typecheck, lint, Vitest with coverage, and build   | `npm run verify`        |
 
 ---
 
@@ -130,11 +130,11 @@ The signed-out control-panel smoke checks the canonical `/kirjaudu` redirect and
 
 ## Production cache verification
 
-Run `npm run test:cache` when changing public rendering, route caching, sitemap generation, fixed icons, or the cookie-aware park rewrite. It builds against a stopped synthetic API endpoint, then owns temporary loopback fixture/UI servers on ports 4398/4399. Both ports must be free. Synthetic API and JWT settings override the corresponding local settings. The command replaces the local `.next` production build and closes its browser and servers on completion or failure.
+Before maintainer review, run `npm run test:cache` when changing public rendering, route caching, sitemap generation, fixed icons, or the cookie-aware park rewrite. It builds against a stopped synthetic API endpoint, then owns temporary loopback fixture/UI servers on ports 4398/4399. Both ports must be free. Synthetic API and JWT settings override the corresponding local settings. The command replaces the local `.next` production build and closes its browser and servers on completion or failure.
 
 The check proves rendered cache hits without repeated API reads, edit and sitemap invalidation, super-admin bulk refresh of park and trip details, withdrawal with the normal mutation profile, hidden-park isolation in both request orders, upstream failure recovery, Finnish redirects, query-selected visit links on reload, and public HTML before hydration. It also checks the cache management page at desktop and mobile sizes, the production prerender manifest for on-demand pages and build-generated icons. Fixtures in `src/test/fixtures/public-cache.mts` are checked against generated API types.
 
-Browser checks use the project's version-matched Chromium headless shell with `headless: true`, no desktop browser channel and no personal session. Install the prerequisite with `npx playwright install chromium --only-shell` if absent. This focused check is separate from `npm run verify`; use it alongside focused Vitest tests before the review pause, and retain the normal final gate after acceptance.
+Browser checks use the project's version-matched Chromium headless shell with `headless: true`, no desktop browser channel and no personal session. Install the prerequisite with `npx playwright install chromium --only-shell` if absent. Report the cache check alongside focused Vitest results in the review handoff. See the [verification checklist](#verification-checklist-before-handoff).
 
 ## Coverage Baseline
 
@@ -278,14 +278,20 @@ When a change touches security, resilience, or resource usage, add the cheapest 
 
 ## Verification Checklist Before Handoff
 
+### Before maintainer review
+
+Run focused checks that exercise the changed behavior and address their failures before requesting review. Include browser verification when the change affects rendering, responsive layout, themes, or interactions. In the handoff, report what you exercised, the observed result, and any blocked checks. For security-sensitive or resource-sensitive changes, name the specific boundary your check covered.
+
+### After acceptance
+
+Run the full gate before committing and pushing.
+
 ```bash
 npm run verify
 ```
 
-This runs: typecheck → lint → coverage-tested Vitest suite → build.
+The gate runs typecheck, lint, the Vitest suite with coverage, and the production build. Resolve any failures before committing.
 
 The `typecheck` step clears old generated Next type folders first, then regenerates route/page/layout types for the current branch before running `tsc`, so verification stays anchored to the checked-out implementation instead of stale `.next` artifacts.
 
-If any step fails, fix before review. If environment limits block verification (e.g., backend not running), report the specific gap clearly.
-
-For security-sensitive or resource-sensitive changes, also report the focused checks you ran beyond the broad gate so future reviewers know the critical boundary was exercised on purpose.
+For changes limited to documentation or repository configuration outside what the gate validates, use focused checks and explain the full gate exception in the PR notes.
