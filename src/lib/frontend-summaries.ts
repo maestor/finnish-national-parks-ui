@@ -43,6 +43,7 @@ export const fetchHomeSummary = async (): Promise<HomeSummary> =>
 export const fetchMapSummary = async (): Promise<MapSummary> =>
   apiPublicFetch<MapSummary>("/api/map-summary", {
     cache: "force-cache",
+    headers: { "X-Reissuvihko-Cache-Version": "2" },
     next: {
       tags: [MAP_SUMMARY_TAG],
     },

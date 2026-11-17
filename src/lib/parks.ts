@@ -3,6 +3,9 @@ import type { paths } from "./api-types";
 export type Park =
   paths["/api/parks"]["get"]["responses"][200]["content"]["application/json"]["parks"][number];
 
+type PublicMapSummaryPark =
+  paths["/api/map-summary"]["get"]["responses"][200]["content"]["application/json"]["parks"][number];
+
 export type ParkSearchResult =
   paths["/api/parks/search"]["get"]["responses"][200]["content"]["application/json"]["parks"][number];
 
@@ -73,7 +76,7 @@ type OptionalParkMapFields = Pick<
 export type MapPark = ParkMapRequiredFields &
   Partial<OptionalParkMapFields> & {
     visitedSummary: VisitedSummary;
-  };
+  } & Pick<PublicMapSummaryPark, "lastVisitId">;
 
 export type FilterableMapPark = MapPark & Pick<Park, "category">;
 

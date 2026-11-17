@@ -1009,35 +1009,6 @@ describe("ParkMap", () => {
     expect(screen.getByText("map.locationUnavailable")).toBeInTheDocument();
   });
 
-  it("keeps the focused popup visible when the marker layer refreshes", () => {
-    const { rerender } = render(
-      <ParkMap
-        parks={parks}
-        canManageVisits={false}
-        homeParkFocusRequest={{
-          requestId: 1,
-          slug: "hetta",
-        }}
-      />,
-    );
-    triggerMapLoad();
-
-    expect(document.body).toHaveTextContent("Hetta");
-
-    rerender(
-      <ParkMap
-        parks={parks}
-        canManageVisits
-        homeParkFocusRequest={{
-          requestId: 1,
-          slug: "hetta",
-        }}
-      />,
-    );
-
-    expect(document.body).toHaveTextContent("Hetta");
-  });
-
   it("keeps the active popup visible when parks change but the active slug is still present", () => {
     const { rerender } = render(<ParkMap parks={parks} />);
     triggerMapLoad();
@@ -1179,20 +1150,46 @@ describe("ParkMap", () => {
     );
   });
 
-  it("shows an add visit link in the popup when visit management is enabled", () => {
-    render(<ParkMap parks={parks} canManageVisits />);
+  it("links to the identified latest visit from the popup", () => {
+    render(
+      <ParkMap
+        parks={[
+          {
+            ...parks[0],
+            lastVisitId: 42,
+            visitedSummary: { visited: true, visitCount: 1, lastVisitedOn: "2026-04-20" },
+          },
+        ]}
+      />,
+    );
     triggerMapLoad();
+    fireEvent.click(markerElements[0]);
 
-    fireEvent.mouseEnter(markerElements[0]);
+    expect(screen.getByRole("link", { name: "map.latestVisit" })).toHaveAttribute(
+      "href",
+      "/paikka/pallas?visit=42#visit-history",
+    );
+  });
+
+  it("keeps the park link usable for cached map data without a visit ID", () => {
+    render(
+      <ParkMap
+        parks={[
+          {
+            ...parks[0],
+            visitedSummary: { visited: true, visitCount: 1, lastVisitedOn: "2026-04-20" },
+          },
+        ]}
+      />,
+    );
+    triggerMapLoad();
+    fireEvent.click(markerElements[0]);
 
     expect(screen.getByRole("link", { name: "map.openParkPage" })).toHaveAttribute(
       "href",
       "/paikka/pallas",
     );
-    expect(screen.getByRole("link", { name: "map.addVisit" })).toHaveAttribute(
-      "href",
-      "/hallinta/kaynnit/uusi?park=pallas",
-    );
+    expect(screen.queryByRole("link", { name: "map.latestVisit" })).not.toBeInTheDocument();
   });
 
   it("closes an active popup when clicking on the map canvas outside markers and popups", () => {

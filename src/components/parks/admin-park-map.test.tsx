@@ -74,7 +74,6 @@ describe("AdminParkMap", () => {
     const lastCall = mockParkMap.mock.calls[mockParkMap.mock.calls.length - 1]?.[0];
     expect(lastCall.parks).toHaveLength(2);
     expect(lastCall.removedSlugs).toEqual(new Set(["removed-park"]));
-    expect(lastCall.canManageVisits).toBe(true);
   });
 
   it("syncs local map state when parent props change", () => {

@@ -7,7 +7,6 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SearchParamsObserver } from "@/components/providers/search-params-observer";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/cn";
 import {
   type FilterableParkTypeSlug,
@@ -145,7 +144,6 @@ interface ParkExplorerProps {
 
 export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
   const t = useTranslations("home.filters");
-  const auth = useAuth();
   const pathname = usePathname();
   const normalizedPathname = normalizeAppPath(pathname);
   const router = useRouter();
@@ -531,7 +529,6 @@ export const ParkExplorer = ({ parks, error }: ParkExplorerProps) => {
       <ParkMap
         parks={filteredParks}
         error={error}
-        canManageVisits={auth.isAuthenticated}
         homeParkFocusRequest={homeParkFocusRequest}
         resetViewRequestId={mapResetRequestId}
         pinMobileControlsToViewport

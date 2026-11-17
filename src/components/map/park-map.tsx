@@ -4,9 +4,11 @@ import { LoaderCircle, LocateFixed } from "lucide-react";
 import * as maplibregl from "maplibre-gl";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { formatFinnishDate } from "@/lib/fi-date";
 import type { MapPark } from "@/lib/parks";
 import { getParkTypeDisplayName, getVisitStatusColor } from "@/lib/parks";
-import { appRoutes, createPathWithSearchParams } from "@/lib/routes";
+import { createParkVisitHref } from "@/lib/public-visits";
+import { appRoutes } from "@/lib/routes";
 import {
   type HomeParkFocusRequest,
   useHomeMapControls,
@@ -28,7 +30,6 @@ import "maplibre-gl/dist/maplibre-gl.css";
 interface ParkMapProps {
   parks: MapPark[];
   error?: string | null;
-  canManageVisits?: boolean;
   homeParkFocusRequest?: HomeParkFocusRequest | null;
   resetViewRequestId?: number;
   pinMobileControlsToViewport?: boolean;
@@ -263,14 +264,13 @@ interface PopupLabels {
   officialLink: string;
   pdfBrochure: string;
   visits: string;
+  latestVisit: (date: string) => string;
   openParkPage: string;
-  addVisit: string;
 }
 
 const createPopupNode = (
   park: MapPark,
   labels: PopupLabels,
-  canManageVisits: boolean,
   isRemoved = false,
   onToggleRemoved?: (slug: string, removed: boolean) => void,
   toggleLabels?: { hide: string; show: string },
@@ -452,34 +452,22 @@ const createPopupNode = (
   parkLink.textContent = labels.openParkPage;
   parkLink.addEventListener("click", (e) => e.stopPropagation());
   summaryRow.appendChild(parkLink);
+
+  if (park.lastVisitId != null && park.visitedSummary.lastVisitedOn !== null) {
+    const latestVisitLink = document.createElement("a");
+    latestVisitLink.href = createParkVisitHref({ parkSlug: park.slug, visitId: park.lastVisitId });
+    latestVisitLink.className = parkLink.className;
+    latestVisitLink.textContent = labels.latestVisit(
+      formatFinnishDate(park.visitedSummary.lastVisitedOn),
+    );
+    latestVisitLink.addEventListener("click", (event) => event.stopPropagation());
+    summaryRow.appendChild(latestVisitLink);
+  }
   container.appendChild(summaryRow);
 
-  const actionRow = document.createElement("div");
-  actionRow.className = "mt-3 flex items-center gap-2 text-xs";
-
-  if (canManageVisits && !onToggleRemoved) {
-    const addLink = document.createElement("a");
-    addLink.href = createPathWithSearchParams(appRoutes.controlPanel.newVisit, {
-      park: park.slug,
-    });
-    addLink.className =
-      "inline-flex items-center gap-1 rounded-full border border-input bg-control px-3 py-1.5 font-medium text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] transition-colors hover:bg-accent ";
-    addLink.appendChild(
-      createSvgIcon({
-        className: "h-3.5 w-3.5",
-        paths: [{ d: "M5 12h14" }, { d: "M12 5v14" }],
-        stroke: "currentColor",
-        strokeLinecap: "round",
-        strokeLinejoin: "round",
-        strokeWidth: 2,
-      }),
-    );
-    addLink.appendChild(createTextSpan(labels.addVisit));
-    addLink.addEventListener("click", (e) => e.stopPropagation());
-    actionRow.appendChild(addLink);
-  }
-
   if (onToggleRemoved && toggleLabels) {
+    const actionRow = document.createElement("div");
+    actionRow.className = "mt-3 flex items-center gap-2 text-xs";
     const toggleBtn = document.createElement("button");
     toggleBtn.type = "button";
     if (isRemoved) {
@@ -497,9 +485,6 @@ const createPopupNode = (
     });
 
     actionRow.appendChild(toggleBtn);
-  }
-
-  if (canManageVisits || (onToggleRemoved && toggleLabels)) {
     container.appendChild(actionRow);
   }
 
@@ -509,7 +494,6 @@ const createPopupNode = (
 export const ParkMap = ({
   parks,
   error,
-  canManageVisits = false,
   homeParkFocusRequest = null,
   resetViewRequestId = 0,
   pinMobileControlsToViewport = false,
@@ -729,6 +713,7 @@ export const ParkMap = ({
       const popup =
         popupRef.current ??
         new maplibregl.Popup({
+          className: pinMobileControlsToViewport ? "public-park-map-popup" : undefined,
           closeButton: false,
           closeOnClick: false,
           maxWidth: "280px",
@@ -754,7 +739,7 @@ export const ParkMap = ({
       popup.addTo(map);
       setMapPopupInteractivity(popup, currentActiveSlug !== null);
     },
-    [parks],
+    [parks, pinMobileControlsToViewport],
   );
 
   // Initialize map
@@ -846,14 +831,14 @@ export const ParkMap = ({
       officialLink: t("officialLink"),
       pdfBrochure: t("pdfBrochure"),
       visits: t("visits"),
+      latestVisit: (date) => t("latestVisit", { date }),
       openParkPage: t("openParkPage"),
-      addVisit: t("addVisit"),
     };
 
     for (const park of parks) {
       const isRemoved = removedSlugs?.has(park.slug) ?? false;
       popupContentFactoriesRef.current.set(park.slug, () =>
-        createPopupNode(park, labels, canManageVisits, isRemoved, onToggleRemoved, toggleLabels),
+        createPopupNode(park, labels, isRemoved, onToggleRemoved, toggleLabels),
       );
     }
 
@@ -910,7 +895,6 @@ export const ParkMap = ({
     t,
     cancelClose,
     scheduleClose,
-    canManageVisits,
     focusPark,
     syncPopupVisibility,
     removedSlugs,
