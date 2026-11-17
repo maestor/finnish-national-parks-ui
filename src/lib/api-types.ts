@@ -3257,6 +3257,7 @@ export interface paths {
                                     /** @enum {string} */
                                     slug: "outdoor-recreation-area" | "cultural-history-area" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
                                 };
+                                lastVisitId?: number | null;
                                 visitedSummary: {
                                     lastVisitedOn: string | null;
                                     visitCount: number;

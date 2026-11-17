@@ -67,7 +67,14 @@ export const trip = {
 } satisfies PublicTripDetail;
 
 export const mapSummary = (revision: number): MapSummary => ({
-  parks: [{ ...park, name: `Testipuisto ${revision}`, visitedSummary: visits.visitedSummary }],
+  parks: [
+    {
+      ...park,
+      name: `Testipuisto ${revision}`,
+      lastVisitId: visits.visits[0].id,
+      visitedSummary: visits.visitedSummary,
+    },
+  ],
   version: revision,
   updatedAt: null,
 });

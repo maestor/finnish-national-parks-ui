@@ -407,3 +407,27 @@ summary::-webkit-details-marker {
 .maplibregl-popup.maplibregl-popup-anchor-bottom-right .maplibregl-popup-content {
   border-bottom-right-radius: 0;
 }
+
+@media (width < 48rem) {
+  .maplibregl-popup.public-park-map-popup {
+    inset: auto 0 calc(env(safe-area-inset-bottom, 0px) + 4.5rem);
+    width: calc(100% - 1rem);
+    max-height: min(70%, calc(100% - 5.5rem));
+    margin-inline: auto;
+    flex-direction: column;
+    /* biome-ignore lint/complexity/noImportantStyles: MapLibre writes the marker position as an inline transform. */
+    transform: none !important;
+  }
+
+  .maplibregl-popup.public-park-map-popup .maplibregl-popup-tip {
+    display: none;
+  }
+
+  .maplibregl-popup.public-park-map-popup .maplibregl-popup-content {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    border-radius: 1.5rem;
+  }
+}

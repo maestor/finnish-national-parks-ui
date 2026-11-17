@@ -15,15 +15,6 @@ const { pathnameState, searchParamsState, replaceMock } = vi.hoisted(() => ({
   replaceMock: vi.fn(),
 }));
 
-const mockUseAuth = vi.fn(() => ({
-  isAuthenticated: false,
-  isLoading: false,
-}));
-
-vi.mock("@/hooks/use-auth", () => ({
-  useAuth: () => mockUseAuth(),
-}));
-
 vi.mock("next/navigation", () => ({
   usePathname: () => pathnameState.value,
   useRouter: () => ({ replace: replaceMock }),
@@ -33,20 +24,17 @@ vi.mock("next/navigation", () => ({
 vi.mock("./park-map", () => ({
   ParkMap: ({
     parks,
-    canManageVisits,
     homeParkFocusRequest,
     resetViewRequestId,
     floatingControls,
   }: {
     parks: FilterableMapPark[];
-    canManageVisits?: boolean;
     homeParkFocusRequest?: { slug: string } | null;
     resetViewRequestId?: number;
     floatingControls?: ReactNode;
   }) => (
     <div>
       <p>count:{parks.length}</p>
-      <p>admin:{String(canManageVisits)}</p>
       <p>focus:{homeParkFocusRequest?.slug ?? "none"}</p>
       <p>reset:{resetViewRequestId ?? 0}</p>
       <div data-testid="floating-controls">{floatingControls}</div>
@@ -309,22 +297,10 @@ describe("ParkExplorer", () => {
     expect(replaceMock).not.toHaveBeenCalled();
   });
 
-  it("enables map admin quick actions for authenticated users", () => {
-    mockUseAuth.mockReturnValueOnce({
-      isAuthenticated: true,
-      isLoading: false,
-    });
-
-    render(<ParkExplorer parks={parks} />);
-
-    expect(screen.getByText("admin:true")).toBeInTheDocument();
-  });
-
   it("defaults to all visited parks and keeps the visit-status toggle active while switching park filters", () => {
     render(<ParkExplorer parks={parks} />);
 
     expect(screen.getByText("count:2")).toBeInTheDocument();
-    expect(screen.getByText("admin:false")).toBeInTheDocument();
     expect(screen.getByText("Päijänteen kansallispuisto")).toBeInTheDocument();
     expect(screen.getByText("Nuuksion vaellusreitti")).toBeInTheDocument();
     expect(screen.queryByText("Verlan tehdaskylä")).not.toBeInTheDocument();

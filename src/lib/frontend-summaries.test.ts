@@ -289,6 +289,7 @@ describe("createHomeProgressItems", () => {
 
     expect(apiPublicFetch).toHaveBeenCalledWith("/api/map-summary", {
       cache: "force-cache",
+      headers: { "X-Reissuvihko-Cache-Version": "2" },
       next: {
         tags: ["map-summary"],
       },

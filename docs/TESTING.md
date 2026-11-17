@@ -121,6 +121,8 @@ The signed-out control-panel smoke checks the canonical `/kirjaudu` redirect and
 
 `e2e/park-visit-anchors.spec.ts` protects the older-visit deep link at `/paikka/sipoonkorven-kansallispuisto?visit=21#visit-history`: the selected card is open and aligned below the navigation on entry and reload, while clicking Vierailut returns to the history heading. It requires Sipoonkorpi and published visit 21 in the local dataset and covers normal/reduced motion at the same desktop/mobile sizes.
 
+`e2e/park-map-popup.spec.ts` opens Pyhä-Häkki from the `/paikat` search on a touch viewport, checks that the popup fits at narrow and short sizes, and follows **Viimeisin käynti** to the expanded visit with the matching date. It requires Pyhä-Häkki with a published visit containing expandable details in the local dataset.
+
 `e2e/skip-to-content.spec.ts` checks the shared **Siirry sisältöön** link on `/` and `/kirjaudu` at desktop and `354x708` in both themes: it is initially visually hidden, appears on the first Tab press without clipping, focuses the main content on Enter, and lets the next Tab continue inside that content. The root-layout tests also protect the translated link and focusable main target. Inspect the focused link's stacking, contrast, and outline in the browser.
 
 **Responsive verification note:**

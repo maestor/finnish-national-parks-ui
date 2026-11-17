@@ -78,7 +78,6 @@ export const AdminParkMap = ({ parks, removedParks }: AdminParkMapProps) => {
         hide: t("map.hide"),
         show: t("map.show"),
       }}
-      canManageVisits
     />
   );
 };
