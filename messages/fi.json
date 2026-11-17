@@ -1157,12 +1157,17 @@
     "emptyPreview": "Ei vielä sisältöä.",
     "opensInNewTab": "avautuu uuteen välilehteen"
   },
+  "reviewStory": {
+    "trailLabel": "Reitti",
+    "trailsLabel": "Reitit"
+  },
   "yearReview": {
     "eyebrow": "Vuosikatsaus",
     "shareTitle": "Vuosikatsaus {year}",
     "shareDescription": "Käynnit, uudet paikat ja kuvat vuodelta {year} Reissuvihkossa.",
     "ogAlt": "Reissuvihkon vuosikatsaus.",
     "stats": {
+      "trips": "Retkiä yhteensä",
       "visits": "Käynnit yhteensä",
       "parks": "Paikat yhteensä",
       "newParks": "Uudet paikat",

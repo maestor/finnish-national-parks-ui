@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { YearReviewStory } from "./year-review-story";
@@ -480,6 +480,92 @@ const mockStoryPosition = (storyElement: HTMLElement, absoluteTop = 48, height =
 };
 
 describe("YearReviewStory", () => {
+  it.each([0, 2])("shows %i trips in the intro and first in the five-slot summary", (tripCount) => {
+    render(
+      <YearReviewStory
+        story={{ ...story, summary: { ...story.summary, tripCount } }}
+        mode="preview"
+      />,
+    );
+    const intro = within(screen.getByTestId("year-review-story-card-0"));
+    expect(intro.getByText("stats.trips").nextElementSibling).toHaveTextContent(String(tripCount));
+    expect(intro.queryByText("stats.parks")).not.toBeInTheDocument();
+    const summary = within(screen.getByTestId("year-review-story-card-3"));
+    const tiles = summary.getByText("stats.trips").parentElement?.parentElement;
+    if (!tiles) throw new Error("Expected the summary tiles");
+    expect([...tiles.children].map((tile) => tile.firstElementChild?.textContent)).toEqual([
+      "stats.trips",
+      "stats.visits",
+      "stats.newParks",
+      "stats.images",
+      "stats.activeMonths",
+    ]);
+    expect(summary.getByText("stats.trips").nextElementSibling).toHaveTextContent(
+      String(tripCount),
+    );
+    expect(summary.getByText("stats.visits").nextElementSibling).toHaveTextContent("7");
+  });
+
+  it("keeps the trip total unknown for older published snapshots without the count", () => {
+    render(<YearReviewStory story={story} mode="public" />);
+    const intro = within(screen.getByTestId("year-review-story-card-0"));
+    expect(intro.getByText("stats.trips").nextElementSibling).toHaveTextContent(
+      "story.notAvailable",
+    );
+    const summary = within(screen.getByTestId("year-review-story-card-3"));
+    expect(summary.getByText("stats.trips").nextElementSibling).toHaveTextContent(
+      "story.notAvailable",
+    );
+  });
+
+  it("shows assigned trails alongside the destination on visit and park cards", () => {
+    const trails = [{ id: 91, name: "Metsäpolku", slug: "metsapolku" }];
+    const trailStory = {
+      ...fallbackStory,
+      cards: fallbackStory.cards.map((card) => {
+        if (card.kind === "photo-highlight") {
+          return {
+            ...card,
+            visit: {
+              id: 99,
+              imageCount: 1,
+              park: { name: "Nuuksio", slug: "nuuksio" },
+              route: "Leiripaikka",
+              trip: null,
+              visitedOn: "2024-06-01",
+              trails: [...trails, { id: 92, name: "Rantapolku", slug: "rantapolku" }],
+            },
+          };
+        }
+        if (card.kind === "new-parks") {
+          return {
+            ...card,
+            parks: [
+              {
+                featuredImage: null,
+                park: { name: "Nuuksio", slug: "nuuksio" },
+                visitedOn: "2024-06-01",
+                trails,
+              },
+            ],
+          };
+        }
+        if (card.kind === "milestone") return { ...card, visit: { ...card.visit, trails } };
+        return card;
+      }),
+    };
+    render(<YearReviewStory story={trailStory} mode="public" />);
+    expect(screen.getByText("Leiripaikka")).toBeInTheDocument();
+    expect(screen.getByText("trailsLabel:").parentElement).toHaveTextContent(
+      "Metsäpolku, Rantapolku",
+    );
+    expect(screen.getByText("trailLabel").nextElementSibling).toHaveTextContent("Metsäpolku");
+    expect(screen.getAllByText("trailLabel:")).toHaveLength(1);
+    for (const label of screen.getAllByText("trailLabel:")) {
+      expect(label.parentElement).toHaveTextContent("Metsäpolku");
+    }
+  });
+
   it("renders the story cards with milestone and seasonal details", () => {
     render(
       <YearReviewStory

@@ -19,9 +19,11 @@ import {
 import { ParkTypeBadge } from "@/components/park/park-type-badge";
 import {
   getReviewStoryParkGridClassName,
+  REVIEW_STORY_METRIC_TILE_CLASS_NAME,
   ReviewStoryFooter,
   ReviewStoryPlaceCard,
   ReviewStorySectionHeader,
+  ReviewStoryTrails,
 } from "@/components/story/review-story-shared";
 import { useStoryProgressNavigation } from "@/components/story/use-story-progress-navigation";
 import { AppImage } from "@/components/ui/app-image";
@@ -130,7 +132,12 @@ const CARD_THEME_CLASS_NAMES: Record<DateRangeReviewCard["kind"], string> = {
 };
 
 const MetricTile = ({ label, value }: { label: string; value: number }) => (
-  <div className="rounded-[1.45rem] border border-border bg-control p-4 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.12)]">
+  <div
+    className={cn(
+      REVIEW_STORY_METRIC_TILE_CLASS_NAME,
+      "rounded-[1.45rem] p-4 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.12)]",
+    )}
+  >
     <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
     <p className="mt-2 text-3xl font-black tracking-tight text-foreground">{value}</p>
   </div>
@@ -260,6 +267,7 @@ const ReviewVisitList = ({
                     {formatFinnishDate(visit.visitedOn)}
                   </span>
                 </div>
+                <ReviewStoryTrails trails={visit.trails} />
               </div>
             </div>
           </li>
@@ -650,6 +658,7 @@ export const DateRangeReviewStory = ({
                               {card.visit.route}
                             </p>
                           )}
+                          <ReviewStoryTrails trails={card.visit.trails} />
                           {card.visit.trip !== null && (
                             <p className="text-sm text-muted-foreground">
                               <span className="font-semibold">{t("story.tripLabel")}:</span>{" "}
@@ -730,6 +739,7 @@ export const DateRangeReviewStory = ({
                         }
                         name={park.park.name}
                         dateText={formatFinnishLongDate(park.visitedOn)}
+                        extraContent={<ReviewStoryTrails trails={park.trails} />}
                         className={cn(
                           "border-border bg-control shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.12)]",
                           getMediaRevealClassName(shouldAnimateCardEntry),
@@ -807,6 +817,7 @@ export const DateRangeReviewStory = ({
                         dateText={formatFinnishLongDate(park.visitedOn)}
                         extraContent={
                           <>
+                            <ReviewStoryTrails trails={park.trails} />
                             <p className="text-sm text-muted-foreground">
                               {t("story.revisitedParkPreviousVisit", {
                                 date: formatFinnishLongDate(park.previousVisitDate),

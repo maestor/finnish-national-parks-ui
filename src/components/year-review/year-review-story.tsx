@@ -16,9 +16,11 @@ import { type CSSProperties, type ReactNode, useEffect, useRef, useState } from 
 import { PUBLIC_PANEL_CLASS_NAME } from "@/components/layout/public-page-styles";
 import {
   getReviewStoryParkGridClassName,
+  REVIEW_STORY_METRIC_TILE_CLASS_NAME as METRIC_TILE_CLASS_NAME,
   ReviewStoryFooter,
   ReviewStoryPlaceCard,
   ReviewStorySectionHeader,
+  ReviewStoryTrails,
 } from "@/components/story/review-story-shared";
 import { useStoryProgressNavigation } from "@/components/story/use-story-progress-navigation";
 import { AppImage } from "@/components/ui/app-image";
@@ -98,12 +100,12 @@ const REPEAT_SPOTLIGHT_MIN_VISITS = 3;
 
 const getSummaryHighlights = (story: YearReviewStoryData) => [
   {
-    labelKey: "stats.visits",
-    value: story.summary.visitCount,
+    labelKey: "stats.trips",
+    value: story.summary.tripCount ?? null,
   },
   {
-    labelKey: "stats.parks",
-    value: story.summary.distinctParkCount,
+    labelKey: "stats.visits",
+    value: story.summary.visitCount,
   },
   {
     labelKey: "stats.newParks",
@@ -177,9 +179,6 @@ const CARD_CONTAINER_CLASS_NAME =
 
 const CARD_INNER_GRID_CLASS_NAME =
   "relative z-10 flex min-h-112 flex-col justify-between gap-8 sm:min-h-128";
-
-const METRIC_TILE_CLASS_NAME =
-  "rounded-2xl border border-border bg-control px-4 py-3 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.18)] backdrop-blur-sm";
 
 const STORY_EYEBROW_BADGE_CLASS_NAME =
   "inline-flex items-center gap-2 rounded-full border border-border bg-control px-3 py-1 text-sm font-medium text-muted-foreground shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.18)] backdrop-blur-sm";
@@ -516,7 +515,7 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                               {t(item.labelKey)}
                             </p>
                             <p className="mt-2 text-3xl font-black tracking-tight text-foreground">
-                              {item.value}
+                              {item.value ?? t("story.notAvailable")}
                             </p>
                           </div>
                         ))}
@@ -570,7 +569,7 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                               {t(item.labelKey)}
                             </p>
                             <p className="mt-2 text-3xl font-black tracking-tight text-foreground">
-                              {item.value}
+                              {item.value ?? t("story.notAvailable")}
                             </p>
                           </div>
                         ))}
@@ -634,7 +633,7 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                         />
                       ) : null}
 
-                      <div className="grid gap-3 sm:grid-cols-2 lg:content-start">
+                      <div className="grid content-start gap-3">
                         {card.visit.route !== null && (
                           <div className={METRIC_TILE_CLASS_NAME}>
                             <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
@@ -645,6 +644,11 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                             </p>
                           </div>
                         )}
+                        <ReviewStoryTrails
+                          trails={card.visit.trails}
+                          className={METRIC_TILE_CLASS_NAME}
+                          variant="tile"
+                        />
                         {card.visit.trip !== null && (
                           <div className={METRIC_TILE_CLASS_NAME}>
                             <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
@@ -659,15 +663,7 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                           </div>
                         )}
 
-                        <div
-                          className={cn(
-                            METRIC_TILE_CLASS_NAME,
-                            milestoneHasPortraitFeaturedImage &&
-                              card.visit.route !== null &&
-                              card.visit.trip !== null &&
-                              "sm:col-span-2",
-                          )}
-                        >
+                        <div className={METRIC_TILE_CLASS_NAME}>
                           <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                             {t("stats.images")}
                           </p>
@@ -774,6 +770,7 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                                 {card.visit.route}
                               </p>
                             )}
+                            <ReviewStoryTrails trails={card.visit.trails} />
                             {card.visit.trip !== null && (
                               <p className="text-sm text-muted-foreground">
                                 <span className="font-semibold">{t("story.tripLabel")}:</span>{" "}
@@ -1008,32 +1005,40 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                         <ReviewStoryPlaceCard
                           key={parkMoment.park.slug}
                           className={cn(
-                            "overflow-hidden rounded-3xl border border-border bg-control shadow-[0_24px_56px_rgba(var(--shadow-rgb),0.2)]",
+                            "row-span-4 grid grid-rows-subgrid gap-0 overflow-hidden rounded-3xl border border-border bg-control shadow-[0_24px_56px_rgba(var(--shadow-rgb),0.2)]",
                             getMediaRevealClassName(shouldAnimateCardEntry),
                           )}
-                          style={getRevealStyle(shouldAnimateCardEntry, 180 + parkIndex * 90)}
+                          contentClassName="row-span-3 grid grid-rows-subgrid items-start gap-3 space-y-0"
+                          style={{
+                            ...getRevealStyle(shouldAnimateCardEntry, 180 + parkIndex * 90),
+                            // Layout containment prevents sharing subgrid rows across cards.
+                            contentVisibility: "visible",
+                          }}
                           href={appRoutes.park(parkMoment.park.slug)}
                           image={
-                            parkMoment.featuredImage ? (
-                              <StoryFeaturedImagePanel
-                                active={isActive}
-                                alt={
-                                  parkMoment.featuredImage.alt ??
-                                  `${parkMoment.park.name}, ${formatVisitDate(parkMoment.visitedOn)}`
-                                }
-                                delayMs={180 + parkIndex * 90}
-                                image={parkMoment.featuredImage}
-                                landscapeImageClassName="h-56 object-cover"
-                                portraitImageClassName="h-72 object-contain p-3"
-                                resolution="thumb"
-                                sizes="(min-width: 1280px) 20rem, (min-width: 768px) 24rem, 100vw"
-                                shouldAnimateEntry={shouldAnimateCardEntry}
-                                wrapperClassName="rounded-none border-0 bg-transparent shadow-none"
-                              />
-                            ) : undefined
+                            <div>
+                              {parkMoment.featuredImage ? (
+                                <StoryFeaturedImagePanel
+                                  active={isActive}
+                                  alt={
+                                    parkMoment.featuredImage.alt ??
+                                    `${parkMoment.park.name}, ${formatVisitDate(parkMoment.visitedOn)}`
+                                  }
+                                  delayMs={180 + parkIndex * 90}
+                                  image={parkMoment.featuredImage}
+                                  landscapeImageClassName="h-72 object-cover"
+                                  portraitImageClassName="h-72 object-contain p-3"
+                                  resolution="thumb"
+                                  sizes="(min-width: 1280px) 20rem, (min-width: 768px) 24rem, 100vw"
+                                  shouldAnimateEntry={shouldAnimateCardEntry}
+                                  wrapperClassName="max-w-none rounded-none border-0 bg-transparent shadow-none"
+                                />
+                              ) : null}
+                            </div>
                           }
                           name={parkMoment.park.name}
                           dateText={formatVisitDate(parkMoment.visitedOn)}
+                          extraContent={<ReviewStoryTrails trails={parkMoment.trails} />}
                         />
                       ))}
                     </div>
@@ -1147,7 +1152,7 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                             {t(item.labelKey)}
                           </p>
                           <p className="mt-2 text-2xl font-black tracking-tight text-foreground">
-                            {item.value}
+                            {item.value ?? t("story.notAvailable")}
                           </p>
                         </div>
                       ))}

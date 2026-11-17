@@ -330,6 +330,75 @@ const setScrollState = ({
 };
 
 describe("DateRangeReviewStory", () => {
+  it("shows assigned trails alongside the destination on visit and park cards", () => {
+    const trails = [{ id: 91, name: "Metsäpolku", slug: "metsapolku" }];
+    const trailStory = {
+      ...story,
+      cards: story.cards.map((card) => {
+        if (card.kind === "photo-highlight") {
+          return {
+            ...card,
+            visit: {
+              id: 99,
+              imageCount: 1,
+              park: { name: "Nuuksio", slug: "nuuksio" },
+              route: "Leiripaikka",
+              trip: null,
+              visitedOn: "2024-06-01",
+              trails: [...trails, { id: 92, name: "Rantapolku", slug: "rantapolku" }],
+            },
+          };
+        }
+        if (card.kind === "new-parks") {
+          return {
+            ...card,
+            parks: [
+              {
+                featuredImage: null,
+                park: { name: "Nuuksio", slug: "nuuksio" },
+                visitedOn: "2024-06-01",
+                trails,
+              },
+            ],
+          };
+        }
+        if (card.kind === "revisited-parks")
+          return { ...card, parks: card.parks.map((park) => ({ ...park, trails })) };
+        if (card.kind === "trip-summary")
+          return {
+            ...card,
+            trip: {
+              ...card.trip,
+              visits: [
+                {
+                  park: {
+                    name: "Nuuksio",
+                    slug: "nuuksio",
+                    typeLabel: "Kansallispuisto",
+                    typeSlug: "national-park",
+                  },
+                  visitedOn: "2024-06-01",
+                  trails,
+                },
+              ],
+            },
+          };
+        if (card.kind === "other-visits")
+          return { ...card, visits: card.visits.map((visit) => ({ ...visit, trails })) };
+        return card;
+      }),
+    };
+    render(<DateRangeReviewStory story={trailStory} mode="public" overview={overview} />);
+    expect(screen.getByText("Leiripaikka")).toBeInTheDocument();
+    expect(screen.getByText("trailsLabel:").parentElement).toHaveTextContent(
+      "Metsäpolku, Rantapolku",
+    );
+    expect(screen.getAllByText("trailLabel:")).toHaveLength(7);
+    for (const label of screen.getAllByText("trailLabel:")) {
+      expect(label.parentElement).toHaveTextContent("Metsäpolku");
+    }
+  });
+
   it("renders the sticky navigation title, shared Finnish date ranges, and corrected revisited totals", () => {
     render(
       <DateRangeReviewStory
