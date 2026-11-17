@@ -4068,6 +4068,11 @@ export interface paths {
                                             name: string;
                                             slug: string;
                                         } | null;
+                                        trails?: {
+                                            id: number;
+                                            name: string;
+                                            slug: string;
+                                        }[];
                                         visitedOn: string;
                                     } | null;
                                 } | {
@@ -4089,6 +4094,11 @@ export interface paths {
                                             name: string;
                                             slug: string;
                                         };
+                                        trails?: {
+                                            id: number;
+                                            name: string;
+                                            slug: string;
+                                        }[];
                                         visitedOn: string;
                                     }[];
                                 } | {
@@ -4112,6 +4122,11 @@ export interface paths {
                                         };
                                         previousVisitDate: string;
                                         revisitCount: number;
+                                        trails?: {
+                                            id: number;
+                                            name: string;
+                                            slug: string;
+                                        }[];
                                         visitedOn: string;
                                     }[];
                                 } | {
@@ -4144,6 +4159,11 @@ export interface paths {
                                                 typeLabel: string;
                                                 typeSlug: string;
                                             };
+                                            trails?: {
+                                                id: number;
+                                                name: string;
+                                                slug: string;
+                                            }[];
                                             visitedOn: string;
                                         }[];
                                         visitCount: number;
@@ -4158,6 +4178,11 @@ export interface paths {
                                             typeLabel: string;
                                             typeSlug: string;
                                         };
+                                        trails?: {
+                                            id: number;
+                                            name: string;
+                                            slug: string;
+                                        }[];
                                         visitedOn: string;
                                     }[];
                                 })[];
@@ -4742,6 +4767,11 @@ export interface paths {
                                             name: string;
                                             slug: string;
                                         } | null;
+                                        trails?: {
+                                            id: number;
+                                            name: string;
+                                            slug: string;
+                                        }[];
                                         visitedOn: string;
                                     } | null;
                                 } | {
@@ -4763,6 +4793,11 @@ export interface paths {
                                             name: string;
                                             slug: string;
                                         };
+                                        trails?: {
+                                            id: number;
+                                            name: string;
+                                            slug: string;
+                                        }[];
                                         visitedOn: string;
                                     }[];
                                 } | {
@@ -4786,6 +4821,11 @@ export interface paths {
                                         };
                                         previousVisitDate: string;
                                         revisitCount: number;
+                                        trails?: {
+                                            id: number;
+                                            name: string;
+                                            slug: string;
+                                        }[];
                                         visitedOn: string;
                                     }[];
                                 } | {
@@ -4818,6 +4858,11 @@ export interface paths {
                                                 typeLabel: string;
                                                 typeSlug: string;
                                             };
+                                            trails?: {
+                                                id: number;
+                                                name: string;
+                                                slug: string;
+                                            }[];
                                             visitedOn: string;
                                         }[];
                                         visitCount: number;
@@ -4832,6 +4877,11 @@ export interface paths {
                                             typeLabel: string;
                                             typeSlug: string;
                                         };
+                                        trails?: {
+                                            id: number;
+                                            name: string;
+                                            slug: string;
+                                        }[];
                                         visitedOn: string;
                                     }[];
                                 })[];
@@ -4958,6 +5008,11 @@ export interface paths {
                                             name: string;
                                             slug: string;
                                         } | null;
+                                        trails?: {
+                                            id: number;
+                                            name: string;
+                                            slug: string;
+                                        }[];
                                         visitedOn: string;
                                     };
                                 } | {
@@ -4988,6 +5043,11 @@ export interface paths {
                                             name: string;
                                             slug: string;
                                         } | null;
+                                        trails?: {
+                                            id: number;
+                                            name: string;
+                                            slug: string;
+                                        }[];
                                         visitedOn: string;
                                     } | null;
                                 } | {
@@ -5046,6 +5106,11 @@ export interface paths {
                                             name: string;
                                             slug: string;
                                         };
+                                        trails?: {
+                                            id: number;
+                                            name: string;
+                                            slug: string;
+                                        }[];
                                         visitedOn: string;
                                     }[];
                                 } | {
@@ -5070,6 +5135,7 @@ export interface paths {
                                     imageCount: number;
                                     newParkCount: number;
                                     revisitedParkCount: number;
+                                    tripCount?: number;
                                     visitCount: number;
                                     visitsBySeason: {
                                         autumn: number;
@@ -5310,6 +5376,11 @@ export interface paths {
                                             name: string;
                                             slug: string;
                                         } | null;
+                                        trails?: {
+                                            id: number;
+                                            name: string;
+                                            slug: string;
+                                        }[];
                                         visitedOn: string;
                                     };
                                 } | {
@@ -5340,6 +5411,11 @@ export interface paths {
                                             name: string;
                                             slug: string;
                                         } | null;
+                                        trails?: {
+                                            id: number;
+                                            name: string;
+                                            slug: string;
+                                        }[];
                                         visitedOn: string;
                                     } | null;
                                 } | {
@@ -5398,6 +5474,11 @@ export interface paths {
                                             name: string;
                                             slug: string;
                                         };
+                                        trails?: {
+                                            id: number;
+                                            name: string;
+                                            slug: string;
+                                        }[];
                                         visitedOn: string;
                                     }[];
                                 } | {
@@ -5422,6 +5503,7 @@ export interface paths {
                                     imageCount: number;
                                     newParkCount: number;
                                     revisitedParkCount: number;
+                                    tripCount?: number;
                                     visitCount: number;
                                     visitsBySeason: {
                                         autumn: number;

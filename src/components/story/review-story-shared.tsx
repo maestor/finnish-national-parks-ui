@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import type { CSSProperties, ReactNode } from "react";
 import { HeaderBrandMark } from "@/components/layout/header-brand-mark";
 import {
@@ -7,6 +8,9 @@ import {
 } from "@/components/layout/public-page-styles";
 import { cn } from "@/lib/cn";
 import { renderMultilineText } from "@/lib/multiline-text";
+
+export const REVIEW_STORY_METRIC_TILE_CLASS_NAME =
+  "flex flex-col justify-between rounded-2xl border border-border bg-control px-4 py-3 shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.18)] backdrop-blur-sm";
 
 export const REVIEW_STORY_COPY_CLASS_NAME =
   "max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base";
@@ -157,3 +161,31 @@ export const ReviewStoryFooter = ({
     )}
   </div>
 );
+
+export const ReviewStoryTrails = ({
+  trails,
+  className,
+  variant = "inline",
+}: {
+  trails?: { name: string }[];
+  className?: string;
+  variant?: "inline" | "tile";
+}) => {
+  const t = useTranslations("reviewStory");
+  if (!trails?.length) return null;
+  const label = t(trails.length === 1 ? "trailLabel" : "trailsLabel");
+  const names = trails.map((trail) => trail.name).join(", ");
+  if (variant === "tile") {
+    return (
+      <div className={className}>
+        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
+        <p className="mt-2 text-xl font-semibold text-foreground wrap-anywhere">{names}</p>
+      </div>
+    );
+  }
+  return (
+    <p className={cn("text-sm leading-6 text-muted-foreground wrap-anywhere", className)}>
+      <span className="font-semibold">{label}:</span> {names}
+    </p>
+  );
+};
