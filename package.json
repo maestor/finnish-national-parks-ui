@@ -24,7 +24,7 @@
     "test:cache": "npm run copy:maplibre-worker && node scripts/verify-public-cache.mjs",
     "test:e2e": "playwright test --project=chromium",
     "test:e2e:all": "playwright test",
-    "verify": "npm run typecheck && npm run lint:fix && npm run test:coverage && npm run build",
+    "verify": "npm run typecheck && npm run lint && npm run test:coverage && npm run build",
     "generate:api-types": "openapi-typescript http://localhost:3004/openapi.json -o src/lib/api-types.ts"
   },
   "dependencies": {

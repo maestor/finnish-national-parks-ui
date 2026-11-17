@@ -82,11 +82,12 @@ The `AUTH_JWT_SECRET` must match the backend's `AUTH_JWT_SECRET` exactly. `AUTH_
 | `npm run test:cache`                  | Production cache/privacy regression with synthetic API and headless Chromium                           |
 | `npm run test:e2e`                    | Run Playwright E2E (Chromium only)                                                                     |
 | `npm run test:e2e:all`                | Run Playwright E2E (all browsers)                                                                      |
-| `npm run verify`                      | Full gate: typecheck → lint:fix → test:coverage → build                                                |
+| `npm run verify`                      | Full gate: typecheck → lint → test:coverage → build                                                    |
 | `npm run generate:api-types`          | Regenerate `src/lib/api-types.ts` from backend OpenAPI                                                 |
 | `npm run copy:maplibre-worker`        | Sync the MapLibre v6 worker files into `public/maplibre/` (runs automatically via `predev`/`prebuild`) |
 
 Use focused checks while implementing, then pause for user review. After acceptance, run `npm run verify` before committing and pushing. Pull requests targeting `main` also run the same `npm run verify` gate in GitHub Actions.
+The lint stage checks the submitted files without writing fixes. Run `npm run lint:fix` explicitly to apply supported fixes during development.
 
 Plans and prototypes confined to the shared, untracked Reissuvihko Plans vault do not enter the Git workflow: leave the current branch unchanged, even on `main`, and review the artifacts directly. Create or switch to a working branch only when the task starts changing repository files, including tracked documentation or agent instructions.
 
