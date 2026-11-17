@@ -92,6 +92,11 @@ Plans and prototypes confined to the shared, untracked Reissuvihko Plans vault d
 
 The pull-request workflow grants `contents: read`, stops after 30 minutes, and cancels an older verification run for the same pull request when a newer commit arrives. Its checkout and Node setup actions are pinned to immutable official release SHAs; Dependabot updates those pins weekly. The separate weekly `Dependency Audit` workflow can be started manually, installs the locked dependency tree, and runs `npm audit --audit-level=high` with development dependencies included. It does not build the application or receive production secrets.
 
+Dependency security notes (2026-11-17):
+
+- `@tailwindcss/typography@0.5.20` pins `postcss-selector-parser@6.0.10`. The scoped override in `package.json` selects the patched `6.1.6` without downgrading typography. Remove the override when typography adopts a patched parser. See [GHSA-rj75-hqrm-r3gf](https://github.com/advisories/GHSA-rj75-hqrm-r3gf).
+- [GHSA-fc5q-39xc-vjpf](https://github.com/advisories/GHSA-fc5q-39xc-vjpf) affects all published `picomatch` versions through `4.0.7`; no patched release is available. It remains in the Vitest/Vite tooling tree and through `next-intl` → `@parcel/watcher`, so even `npm audit --omit=dev` reports it. The latter is used by next-intl's optional message-extraction watcher, which this project's plugin configuration does not enable. No request-supplied glob patterns were identified in application code. Keep both the full audit and production-only audit visible, avoid untrusted glob configuration, and update when a compatible patch is published; the audit workflow continues to fail at high severity.
+
 `npm run typecheck` intentionally clears `.next/types` and `.next/dev/types`, then rebuilds the current branch's route and App Router typings through `next typegen` before running `tsc`. This keeps local verification aligned with the checked-out implementation instead of stale generated artifacts from another branch.
 
 Tailwind class naming rule:

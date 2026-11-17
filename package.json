@@ -41,14 +41,14 @@
     "react-dom": "^19.2.8",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
-    "serwist": "^9.5.11",
+    "serwist": "^9.5.15",
     "tailwind-merge": "^3.6.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.11",
     "@playwright/test": "^1.62.1",
-    "@serwist/turbopack": "^9.5.12",
+    "@serwist/turbopack": "^9.5.15",
     "@tailwindcss/postcss": "^4.3.3",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
@@ -57,15 +57,18 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
     "@vitejs/plugin-react": "^6.1.1",
-    "@vitest/coverage-v8": "^4.1.8",
+    "@vitest/coverage-v8": "^4.1.12",
     "esbuild": "^0.28.2",
     "jsdom": "^30.0.1",
     "openapi-typescript": "^7.13.0",
     "tailwindcss": "^4",
     "typescript": "^5.9.3",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.12"
   },
   "overrides": {
-    "browserslist": "4.28.9"
+    "browserslist": "4.28.9",
+    "@tailwindcss/typography": {
+      "postcss-selector-parser": "6.1.6"
+    }
   }
 }
