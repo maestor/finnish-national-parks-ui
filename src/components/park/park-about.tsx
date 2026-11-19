@@ -1,6 +1,7 @@
 import { Info } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { ParkMaterialLinks } from "@/components/park/park-material-links";
+import { ParkWeather } from "@/components/park/park-weather";
 import { MarkdownContent } from "@/components/ui/markdown-content";
 import { SEASON_EMOJIS, type Season } from "@/lib/seasons";
 
@@ -20,6 +21,7 @@ export const ParkAbout = ({
   return (
     <section
       id="park-about"
+      tabIndex={-1}
       aria-labelledby="park-about-title"
       className="mt-6 scroll-mt-28 overflow-hidden rounded-[2rem] border border-border theme-panel shadow-[0_24px_48px_rgba(var(--shadow-rgb),0.14)] backdrop-blur-xl dark:shadow-[0_28px_56px_rgba(var(--shadow-rgb),0.3)]"
     >
@@ -31,6 +33,7 @@ export const ParkAbout = ({
           </h2>
         </div>
         {description !== null && <MarkdownContent className="mt-4">{description}</MarkdownContent>}
+        <ParkWeather />
         {seasons.length > 0 && (
           <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3 rounded-2xl border border-border/60 bg-control/45 px-4 py-3">
             <h3

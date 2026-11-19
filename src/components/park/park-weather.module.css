@@ -1,0 +1,99 @@
+.slots {
+  display: grid;
+}
+
+.metricLegend {
+  display: none;
+}
+
+.slot {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.time {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+
+.reading {
+  grid-column: 1;
+  grid-row: calc(var(--weather-metric) + 1);
+  text-align: start;
+}
+
+@container (min-width: 8rem) {
+  .slot {
+    grid-template-columns: repeat(var(--weather-metrics), minmax(0, 1fr));
+  }
+
+  .reading {
+    grid-column: var(--weather-metric);
+    grid-row: 2;
+    text-align: center;
+  }
+}
+
+@container (min-width: 12rem) {
+  .slot,
+  .metricLegend {
+    grid-template-columns:
+      minmax(3.75rem, 1.15fr)
+      repeat(var(--weather-metrics), minmax(0, 1fr));
+  }
+
+  .metricLegend {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .time {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .reading {
+    grid-column: calc(var(--weather-metric) + 1);
+    grid-row: 1;
+  }
+}
+
+@container (min-width: 23rem) {
+  .slots {
+    grid-template-columns: repeat(var(--weather-slots), minmax(0, 1fr));
+    margin-inline-start: 1.75rem;
+    max-inline-size: 36rem;
+  }
+
+  .metricLegend {
+    display: none;
+  }
+
+  .slot {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: subgrid;
+    grid-row: span calc(var(--weather-metrics) + 1);
+    align-items: stretch;
+  }
+
+  .time {
+    display: grid;
+    align-items: end;
+    justify-items: center;
+    justify-self: stretch;
+    padding-block-end: 0.25rem;
+  }
+
+  .reading {
+    grid-column: 1;
+    grid-row: calc(var(--weather-metric) + 1);
+    padding-block: 0.25rem;
+  }
+
+  .time,
+  .reading:not(:last-child) {
+    border-block-end: 1px solid color-mix(in oklab, var(--color-border) 60%, transparent);
+  }
+}

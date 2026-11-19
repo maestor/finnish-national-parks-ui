@@ -1365,6 +1365,100 @@ describe("App pages", () => {
     );
   });
 
+  it("moves materials into weather-only Kohteesta when the independent request resolves", async () => {
+    let deliverWeather: (weather: unknown) => void = () => undefined;
+    const weather = new Promise((resolve) => {
+      deliverWeather = resolve;
+    });
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({ ...publicPark, description: null, parkUrl: "https://example.com/" })
+      .mockResolvedValueOnce({ visits: [] })
+      .mockReturnValueOnce(weather);
+
+    await renderPublicRoute(await ParkDetailPage({ params: Promise.resolve({ slug: "pallas" }) }));
+    const location = document.getElementById("park-location") as HTMLElement;
+    expect(within(location).getByRole("link", { name: /^park.officialLink/ })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "park.aboutTitle" })).toBeNull();
+
+    await act(async () => {
+      const time = (minutes: number) => new Date(Date.now() + minutes * 60_000).toISOString();
+      deliverWeather({
+        forecast: {
+          point: { lat: 67.9, lon: 24.1 },
+          modelRunTime: time(-120),
+          expiresAt: time(60),
+          slots: [
+            {
+              time: time(30),
+              temperature: -3.4,
+              feelsLikeTemperature: 0,
+              precipitation: 0,
+              wind: 1.94,
+              weatherSymbol: 31,
+            },
+            { time: time(45), temperature: -4.4 },
+          ],
+        },
+      });
+    });
+
+    const about = screen.getByRole("region", { name: "park.aboutTitle" });
+    expect(screen.getByRole("link", { name: "park.sectionNav.about" })).toHaveAttribute(
+      "href",
+      "#park-about",
+    );
+    const readings = within(about).getByRole("list", { name: "park.weather.title" });
+    const [first, second] = within(readings).getAllByRole("listitem");
+    expect(within(first).getByText("park.weather.temperatureValue")).toBeVisible();
+    expect(within(first).getByText("park.weather.precipitationValue")).toBeVisible();
+    expect(within(first).getByText("park.weather.windValue")).toBeVisible();
+    expect(within(second).getByText("park.weather.temperatureValue")).toBeVisible();
+    expect(within(second).queryByText("park.weather.precipitationValue")).toBeNull();
+    expect(within(second).queryByText("park.weather.windValue")).toBeNull();
+    const firstDetails = within(first).getByRole("button", {
+      name: "park.weather.forecastDetails",
+    });
+    const firstPanel = document.getElementById(firstDetails.getAttribute("popovertarget") ?? "");
+    expect(firstPanel).toHaveTextContent("park.weather.conditions.31");
+    expect(firstPanel).toHaveTextContent("park.weather.temperatureFeelsLike");
+    expect(firstPanel).toHaveTextContent("park.weather.precipitationTitle");
+    const secondDetails = within(second).getByRole("button", {
+      name: "park.weather.forecastDetails",
+    });
+    const secondPanel = document.getElementById(secondDetails.getAttribute("popovertarget") ?? "");
+    expect(secondPanel).toHaveTextContent("park.weather.temperatureTitle");
+    expect(secondPanel).not.toHaveTextContent("park.weather.conditions.");
+    expect(secondPanel).not.toHaveTextContent("park.weather.precipitationTitle");
+    expect(within(about).getByRole("link", { name: /^park.officialLink/ })).toBeInTheDocument();
+    expect(within(location).queryByRole("link", { name: /^park.officialLink/ })).toBeNull();
+    const source = within(about).getByRole("button", { name: "park.weather.source" });
+    const sourcePanel = document.getElementById(source.getAttribute("popovertarget") ?? "");
+    expect(sourcePanel).toHaveAttribute("popover", "auto");
+    expect(sourcePanel).toHaveAttribute("aria-label", "park.weather.source");
+    expect(within(about).getByText("park.weather.fmi")).toHaveAttribute(
+      "href",
+      "https://www.ilmatieteenlaitos.fi/avoin-data",
+    );
+    expect(within(first).getByTitle("park.weather.windTitle")).toBeVisible();
+    expect(within(first).getByTitle("park.weather.temperatureFeelsLike")).toBeVisible();
+    expect(within(second).getByTitle("park.weather.temperatureTitle")).toBeVisible();
+
+    const expiredAt = Date.now() + 61 * 60_000;
+    const clock = vi.spyOn(Date, "now").mockReturnValue(expiredAt);
+    const network = vi.spyOn(window.navigator, "onLine", "get").mockReturnValue(false);
+    try {
+      await act(async () => {
+        window.dispatchEvent(new Event("pageshow"));
+      });
+      expect(screen.queryByRole("region", { name: "park.aboutTitle" })).toBeNull();
+      expect(screen.queryByRole("link", { name: "park.sectionNav.about" })).toBeNull();
+      expect(within(location).getByRole("link", { name: /^park.officialLink/ })).toBeVisible();
+    } finally {
+      clock.mockRestore();
+      network.mockRestore();
+    }
+  });
+
   it("renders the park detail page with main content and visit history", async () => {
     vi.mocked(apiFetch)
       .mockResolvedValueOnce({
