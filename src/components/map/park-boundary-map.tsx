@@ -12,7 +12,6 @@ import { ThreeDotPulse } from "../ui/three-dot-pulse";
 import { MAP_FLOATING_CONTROL_BUTTON_CLASS_NAME } from "./map-floating-control-styles";
 import { getMapStyle } from "./map-style";
 import "maplibre-gl/dist/maplibre-gl.css";
-import "./park-boundary-map.css";
 
 type BoundaryGeoJson = NonNullable<ParkDetail["boundaryGeoJson"]>;
 
@@ -497,7 +496,7 @@ export const ParkBoundaryMap = ({
       <div
         className={
           linkedTrails.length
-            ? "park-boundary-map-with-trails relative h-87.5 w-full overflow-hidden rounded-lg border md:h-107.5"
+            ? "relative h-87.5 w-full overflow-hidden rounded-lg border md:h-107.5"
             : "relative h-80 w-full overflow-hidden rounded-lg border"
         }
       >
@@ -524,7 +523,7 @@ export const ParkBoundaryMap = ({
           <Button
             type="button"
             variant="ghost"
-            className={`absolute bottom-3 left-3 ${MAP_FLOATING_CONTROL_BUTTON_CLASS_NAME}`}
+            className={`absolute top-3 left-3 md:top-auto md:bottom-3 ${MAP_FLOATING_CONTROL_BUTTON_CLASS_NAME}`}
             aria-label={t("wholeArea")}
             onClick={onReset}
           >
