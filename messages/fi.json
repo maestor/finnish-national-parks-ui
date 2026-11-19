@@ -89,7 +89,25 @@
       "githubUiText": "UI",
       "githubApi": "Reissuvihkon API GitHubissa",
       "githubApiText": "API",
-      "copyright": "Copyright © Kalle Haavisto 2026->"
+      "copyright": "Copyright © Kalle Haavisto 2026->",
+      "dataSources": {
+        "title": "Sovelluksessa käytetyt aineistolähteet",
+        "maps": "Kartat",
+        "places": "Paikat",
+        "routes": "Reitit",
+        "weather": "Sää",
+        "openStreetMap": "© OpenStreetMap contributors",
+        "lipas": "Jyväskylän yliopisto, Lipas-tietokanta",
+        "syke": "Suomen ympäristökeskus (Syke)",
+        "museovirasto": "Museovirasto",
+        "landSurvey": "Maanmittauslaitos",
+        "helsinkiOpenData": "Helsingin kaupungin avoimet paikkatiedot",
+        "geoapify": "Geoapify (Palvelun käyttöehdot)",
+        "geoapifyUsage": "Paikkahaku ja autoreitit",
+        "fmi": "Ilmatieteen laitos, säähavainnot ja sääennusteet",
+        "ccBy": "CC BY 4.0",
+        "odbl": "ODbL 1.0"
+      }
     },
     "filters": {
       "panelLabel": "Karttasuodattimet",
