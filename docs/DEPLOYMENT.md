@@ -59,23 +59,16 @@ Keep `AUTH_COOKIE_NAME` consistent with the API: the build's cookie-aware park r
 
 Use `npm run test:cache` for a synthetic production check of cache hits, publication refresh, private isolation and linked visits. See [production cache verification](TESTING.md#production-cache-verification).
 
-## Home-summary v2 rollout
+Apply API migrations and deploy compatible API changes before the UI.
+Coordinate promotion for breaking contract changes so incompatible versions
+do not serve traffic together. After deployment or direct imports, expire
+affected UI caches through the authenticated cache controls. For example,
+home-summary changes require expiring `home-summary` and revalidating `/`.
+API ETags alone cannot evict cached Next.js responses.
 
-The new home read model deliberately removes the four legacy list fields. Prepare paired API/UI previews, merge the API first and UI second, and promote the complete pair in one coordinated release. There is a brief incompatible window between API and UI promotion; do not publish the API change as an independent release with the old frontend still serving traffic. A release requiring no incompatible window needs coordinated traffic switching before promotion.
+## Service worker verification
 
-Immediately after promotion, use the existing admin-session, same-origin `POST /api/revalidate-public-cache` flow with `{ "expireImmediately": true }`. It expires `home-summary` and revalidates `/` along with the existing public tags/paths. The API's v2 ETag rejects old validators, but it cannot evict Next's cached v1 JSON; changing a tag alone does not change the fetch cache identity. Also invoke this flow after direct catalog imports affecting denominators or magnet flags. There is no legacy response adapter or service-worker cache change.
-
-## Featured-visit rollout
-
-Merge/deploy the API first with migration `0042_home_featured_visit.sql`, then the UI. The home summary adds nullable `featuredVisit`; its home ETag representation is now v3. Immediately expire the frontend `home-summary` cache through the same-origin authenticated `POST /api/revalidate-public-cache` flow with `{ "expireImmediately": true }` after promotion. The selection starts empty, and admin saves perform the same immediate expiration. Service-worker behavior is unchanged.
-
-## Curated park rollout
-
-Deploy migration `0045_home_featured_park.sql` and the API before the UI. `GET /api/home-summary` adds required nullable `featuredPark`, and home ETags use representation v4. The selection starts empty. Immediately expire the UI's `home-summary` cache using the authenticated, same-origin `POST /api/revalidate-public-cache` flow with `{ "expireImmediately": true }` after promotion; API ETags cannot evict already cached Next.js JSON. Admin selections use this same immediate expiration. No service-worker or offline-storage changes.
-
-## Current PWA note
-
-Production builds register the Serwist service worker. Development disables registration and removes a leftover registration for this app's worker, its scoped `serwist-precache-v2` cache and `public-static-v2`. Other origin caches and browser storage are preserved. If a normal localhost refresh loads stale JavaScript and reports old/new class-name hydration mismatches, hard-refresh once to load the development cleanup; subsequent normal refreshes should use current bundles. Production registration and caching are unchanged.
+Production builds register the Serwist service worker. Development disables registration and removes a leftover registration for this app's worker, its scoped `serwist-precache-v2` cache and `public-static-v2`. Other origin caches and browser storage are preserved. If a normal localhost refresh loads stale JavaScript and reports old/new class-name hydration mismatches, hard-refresh once to load the development cleanup; subsequent normal refreshes should use current bundles.
 
 When validating a deployment, include one real browser pass for:
 
@@ -113,7 +106,9 @@ The frontend proxy routes in this repo avoid sending the backend cookie directly
 
 The backend must know the frontend's real public URL for OAuth redirects and post-login redirects. Apply the current database migrations before enabling the control panel; existing email-only admins are enrolled through `/hallinta/kayttajat` after an enrolled admin signs in.
 
-For publication-status releases, deploy the API migration and status-aware handlers before the UI. Existing records are backfilled as published, but the new API defaults omitted create status to draft; keep admin editing paused during the gap until the UI sends explicit `draft` or `published` intent. Never roll back to API handlers that expose drafts after drafts have been created.
+Keep publication rules intact during deployment and rollback. Pause admin
+editing if a temporary version mismatch could change the requested draft or
+published status. Any rollback must continue to protect existing drafts.
 
 Typical values you will need on the backend side:
 
