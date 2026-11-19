@@ -103,16 +103,6 @@ describe("VisitAccordion", () => {
     },
   ];
 
-  const getVisitToggle = (dateLabel: string) => {
-    const button = screen.getByText(dateLabel).closest("button");
-
-    if (!(button instanceof HTMLButtonElement)) {
-      throw new Error(`No toggle button found for ${dateLabel}`);
-    }
-
-    return button;
-  };
-
   const getVisitCard = (dateLabel: string) => {
     const card = screen.getByText(dateLabel).closest(".rounded-lg");
 
@@ -122,6 +112,11 @@ describe("VisitAccordion", () => {
 
     return card;
   };
+
+  const getVisitToggle = (dateLabel: string) =>
+    within(getVisitCard(dateLabel)).getByRole("button", {
+      name: /park\.(showDetails|hideDetails)/,
+    });
 
   it("renders visits sorted newest first with correct numbering", () => {
     render(<VisitAccordion visits={visits} parkSlug="pallas" />);
@@ -264,7 +259,9 @@ describe("VisitAccordion", () => {
     expect(screen.getAllByRole("button", { name: "park.copyVisitLink" })).toHaveLength(5);
   });
 
-  it("shows a trip link for visits that belong to a trip", () => {
+  it("puts the trip first and keeps the trip link independent of the visit toggle", async () => {
+    const user = userEvent.setup();
+
     render(
       <VisitAccordion
         visits={[
@@ -281,10 +278,18 @@ describe("VisitAccordion", () => {
       />,
     );
 
-    expect(screen.getByRole("link", { name: "Kesaretki" })).toHaveAttribute(
-      "href",
-      "/retki/kesaretki",
+    const tripLink = screen.getByRole("link", { name: "Kesaretki" });
+    const toggle = screen.getByRole("button", { name: "park.hideDetails" });
+    expect(tripLink).toHaveAttribute("href", "/retki/kesaretki");
+    expect(tripLink.compareDocumentPosition(screen.getByText("Pallas-reitti"))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
     );
+    expect(toggle).not.toContainElement(tripLink);
+    tripLink.addEventListener("click", (event) => event.preventDefault());
+    tripLink.focus();
+    await user.keyboard("{Enter}");
+
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
   });
 
   it("shows edit links when editable", () => {
