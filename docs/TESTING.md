@@ -115,11 +115,17 @@ The signed-out control-panel smoke checks the canonical `/kirjaudu` redirect and
 
 `e2e/breadcrumbs.spec.ts` checks legacy archive redirects, direct trip entry, the complete mobile accessibility path, visually reduced ancestors and their keyboard-focus reveal, parent navigation, front-page/map omission, and placement as the first content in public archive/planner heroes. It requires a published trip for the detail flow. Component and route tests cover the Finnish route matrix, loaded entity names, admin list/new/edit/preview trails, and one non-link current item; inspect separator baselines, wrapped titles, and both themes in the browser.
 
-`e2e/year-review-layout.spec.ts` uses the loopback development login and the local 2026 review dataset (first/last visits, at least three new-magnet cards, and at least three July–October visits for the date-range preview). It checks full-width stacked visit tiles, image/title/date/trail row alignment, and aligned metric values across all year/date-range review slides despite wrapped labels at desktop, tablet and narrow mobile widths in both themes. Run it with `npx playwright test e2e/year-review-layout.spec.ts --project=chromium`; the API and UI must use the local admin-login setup described in the development guide.
+`e2e/year-review-layout.spec.ts` checks review tile alignment with wrapped
+labels across viewport sizes and themes. It requires the [local admin login](DEVELOPMENT.md#local-ai-agent-login)
+and populated 2026 year and date-range previews. See the spec for its exact
+fixture requirements.
 
 `e2e/section-anchors.spec.ts` checks direct entry, reload, and section-link clicks for shared trip-description and park-about links in fresh browser contexts with delayed client scripts, under normal and reduced motion. It checks the active link, consistent alignment below the sticky navigation, and a visible main header until the visitor scrolls. It requires a published trip with a description and a linked park with an about section; run it at desktop and `354x708` mobile sizes. Component tests protect short/final-section selection, streamed/hidden targets, header-offset changes, unchanged history, restoration cleanup, and header protection during automatic positioning versus user input.
 
-`e2e/park-visit-anchors.spec.ts` protects the older-visit deep link at `/paikka/sipoonkorven-kansallispuisto?visit=21#visit-history`: the selected card is open and aligned below the navigation on entry and reload, while clicking Vierailut returns to the history heading. It requires Sipoonkorpi and published visit 21 in the local dataset and covers normal/reduced motion at the same desktop/mobile sizes.
+`e2e/park-visit-anchors.spec.ts` distinguishes a deep link to an older visit
+from navigation to the history heading. It uses the local Sipoonkorpi fixture
+with published visit 21 and checks entry and reload at desktop and mobile
+sizes under normal and reduced motion.
 
 `e2e/park-map-popup.spec.ts` opens Pyhä-Häkki from the `/paikat` search on a touch viewport, checks that the popup fits at narrow and short sizes, and follows **Viimeisin käynti** to the expanded visit with the matching date. It requires Pyhä-Häkki with a published visit containing expandable details in the local dataset.
 
