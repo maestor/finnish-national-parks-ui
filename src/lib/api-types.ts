@@ -1998,6 +1998,55 @@ export interface paths {
         };
         trace?: never;
     };
+    "/api/parks/{slug}/weather": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    slug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Available park weather. Precipitation is millimetres over the hour ending at the reported time. Observed -1 is dry and observed 0 is trace. Forecast 0 is dry. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ParkWeather"];
+                    };
+                };
+                /** @description Park was not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/parks/{slug}": {
         parameters: {
             query?: never;
@@ -10014,7 +10063,62 @@ export interface paths {
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: never;
+    schemas: {
+        ParkWeather: {
+            observation?: {
+                station: {
+                    lat: number;
+                    lon: number;
+                    id: string;
+                    name: string;
+                    distanceMetres: number;
+                };
+                temperature?: {
+                    value: number;
+                    /** Format: date-time */
+                    time: string;
+                    /** Format: date-time */
+                    expiresAt: string;
+                    feelsLikeTemperature?: number;
+                };
+                wind?: {
+                    value: number;
+                    /** Format: date-time */
+                    time: string;
+                    /** Format: date-time */
+                    expiresAt: string;
+                    directionDegrees?: number;
+                };
+                precipitation?: {
+                    value: number;
+                    /** Format: date-time */
+                    time: string;
+                    /** Format: date-time */
+                    expiresAt: string;
+                };
+            };
+            forecast?: {
+                point: {
+                    lat: number;
+                    lon: number;
+                };
+                /** Format: date-time */
+                modelRunTime: string;
+                /** Format: date-time */
+                expiresAt: string;
+                slots: {
+                    /** Format: date-time */
+                    time: string;
+                    temperature?: number;
+                    feelsLikeTemperature?: number;
+                    wind?: number;
+                    windDirectionDegrees?: number;
+                    weatherSymbol?: number;
+                    precipitation?: number;
+                }[];
+            };
+        };
+    };
     responses: never;
     parameters: never;
     requestBodies: never;

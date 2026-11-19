@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { apiFetch } from "@/lib/api";
 import type { AdminParkVisits, Visit } from "@/lib/parks";
 import { ParkVisitHistory } from "./park-visit-history";
+import { useParkWeather } from "./park-weather-state";
 
 const ParkVisitVisibilityContext = createContext<Visit[] | null>(null);
 
@@ -74,9 +75,14 @@ export const LinkedParkSectionNavigation = (
   props: ComponentProps<typeof StickySectionNavigation>,
 ) => {
   const visitId = useLinkedVisitId();
+  const hasAbout = useParkWeather()?.hasAbout;
   const visitIds = (useParkVisitVisibility() ?? []).map((visit) => visit.id);
   const items = props.items
-    .filter((item) => item.id !== "visit-history" || visitIds.length > 0)
+    .filter((item) =>
+      item.id === "park-about"
+        ? hasAbout !== false
+        : item.id !== "visit-history" || visitIds.length > 0,
+    )
     .map((item) =>
       item.id === "visit-history" && visitId !== null && visitIds.includes(visitId)
         ? { ...item, initialTargetId: `park-visit-${visitId}` }

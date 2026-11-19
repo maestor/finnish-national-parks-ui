@@ -2,7 +2,7 @@ import { CalendarRange, MapPin, Route, Scan } from "lucide-react";
 import Link from "next/link";
 import { unstable_rethrow } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { cache, Suspense } from "react";
+import { cache, type ReactNode, Suspense } from "react";
 import { AppBreadcrumbs } from "@/components/layout/app-breadcrumbs";
 import { PublicMetaBadge } from "@/components/layout/public-meta-badge";
 import {
@@ -33,6 +33,11 @@ import {
   LinkedParkVisitHistory,
   ParkVisitVisibilityProvider,
 } from "@/components/park/park-visit-link";
+import {
+  ParkAboutVisibility,
+  ParkLocationMaterials,
+  ParkWeatherProvider,
+} from "@/components/park/park-weather-state";
 import { AppImage } from "@/components/ui/app-image";
 import { CopyLinkButton } from "@/components/ui/copy-link-button";
 import { apiAuthFetch } from "@/lib/api";
@@ -115,6 +120,24 @@ export const buildParkMetadata = async ({ params, authenticated = false }: ParkD
     : { ...metadata, robots: { index: false, follow: false } };
 };
 
+const ParkDetailContent = ({
+  children,
+  hasStaticAbout,
+  slug,
+  trailSlugs,
+}: {
+  children: ReactNode;
+  hasStaticAbout: boolean;
+  slug: string;
+  trailSlugs: string[];
+}) => (
+  <ParkTrailNavigationProvider trailSlugs={trailSlugs}>
+    <ParkWeatherProvider key={slug} parkSlug={slug} hasStaticAbout={hasStaticAbout}>
+      {children}
+    </ParkWeatherProvider>
+  </ParkTrailNavigationProvider>
+);
+
 export const ParkDetailPage = async ({ params, authenticated = false }: ParkDetailPageProps) => {
   const { slug } = await params;
   const t = await getTranslations("park");
@@ -142,7 +165,7 @@ export const ParkDetailPage = async ({ params, authenticated = false }: ParkDeta
   const description = publicPark.description?.trim() || null;
   const experiencedSeasons = new Set(visits.map((visit) => getVisitSeason(visit.visitedOn)));
   const seasons = SEASONS.filter((season) => experiencedSeasons.has(season));
-  const hasAbout = description !== null || seasons.length > 0;
+  const hasStaticAbout = description !== null || seasons.length > 0;
   const boundaryGeoJson = publicPark.boundaryGeoJson ?? null;
   const hasBoundaryGeoJson = boundaryGeoJson !== null;
 
@@ -151,7 +174,7 @@ export const ParkDetailPage = async ({ params, authenticated = false }: ParkDeta
     className: "mt-4",
     items: [
       { id: "park-location", label: t("sectionNav.location") },
-      ...(hasAbout ? [{ id: "park-about", label: t("sectionNav.about") }] : []),
+      { id: "park-about", label: t("sectionNav.about") },
       { id: "visit-history", label: t("sectionNav.visits") },
     ],
   };
@@ -165,7 +188,9 @@ export const ParkDetailPage = async ({ params, authenticated = false }: ParkDeta
   return (
     <ParkAdminControlsProvider parkSlug={slug}>
       <ParkVisitVisibilityProvider parkSlug={slug} initialVisits={visits}>
-        <ParkTrailNavigationProvider
+        <ParkDetailContent
+          slug={slug}
+          hasStaticAbout={hasStaticAbout}
           trailSlugs={
             hasBoundaryGeoJson ? (publicPark.linkedTrails ?? []).map((trail) => trail.slug) : []
           }
@@ -244,11 +269,13 @@ export const ParkDetailPage = async ({ params, authenticated = false }: ParkDeta
 
             <Suspense
               fallback={
-                hasAbout || visits.length > 0 ? (
+                hasStaticAbout || visits.length > 0 ? (
                   <StickySectionNavigation
                     {...sectionNavigationProps}
-                    items={sectionNavigationProps.items.filter(
-                      (item) => item.id !== "visit-history" || visits.length > 0,
+                    items={sectionNavigationProps.items.filter((item) =>
+                      item.id === "park-about"
+                        ? hasStaticAbout
+                        : item.id !== "visit-history" || visits.length > 0,
                     )}
                   />
                 ) : null
@@ -285,13 +312,15 @@ export const ParkDetailPage = async ({ params, authenticated = false }: ParkDeta
                   </ParkLocationBadge>
                 );
                 const areaActions =
-                  hasAbout === false && (parkUrl !== null || mapUrl !== null) ? (
-                    <ParkMaterialLinks
-                      parkUrl={parkUrl}
-                      mapUrl={mapUrl}
-                      className="gap-1 min-[350px]:flex-nowrap sm:gap-2 md:shrink-0 md:self-center"
-                      linkClassName="gap-1 whitespace-nowrap px-2 sm:gap-2 sm:px-3"
-                    />
+                  !hasStaticAbout && (parkUrl !== null || mapUrl !== null) ? (
+                    <ParkLocationMaterials>
+                      <ParkMaterialLinks
+                        parkUrl={parkUrl}
+                        mapUrl={mapUrl}
+                        className="gap-1 min-[350px]:flex-nowrap sm:gap-2 md:shrink-0 md:self-center"
+                        linkClassName="gap-1 whitespace-nowrap px-2 sm:gap-2 sm:px-3"
+                      />
+                    </ParkLocationMaterials>
                   ) : null;
                 if (
                   hasBoundaryGeoJson &&
@@ -333,21 +362,21 @@ export const ParkDetailPage = async ({ params, authenticated = false }: ParkDeta
               })()}
             </section>
 
-            {hasAbout === true && (
+            <ParkAboutVisibility>
               <ParkAbout
                 description={description}
                 seasons={seasons}
                 parkUrl={parkUrl}
                 mapUrl={mapUrl}
               />
-            )}
+            </ParkAboutVisibility>
 
             <Suspense fallback={<ParkVisitHistory {...visitHistoryProps} />}>
               <LinkedParkVisitHistory {...visitHistoryProps} />
             </Suspense>
             <ParkAdminSection />
           </article>
-        </ParkTrailNavigationProvider>
+        </ParkDetailContent>
       </ParkVisitVisibilityProvider>
     </ParkAdminControlsProvider>
   );
