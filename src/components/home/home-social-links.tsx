@@ -1,5 +1,6 @@
 import { AppImage } from "@/components/ui/app-image";
 import { cn } from "@/lib/cn";
+import { HomeDataSources } from "./home-data-sources";
 
 interface HomeSocialLinksProps {
   sectionLabel: string;
@@ -99,6 +100,7 @@ export const HomeSocialLinks = ({
         )}
       </div>
       <p className="mt-4 text-sm text-muted-foreground">{copyrightLabel}</p>
+      <HomeDataSources />
     </section>
   );
 };
