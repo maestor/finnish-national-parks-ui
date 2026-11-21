@@ -11,19 +11,11 @@ import { NATIVE_PROGRESS_CLASS_NAME } from "@/components/ui/theme-styles";
 import { VisitImageGallery } from "@/components/visits/visit-image-gallery";
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/cn";
-import { isLocalImageUploadMode, prepareImageFileForUpload } from "@/lib/image-upload";
+import { prepareImageFileForUpload } from "@/lib/image-upload";
 import type { VisitImage } from "@/lib/parks";
 import { revalidatePublicCache } from "@/lib/public-cache";
 
-type UploadStage = "waiting" | "requesting" | "uploading" | "processing" | "complete" | "failed";
-
-interface PendingImage {
-  id: string;
-  file: File;
-  previewUrl: string;
-  originalName: string;
-  stage: UploadStage;
-}
+import { type PendingImage, type UploadStage, uploadImageBatch } from "./image-upload-queue";
 
 interface ActiveDrag {
   collection: "saved" | "pending";
@@ -32,39 +24,6 @@ interface ActiveDrag {
   startX: number;
   startY: number;
   isDragging: boolean;
-}
-
-interface LocalUploadResponse {
-  errors: {
-    originalName: string;
-    reason: string;
-  }[];
-  images: VisitImage[];
-}
-
-interface DirectUploadPlanRequest {
-  contentType: "image/jpeg" | "image/png" | "image/webp";
-  fileSizeBytes: number;
-  originalName: string;
-}
-
-interface DirectUploadPlanResponse {
-  expiresAt: string;
-  headers: Record<string, string>;
-  key: string;
-  method: "PUT";
-  uploadUrl: string;
-}
-
-interface DirectUploadCompleteRequest {
-  fullHeight?: number | null;
-  fullWidth?: number | null;
-  key: string;
-  originalName?: string | null;
-}
-
-interface DirectUploadCompleteResponse {
-  image: VisitImage;
 }
 
 interface ManagedImageMessages {
@@ -507,98 +466,27 @@ export const ManagedImageSection = ({
     );
   };
 
-  const uploadImageLocally = async (pendingImage: PendingImage): Promise<VisitImage> => {
-    setUploadStage(pendingImage.id, "uploading");
-    const formData = new FormData();
-    formData.append("images", pendingImage.file);
-    const response = await apiFetch<LocalUploadResponse>(uploadLocalPath, {
-      method: "POST",
-      body: formData,
-    });
-    if (!response || !Array.isArray(response.images) || !Array.isArray(response.errors)) {
-      throw new Error(messages.uploadFailed);
-    }
-    const image = response.images[0];
-    if (!image) {
-      throw new Error(messages.uploadFailed);
-    }
-    return image;
-  };
-
-  const uploadImageDirectly = async (pendingImage: PendingImage): Promise<VisitImage> => {
-    setUploadStage(pendingImage.id, "requesting");
-    const uploadPlanRequest = {
-      contentType: pendingImage.file.type as DirectUploadPlanRequest["contentType"],
-      fileSizeBytes: pendingImage.file.size,
-      originalName: pendingImage.file.name,
-    } satisfies DirectUploadPlanRequest;
-
-    const uploadPlan = await apiFetch<DirectUploadPlanResponse>(uploadPlanPath, {
-      method: "POST",
-      body: JSON.stringify(uploadPlanRequest),
-    });
-
-    if (!uploadPlan?.uploadUrl || !uploadPlan?.key) {
-      throw new Error(messages.uploadFailed);
-    }
-
-    setUploadStage(pendingImage.id, "uploading");
-    const uploadResponse = await fetch(uploadPlan.uploadUrl, {
-      method: uploadPlan.method,
-      headers: uploadPlan.headers,
-      body: pendingImage.file,
-    });
-
-    if (!uploadResponse.ok) {
-      throw new Error(messages.uploadFailed);
-    }
-
-    setUploadStage(pendingImage.id, "processing");
-    const completeRequest = {
-      key: uploadPlan.key,
-      originalName: pendingImage.file.name,
-    } satisfies DirectUploadCompleteRequest;
-
-    const completedUpload = await apiFetch<DirectUploadCompleteResponse>(uploadCompletePath, {
-      method: "POST",
-      body: JSON.stringify(completeRequest),
-    });
-
-    if (!completedUpload?.image) {
-      throw new Error(messages.uploadFailed);
-    }
-
-    return completedUpload.image;
-  };
-
   const handleUpload = async () => {
     if (pendingImages.length === 0 || isBusy) return;
 
     setIsUploading(true);
     setPreparationErrors([]);
     setPendingImages((current) => current.map((image) => ({ ...image, stage: "waiting" })));
-    const uploadedImages: VisitImage[] = [];
-    const uploadedIds = new Set<string>();
     try {
-      for (const pendingImage of pendingImages) {
-        try {
-          const image = isLocalImageUploadMode()
-            ? await uploadImageLocally(pendingImage)
-            : await uploadImageDirectly(pendingImage);
-          uploadedImages.push(image);
-          uploadedIds.add(pendingImage.id);
-          setUploadStage(pendingImage.id, "complete");
-        } catch {
-          setUploadStage(pendingImage.id, "failed");
-          showSnackbar({ message: messages.uploadFailed, tone: "error" });
-          // Later files must not overtake this slot. Retry resumes this same queue.
-          break;
-        }
+      const { saved, failed } = await uploadImageBatch(
+        pendingImages,
+        { uploadPlanPath, uploadCompletePath, uploadLocalPath },
+        setUploadStage,
+      );
+      if (failed) {
+        showSnackbar({ message: messages.uploadFailed, tone: "error" });
       }
 
-      if (uploadedImages.length > 0) {
-        for (const pendingImage of pendingImages) {
-          if (uploadedIds.has(pendingImage.id)) URL.revokeObjectURL(pendingImage.previewUrl);
+      if (saved.length > 0) {
+        const uploadedIds = new Set(saved.map(({ pendingImage }) => pendingImage.id));
+        const uploadedImages = saved.map(({ image }) => image);
+        for (const { pendingImage } of saved) {
+          URL.revokeObjectURL(pendingImage.previewUrl);
         }
         setPendingImages((current) => current.filter((image) => !uploadedIds.has(image.id)));
         const nextImages = [...localImages, ...uploadedImages];
@@ -609,7 +497,7 @@ export const ManagedImageSection = ({
         ]);
         onSavedImagesChange?.(nextImages);
         await revalidatePublicCache(revalidateTargets);
-        if (uploadedImages.length === pendingImages.length) {
+        if (!failed) {
           showSnackbar({ message: messages.uploadSuccess(uploadedImages.length), tone: "success" });
         }
         router.refresh();
