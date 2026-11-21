@@ -504,6 +504,8 @@ These are contributor defaults, not optional polish:
 
 ## Coding Conventions
 
+Use [Clean Code for TypeScript](../.agents/skills/clean-code-typescript/SKILL.md) when writing, refactoring, or reviewing TypeScript and TSX. Start at a real call site, make domain intent clear in names and types, and keep side effects visible. Keep cleanup scoped to the change and preserve component behavior and API boundaries.
+
 See `AGENTS.md` for the full convention list. Key rules:
 
 - **Arrow functions only** — no `function` declarations
