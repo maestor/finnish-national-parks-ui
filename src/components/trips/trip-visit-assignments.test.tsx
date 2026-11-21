@@ -1895,6 +1895,58 @@ describe("TripVisitAssignments", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("keeps the visible reorder and the last saved baseline after a later PATCH fails", async () => {
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error("Visit order update failed"))
+      .mockResolvedValue(undefined);
+    const user = userEvent.setup();
+
+    render(<TripVisitAssignments trip={tripWithRouteWaypoint} visits={visits} />);
+
+    const itinerarySection = screen
+      .getByRole("heading", { name: "controlPanel.trips.assignments.assignedTitle" })
+      .closest("section");
+    if (!itinerarySection) throw new Error("Expected itinerary section");
+    const visitRow = within(itinerarySection).getByText("Nuuksio").closest("tr");
+    if (!visitRow) throw new Error("Expected itinerary visit row");
+    const reorderButton = within(visitRow).getByRole("button", {
+      name: "controlPanel.trips.assignments.table.reorderItem",
+    });
+    reorderButton.focus();
+    await user.keyboard("{ArrowDown}");
+
+    expect(await screen.findByText("Visit order update failed")).toBeInTheDocument();
+    expect(getItineraryOrder(itinerarySection)).toEqual([
+      "route-waypoint-31",
+      "visit-11",
+      "stop-21",
+    ]);
+    expect(apiFetch).toHaveBeenCalledTimes(2);
+    expect(apiFetch).toHaveBeenNthCalledWith(1, "/api/trip-route-waypoints/31", {
+      method: "PATCH",
+      body: JSON.stringify({ tripStopOrder: 1 }),
+    });
+    expect(mockRevalidatePublicCache).not.toHaveBeenCalled();
+    expect(mockRefresh).not.toHaveBeenCalled();
+
+    reorderButton.focus();
+    await user.keyboard("{ArrowUp}");
+    expect(getItineraryOrder(itinerarySection)).toEqual([
+      "visit-11",
+      "route-waypoint-31",
+      "stop-21",
+    ]);
+    expect(apiFetch).toHaveBeenCalledTimes(2);
+
+    reorderButton.focus();
+    await user.keyboard("{ArrowDown}");
+    await waitFor(() => expect(mockRefresh).toHaveBeenCalledTimes(1));
+    expect(vi.mocked(apiFetch).mock.calls.slice(2)).toEqual(
+      vi.mocked(apiFetch).mock.calls.slice(0, 2),
+    );
+  });
+
   it("uses the primary edit action as close when stop details have not changed", async () => {
     render(<TripVisitAssignments trip={currentTrip} visits={visits} />);
 
