@@ -105,7 +105,11 @@ const DURATION_FORMATTER = new Intl.NumberFormat("fi-FI", {
   maximumFractionDigits: 0,
 });
 
-type SearchState = "idle" | "loading" | "success" | "error";
+type SearchState =
+  | { status: "idle"; result: null }
+  | { status: "searching"; result: TripPlannerUiResult | null }
+  | { status: "results"; result: TripPlannerUiResult }
+  | { status: "failure"; result: null; message: string };
 type TripPlannerMode = TripPlannerUiResult["mode"];
 type VisitStatusFilter = "all" | "visited" | "not-visited";
 type UserLocationStatus =
@@ -670,9 +674,7 @@ export const TripPlannerPage = () => {
   const [destinationLocation, setDestinationLocation] =
     useState<TripPlannerResolvedLocation | null>(null);
   const [originLocationStatus, setOriginLocationStatus] = useState<UserLocationStatus>("idle");
-  const [searchState, setSearchState] = useState<SearchState>("idle");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [result, setResult] = useState<TripPlannerUiResult | null>(null);
+  const [search, setSearch] = useState<SearchState>({ status: "idle", result: null });
   const [activeParkFilter, setActiveParkFilter] = useState<TripPlannerParkTypeFilter>("all");
   const [activeVisitStatus, setActiveVisitStatus] = useState<VisitStatusFilter>(
     DEFAULT_VISIT_STATUS_FILTER,
@@ -681,7 +683,8 @@ export const TripPlannerPage = () => {
   const [activeView, setActiveView] = useState<ViewTab>("map");
   const [isSearchPanelExpanded, setIsSearchPanelExpanded] = useState(true);
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
-  const isResultsLoading = searchState === "loading";
+  const { result } = search;
+  const isResultsLoading = search.status === "searching";
   const normalizedOriginQuery = normalizeSuggestionQuery(originQuery);
   const normalizedDestinationQuery = normalizeSuggestionQuery(destinationQuery);
   const hasOriginQuery = normalizedOriginQuery.length > 0;
@@ -842,7 +845,9 @@ export const TripPlannerPage = () => {
       return;
     }
 
-    setErrorMessage(null);
+    setSearch((current) =>
+      current.status === "failure" ? { status: "idle", result: null } : current,
+    );
     setOriginLocationStatus("locating");
 
     geolocation.getCurrentPosition(
@@ -891,8 +896,7 @@ export const TripPlannerPage = () => {
       return;
     }
 
-    setSearchState("loading");
-    setErrorMessage(null);
+    setSearch((current) => ({ status: "searching", result: current.result }));
 
     try {
       const response =
@@ -911,21 +915,20 @@ export const TripPlannerPage = () => {
             );
 
       resetLocalFilters(response);
-      setResult(response);
+      setSearch({ status: "results", result: response });
       setActiveView("map");
       setIsMobileFiltersOpen(false);
       setIsSearchPanelExpanded(false);
-      setSearchState("success");
     } catch (failure) {
-      setSearchState("error");
-      setResult(null);
+      let message: string;
       if (failure instanceof ApiError && failure.status === 429) {
-        setErrorMessage(t("errors.rateLimited"));
+        message = t("errors.rateLimited");
       } else if (failure instanceof ApiError && failure.status === 413) {
-        setErrorMessage(t("errors.requestTooLarge"));
+        message = t("errors.requestTooLarge");
       } else {
-        setErrorMessage(failure instanceof Error ? failure.message : t("errors.generic"));
+        message = failure instanceof Error ? failure.message : t("errors.generic");
       }
+      setSearch({ status: "failure", message, result: null });
     }
   };
 
@@ -1070,12 +1073,12 @@ export const TripPlannerPage = () => {
           </div>
         </div>
 
-        {errorMessage !== null && (
+        {search.status === "failure" && (
           <p
             className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
             role="alert"
           >
-            {errorMessage}
+            {search.message}
           </p>
         )}
       </section>

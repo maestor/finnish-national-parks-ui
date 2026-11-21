@@ -696,6 +696,8 @@ describe("TripPlannerPage", () => {
     expect(screen.queryByTestId("trip-planner-map")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "tripPlanner.submit" })).toBeDisabled();
 
+    expect(screen.getByRole("button", { name: "tripPlanner.collapseSearch" })).toBeVisible();
+
     secondSearch.resolve({
       ...firstResponse,
       destination: {
@@ -1591,6 +1593,33 @@ describe("TripPlannerPage", () => {
     await user.click(screen.getByRole("button", { name: "tripPlanner.submit" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("tripPlanner.errors.rateLimited");
+  });
+
+  it("clears previous results on failure and dismisses the error when locating the origin", async () => {
+    mockTripPlannerApi({
+      searchResponses: [createSearchResponse(), new ApiError(429, "Provider budget exhausted")],
+    });
+    const getCurrentPosition = mockCurrentLocation(() => {});
+    const user = userEvent.setup();
+
+    render(<TripPlannerPage />);
+
+    await user.type(screen.getByRole("combobox", { name: "tripPlanner.originLabel" }), "Helsinki");
+    await user.type(
+      screen.getByRole("combobox", { name: "tripPlanner.destinationLabel" }),
+      "Tampere",
+    );
+    await user.click(screen.getByRole("button", { name: "tripPlanner.submit" }));
+    expect(await screen.findByTestId("trip-planner-map")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "tripPlanner.expandSearch" }));
+    await user.click(screen.getByRole("button", { name: "tripPlanner.submit" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("tripPlanner.errors.rateLimited");
+    expect(screen.queryByTestId("trip-planner-map")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "tripPlanner.originLocate" }));
+    expect(getCurrentPosition).toHaveBeenCalledOnce();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("shows a Finnish message when a request body is too large", async () => {

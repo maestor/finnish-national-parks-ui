@@ -30,7 +30,7 @@ import {
   resolveLocationFromCoordinate,
   type UserLocationStatus,
 } from "@/lib/location";
-import type { VisitWithPark } from "@/lib/parks";
+import type { VisitUpdateRequest, VisitWithPark } from "@/lib/parks";
 import { revalidatePublicCache } from "@/lib/public-cache";
 import {
   getTripStopDisplayName,
@@ -143,6 +143,35 @@ const getItineraryItemKey = (item: TripItineraryItem) =>
       : `route-waypoint-${item.routeWaypoint.id}`;
 
 const getItineraryOrderKeys = (items: TripItineraryItem[]) => items.map(getItineraryItemKey);
+
+const getChangedItineraryItems = (items: TripItineraryItem[], savedOrder: string[]) =>
+  items.filter((item, index) => savedOrder[index] !== getItineraryItemKey(item));
+
+const patchItineraryItemOrder = async (tripId: number, item: TripItineraryItem) => {
+  if (item.kind === "visit") {
+    await apiFetch(`/api/visits/${item.visit.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        tripId,
+        tripStopOrder: item.tripStopOrder,
+      } satisfies VisitUpdateRequest),
+    });
+  } else if (item.kind === "stop") {
+    await apiFetch(`/api/trip-stops/${item.stop.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        tripStopOrder: item.tripStopOrder,
+      } satisfies TripStopUpdateRequest),
+    });
+  } else {
+    await apiFetch(`/api/trip-route-waypoints/${item.routeWaypoint.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        tripStopOrder: item.tripStopOrder,
+      } satisfies TripRouteWaypointUpdateRequest),
+    });
+  }
+};
 
 const getItineraryItemLabel = (item: TripItineraryItem) =>
   item.kind === "visit"
@@ -865,10 +894,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       return;
     }
 
-    const savedOrder = savedItineraryOrderRef.current;
-    const changedItems = nextItinerary.filter((item, index) => {
-      return savedOrder[index] !== getItineraryItemKey(item);
-    });
+    const changedItems = getChangedItineraryItems(nextItinerary, savedItineraryOrderRef.current);
 
     if (changedItems.length === 0) {
       return;
@@ -878,29 +904,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
 
     try {
       for (const item of changedItems) {
-        if (item.kind === "visit") {
-          await apiFetch(`/api/visits/${item.visit.id}`, {
-            method: "PATCH",
-            body: JSON.stringify({
-              tripId: trip.id,
-              tripStopOrder: item.tripStopOrder,
-            }),
-          });
-        } else if (item.kind === "stop") {
-          await apiFetch(`/api/trip-stops/${item.stop.id}`, {
-            method: "PATCH",
-            body: JSON.stringify({
-              tripStopOrder: item.tripStopOrder,
-            } satisfies TripStopUpdateRequest),
-          });
-        } else {
-          await apiFetch(`/api/trip-route-waypoints/${item.routeWaypoint.id}`, {
-            method: "PATCH",
-            body: JSON.stringify({
-              tripStopOrder: item.tripStopOrder,
-            } satisfies TripRouteWaypointUpdateRequest),
-          });
-        }
+        await patchItineraryItemOrder(trip.id, item);
       }
 
       await revalidatePublicCache({ tripSlug: trip.slug });
