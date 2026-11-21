@@ -13,6 +13,7 @@
   - accessibility, semantic HTML, focus, or interaction → `.agents/skills/accessibility-first-ui/SKILL.md`
   - API/OpenAPI/generated types or UI/API contract → `.agents/skills/api-contract-sync/SKILL.md`
   - browser, responsive, or visual verification → `.agents/skills/browser-ui-verification/SKILL.md`
+  - writing, refactoring, or reviewing TypeScript or TSX when naming, domain types, function responsibilities, side effects, or abstractions affect callers → `.agents/skills/clean-code-typescript/SKILL.md`
   - tests or TDD → `.agents/skills/intelligence-testing/SKILL.md`
   - local verification choice → `.agents/skills/local-first-verification/SKILL.md`
   - documentation or planning → `.agents/skills/project-documentation/SKILL.md`

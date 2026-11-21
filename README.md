@@ -139,7 +139,7 @@ Vercel deployment notes live in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## Contributor Docs
 
-- [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for local workflow, architecture, and contributor guardrails
+- [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for local workflow, architecture, and [coding conventions](docs/DEVELOPMENT.md#coding-conventions)
 - [docs/TESTING.md](docs/TESTING.md) for behavior-first testing and verification expectations
 - [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for production and Vercel setup
 - [AGENTS.md](AGENTS.md) for repo-specific AI and contributor workflow rules
