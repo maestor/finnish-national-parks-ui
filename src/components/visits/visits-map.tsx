@@ -9,15 +9,14 @@ import {
   PUBLIC_PANEL_CLASS_NAME,
 } from "@/components/layout/public-page-styles";
 import { createParkVisitHref, type PublicVisitsMapMarker } from "@/lib/public-visits";
+import { getMapOptions } from "../map/map-options";
 import { createMapPinSvg } from "../map/map-pin";
 import {
   bindMapPointLayerEvents,
-  MAP_POINT_LAYER_ID,
   prepareMapPointIcon,
   setMapPopupInteractivity,
   syncMapPointLayer,
 } from "../map/map-point-layer";
-import { getMapStyle } from "../map/map-style";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 interface VisitsMapProps {
@@ -240,8 +239,7 @@ export const VisitsMap = ({ markers, selectedYear = null }: VisitsMapProps) => {
     }
 
     const map = new maplibregl.Map({
-      container,
-      style: getMapStyle(),
+      ...getMapOptions(container),
       bounds: getMarkersBounds(markers),
       fitBoundsOptions: {
         duration: 0,
@@ -265,13 +263,7 @@ export const VisitsMap = ({ markers, selectedYear = null }: VisitsMapProps) => {
 
     mapRef.current = map;
 
-    const resizeObserver = new ResizeObserver(() => {
-      map.resize();
-    });
-    resizeObserver.observe(container);
-
     return () => {
-      resizeObserver.disconnect();
       cancelClose();
       popupRef.current?.remove();
       popupRef.current = null;
@@ -306,6 +298,11 @@ export const VisitsMap = ({ markers, selectedYear = null }: VisitsMapProps) => {
     });
 
     const cleanupPointEvents = bindMapPointLayerEvents(map, {
+      onBackgroundClick: () => {
+        cancelClose();
+        setActiveSlug(null);
+        setHoveredSlug(null);
+      },
       onPointClick: (slug) => {
         cancelClose();
         setHoveredSlug(null);
@@ -321,25 +318,11 @@ export const VisitsMap = ({ markers, selectedYear = null }: VisitsMapProps) => {
       onPointLeave: scheduleClose,
     });
 
-    const handleMapClick = (event: maplibregl.MapMouseEvent) => {
-      if (
-        map.queryRenderedFeatures(event.point, {
-          layers: [MAP_POINT_LAYER_ID],
-        }).length === 0
-      ) {
-        cancelClose();
-        setActiveSlug(null);
-        setHoveredSlug(null);
-      }
-    };
-    map.on("click", handleMapClick);
-
     syncPopupVisibility(activeSlugRef.current, hoveredSlugRef.current);
 
     return () => {
       cancelClose();
       cleanupPointEvents();
-      map.off("click", handleMapClick);
     };
   }, [cancelClose, isMapLoaded, markers, scheduleClose, syncPopupVisibility]);
 

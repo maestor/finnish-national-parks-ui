@@ -353,12 +353,14 @@ Year and date-range review shares are snapshots. They gain trail assignments
 and newer metrics when refreshed or republished. Older snapshots may omit these
 fields. The API owns the distinct published-trip count.
 
-### MapLibre Worker (v6)
+### MapLibre rendering and worker
+
+Every map uses `getMapOptions(container)` from `src/components/map/map-options.ts`. It requests a low-power WebGL context and caps the canvas pixel ratio at 1.5. This reduces the pixels drawn during pan and zoom on high-density screens. HTML controls and popups use the browser's native resolution. MapLibre observes container size changes itself.
 
 MapLibre GL v6 ships ESM-only and cannot auto-detect its worker URL inside the Next.js/Turbopack module graph. The app therefore self-hosts the worker:
 
 - `scripts/copy-maplibre-worker.mjs` copies `maplibre-gl-worker.mjs` and its sibling `maplibre-gl-shared.mjs` from `node_modules` into `public/maplibre/` (gitignored) and runs automatically via the `predev` and `prebuild` npm hooks, so local dev, `npm run verify`, and Vercel builds all stay in sync with the installed `maplibre-gl` version.
-- `src/components/map/map-worker.ts` calls `setWorkerUrl("/maplibre/maplibre-gl-worker.mjs")`; it is imported by `src/components/map/map-style.ts`, which every map component already imports.
+- The shared map options import `src/components/map/map-worker.ts`, which calls `setWorkerUrl("/maplibre/maplibre-gl-worker.mjs")`.
 - The CSP `worker-src 'self' blob:` in `next.config.ts` covers the same-origin worker file.
 
 ### Public result-map point rendering
@@ -366,6 +368,8 @@ MapLibre GL v6 ships ESM-only and cannot auto-detect its worker URL inside the N
 The public catalogue map (`/paikat`), visits map (`/kaynnit?view=map`), and trip-planner result map share the point-layer adapter in `src/components/map/map-point-layer.ts`. Visible places are one unclustered GeoJSON source rendered by a reusable MapLibre pin layer; they are not individual DOM markers or one popup per place. Each map keeps at most one active popup and updates the source data when filters or results change.
 
 Canvas points are not individually keyboard-focusable. The header park search, visits-map result list, and trip-planner result list remain the accessible searchable or link-based alternatives for selecting a place. Trip-planner origin and destination pins remain small DOM markers because they are fixed endpoints, not catalogue-sized result sets.
+
+The adapter queries the pin layer once per mouse move or click. The same result identifies the pin or the map background. Leaving the canvas clears hover without another query.
 
 ### Optional map loading
 

@@ -74,34 +74,23 @@ const createMockMap = ({ autoLoad = true } = {}) => {
         handler({ point: { x: 0, y: 0 } });
       }
     },
-    triggerLayer: (event: string, layer: string, slug: string) => {
+    triggerPoint: (event: string, slug: string | null) => {
       act(() => {
         renderedPointSlug = slug;
-        for (const handler of listeners[`${event}:${layer}`] ?? []) {
+        for (const handler of listeners[event] ?? []) {
           handler({ point: { x: 0, y: 0 } });
         }
         renderedPointSlug = null;
       });
     },
-    on: vi.fn(
-      (
-        event: string,
-        layerOrHandler: string | ((event?: unknown) => void),
-        maybeHandler?: (event?: unknown) => void,
-      ) => {
-        const key = typeof layerOrHandler === "string" ? `${event}:${layerOrHandler}` : event;
-        const handler = (typeof layerOrHandler === "string" ? maybeHandler : layerOrHandler) as (
-          event?: unknown,
-        ) => void;
-        listeners[key] ??= [];
-        listeners[key]?.push(handler);
-
-        if (event === "load" && autoLoad) {
-          handler();
-        }
-      },
-    ),
-    off: vi.fn(),
+    on: vi.fn((event: string, handler: (event?: unknown) => void) => {
+      listeners[event] ??= [];
+      listeners[event].push(handler);
+      if (event === "load" && autoLoad) handler();
+    }),
+    off: vi.fn((event: string, handler: (event?: unknown) => void) => {
+      listeners[event] = (listeners[event] ?? []).filter((entry) => entry !== handler);
+    }),
     remove: vi.fn(),
     resize: vi.fn(),
     addControl: vi.fn(),
@@ -123,13 +112,6 @@ const createMockMap = ({ autoLoad = true } = {}) => {
     fitBounds: vi.fn(),
   };
 };
-
-class MockResizeObserver {
-  observe = vi.fn();
-  disconnect = vi.fn();
-}
-
-global.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
 
 let mockMap = createMockMap();
 let renderedPointSlug: string | null = null;
@@ -366,7 +348,7 @@ describe("TripPlannerMap", () => {
   it("opens a park popup with a park page link when a park pin is clicked", () => {
     render(<TripPlannerMap {...routeModeProps} />);
 
-    mockMap.triggerLayer("click", "public-map-points", "nuuksio");
+    mockMap.triggerPoint("click", "nuuksio");
 
     expect(screen.getByRole("link", { name: "Nuuksion kansallispuisto" })).toHaveAttribute(
       "href",
@@ -401,10 +383,10 @@ describe("TripPlannerMap", () => {
 
     render(<TripPlannerMap {...routeModeProps} />);
 
-    mockMap.triggerLayer("mouseenter", "public-map-points", "nuuksio");
+    mockMap.triggerPoint("mousemove", "nuuksio");
     expect(screen.getByRole("link", { name: "Nuuksion kansallispuisto" })).toBeInTheDocument();
 
-    mockMap.triggerLayer("mouseleave", "public-map-points", "nuuksio");
+    mockMap.triggerPoint("mouseout", null);
     await act(async () => {
       vi.advanceTimersByTime(250);
     });
@@ -417,7 +399,7 @@ describe("TripPlannerMap", () => {
   it("closes an open popup when escape is pressed", async () => {
     render(<TripPlannerMap {...routeModeProps} />);
 
-    mockMap.triggerLayer("mouseenter", "public-map-points", "nuuksio");
+    mockMap.triggerPoint("mousemove", "nuuksio");
     expect(screen.getByRole("link", { name: "Nuuksion kansallispuisto" })).toBeInTheDocument();
 
     fireEvent.keyDown(document, { key: "Escape" });
@@ -432,7 +414,7 @@ describe("TripPlannerMap", () => {
   it("keeps the popup open for popup clicks but closes it when the user clicks the map background", async () => {
     render(<TripPlannerMap {...routeModeProps} />);
 
-    mockMap.triggerLayer("click", "public-map-points", "nuuksio");
+    mockMap.triggerPoint("click", "nuuksio");
 
     const popupLink = screen.getByRole("link", { name: "Nuuksion kansallispuisto" });
     fireEvent.mouseDown(popupLink);
@@ -451,7 +433,7 @@ describe("TripPlannerMap", () => {
   it("clears an active popup when the matching park disappears from the result set", async () => {
     const { rerender } = render(<TripPlannerMap {...routeModeProps} />);
 
-    mockMap.triggerLayer("click", "public-map-points", "nuuksio");
+    mockMap.triggerPoint("click", "nuuksio");
     expect(screen.getByRole("link", { name: "Nuuksion kansallispuisto" })).toBeInTheDocument();
 
     rerender(<TripPlannerMap {...routeModeProps} parks={parks.slice(1)} />);

@@ -1,7 +1,7 @@
 import type * as maplibregl from "maplibre-gl";
 import "./map-worker";
 
-export const getMapStyle = (): string | maplibregl.StyleSpecification => {
+const getMapStyle = (): string | maplibregl.StyleSpecification => {
   const mapStyleUrl = process.env.NEXT_PUBLIC_MAP_STYLE_URL as string | undefined;
   if (mapStyleUrl) {
     return mapStyleUrl;
@@ -28,3 +28,10 @@ export const getMapStyle = (): string | maplibregl.StyleSpecification => {
     ],
   } as maplibregl.StyleSpecification;
 };
+
+export const getMapOptions = (container: HTMLElement): maplibregl.MapOptions => ({
+  container,
+  style: getMapStyle(),
+  pixelRatio: Math.min(window.devicePixelRatio, 1.5),
+  canvasContextAttributes: { powerPreference: "low-power" },
+});
