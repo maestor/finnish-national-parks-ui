@@ -147,7 +147,7 @@ export const setMapPointSelection = (
   }
 };
 
-export const getMapPointIdFromEvent = (
+const getMapPointIdFromEvent = (
   map: maplibregl.Map,
   event: maplibregl.MapMouseEvent,
 ): string | null => {
@@ -161,48 +161,46 @@ export const getMapPointIdFromEvent = (
 export const bindMapPointLayerEvents = (
   map: maplibregl.Map,
   handlers: {
-    onPointClick: (id: string, event: maplibregl.MapMouseEvent) => void;
-    onPointEnter: (id: string, event: maplibregl.MapMouseEvent) => void;
-    onPointLeave: (event: maplibregl.MapMouseEvent) => void;
+    onBackgroundClick: () => void;
+    onPointClick: (id: string) => void;
+    onPointEnter: (id: string) => void;
+    onPointLeave: () => void;
   },
 ) => {
-  let hoveredPointId: string | null = null;
+  // After a filter change the first hit must reconcile any existing hover popup.
+  let hoveredPointId: string | null | undefined;
+  const canvas = map.getCanvas();
 
-  const handlePointClick = (event: maplibregl.MapMouseEvent) => {
+  const handleClick = (event: maplibregl.MapMouseEvent) => {
     const id = getMapPointIdFromEvent(map, event);
-    if (id) {
-      handlers.onPointClick(id, event);
+    if (id === null) {
+      handlers.onBackgroundClick();
+    } else {
+      handlers.onPointClick(id);
     }
   };
-  const handlePointMove = (event: maplibregl.MapMouseEvent) => {
-    const id = getMapPointIdFromEvent(map, event);
-    if (!id) {
-      return;
-    }
 
-    map.getCanvas().style.cursor = "pointer";
-    if (id === hoveredPointId) {
-      return;
-    }
-
+  const updateHover = (id: string | null) => {
+    if (id === hoveredPointId) return;
     hoveredPointId = id;
-    handlers.onPointEnter(id, event);
+    canvas.style.cursor = id === null ? "" : "pointer";
+    if (id === null) {
+      handlers.onPointLeave();
+    } else {
+      handlers.onPointEnter(id);
+    }
   };
-  const handlePointLeave = (event: maplibregl.MapMouseEvent) => {
-    hoveredPointId = null;
-    map.getCanvas().style.cursor = "";
-    handlers.onPointLeave(event);
-  };
-  map.on("click", MAP_POINT_LAYER_ID, handlePointClick);
-  map.on("mouseenter", MAP_POINT_LAYER_ID, handlePointMove);
-  map.on("mousemove", MAP_POINT_LAYER_ID, handlePointMove);
-  map.on("mouseleave", MAP_POINT_LAYER_ID, handlePointLeave);
+  const handleMove = (event: maplibregl.MapMouseEvent) =>
+    updateHover(getMapPointIdFromEvent(map, event));
+  const handleOut = () => updateHover(null);
 
+  map.on("click", handleClick);
+  map.on("mousemove", handleMove);
+  map.on("mouseout", handleOut);
   return () => {
-    map.off("click", MAP_POINT_LAYER_ID, handlePointClick);
-    map.off("mouseenter", MAP_POINT_LAYER_ID, handlePointMove);
-    map.off("mousemove", MAP_POINT_LAYER_ID, handlePointMove);
-    map.off("mouseleave", MAP_POINT_LAYER_ID, handlePointLeave);
-    map.getCanvas().style.cursor = "";
+    map.off("click", handleClick);
+    map.off("mousemove", handleMove);
+    map.off("mouseout", handleOut);
+    canvas.style.cursor = "";
   };
 };

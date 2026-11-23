@@ -12,13 +12,10 @@ const { homeMapControlsState } = vi.hoisted(() => ({
 }));
 
 const loadHandlers: Array<() => void> = [];
-const mapEventHandlers = new Map<
-  string,
-  Array<{ handler: (event?: unknown) => void; layer?: string }>
->();
+type MapEventHandler = (event?: unknown) => void;
+const mapEventHandlers = new Map<string, MapEventHandler[]>();
 const markerElements: HTMLElement[] = [];
 let virtualPointElements: HTMLElement[] = [];
-const resizeObservers: MockResizeObserver[] = [];
 const popupInstances: Array<{
   addTo: ReturnType<typeof vi.fn>;
   remove: ReturnType<typeof vi.fn>;
@@ -88,21 +85,11 @@ const triggerMapLoad = () => {
   });
 };
 
-const triggerMapEvent = (event: string) => {
-  act(() => {
-    for (const { handler } of mapEventHandlers.get(event) ?? []) {
-      handler({ point: { x: 0, y: 0 } });
-    }
-  });
-};
-
-const triggerMapPointEvent = (event: string, slug: string) => {
+const triggerMapEvent = (event: string, slug: string | null = null) => {
   act(() => {
     renderedPointSlug = slug;
-    for (const { handler, layer } of mapEventHandlers.get(event) ?? []) {
-      if (layer === "public-map-points") {
-        handler({ point: { x: 0, y: 0 } });
-      }
+    for (const handler of mapEventHandlers.get(event) ?? []) {
+      handler({ point: { x: 0, y: 0 } });
     }
     renderedPointSlug = null;
   });
@@ -185,54 +172,27 @@ const createMockMap = (container: HTMLElement) => {
       button.setAttribute("aria-label", `${park.name}, ${getParkTypeDisplayName(park)}`);
       const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
       button.appendChild(svg);
-      for (const event of ["click", "mouseenter", "mousemove", "mouseleave", "focus"]) {
-        button.addEventListener(event, () => triggerMapPointEvent(event, slug));
-      }
+      button.addEventListener("click", () => triggerMapEvent("click", slug));
+      button.addEventListener("mousemove", () => triggerMapEvent("mousemove", slug));
+      button.addEventListener("mouseleave", () => triggerMapEvent("mousemove", null));
       markerElements.push(button);
       return [button];
     });
   };
 
   return {
-    on: vi.fn(
-      (
-        event: string,
-        layerOrHandler: string | ((event?: unknown) => void),
-        maybeHandler?: (event?: unknown) => void,
-      ) => {
-        const layer = typeof layerOrHandler === "string" ? layerOrHandler : undefined;
-        const handler = (typeof layerOrHandler === "string" ? maybeHandler : layerOrHandler) as (
-          event?: unknown,
-        ) => void;
-        const handlers = mapEventHandlers.get(event) ?? [];
-        handlers.push({ handler, layer });
-        mapEventHandlers.set(event, handlers);
-
-        if (event === "load") {
-          loadHandlers.push(handler);
-        }
-      },
-    ),
-    off: vi.fn(
-      (
-        event: string,
-        layerOrHandler: string | ((event?: unknown) => void),
-        maybeHandler?: (event?: unknown) => void,
-      ) => {
-        const layer = typeof layerOrHandler === "string" ? layerOrHandler : undefined;
-        const handler = (typeof layerOrHandler === "string" ? maybeHandler : layerOrHandler) as (
-          event?: unknown,
-        ) => void;
-        const handlers = mapEventHandlers.get(event) ?? [];
-        mapEventHandlers.set(
-          event,
-          handlers.filter(
-            ({ handler: registeredHandler, layer: registeredLayer }) =>
-              registeredHandler !== handler || registeredLayer !== layer,
-          ),
-        );
-      },
-    ),
+    on: vi.fn((event: string, handler: MapEventHandler) => {
+      const handlers = mapEventHandlers.get(event) ?? [];
+      handlers.push(handler);
+      mapEventHandlers.set(event, handlers);
+      if (event === "load") loadHandlers.push(handler);
+    }),
+    off: vi.fn((event: string, handler: MapEventHandler) => {
+      mapEventHandlers.set(
+        event,
+        (mapEventHandlers.get(event) ?? []).filter((entry) => entry !== handler),
+      );
+    }),
     remove: vi.fn(),
     resize: vi.fn(),
     addControl: vi.fn((control: { __kind?: string }) => {
@@ -290,17 +250,6 @@ const createMockMap = (container: HTMLElement) => {
   };
 };
 
-class MockResizeObserver {
-  observe = vi.fn();
-  disconnect = vi.fn();
-
-  constructor() {
-    resizeObservers.push(this);
-  }
-}
-
-global.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
-
 vi.mock("../providers/home-map-controls-provider", () => ({
   useHomeMapControls: () => homeMapControlsState.value,
 }));
@@ -336,7 +285,6 @@ describe("ParkMap", () => {
     markerElements.length = 0;
     virtualPointElements = [];
     popupInstances.length = 0;
-    resizeObservers.length = 0;
     mapOptions = null;
     mapInstance = null;
     homeMapControlsState.value = {
@@ -367,7 +315,23 @@ describe("ParkMap", () => {
     expect(screen.getByText("map.loading")).toBeInTheDocument();
   });
 
-  it("initializes the map against Finland bounds and observes container resizes", () => {
+  it.each([
+    [1, 1],
+    [2, 1.5],
+  ])("limits map rendering work on a %sx display", (devicePixelRatio, expectedRatio) => {
+    vi.stubGlobal("devicePixelRatio", devicePixelRatio);
+    try {
+      render(<ParkMap parks={parks} />);
+      expect(mapOptions).toMatchObject({
+        pixelRatio: expectedRatio,
+        canvasContextAttributes: { powerPreference: "low-power" },
+      });
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("initializes the map against Finland bounds", () => {
     render(<ParkMap parks={[]} />);
 
     expect(mapOptions).toMatchObject({
@@ -381,8 +345,20 @@ describe("ParkMap", () => {
         padding: 24,
       },
     });
-    expect(resizeObservers).toHaveLength(1);
-    expect(resizeObservers[0]?.observe).toHaveBeenCalledTimes(1);
+  });
+
+  it("uses the configured basemap with the shared rendering defaults", () => {
+    const style = "https://maps.example.org/style.json";
+    vi.stubEnv("NEXT_PUBLIC_MAP_STYLE_URL", style);
+    try {
+      render(<ParkMap parks={parks} />);
+      expect(mapOptions).toMatchObject({
+        style,
+        canvasContextAttributes: { powerPreference: "low-power" },
+      });
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 
   it("adds a compact attribution control that starts collapsed behind the info button", async () => {
@@ -530,7 +506,7 @@ describe("ParkMap", () => {
     render(<ParkMap parks={parks} />);
     triggerMapLoad();
 
-    fireEvent.mouseEnter(markerElements[0]);
+    fireEvent.mouseMove(markerElements[0]);
     expect(document.body).toHaveTextContent("Pallas-Yllästunturin kansallispuisto");
 
     fireEvent.mouseLeave(markerElements[0]);
@@ -545,11 +521,13 @@ describe("ParkMap", () => {
     render(<ParkMap parks={parks} />);
     triggerMapLoad();
 
-    fireEvent.mouseEnter(markerElements[0]);
+    fireEvent.mouseMove(markerElements[0]);
     expect(document.querySelector(".maplibregl-popup")).toHaveStyle({ pointerEvents: "none" });
 
+    fireEvent.mouseMove(markerElements[0]);
     fireEvent.mouseMove(markerElements[1]);
 
+    expect(mapInstance?.queryRenderedFeatures).toHaveBeenCalledTimes(3);
     expect(document.querySelector(".maplibregl-popup h3")).toHaveTextContent("Hetta");
   });
 
@@ -557,11 +535,11 @@ describe("ParkMap", () => {
     render(<ParkMap parks={parks} />);
     triggerMapLoad();
 
-    fireEvent.mouseEnter(markerElements[0]);
+    fireEvent.mouseMove(markerElements[0]);
     expect(document.body).toHaveTextContent("Pallas-Yllästunturin kansallispuisto");
 
     fireEvent.click(markerElements[0]);
-    fireEvent.mouseEnter(markerElements[1]);
+    fireEvent.mouseMove(markerElements[1]);
 
     expect(document.body).toHaveTextContent("Pallas-Yllästunturin kansallispuisto");
     expect(document.body).not.toHaveTextContent("Hetta");
@@ -1142,7 +1120,7 @@ describe("ParkMap", () => {
     render(<ParkMap parks={parks} />);
     triggerMapLoad();
 
-    fireEvent.mouseEnter(markerElements[0]);
+    fireEvent.mouseMove(markerElements[0]);
 
     expect(screen.getByRole("link", { name: "map.pdfBrochure" })).toHaveAttribute(
       "href",

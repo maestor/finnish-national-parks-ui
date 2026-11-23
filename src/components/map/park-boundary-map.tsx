@@ -10,7 +10,7 @@ import { resolveTooltipPosition, TOOLTIP_CONTENT_CLASS_NAME } from "@/components
 import type { ParkDetail } from "@/lib/parks";
 import { ThreeDotPulse } from "../ui/three-dot-pulse";
 import { MAP_FLOATING_CONTROL_BUTTON_CLASS_NAME } from "./map-floating-control-styles";
-import { getMapStyle } from "./map-style";
+import { getMapOptions } from "./map-options";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 type BoundaryGeoJson = NonNullable<ParkDetail["boundaryGeoJson"]>;
@@ -114,8 +114,7 @@ export const ParkBoundaryMap = ({
     destroyedRef.current = false;
 
     const map = new maplibregl.Map({
-      container,
-      style: getMapStyle(),
+      ...getMapOptions(container),
       minZoom: MAP_MIN_ZOOM,
       maxZoom: MAP_MAX_ZOOM,
     });
@@ -124,19 +123,12 @@ export const ParkBoundaryMap = ({
 
     map.on("load", () => {
       setIsMapLoaded(true);
-      map.resize();
     });
 
     mapRef.current = map;
 
-    const resizeObserver = new ResizeObserver(() => {
-      map.resize();
-    });
-    resizeObserver.observe(container);
-
     return () => {
       destroyedRef.current = true;
-      resizeObserver.disconnect();
       markerRef.current?.remove();
       markerRef.current = null;
       map.remove();

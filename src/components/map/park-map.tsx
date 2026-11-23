@@ -16,15 +16,14 @@ import {
 import { Button } from "../ui/button";
 import { ThreeDotPulse } from "../ui/three-dot-pulse";
 import { MAP_FLOATING_CONTROL_BUTTON_CLASS_NAME } from "./map-floating-control-styles";
+import { getMapOptions } from "./map-options";
 import {
   bindMapPointLayerEvents,
-  MAP_POINT_LAYER_ID,
   prepareMapPointIcon,
   setMapPointSelection,
   setMapPopupInteractivity,
   syncMapPointLayer,
 } from "./map-point-layer";
-import { getMapStyle } from "./map-style";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 interface ParkMapProps {
@@ -748,8 +747,7 @@ export const ParkMap = ({
     if (!container) return;
 
     const map = new maplibregl.Map({
-      container,
-      style: getMapStyle(),
+      ...getMapOptions(container),
       attributionControl: false,
       bounds: initialBoundsRef.current,
       fitBoundsOptions: {
@@ -780,14 +778,8 @@ export const ParkMap = ({
 
     mapRef.current = map;
 
-    const resizeObserver = new ResizeObserver(() => {
-      map.resize();
-    });
-    resizeObserver.observe(container);
-
     return () => {
       cancelClose();
-      resizeObserver.disconnect();
       popupRef.current?.remove();
       popupRef.current = null;
       popupSlugRef.current = null;
@@ -843,6 +835,10 @@ export const ParkMap = ({
     }
 
     const cleanupPointEvents = bindMapPointLayerEvents(map, {
+      onBackgroundClick: () => {
+        setActiveSlug(null);
+        setHoveredSlug(null);
+      },
       onPointClick: (slug) => {
         const park = parks.find(({ slug: parkSlug }) => parkSlug === slug);
         if (!park) {
@@ -871,24 +867,9 @@ export const ParkMap = ({
       },
     });
 
-    const handleMapClick = (event: maplibregl.MapMouseEvent) => {
-      if (
-        map.queryRenderedFeatures(event.point, {
-          layers: [MAP_POINT_LAYER_ID],
-        }).length === 0
-      ) {
-        setActiveSlug(null);
-        setHoveredSlug(null);
-      }
-    };
-    map.on("click", handleMapClick);
-
     syncPopupVisibility(activeSlugRef.current, hoveredSlugRef.current);
 
-    return () => {
-      cleanupPointEvents();
-      map.off("click", handleMapClick);
-    };
+    return cleanupPointEvents;
   }, [
     parks,
     isMapLoaded,

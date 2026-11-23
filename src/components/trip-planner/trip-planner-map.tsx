@@ -11,14 +11,13 @@ import type {
   TripPlannerSearchAreaResult,
   TripPlannerUiParkResult,
 } from "@/lib/trip-planner";
+import { getMapOptions } from "../map/map-options";
 import {
   bindMapPointLayerEvents,
-  MAP_POINT_LAYER_ID,
   prepareMapPointIcon,
   setMapPopupInteractivity,
   syncMapPointLayer,
 } from "../map/map-point-layer";
-import { getMapStyle } from "../map/map-style";
 import { ThreeDotPulse } from "../ui/three-dot-pulse";
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -361,8 +360,7 @@ export const TripPlannerMap = ({
     destroyedRef.current = false;
 
     const map = new maplibregl.Map({
-      container,
-      style: getMapStyle(),
+      ...getMapOptions(container),
       minZoom: 4,
       maxZoom: 15,
     });
@@ -371,20 +369,13 @@ export const TripPlannerMap = ({
     map.on("load", () => {
       prepareMapPointIcon(map);
       setIsMapLoaded(true);
-      map.resize();
     });
 
     mapRef.current = map;
 
-    const resizeObserver = new ResizeObserver(() => {
-      map.resize();
-    });
-    resizeObserver.observe(container);
-
     return () => {
       destroyedRef.current = true;
       cancelClose();
-      resizeObserver.disconnect();
 
       for (const marker of markerRefs.current) {
         marker.remove();
@@ -506,6 +497,10 @@ export const TripPlannerMap = ({
     );
 
     const cleanupPointEvents = bindMapPointLayerEvents(map, {
+      onBackgroundClick: () => {
+        setActiveSlug(null);
+        setHoveredSlug(null);
+      },
       onPointClick: (slug) => {
         cancelClose();
         setHoveredSlug(null);
@@ -522,18 +517,6 @@ export const TripPlannerMap = ({
       onPointLeave: scheduleClose,
     });
 
-    const handleMapClick = (event: maplibregl.MapMouseEvent) => {
-      if (
-        map.queryRenderedFeatures(event.point, {
-          layers: [MAP_POINT_LAYER_ID],
-        }).length === 0
-      ) {
-        setActiveSlug(null);
-        setHoveredSlug(null);
-      }
-    };
-    map.on("click", handleMapClick);
-
     for (const marker of nextMarkers) {
       marker.addTo(map);
     }
@@ -548,10 +531,7 @@ export const TripPlannerMap = ({
     );
     syncPopupVisibility(activeSlugRef.current, hoveredSlugRef.current);
 
-    return () => {
-      cleanupPointEvents();
-      map.off("click", handleMapClick);
-    };
+    return cleanupPointEvents;
   }, [
     cancelClose,
     destination,

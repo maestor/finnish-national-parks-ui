@@ -4,10 +4,8 @@ import type { PublicVisitsMapMarker } from "@/lib/public-visits";
 import { VisitsMap } from "./visits-map";
 
 const loadHandlers: Array<() => void> = [];
-const mapEventHandlers = new Map<
-  string,
-  Array<{ handler: (event?: unknown) => void; layer?: string }>
->();
+type MapEventHandler = (event?: unknown) => void;
+const mapEventHandlers = new Map<string, MapEventHandler[]>();
 const markerElements: HTMLElement[] = [];
 let virtualPointElements: HTMLElement[] = [];
 const markerInstances: Array<{ remove: ReturnType<typeof vi.fn> }> = [];
@@ -41,13 +39,11 @@ const triggerMapLoad = () => {
   });
 };
 
-const triggerMapPointEvent = (event: string, slug: string) => {
+const triggerMapPointEvent = (event: string, slug: string | null) => {
   act(() => {
     renderedPointSlug = slug;
-    for (const { handler, layer } of mapEventHandlers.get(event) ?? []) {
-      if (layer === "public-map-points") {
-        handler({ point: { x: 0, y: 0 } });
-      }
+    for (const handler of mapEventHandlers.get(event) ?? []) {
+      handler({ point: { x: 0, y: 0 } });
     }
     renderedPointSlug = null;
   });
@@ -128,52 +124,27 @@ const createMockMap = () => {
       button.setAttribute("aria-label", `${marker.name}, visits.map.visitCount`);
       const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
       button.appendChild(svg);
-      for (const event of ["click", "mouseenter", "mousemove", "mouseleave", "focus"]) {
-        button.addEventListener(event, () => triggerMapPointEvent(event, slug));
-      }
+      button.addEventListener("click", () => triggerMapPointEvent("click", slug));
+      button.addEventListener("mousemove", () => triggerMapPointEvent("mousemove", slug));
+      button.addEventListener("mouseleave", () => triggerMapPointEvent("mousemove", null));
       markerElements.push(button);
       return [button];
     });
   };
 
   return {
-    on: vi.fn(
-      (
-        event: string,
-        layerOrHandler: string | ((event?: unknown) => void),
-        maybeHandler?: (event?: unknown) => void,
-      ) => {
-        const layer = typeof layerOrHandler === "string" ? layerOrHandler : undefined;
-        const handler = (typeof layerOrHandler === "string" ? maybeHandler : layerOrHandler) as (
-          event?: unknown,
-        ) => void;
-        const handlers = mapEventHandlers.get(event) ?? [];
-        handlers.push({ handler, layer });
-        mapEventHandlers.set(event, handlers);
-        if (event === "load") {
-          loadHandlers.push(handler);
-        }
-      },
-    ),
-    off: vi.fn(
-      (
-        event: string,
-        layerOrHandler: string | ((event?: unknown) => void),
-        maybeHandler?: (event?: unknown) => void,
-      ) => {
-        const layer = typeof layerOrHandler === "string" ? layerOrHandler : undefined;
-        const handler = (typeof layerOrHandler === "string" ? maybeHandler : layerOrHandler) as (
-          event?: unknown,
-        ) => void;
-        mapEventHandlers.set(
-          event,
-          (mapEventHandlers.get(event) ?? []).filter(
-            ({ handler: registeredHandler, layer: registeredLayer }) =>
-              registeredHandler !== handler || registeredLayer !== layer,
-          ),
-        );
-      },
-    ),
+    on: vi.fn((event: string, handler: MapEventHandler) => {
+      const handlers = mapEventHandlers.get(event) ?? [];
+      handlers.push(handler);
+      mapEventHandlers.set(event, handlers);
+      if (event === "load") loadHandlers.push(handler);
+    }),
+    off: vi.fn((event: string, handler: MapEventHandler) => {
+      mapEventHandlers.set(
+        event,
+        (mapEventHandlers.get(event) ?? []).filter((entry) => entry !== handler),
+      );
+    }),
     remove: vi.fn(),
     resize: vi.fn(),
     addControl: vi.fn(),
@@ -203,13 +174,6 @@ const createMockMap = () => {
     fitBounds: fitBoundsMock,
   };
 };
-
-class MockResizeObserver {
-  observe = vi.fn();
-  disconnect = vi.fn();
-}
-
-global.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
 
 vi.mock("maplibre-gl", () => ({
   // biome-ignore lint: Vitest v4 constructor mocks must be constructible.
@@ -314,7 +278,7 @@ describe("VisitsMap", () => {
     render(<VisitsMap markers={markers} />);
     triggerMapLoad();
 
-    fireEvent.mouseEnter(markerElements[0]);
+    fireEvent.mouseMove(markerElements[0]);
     expect(document.querySelector(".maplibregl-popup")).not.toBeNull();
 
     fireEvent.mouseLeave(markerElements[0]);
@@ -333,7 +297,7 @@ describe("VisitsMap", () => {
     render(<VisitsMap markers={markers} />);
     triggerMapLoad();
 
-    fireEvent.mouseEnter(markerElements[0]);
+    fireEvent.mouseMove(markerElements[0]);
     expect(document.querySelector(".maplibregl-popup")).toHaveStyle({ pointerEvents: "none" });
 
     fireEvent.mouseMove(markerElements[1]);
@@ -345,7 +309,7 @@ describe("VisitsMap", () => {
     render(<VisitsMap markers={markers} />);
     triggerMapLoad();
 
-    fireEvent.mouseEnter(markerElements[0]);
+    fireEvent.mouseMove(markerElements[0]);
     fireEvent.click(markerElements[0]);
     fireEvent.mouseLeave(markerElements[0]);
 
@@ -367,16 +331,16 @@ describe("VisitsMap", () => {
     expect(document.querySelector(".maplibregl-popup")).toBeNull();
   });
 
-  it("keeps the popup open when a focused marker is clicked", () => {
+  it("keeps the clicked visit selected until the map background is clicked", () => {
     render(<VisitsMap markers={markers} />);
     triggerMapLoad();
 
-    // A real pointer click focuses the button before the click event fires;
-    // the popup opened by focus must survive the click.
-    fireEvent.focus(markerElements[0]);
     fireEvent.click(markerElements[0]);
+    fireEvent.mouseMove(markerElements[1]);
+    expect(document.querySelector(".maplibregl-popup h3")).toHaveTextContent("Nuuksio");
 
-    expect(document.querySelector(".maplibregl-popup")).not.toBeNull();
+    triggerMapPointEvent("click", null);
+    expect(document.querySelector(".maplibregl-popup")).toBeNull();
   });
 
   it("removes the previous markers and popups when the filtered markers change", () => {

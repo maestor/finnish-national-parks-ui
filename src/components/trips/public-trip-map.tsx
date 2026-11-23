@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { formatFinnishDate } from "@/lib/fi-date";
 import { createTripItineraryItemKey } from "@/lib/public-trip-visit-details";
 import { getTripStopDisplayName, type PublicTripDetail, type PublicTripRoute } from "@/lib/trips";
-import { getMapStyle } from "../map/map-style";
+import { getMapOptions } from "../map/map-options";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 interface PublicTripMapProps {
@@ -254,8 +254,7 @@ export const PublicTripMap = ({
     }
 
     const map = new maplibregl.Map({
-      container,
-      style: getMapStyle(),
+      ...getMapOptions(container),
       minZoom: 4,
       maxZoom: 15,
     });
@@ -263,19 +262,11 @@ export const PublicTripMap = ({
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
     map.on("load", () => {
       setIsMapLoaded(true);
-      map.resize();
     });
 
     mapRef.current = map;
 
-    const resizeObserver = new ResizeObserver(() => {
-      map.resize();
-    });
-    resizeObserver.observe(container);
-
     return () => {
-      resizeObserver.disconnect();
-
       for (const marker of markerRefs.current) {
         marker.remove();
       }

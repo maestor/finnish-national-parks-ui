@@ -54,13 +54,6 @@ const createMockMap = ({ autoLoad = true } = {}) => {
   };
 };
 
-class MockResizeObserver {
-  observe = vi.fn();
-  disconnect = vi.fn();
-}
-
-global.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
-
 let mockMap = createMockMap();
 
 vi.mock("maplibre-gl", async (importOriginal) => ({
