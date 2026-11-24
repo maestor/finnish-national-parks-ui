@@ -49,6 +49,8 @@ const createVisibilityPark = () => ({
 describe("Park admin controls", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(apiFetch).mockReset();
+    mockRevalidatePublicCache.mockReset().mockResolvedValue(true);
   });
 
   it("stays hidden for logged out visitors", () => {
@@ -110,6 +112,83 @@ describe("Park admin controls", () => {
     expect(editLink.parentElement?.children[1]).toBe(addVisitLink);
     expect(editLink.parentElement?.children[2]).toBe(hideButton);
     expect(addVisitLink).toHaveAttribute("href", "/hallinta/kaynnit/uusi?park=pallas");
+  });
+
+  it("clears the current park and its freshly linked trails from the admin section", async () => {
+    const user = userEvent.setup();
+    mockUseAuth.mockReturnValue({ isAuthenticated: true, isLoading: false });
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({ visibleParks: [createVisibilityPark()], removedParks: [] })
+      .mockResolvedValueOnce({
+        trails: [
+          { slug: "recently-imported", effective: true },
+          { slug: "excluded-trail", effective: false },
+          { slug: "other-linked-trail", effective: true },
+        ],
+      });
+    renderControls(<ParkAdminSection />);
+
+    const button = await screen.findByRole("button", { name: "park.admin.clearCacheAction" });
+    expect(button.previousElementSibling).toBe(
+      screen.getByRole("button", { name: "park.admin.hideAction" }),
+    );
+    expect(button).toHaveClass("bg-destructive");
+    await user.click(button);
+
+    expect(apiFetch).toHaveBeenCalledWith("/api/admin/parks/pallas/visit-trails", {
+      cache: "no-store",
+    });
+    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({
+      parkSlug: "pallas",
+      parkSlugs: ["recently-imported", "other-linked-trail"],
+    });
+    expect(await screen.findByRole("status")).toHaveTextContent("park.admin.clearCacheSuccess");
+  });
+
+  it("keeps the cache action focused while clearing a park without trails and lets admins retry", async () => {
+    const user = userEvent.setup();
+    let finishClear!: (result: boolean) => void;
+    mockRevalidatePublicCache.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finishClear = resolve;
+        }),
+    );
+    mockUseAuth.mockReturnValue({ isAuthenticated: true, isLoading: false });
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({ visibleParks: [], removedParks: [createVisibilityPark()] })
+      .mockResolvedValue({ trails: [] });
+    renderControls(<ParkAdminSection />);
+
+    const button = await screen.findByRole("button", { name: "park.admin.clearCacheAction" });
+    expect(button.previousElementSibling).toBe(
+      screen.getByRole("button", { name: "park.admin.showAction" }),
+    );
+    button.focus();
+    await user.keyboard("{Enter}{Enter}");
+    expect(button).toHaveAttribute("aria-disabled", "true");
+    expect(button).toHaveFocus();
+    expect(button).toHaveAccessibleName("park.admin.clearingCache");
+    expect(mockRevalidatePublicCache).toHaveBeenCalledTimes(1);
+    expect(mockRevalidatePublicCache).toHaveBeenCalledWith({ parkSlug: "pallas", parkSlugs: [] });
+
+    finishClear(false);
+    expect(await screen.findByRole("alert")).toHaveTextContent("park.admin.clearCacheError");
+    await user.keyboard("{Enter}");
+    expect(await screen.findByRole("status")).toHaveTextContent("park.admin.clearCacheSuccess");
+  });
+
+  it("reports a failed trail lookup before submitting a cache clear", async () => {
+    const user = userEvent.setup();
+    mockUseAuth.mockReturnValue({ isAuthenticated: true, isLoading: false });
+    vi.mocked(apiFetch)
+      .mockResolvedValueOnce({ visibleParks: [createVisibilityPark()], removedParks: [] })
+      .mockRejectedValueOnce(new Error("offline"));
+    renderControls(<ParkAdminSection />);
+
+    await user.click(await screen.findByRole("button", { name: "park.admin.clearCacheAction" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("park.admin.clearCacheError");
+    expect(mockRevalidatePublicCache).not.toHaveBeenCalled();
   });
 
   it("toggles park visibility from the admin section", async () => {

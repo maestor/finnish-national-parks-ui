@@ -5,6 +5,7 @@ import {
   getPublicTripTag,
   HOME_SUMMARY_TAG,
   MAP_SUMMARY_TAG,
+  MAX_PARK_SLUGS_PER_REVALIDATION,
   PUBLIC_TRIPS_TAG,
   PUBLIC_VISITS_TAG,
 } from "@/lib/public-cache";
@@ -64,7 +65,7 @@ export const POST = async (request: Request) => {
     if (body.parkSlugs !== undefined) {
       if (
         !Array.isArray(body.parkSlugs) ||
-        body.parkSlugs.length > 500 ||
+        body.parkSlugs.length > MAX_PARK_SLUGS_PER_REVALIDATION ||
         body.parkSlugs.some((slug) => typeof slug !== "string" || !/^[a-z0-9-]+$/.test(slug))
       ) {
         return Response.json({ ok: false, error: "Invalid park slugs" }, { status: 400 });
