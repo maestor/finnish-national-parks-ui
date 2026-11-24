@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   createContext,
@@ -17,6 +18,7 @@ import { useSnackbar } from "@/components/providers/snackbar-provider";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { apiFetch } from "@/lib/api";
+import type { paths } from "@/lib/api-types";
 import type { AdminParkVisibilityResponse } from "@/lib/parks";
 import { revalidatePublicCache } from "@/lib/public-cache";
 import { appRoutes, createPathWithSearchParams } from "@/lib/routes";
@@ -25,6 +27,9 @@ const ADMIN_ACTION_LINK_CLASS_NAME =
   "inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
 
 type ParkVisibilityState = "visible" | "hidden" | null;
+
+type ParkTrailResponse =
+  paths["/api/admin/parks/{slug}/visit-trails"]["get"]["responses"][200]["content"]["application/json"];
 
 interface ParkAdminControlsContextValue {
   isAuthenticated: boolean;
@@ -209,6 +214,9 @@ export const ParkVisibilityBadge = () => {
 export const ParkAdminSection = () => {
   const t = useTranslations("park.admin");
   const tPark = useTranslations("park");
+  const router = useRouter();
+  const { showSnackbar } = useSnackbar();
+  const [isClearingCache, setIsClearingCache] = useState(false);
   const {
     isAuthenticated,
     isPending,
@@ -223,6 +231,30 @@ export const ParkAdminSection = () => {
   }
 
   const isVisible = visibility === "visible";
+
+  const clearParkCache = async () => {
+    if (isClearingCache) return;
+    setIsClearingCache(true);
+
+    const cleared = await apiFetch<ParkTrailResponse>(
+      `/api/admin/parks/${encodeURIComponent(parkSlug)}/visit-trails`,
+      { cache: "no-store" },
+    )
+      .then(({ trails }) =>
+        revalidatePublicCache({
+          parkSlug,
+          parkSlugs: trails.filter((trail) => trail.effective).map((trail) => trail.slug),
+        }),
+      )
+      .catch(() => false);
+
+    setIsClearingCache(false);
+    showSnackbar({
+      message: cleared ? t("clearCacheSuccess") : t("clearCacheError"),
+      tone: cleared ? "success" : "error",
+    });
+    if (cleared) router.refresh();
+  };
 
   return (
     <section className="mt-8 rounded-[2rem] border border-border theme-panel p-5 shadow-[0_24px_48px_rgba(var(--shadow-rgb),0.14)] backdrop-blur-xl dark:shadow-[0_28px_56px_rgba(var(--shadow-rgb),0.3)]">
@@ -254,6 +286,15 @@ export const ParkAdminSection = () => {
           disabled={isPending}
         >
           {isPending ? t("updating") : isVisible ? t("hideAction") : t("showAction")}
+        </Button>
+        <Button
+          type="button"
+          variant="destructive"
+          aria-disabled={isClearingCache}
+          className="aria-disabled:opacity-50"
+          onClick={clearParkCache}
+        >
+          {isClearingCache ? t("clearingCache") : t("clearCacheAction")}
         </Button>
       </div>
     </section>
