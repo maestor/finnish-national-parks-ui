@@ -2159,6 +2159,7 @@ export interface paths {
                                 slug: string;
                                 address: string | null;
                                 lengthKm: number | null;
+                                parkUrl?: string | null;
                                 source?: {
                                     /** @enum {string} */
                                     type: "openstreetmap";
@@ -2359,6 +2360,7 @@ export interface paths {
                                 slug: string;
                                 address: string | null;
                                 lengthKm: number | null;
+                                parkUrl?: string | null;
                                 source?: {
                                     /** @enum {string} */
                                     type: "openstreetmap";

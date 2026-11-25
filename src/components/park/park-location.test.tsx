@@ -65,6 +65,28 @@ const props = {
 };
 
 describe("ParkLocation", () => {
+  it("shows a new-tab details badge for the selected trail with a URL", async () => {
+    const user = userEvent.setup();
+    const parkUrl = "https://www.luontoon.fi/testi-luontopolku";
+    render(
+      <ParkLocation
+        {...props}
+        linkedTrails={[{ ...trails[0], parkUrl }, { ...trails[1], parkUrl: null }, trails[2]]}
+      />,
+      { wrapper: I18nProvider },
+    );
+    const panel = within(screen.getByTestId("selection-details"));
+    await user.click(screen.getByRole("button", { name: "Tunnettu reitti" }));
+    const link = panel.getByRole("link", { name: "Lisätietoja (avautuu uuteen välilehteen)" });
+    expect(link).toHaveAttribute("href", parkUrl);
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", "noopener noreferrer");
+
+    for (const name of ["Tuntematon reitti", "Nollareitti"]) {
+      await user.click(screen.getByRole("button", { name }));
+      expect(panel.queryByRole("link", { name: /Lisätietoja/ })).not.toBeInTheDocument();
+    }
+  });
   it.each([
     {
       type: "openstreetmap" as const,
