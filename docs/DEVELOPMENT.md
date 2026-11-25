@@ -337,8 +337,10 @@ expire affected area and trail slugs through authenticated revalidation.
 Park edits also expire any old slug and effective linked areas.
 
 `ParkLocation` shares selection across the trail list, details panel and
-deferred MapLibre map. Trail links and visit assignments remain available
-without map geometry. Visit badges navigate to the selected trail and linked
+deferred MapLibre map. When the selected trail has a `parkUrl`, the details panel
+shows a **Lisätietoja** badge in the top-right corner that opens the trail website
+in a new tab. Trail links and visit assignments remain available without map
+geometry. Visit badges navigate to the selected trail and linked
 visit dates navigate back to the history card. Repeated navigation and reduced
 motion are handled by the shared location and visit navigation.
 

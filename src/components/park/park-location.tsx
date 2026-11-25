@@ -1,8 +1,9 @@
 "use client";
-import { Check } from "lucide-react";
+import { ArrowUpRight, Check, Globe2 } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { PUBLIC_META_BADGE_CLASS_NAME } from "@/components/layout/public-page-styles";
 import { DeferredMap } from "@/components/map/deferred-map";
 import { LazyParkBoundaryMap } from "@/components/map/lazy-park-boundary-map";
 import { ParkTrailChoices } from "@/components/map/park-trail-choices";
@@ -12,6 +13,7 @@ import { useParkVisitVisibility } from "@/components/park/park-visit-link";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { SelectionDetails } from "@/components/ui/selection-details";
+import { cn } from "@/lib/cn";
 import { formatFinnishDate } from "@/lib/fi-date";
 import { getParkTrailVisits } from "@/lib/park-trail-visits";
 import type { ParkDetail, Visit } from "@/lib/parks";
@@ -162,6 +164,24 @@ export const ParkLocation = ({
       </span>
       <SelectionDetails
         label={selected ? t("selectedTrail") : t("wholeArea")}
+        labelAction={
+          !!selected?.parkUrl && (
+            <a
+              href={selected.parkUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`${t("officialLink")} (${parkT("opensInNewTab")})`}
+              className={cn(
+                PUBLIC_META_BADGE_CLASS_NAME,
+                "relative shrink-0 text-link transition-colors after:absolute after:inset-x-0 after:-inset-y-2.5 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+              )}
+            >
+              <Globe2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              {t("officialLink")}
+              <ArrowUpRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            </a>
+          )
+        }
         actions={selected ? null : areaActions}
       >
         {selected ? (
