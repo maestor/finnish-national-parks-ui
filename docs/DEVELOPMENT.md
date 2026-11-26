@@ -298,7 +298,7 @@ reject extra path segments.
 | --- | --- | --- |
 | Home | `GET /api/home-summary` | Cache under `home-summary`. This one read supplies catalog progress, magnet progress, and latest and curated memory previews. |
 | Map | `GET /api/map-summary` | Cache under `map-summary`. The latest-visit link uses `lastVisitId` from the same result as the summary date. |
-| Visits | `GET /api/visits-timeline` | Cache under `public-visits`. The map and visited national parks views also read map summary. Timeline cards use the first ordered thumbnail, and expanded content loads on demand. |
+| Visits | `GET /api/visits-timeline` | Cache under `public-visits`. The map and visited national parks views also read map summary. Timeline cards use the first ordered thumbnail and show linked trails alongside the free-text kohde. Expanded content loads on demand. |
 | Trip archive | `GET /api/trips/archive` | Cache the first page under `public-trips`. Further pages load through the cursor-based archive proxy. Back navigation restores the loaded list and position without persisting media URLs. |
 | Park detail | `GET /api/parks/{slug}` and `GET /api/parks/{slug}/visits` | Cache public reads under `public-park:{slug}`. Weather loads separately after hydration through the same-origin proxy with `no-store`. |
 | Trip detail | `GET /api/trips/slug/{slug}` | Cache public details under `public-trip:{slug}`. Route geometry and private, no-store gallery pages load separately. |
