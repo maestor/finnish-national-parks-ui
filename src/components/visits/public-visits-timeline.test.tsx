@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { assert, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   buildPublicVisitsTimelineModel,
   buildVisitedMagnetParksModel,
@@ -195,7 +195,7 @@ describe("PublicVisitsTimeline", () => {
     });
   });
 
-  it("loads opening thumbnails eagerly in standalone and trip visits without changing their details", () => {
+  it("loads opening thumbnails eagerly and shows the park type over both card images", () => {
     renderTimeline(
       [
         {
@@ -237,16 +237,21 @@ describe("PublicVisitsTimeline", () => {
       expect(within(link).getByText("visits.item.viewVisit")).toHaveClass("sr-only");
       expect(link).toHaveAccessibleName(/visits\.item\.viewVisit/);
       expect(link).toHaveAttribute("title", "visits.item.viewVisit");
-      const imageCount = within(imageSurface).getByLabelText("visits.item.imageCount");
+      const parkTypeBadge = within(imageSurface).getByText("Kansallispuisto");
+      expect(parkTypeBadge).toBeVisible();
+      expect(parkTypeBadge).toHaveClass("theme-memory", "text-sm", "font-medium");
+      const card = link.closest("li");
+      assert(card);
+      const imageCount = within(card).getByLabelText("visits.item.imageCount");
       expect(imageCount).toHaveTextContent("1");
-      expect(
-        within(link.closest("li") as HTMLElement).getAllByLabelText("visits.item.imageCount"),
-      ).toHaveLength(1);
+      expect(imageSurface).toContainElement(imageCount);
       expect(within(link).getAllByText(date)).toHaveLength(1);
       expect(imageSurface).not.toContainElement(within(link).getByRole("heading"));
     }
     const imagelessLink = screen.getByRole("link", { name: /Oulanka/ });
-    expect(within(imagelessLink).getByText("5.2.2025")).toBeVisible();
+    const date = within(imagelessLink).getByText("5.2.2025");
+    expect(date).toBeVisible();
+    expect(date.parentElement).toContainElement(within(imagelessLink).getByText("Kansallispuisto"));
     expect(within(imagelessLink).getByText("visits.item.viewVisit")).toHaveClass("sr-only");
     expect(imagelessLink).toHaveAccessibleName(/visits\.item\.viewVisit/);
     expect(imagelessLink).toHaveAttribute("title", "visits.item.viewVisit");
@@ -701,45 +706,61 @@ describe("PublicVisitsTimeline", () => {
     expect(screen.queryByText("visits.empty.filtered")).not.toBeInTheDocument();
   });
 
-  it("shows a continuous month spine with the park type as the first detail badge", () => {
+  it("shows a continuous month spine and visit image counts", () => {
     renderTimeline(visits, { selectedYear: null, selectedMonth: null });
 
     const nuuksioVisitItem = screen.getByRole("heading", { name: "Nuuksio" }).closest("li");
     const monthTimeline = nuuksioVisitItem?.closest("ol");
     const imageBadge = screen.getByLabelText("visits.item.imageCount");
-    const routeBadge = screen.getByText("Punarinnankierros");
 
     if (!(monthTimeline instanceof HTMLElement) || !(nuuksioVisitItem instanceof HTMLElement)) {
       throw new Error("Expected timeline list and Nuuksio visit item");
     }
 
-    const parkTypeBadge = within(nuuksioVisitItem).getByText("Kansallispuisto");
-
     expect(monthTimeline).toHaveClass("before:absolute");
-    expect(parkTypeBadge.compareDocumentPosition(routeBadge)).toBe(
-      Node.DOCUMENT_POSITION_FOLLOWING,
-    );
     expect(imageBadge).toHaveTextContent("1");
     expect(screen.queryByLabelText("visits.item.note")).not.toBeInTheDocument();
   });
 
-  it("shows the park type badge in the shared detail badge row when metadata is available", () => {
-    renderTimeline(visits, { selectedYear: null, selectedMonth: null });
+  it("uses a shared row with the free-text kohde before linked trails", () => {
+    renderTimeline(
+      [
+        {
+          ...visits[0],
+          featuredImage: { url: "https://example.test/loose-thumb.jpg" },
+          imageCount: 3,
+          trails: [
+            { id: 10, name: "Haukankierros", slug: "haukankierros" },
+            { id: 11, name: "Klassarinkierros", slug: "klassarinkierros" },
+          ],
+        },
+        {
+          ...visits[1],
+          trip: { id: 7, name: "Kesäretki", slug: "kesaretki" },
+          trails: [{ id: 12, name: "Taivaskeron kierros", slug: "taivaskeron-kierros" }],
+        },
+        { ...visits[2], trails: [] },
+      ],
+      { selectedYear: null, selectedMonth: null },
+    );
 
-    const nuuksioVisitItem = screen.getByRole("heading", { name: "Nuuksio" }).closest("li");
+    const nuuksioCard = screen.getByRole("heading", { name: "Nuuksio" }).closest("li");
+    assert(nuuksioCard);
+    const badgeRow =
+      within(nuuksioCard).getByText("Punarinnankierros").parentElement?.parentElement;
+    assert(badgeRow);
+    expect(badgeRow).toHaveClass("flex", "flex-wrap");
+    expect(Array.from(badgeRow.children, (badge) => badge.textContent)).toEqual([
+      "Punarinnankierros",
+      "Haukankierros",
+      "Klassarinkierros",
+    ]);
 
-    if (!(nuuksioVisitItem instanceof HTMLElement)) {
-      throw new Error("Expected Nuuksio visit item");
-    }
-
-    const badgeRow = screen.getByText("Punarinnankierros").parentElement;
-
-    if (!(badgeRow instanceof HTMLElement)) {
-      throw new Error("Expected visit badge row");
-    }
-
-    expect(badgeRow).toHaveClass("mt-3", "flex", "flex-wrap", "gap-2");
-    expect(within(badgeRow).getByText("Kansallispuisto")).toBeInTheDocument();
+    const tripCard = screen.getByRole("heading", { name: "Pallas-Yllastunturi" }).closest("li");
+    assert(tripCard);
+    const tripTrail = within(tripCard).getByText("Taivaskeron kierros");
+    const tripPhotoCount = within(tripCard).getByLabelText("visits.item.imageCount");
+    expect(tripTrail.parentElement?.previousElementSibling).toBe(tripPhotoCount);
   });
 
   it("uses centered mobile month headers and aligns the mobile spine with visit markers", () => {

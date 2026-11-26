@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUp, CalendarRange, Footprints, Images, MapPin, TentTree } from "lucide-react";
+import { ArrowUp, CalendarRange, Footprints, Images, MapPin, Route, TentTree } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -302,35 +302,34 @@ const PublicVisitsTimelineContent = ({
   let visitFocusIndex = 0;
   let visitImageIndex = 0;
 
-  const renderVisitBadges = (visit: {
-    imageCount: number;
-    featuredImage: { url: string } | null;
-    park: { typeLabel: string };
-    route: string | null;
-  }) => {
-    const hasImages = visit.imageCount > 0 && !visit.featuredImage;
+  const renderVisitBadges = (visit: PublicVisitTimelineVisitItem["visit"]) => {
+    const showImageCount = visit.imageCount > 0 && visit.featuredImage === null;
+    if (visit.route === null && !visit.trails?.length && !showImageCount) return null;
 
     return (
-      <div className="mt-3 flex flex-wrap gap-2">
-        <ParkTypeBadge label={visit.park.typeLabel} />
+      <div className="mt-2 flex flex-wrap gap-1.5">
         {visit.route !== null && (
           <span className={PUBLIC_ROUTE_BADGE_CLASS_NAME}>
-            <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
-            {visit.route}
+            <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <span className="min-w-0 wrap-break-word">{visit.route}</span>
           </span>
         )}
-        {hasImages === true && (
+        {showImageCount === true && (
           <span
-            aria-label={t("item.imageCount", {
-              count: visit.imageCount,
-            })}
-            className="inline-flex items-center gap-1.5 rounded-full border border-border theme-memory px-2.5 py-1 text-xs font-semibold text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] dark:shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.08)]"
+            aria-label={t("item.imageCount", { count: visit.imageCount })}
+            className={PUBLIC_ROUTE_BADGE_CLASS_NAME}
             role="img"
           >
             <Images className="h-3.5 w-3.5" aria-hidden="true" />
             {visit.imageCount}
           </span>
         )}
+        {visit.trails?.map((trail) => (
+          <span key={trail.id} className={PUBLIC_ROUTE_BADGE_CLASS_NAME}>
+            <Route className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <span className="min-w-0 wrap-break-word">{trail.name}</span>
+          </span>
+        ))}
       </div>
     );
   };
@@ -344,10 +343,11 @@ const PublicVisitsTimelineContent = ({
     if (image) visitImageIndex += 1;
     const header = (
       <div
-        className={cn(
-          "flex items-start justify-between",
-          image ? "absolute inset-x-3 top-3 gap-1.5" : cn("gap-3", imagelessHeaderPadding),
-        )}
+        className={
+          image
+            ? "absolute inset-x-3 bottom-3 flex items-end justify-between gap-1.5"
+            : cn("flex flex-wrap items-center gap-x-3 gap-y-1.5", imagelessHeaderPadding)
+        }
       >
         <time
           dateTime={visit.visitedOn}
@@ -369,6 +369,7 @@ const PublicVisitsTimelineContent = ({
             {visit.imageCount}
           </span>
         )}
+        {image === null && <ParkTypeBadge label={visit.park.typeLabel} />}
         <span className="sr-only">{t("item.viewVisit")}</span>
       </div>
     );
@@ -383,6 +384,10 @@ const PublicVisitsTimelineContent = ({
           className="object-cover"
         />
         {header}
+        <ParkTypeBadge
+          label={visit.park.typeLabel}
+          className="absolute top-3 left-3 max-w-[calc(100%-1.5rem)] wrap-break-word"
+        />
       </div>
     ) : (
       header

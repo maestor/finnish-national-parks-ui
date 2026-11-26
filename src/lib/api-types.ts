@@ -3433,6 +3433,11 @@ export interface paths {
                                     typeLabel: string;
                                 };
                                 route: string | null;
+                                trails?: {
+                                    id: number;
+                                    name: string;
+                                    slug: string;
+                                }[];
                                 trip: {
                                     id: number;
                                     name: string;
