@@ -7,6 +7,9 @@ interface BuildPageMetadataOptions {
   socialImagePath?: string;
 }
 
+export const buildOptimizedShareImagePath = (url: string) =>
+  `/_next/image?url=${encodeURIComponent(url)}&w=1200&q=75`;
+
 export const buildShareTitle = (pageTitle: string, siteTitle: string) =>
   `${pageTitle} | ${siteTitle}`;
 
