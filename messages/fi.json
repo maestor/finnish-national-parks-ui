@@ -152,7 +152,6 @@
     }
   },
   "park": {
-    "aboutTitle": "Kohteesta",
     "materialsTitle": "Materiaalit",
     "weather": {
       "title": "Säätiedot",
@@ -226,9 +225,8 @@
       "summer": "Kesä",
       "autumn": "Syksy"
     },
-    "eyebrow": "Paikka",
+    "eyebrow": "Kohde",
     "detailTitle": "Paikan tiedot",
-    "visitHistory": "Käyntihistoria",
     "officialLink": "Web-sivu",
     "pdfBrochure": "PDF esite",
     "location": "Sijainti",
@@ -253,7 +251,7 @@
     "copyParkPageLink": "Kopioi paikan sivun linkki",
     "parkPageLinkCopied": "Paikan sivun linkki kopioitu",
     "boundaryMapTitle": "Paikan kartta",
-    "showInFinlandsMap": "Näytä Suomen kartalla",
+    "showOnMap": "Näytä kartalla",
     "admin": {
       "title": "Hallintatoimet",
       "description": "Voit muokata paikan tietoja, muuttaa sen näkyvyyttä tai tyhjentää paikan ja siihen liitettyjen reittien välimuistin.",

@@ -6,11 +6,15 @@ import { MarkdownContent } from "@/components/ui/markdown-content";
 import { SEASON_EMOJIS, type Season } from "@/lib/seasons";
 
 export const ParkAbout = ({
+  id,
+  title,
   description,
   seasons,
   parkUrl,
   mapUrl,
 }: {
+  id: string;
+  title: string;
   description: string | null;
   seasons: Season[];
   parkUrl: string | null;
@@ -20,7 +24,7 @@ export const ParkAbout = ({
   const hasMaterials = parkUrl !== null || mapUrl !== null;
   return (
     <section
-      id="park-about"
+      id={id}
       tabIndex={-1}
       aria-labelledby="park-about-title"
       className="mt-6 scroll-mt-28 overflow-hidden rounded-[2rem] border border-border theme-panel shadow-[0_24px_48px_rgba(var(--shadow-rgb),0.14)] backdrop-blur-xl dark:shadow-[0_28px_56px_rgba(var(--shadow-rgb),0.3)]"
@@ -29,11 +33,10 @@ export const ParkAbout = ({
         <div className="flex items-center gap-2">
           <Info className="h-4 w-4 text-link" aria-hidden="true" />
           <h2 id="park-about-title" className="text-lg font-semibold tracking-tight">
-            {t("aboutTitle")}
+            {title}
           </h2>
         </div>
         {description !== null && <MarkdownContent className="mt-4">{description}</MarkdownContent>}
-        <ParkWeather />
         {seasons.length > 0 && (
           <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3 rounded-2xl border border-border/60 bg-control/45 px-4 py-3">
             <h3
@@ -57,6 +60,7 @@ export const ParkAbout = ({
             </ul>
           </div>
         )}
+        <ParkWeather />
       </div>
       {hasMaterials === true && (
         <div className="border-t border-border/70 bg-control/35 px-5 py-4 sm:px-6">

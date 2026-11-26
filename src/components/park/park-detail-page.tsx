@@ -1,4 +1,4 @@
-import { CalendarRange, MapPin, Route, Scan } from "lucide-react";
+import { CalendarRange, Map as MapIcon, MapPin, Route, Scan } from "lucide-react";
 import Link from "next/link";
 import { unstable_rethrow } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -169,17 +169,19 @@ export const ParkDetailPage = async ({ params, authenticated = false }: ParkDeta
   const boundaryGeoJson = publicPark.boundaryGeoJson ?? null;
   const hasBoundaryGeoJson = boundaryGeoJson !== null;
 
+  const sections = {
+    location: { id: "park-location", label: t("sectionNav.location") },
+    visits: { id: "visit-history", label: t("sectionNav.visits") },
+    about: { id: "park-about", label: t("sectionNav.about") },
+  };
   const sectionNavigationProps = {
     ariaLabel: t("sectionNavigationLabel"),
     className: "mt-4",
-    items: [
-      { id: "park-location", label: t("sectionNav.location") },
-      { id: "park-about", label: t("sectionNav.about") },
-      { id: "visit-history", label: t("sectionNav.visits") },
-    ],
+    items: Object.values(sections),
   };
   const visitHistoryProps = {
-    title: t("visitHistory"),
+    id: sections.visits.id,
+    title: sections.visits.label,
     addVisitLabel: t("addVisit"),
     parkSlug: slug,
     visits,
@@ -285,7 +287,7 @@ export const ParkDetailPage = async ({ params, authenticated = false }: ParkDeta
             </Suspense>
 
             <section
-              id="park-location"
+              id={sections.location.id}
               tabIndex={-1}
               aria-labelledby="park-location-title"
               className="mt-6 scroll-mt-28 rounded-[2rem] border border-border theme-panel p-5 shadow-[0_24px_48px_rgba(var(--shadow-rgb),0.14)] backdrop-blur-xl dark:shadow-[0_28px_56px_rgba(var(--shadow-rgb),0.3)]"
@@ -294,15 +296,16 @@ export const ParkDetailPage = async ({ params, authenticated = false }: ParkDeta
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-link" aria-hidden="true" />
                   <h2 id="park-location-title" className="text-lg font-semibold tracking-tight">
-                    {t(hasBoundaryGeoJson ? "boundaryMapTitle" : "location")}
+                    {sections.location.label}
                   </h2>
                 </div>
                 <Link
                   href={createPathWithSearchParams(appRoutes.parks, { park: slug })}
                   prefetch={false}
-                  className="rounded-full border border-border bg-control px-3 py-1.5 text-sm font-medium text-link shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.55)] transition-colors hover:bg-accent"
+                  className="inline-flex items-center gap-1 rounded-full theme-action px-3 py-1.5 text-xs font-medium text-action-foreground shadow-[0_14px_28px_rgba(var(--shadow-rgb),0.24)] transition-[filter,transform] hover:brightness-105"
                 >
-                  {t("showInFinlandsMap")}
+                  <MapIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                  {t("showOnMap")}
                 </Link>
               </div>
               {(() => {
@@ -362,18 +365,20 @@ export const ParkDetailPage = async ({ params, authenticated = false }: ParkDeta
               })()}
             </section>
 
+            <Suspense fallback={<ParkVisitHistory {...visitHistoryProps} />}>
+              <LinkedParkVisitHistory {...visitHistoryProps} />
+            </Suspense>
+
             <ParkAboutVisibility>
               <ParkAbout
+                id={sections.about.id}
+                title={sections.about.label}
                 description={description}
                 seasons={seasons}
                 parkUrl={parkUrl}
                 mapUrl={mapUrl}
               />
             </ParkAboutVisibility>
-
-            <Suspense fallback={<ParkVisitHistory {...visitHistoryProps} />}>
-              <LinkedParkVisitHistory {...visitHistoryProps} />
-            </Suspense>
             <ParkAdminSection />
           </article>
         </ParkDetailContent>
