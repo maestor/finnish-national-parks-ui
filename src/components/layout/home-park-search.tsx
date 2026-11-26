@@ -8,11 +8,7 @@ import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/cn";
-import {
-  type CombinedSearchIndex,
-  getParkTypeDisplayName,
-  type ParkSearchResult,
-} from "@/lib/parks";
+import { type CombinedSearchIndex, getParkTypeDisplayName } from "@/lib/parks";
 import { appRoutes, normalizeAppPath } from "@/lib/routes";
 import { useHomeMapControls } from "../providers/home-map-controls-provider";
 
@@ -28,7 +24,7 @@ const MOBILE_SEARCH_RESULTS_PANEL_CLASS_NAME =
   "bg-control shadow-[0_32px_72px_rgba(var(--shadow-rgb),0.32)] dark:shadow-[0_36px_76px_rgba(var(--shadow-rgb),0.52)]";
 
 type SearchResult =
-  | { kind: "park"; park: ParkSearchResult & { visited: boolean } }
+  | { kind: "park"; park: CombinedSearchIndex["parks"][number] }
   | { kind: "trip"; trip: CombinedSearchIndex["trips"][number] };
 
 const finnishSearchCollator = new Intl.Collator("fi-FI", { sensitivity: "base" });
@@ -130,7 +126,13 @@ export const HomeParkSearch = () => {
         .filter(
           (park) =>
             trimmedQuery.length === 0 ||
-            [park.name, getParkTypeDisplayName(park), park.type.name, park.address].some(matches),
+            [
+              park.name,
+              getParkTypeDisplayName(park),
+              park.type.name,
+              park.address,
+              ...park.trailNames,
+            ].some(matches),
         )
         .map((park) => ({ kind: "park", park }));
     const matchingTrips: SearchResult[] = searchIndex.trips
