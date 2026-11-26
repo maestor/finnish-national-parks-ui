@@ -10,6 +10,9 @@ describe("service worker cache policy", () => {
     expect(getRuntimeCachePolicy({ pathname: "/api/visits", sameOrigin: true })).toBe(
       "network-only",
     );
+    expect(getRuntimeCachePolicy({ pathname: "/api/search", sameOrigin: true })).toBe(
+      "network-only",
+    );
     expect(getRuntimeCachePolicy({ pathname: "/auth/me", sameOrigin: true })).toBe("network-only");
     expect(getRuntimeCachePolicy({ pathname: "/auth/session", sameOrigin: true })).toBe(
       "network-only",

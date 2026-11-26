@@ -9,6 +9,9 @@ type PublicMapSummaryPark =
 export type ParkSearchResult =
   paths["/api/parks/search"]["get"]["responses"][200]["content"]["application/json"]["parks"][number];
 
+export type CombinedSearchIndex =
+  paths["/api/search"]["get"]["responses"][200]["content"]["application/json"];
+
 export type AdminParkVisibilityResponse =
   paths["/api/admin/parks/visibility"]["get"]["responses"][200]["content"]["application/json"];
 

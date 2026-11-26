@@ -441,6 +441,8 @@ const visit = await apiFetch<Visit>("/api/parks/pallas/visits", {
 - Throws `ApiError` on non-2xx responses
 - Handles empty-body 204 responses
 
+The shared header search requests the combined `/api/search` index only when opened. It keeps the index in component memory while that opening is active, filters locally as the visitor types, and fetches again after the search is closed and reopened. The same-origin proxy preserves the API's `no-store` response; the index is not part of initial page data or persistent offline storage. A failed read can be retried by reopening the search. API rollout must precede the UI rollout because the UI consumes the additive generated contract.
+
 The browser does **not** need direct access to `API_KEY`. Next.js route handlers relay browser auth and admin write requests to the backend and attach the server-side key there.
 
 Use `apiPublicFetch<T>(path, options?)` for cacheable public server-side reads:
