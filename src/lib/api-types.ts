@@ -916,6 +916,7 @@ export interface paths {
                             trips: {
                                 name: string;
                                 slug: string;
+                                stopNames: string[];
                                 visitedParkSlugs: string[];
                             }[];
                         };

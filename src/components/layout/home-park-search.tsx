@@ -138,6 +138,7 @@ export const HomeParkSearch = () => {
         (trip) =>
           trimmedQuery.length === 0 ||
           matches(trip.name) ||
+          trip.stopNames.some(matches) ||
           trip.visitedParkSlugs.some((slug) => {
             const parkName = parkNamesBySlug.get(slug);
             return parkName ? matches(parkName) : false;

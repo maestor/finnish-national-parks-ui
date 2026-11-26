@@ -160,8 +160,8 @@ describe("HomeParkSearch", () => {
           : { ...park, name: "Aulangon puisto", slug: "aulanko", visited: false },
       ),
       trips: [
-        { name: "Syysretki", slug: "syysretki", visitedParkSlugs: ["nuuksio"] },
-        { name: "Evon retki", slug: "evon-retki", visitedParkSlugs: ["nuuksio"] },
+        { name: "Syysretki", slug: "syysretki", stopNames: [], visitedParkSlugs: ["nuuksio"] },
+        { name: "Evon retki", slug: "evon-retki", stopNames: [], visitedParkSlugs: ["nuuksio"] },
       ],
     };
     vi.mocked(apiFetch).mockResolvedValueOnce(searchIndex);
@@ -189,10 +189,38 @@ describe("HomeParkSearch", () => {
     expect(screen.getAllByRole("link", { name: /Syysretki/ })).toHaveLength(1);
   });
 
+  it("matches a trip by a stop name without duplicating the trip result", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ...createSearchIndex(parks),
+      trips: [
+        {
+          name: "Syysretki",
+          slug: "syysretki",
+          stopNames: ["Laavun tauko", "Syysretki näköalapaikka"],
+          visitedParkSlugs: [],
+        },
+      ],
+    });
+
+    renderSearch();
+
+    const input = screen.getByRole("combobox", { name: "layout.parkSearch.label" });
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: "laavun tauko" } });
+
+    const tripLink = await screen.findByRole("link", { name: /Syysretki/ });
+    expect(tripLink).toHaveAttribute("href", "/retki/syysretki");
+
+    fireEvent.change(input, { target: { value: "syysretki" } });
+    expect(await screen.findAllByRole("link", { name: /Syysretki/ })).toHaveLength(1);
+  });
+
   it("opens trip results by keyboard from the map and another route", async () => {
     vi.mocked(apiFetch).mockResolvedValue({
       ...createSearchIndex(parks),
-      trips: [{ name: "Syysretki", slug: "syysretki", visitedParkSlugs: ["paijanne"] }],
+      trips: [
+        { name: "Syysretki", slug: "syysretki", stopNames: [], visitedParkSlugs: ["paijanne"] },
+      ],
     });
 
     const { unmount } = renderSearch();
