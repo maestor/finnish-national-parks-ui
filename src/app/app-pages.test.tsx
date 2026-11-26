@@ -1321,7 +1321,7 @@ describe("App pages", () => {
     expect(login.container.querySelector("main")).toBeNull();
   });
 
-  it("shows Markdown and deduplicated experienced seasons between location and history", async () => {
+  it("shows Markdown and deduplicated experienced seasons after visit history", async () => {
     vi.mocked(apiFetch)
       .mockResolvedValueOnce({
         ...publicPark,
@@ -1335,9 +1335,13 @@ describe("App pages", () => {
       });
     await renderPublicRoute(await ParkDetailPage({ params: Promise.resolve({ slug: "pallas" }) }));
     const about = screen
-      .getByRole("heading", { name: "park.aboutTitle" })
+      .getByRole("heading", { name: "park.sectionNav.about" })
       .closest("section") as HTMLElement;
-    expect(about.previousElementSibling).toHaveAttribute("id", "park-location");
+    expect(about.previousElementSibling).toHaveAttribute("id", "visit-history");
+    expect(about.previousElementSibling?.previousElementSibling).toHaveAttribute(
+      "id",
+      "park-location",
+    );
     expect(within(about).getByText("Metsäpolut").tagName).toBe("STRONG");
     expect(within(about).getByRole("link", { name: "Reitti" })).toHaveAttribute(
       "href",
@@ -1378,7 +1382,7 @@ describe("App pages", () => {
     await renderPublicRoute(await ParkDetailPage({ params: Promise.resolve({ slug: "pallas" }) }));
     const location = document.getElementById("park-location") as HTMLElement;
     expect(within(location).getByRole("link", { name: /^park.officialLink/ })).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "park.aboutTitle" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "park.sectionNav.about" })).toBeNull();
 
     await act(async () => {
       const time = (minutes: number) => new Date(Date.now() + minutes * 60_000).toISOString();
@@ -1402,7 +1406,7 @@ describe("App pages", () => {
       });
     });
 
-    const about = screen.getByRole("region", { name: "park.aboutTitle" });
+    const about = screen.getByRole("region", { name: "park.sectionNav.about" });
     expect(screen.getByRole("link", { name: "park.sectionNav.about" })).toHaveAttribute(
       "href",
       "#park-about",
@@ -1450,7 +1454,7 @@ describe("App pages", () => {
       await act(async () => {
         window.dispatchEvent(new Event("pageshow"));
       });
-      expect(screen.queryByRole("region", { name: "park.aboutTitle" })).toBeNull();
+      expect(screen.queryByRole("region", { name: "park.sectionNav.about" })).toBeNull();
       expect(screen.queryByRole("link", { name: "park.sectionNav.about" })).toBeNull();
       expect(within(location).getByRole("link", { name: /^park.officialLink/ })).toBeVisible();
     } finally {
@@ -1498,17 +1502,17 @@ describe("App pages", () => {
     expect(connectionMock).not.toHaveBeenCalled();
     expect(screen.getByText("Maailmanperintökohde")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "park.copyParkPageLink" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "park.showInFinlandsMap" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "park.showOnMap" })).toHaveAttribute(
       "href",
       "/paikat?park=pallas",
     );
     expect(await screen.findByTestId("park-boundary-map")).toHaveTextContent("Pallas-Yllästunturi");
     const location = screen
-      .getByRole("heading", { name: "park.boundaryMapTitle" })
+      .getByRole("heading", { name: "park.sectionNav.location" })
       .closest("section") as HTMLElement;
     expect(within(location).getByText(publicPark.address)).toBeInTheDocument();
     const about = screen
-      .getByRole("heading", { name: "park.aboutTitle" })
+      .getByRole("heading", { name: "park.sectionNav.about" })
       .closest("section") as HTMLElement;
     expect(within(about).getByRole("heading", { name: "park.materialsTitle" })).toBeInTheDocument();
     expect(within(about).getByRole("link", { name: /park.pdfBrochure/ })).toHaveAttribute(
@@ -1548,7 +1552,7 @@ describe("App pages", () => {
     expect(areaBadge).toHaveFocus();
     expect(screen.getByRole("tooltip")).toHaveTextContent("park.area");
     const location = screen
-      .getByRole("heading", { name: "park.location" })
+      .getByRole("heading", { name: "park.sectionNav.location" })
       .closest("section") as HTMLElement;
     expect(within(location).getByText(publicPark.address)).toBeInTheDocument();
     expect(within(location).getByRole("link", { name: /park.officialLink/ })).toHaveAttribute(
@@ -1580,9 +1584,9 @@ describe("App pages", () => {
         await ParkDetailPage({ params: Promise.resolve({ slug: "pallas" }) }),
       );
       const location = screen
-        .getByRole("heading", { name: "park.location" })
+        .getByRole("heading", { name: "park.sectionNav.location" })
         .closest("section") as HTMLElement;
-      expect(screen.queryByRole("heading", { name: "park.aboutTitle" })).toBeNull();
+      expect(screen.queryByRole("heading", { name: "park.sectionNav.about" })).toBeNull();
       expect(screen.queryByRole("link", { name: "park.sectionNav.about" })).toBeNull();
       expect(screen.queryByRole("heading", { name: "park.materialsTitle" })).toBeNull();
       const address = within(location).getByText(publicPark.address);
@@ -1671,7 +1675,9 @@ describe("App pages", () => {
       screen.queryByRole("navigation", { name: "park.sectionNavigationLabel" }),
     ).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "park.sectionNav.visits" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "park.visitHistory" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "park.sectionNav.visits" }),
+    ).not.toBeInTheDocument();
   });
 
   it("keeps navigation for About but omits the visits link without visits", async () => {
@@ -1681,7 +1687,9 @@ describe("App pages", () => {
     await renderPublicRoute(await ParkDetailPage({ params: Promise.resolve({ slug: "pallas" }) }));
     expect(screen.getByRole("link", { name: "park.sectionNav.about" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "park.sectionNav.visits" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "park.visitHistory" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "park.sectionNav.visits" }),
+    ).not.toBeInTheDocument();
   });
 
   it("keeps description and materials in the about section even without visits", async () => {
@@ -1689,7 +1697,7 @@ describe("App pages", () => {
       .mockResolvedValueOnce({ ...publicPark, description: "Polkuja järven rannalla." })
       .mockResolvedValueOnce({ visits: [] });
     await renderPublicRoute(await ParkDetailPage({ params: Promise.resolve({ slug: "pallas" }) }));
-    const about = screen.getByRole("region", { name: "park.aboutTitle" });
+    const about = screen.getByRole("region", { name: "park.sectionNav.about" });
     expect(within(about).getByText("Polkuja järven rannalla.")).toBeInTheDocument();
     expect(within(about).getByRole("link", { name: /park.officialLink/ })).toHaveAttribute(
       "href",
@@ -1726,7 +1734,7 @@ describe("App pages", () => {
         await ParkDetailPage({ params: Promise.resolve({ slug: "pallas" }) }),
       );
       const panel = screen.getByTestId("selection-details");
-      const about = screen.getByRole("region", { name: "park.aboutTitle" });
+      const about = screen.getByRole("region", { name: "park.sectionNav.about" });
       expect(
         within(panel).queryByRole("link", { name: /park.officialLink/ }),
       ).not.toBeInTheDocument();
@@ -1749,7 +1757,7 @@ describe("App pages", () => {
     expect(
       screen.getByRole("heading", { name: "Pallas-Yllästunturi" }).closest("section"),
     ).not.toHaveAttribute("data-featured-image");
-    expect(screen.getByRole("heading", { name: "park.location" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "park.sectionNav.location" })).toBeInTheDocument();
   });
 
   it("keeps a minimal park usable without optional facts or external links", async () => {
@@ -1771,7 +1779,7 @@ describe("App pages", () => {
     expect(screen.queryByText("park.length")).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /park.officialLink/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /park.pdfBrochure/ })).not.toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "park.aboutTitle" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "park.sectionNav.about" })).toBeNull();
     expect(screen.queryByRole("link", { name: "park.sectionNav.about" })).toBeNull();
   });
 

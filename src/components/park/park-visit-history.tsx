@@ -9,6 +9,7 @@ import { appRoutes, createPathWithSearchParams } from "@/lib/routes";
 
 interface ParkVisitHistoryProps {
   addVisitLabel: string;
+  id?: string;
   initialOpenVisitId?: number | null;
   parkSlug: string;
   title: string;
@@ -17,6 +18,7 @@ interface ParkVisitHistoryProps {
 
 export const ParkVisitHistory = ({
   addVisitLabel,
+  id = "visit-history",
   initialOpenVisitId = null,
   parkSlug,
   title,
@@ -27,7 +29,7 @@ export const ParkVisitHistory = ({
 
   return (
     <section
-      id="visit-history"
+      id={id}
       className="mt-8 scroll-mt-28 rounded-[2rem] border border-border bg-control p-5 shadow-[0_24px_48px_rgba(var(--shadow-rgb),0.14)] backdrop-blur-xl dark:shadow-[0_28px_56px_rgba(var(--shadow-rgb),0.3)]"
     >
       <div className="flex items-center justify-between gap-3">
