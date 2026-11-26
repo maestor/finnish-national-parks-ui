@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { cache } from "react";
 import { PublicTripPage } from "@/components/trips/public-trip-page";
 import { ApiError } from "@/lib/api";
-import { buildPageMetadata } from "@/lib/page-metadata";
+import { buildOptimizedShareImagePath, buildPageMetadata } from "@/lib/page-metadata";
 import { fetchPublicTripBySlug } from "@/lib/public-trip";
 
 interface PublicTripRoutePageProps {
@@ -33,7 +33,9 @@ export const generateMetadata = async ({ params }: PublicTripRoutePageProps) => 
   return buildPageMetadata(trip.name, metadataT("title"), {
     description: trip.description || metadataT("tripDescription", { trip: trip.name }),
     pagePath: `/retki/${trip.slug}`,
-    socialImagePath: trip.featuredImage?.fullUrl,
+    socialImagePath: trip.featuredImage
+      ? buildOptimizedShareImagePath(trip.featuredImage.fullUrl)
+      : undefined,
   });
 };
 

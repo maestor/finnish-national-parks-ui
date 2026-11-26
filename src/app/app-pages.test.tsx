@@ -1233,8 +1233,16 @@ describe("App pages", () => {
       const metadata = await generatePublicTripMetadata({
         params: Promise.resolve({ slug: publicTrip.slug }),
       });
-      expect(metadata.openGraph?.images).toEqual([featuredImage?.fullUrl ?? "/opengraph-image"]);
-      expect(metadata.twitter?.images).toEqual([featuredImage?.fullUrl ?? "/twitter-image"]);
+      expect(metadata.openGraph?.images).toEqual([
+        featuredImage
+          ? `/_next/image?url=${encodeURIComponent(featuredImage.fullUrl)}&w=1200&q=75`
+          : "/opengraph-image",
+      ]);
+      expect(metadata.twitter?.images).toEqual([
+        featuredImage
+          ? `/_next/image?url=${encodeURIComponent(featuredImage.fullUrl)}&w=1200&q=75`
+          : "/twitter-image",
+      ]);
       expect(metadata.twitter).toMatchObject({ card: "summary_large_image" });
     },
   );
@@ -1246,8 +1254,16 @@ describe("App pages", () => {
       const metadata = await generateParkDetailMetadata({
         params: Promise.resolve({ slug: publicPark.slug }),
       });
-      expect(metadata.openGraph?.images).toEqual([featuredImage?.fullUrl ?? "/opengraph-image"]);
-      expect(metadata.twitter?.images).toEqual([featuredImage?.fullUrl ?? "/twitter-image"]);
+      expect(metadata.openGraph?.images).toEqual([
+        featuredImage
+          ? `/_next/image?url=${encodeURIComponent(featuredImage.fullUrl)}&w=1200&q=75`
+          : "/opengraph-image",
+      ]);
+      expect(metadata.twitter?.images).toEqual([
+        featuredImage
+          ? `/_next/image?url=${encodeURIComponent(featuredImage.fullUrl)}&w=1200&q=75`
+          : "/twitter-image",
+      ]);
     },
   );
 

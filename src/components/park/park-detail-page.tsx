@@ -43,7 +43,7 @@ import { CopyLinkButton } from "@/components/ui/copy-link-button";
 import { apiAuthFetch } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { fetchPublicParkDetail, fetchPublicParkVisits } from "@/lib/frontend-summaries";
-import { buildPageMetadata } from "@/lib/page-metadata";
+import { buildOptimizedShareImagePath, buildPageMetadata } from "@/lib/page-metadata";
 import { getParkTypeDisplayName, type ParkDetail, type ParkVisits } from "@/lib/parks";
 import { appRoutes, createPathWithSearchParams } from "@/lib/routes";
 
@@ -113,7 +113,9 @@ export const buildParkMetadata = async ({ params, authenticated = false }: ParkD
     description: shareDescription,
     pagePath: appRoutes.park(slug),
     socialImagePath:
-      result && !result.usedAuthenticatedFallback ? result.park.featuredImage?.fullUrl : undefined,
+      result && !result.usedAuthenticatedFallback && result.park.featuredImage
+        ? buildOptimizedShareImagePath(result.park.featuredImage.fullUrl)
+        : undefined,
   });
   return result && !result.usedAuthenticatedFallback
     ? metadata
