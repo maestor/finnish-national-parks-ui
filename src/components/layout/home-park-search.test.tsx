@@ -7,7 +7,7 @@ import {
   useHomeMapControls,
 } from "@/components/providers/home-map-controls-provider";
 import { apiFetch } from "@/lib/api";
-import type { CombinedSearchIndex, ParkSearchResult } from "@/lib/parks";
+import type { CombinedSearchIndex } from "@/lib/parks";
 import { HomeParkSearch } from "./home-park-search";
 
 const { mockPush, pathnameState, searchParamsState } = vi.hoisted(() => ({
@@ -51,7 +51,7 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(searchParamsState.value),
 }));
 
-type SearchPark = ParkSearchResult & { visited: boolean };
+type SearchPark = CombinedSearchIndex["parks"][number];
 
 const parks: SearchPark[] = [
   {
@@ -61,6 +61,7 @@ const parks: SearchPark[] = [
     locationLabel: "Päijänteentie 1",
     postalCode: "17200",
     postalOffice: "Päijät-Häme",
+    trailNames: [],
     visited: true,
     type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },
   },
@@ -73,6 +74,7 @@ const parks: SearchPark[] = [
     locationLabel: "Matildanjärventie 84",
     postalCode: "25570",
     postalOffice: "Salo",
+    trailNames: [],
     type: { code: 4, id: 4, name: "Muu luonnonsuojelualue", slug: "nature-reserve-area" },
   },
 ];
@@ -89,6 +91,7 @@ const mobileScrollableParks: SearchPark[] = Array.from({ length: 12 }, (_, index
   locationLabel: `Katu ${index + 1}`,
   postalCode: `0010${index}`,
   postalOffice: `Alue ${index + 1}`,
+  trailNames: [],
   visited: index % 2 === 0,
   type: { code: 1, id: 1, name: "Kansallispuisto", slug: "national-park" },
 }));
@@ -150,6 +153,31 @@ describe("HomeParkSearch", () => {
 
     expect(screen.getByTestId("focus-request")).toHaveTextContent("paijanne");
     expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it("finds and focuses a park by a partial, case-insensitive trail name", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce(
+      createSearchIndex([
+        ...parks,
+        {
+          ...parks[0],
+          slug: "nuuksion-kansallispuisto",
+          name: "Nuuksion kansallispuisto",
+          trailNames: ["Klassarinkierros"],
+        },
+      ]),
+    );
+
+    renderSearch();
+
+    const input = screen.getByRole("combobox", { name: "layout.parkSearch.label" });
+    fireEvent.change(input, { target: { value: " KLASSARIN " } });
+
+    const park = await screen.findByRole("button", { name: /Nuuksion kansallispuisto/ });
+    expect(screen.getAllByRole("listitem")).toHaveLength(1);
+    fireEvent.click(park);
+
+    expect(screen.getByTestId("focus-request")).toHaveTextContent("nuuksion-kansallispuisto");
   });
 
   it("matches a trip by its visited place and sorts the two result tiers in Finnish order", async () => {
