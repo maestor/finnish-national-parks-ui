@@ -21,6 +21,8 @@ interface HomeVisitStatsProps {
   sectionTitle: string;
   totalVisitsLabel: string;
   totalVisits: number;
+  totalTripsLabel: string;
+  totalTrips: number;
   progressItems: HomeProgressItem[];
   backToStartLabel: string;
   featuredMemories: ReactNode;
@@ -43,6 +45,8 @@ export const HomeVisitStats = ({
   sectionTitle,
   totalVisitsLabel,
   totalVisits,
+  totalTripsLabel,
+  totalTrips,
   progressItems,
   backToStartLabel,
   seasonalVisitsLabel,
@@ -87,7 +91,7 @@ export const HomeVisitStats = ({
   return (
     <section aria-labelledby="home-visit-stats-title">
       <div className={`${PUBLIC_CONTENT_PANEL_CLASS_NAME} text-card-foreground`}>
-        <div className="grid grid-cols-[minmax(0,.85fr)_minmax(0,1.35fr)] items-center gap-x-2.5 gap-y-4 md:grid-cols-[minmax(0,1fr)_150px_252px] md:gap-3">
+        <div className="grid grid-cols-2 items-center gap-x-2.5 gap-y-4 md:grid-cols-[minmax(0,1fr)_100px_100px_252px] md:gap-3">
           <div className="col-span-2 flex min-w-0 items-center gap-3 md:col-span-1 md:self-start">
             <span className={PUBLIC_PANEL_ICON_SURFACE_CLASS_NAME}>
               <ForestWaterIcon />
@@ -101,7 +105,13 @@ export const HomeVisitStats = ({
             <p className="text-xs text-muted-foreground">{totalVisitsLabel}</p>
             <p className="mt-1 text-[2rem] font-semibold tracking-tight">{totalVisits}</p>
           </div>
-          <div className={`${SEASONAL_CARD_CLASS_NAME} h-24.5 min-w-0 md:h-24`}>
+          <div className={`${TOTAL_VISITS_CARD_CLASS_NAME} h-24.5 min-w-0 md:h-24`}>
+            <p className="text-xs text-muted-foreground">{totalTripsLabel}</p>
+            <p className="mt-1 text-[2rem] font-semibold tracking-tight">{totalTrips}</p>
+          </div>
+          <div
+            className={`${SEASONAL_CARD_CLASS_NAME} col-span-2 h-24.5 min-w-0 md:col-span-1 md:h-24`}
+          >
             <p className="text-xs text-muted-foreground">{seasonalVisitsLabel}</p>
             <div className="mt-1.5 grid grid-cols-4 gap-0.75 md:gap-1.25">
               {seasonItems.map((season) => (
