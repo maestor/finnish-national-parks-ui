@@ -39,11 +39,12 @@
       "preview": "Esikatselu"
     },
     "parkSearch": {
-      "label": "Hae paikkaa",
-      "placeholder": "Hae paikkaa...",
-      "loading": "Ladataan paikkoja...",
-      "empty": "Hakua vastaavia paikkoja ei löytynyt.",
-      "openParkPage": "Avaa paikan sivu"
+      "label": "Hae paikkoja ja retkiä",
+      "placeholder": "Hae paikkoja ja retkiä...",
+      "loading": "Ladataan hakutuloksia...",
+      "empty": "Hakua vastaavia paikkoja tai retkiä ei löytynyt.",
+      "openParkPage": "Avaa paikan sivu",
+      "trip": "Retki"
     },
     "themeToggle": {
       "light": "Vaihda vaaleaan teemaan",

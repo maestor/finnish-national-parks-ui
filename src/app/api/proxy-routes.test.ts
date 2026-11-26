@@ -45,6 +45,7 @@ import { PATCH as patchPark } from "./parks/[slug]/route";
 import { POST as postParkVisit } from "./parks/[slug]/visits/route";
 import { GET as getParks } from "./parks/route";
 import { GET as getParkSearch } from "./parks/search/route";
+import { GET as getCombinedSearch } from "./search/route";
 import { POST as postTripPlannerNearby } from "./trip-planner/nearby/route";
 import { POST as postTripPlannerSearch } from "./trip-planner/search/route";
 import { POST as postTripPlannerSuggestions } from "./trip-planner/suggestions/route";
@@ -313,6 +314,14 @@ describe("api proxy routes", () => {
     await getParkSearch(request);
 
     expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/parks/search");
+  });
+
+  it("proxies the combined public search index", async () => {
+    const request = new Request("https://frontend.example/api/search");
+
+    await getCombinedSearch(request);
+
+    expect(proxyBackendRequestMock).toHaveBeenCalledWith(request, "/api/search");
   });
 
   it("proxies trip listing reads", async () => {

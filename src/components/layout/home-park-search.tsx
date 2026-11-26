@@ -1,14 +1,18 @@
 "use client";
 
-import { MapPin, Search, X } from "lucide-react";
+import { MapPin, Search, TentTree, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type { KeyboardEvent as ReactKeyboardEvent } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/cn";
-import { getParkTypeDisplayName, type ParkSearchResult } from "@/lib/parks";
+import {
+  type CombinedSearchIndex,
+  getParkTypeDisplayName,
+  type ParkSearchResult,
+} from "@/lib/parks";
 import { appRoutes, normalizeAppPath } from "@/lib/routes";
 import { useHomeMapControls } from "../providers/home-map-controls-provider";
 
@@ -23,6 +27,25 @@ const SEARCH_RESULTS_PANEL_CLASS_NAME =
 const MOBILE_SEARCH_RESULTS_PANEL_CLASS_NAME =
   "bg-control shadow-[0_32px_72px_rgba(var(--shadow-rgb),0.32)] dark:shadow-[0_36px_76px_rgba(var(--shadow-rgb),0.52)]";
 
+type SearchResult =
+  | { kind: "park"; park: ParkSearchResult & { visited: boolean } }
+  | { kind: "trip"; trip: CombinedSearchIndex["trips"][number] };
+
+const finnishSearchCollator = new Intl.Collator("fi-FI", { sensitivity: "base" });
+
+const sortSearchResults = (results: SearchResult[]) =>
+  results.sort((left, right) => {
+    const leftName = left.kind === "trip" ? left.trip.name : left.park.name;
+    const rightName = right.kind === "trip" ? right.trip.name : right.park.name;
+    return (
+      finnishSearchCollator.compare(leftName, rightName) ||
+      left.kind.localeCompare(right.kind) ||
+      (left.kind === "trip" ? left.trip.slug : left.park.slug).localeCompare(
+        right.kind === "trip" ? right.trip.slug : right.park.slug,
+      )
+    );
+  });
+
 export const HomeParkSearch = () => {
   const t = useTranslations("layout.parkSearch");
   const router = useRouter();
@@ -31,36 +54,47 @@ export const HomeParkSearch = () => {
   const { closeMobileFilters, focusParkOnHome } = useHomeMapControls();
   const containerRef = useRef<HTMLDivElement>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
+  const mobileButtonRef = useRef<HTMLButtonElement>(null);
   const loadStartedRef = useRef(false);
-  const [parks, setParks] = useState<ParkSearchResult[]>([]);
+  const loadIdRef = useRef(0);
+  const [searchIndex, setSearchIndex] = useState<CombinedSearchIndex | null>(null);
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const isParksMapPage = normalizedPathname === appRoutes.parks;
 
-  // The park index is only needed once the visitor actually uses search, so
-  // the first focus/click starts the fetch instead of every page load.
-  const ensureParksLoaded = () => {
+  // Refresh the index each time the visitor opens search.
+  const loadSearchIndex = () => {
     if (loadStartedRef.current) {
       return;
     }
     loadStartedRef.current = true;
+    const loadId = ++loadIdRef.current;
+    setSearchIndex(null);
+    setIsLoading(true);
 
-    apiFetch<{ parks: ParkSearchResult[] }>("/api/parks/search")
+    apiFetch<CombinedSearchIndex>("/api/search", { cache: "no-store" })
       .then((data) => {
-        setParks(
-          [...data.parks].sort((left, right) => left.name.localeCompare(right.name, "fi-FI")),
-        );
+        if (loadId === loadIdRef.current) setSearchIndex(data);
       })
       .catch(() => {
-        setParks([]);
+        if (loadId === loadIdRef.current) setSearchIndex(null);
       })
       .finally(() => {
-        setIsLoading(false);
+        if (loadId === loadIdRef.current) setIsLoading(false);
       });
   };
+
+  const closeSearch = useCallback(() => {
+    loadIdRef.current += 1;
+    loadStartedRef.current = false;
+    setSearchIndex(null);
+    setIsLoading(false);
+    setIsOpen(false);
+    setIsMobileOpen(false);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -70,14 +104,13 @@ export const HomeParkSearch = () => {
       }
 
       if (!containerRef.current?.contains(target)) {
-        setIsOpen(false);
-        setIsMobileOpen(false);
+        closeSearch();
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [closeSearch]);
 
   useEffect(() => {
     if (isMobileOpen) {
@@ -87,36 +120,58 @@ export const HomeParkSearch = () => {
 
   const results = useMemo(() => {
     const trimmedQuery = query.trim().toLocaleLowerCase("fi-FI");
-    const filteredParks =
-      trimmedQuery.length === 0
-        ? parks
-        : parks.filter((park) => {
-            const displayTypeName = getParkTypeDisplayName(park);
-            const haystacks = [park.name, displayTypeName, park.type.name, park.address];
-            return haystacks.some((value) =>
-              value.toLocaleLowerCase("fi-FI").includes(trimmedQuery),
-            );
-          });
+    if (!searchIndex) return [];
 
-    return filteredParks;
-  }, [parks, query]);
+    const parkNamesBySlug = new Map(searchIndex.parks.map((park) => [park.slug, park.name]));
+    const matches = (value: string) => value.toLocaleLowerCase("fi-FI").includes(trimmedQuery);
+    const matchingParks = (visited: boolean): SearchResult[] =>
+      searchIndex.parks
+        .filter((park) => park.visited === visited)
+        .filter(
+          (park) =>
+            trimmedQuery.length === 0 ||
+            [park.name, getParkTypeDisplayName(park), park.type.name, park.address].some(matches),
+        )
+        .map((park) => ({ kind: "park", park }));
+    const matchingTrips: SearchResult[] = searchIndex.trips
+      .filter(
+        (trip) =>
+          trimmedQuery.length === 0 ||
+          matches(trip.name) ||
+          trip.visitedParkSlugs.some((slug) => {
+            const parkName = parkNamesBySlug.get(slug);
+            return parkName ? matches(parkName) : false;
+          }),
+      )
+      .map((trip) => ({ kind: "trip", trip }));
 
-  const activatePark = (park: ParkSearchResult) => {
+    return [
+      ...sortSearchResults([...matchingParks(true), ...matchingTrips]),
+      ...sortSearchResults(matchingParks(false)),
+    ];
+  }, [query, searchIndex]);
+
+  const activateResult = (result: SearchResult) => {
     setQuery("");
-    setIsOpen(false);
-    setIsMobileOpen(false);
+    closeSearch();
 
-    if (isParksMapPage) {
-      closeMobileFilters();
-      focusParkOnHome(park.slug);
+    if (result.kind === "trip") {
+      router.push(appRoutes.trip(result.trip.slug));
       return;
     }
 
-    router.push(appRoutes.park(park.slug));
+    if (isParksMapPage) {
+      closeMobileFilters();
+      focusParkOnHome(result.park.slug);
+      return;
+    }
+
+    router.push(appRoutes.park(result.park.slug));
   };
 
   const handleKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
     if (!isOpen && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
+      loadSearchIndex();
       setIsOpen(true);
       event.preventDefault();
       return;
@@ -136,25 +191,31 @@ export const HomeParkSearch = () => {
 
     if (event.key === "Enter" && results[highlightedIndex]) {
       event.preventDefault();
-      activatePark(results[highlightedIndex]);
+      activateResult(results[highlightedIndex]);
       return;
     }
 
     if (event.key === "Escape") {
-      setIsOpen(false);
-      setIsMobileOpen(false);
+      const wasMobileOpen = isMobileOpen;
+      closeSearch();
+      if (wasMobileOpen) mobileButtonRef.current?.focus();
     }
   };
 
   return (
     <div ref={containerRef} className="relative w-auto md:w-full md:max-w-md">
       <button
+        ref={mobileButtonRef}
         type="button"
         onClick={() => {
-          ensureParksLoaded();
+          if (isMobileOpen) {
+            closeSearch();
+            return;
+          }
+          loadSearchIndex();
           setHighlightedIndex(0);
-          setIsOpen((current) => !current);
-          setIsMobileOpen((current) => !current);
+          setIsOpen(true);
+          setIsMobileOpen(true);
         }}
         className={cn(
           "inline-flex h-9 w-9 items-center justify-center rounded-full text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden",
@@ -181,13 +242,13 @@ export const HomeParkSearch = () => {
           type="search"
           value={query}
           onChange={(event) => {
-            ensureParksLoaded();
+            loadSearchIndex();
             setQuery(event.target.value);
             setHighlightedIndex(0);
             setIsOpen(true);
           }}
           onFocus={() => {
-            ensureParksLoaded();
+            loadSearchIndex();
             setIsOpen(true);
           }}
           onKeyDown={handleKeyDown}
@@ -222,6 +283,7 @@ export const HomeParkSearch = () => {
                   type="search"
                   value={query}
                   onChange={(event) => {
+                    loadSearchIndex();
                     setQuery(event.target.value);
                     setHighlightedIndex(0);
                   }}
@@ -235,54 +297,90 @@ export const HomeParkSearch = () => {
           )}
 
           {isLoading ? (
-            <p className="px-4 py-3 text-sm text-muted-foreground">{t("loading")}</p>
+            <p role="status" className="px-4 py-3 text-sm text-muted-foreground">
+              {t("loading")}
+            </p>
           ) : results.length === 0 ? (
-            <p className="px-4 py-3 text-sm text-muted-foreground">{t("empty")}</p>
+            <p role="status" className="px-4 py-3 text-sm text-muted-foreground">
+              {t("empty")}
+            </p>
           ) : (
             <ul className="max-h-[calc(100dvh-9.5rem)] flex-1 overflow-y-auto overscroll-contain bg-control px-2 py-2 touch-pan-y [-webkit-overflow-scrolling:touch] md:max-h-80">
-              {results.map((park, index) => (
-                <li key={park.slug} className="border-b border-border last:border-b-0">
-                  <div
-                    className={cn(
-                      "flex items-center gap-2 px-2 py-1.5",
-                      isMobileOpen && "rounded-[1.35rem]",
-                      highlightedIndex === index &&
-                        "rounded-2xl bg-control text-foreground shadow-[0_12px_24px_rgba(var(--shadow-rgb),0.18)] dark:shadow-[0_16px_28px_rgba(var(--shadow-rgb),0.28)]",
-                    )}
+              {results.map((result, index) => {
+                const name = result.kind === "trip" ? result.trip.name : result.park.name;
+                const slug = result.kind === "trip" ? result.trip.slug : result.park.slug;
+                const closeAfterNavigation = () => {
+                  setQuery("");
+                  closeSearch();
+                };
+
+                return (
+                  <li
+                    key={`${result.kind}:${slug}`}
+                    className="border-b border-border last:border-b-0"
                   >
-                    <button
-                      type="button"
-                      onMouseEnter={() => setHighlightedIndex(index)}
-                      onClick={() => activatePark(park)}
-                      className="flex min-w-0 flex-1 items-start gap-3 rounded-xl px-2 py-1 text-left transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    <div
+                      className={cn(
+                        "flex items-center gap-2 px-2 py-1.5",
+                        isMobileOpen && "rounded-[1.35rem]",
+                        highlightedIndex === index &&
+                          "rounded-2xl bg-control text-foreground shadow-[0_12px_24px_rgba(var(--shadow-rgb),0.18)] dark:shadow-[0_16px_28px_rgba(var(--shadow-rgb),0.28)]",
+                      )}
                     >
-                      <MapPin
-                        className="mt-0.5 h-4 w-4 shrink-0 text-icon stroke-[2.25]"
-                        aria-hidden="true"
-                      />
-                      <span className="min-w-0">
-                        <span className="block truncate text-sm font-medium">{park.name}</span>
-                        <span className="block truncate text-xs text-muted-foreground">
-                          {getParkTypeDisplayName(park)}
-                        </span>
-                      </span>
-                    </button>
-                    {isParksMapPage && (
-                      <Link
-                        href={appRoutes.park(park.slug)}
-                        onClick={() => {
-                          setQuery("");
-                          setIsOpen(false);
-                          setIsMobileOpen(false);
-                        }}
-                        className="shrink-0 rounded-full border border-border bg-control px-2.5 py-1 text-xs font-medium text-icon stroke-[2.25] shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.7)] transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      >
-                        {t("openParkPage")}
-                      </Link>
-                    )}
-                  </div>
-                </li>
-              ))}
+                      {result.kind === "trip" ? (
+                        <Link
+                          href={appRoutes.trip(result.trip.slug)}
+                          prefetch={false}
+                          onMouseEnter={() => setHighlightedIndex(index)}
+                          onClick={closeAfterNavigation}
+                          className="flex min-w-0 flex-1 items-start gap-3 rounded-xl px-2 py-1 text-left transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          <TentTree
+                            className="mt-0.5 h-4 w-4 shrink-0 text-link stroke-[2.25]"
+                            aria-hidden="true"
+                          />
+                          <span className="min-w-0">
+                            <span className="block truncate text-sm font-medium">{name}</span>
+                            <span className="block truncate text-xs text-muted-foreground">
+                              {t("trip")}
+                            </span>
+                          </span>
+                        </Link>
+                      ) : (
+                        <button
+                          type="button"
+                          onMouseEnter={() => setHighlightedIndex(index)}
+                          onClick={() => activateResult(result)}
+                          className="flex min-w-0 flex-1 items-start gap-3 rounded-xl px-2 py-1 text-left transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          <MapPin
+                            className={cn(
+                              "mt-0.5 h-4 w-4 shrink-0 stroke-[2.25]",
+                              result.park.visited ? "text-icon" : "text-muted-foreground",
+                            )}
+                            aria-hidden="true"
+                          />
+                          <span className="min-w-0">
+                            <span className="block truncate text-sm font-medium">{name}</span>
+                            <span className="block truncate text-xs text-muted-foreground">
+                              {getParkTypeDisplayName(result.park)}
+                            </span>
+                          </span>
+                        </button>
+                      )}
+                      {result.kind === "park" && isParksMapPage && (
+                        <Link
+                          href={appRoutes.park(result.park.slug)}
+                          onClick={closeAfterNavigation}
+                          className="shrink-0 rounded-full border border-border bg-control px-2.5 py-1 text-xs font-medium text-icon stroke-[2.25] shadow-[inset_0_1px_0_rgba(var(--highlight-rgb),0.7)] transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          {t("openParkPage")}
+                        </Link>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
