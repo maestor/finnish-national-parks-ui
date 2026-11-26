@@ -12,6 +12,8 @@ const Stats = (
 ) => (
   <HomeVisitStats
     featuredMemories={null}
+    totalTripsLabel="Retkiä"
+    totalTrips={7}
     seasonalVisitsLabel="Käynnit kausittain"
     seasonalVisits={{ spring: 0, summer: 0, autumn: 0, winter: 0 }}
     springLabel="Kevät"
@@ -27,7 +29,7 @@ describe("HomeVisitStats", () => {
     render(
       <Stats
         sectionTitle="Käynnit"
-        totalVisitsLabel="Käyntejä yhteensä"
+        totalVisitsLabel="Käyntejä"
         totalVisits={12}
         backToStartLabel="Takaisin alkuun"
         progressItems={[
@@ -48,7 +50,7 @@ describe("HomeVisitStats", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Käynnit" })).toBeInTheDocument();
-    expect(screen.getByText("Käyntejä yhteensä")).toBeInTheDocument();
+    expect(screen.getByText("Käyntejä")).toBeInTheDocument();
     expect(screen.getByText("12")).toBeInTheDocument();
     expect(screen.getByText("5 / 10")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Kaikki puistot/i })).toHaveAttribute(
@@ -70,7 +72,7 @@ describe("HomeVisitStats", () => {
     render(
       <Stats
         sectionTitle="Käynnit"
-        totalVisitsLabel="Käyntejä yhteensä"
+        totalVisitsLabel="Käyntejä"
         totalVisits={85}
         backToStartLabel="Takaisin alkuun"
         progressItems={[
@@ -105,7 +107,7 @@ describe("HomeVisitStats", () => {
     render(
       <Stats
         sectionTitle="Käynnit"
-        totalVisitsLabel="Käyntejä yhteensä"
+        totalVisitsLabel="Käyntejä"
         totalVisits={0}
         backToStartLabel="Takaisin alkuun"
         progressItems={[]}
@@ -113,14 +115,14 @@ describe("HomeVisitStats", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Käynnit", level: 2 })).toBeInTheDocument();
-    expect(screen.getByText("Käyntejä yhteensä")).toBeInTheDocument();
+    expect(screen.getByText("Käyntejä")).toBeInTheDocument();
   });
 
   it("renders zero-progress items without dividing by zero", () => {
     const { container } = render(
       <Stats
         sectionTitle="Käynnit"
-        totalVisitsLabel="Käyntejä yhteensä"
+        totalVisitsLabel="Käyntejä"
         totalVisits={0}
         backToStartLabel="Takaisin alkuun"
         progressItems={[

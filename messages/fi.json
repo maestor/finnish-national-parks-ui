@@ -70,7 +70,8 @@
     },
     "statistics": {
       "title": "Koettua tähän saakka",
-      "totalVisits": "Käyntejä yhteensä",
+      "totalVisits": "Käyntejä",
+      "totalTrips": "Retkiä",
       "seasonalVisits": "Käynnit kausittain",
       "allParks": "Kaikki käydyt kohteet",
       "seasons": {

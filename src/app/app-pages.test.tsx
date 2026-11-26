@@ -930,6 +930,7 @@ describe("App pages", () => {
       version: 3,
     });
 
+    vi.mocked(apiPublicFetch).mockResolvedValueOnce({ total: 7, trips: [], nextCursor: null });
     await renderPublicRoute(await HomePage({ params: Promise.resolve({}) }));
 
     expect(
@@ -940,6 +941,10 @@ describe("App pages", () => {
       description: "home.summary",
       url: "https://reissuvihko.example.com/",
     });
+
+    expect(screen.getByText("home.statistics.totalTrips").nextElementSibling).toHaveTextContent(
+      "7",
+    );
 
     expect(screen.getByTestId("home-intro")).toHaveTextContent(
       "title:home.title|summary:home.summary|map:home.openMap|info:home.intro.showInfo",
@@ -1006,6 +1011,7 @@ describe("App pages", () => {
       version: 0,
       updatedAt: null,
     });
+    vi.mocked(apiPublicFetch).mockResolvedValueOnce({ total: 0, trips: [], nextCursor: null });
     await renderPublicRoute(await HomePage({ params: Promise.resolve({}) }));
     expect(
       screen.getByRole("heading", { name: "home.statistics.title", level: 2 }),
@@ -1088,6 +1094,7 @@ describe("App pages", () => {
         updatedAt: "2024-06-15T12:00:00.000Z",
         version: 1,
       })
+      .mockResolvedValueOnce({ total: 0, trips: [], nextCursor: null })
       .mockResolvedValueOnce({
         parks: [],
         updatedAt: "2024-06-15T12:00:00.000Z",
@@ -1307,6 +1314,7 @@ describe("App pages", () => {
         updatedAt: visitWithPark.updatedAt,
         version: 3,
       })
+      .mockResolvedValueOnce({ total: 0, trips: [], nextCursor: null })
       .mockResolvedValueOnce({
         parks: [],
         updatedAt: visitWithPark.updatedAt,

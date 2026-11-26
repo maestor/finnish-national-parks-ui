@@ -10,6 +10,7 @@ import { WebsiteStructuredData } from "@/components/home/website-structured-data
 import { PUBLIC_PAGE_SHELL_CLASS_NAME } from "@/components/layout/public-page-styles";
 import { createHomeProgressItems, fetchHomeSummary } from "@/lib/frontend-summaries";
 import { buildPageMetadata } from "@/lib/page-metadata";
+import { fetchPublicTripArchive } from "@/lib/public-trips";
 
 export const generateMetadata = async ({ params }: { params: Promise<{ path?: string[] }> }) => {
   const { path } = await params;
@@ -29,7 +30,7 @@ const HomePage = async ({ params }: { params: Promise<{ path?: string[] }> }) =>
   const { path } = await params;
   if (path?.length) notFound();
   const [t, metadataT] = await Promise.all([getTranslations("home"), getTranslations("metadata")]);
-  const summary = await fetchHomeSummary();
+  const [summary, tripArchive] = await Promise.all([fetchHomeSummary(), fetchPublicTripArchive()]);
   const progressItems = createHomeProgressItems(
     summary,
     t("statistics.allParks"),
@@ -61,6 +62,8 @@ const HomePage = async ({ params }: { params: Promise<{ path?: string[] }> }) =>
         sectionTitle={t("statistics.title")}
         totalVisitsLabel={t("statistics.totalVisits")}
         totalVisits={summary.totalVisits}
+        totalTripsLabel={t("statistics.totalTrips")}
+        totalTrips={tripArchive.total}
         progressItems={progressItems}
         backToStartLabel={t("backToStart")}
         seasonalVisitsLabel={t("statistics.seasonalVisits")}
