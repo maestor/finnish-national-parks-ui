@@ -402,7 +402,7 @@ const PublicVisitsTimelineContent = ({
     return (
       <li
         key={visit.visit.id}
-        className="relative pl-12 md:grid md:grid-cols-[minmax(0,1fr)_2.5rem_minmax(0,1fr)] md:gap-4 md:pl-0"
+        className="relative pl-12 md:grid md:grid-cols-[minmax(0,1fr)_2.5rem_minmax(0,1fr)] md:gap-4 md:pl-0 [@media(max-width:640px)]:pl-7"
       >
         <div className={cn("md:row-start-1", isLeftMonth ? "md:col-start-1" : "md:col-start-3")}>
           <div className="rounded-[1.8rem] border border-border theme-memory shadow-[0_20px_44px_rgba(var(--shadow-rgb),0.16)] backdrop-blur-xl transition-colors hover:brightness-105 dark:shadow-[0_24px_52px_rgba(var(--shadow-rgb),0.32)]">
@@ -429,7 +429,7 @@ const PublicVisitsTimelineContent = ({
           </div>
         </div>
 
-        <div className="pointer-events-none absolute bottom-0 left-4 top-0 flex w-4 -translate-x-1/2 justify-center md:static md:col-start-2 md:row-start-1 md:w-auto md:translate-x-0">
+        <div className="pointer-events-none absolute bottom-0 left-4 top-0 flex w-4 -translate-x-1/2 justify-center md:static md:col-start-2 md:row-start-1 md:w-auto md:translate-x-0 [@media(max-width:640px)]:left-3">
           <span
             aria-hidden="true"
             className="relative top-5 h-3.5 w-3.5 rounded-full border-2 border-background bg-primary shadow-[0_0_0_4px_rgba(var(--highlight-rgb),0.75)] dark:shadow-[0_0_0_4px_rgba(var(--shadow-rgb),0.72)]"
@@ -447,7 +447,7 @@ const PublicVisitsTimelineContent = ({
   ) => (
     <li
       key={`trip-${trip.tripId}-${sectionYear}-${sectionMonth}`}
-      className="relative pl-12 md:grid md:grid-cols-[minmax(0,1fr)_2.5rem_minmax(0,1fr)] md:gap-4 md:pl-0"
+      className="relative pl-12 md:grid md:grid-cols-[minmax(0,1fr)_2.5rem_minmax(0,1fr)] md:gap-4 md:pl-0 [@media(max-width:640px)]:pl-7"
     >
       <div className={cn("md:row-start-1", isLeftMonth ? "md:col-start-1" : "md:col-start-3")}>
         <article className="overflow-hidden rounded-[2rem] border border-border theme-memory shadow-[0_22px_52px_rgba(var(--shadow-rgb),0.14)] backdrop-blur-xl dark:shadow-[0_28px_60px_rgba(var(--shadow-rgb),0.34)]">
@@ -477,7 +477,7 @@ const PublicVisitsTimelineContent = ({
             </div>
           </div>
 
-          <ol className="space-y-3 px-4 py-4">
+          <ol className="space-y-3 px-4 py-4 [@media(max-width:640px)]:px-2">
             {trip.visits.map((visit) => {
               const currentVisitFocusIndex = visitFocusIndex;
               visitFocusIndex += 1;
@@ -510,7 +510,7 @@ const PublicVisitsTimelineContent = ({
         </article>
       </div>
 
-      <div className="pointer-events-none absolute bottom-0 left-4 top-0 flex w-4 -translate-x-1/2 justify-center md:static md:col-start-2 md:row-start-1 md:w-auto md:translate-x-0">
+      <div className="pointer-events-none absolute bottom-0 left-4 top-0 flex w-4 -translate-x-1/2 justify-center md:static md:col-start-2 md:row-start-1 md:w-auto md:translate-x-0 [@media(max-width:640px)]:left-3">
         <span
           aria-hidden="true"
           className="relative top-5 h-4 w-4 rounded-full border-2 border-background bg-icon shadow-[0_0_0_4px_rgba(var(--highlight-rgb),0.75)] dark:shadow-[0_0_0_4px_rgba(var(--shadow-rgb),0.72)]"
@@ -776,10 +776,10 @@ const PublicVisitsTimelineContent = ({
       )}
 
       {filteredCount > 0 && view === "timeline" && (
-        <div className="relative space-y-8 before:absolute before:bottom-0 before:left-4 before:top-0 before:w-px before:-translate-x-1/2 before:theme-rail before:content-[''] md:before:bottom-13 md:before:left-1/2 md:before:-translate-x-1/2">
+        <div className="relative space-y-8 before:absolute before:bottom-0 before:left-4 before:top-0 before:w-px before:-translate-x-1/2 before:theme-rail before:content-[''] md:before:bottom-13 md:before:left-1/2 md:before:-translate-x-1/2 [@media(max-width:640px)]:before:left-3">
           {visibleSections.map((section) => (
             <section key={section.year} aria-labelledby={`visits-year-${section.year}`}>
-              <div className="flex items-center gap-3 pl-12 pr-4 md:px-0">
+              <div className="flex items-center gap-3 pl-12 pr-4 md:px-0 [@media(max-width:640px)]:pl-7">
                 <div className="h-px flex-1 bg-border/70" aria-hidden="true" />
                 <h2
                   id={`visits-year-${section.year}`}
@@ -804,7 +804,7 @@ const PublicVisitsTimelineContent = ({
                       <div className="md:grid md:grid-cols-[minmax(0,1fr)_2.5rem_minmax(0,1fr)] md:gap-4">
                         <div
                           className={cn(
-                            "flex items-center gap-3 pl-12 pr-4 md:px-0",
+                            "flex items-center gap-3 pl-12 pr-4 md:px-0 [@media(max-width:640px)]:pl-7",
                             isLeftMonth ? "md:col-start-1" : "md:col-start-3",
                           )}
                         >
@@ -819,7 +819,7 @@ const PublicVisitsTimelineContent = ({
                         </div>
                       </div>
 
-                      <ol className="relative mt-4 space-y-4 before:absolute before:bottom-0 before:left-4 before:top-0 before:w-px before:-translate-x-1/2 before:theme-rail before:content-[''] md:before:left-1/2 md:before:-translate-x-1/2">
+                      <ol className="relative mt-4 space-y-4 before:absolute before:bottom-0 before:left-4 before:top-0 before:w-px before:-translate-x-1/2 before:theme-rail before:content-[''] md:before:left-1/2 md:before:-translate-x-1/2 [@media(max-width:640px)]:before:left-3">
                         {monthSection.items.map((item) => {
                           if (item.kind === "trip") {
                             return renderTripCard(
@@ -855,7 +855,7 @@ const PublicVisitsTimelineContent = ({
             {t("timeline.loadedCount", { count: renderedVisitCount, total: filteredCount })}
           </p>
 
-          <div className="flex items-center gap-3 pl-12 pr-4 md:px-0">
+          <div className="flex items-center gap-3 pl-12 pr-4 md:px-0 [@media(max-width:640px)]:pl-7">
             <div className="h-px flex-1 bg-border/70" aria-hidden="true" />
             <button
               type="button"
