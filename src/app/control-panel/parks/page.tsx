@@ -18,20 +18,25 @@ export const generateMetadata = async () => {
 };
 
 const ParksPage = async () => {
-  const { visibleParks, removedParks } = await apiAuthFetch<AdminParkVisibilityResponse>(
-    "/api/admin/parks/visibility",
-    {
-      cache: "force-cache",
-      next: {
-        tags: [ADMIN_PARK_VISIBILITY_TAG],
-      },
+  const {
+    visibleParks,
+    removedParks,
+    linkedTrails = [],
+  } = await apiAuthFetch<AdminParkVisibilityResponse>("/api/admin/parks/visibility", {
+    cache: "force-cache",
+    next: {
+      tags: [ADMIN_PARK_VISIBILITY_TAG],
     },
-  );
+  });
 
   return (
     <div>
       <AppBreadcrumbs path={appRoutes.controlPanel.parks} className="mb-4" />
-      <ParkManagement parks={visibleParks} removedParks={removedParks} />
+      <ParkManagement
+        parks={visibleParks}
+        removedParks={removedParks}
+        linkedTrails={linkedTrails}
+      />
     </div>
   );
 };

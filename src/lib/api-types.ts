@@ -949,13 +949,43 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Lightweight visible and removed parks for admin visibility management */
+                /** @description Lightweight parks and effective trail links for admin visibility management */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
                         "application/json": {
+                            linkedTrails?: {
+                                address: string;
+                                displayTypeName?: string | null;
+                                locationLabel: string;
+                                name: string;
+                                postalCode: string | null;
+                                postalOffice: string | null;
+                                slug: string;
+                                type: {
+                                    code: number;
+                                    id: number;
+                                    name: string;
+                                    /** @enum {string} */
+                                    slug: "outdoor-recreation-area" | "cultural-history-area" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
+                                };
+                                boundingBox: {
+                                    maxLat: number;
+                                    maxLon: number;
+                                    minLat: number;
+                                    minLon: number;
+                                };
+                                markerPoint: {
+                                    lat: number;
+                                    lon: number;
+                                };
+                                linkedAreas: {
+                                    name: string;
+                                    slug: string;
+                                }[];
+                            }[];
                             removedParks: {
                                 address: string;
                                 displayTypeName?: string | null;

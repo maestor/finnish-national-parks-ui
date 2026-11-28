@@ -31,7 +31,7 @@ const basePark = {
 
 describe("ParkManagement", () => {
   it("renders list view by default", () => {
-    render(<ParkManagement parks={[basePark]} removedParks={[]} />);
+    render(<ParkManagement parks={[basePark]} removedParks={[]} linkedTrails={[]} />);
 
     expect(screen.getByTestId("park-list")).toBeInTheDocument();
     expect(screen.queryByTestId("admin-park-map")).not.toBeInTheDocument();
@@ -39,7 +39,7 @@ describe("ParkManagement", () => {
 
   it("switches to map view when map tab is clicked", async () => {
     const user = userEvent.setup();
-    render(<ParkManagement parks={[basePark]} removedParks={[]} />);
+    render(<ParkManagement parks={[basePark]} removedParks={[]} linkedTrails={[]} />);
 
     const mapTab = screen.getByRole("tab", { name: "controlPanel.parks.viewTabs.map" });
     await user.click(mapTab);
@@ -50,7 +50,7 @@ describe("ParkManagement", () => {
 
   it("switches back to list view when list tab is clicked", async () => {
     const user = userEvent.setup();
-    render(<ParkManagement parks={[basePark]} removedParks={[]} />);
+    render(<ParkManagement parks={[basePark]} removedParks={[]} linkedTrails={[]} />);
 
     const mapTab = screen.getByRole("tab", { name: "controlPanel.parks.viewTabs.map" });
     await user.click(mapTab);
@@ -64,7 +64,7 @@ describe("ParkManagement", () => {
 
   it("sets correct aria-selected on tabs", async () => {
     const user = userEvent.setup();
-    render(<ParkManagement parks={[basePark]} removedParks={[]} />);
+    render(<ParkManagement parks={[basePark]} removedParks={[]} linkedTrails={[]} />);
 
     const listTab = screen.getByRole("tab", { name: "controlPanel.parks.viewTabs.list" });
     const mapTab = screen.getByRole("tab", { name: "controlPanel.parks.viewTabs.map" });
