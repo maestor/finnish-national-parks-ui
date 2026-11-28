@@ -29,6 +29,7 @@ import { useStoryProgressNavigation } from "@/components/story/use-story-progres
 import { AppImage } from "@/components/ui/app-image";
 import { Button } from "@/components/ui/button";
 import { PROGRESS_FILL_CLASS_NAME, PROGRESS_TRACK_CLASS_NAME } from "@/components/ui/theme-styles";
+import { VisitTarget } from "@/components/visits/visit-target";
 import { cn } from "@/lib/cn";
 import type {
   DateRangeReviewCard,
@@ -652,12 +653,11 @@ export const DateRangeReviewStory = ({
                               value={card.totalImageCount}
                             />
                           </div>
-                          {card.visit.route !== null && (
-                            <p className="text-sm text-muted-foreground">
-                              <span className="font-semibold">{t("story.routeLabel")}:</span>{" "}
-                              {card.visit.route}
-                            </p>
-                          )}
+                          <VisitTarget
+                            visit={card.visit}
+                            label={t("story.routeLabel")}
+                            className="block text-sm text-muted-foreground"
+                          />
                           <ReviewStoryTrails trails={card.visit.trails} />
                           {card.visit.trip !== null && (
                             <p className="text-sm text-muted-foreground">

@@ -27,6 +27,11 @@ vi.mock("@/lib/api", () => ({
   apiFetch: vi.fn(),
 }));
 
+vi.mock(import("@/lib/trip-planner"), async (importOriginal) => ({
+  ...(await importOriginal()),
+  fetchTripPlannerSuggestions: vi.fn(async () => ({ suggestions: [] })),
+}));
+
 vi.mock("@/lib/public-cache", () => ({
   revalidatePublicCache: mockRevalidatePublicCache,
 }));

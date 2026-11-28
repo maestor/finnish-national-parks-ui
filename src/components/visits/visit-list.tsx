@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { AdminTableFilters } from "@/components/admin/admin-table-filters";
 import { EditVisitLink } from "@/components/visits/edit-visit-link";
+import { hasVisitTarget, VisitTarget } from "@/components/visits/visit-target";
 import type { VisitWithPark } from "@/lib/parks";
 import { appRoutes } from "@/lib/routes";
 
@@ -63,7 +64,12 @@ export const VisitList = ({ visits }: VisitListProps) => {
     const matchesStatus = selectedPublicationStatus
       ? visit.status === selectedPublicationStatus
       : true;
-    const haystack = [visit.park.name, visit.route ?? "", visit.visitedOn]
+    const haystack = [
+      visit.park.name,
+      visit.route ?? "",
+      ...(visit.areas?.map(({ name }) => name) ?? []),
+      visit.visitedOn,
+    ]
       .join(" ")
       .toLocaleLowerCase("fi-FI");
     const matchesQuery = normalizedQuery ? haystack.includes(normalizedQuery) : true;
@@ -147,7 +153,9 @@ export const VisitList = ({ visits }: VisitListProps) => {
                       {visit.park.name}
                     </Link>
                   </td>
-                  <td className="px-4 py-3">{visit.route ?? "–"}</td>
+                  <td className="px-4 py-3">
+                    {hasVisitTarget(visit) ? <VisitTarget visit={visit} /> : "–"}
+                  </td>
                   <td className="px-4 py-3">{visit.visitedOn}</td>
                   <td className="px-4 py-3">
                     <div className="flex flex-col items-start gap-1">

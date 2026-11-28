@@ -14,6 +14,7 @@ interface RevalidatePublicCacheOptions {
   parkSlug?: string | null;
   parkSlugs?: string[];
   tripSlug?: string | null;
+  refreshTripDetails?: boolean;
 }
 
 export const revalidatePublicCache = async ({
@@ -21,6 +22,7 @@ export const revalidatePublicCache = async ({
   parkSlugs,
   tripSlug = null,
   expireImmediately = false,
+  refreshTripDetails,
 }: RevalidatePublicCacheOptions = {}): Promise<boolean> => {
   try {
     let offset = 0;
@@ -36,6 +38,7 @@ export const revalidatePublicCache = async ({
           parkSlug,
           parkSlugs: parkSlugs?.slice(offset, offset + MAX_PARK_SLUGS_PER_REVALIDATION),
           tripSlug,
+          refreshTripDetails,
         }),
       });
       if (!response.ok) return false;

@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import type { AdminLinkedTrail, AdminVisibilityPark } from "@/lib/parks";
+import type { AdminLinkedArea, AdminLinkedTrail, AdminVisibilityPark } from "@/lib/parks";
 import { AdminParkMap } from "./admin-park-map";
 import { ParkList } from "./park-list";
 
@@ -12,9 +12,15 @@ interface ParkManagementProps {
   parks: AdminVisibilityPark[];
   removedParks: AdminVisibilityPark[];
   linkedTrails: AdminLinkedTrail[];
+  linkedAreas?: AdminLinkedArea[];
 }
 
-export const ParkManagement = ({ parks, removedParks, linkedTrails }: ParkManagementProps) => {
+export const ParkManagement = ({
+  parks,
+  removedParks,
+  linkedTrails,
+  linkedAreas = [],
+}: ParkManagementProps) => {
   const t = useTranslations("controlPanel.parks");
   const [activeView, setActiveView] = useState<ViewTab>("list");
 
@@ -58,7 +64,12 @@ export const ParkManagement = ({ parks, removedParks, linkedTrails }: ParkManage
 
       <div className="mt-4">
         {activeView === "list" ? (
-          <ParkList parks={parks} removedParks={removedParks} linkedTrails={linkedTrails} />
+          <ParkList
+            parks={parks}
+            removedParks={removedParks}
+            linkedTrails={linkedTrails}
+            linkedAreas={linkedAreas}
+          />
         ) : (
           <div className="flex h-218.75 flex-col overflow-hidden rounded-[1.6rem] border border-border bg-control shadow-[0_18px_36px_rgba(var(--shadow-rgb),0.14)] backdrop-blur-xl dark:shadow-[0_22px_40px_rgba(var(--shadow-rgb),0.28)]">
             <AdminParkMap parks={parks} removedParks={removedParks} />

@@ -5,6 +5,7 @@ import { createContext, type ReactNode, useContext, useState } from "react";
 interface TrailNavigation {
   request: { slug: string; sequence: number } | null;
   trailSlugs: string[];
+  areaSlugs: string[];
   navigate: (slug: string) => void;
 }
 const ParkTrailNavigationContext = createContext<TrailNavigation | null>(null);
@@ -12,9 +13,11 @@ const ParkTrailNavigationContext = createContext<TrailNavigation | null>(null);
 export const ParkTrailNavigationProvider = ({
   children,
   trailSlugs,
+  areaSlugs = [],
 }: {
   children: ReactNode;
   trailSlugs: string[];
+  areaSlugs?: string[];
 }) => {
   const [request, setRequest] = useState<TrailNavigation["request"]>(null);
   const navigate = (slug: string) => {
@@ -35,7 +38,7 @@ export const ParkTrailNavigationProvider = ({
     });
   };
   return (
-    <ParkTrailNavigationContext.Provider value={{ request, trailSlugs, navigate }}>
+    <ParkTrailNavigationContext.Provider value={{ request, trailSlugs, areaSlugs, navigate }}>
       {children}
     </ParkTrailNavigationContext.Provider>
   );

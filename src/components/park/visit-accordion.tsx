@@ -9,6 +9,7 @@ import { CopyLinkButton } from "@/components/ui/copy-link-button";
 import { MarkdownContent } from "@/components/ui/markdown-content";
 import { EditVisitLink } from "@/components/visits/edit-visit-link";
 import { VisitImageGallery } from "@/components/visits/visit-image-gallery";
+import { hasVisitTarget, VisitTarget } from "@/components/visits/visit-target";
 import { VisitTrailSection } from "@/components/visits/visit-trail-section";
 import { formatFinnishDate } from "@/lib/fi-date";
 import type { Visit } from "@/lib/parks";
@@ -252,7 +253,7 @@ export const VisitAccordion = ({
                   )}
                 </div>
               )}
-              {(trip !== null || !!visit.route || hasImages || isDraft) && (
+              {(trip !== null || hasVisitTarget(visit) || hasImages || isDraft) && (
                 <div className="col-span-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1.5 @xl:col-span-1 @xl:col-start-2 @xl:row-start-1 @xl:min-h-8">
                   {trip !== null && (
                     <Link
@@ -263,14 +264,25 @@ export const VisitAccordion = ({
                       <span className="wrap-anywhere text-balance">{trip.name}</span>
                     </Link>
                   )}
-                  {!!visit.route && (
-                    <span
-                      className={`${WRAPPING_BADGE_CLASS_NAME} border-emerald-200/70 text-emerald-900 dark:border-emerald-300/15 dark:text-emerald-200`}
-                    >
-                      <MapPin className="size-3.5 shrink-0" aria-hidden="true" />
-                      <span className="wrap-anywhere text-balance">{visit.route}</span>
-                    </span>
-                  )}
+                  <VisitTarget
+                    visit={visit}
+                    className={`${WRAPPING_BADGE_CLASS_NAME} border-emerald-200/70 text-emerald-900 dark:border-emerald-300/15 dark:text-emerald-200`}
+                    icon={<MapPin className="size-3.5 shrink-0" aria-hidden="true" />}
+                    primaryClassName="text-balance"
+                    renderArea={(area) =>
+                      trailNavigation?.areaSlugs.includes(area.slug) ? (
+                        <button
+                          type="button"
+                          onClick={() => trailNavigation.navigate(area.slug)}
+                          className="relative cursor-pointer text-left focus-visible:outline-2 focus-visible:outline-ring"
+                        >
+                          {area.name}
+                        </button>
+                      ) : (
+                        area.name
+                      )
+                    }
+                  />
                   {hasImages && (
                     <span
                       className={`inline-flex items-center gap-1.5 ${METADATA_BADGE_CLASS_NAME} border-border leading-tight text-link`}

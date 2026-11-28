@@ -8,6 +8,7 @@ import { useSnackbar } from "@/components/providers/snackbar-provider";
 import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api";
 import {
+  type AdminLinkedArea,
   type AdminLinkedTrail,
   type AdminVisibilityPark,
   getParkTypeDisplayName,
@@ -19,11 +20,13 @@ interface ParkListProps {
   parks: AdminVisibilityPark[];
   removedParks: AdminVisibilityPark[];
   linkedTrails: AdminLinkedTrail[];
+  linkedAreas?: AdminLinkedArea[];
 }
 
 const parkTabs = ["visible", "hidden", "linked"] as const;
 type ParkTab = (typeof parkTabs)[number];
-type ParkListRow = AdminVisibilityPark | AdminLinkedTrail;
+type ParkListRow = AdminVisibilityPark | AdminLinkedTrail | AdminLinkedArea;
+const noLinkedAreas: AdminLinkedArea[] = [];
 
 const tabCopy = {
   visible: { notice: "visibleNotice", empty: "emptyVisible" },
@@ -31,7 +34,12 @@ const tabCopy = {
   linked: { notice: "linkedNotice", empty: "emptyLinked" },
 } as const;
 
-export const ParkList = ({ parks, removedParks, linkedTrails }: ParkListProps) => {
+export const ParkList = ({
+  parks,
+  removedParks,
+  linkedTrails,
+  linkedAreas = noLinkedAreas,
+}: ParkListProps) => {
   const t = useTranslations("controlPanel.parks");
   const tabId = useId();
   const { showSnackbar } = useSnackbar();
@@ -56,16 +64,16 @@ export const ParkList = ({ parks, removedParks, linkedTrails }: ParkListProps) =
     const byTab: Record<ParkTab, ParkListRow[]> = {
       visible: [...localParks],
       hidden: localRemovedParks.filter((park) => !linkedSlugs.has(park.slug)),
-      linked: linkedTrails.filter((trail) => !visibleSlugs.has(trail.slug)),
+      linked: [...linkedTrails.filter((trail) => !visibleSlugs.has(trail.slug)), ...linkedAreas],
     };
     for (const tab of parkTabs) {
       byTab[tab].sort((left, right) => left.name.localeCompare(right.name, "fi-FI"));
     }
     return byTab;
-  }, [localParks, localRemovedParks, linkedTrails]);
+  }, [localParks, localRemovedParks, linkedTrails, linkedAreas]);
 
   const typeOptions = useMemo(() => {
-    const typeEntries = [...localParks, ...localRemovedParks, ...linkedTrails].map(
+    const typeEntries = [...localParks, ...localRemovedParks, ...linkedTrails, ...linkedAreas].map(
       (park) => park.type,
     );
     const uniqueTypes = Array.from(
@@ -79,7 +87,7 @@ export const ParkList = ({ parks, removedParks, linkedTrails }: ParkListProps) =
         value: type.slug,
       })),
     ];
-  }, [localParks, localRemovedParks, linkedTrails, t]);
+  }, [localParks, localRemovedParks, linkedTrails, linkedAreas, t]);
 
   const handleTabKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const current = parkTabs.indexOf(activeTab);
@@ -160,6 +168,7 @@ export const ParkList = ({ parks, removedParks, linkedTrails }: ParkListProps) =
       park.address,
       getParkTypeDisplayName(park),
       park.type.name,
+      ...("mainPark" in park ? [park.mainPark.name] : []),
       ...("linkedAreas" in park ? park.linkedAreas.map((area) => area.name) : []),
     ]
       .join(" ")
@@ -167,8 +176,25 @@ export const ParkList = ({ parks, removedParks, linkedTrails }: ParkListProps) =
 
     return matchesType && haystack.includes(normalizedQuery);
   });
+  const groups = isLinkedTab
+    ? [
+        {
+          title: t("linkedTrailsSection"),
+          parks: filteredParks.filter((park) => "linkedAreas" in park),
+        },
+        {
+          title: t("linkedAreasSection"),
+          parks: filteredParks.filter((park) => "mainPark" in park),
+        },
+      ]
+    : [{ title: null, parks: filteredParks }];
   const resultCountLabel = t("filters.results", { count: filteredParks.length });
-  if (localParks.length === 0 && localRemovedParks.length === 0 && linkedTrails.length === 0) {
+  if (
+    localParks.length === 0 &&
+    localRemovedParks.length === 0 &&
+    linkedTrails.length === 0 &&
+    linkedAreas.length === 0
+  ) {
     return (
       <div className="mt-6 rounded-3xl border border-dashed border-border bg-control p-8 text-center backdrop-blur-sm">
         <p className="text-muted-foreground">{t("emptyAll")}</p>
@@ -246,80 +272,102 @@ export const ParkList = ({ parks, removedParks, linkedTrails }: ParkListProps) =
             <p className="text-muted-foreground">{t("emptyFiltered")}</p>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-[1.6rem] border border-border theme-panel shadow-[0_18px_36px_rgba(var(--shadow-rgb),0.14)] backdrop-blur-xl dark:shadow-[0_22px_40px_rgba(var(--shadow-rgb),0.28)]">
-            <table className="min-w-168 w-full text-sm">
-              <thead className="bg-control">
-                <tr>
-                  <th className="px-4 py-3 text-left font-medium">{t("parkName")}</th>
-                  <th className="px-4 py-3 text-left font-medium">{t("parkType")}</th>
-                  <th className="px-4 py-3 text-left font-medium">{t("location")}</th>
-                  {isLinkedTab ? (
-                    <th className="px-4 py-3 text-left font-medium">{t("linkedAreas")}</th>
-                  ) : (
-                    <th className="px-4 py-3 text-right font-medium" />
-                  )}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/30 dark:divide-white/8">
-                {filteredParks.map((park) => {
-                  const isUpdating = pendingSlug === park.slug;
+          groups.map((group) => (
+            <div key={group.title ?? activeTab} className="space-y-2">
+              {group.title !== null && <h3 className="font-semibold">{group.title}</h3>}
+              {group.parks.length === 0 ? (
+                <p className="text-sm text-muted-foreground">{t("emptyLinkedSection")}</p>
+              ) : (
+                <div className="overflow-x-auto rounded-[1.6rem] border border-border theme-panel shadow-[0_18px_36px_rgba(var(--shadow-rgb),0.14)] backdrop-blur-xl dark:shadow-[0_22px_40px_rgba(var(--shadow-rgb),0.28)]">
+                  <table className="min-w-168 w-full text-sm">
+                    <thead className="bg-control">
+                      <tr>
+                        <th className="px-4 py-3 text-left font-medium">{t("parkName")}</th>
+                        <th className="px-4 py-3 text-left font-medium">{t("parkType")}</th>
+                        <th className="px-4 py-3 text-left font-medium">{t("location")}</th>
+                        {isLinkedTab ? (
+                          <th className="px-4 py-3 text-left font-medium">
+                            {t(
+                              group.title === t("linkedAreasSection") ? "mainPark" : "linkedAreas",
+                            )}
+                          </th>
+                        ) : (
+                          <th className="px-4 py-3 text-right font-medium" />
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/30 dark:divide-white/8">
+                      {group.parks.map((park) => {
+                        const isUpdating = pendingSlug === park.slug;
 
-                  return (
-                    <tr key={park.slug} className="transition-colors hover:bg-accent">
-                      <td className="px-4 py-3">
-                        <Link
-                          href={
-                            isVisibleTab
-                              ? appRoutes.controlPanel.parkEdit(park.slug)
-                              : appRoutes.park(park.slug)
-                          }
-                          className="font-medium hover:underline"
-                        >
-                          {park.name}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-3">{getParkTypeDisplayName(park)}</td>
-                      <td className="px-4 py-3">{park.address}</td>
-                      {"linkedAreas" in park ? (
-                        <td className="px-4 py-3">
-                          <ul className="space-y-1">
-                            {park.linkedAreas.map((area) => (
-                              <li key={area.slug}>
+                        return (
+                          <tr key={park.slug} className="transition-colors hover:bg-accent">
+                            <td className="px-4 py-3">
+                              <Link
+                                href={
+                                  isVisibleTab || "mainPark" in park
+                                    ? appRoutes.controlPanel.parkEdit(park.slug)
+                                    : appRoutes.park(park.slug)
+                                }
+                                className="font-medium hover:underline"
+                              >
+                                {park.name}
+                              </Link>
+                            </td>
+                            <td className="px-4 py-3">{getParkTypeDisplayName(park)}</td>
+                            <td className="px-4 py-3">{park.address}</td>
+                            {"mainPark" in park ? (
+                              <td className="px-4 py-3">
                                 <Link
-                                  href={appRoutes.controlPanel.parkEdit(area.slug)}
+                                  href={appRoutes.controlPanel.parkEdit(park.mainPark.slug)}
                                   className="underline underline-offset-2"
                                 >
-                                  {area.name}
+                                  {park.mainPark.name}
                                 </Link>
-                              </li>
-                            ))}
-                          </ul>
-                        </td>
-                      ) : (
-                        <td className="px-4 py-3 text-right">
-                          <Button
-                            type="button"
-                            variant={isVisibleTab ? "destructive" : "outline"}
-                            size="sm"
-                            onClick={() => updateParkVisibility(park, isVisibleTab)}
-                            disabled={isUpdating}
-                          >
-                            {isUpdating
-                              ? isVisibleTab
-                                ? t("removing")
-                                : t("restoring")
-                              : isVisibleTab
-                                ? t("removeAction")
-                                : t("restoreAction")}
-                          </Button>
-                        </td>
-                      )}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                              </td>
+                            ) : "linkedAreas" in park ? (
+                              <td className="px-4 py-3">
+                                <ul className="space-y-1">
+                                  {park.linkedAreas.map((area) => (
+                                    <li key={area.slug}>
+                                      <Link
+                                        href={appRoutes.controlPanel.parkEdit(area.slug)}
+                                        className="underline underline-offset-2"
+                                      >
+                                        {area.name}
+                                      </Link>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </td>
+                            ) : (
+                              <td className="px-4 py-3 text-right">
+                                <Button
+                                  type="button"
+                                  variant={isVisibleTab ? "destructive" : "outline"}
+                                  size="sm"
+                                  onClick={() => updateParkVisibility(park, isVisibleTab)}
+                                  disabled={isUpdating}
+                                >
+                                  {isUpdating
+                                    ? isVisibleTab
+                                      ? t("removing")
+                                      : t("restoring")
+                                    : isVisibleTab
+                                      ? t("removeAction")
+                                      : t("restoreAction")}
+                                </Button>
+                              </td>
+                            )}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          ))
         )}
       </div>
     </div>

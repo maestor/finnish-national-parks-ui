@@ -23,6 +23,7 @@ import { ParkTypeBadge } from "@/components/park/park-type-badge";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { IMAGE_OVERLAY_LABEL_CLASS_NAME } from "@/components/ui/theme-styles";
+import { hasVisitTarget, VisitTarget } from "@/components/visits/visit-target";
 import { cn } from "@/lib/cn";
 import { formatFinnishDate, formatFinnishDateRange } from "@/lib/fi-date";
 import { renderMultilineText } from "@/lib/multiline-text";
@@ -304,16 +305,15 @@ const PublicVisitsTimelineContent = ({
 
   const renderVisitBadges = (visit: PublicVisitTimelineVisitItem["visit"]) => {
     const showImageCount = visit.imageCount > 0 && visit.featuredImage === null;
-    if (visit.route === null && !visit.trails?.length && !showImageCount) return null;
+    if (!hasVisitTarget(visit) && !visit.trails?.length && !showImageCount) return null;
 
     return (
       <div className="mt-2 flex flex-wrap gap-1.5">
-        {visit.route !== null && (
-          <span className={PUBLIC_ROUTE_BADGE_CLASS_NAME}>
-            <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            <span className="min-w-0 wrap-break-word">{visit.route}</span>
-          </span>
-        )}
+        <VisitTarget
+          visit={visit}
+          className={PUBLIC_ROUTE_BADGE_CLASS_NAME}
+          icon={<MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />}
+        />
         {showImageCount === true && (
           <span
             aria-label={t("item.imageCount", { count: visit.imageCount })}

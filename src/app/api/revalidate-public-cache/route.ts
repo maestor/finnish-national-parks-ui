@@ -6,6 +6,7 @@ import {
   HOME_SUMMARY_TAG,
   MAP_SUMMARY_TAG,
   MAX_PARK_SLUGS_PER_REVALIDATION,
+  PUBLIC_TRIP_DETAILS_TAG,
   PUBLIC_TRIPS_TAG,
   PUBLIC_VISITS_TAG,
 } from "@/lib/public-cache";
@@ -19,6 +20,7 @@ interface RevalidateRequestBody {
   parkSlug?: string | null;
   parkSlugs?: string[];
   tripSlug?: string | null;
+  refreshTripDetails?: boolean;
 }
 
 export const POST = async (request: Request) => {
@@ -58,6 +60,7 @@ export const POST = async (request: Request) => {
   let parkSlug: string | null = null;
   let parkSlugs: string[] = [];
   let tripSlug: string | null = null;
+  let refreshTripDetails = false;
 
   try {
     const body = (await request.json()) as RevalidateRequestBody;
@@ -72,6 +75,7 @@ export const POST = async (request: Request) => {
       }
       parkSlugs = body.parkSlugs;
     }
+    refreshTripDetails = body.refreshTripDetails === true;
     tripSlug = typeof body.tripSlug === "string" && body.tripSlug.trim() ? body.tripSlug : null;
   } catch {
     parkSlug = null;
@@ -98,6 +102,8 @@ export const POST = async (request: Request) => {
     revalidateTag(getPublicParkTag(slug), profile);
     revalidatePath(appRoutes.park(slug), "page");
   }
+
+  if (refreshTripDetails) revalidateTag(PUBLIC_TRIP_DETAILS_TAG, profile);
 
   if (tripSlug) {
     revalidateTag(getPublicTripTag(tripSlug), profile);

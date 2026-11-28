@@ -26,6 +26,7 @@ import { useStoryProgressNavigation } from "@/components/story/use-story-progres
 import { AppImage } from "@/components/ui/app-image";
 import { Button } from "@/components/ui/button";
 import { PROGRESS_FILL_CLASS_NAME, PROGRESS_TRACK_CLASS_NAME } from "@/components/ui/theme-styles";
+import { hasVisitTarget, VisitTarget } from "@/components/visits/visit-target";
 import { cn } from "@/lib/cn";
 import { formatFinnishDateRange, formatFinnishLongDate } from "@/lib/fi-date";
 import { appRoutes } from "@/lib/routes";
@@ -634,14 +635,16 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                       ) : null}
 
                       <div className="grid content-start gap-3">
-                        {card.visit.route !== null && (
+                        {hasVisitTarget(card.visit) && (
                           <div className={METRIC_TILE_CLASS_NAME}>
                             <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                               {t("story.routeLabel")}
                             </p>
-                            <p className="mt-2 text-xl font-semibold text-foreground">
-                              {card.visit.route}
-                            </p>
+                            <VisitTarget
+                              visit={card.visit}
+                              className="mt-2 block text-foreground"
+                              primaryClassName="text-xl font-semibold"
+                            />
                           </div>
                         )}
                         <ReviewStoryTrails
@@ -764,12 +767,11 @@ const YearReviewStory = ({ headingLevel = 2, mode, story }: YearReviewStoryProps
                                 </p>
                               </div>
                             </div>
-                            {card.visit.route !== null && (
-                              <p className="text-sm text-muted-foreground">
-                                <span className="font-semibold">{t("story.routeLabel")}:</span>{" "}
-                                {card.visit.route}
-                              </p>
-                            )}
+                            <VisitTarget
+                              visit={card.visit}
+                              label={t("story.routeLabel")}
+                              className="block text-sm text-muted-foreground"
+                            />
                             <ReviewStoryTrails trails={card.visit.trails} />
                             {card.visit.trip !== null && (
                               <p className="text-sm text-muted-foreground">

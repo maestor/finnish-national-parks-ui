@@ -21,6 +21,11 @@ const trails = [
   { trailId: 20, name: "Lyhyt polku", effective: true },
   { trailId: 30, name: "Poistettu polku", effective: false },
 ];
+const areas = [
+  { id: 40, name: "Aulanko", slug: "aulanko", active: true, removed: false },
+  { id: 50, name: "Langinkoski", slug: "langinkoski", active: true, removed: true },
+  { id: 60, name: "Vanha alue", slug: "vanha", active: false, removed: true },
+];
 const visit: VisitWithPark = {
   id: 1,
   park: { slug: "alue", name: "Alue" },
@@ -44,40 +49,75 @@ beforeEach(() => {
 it("saves selected park trails with a new visit and resets choices when the park changes", async () => {
   const user = userEvent.setup();
   vi.mocked(apiFetch).mockImplementation(async (path, options) =>
-    options?.method === "POST" ? { id: 5 } : { trails: path.includes("toinen") ? [] : trails },
+    options?.method === "POST"
+      ? { id: 5 }
+      : path.includes("toinen")
+        ? { trails: [], areas: [] }
+        : { trails, areas },
   );
   render(<VisitForm parks={parks} />, { wrapper: I18nProvider });
   await user.selectOptions(screen.getByLabelText(/^Paikka/), "alue");
   await user.click(await screen.findByRole("checkbox", { name: "Pitkä polku" }));
   await user.click(screen.getByRole("checkbox", { name: "Lyhyt polku" }));
+  await user.click(screen.getByRole("checkbox", { name: "Aulanko" }));
   expect(screen.queryByRole("checkbox", { name: "Poistettu polku" })).not.toBeInTheDocument();
   await user.selectOptions(screen.getByLabelText(/^Paikka/), "toinen");
   await waitFor(() => expect(screen.queryByRole("checkbox")).not.toBeInTheDocument());
   await user.selectOptions(screen.getByLabelText(/^Paikka/), "alue");
   expect(await screen.findByRole("checkbox", { name: "Pitkä polku" })).not.toBeChecked();
+  expect(screen.getByRole("checkbox", { name: "Aulanko" })).not.toBeChecked();
+  expect(screen.queryByRole("checkbox", { name: "Vanha alue" })).not.toBeInTheDocument();
+  await user.click(screen.getByRole("checkbox", { name: "Aulanko" }));
+  await user.click(screen.getByRole("checkbox", { name: "Langinkoski" }));
   await user.click(screen.getByRole("checkbox", { name: "Lyhyt polku" }));
   await user.click(screen.getByRole("button", { name: "Julkaise" }));
   const request = vi.mocked(apiFetch).mock.calls.find(([, options]) => options?.method === "POST");
   expect(request?.[0]).toBe("/api/parks/alue/visits");
-  expect(JSON.parse(request?.[1]?.body as string)).toMatchObject({ trailIds: [20], route: null });
+  expect(JSON.parse(request?.[1]?.body as string)).toMatchObject({
+    trailIds: [20],
+    areaIds: [40, 50],
+    route: null,
+  });
+});
+
+it("offers to switch a linked subarea to its main park before saving a visit", async () => {
+  const user = userEvent.setup();
+  vi.mocked(apiFetch).mockImplementation(async (path) =>
+    path.includes("/toinen/")
+      ? { trails: [], mainPark: { id: 5, slug: "alue", name: "Alue" } }
+      : { trails: [], areas },
+  );
+  render(<VisitForm parks={parks} defaultParkSlug="toinen" />, { wrapper: I18nProvider });
+  const switchPark = await screen.findByRole("button", { name: "Valitse pääalue" });
+  expect(screen.getByText("Tämän alueen käynnit kirjataan pääalueelle Alue.")).toBeVisible();
+  expect(screen.getByRole("button", { name: "Julkaise" })).toBeDisabled();
+  await user.click(switchPark);
+  expect(screen.getByLabelText(/^Paikka/)).toHaveValue("alue");
+  expect(await screen.findByRole("checkbox", { name: "Aulanko" })).toBeEnabled();
 });
 
 it("lets admins clear existing trails without changing the free-text route", async () => {
   const user = userEvent.setup();
   vi.mocked(apiFetch).mockImplementation(async (_path, options) =>
-    options?.method === "PATCH" ? {} : { trails },
+    options?.method === "PATCH" ? {} : { trails, areas },
   );
-  render(<VisitForm parks={parks} visitToEdit={visit} />, { wrapper: I18nProvider });
+  render(<VisitForm parks={parks} visitToEdit={{ ...visit, areas: [areas[2]] }} />, {
+    wrapper: I18nProvider,
+  });
   const checkbox = await screen.findByRole("checkbox", { name: "Pitkä polku" });
   expect(checkbox).toBeChecked();
   const save = screen.getByRole("button", { name: "Tallenna muutokset" });
   expect(save).toBeDisabled();
   await user.click(checkbox);
+  const inactive = screen.getByRole("checkbox", { name: /^Vanha alue/ });
+  expect(inactive).toBeChecked();
+  await user.click(inactive);
   await user.click(save);
   await waitFor(() => expect(save).toBeDisabled());
   const request = vi.mocked(apiFetch).mock.calls.find(([, options]) => options?.method === "PATCH");
   expect(JSON.parse(request?.[1]?.body as string)).toMatchObject({
     trailIds: [],
+    areaIds: [],
     route: "Alkuperäinen reitti",
   });
 });

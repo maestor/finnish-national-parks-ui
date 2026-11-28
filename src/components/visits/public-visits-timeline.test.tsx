@@ -746,8 +746,7 @@ describe("PublicVisitsTimeline", () => {
 
     const nuuksioCard = screen.getByRole("heading", { name: "Nuuksio" }).closest("li");
     assert(nuuksioCard);
-    const badgeRow =
-      within(nuuksioCard).getByText("Punarinnankierros").parentElement?.parentElement;
+    const badgeRow = within(nuuksioCard).getByText("Punarinnankierros").closest(".flex.flex-wrap");
     assert(badgeRow);
     expect(badgeRow).toHaveClass("flex", "flex-wrap");
     expect(Array.from(badgeRow.children, (badge) => badge.textContent)).toEqual([
