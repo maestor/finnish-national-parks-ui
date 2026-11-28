@@ -69,6 +69,8 @@ const EditParkPage = async ({ params, searchParams }: EditParkPageProps) => {
           >(`/api/admin/parks/${encodeURIComponent(slug)}/areas`, { cache: "no-store" })
         ).areas
       : [];
+  const mainPark = park.mainPark;
+  const relatedAreas = mainPark ? [mainPark] : linkedAreas;
   const details = (
     <>
       <ParkForm park={park} linkedAreaSlugs={linkedAreas.map((area) => area.slug)} />
@@ -87,10 +89,10 @@ const EditParkPage = async ({ params, searchParams }: EditParkPageProps) => {
       <p className="mt-2 text-muted-foreground">{t("description")}</p>
       <div className="mt-3 flex flex-wrap items-center gap-4 text-sm">
         <Link
-          href={appRoutes.park(park.mainPark?.slug ?? park.slug)}
+          href={appRoutes.park(park.slug)}
           className="font-medium text-link underline underline-offset-4 hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
-          {t(park.mainPark ? "viewMainParkPage" : "viewParkPage")}
+          {t("viewParkPage")}
         </Link>
       </div>
       {updated === "1" && refreshFailed !== "1" && <SnackbarNotice message={t("updatedNotice")} />}
@@ -109,16 +111,16 @@ const EditParkPage = async ({ params, searchParams }: EditParkPageProps) => {
           successMessage={t("cacheRefreshRetried")}
         />
       )}
-      {linkedAreas.length > 0 && (
+      {relatedAreas.length > 0 && (
         <section
           className="mt-6 max-w-3xl rounded-2xl border border-border bg-control p-4"
           aria-labelledby="linked-areas-title"
         >
           <h2 id="linked-areas-title" className="text-lg font-semibold">
-            {t("linkedAreasTitle")}
+            {t(mainPark ? "mainParkTitle" : "linkedAreasTitle")}
           </h2>
           <ul className="mt-2 space-y-1">
-            {linkedAreas.map((area) => (
+            {relatedAreas.map((area) => (
               <li key={area.slug}>
                 <Link
                   href={appRoutes.controlPanel.parkEdit(area.slug)}

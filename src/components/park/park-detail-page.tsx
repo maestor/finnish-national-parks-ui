@@ -75,7 +75,7 @@ const fetchParkDetailForRequest = cache(
   ): Promise<{
     park: ParkDetail;
     usedAuthenticatedFallback: boolean;
-  } | null> => {
+  }> => {
     try {
       return {
         park: await fetchPublicParkDetail(slug, { includeBoundary: true }),
@@ -90,7 +90,7 @@ const fetchParkDetailForRequest = cache(
       const park = await apiAuthFetch<ParkDetail>(buildParkDetailPath(slug, true), {
         cache: "no-store",
       });
-      return park.mainPark ? null : { park, usedAuthenticatedFallback: true };
+      return { park, usedAuthenticatedFallback: true };
     }
   },
 );
