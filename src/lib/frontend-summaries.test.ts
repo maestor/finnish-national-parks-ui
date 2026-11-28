@@ -240,7 +240,7 @@ describe("createHomeProgressItems", () => {
 
     expect(apiFetch).toHaveBeenCalledWith("/api/parks/riisitunturi?includeBoundary=true", {
       cache: "force-cache",
-      headers: { "X-Reissuvihko-Cache-Version": "4" },
+      headers: { "X-Reissuvihko-Cache-Version": "5" },
       next: {
         revalidate: 3600,
         tags: [getPublicParkTag("riisitunturi"), PUBLIC_PARK_DETAILS_TAG],
@@ -255,7 +255,7 @@ describe("createHomeProgressItems", () => {
 
     expect(apiFetch).toHaveBeenCalledWith("/api/parks/riisitunturi/visits", {
       cache: "force-cache",
-      headers: { "X-Reissuvihko-Cache-Version": "2" },
+      headers: { "X-Reissuvihko-Cache-Version": "3" },
       next: {
         tags: [getPublicParkTag("riisitunturi"), PUBLIC_PARK_DETAILS_TAG],
       },
@@ -269,6 +269,7 @@ describe("createHomeProgressItems", () => {
 
     expect(apiPublicFetch).toHaveBeenCalledWith("/api/home-summary", {
       cache: "force-cache",
+      headers: { "X-Reissuvihko-Cache-Version": "2" },
       next: {
         tags: ["home-summary"],
       },
@@ -289,7 +290,7 @@ describe("createHomeProgressItems", () => {
 
     expect(apiPublicFetch).toHaveBeenCalledWith("/api/map-summary", {
       cache: "force-cache",
-      headers: { "X-Reissuvihko-Cache-Version": "2" },
+      headers: { "X-Reissuvihko-Cache-Version": "3" },
       next: {
         tags: ["map-summary"],
       },

@@ -35,6 +35,7 @@ export interface HomeProgressItem {
 export const fetchHomeSummary = async (): Promise<HomeSummary> =>
   apiPublicFetch<HomeSummary>("/api/home-summary", {
     cache: "force-cache",
+    headers: { "X-Reissuvihko-Cache-Version": "2" },
     next: {
       tags: [HOME_SUMMARY_TAG],
     },
@@ -43,7 +44,7 @@ export const fetchHomeSummary = async (): Promise<HomeSummary> =>
 export const fetchMapSummary = async (): Promise<MapSummary> =>
   apiPublicFetch<MapSummary>("/api/map-summary", {
     cache: "force-cache",
-    headers: { "X-Reissuvihko-Cache-Version": "2" },
+    headers: { "X-Reissuvihko-Cache-Version": "3" },
     next: {
       tags: [MAP_SUMMARY_TAG],
     },
@@ -59,7 +60,7 @@ export const fetchPublicParkDetail = async (
     `/api/parks/${slug}${options?.includeBoundary ? "?includeBoundary=true" : ""}`,
     {
       cache: "force-cache",
-      headers: { "X-Reissuvihko-Cache-Version": "4" },
+      headers: { "X-Reissuvihko-Cache-Version": "5" },
       next: {
         revalidate: 3600,
         tags: [getPublicParkTag(slug), PUBLIC_PARK_DETAILS_TAG],
@@ -70,7 +71,7 @@ export const fetchPublicParkDetail = async (
 export const fetchPublicParkVisits = async (slug: string): Promise<ParkVisits> =>
   apiFetch<ParkVisits>(`/api/parks/${slug}/visits`, {
     cache: "force-cache",
-    headers: { "X-Reissuvihko-Cache-Version": "2" },
+    headers: { "X-Reissuvihko-Cache-Version": "3" },
     next: {
       tags: [getPublicParkTag(slug), PUBLIC_PARK_DETAILS_TAG],
     },

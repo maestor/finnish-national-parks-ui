@@ -25,6 +25,7 @@ const ParksPage = async () => {
     linkedAreas = [],
   } = await apiAuthFetch<AdminParkVisibilityResponse>("/api/admin/parks/visibility", {
     cache: "force-cache",
+    headers: { "X-Reissuvihko-Cache-Version": "2" },
     next: {
       tags: [ADMIN_PARK_VISIBILITY_TAG],
     },

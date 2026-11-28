@@ -1990,6 +1990,22 @@ describe("App pages", () => {
     expect(screen.getByRole("heading", { name: "Pallas-Yllästunturi" })).toBeInTheDocument();
   });
 
+  it("keeps linked areas off the public park route for signed-in admins", async () => {
+    vi.mocked(apiFetch).mockRejectedValue(new ApiError(404, "linked area"));
+    vi.mocked(apiAuthFetch).mockResolvedValue({
+      ...publicPark,
+      mainPark: { id: 1, name: "Petikon luontovirkistysalue", slug: "petikko" },
+    });
+
+    await renderPublicRoute(
+      await AuthenticatedParkPage({ params: Promise.resolve({ slug: publicPark.slug }) }),
+    );
+
+    expect(screen.getByText("park.detailTitle")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: publicPark.name })).not.toBeInTheDocument();
+    expect(apiAuthFetch).toHaveBeenCalledTimes(1);
+  });
+
   it("renders the public visits page with selected year and month filters", async () => {
     vi.mocked(apiPublicFetch).mockResolvedValueOnce({ visits: [timelineVisit] });
 
@@ -2495,6 +2511,7 @@ describe("App pages", () => {
 
     expect(apiAuthFetch).toHaveBeenNthCalledWith(1, "/api/admin/parks/visibility", {
       cache: "force-cache",
+      headers: { "X-Reissuvihko-Cache-Version": "2" },
       next: {
         tags: ["admin-park-visibility"],
       },
@@ -2614,6 +2631,28 @@ describe("App pages", () => {
       screen.getByRole("button", { name: "controlPanel.parks.edit.retryCacheRefresh" }),
     ).toBeInTheDocument();
     expect(screen.queryByText("controlPanel.parks.edit.updatedNotice")).not.toBeInTheDocument();
+  });
+
+  it("links to the parent park from the linked area editor", async () => {
+    vi.mocked(apiAuthFetch)
+      .mockResolvedValueOnce({
+        ...publicPark,
+        mainPark: { id: 1, name: "Petikon luontovirkistysalue", slug: "petikko" },
+      })
+      .mockResolvedValueOnce({ trails: [] })
+      .mockResolvedValueOnce({ areas: [] });
+
+    await renderControlPanelRoute(
+      await EditParkPage({
+        params: Promise.resolve({ slug: publicPark.slug }),
+        searchParams: Promise.resolve({}),
+      }),
+    );
+
+    expect(
+      screen.getByRole("link", { name: "controlPanel.parks.edit.viewMainParkPage" }),
+    ).toHaveAttribute("href", "/paikka/petikko");
+    expect(screen.queryByRole("link", { name: "controlPanel.parks.edit.viewParkPage" })).toBeNull();
   });
 
   it("shows no area links for an unlinked trail", async () => {

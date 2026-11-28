@@ -180,6 +180,29 @@ describe("HomeParkSearch", () => {
     expect(screen.getByTestId("focus-request")).toHaveTextContent("nuuksion-kansallispuisto");
   });
 
+  it("finds the parent park when searching for a linked area", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce(
+      createSearchIndex([
+        {
+          ...parks[0],
+          slug: "petikon-luontovirkistysalue",
+          name: "Petikon luontovirkistysalue",
+          areaNames: ["Vestran luonnonsuojelualueet"],
+        },
+      ]),
+    );
+
+    renderSearch();
+    fireEvent.change(screen.getByRole("combobox", { name: "layout.parkSearch.label" }), {
+      target: { value: "vestran" },
+    });
+
+    const park = await screen.findByRole("button", { name: /Petikon luontovirkistysalue/ });
+    expect(screen.getAllByRole("listitem")).toHaveLength(1);
+    fireEvent.click(park);
+    expect(screen.getByTestId("focus-request")).toHaveTextContent("petikon-luontovirkistysalue");
+  });
+
   it("matches a trip by its visited place and sorts the two result tiers in Finnish order", async () => {
     const searchIndex: CombinedSearchIndex = {
       parks: parks.map((park) =>

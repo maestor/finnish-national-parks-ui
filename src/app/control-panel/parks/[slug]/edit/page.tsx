@@ -87,10 +87,10 @@ const EditParkPage = async ({ params, searchParams }: EditParkPageProps) => {
       <p className="mt-2 text-muted-foreground">{t("description")}</p>
       <div className="mt-3 flex flex-wrap items-center gap-4 text-sm">
         <Link
-          href={appRoutes.park(park.slug)}
+          href={appRoutes.park(park.mainPark?.slug ?? park.slug)}
           className="font-medium text-link underline underline-offset-4 hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
-          {t("viewParkPage")}
+          {t(park.mainPark ? "viewMainParkPage" : "viewParkPage")}
         </Link>
       </div>
       {updated === "1" && refreshFailed !== "1" && <SnackbarNotice message={t("updatedNotice")} />}
