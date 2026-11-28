@@ -16,6 +16,7 @@ export type AdminParkVisibilityResponse =
   paths["/api/admin/parks/visibility"]["get"]["responses"][200]["content"]["application/json"];
 
 export type AdminVisibilityPark = AdminParkVisibilityResponse["visibleParks"][number];
+export type AdminLinkedTrail = NonNullable<AdminParkVisibilityResponse["linkedTrails"]>[number];
 
 export type ParkDetail =
   paths["/api/parks/{slug}"]["get"]["responses"][200]["content"]["application/json"];

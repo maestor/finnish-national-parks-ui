@@ -3,7 +3,13 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SnackbarProvider } from "@/components/providers/snackbar-provider";
 import { ApiError, apiAuthFetch, apiFetch, apiPublicFetch } from "@/lib/api";
-import type { AdminVisibilityPark, Park, Visit, VisitWithPark } from "@/lib/parks";
+import type {
+  AdminLinkedTrail,
+  AdminVisibilityPark,
+  Park,
+  Visit,
+  VisitWithPark,
+} from "@/lib/parks";
 import type { FrontendTimelineVisit } from "@/lib/public-visits";
 import HomePage, { generateMetadata as generateHomeMetadata } from "./(user)/[[...path]]/page";
 import PublicDateRangeReviewPage, {
@@ -343,14 +349,16 @@ vi.mock("@/components/parks/park-list", () => ({
 
 vi.mock("@/components/parks/park-management", () => ({
   ParkManagement: ({
+    linkedTrails,
     parks,
     removedParks,
   }: {
+    linkedTrails: AdminLinkedTrail[];
     parks: AdminVisibilityPark[];
     removedParks: AdminVisibilityPark[];
   }) => (
     <div data-testid="park-management">
-      parks:{parks.length}|removed:{removedParks.length}
+      parks:{parks.length}|removed:{removedParks.length}|linked:{linkedTrails.length}
     </div>
   ),
 }));
@@ -2472,6 +2480,15 @@ describe("App pages", () => {
     vi.mocked(apiAuthFetch).mockResolvedValueOnce({
       visibleParks: [adminVisibilityPark],
       removedParks: [],
+      linkedTrails: [
+        {
+          ...adminVisibilityPark,
+          name: "Klassarinkierros",
+          slug: "klassarinkierros",
+          type: { code: 4404, id: 4404, name: "Luontopolku", slug: "nature-trail" },
+          linkedAreas: [{ name: adminVisibilityPark.name, slug: adminVisibilityPark.slug }],
+        },
+      ],
     });
 
     await renderControlPanelRoute(await ParksPage());
@@ -2483,7 +2500,7 @@ describe("App pages", () => {
       },
     });
     expect(screen.getByRole("navigation", { name: "controlPanel.title" })).toBeInTheDocument();
-    expect(screen.getByTestId("park-management")).toHaveTextContent("parks:1|removed:0");
+    expect(screen.getByTestId("park-management")).toHaveTextContent("parks:1|removed:0|linked:1");
   });
 
   it("builds metadata for the parks list page", async () => {

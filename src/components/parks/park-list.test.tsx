@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SnackbarProvider } from "@/components/providers/snackbar-provider";
 import { apiFetch } from "@/lib/api";
-import type { AdminVisibilityPark } from "@/lib/parks";
+import type { AdminLinkedTrail, AdminVisibilityPark } from "@/lib/parks";
 import { ParkList } from "./park-list";
 
 const { mockRevalidatePublicCache } = vi.hoisted(() => ({
@@ -58,6 +58,21 @@ const removedParks: AdminVisibilityPark[] = [
   },
 ];
 
+const trail: AdminVisibilityPark = {
+  ...removedParks[0],
+  name: "Klassarinkierros",
+  slug: "klassarinkierros",
+  type: { code: 4404, id: 4404, name: "Luontopolku", slug: "nature-trail" },
+};
+
+const linkedTrail: AdminLinkedTrail = {
+  ...trail,
+  linkedAreas: [
+    { name: "Nuuksion kansallispuisto", slug: "nuuksio" },
+    { name: "Haukkalammen ulkoilualue", slug: "haukkalampi" },
+  ],
+};
+
 const render = (ui: Parameters<typeof renderTestingLibrary>[0]) =>
   renderTestingLibrary(<SnackbarProvider>{ui}</SnackbarProvider>);
 
@@ -71,7 +86,7 @@ describe("ParkList", () => {
   });
 
   it("renders parks sorted by name with edit links in the name column", () => {
-    render(<ParkList parks={parks} removedParks={removedParks} />);
+    render(<ParkList parks={parks} removedParks={removedParks} linkedTrails={[]} />);
 
     const rows = screen.getAllByRole("row");
     expect(rows).toHaveLength(3);
@@ -88,7 +103,7 @@ describe("ParkList", () => {
   });
 
   it("uses the park page link for removed parks on the hidden tab", () => {
-    render(<ParkList parks={parks} removedParks={removedParks} />);
+    render(<ParkList parks={parks} removedParks={removedParks} linkedTrails={[]} />);
 
     fireEvent.click(screen.getByRole("tab", { name: "controlPanel.parks.tabs.hidden" }));
 
@@ -98,10 +113,71 @@ describe("ParkList", () => {
     );
   });
 
+  it("moves linked trails out of the hidden list and shows all linked areas without restore", async () => {
+    const user = userEvent.setup();
+    render(
+      <ParkList
+        parks={parks}
+        removedParks={[...removedParks, trail]}
+        linkedTrails={[linkedTrail]}
+      />,
+    );
+
+    const hiddenTab = screen.getByRole("tab", { name: "controlPanel.parks.tabs.hidden" });
+    await user.click(hiddenTab);
+    expect(screen.getByRole("link", { name: "Repoveden kansallispuisto" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "controlPanel.parks.restoreAction" })).toBeEnabled();
+    expect(screen.queryByRole("link", { name: "Klassarinkierros" })).not.toBeInTheDocument();
+
+    await user.keyboard("{ArrowRight}");
+
+    const linkedTab = screen.getByRole("tab", { name: "controlPanel.parks.tabs.linked" });
+    expect(linkedTab).toHaveFocus();
+    expect(linkedTab).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tabpanel", { name: "controlPanel.parks.tabs.linked" })).toBeVisible();
+    expect(screen.getByRole("link", { name: "Klassarinkierros" })).toHaveAttribute(
+      "href",
+      "/paikka/klassarinkierros",
+    );
+    expect(screen.getByRole("link", { name: "Nuuksion kansallispuisto" })).toHaveAttribute(
+      "href",
+      "/hallinta/paikat/nuuksio/muokkaa",
+    );
+    expect(screen.getByRole("link", { name: "Haukkalammen ulkoilualue" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "controlPanel.parks.restoreAction" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Repoveden kansallispuisto" })).toBeNull();
+
+    const search = screen.getByLabelText("controlPanel.parks.filters.searchLabel");
+    await user.tab();
+    expect(search).toHaveFocus();
+    await user.type(search, "Nuuksio");
+    expect(screen.getByRole("link", { name: "Klassarinkierros" })).toBeInTheDocument();
+    await user.type(search, "xx");
+    expect(screen.getByText("controlPanel.parks.emptyFiltered")).toBeInTheDocument();
+  });
+
+  it("shows an empty linked-trails tab when no hidden trails are linked", async () => {
+    const user = userEvent.setup();
+    render(<ParkList parks={[...parks, trail]} removedParks={[]} linkedTrails={[linkedTrail]} />);
+
+    const visibleTab = screen.getByRole("tab", { name: "controlPanel.parks.tabs.visible" });
+    await user.click(visibleTab);
+    expect(screen.getByRole("link", { name: "Klassarinkierros" })).toBeInTheDocument();
+
+    await user.keyboard("{End}");
+    expect(screen.getByText("controlPanel.parks.emptyLinked")).toBeVisible();
+    await user.keyboard("{ArrowRight}");
+    expect(visibleTab).toHaveFocus();
+    await user.keyboard("{ArrowLeft}");
+    expect(screen.getByRole("tab", { name: "controlPanel.parks.tabs.linked" })).toHaveFocus();
+    await user.keyboard("{Home}");
+    expect(visibleTab).toHaveFocus();
+  });
+
   it("removes a park after confirmation without waiting for a route refresh", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce(undefined);
 
-    render(<ParkList parks={parks} removedParks={removedParks} />);
+    render(<ParkList parks={parks} removedParks={removedParks} linkedTrails={[]} />);
 
     fireEvent.click(screen.getAllByRole("button", { name: "controlPanel.parks.removeAction" })[0]);
 
@@ -128,7 +204,7 @@ describe("ParkList", () => {
       vi.fn(() => false),
     );
 
-    render(<ParkList parks={parks} removedParks={removedParks} />);
+    render(<ParkList parks={parks} removedParks={removedParks} linkedTrails={[]} />);
 
     fireEvent.click(screen.getAllByRole("button", { name: "controlPanel.parks.removeAction" })[0]);
 
@@ -138,7 +214,7 @@ describe("ParkList", () => {
   it("shows an error when park removal fails", async () => {
     vi.mocked(apiFetch).mockRejectedValueOnce(new Error("remove failed"));
 
-    render(<ParkList parks={parks} removedParks={removedParks} />);
+    render(<ParkList parks={parks} removedParks={removedParks} linkedTrails={[]} />);
 
     fireEvent.click(screen.getAllByRole("button", { name: "controlPanel.parks.removeAction" })[0]);
 
@@ -152,7 +228,7 @@ describe("ParkList", () => {
   it("shows removed parks on the hidden tab and restores them", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce(undefined);
 
-    render(<ParkList parks={parks} removedParks={removedParks} />);
+    render(<ParkList parks={parks} removedParks={removedParks} linkedTrails={[]} />);
 
     fireEvent.click(screen.getByRole("tab", { name: "controlPanel.parks.tabs.hidden" }));
     fireEvent.click(screen.getByRole("button", { name: "controlPanel.parks.restoreAction" }));
@@ -177,7 +253,7 @@ describe("ParkList", () => {
   it("filters parks by search query and type", async () => {
     const user = userEvent.setup();
 
-    render(<ParkList parks={parks} removedParks={removedParks} />);
+    render(<ParkList parks={parks} removedParks={removedParks} linkedTrails={[]} />);
 
     await user.type(screen.getByLabelText("controlPanel.parks.filters.searchLabel"), "Teijo");
 
@@ -199,7 +275,7 @@ describe("ParkList", () => {
   it("matches a park by its custom display type name in the search filter", async () => {
     const user = userEvent.setup();
 
-    render(<ParkList parks={parks} removedParks={removedParks} />);
+    render(<ParkList parks={parks} removedParks={removedParks} linkedTrails={[]} />);
 
     await user.type(
       screen.getByLabelText("controlPanel.parks.filters.searchLabel"),
@@ -213,7 +289,7 @@ describe("ParkList", () => {
   it("matches a park by its address in the search filter", async () => {
     const user = userEvent.setup();
 
-    render(<ParkList parks={parks} removedParks={removedParks} />);
+    render(<ParkList parks={parks} removedParks={removedParks} linkedTrails={[]} />);
 
     await user.type(screen.getByLabelText("controlPanel.parks.filters.searchLabel"), "13220");
 
@@ -224,7 +300,7 @@ describe("ParkList", () => {
   it("shows filtered empty state and resets the filters", async () => {
     const user = userEvent.setup();
 
-    render(<ParkList parks={parks} removedParks={removedParks} />);
+    render(<ParkList parks={parks} removedParks={removedParks} linkedTrails={[]} />);
 
     await user.type(screen.getByLabelText("controlPanel.parks.filters.searchLabel"), "Lemmenjoki");
 
@@ -238,7 +314,7 @@ describe("ParkList", () => {
   });
 
   it("shows an empty state when there are no parks in the active tab", () => {
-    render(<ParkList parks={[]} removedParks={removedParks} />);
+    render(<ParkList parks={[]} removedParks={removedParks} linkedTrails={[]} />);
 
     expect(screen.getByText("controlPanel.parks.emptyVisible")).toBeInTheDocument();
 
@@ -248,7 +324,7 @@ describe("ParkList", () => {
   });
 
   it("shows an empty state when there are no parks to manage at all", () => {
-    render(<ParkList parks={[]} removedParks={[]} />);
+    render(<ParkList parks={[]} removedParks={[]} linkedTrails={[]} />);
 
     expect(screen.getByText("controlPanel.parks.emptyAll")).toBeInTheDocument();
   });

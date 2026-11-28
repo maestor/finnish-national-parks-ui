@@ -680,7 +680,8 @@
       "tabs": {
         "ariaLabel": "Paikkojen näkyvyysvälilehdet",
         "visible": "Näkyvissä",
-        "hidden": "Piilotetut"
+        "hidden": "Piilotetut",
+        "linked": "Linkitetyt reitit"
       },
       "filters": {
         "searchLabel": "Haku",
@@ -690,8 +691,10 @@
         "results": "{count} paikkaa",
         "reset": "Tyhjennä suodattimet"
       },
-      "visibleNotice": "Paikan piilottaminen poistaa sen näkyvistä julkisista näkymistä ja rajapinnoista. Voit palauttaa paikan myöhemmin Piilotetut-välilehdeltä.",
+      "visibleNotice": "Paikan piilottaminen poistaa sen omana kohteenaan julkisista näkymistä ja rajapinnoista.",
       "hiddenNotice": "Piilotetut paikat eivät näy julkisissa näkymissä. Palauta paikka näkyviin, jos haluat sen takaisin julkisiin rajapintoihin.",
+      "linkedNotice": "Nämä reitit kuuluvat alla lueteltuihin alueisiin.",
+      "linkedAreas": "Linkitetty alueisiin",
       "visibleSuccess": "Paikka palautettiin näkyviin.",
       "hiddenSuccess": "Paikka piilotettiin.",
       "parkName": "Paikka",
@@ -791,6 +794,7 @@
       "emptyAll": "Ei hallittavia paikkoja.",
       "emptyVisible": "Ei näkyvissä olevia paikkoja.",
       "emptyHidden": "Ei piilotettuja paikkoja.",
+      "emptyLinked": "Ei linkitettyjä reittejä.",
       "emptyFiltered": "Yksikään paikka ei vastaa nykyisiä suodattimia.",
       "featuredImage": {
         "title": "Pääkuva",
