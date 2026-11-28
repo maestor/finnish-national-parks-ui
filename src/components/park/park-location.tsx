@@ -15,7 +15,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { SelectionDetails } from "@/components/ui/selection-details";
 import { cn } from "@/lib/cn";
 import { formatFinnishDate } from "@/lib/fi-date";
-import { getParkTrailVisits } from "@/lib/park-trail-visits";
+import { getParkLocationVisits } from "@/lib/park-location-visits";
 import type { ParkDetail, Visit } from "@/lib/parks";
 import { createParkVisitHref } from "@/lib/public-visits";
 
@@ -45,8 +45,8 @@ export const ParkLocation = ({
   const t = useTranslations("map");
   const parkT = useTranslations("park");
   const effectiveVisits = useParkVisitVisibility() ?? visits;
-  const trailVisits = getParkTrailVisits(linkedTrails, effectiveVisits);
-  const visitedSlugs = [...trailVisits]
+  const locationVisits = getParkLocationVisits([...linkedTrails, ...linkedAreas], effectiveVisits);
+  const visitedSlugs = [...locationVisits]
     .filter(([, entries]) => entries.length > 0)
     .map(([slug]) => slug);
   const visitNumbers = new Map(
@@ -64,7 +64,11 @@ export const ParkLocation = ({
   const listRef = useRef<HTMLFieldSetElement>(null);
   const selected = linkedTrails.find((trail) => trail.slug === selectedSlug);
   const selectedArea = linkedAreas.find((area) => area.slug === selectedSlug);
-  const selectedName = selected?.name ?? selectedArea?.name;
+  const selectedLocation = selected ?? selectedArea;
+  const selectedName = selectedLocation?.name;
+  const address = selectedLocation?.address;
+  const officialUrl = selectedLocation?.parkUrl;
+  const selectedVisits = selectedLocation ? (locationVisits.get(selectedLocation.slug) ?? []) : [];
   const chooserLabel = t("mapChooser");
   const mobileSelectionLabel = selected
     ? t("mapTrailChoice", { name: selected.name })
@@ -133,7 +137,6 @@ export const ParkLocation = ({
             {...choices}
             trails={linkedAreas}
             kind="area"
-            visitedSlugs={[]}
             areaLabel={undefined}
             onSelect={onSelect}
           />
@@ -205,9 +208,9 @@ export const ParkLocation = ({
       <SelectionDetails
         label={selected ? t("selectedTrail") : selectedArea ? t("selectedArea") : t("wholeArea")}
         labelAction={
-          !!selected?.parkUrl && (
+          !!officialUrl && (
             <a
-              href={selected.parkUrl}
+              href={officialUrl}
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`${t("officialLink")} (${parkT("opensInNewTab")})`}
@@ -224,45 +227,42 @@ export const ParkLocation = ({
         }
         actions={selectedName === undefined ? areaActions : null}
       >
-        {selected ? (
+        {selectedLocation ? (
           <>
             <div className="mt-3 flex flex-wrap items-center gap-3">
-              <ParkLocationBadge kind="trail">
-                <span className="min-w-0 wrap-break-word">{selected.name}</span>
-                {visitedSlugs.includes(selected.slug) && (
+              <ParkLocationBadge kind={selected ? "trail" : "area"}>
+                <span className="min-w-0 wrap-break-word">{selectedLocation.name}</span>
+                {selectedVisits.length > 0 && (
                   <>
                     <Check className="h-4 w-4" aria-hidden="true" />
-                    <span className="sr-only">{t("visitedTrail")}</span>
+                    <span className="sr-only">{t("visitedLocation")}</span>
                   </>
                 )}
-                {selected.lengthKm !== null && (
+                {selected?.lengthKm != null && (
                   <>
                     <span aria-hidden="true">·</span>
                     <span className="shrink-0">{selected.lengthKm.toLocaleString("fi-FI")} km</span>
                   </>
                 )}
               </ParkLocationBadge>
-              {selected.address !== null && (
+              {!!address && (
                 <ParkLocationBadge kind="address">
-                  <span className="min-w-0 wrap-break-word">{selected.address}</span>
+                  <span className="min-w-0 wrap-break-word">{address}</span>
                 </ParkLocationBadge>
               )}
             </div>
-            {(trailVisits.get(selected.slug) ?? []).length > 0 && (
+            {selectedVisits.length > 0 && (
               <div className="mt-2 flex flex-wrap items-center gap-x-1 text-sm">
-                <span>
-                  {t("linkedVisitCount", { count: trailVisits.get(selected.slug)?.length ?? 0 })}:
-                </span>
-                {trailVisits.get(selected.slug)?.map((visit, index) => (
+                <span>{t("linkedVisitCount", { count: selectedVisits.length })}:</span>
+                {selectedVisits.map((visit, index) => (
                   <span key={visit.id}>
                     <Link
                       href={createParkVisitHref({ parkSlug, visitId: visit.id })}
                       prefetch={false}
                       scroll={false}
                       aria-label={
-                        (trailVisits.get(selected.slug) ?? []).filter(
-                          (item) => item.visitedOn === visit.visitedOn,
-                        ).length > 1
+                        selectedVisits.filter((item) => item.visitedOn === visit.visitedOn).length >
+                        1
                           ? `${formatFinnishDate(visit.visitedOn)}, ${parkT("visitNumber", { number: visitNumbers.get(visit.id) ?? 0 })}`
                           : undefined
                       }
@@ -282,14 +282,12 @@ export const ParkLocation = ({
                     >
                       {formatFinnishDate(visit.visitedOn)}
                     </Link>
-                    {index < (trailVisits.get(selected.slug)?.length ?? 0) - 1 ? "," : ""}
+                    {index < selectedVisits.length - 1 ? "," : ""}
                   </span>
                 ))}
               </div>
             )}
           </>
-        ) : selectedArea ? (
-          <p className="mt-3 font-semibold wrap-anywhere">{selectedArea.name}</p>
         ) : (
           areaContent
         )}

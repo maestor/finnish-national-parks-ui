@@ -94,6 +94,47 @@ describe("ParkLocation", () => {
     await user.click(within(group).getByRole("button", { name: "Koko kohde" }));
     expect(screen.getByTestId("map-request")).toHaveTextContent("area:3");
   });
+  it("marks linked areas as visited and links their visits even when they have free text", async () => {
+    const user = userEvent.setup();
+    const area = { id: 1, name: "Langinkoski", slug: "langinkoski" };
+    const address = "Keisarinmajantie 118, 48230 Kotka";
+    const parkUrl = "https://www.luontoon.fi/langinkoski";
+    const unvisited = { id: 2, name: "Aulanko", slug: "aulanko" };
+    const visits = [
+      { id: 2, visitedOn: "2025-05-03", areas: [area], route: "Oma kierros" },
+      { id: 1, visitedOn: "2020-09-13", route: "Aulanko" },
+    ] as import("@/lib/parks").Visit[];
+    render(
+      <ParkLocation
+        {...props}
+        parkSlug="puisto"
+        linkedAreas={[
+          { ...area, address, parkUrl, boundaryGeoJson: geometry },
+          { ...unvisited, boundaryGeoJson: geometry },
+        ]}
+        visits={visits}
+      />,
+      { wrapper: I18nProvider },
+    );
+    const choices = within(screen.getByRole("group", { name: "Karttavalinta" }));
+    await user.click(choices.getByRole("button", { name: "Langinkoski Käyty" }));
+    const panel = within(screen.getByTestId("selection-details"));
+    expect(panel.getByText("Käyty")).toBeInTheDocument();
+    expect(panel.getByText(address)).toBeVisible();
+    const officialLink = panel.getByRole("link", {
+      name: "Lisätietoja (avautuu uuteen välilehteen)",
+    });
+    expect(officialLink).toHaveAttribute("href", parkUrl);
+    expect(officialLink).toHaveAttribute("target", "_blank");
+    expect(panel.getByRole("link", { name: "3.5.2025" })).toHaveAttribute(
+      "href",
+      "/paikka/puisto?visit=2#visit-history",
+    );
+
+    await user.click(choices.getByRole("button", { name: "Aulanko" }));
+    expect(panel.queryByText("Käyty")).not.toBeInTheDocument();
+    expect(panel.queryByRole("link")).not.toBeInTheDocument();
+  });
   it("shows a new-tab details badge for the selected trail with a URL", async () => {
     const user = userEvent.setup();
     const parkUrl = "https://www.luontoon.fi/testi-luontopolku";

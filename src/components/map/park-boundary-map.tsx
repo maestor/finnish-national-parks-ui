@@ -82,6 +82,10 @@ export const ParkBoundaryMap = ({
   onPick,
   onReset,
 }: ParkBoundaryMapProps) => {
+  const hasPreview =
+    linkedAreas.some(({ slug }) => slug === previewSlug) ||
+    linkedTrails.some(({ slug }) => slug === previewSlug);
+  const highlightedSlug = hasPreview ? previewSlug : selectedSlug;
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markerRef = useRef<maplibregl.Marker | null>(null);
@@ -254,26 +258,37 @@ export const ParkBoundaryMap = ({
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !isMapLoaded || linkedAreas.length === 0) return;
-    const selected: maplibregl.ExpressionSpecification = [
+    const fadeOtherAreas = hasPreview || linkedAreas.some(({ slug }) => slug === highlightedSlug);
+    const focused: maplibregl.ExpressionSpecification = [
       "==",
       ["get", "slug"],
-      selectedSlug ?? "",
+      highlightedSlug ?? "",
     ];
-    const previewed: maplibregl.ExpressionSpecification = [
-      "==",
+    const visited: maplibregl.ExpressionSpecification = [
+      "in",
       ["get", "slug"],
-      previewSlug ?? "",
+      ["literal", visitedSlugs],
     ];
     map.setPaintProperty(AREA_FILL_ID, "fill-opacity", [
       "case",
-      selected,
+      focused,
       0.32,
-      previewed,
-      0.25,
-      0.14,
+      fadeOtherAreas ? 0.05 : 0.14,
     ]);
-    map.setPaintProperty(AREA_OUTLINE_ID, "line-width", ["case", selected, 3, previewed, 2.5, 1.5]);
-  }, [isMapLoaded, linkedAreas, selectedSlug, previewSlug]);
+    map.setPaintProperty(AREA_OUTLINE_ID, "line-opacity", [
+      "case",
+      focused,
+      1,
+      fadeOtherAreas ? 0.3 : 1,
+    ]);
+    map.setPaintProperty(AREA_OUTLINE_ID, "line-width", ["case", focused, 3.5, visited, 2.5, 1.5]);
+    map.setPaintProperty(AREA_OUTLINE_ID, "line-dasharray", [
+      "case",
+      visited,
+      ["literal", [2, 1]],
+      ["literal", [1, 0]],
+    ]);
+  }, [isMapLoaded, linkedAreas, highlightedSlug, hasPreview, visitedSlugs]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -537,55 +552,49 @@ export const ParkBoundaryMap = ({
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !isMapLoaded || linkedTrails.length === 0) return;
-    const previewingTrail = linkedTrails.some(({ slug }) => slug === previewSlug);
-    const hasActiveTrail =
-      previewingTrail || linkedTrails.some(({ slug }) => slug === selectedSlug);
-    const inactiveFilter: maplibregl.FilterSpecification | null = hasActiveTrail
-      ? [
-          "all",
-          ["!=", ["get", "slug"], selectedSlug ?? ""],
-          ["!=", ["get", "slug"], previewSlug ?? ""],
-        ]
+    const fadeOtherTrails = hasPreview || linkedTrails.some(({ slug }) => slug === highlightedSlug);
+    const inactiveFilter: maplibregl.FilterSpecification | null = fadeOtherTrails
+      ? ["!=", ["get", "slug"], highlightedSlug ?? ""]
       : null;
     map.setFilter(TRAIL_HALO_ID, inactiveFilter);
     map.setFilter(TRAIL_LINE_ID, inactiveFilter);
-    map.setPaintProperty(TRAIL_HALO_ID, "line-opacity", hasActiveTrail ? 0.25 : 0.65);
-    map.setPaintProperty(TRAIL_LINE_ID, "line-width", hasActiveTrail ? 2.5 : 3);
-    map.setPaintProperty(TRAIL_LINE_ID, "line-opacity", hasActiveTrail ? 0.5 : 1);
+    map.setPaintProperty(TRAIL_HALO_ID, "line-opacity", fadeOtherTrails ? 0.25 : 0.65);
+    map.setPaintProperty(TRAIL_LINE_ID, "line-width", fadeOtherTrails ? 2.5 : 3);
+    map.setPaintProperty(TRAIL_LINE_ID, "line-opacity", fadeOtherTrails ? 0.5 : 1);
     const selectedFilter: maplibregl.FilterSpecification = [
       "==",
       ["get", "slug"],
-      selectedSlug ?? "",
+      highlightedSlug === selectedSlug ? (selectedSlug ?? "") : "",
     ];
     const previewFilter: maplibregl.FilterSpecification = [
       "==",
       ["get", "slug"],
-      previewSlug !== selectedSlug ? (previewSlug ?? "") : "",
+      highlightedSlug !== selectedSlug ? (highlightedSlug ?? "") : "",
     ];
     const visitedFilter: maplibregl.FilterSpecification = [
       "all",
       ["in", ["get", "slug"], ["literal", visitedSlugs]],
-      ["!=", ["get", "slug"], selectedSlug ?? ""],
-      ["!=", ["get", "slug"], previewSlug ?? ""],
+      ["!=", ["get", "slug"], highlightedSlug ?? ""],
     ];
     map.setPaintProperty(
       TRAIL_VISITED_HALO_ID,
       "line-opacity",
-      previewingTrail ? 0 : TRAIL_HALO_OPACITY,
+      hasPreview ? 0 : TRAIL_HALO_OPACITY,
     );
-    map.setPaintProperty(TRAIL_VISITED_LINE_ID, "line-opacity", previewingTrail ? 0 : 1);
+    map.setPaintProperty(TRAIL_VISITED_LINE_ID, "line-opacity", hasPreview ? 0 : 1);
     map.setFilter(TRAIL_VISITED_HALO_ID, visitedFilter);
     map.setFilter(TRAIL_VISITED_LINE_ID, visitedFilter);
     map.setFilter(TRAIL_ACTIVE_HALO_ID, selectedFilter);
     map.setFilter(TRAIL_ACTIVE_LINE_ID, selectedFilter);
     map.setFilter(TRAIL_PREVIEW_HALO_ID, previewFilter);
     map.setFilter(TRAIL_PREVIEW_LINE_ID, previewFilter);
-  }, [selectedSlug, previewSlug, isMapLoaded, linkedTrails, visitedSlugs]);
+  }, [selectedSlug, highlightedSlug, hasPreview, isMapLoaded, linkedTrails, visitedSlugs]);
 
   const hoveredTrail = linkedTrails.find((trail) => trail.slug === hoverLabel);
-  const hoveredName =
-    hoveredTrail?.name ?? linkedAreas.find((area) => area.slug === hoverLabel)?.name;
+  const hoveredArea = linkedAreas.find((area) => area.slug === hoverLabel);
+  const hoveredName = hoveredTrail?.name ?? hoveredArea?.name;
   const hoveredLength = hoveredTrail?.lengthKm;
+  const hoveredAreaSize = Math.round((hoveredArea?.areaKm2 ?? 0) * 1_000_000);
 
   return (
     <div>
@@ -612,6 +621,7 @@ export const ParkBoundaryMap = ({
               {hoveredLength != null && hoveredLength !== 0
                 ? ` · ${hoveredLength.toLocaleString("fi-FI")} km`
                 : ""}
+              {hoveredAreaSize > 0 ? ` · ${t("hoverAreaSize", { size: hoveredAreaSize })}` : ""}
             </strong>
           </span>
         )}

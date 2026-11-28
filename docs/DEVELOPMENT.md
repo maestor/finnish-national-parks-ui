@@ -298,7 +298,7 @@ reject extra path segments.
 | --- | --- | --- |
 | Home | `GET /api/home-summary` | Cache under `home-summary`. This one read supplies catalog progress, magnet progress, and latest and curated memory previews. |
 | Map | `GET /api/map-summary` | Cache under `map-summary`. The latest-visit link uses `lastVisitId` from the same result as the summary date. |
-| Visits | `GET /api/visits-timeline` | Cache under `public-visits`. The map and visited national parks views also read map summary. Timeline cards use the first ordered thumbnail and show linked trails alongside the free-text kohde. Expanded content loads on demand. |
+| Visits | `GET /api/visits-timeline` | Cache under `public-visits`. The map and visited national parks views also read map summary. Timeline cards use the first ordered thumbnail and show linked trails alongside the visit target. Expanded content loads on demand. |
 | Trip archive | `GET /api/trips/archive` | Cache the first page under `public-trips`. Further pages load through the cursor-based archive proxy. Back navigation restores the loaded list and position without persisting media URLs. |
 | Park detail | `GET /api/parks/{slug}` and `GET /api/parks/{slug}/visits` | Cache public reads under `public-park:{slug}`. Weather loads separately after hydration through the same-origin proxy with `no-store`. |
 | Trip detail | `GET /api/trips/slug/{slug}` | Cache public details under `public-trip:{slug}`. Route geometry and private, no-store gallery pages load separately. |
@@ -457,7 +457,22 @@ Use `apiAuthFetch<T>(path, { cache: "no-store" })` for server-rendered admin rea
 
 The parks admin list uses the tagged `/api/admin/parks/visibility` response. **Linkitykset** shows **Reitit** with their linked areas and **Alueet** with their main parks. Linked areas appear only in **Alueet** while linked. On unlink, the saved standalone preference returns the area to **Näkyvissä** or **Piilotetut**. Membership changes expire both park details and the admin visibility tag through the authenticated revalidation route. Renaming a linked area also expires the public trip details tag because trips can show the new area name. Deploy the API before the UI and expire the `admin-park-visibility` tag on rollout.
 
-Visit editors load linked area choices with the existing private visit-trail request. Both assignment controls reset when changing parks. The public park boundary response includes linked polygons for the existing **Sijainti** map. Visit projections carry lightweight references used by **Kohde**. Review shares display the references saved in their snapshots. Refresh or republish a share to pick up later edits.
+Visit editors load linked area choices with the existing private visit-trail
+request. Both assignment controls reset when changing parks. The park boundary
+response includes linked polygons, addresses, sizes and official URLs for the
+**Sijainti** chooser. Linked areas share the trail details layout, including
+visited marks and links to the assigned visits. The map uses a dashed outline for
+visited areas. Hovering over a linked area or trail or focusing its chooser
+button fades the other areas and trails. When the preview ends, the map restores
+the selection. Area hover labels show the name and the size in square metres
+when available. Visit targets display trimmed free text when present and fall back to
+linked area names when it is blank. The visit editor explains this rule below
+**Kohde**. Visit cards show one badge per fallback area. When a park or trip
+visit has free text and linked areas, its expanded details show **Alueet** before
+**Reitit**.
+Assignments still contribute to the visited marks and date links when a visit has
+free text. Review shares read area references from their saved snapshots. Refresh
+or republish a share to pick up later edits.
 
 Saved-content previews live at the canonical Finnish URLs `/hallinta/kaynnit/[id]/esikatselu` and `/hallinta/retket/[id]/esikatselu`. Their English implementation routes are under `/control-panel/.../preview`. Both are dynamic, noindex, and fetch private no-store API data. Trip preview route and gallery requests use authenticated preview endpoints; preview images bypass Next image optimization so private signed URLs do not create shared derivatives. Public trip rendering keeps its existing anonymous endpoints and cache tags.
 

@@ -846,6 +846,39 @@ describe("PublicTripPage", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("expands a trip visit to show linked areas when its header uses the free-text target", async () => {
+    const user = userEvent.setup();
+    const base = createTripWithoutExpandableThirdVisit();
+    render(
+      <PublicTripPage
+        trip={{
+          ...base,
+          itinerary: base.itinerary.map((item) =>
+            item.kind === "visit" && item.visit.id === 12
+              ? {
+                  ...item,
+                  visit: {
+                    ...item.visit,
+                    route: "Iltakierros",
+                    areas: [{ id: 9, name: "Aulanko", slug: "aulanko" }],
+                  },
+                }
+              : item,
+          ),
+        }}
+      />,
+    );
+    const visitCard = screen.getByRole("link", { name: "Pallas-Yllästunturi" }).closest("li");
+    if (!visitCard) throw new Error("Expected visit card");
+    const card = within(visitCard);
+    expect(card.getByText("Iltakierros")).toBeVisible();
+    expect(card.queryByRole("heading", { name: "park.areasTitle" })).not.toBeInTheDocument();
+    await user.click(card.getByRole("button", { name: "tripPage.showVisit" }));
+    expect(card.getByRole("heading", { name: "park.areasTitle", level: 4 })).toBeVisible();
+    expect(card.getByText("Aulanko")).toBeVisible();
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
   it("opens trip visit details inline and loads image galleries without leaving the page", async () => {
     const user = userEvent.setup();
 
