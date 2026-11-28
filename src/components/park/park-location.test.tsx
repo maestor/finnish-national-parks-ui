@@ -65,6 +65,35 @@ const props = {
 };
 
 describe("ParkLocation", () => {
+  it("orders the whole area, subareas and trails and fits repeat selections", async () => {
+    const user = userEvent.setup();
+    render(
+      <ParkLocation
+        {...props}
+        linkedAreas={[
+          { id: 1, name: "Langinkoski", slug: "langinkoski", boundaryGeoJson: geometry },
+        ]}
+      />,
+      { wrapper: I18nProvider },
+    );
+    const group = screen.getByRole("group", { name: "Karttavalinta" });
+    expect(within(group).getAllByRole("button").slice(0, 3)).toEqual([
+      within(group).getByRole("button", { name: "Koko kohde" }),
+      within(group).getByRole("button", { name: "Langinkoski" }),
+      within(group).getByRole("button", { name: "Tunnettu reitti" }),
+    ]);
+    expect(within(group).getByText("Alueet (1)")).toBeVisible();
+    expect(within(group).getByText("Reitit (3)")).toBeVisible();
+    const choice = within(group).getByRole("button", { name: "Langinkoski" });
+    choice.focus();
+    await user.keyboard("{Enter}");
+    expect(choice).toHaveAttribute("aria-pressed", "true");
+    expect(await screen.findByTestId("map-request")).toHaveTextContent("langinkoski:1");
+    await user.keyboard("{Enter}");
+    expect(screen.getByTestId("map-request")).toHaveTextContent("langinkoski:2");
+    await user.click(within(group).getByRole("button", { name: "Koko kohde" }));
+    expect(screen.getByTestId("map-request")).toHaveTextContent("area:3");
+  });
   it("shows a new-tab details badge for the selected trail with a URL", async () => {
     const user = userEvent.setup();
     const parkUrl = "https://www.luontoon.fi/testi-luontopolku";
@@ -263,7 +292,7 @@ describe("ParkLocation", () => {
       </I18nProvider>,
     );
     expect(html).toContain("Puiston osoite");
-    expect(html).toContain("Koko alue");
+    expect(html).toContain("Koko kohde");
     expect(html).not.toContain("Map single");
   });
   it.each([1, 14, 40])("keeps %i name-only choices available with area first", (count) => {
@@ -273,10 +302,11 @@ describe("ParkLocation", () => {
       slug: `trail-${index}`,
     }));
     render(<ParkLocation {...props} linkedTrails={items} />, { wrapper: I18nProvider });
-    const group = screen.getByRole("group", { name: `Reitit (${count})` });
+    const group = screen.getByRole("group", { name: "Karttavalinta" });
     const buttons = within(group).getAllByRole("button");
+    expect(within(group).getByRole("heading", { name: `Reitit (${count})` })).toBeVisible();
     expect(buttons).toHaveLength(count + 1);
-    expect(buttons[0]).toHaveAccessibleName("Koko alue");
+    expect(buttons[0]).toHaveAccessibleName("Koko kohde");
     expect(buttons[count]).toHaveAccessibleName(`Pitkä reitin nimi ${count - 1}`);
     expect(group).not.toHaveTextContent("2,5 km");
     expect(buttons[0].querySelector("svg")).toHaveClass("h-4", "w-4");
@@ -306,7 +336,7 @@ describe("ParkLocation", () => {
       within(screen.getByTestId("selection-details")).getByText("Puiston osoite"),
     ).toBeInTheDocument();
     expect(screen.getByTestId("map-request")).toHaveTextContent("area:2");
-    expect(screen.getByRole("status")).toHaveTextContent("Valittu: Koko alue");
+    expect(screen.getByRole("status")).toHaveTextContent("Valittu: Koko kohde");
   });
   it("closes the mobile dialog and focuses the desktop list at the breakpoint", async () => {
     HTMLDialogElement.prototype.showModal = function () {
@@ -327,11 +357,13 @@ describe("ParkLocation", () => {
     try {
       const user = userEvent.setup();
       render(<ParkLocation {...props} />, { wrapper: I18nProvider });
-      await user.click(screen.getByRole("button", { name: "Reitit (3): Koko alue" }));
+      await user.click(screen.getByRole("button", { name: "Karttavalinta: Koko kohde" }));
       media.matches = true;
       act(() => change?.());
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-      await waitFor(() => expect(screen.getByRole("group", { name: "Reitit (3)" })).toHaveFocus());
+      await waitFor(() =>
+        expect(screen.getByRole("group", { name: "Karttavalinta" })).toHaveFocus(),
+      );
     } finally {
       vi.unstubAllGlobals();
     }
@@ -344,21 +376,40 @@ describe("ParkLocation", () => {
       this.open = false;
     };
     const user = userEvent.setup();
-    render(<ParkLocation {...props} />, { wrapper: I18nProvider });
-    const opener = screen.getByRole("button", { name: "Reitit (3): Koko alue" });
+    render(
+      <ParkLocation
+        {...props}
+        linkedAreas={[
+          { id: 1, name: "Tunnettu reitti", slug: "same-name-area", boundaryGeoJson: geometry },
+        ]}
+      />,
+      { wrapper: I18nProvider },
+    );
+    const opener = screen.getByRole("button", { name: "Karttavalinta: Koko kohde" });
+    expect(opener).toHaveTextContent(/^Koko kohde$/);
     await user.click(opener);
     const dialog = screen.getByRole("dialog");
     fireEvent(dialog, new Event("cancel", { bubbles: true, cancelable: true }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(opener).toHaveFocus();
     await user.click(opener);
+    const sameNameChoices = within(screen.getByRole("dialog")).getAllByRole("button", {
+      name: /^Tunnettu reitti$/,
+    });
+    await user.click(sameNameChoices[0]);
+    expect(opener).toHaveTextContent(/^Alue: Tunnettu reitti$/);
+    expect(opener).toHaveFocus();
+    await user.click(opener);
     await user.click(
-      within(screen.getByRole("dialog")).getByRole("button", { name: "Tunnettu reitti" }),
+      within(screen.getByRole("dialog")).getAllByRole("button", {
+        name: /^Tunnettu reitti$/,
+      })[1],
     );
     expect(
       within(screen.getByTestId("selection-details")).getByText("Tunnettu reitti"),
     ).toBeInTheDocument();
     expect(opener).toHaveFocus();
+    expect(opener).toHaveTextContent(/^Reitti: Tunnettu reitti$/);
   });
   it("switches one details panel between area and trail contents", async () => {
     const user = userEvent.setup();
@@ -400,7 +451,7 @@ describe("ParkLocation", () => {
     expect(within(panel).queryByText(/km|Pituus ei tiedossa/)).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Nollareitti" }));
     expect(within(panel).getByText("0 km")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Koko alue" }));
+    await user.click(screen.getByRole("button", { name: "Koko kohde" }));
     expect(within(panel).getByText("Puiston osoite")).toBeInTheDocument();
     expect(within(panel).getByRole("link", { name: "Kartta PDF" })).toBeInTheDocument();
   });

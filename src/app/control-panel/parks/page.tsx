@@ -22,6 +22,7 @@ const ParksPage = async () => {
     visibleParks,
     removedParks,
     linkedTrails = [],
+    linkedAreas = [],
   } = await apiAuthFetch<AdminParkVisibilityResponse>("/api/admin/parks/visibility", {
     cache: "force-cache",
     next: {
@@ -36,6 +37,7 @@ const ParksPage = async () => {
         parks={visibleParks}
         removedParks={removedParks}
         linkedTrails={linkedTrails}
+        linkedAreas={linkedAreas}
       />
     </div>
   );

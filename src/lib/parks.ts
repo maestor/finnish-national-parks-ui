@@ -18,6 +18,13 @@ export type AdminParkVisibilityResponse =
 export type AdminVisibilityPark = AdminParkVisibilityResponse["visibleParks"][number];
 export type AdminLinkedTrail = NonNullable<AdminParkVisibilityResponse["linkedTrails"]>[number];
 
+export type AdminLinkedArea = NonNullable<AdminParkVisibilityResponse["linkedAreas"]>[number];
+export type ParkAreaList =
+  paths["/api/admin/parks/{slug}/subareas"]["get"]["responses"][200]["content"]["application/json"];
+
+export type VisitLocationChoices =
+  paths["/api/admin/parks/{slug}/visit-trails"]["get"]["responses"][200]["content"]["application/json"];
+
 export type ParkDetail =
   paths["/api/parks/{slug}"]["get"]["responses"][200]["content"]["application/json"];
 

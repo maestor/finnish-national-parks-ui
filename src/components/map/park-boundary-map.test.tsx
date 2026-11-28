@@ -13,6 +13,7 @@ const createMockMarker = () => ({
 
 const createMockMap = ({ autoLoad = true } = {}) => {
   const listeners: Record<string, (() => void)[]> = {};
+  const canvas = { style: { cursor: "" }, getBoundingClientRect: () => ({ left: 0, top: 0 }) };
   return {
     on: vi.fn((event: string, handlerOrLayer: (() => void) | string, layerHandler?: () => void) => {
       const handler = typeof handlerOrLayer === "function" ? handlerOrLayer : layerHandler;
@@ -50,7 +51,7 @@ const createMockMap = ({ autoLoad = true } = {}) => {
       }[] => [],
     ),
     project: vi.fn(([x, y]: [number, number]) => ({ x, y })),
-    getCanvas: vi.fn(() => ({ getBoundingClientRect: () => ({ left: 0, top: 0 }) })),
+    getCanvas: vi.fn(() => canvas),
   };
 };
 
@@ -192,7 +193,7 @@ describe("ParkBoundaryMap", () => {
       boundingBox: mockBoundingBox,
       markerPoint: mockMarkerPoint,
       parkName: "Test Park",
-      linkedTrails: [mockLinkedTrail],
+      linkedTrails: [mockLinkedTrail, { ...mockLinkedTrail, slug: "third" }],
     };
     const { rerender, unmount } = render(<ParkBoundaryMap {...props} visitedSlugs={[]} />, {
       wrapper: I18nProvider,
@@ -303,6 +304,137 @@ describe("ParkBoundaryMap", () => {
       expect.objectContaining({ maxZoom: 16 }),
     );
   });
+  it("shows linked polygons initially and previews and selects both area parts", () => {
+    const onPreview = vi.fn();
+    const onPick = vi.fn();
+    const props = {
+      boundaryGeoJson: mockBoundaryGeoJson,
+      boundingBox: mockBoundingBox,
+      markerPoint: mockMarkerPoint,
+      parkName: "Test Park",
+      onPreview,
+      onPick,
+      linkedAreas: [
+        {
+          id: 8,
+          slug: "langinkoski",
+          name: "Langinkoski",
+          boundaryGeoJson: {
+            type: "FeatureCollection" as const,
+            features: [
+              {
+                type: "Feature" as const,
+                geometry: {
+                  type: "Polygon" as const,
+                  coordinates: [
+                    [
+                      [26, 60],
+                      [27, 60],
+                      [26, 61],
+                      [26, 60],
+                    ],
+                  ] as [number, number][][],
+                },
+              },
+              {
+                type: "Feature" as const,
+                geometry: {
+                  type: "Polygon" as const,
+                  coordinates: [
+                    [
+                      [28, 63],
+                      [29, 63],
+                      [28, 64],
+                      [28, 63],
+                    ],
+                  ] as [number, number][][],
+                },
+              },
+            ],
+          },
+        },
+      ],
+    };
+    const { rerender } = render(<ParkBoundaryMap {...props} />, { wrapper: I18nProvider });
+    expect(mockMap.addSource).toHaveBeenCalledWith("park-subareas", {
+      type: "geojson",
+      data: expect.objectContaining({
+        features: props.linkedAreas[0].boundaryGeoJson.features.map((feature) => ({
+          ...feature,
+          properties: { slug: "langinkoski" },
+        })),
+      }),
+    });
+    expect(mockMap.addLayer).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "park-subareas-fill",
+        paint: expect.objectContaining({ "fill-opacity": 0.14 }),
+      }),
+      undefined,
+    );
+    mockMap.queryRenderedFeatures.mockReturnValue([
+      { properties: { slug: "langinkoski" }, geometry: { type: "Polygon", coordinates: [] } },
+    ]);
+    const point = { point: { x: 5, y: 5 } };
+    const move = mockMap.on.mock.calls.find(([event]) => event === "mousemove")?.[1] as unknown as (
+      event: typeof point,
+    ) => void;
+    const click = mockMap.on.mock.calls.find(([event]) => event === "click")?.[1] as unknown as (
+      event: typeof point,
+    ) => void;
+    act(() => move(point));
+    expect(mockMap.queryRenderedFeatures).toHaveBeenCalledWith(point.point, {
+      layers: ["park-subareas-fill"],
+    });
+    expect(onPreview).toHaveBeenCalledWith("langinkoski");
+    expect(screen.getByText("Langinkoski")).toBeVisible();
+    expect(mockMap.getCanvas().style.cursor).toBe("pointer");
+    rerender(<ParkBoundaryMap {...props} previewSlug="langinkoski" />);
+    expect(mockMap.setPaintProperty).toHaveBeenCalledWith("park-subareas-fill", "fill-opacity", [
+      "case",
+      ["==", ["get", "slug"], ""],
+      0.32,
+      ["==", ["get", "slug"], "langinkoski"],
+      0.25,
+      0.14,
+    ]);
+    act(() => click(point));
+    expect(onPick).toHaveBeenCalledWith("langinkoski");
+    mockMap.queryRenderedFeatures.mockReturnValue([]);
+    act(() => move(point));
+    expect(onPreview).toHaveBeenLastCalledWith(null);
+    expect(mockMap.getCanvas().style.cursor).toBe("");
+    mockMap.fitBounds.mockClear();
+    rerender(
+      <ParkBoundaryMap
+        {...props}
+        selectedSlug="langinkoski"
+        cameraRequest={{ slug: "langinkoski", sequence: 1 }}
+      />,
+    );
+    expect(mockMap.setPaintProperty).toHaveBeenCalledWith("park-subareas-fill", "fill-opacity", [
+      "case",
+      ["==", ["get", "slug"], "langinkoski"],
+      0.32,
+      ["==", ["get", "slug"], ""],
+      0.25,
+      0.14,
+    ]);
+    expect(mockMap.fitBounds).toHaveBeenCalledWith(
+      [
+        [26, 60],
+        [29, 64],
+      ],
+      expect.any(Object),
+    );
+    rerender(<ParkBoundaryMap {...props} cameraRequest={{ slug: null, sequence: 2 }} />);
+    expect(mockMap.setPaintProperty).toHaveBeenLastCalledWith(
+      "park-subareas-outline",
+      "line-width",
+      ["case", ["==", ["get", "slug"], ""], 3, ["==", ["get", "slug"], ""], 2.5, 1.5],
+    );
+  });
+
   it("does not move for an undrawable trail and keeps preview separate from selection", () => {
     const undrawable = { ...mockLinkedTrail, boundaryGeoJson: mockBoundaryGeoJson };
     const props = {
@@ -335,7 +467,7 @@ describe("ParkBoundaryMap", () => {
     );
   });
 
-  it("selects the hovered trail when lines overlap", () => {
+  it("selects the closest trail on its line and the area away from the line", () => {
     const onPick = vi.fn();
     const onPreview = vi.fn();
     mockMap.queryRenderedFeatures = vi.fn(() => [
@@ -377,6 +509,9 @@ describe("ParkBoundaryMap", () => {
         markerPoint={mockMarkerPoint}
         parkName="Test Park"
         linkedTrails={[mockLinkedTrail]}
+        linkedAreas={[
+          { id: 8, slug: "langinkoski", name: "Langinkoski", boundaryGeoJson: mockBoundaryGeoJson },
+        ]}
         onPick={onPick}
         onPreview={onPreview}
       />,
@@ -388,10 +523,19 @@ describe("ParkBoundaryMap", () => {
     const move = mockMap.on.mock.calls.find(
       ([event]) => event === "mousemove",
     )?.[1] as unknown as (event: { point: { x: number; y: number } }) => void;
+    const areaHit = [
+      { properties: { slug: "langinkoski" }, geometry: { type: "Polygon", coordinates: [] } },
+    ];
+    mockMap.queryRenderedFeatures.mockReturnValueOnce(areaHit);
     act(() => move({ point: { x: 5, y: 0 } }));
     expect(onPreview).toHaveBeenCalledWith("near");
     act(() => click({ point: { x: 5, y: 4 } }));
     expect(onPick).toHaveBeenCalledWith("near");
+    mockMap.queryRenderedFeatures.mockReturnValueOnce(areaHit);
+    act(() => move({ point: { x: 5, y: 8 } }));
+    expect(onPreview).toHaveBeenLastCalledWith("langinkoski");
+    act(() => click({ point: { x: 5, y: 8 } }));
+    expect(onPick).toHaveBeenLastCalledWith("langinkoski");
   });
 
   it("clears the hover label on Escape and removes map layers when trails change", () => {

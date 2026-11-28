@@ -24,7 +24,7 @@ for (const viewport of [
       const initialHeight = await map.evaluate((el) => el.getBoundingClientRect().height);
       expect(initialHeight).toBe(viewport.width < 768 ? 348 : 428);
       if (viewport.width < 768) {
-        const opener = location.getByRole("button", { name: /Reitit \(14\)/ });
+        const opener = location.getByRole("button", { name: /^Karttavalinta: / });
         await opener.click();
         await page.keyboard.press("Escape");
         await expect(page.getByRole("dialog")).toHaveCount(0);
@@ -36,7 +36,7 @@ for (const viewport of [
       await choices.locator(".overflow-y-auto").evaluate((el) => {
         el.scrollTop = el.scrollHeight;
       });
-      await expect(choices.getByRole("button", { name: "Koko alue" })).toBeVisible();
+      await expect(choices.getByRole("button", { name: "Koko kohde" })).toBeVisible();
       await choices.locator(".overflow-y-auto").evaluate((el) => {
         el.scrollTop = 0;
       });
@@ -47,14 +47,14 @@ for (const viewport of [
       await expect(location.getByTestId("selection-details")).not.toContainText("Knutersintie");
       expect(await map.evaluate((el) => el.getBoundingClientRect().height)).toBe(initialHeight);
       if (viewport.width < 768)
-        await location.getByRole("button", { name: /Reitit \(14\)/ }).click();
+        await location.getByRole("button", { name: /^Karttavalinta: / }).click();
       await choices.getByRole("button", { name: "Fiskträsk", exact: true }).click();
       await expect(location.getByTestId("selection-details")).toContainText("Fiskträsk");
       await expect(location.getByTestId("selection-details")).not.toContainText("km");
       expect(await map.evaluate((el) => el.getBoundingClientRect().height)).toBe(initialHeight);
       if (viewport.width < 768)
-        await location.getByRole("button", { name: /Reitit \(14\)/ }).click();
-      await choices.getByRole("button", { name: "Koko alue" }).click();
+        await location.getByRole("button", { name: /^Karttavalinta: / }).click();
+      await choices.getByRole("button", { name: "Koko kohde" }).click();
       await expect(location.getByText("Knutersintie 667, 04130 Sipoo")).toBeVisible();
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth),
@@ -97,7 +97,7 @@ test("map touch and overlapping lines select directly", async ({ browser }) => {
     });
     await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
     await expect(details).toContainText("Knutersintie");
-    await location.locator("fieldset").getByRole("button", { name: "Koko alue" }).click();
+    await location.locator("fieldset").getByRole("button", { name: "Koko kohde" }).click();
     await cdp.send("Input.dispatchTouchEvent", {
       type: "touchStart",
       touchPoints: [
@@ -114,11 +114,11 @@ test("map touch and overlapping lines select directly", async ({ browser }) => {
     });
     await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
     await expect(details).toContainText("Knutersintie");
-    await location.locator("fieldset").getByRole("button", { name: "Koko alue" }).click();
+    await location.locator("fieldset").getByRole("button", { name: "Koko kohde" }).click();
     await page.touchscreen.tap(box.x + 349, box.y + 61);
     await expect(details).toContainText("Byabäckenin polku");
     await expect(location.getByRole("button", { name: "Valitse reitti" })).toHaveCount(0);
-    await location.locator("fieldset").getByRole("button", { name: "Koko alue" }).click();
+    await location.locator("fieldset").getByRole("button", { name: "Koko kohde" }).click();
     await page.waitForTimeout(800);
     await page.mouse.move(box.x + 354, box.y + 198);
     const label = location.locator("span.pointer-events-none.absolute");
@@ -145,7 +145,7 @@ test("a park without linked trails keeps the original map and address", async ({
     const map = location.locator(".maplibregl-map");
     await expect(map).toBeVisible();
     expect(await map.evaluate((el) => el.parentElement?.getBoundingClientRect().height)).toBe(320);
-    await expect(location.getByRole("button", { name: /Reitit/ })).toHaveCount(0);
+    await expect(location.getByRole("button", { name: /^Karttavalinta: / })).toHaveCount(0);
     await expect(location.getByTestId("selection-details")).toHaveCount(0);
   } finally {
     await context.close();
@@ -164,13 +164,13 @@ test("area materials return after choosing a linked trail", async ({ browser }) 
     const location = page.locator("#park-location");
     const details = location.getByTestId("selection-details");
     await expect(details.getByRole("link", { name: /Web-sivu/ })).toBeVisible();
-    const trigger = location.getByRole("button", { name: /Reitit \(2\)/ });
+    const trigger = location.getByRole("button", { name: /^Karttavalinta: / });
     await trigger.click();
     await page.getByRole("dialog").locator("button[aria-pressed]").nth(1).click();
     await expect(details.getByRole("link", { name: /Web-sivu/ })).toHaveCount(0);
     await expect(details).not.toContainText("Olympiakatu 20");
     await trigger.click();
-    await page.getByRole("dialog").getByRole("button", { name: "Koko alue" }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "Koko kohde" }).click();
     await expect(details.getByRole("link", { name: /Web-sivu/ })).toBeVisible();
     await expect(details).toContainText("Olympiakatu 20");
   } finally {
@@ -196,7 +196,7 @@ for (const width of [350, 1280]) {
       const first = await links.nth(0).boundingBox();
       const second = await links.nth(1).boundingBox();
       const panelBox = await panel.boundingBox();
-      const label = await panel.getByText("Koko alue").boundingBox();
+      const label = await panel.getByText("Koko kohde").boundingBox();
       if (!first || !second || !panelBox || !label) throw new Error("Missing panel geometry");
       expect(first.y).toBe(second.y);
       expect(first.height).toBeGreaterThanOrEqual(44);
@@ -213,7 +213,7 @@ for (const width of [350, 1280]) {
       const attribution = await map.locator(".maplibregl-ctrl-attrib").boundingBox();
       const reset = await map
         .locator("..")
-        .getByRole("button", { name: "Koko alue" })
+        .getByRole("button", { name: "Koko kohde" })
         .boundingBox();
       if (!attribution || !reset) throw new Error("Missing map controls");
       const intersects =

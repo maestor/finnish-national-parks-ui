@@ -23,6 +23,7 @@ import type {
   Park,
   Visit,
   VisitCreateRequest,
+  VisitLocationChoices,
   VisitUpdateRequest,
   VisitWithPark,
 } from "@/lib/parks";
@@ -41,6 +42,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
   const router = useRouter();
   const isEditing = !!visitToEdit;
 
+  const [mainPark, setMainPark] = useState<VisitLocationChoices["mainPark"]>();
   const [parkSlug, setParkSlug] = useState(visitToEdit?.park.slug ?? defaultParkSlug ?? "");
   const [visitedOn, setVisitedOn] = useState(
     () => visitToEdit?.visitedOn ?? getCurrentFinnishDate(),
@@ -50,6 +52,12 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
     () => visitToEdit?.trails?.map((trail) => trail.id) ?? [],
   );
   const [savedTrailIds, setSavedTrailIds] = useState(trailIds);
+  const [areaIds, setAreaIds] = useState<number[]>(
+    () => visitToEdit?.areas?.map(({ id }) => id) ?? [],
+  );
+  const [savedAreaIds, setSavedAreaIds] = useState(areaIds);
+  const areasChanged =
+    areaIds.length !== savedAreaIds.length || areaIds.some((id) => !savedAreaIds.includes(id));
   const trailsChanged =
     [...trailIds].sort((a, b) => a - b).join(",") !==
     [...savedTrailIds].sort((a, b) => a - b).join(",");
@@ -72,6 +80,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
   const isEditDirty =
     !visitToEdit ||
     trailsChanged ||
+    areasChanged ||
     visitedOn !== savedSnapshot.visitedOn ||
     route !== savedSnapshot.route ||
     author !== savedSnapshot.author ||
@@ -82,6 +91,13 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
   const hasParkSlugError = errors.parkSlug !== undefined;
   const hasVisitedOnError = errors.visitedOn !== undefined;
   const hasLocationError = errors.location !== undefined;
+
+  const selectPark = (slug: string) => {
+    setParkSlug(slug);
+    setTrailIds([]);
+    setAreaIds([]);
+    setMainPark(undefined);
+  };
 
   const handleBack = () => {
     router.back();
@@ -118,6 +134,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (mainPark !== undefined) return;
     const submitter = (event.nativeEvent as SubmitEvent).submitter;
     const requestedStatus =
       submitter instanceof HTMLButtonElement && submitter.name === "status"
@@ -169,6 +186,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
           location: parsedLocation.kind === "value" ? parsedLocation.value : null,
           note: note || null,
           ...(trailsChanged ? { trailIds } : {}),
+          ...(areasChanged ? { areaIds } : {}),
           ...(requestedStatus ? { status: requestedStatus } : {}),
         };
         await apiFetch(`/api/visits/${visitToEdit.id}`, {
@@ -176,13 +194,14 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
           body: JSON.stringify(payload),
         });
         const cacheRefreshed = await revalidateVisitPublicViews({
-          expireImmediately: requestedStatus !== undefined || trailsChanged,
+          expireImmediately: requestedStatus !== undefined || trailsChanged || areasChanged,
           parkSlug: visitToEdit.park.slug,
           previousTripSlug: visitToEdit.trip?.slug ?? null,
           nextTripSlug: visitToEdit.trip?.slug ?? null,
         });
         setCacheRefreshFailed(!cacheRefreshed);
         setSavedTrailIds(trailIds);
+        setSavedAreaIds(areaIds);
         if (requestedStatus) setStatus(requestedStatus);
         setSavedSnapshot({
           visitedOn,
@@ -212,6 +231,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
           note: note || null,
           status: requestedStatus ?? "published",
           ...(trailIds.length > 0 ? { trailIds } : {}),
+          ...(areaIds.length > 0 ? { areaIds } : {}),
         };
         const createdVisit = await apiFetch<Visit>(`/api/parks/${parkSlug}/visits`, {
           method: "POST",
@@ -291,10 +311,8 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
           <Select
             id="park"
             value={parkSlug}
-            onChange={(e) => {
-              setParkSlug(e.target.value);
-              setTrailIds([]);
-            }}
+            onChange={(event) => selectPark(event.target.value)}
+            aria-describedby={mainPark === undefined ? undefined : "visit-main-park"}
             className="h-10"
           >
             <option value="">{t("parkPlaceholder")}</option>
@@ -304,6 +322,18 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
               </option>
             ))}
           </Select>
+        )}
+        {mainPark !== undefined && (
+          <div className="space-y-2">
+            <p id="visit-main-park" role="status" className="text-sm text-muted-foreground">
+              {t("subareaVisit", { park: mainPark.name })}
+            </p>
+            {parks.some(({ slug }) => slug === mainPark.slug) && (
+              <Button type="button" variant="outline" onClick={() => selectPark(mainPark.slug)}>
+                {t("useMainPark")}
+              </Button>
+            )}
+          </div>
         )}
         {hasParkSlugError && <p className="text-sm text-destructive">{errors.parkSlug}</p>}
       </div>
@@ -329,6 +359,8 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
           parkSlug={parkSlug}
           selectedIds={trailIds}
           onChange={setTrailIds}
+          areaSelection={{ ids: areaIds, onChange: setAreaIds }}
+          onMainParkChange={setMainPark}
           disabled={isSubmitting}
         />
       )}
@@ -393,7 +425,9 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
       <div className="flex flex-wrap items-center gap-4">
         <Button
           type="submit"
-          disabled={isSubmitting || isNoteTooLong || (isEditing && !isEditDirty)}
+          disabled={
+            isSubmitting || isNoteTooLong || mainPark !== undefined || (isEditing && !isEditDirty)
+          }
         >
           {isSubmitting ? "..." : isEditing ? t("submit") : t("publish")}
         </Button>
@@ -403,7 +437,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
             name="intent"
             value="preview"
             variant="outline"
-            disabled={isSubmitting || isNoteTooLong}
+            disabled={isSubmitting || isNoteTooLong || mainPark !== undefined}
           >
             {t("saveAndPreview")}
           </Button>
@@ -414,7 +448,7 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
             name="status"
             value="draft"
             variant="outline"
-            disabled={isSubmitting || isNoteTooLong}
+            disabled={isSubmitting || isNoteTooLong || mainPark !== undefined}
           >
             {t("saveDraft")}
           </Button>

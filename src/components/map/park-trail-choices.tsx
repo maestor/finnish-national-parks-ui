@@ -1,13 +1,12 @@
 "use client";
-import { Check, Map as MapIcon, Route } from "lucide-react";
+import { Check, Map as MapIcon, MapPin, Route } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
-import type { ParkDetail } from "@/lib/parks";
 
-type Trail = NonNullable<ParkDetail["linkedTrails"]>[number];
 interface Props {
-  trails: Trail[];
+  trails: { name: string; slug: string }[];
+  kind?: "area" | "trail";
   visitedSlugs?: string[];
   areaLabel?: string;
   selectedSlug: string | null;
@@ -17,6 +16,7 @@ interface Props {
 }
 export const ParkTrailChoices = ({
   trails,
+  kind = "trail",
   visitedSlugs = [],
   areaLabel,
   selectedSlug,
@@ -47,6 +47,8 @@ export const ParkTrailChoices = ({
         >
           {trail.slug === null ? (
             <MapIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
+          ) : kind === "area" ? (
+            <MapPin className="h-4 w-4 shrink-0" aria-hidden="true" />
           ) : (
             <Route className="h-4 w-4 shrink-0" aria-hidden="true" />
           )}

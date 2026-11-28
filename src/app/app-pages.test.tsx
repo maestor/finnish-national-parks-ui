@@ -2518,7 +2518,8 @@ describe("App pages", () => {
           { trailId: 1, name: "Metsäpolku", slug: "metsapolku", effective: true },
           { trailId: 2, name: "Pois jätetty", slug: "pois", effective: false },
         ],
-      });
+      })
+      .mockResolvedValueOnce({ areas: [] });
 
     await renderControlPanelRoute(
       await EditParkPage({
@@ -2548,13 +2549,15 @@ describe("App pages", () => {
     const user = userEvent.setup();
     screen.getByRole("tab", { name: "controlPanel.parks.edit.tabs.details" }).focus();
     await user.keyboard("{ArrowRight}");
+    expect(screen.getByRole("tab", { name: "controlPanel.parks.edit.tabs.areas" })).toHaveFocus();
+    await user.keyboard("{ArrowRight}");
     expect(screen.getByRole("tab", { name: "controlPanel.parks.edit.tabs.trails" })).toHaveFocus();
     expect(screen.getByRole("link", { name: "Metsäpolku" })).toHaveAttribute(
       "href",
       "/hallinta/paikat/metsapolku/muokkaa",
     );
     expect(screen.queryByRole("link", { name: "Pois jätetty" })).not.toBeInTheDocument();
-    await user.keyboard("{ArrowLeft}");
+    await user.keyboard("{Home}");
     expect(screen.getByTestId("park-form")).toBeVisible();
     expect(screen.getByTestId("park-form")).toHaveTextContent(
       "slug:pallas|name:Pallas-Yllästunturi",
@@ -2594,7 +2597,10 @@ describe("App pages", () => {
 
   it("offers a cache refresh retry when a park save could not refresh public pages", async () => {
     vi.mocked(apiFetch).mockResolvedValueOnce({ featuredImage: null, hasImages: false });
-    vi.mocked(apiAuthFetch).mockResolvedValueOnce(publicPark).mockResolvedValueOnce({ trails: [] });
+    vi.mocked(apiAuthFetch)
+      .mockResolvedValueOnce(publicPark)
+      .mockResolvedValueOnce({ trails: [] })
+      .mockResolvedValueOnce({ areas: [] });
     await renderControlPanelRoute(
       await EditParkPage({
         params: Promise.resolve({ slug: "pallas" }),

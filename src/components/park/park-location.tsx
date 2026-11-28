@@ -27,13 +27,17 @@ interface ParkLocationProps {
   parkSlug?: string;
   visits?: Visit[];
   linkedTrails: NonNullable<ParkDetail["linkedTrails"]>;
+  linkedAreas?: NonNullable<ParkDetail["linkedAreas"]>;
   areaContent: ReactNode;
   areaActions?: ReactNode;
 }
+const EMPTY_AREAS: NonNullable<ParkDetail["linkedAreas"]> = [];
+
 export const ParkLocation = ({
   areaContent,
   areaActions,
   linkedTrails,
+  linkedAreas = EMPTY_AREAS,
   parkSlug = "",
   visits = [],
   ...mapProps
@@ -59,14 +63,22 @@ export const ParkLocation = ({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLFieldSetElement>(null);
   const selected = linkedTrails.find((trail) => trail.slug === selectedSlug);
+  const selectedArea = linkedAreas.find((area) => area.slug === selectedSlug);
+  const selectedName = selected?.name ?? selectedArea?.name;
+  const chooserLabel = t("mapChooser");
+  const mobileSelectionLabel = selected
+    ? t("mapTrailChoice", { name: selected.name })
+    : selectedArea
+      ? t("mapAreaChoice", { name: selectedArea.name })
+      : t("wholeArea");
   useEffect(() => {
-    if (selectedSlug !== null && !linkedTrails.some((trail) => trail.slug === selectedSlug)) {
+    if (selectedSlug !== null && selectedName === undefined) {
       setSelectedSlug(null);
       setPreviewSlug(null);
       setRequest((previous) => ({ slug: null, sequence: (previous?.sequence ?? 0) + 1 }));
       setStatus(t("selectionStatus", { name: t("wholeArea") }));
     }
-  }, [linkedTrails, selectedSlug, t]);
+  }, [selectedName, selectedSlug, t]);
   useEffect(() => {
     const media = window.matchMedia("(min-width: 768px)");
     const update = () => {
@@ -84,11 +96,14 @@ export const ParkLocation = ({
       setRequest((previous) => ({ slug, sequence: (previous?.sequence ?? 0) + 1 }));
       setStatus(
         t("selectionStatus", {
-          name: linkedTrails.find((trail) => trail.slug === slug)?.name ?? t("wholeArea"),
+          name:
+            linkedTrails.find((trail) => trail.slug === slug)?.name ??
+            linkedAreas.find((area) => area.slug === slug)?.name ??
+            t("wholeArea"),
         }),
       );
     },
-    [linkedTrails, t],
+    [linkedTrails, linkedAreas, t],
   );
   const externalRequest = navigation?.request;
   useEffect(() => {
@@ -102,31 +117,57 @@ export const ParkLocation = ({
     trails: linkedTrails,
     visitedSlugs,
     areaLabel: t("wholeArea"),
-    selectedSlug: selected?.slug ?? null,
+    selectedSlug: selectedName === undefined ? null : selectedSlug,
     previewSlug,
     onSelect: select,
     onPreview: setPreviewSlug,
   };
+  const groupedChoices = (onSelect: typeof select) => (
+    <>
+      {linkedAreas.length > 0 && (
+        <div className="pt-2">
+          <h3 className="px-2 text-sm font-semibold">
+            {t("areaCount", { count: linkedAreas.length })}
+          </h3>
+          <ParkTrailChoices
+            {...choices}
+            trails={linkedAreas}
+            kind="area"
+            visitedSlugs={[]}
+            areaLabel={undefined}
+            onSelect={onSelect}
+          />
+        </div>
+      )}
+      {linkedTrails.length > 0 && (
+        <div className="pt-2">
+          <h3 className="px-2 text-sm font-semibold">
+            {t("trailCount", { count: linkedTrails.length })}
+          </h3>
+          <ParkTrailChoices {...choices} areaLabel={undefined} onSelect={onSelect} />
+        </div>
+      )}
+    </>
+  );
+
   return (
     <>
       <div className="md:flex md:gap-4">
         <fieldset ref={listRef} tabIndex={-1} className="hidden w-60 shrink-0 md:block">
-          <legend className="mb-2 font-semibold">
-            {t("trailCount", { count: linkedTrails.length })}
-          </legend>
+          <legend className="sr-only">{chooserLabel}</legend>
           <ParkTrailChoices {...choices} trails={[]} />
-          <div className="max-h-87.5 overflow-y-auto">
-            <ParkTrailChoices {...choices} areaLabel={undefined} />
-          </div>
+          <div className="max-h-87.5 overflow-y-auto">{groupedChoices(select)}</div>
         </fieldset>
         <Button
           ref={triggerRef}
           type="button"
           variant="outline"
+          aria-haspopup="dialog"
+          aria-label={`${chooserLabel}: ${mobileSelectionLabel}`}
           className="mb-3 h-auto min-h-11 w-full justify-between whitespace-normal text-left md:hidden"
           onClick={() => setChooserOpen(true)}
         >
-          {t("trailCount", { count: linkedTrails.length })}: {selected?.name ?? t("wholeArea")}
+          {mobileSelectionLabel}
         </Button>
         <DeferredMap
           className="h-87.5 min-w-0 flex-1 md:h-107.5"
@@ -135,8 +176,9 @@ export const ParkLocation = ({
           <LazyParkBoundaryMap
             {...mapProps}
             linkedTrails={linkedTrails}
+            linkedAreas={linkedAreas}
             visitedSlugs={visitedSlugs}
-            selectedSlug={selected?.slug ?? null}
+            selectedSlug={choices.selectedSlug}
             previewSlug={previewSlug}
             cameraRequest={request}
             onPreview={setPreviewSlug}
@@ -148,22 +190,20 @@ export const ParkLocation = ({
       <Dialog
         open={chooserOpen}
         onClose={() => setChooserOpen(false)}
-        title={t("trailCount", { count: linkedTrails.length })}
-        closeLabel={t("closeChooser")}
+        title={chooserLabel}
+        closeLabel={t("closeMapChooser")}
         className="mt-auto w-full rounded-b-none md:w-[min(92vw,32rem)]"
       >
         <div className="flex min-h-0 flex-col p-5">
           <ParkTrailChoices {...choices} trails={[]} onSelect={selectAndClose} />
-          <div className="min-h-0 overflow-y-auto">
-            <ParkTrailChoices {...choices} areaLabel={undefined} onSelect={selectAndClose} />
-          </div>
+          <div className="min-h-0 overflow-y-auto">{groupedChoices(selectAndClose)}</div>
         </div>
       </Dialog>
       <span className="sr-only" role="status">
         {status}
       </span>
       <SelectionDetails
-        label={selected ? t("selectedTrail") : t("wholeArea")}
+        label={selected ? t("selectedTrail") : selectedArea ? t("selectedArea") : t("wholeArea")}
         labelAction={
           !!selected?.parkUrl && (
             <a
@@ -182,7 +222,7 @@ export const ParkLocation = ({
             </a>
           )
         }
-        actions={selected ? null : areaActions}
+        actions={selectedName === undefined ? areaActions : null}
       >
         {selected ? (
           <>
@@ -248,6 +288,8 @@ export const ParkLocation = ({
               </div>
             )}
           </>
+        ) : selectedArea ? (
+          <p className="mt-3 font-semibold wrap-anywhere">{selectedArea.name}</p>
         ) : (
           areaContent
         )}

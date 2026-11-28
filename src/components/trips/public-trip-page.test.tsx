@@ -428,7 +428,9 @@ describe("PublicTripPage", () => {
     expect(screen.queryByRole("button", { name: "map.loadDeferredMap" })).not.toBeInTheDocument();
     expect(screen.getByText("tripPage.routeDistanceLabel")).toBeInTheDocument();
     expect(screen.getByText("tripPage.itineraryDescription")).toBeInTheDocument();
-    expect(screen.getByText("Punarinnankierros")).toHaveClass("text-emerald-900");
+    expect(screen.getByText("Punarinnankierros").closest(".text-emerald-900")).toHaveClass(
+      "text-emerald-900",
+    );
     expect(screen.getByText("1 tripPage.imageCount")).toHaveClass("text-link");
     expect(screen.queryByText("Helsinki")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "tripPage.copyTripPageLink" })).toBeInTheDocument();

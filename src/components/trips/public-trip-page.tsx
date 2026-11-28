@@ -37,6 +37,7 @@ import { AppImage } from "@/components/ui/app-image";
 import { CopyLinkButton } from "@/components/ui/copy-link-button";
 import { MarkdownContent } from "@/components/ui/markdown-content";
 import { VisitImageGallery } from "@/components/visits/visit-image-gallery";
+import { VisitTarget } from "@/components/visits/visit-target";
 import { VisitTrailSection } from "@/components/visits/visit-trail-section";
 import { useAuth } from "@/hooks/use-auth";
 import { apiPublicFetch } from "@/lib/api";
@@ -801,12 +802,11 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
                               )}
                             </div>
                             <div className="mt-3 flex flex-wrap gap-2">
-                              {item.visit.route !== null && (
-                                <span className={ROUTE_BADGE_CLASS_NAME}>
-                                  <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
-                                  {item.visit.route}
-                                </span>
-                              )}
+                              <VisitTarget
+                                visit={item.visit}
+                                className={ROUTE_BADGE_CLASS_NAME}
+                                icon={<MapPin className="h-3.5 w-3.5" aria-hidden="true" />}
+                              />
                               {item.visit.imageCount > 0 && (
                                 <span className={IMAGE_BADGE_CLASS_NAME}>
                                   <Camera className="h-3.5 w-3.5" aria-hidden="true" />

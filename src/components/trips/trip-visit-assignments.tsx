@@ -22,6 +22,7 @@ import {
   LONG_TEXTAREA_MAX_LENGTH,
   TextareaWithCounter,
 } from "@/components/ui/textarea-with-counter";
+import { VisitTarget } from "@/components/visits/visit-target";
 import { apiFetch } from "@/lib/api";
 import { formatFinnishDate } from "@/lib/fi-date";
 import {
@@ -541,7 +542,13 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
       }
 
       const matchesPark = selectedParkSlug ? visit.park.slug === selectedParkSlug : true;
-      const haystack = [visit.park.name, visit.route ?? "", visit.visitedOn, visit.author ?? ""]
+      const haystack = [
+        visit.park.name,
+        visit.route ?? "",
+        ...(visit.areas?.map(({ name }) => name) ?? []),
+        visit.visitedOn,
+        visit.author ?? "",
+      ]
         .join(" ")
         .toLocaleLowerCase("fi-FI");
       const matchesQuery = normalizedQuery ? haystack.includes(normalizedQuery) : true;
@@ -1143,6 +1150,7 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
           note: visit.note,
           park: visit.park,
           route: visit.route,
+          areas: visit.areas,
           updatedAt: visit.updatedAt,
           visitedOn: visit.visitedOn,
         },
@@ -2131,11 +2139,10 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                             </div>
                             {isVisit ? (
                               <>
-                                {item.visit.route !== null && (
-                                  <p className="text-sm text-muted-foreground">
-                                    {item.visit.route}
-                                  </p>
-                                )}
+                                <VisitTarget
+                                  visit={item.visit}
+                                  className="block text-sm text-muted-foreground"
+                                />
                                 {item.visit.excludeFromRoute === true && (
                                   <p className="text-sm font-medium text-link">
                                     {t("excludedFromRoute")}
@@ -2287,9 +2294,10 @@ export const TripVisitAssignments = ({ trip, visits }: TripVisitAssignmentsProps
                         <td className="px-4 py-3">
                           <div className="space-y-1">
                             <p className="font-medium">{visit.park.name}</p>
-                            {visit.route !== null && (
-                              <p className="text-sm text-muted-foreground">{visit.route}</p>
-                            )}
+                            <VisitTarget
+                              visit={visit}
+                              className="block text-sm text-muted-foreground"
+                            />
                           </div>
                         </td>
                         <td className="w-28 px-4 py-3 align-top whitespace-nowrap text-muted-foreground">

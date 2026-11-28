@@ -956,6 +956,37 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
+                            linkedAreas?: {
+                                address: string;
+                                displayTypeName?: string | null;
+                                locationLabel: string;
+                                name: string;
+                                postalCode: string | null;
+                                postalOffice: string | null;
+                                slug: string;
+                                type: {
+                                    code: number;
+                                    id: number;
+                                    name: string;
+                                    /** @enum {string} */
+                                    slug: "outdoor-recreation-area" | "cultural-history-area" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
+                                };
+                                boundingBox: {
+                                    maxLat: number;
+                                    maxLon: number;
+                                    minLat: number;
+                                    minLon: number;
+                                };
+                                markerPoint: {
+                                    lat: number;
+                                    lon: number;
+                                };
+                                mainPark: {
+                                    id: number;
+                                    name: string;
+                                    slug: string;
+                                };
+                            }[];
                             linkedTrails?: {
                                 address: string;
                                 displayTypeName?: string | null;
@@ -1183,6 +1214,475 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/parks/{slug}/subareas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    slug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Areas linked to a main park */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            areas: {
+                                id: number;
+                                name: string;
+                                slug: string;
+                                active: boolean;
+                                removed: boolean;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Invalid request parameters */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                name: string;
+                                message: string;
+                            } & {
+                                [key: string]: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Park or area not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Invalid park or area */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Authentication unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/parks/{slug}/subarea-candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    q?: string;
+                    limit?: number;
+                    offset?: number | null;
+                };
+                header?: never;
+                path: {
+                    slug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Active catalog areas and eligibility for linkage */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            areas: {
+                                id: number;
+                                name: string;
+                                slug: string;
+                                active: boolean;
+                                removed: boolean;
+                                /** @enum {string|null} */
+                                blockedBy: "same_park" | "main_park_is_subarea" | "already_linked" | "has_subareas" | "has_visits" | null;
+                            }[];
+                            nextOffset: number | null;
+                        };
+                    };
+                };
+                /** @description Invalid request parameters */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                name: string;
+                                message: string;
+                            } & {
+                                [key: string]: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Park or area not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Invalid park or area */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Authentication unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/parks/{slug}/subareas/{areaId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    slug: string;
+                    areaId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Linked or unlinked area */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: number;
+                            name: string;
+                            slug: string;
+                            active: boolean;
+                            removed: boolean;
+                        };
+                    };
+                };
+                /** @description Invalid request parameters */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                name: string;
+                                message: string;
+                            } & {
+                                [key: string]: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Park or area not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Draft or published visits block the membership change */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                            /** @enum {string} */
+                            code: "AREA_HAS_VISITS" | "AREA_ASSIGNED_TO_VISITS";
+                            visits: {
+                                id: number;
+                                parkSlug: string;
+                                visitedOn: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Invalid park or area */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Authentication unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    slug: string;
+                    areaId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Linked or unlinked area */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: number;
+                            name: string;
+                            slug: string;
+                            active: boolean;
+                            removed: boolean;
+                        };
+                    };
+                };
+                /** @description Invalid request parameters */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: false;
+                            error: {
+                                name: string;
+                                message: string;
+                            } & {
+                                [key: string]: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Admin session required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Park or area not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Draft or published visits block the membership change */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                            /** @enum {string} */
+                            code: "AREA_HAS_VISITS" | "AREA_ASSIGNED_TO_VISITS";
+                            visits: {
+                                id: number;
+                                parkSlug: string;
+                                visitedOn: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Invalid park or area */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Authentication unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example Not found */
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/parks/{slug}/visit-trails": {
         parameters: {
             query?: never;
@@ -1201,7 +1701,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Park trail choices for visit editing; empty for standalone trails */
+                /** @description Park trail and area choices for visit editing */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -1225,6 +1725,18 @@ export interface paths {
                                 createdAt: string;
                                 updatedAt: string;
                             }[];
+                            areas?: {
+                                id: number;
+                                name: string;
+                                slug: string;
+                                active: boolean;
+                                removed: boolean;
+                            }[];
+                            mainPark?: {
+                                id: number;
+                                name: string;
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -2244,6 +2756,28 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "FeatureCollection";
                             };
+                            linkedAreas?: {
+                                id: number;
+                                name: string;
+                                slug: string;
+                                boundaryGeoJson: {
+                                    features: {
+                                        geometry: {
+                                            coordinates: number[][][];
+                                            /** @enum {string} */
+                                            type: "Polygon";
+                                        } | {
+                                            coordinates: number[][];
+                                            /** @enum {string} */
+                                            type: "LineString";
+                                        };
+                                        /** @enum {string} */
+                                        type: "Feature";
+                                    }[];
+                                    /** @enum {string} */
+                                    type: "FeatureCollection";
+                                };
+                            }[];
                             linkedTrails?: {
                                 name: string;
                                 slug: string;
@@ -2445,6 +2979,28 @@ export interface paths {
                                 /** @enum {string} */
                                 type: "FeatureCollection";
                             };
+                            linkedAreas?: {
+                                id: number;
+                                name: string;
+                                slug: string;
+                                boundaryGeoJson: {
+                                    features: {
+                                        geometry: {
+                                            coordinates: number[][][];
+                                            /** @enum {string} */
+                                            type: "Polygon";
+                                        } | {
+                                            coordinates: number[][];
+                                            /** @enum {string} */
+                                            type: "LineString";
+                                        };
+                                        /** @enum {string} */
+                                        type: "Feature";
+                                    }[];
+                                    /** @enum {string} */
+                                    type: "FeatureCollection";
+                                };
+                            }[];
                             linkedTrails?: {
                                 name: string;
                                 slug: string;
@@ -2498,6 +3054,11 @@ export interface paths {
                             /** Format: date-time */
                             sourceEventDate: string | null;
                             updatedAt: string;
+                            mainPark?: {
+                                id: number;
+                                name: string;
+                                slug: string;
+                            };
                         };
                     };
                 };
@@ -2596,6 +3157,11 @@ export interface paths {
                                 visited: boolean;
                             };
                             visits: {
+                                areas?: {
+                                    id: number;
+                                    name: string;
+                                    slug: string;
+                                }[];
                                 author: string | null;
                                 createdAt: string;
                                 excludeFromRoute: boolean;
@@ -2666,6 +3232,7 @@ export interface paths {
             requestBody?: {
                 content: {
                     "application/json": {
+                        areaIds?: number[];
                         trailIds?: number[];
                         author?: string | null;
                         excludeFromRoute?: boolean;
@@ -2691,6 +3258,11 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
+                            areas?: {
+                                id: number;
+                                name: string;
+                                slug: string;
+                            }[];
                             author: string | null;
                             createdAt: string;
                             excludeFromRoute: boolean;
@@ -2815,6 +3387,11 @@ export interface paths {
                     content: {
                         "application/json": {
                             visits: {
+                                areas?: {
+                                    id: number;
+                                    name: string;
+                                    slug: string;
+                                }[];
                                 author: string | null;
                                 createdAt: string;
                                 excludeFromRoute: boolean;
@@ -3216,6 +3793,11 @@ export interface paths {
                                 visitCount: number;
                             } | null;
                             latestStandaloneVisit: {
+                                areas?: {
+                                    id: number;
+                                    name: string;
+                                    slug: string;
+                                }[];
                                 id: number;
                                 park: {
                                     name: string;
@@ -3233,6 +3815,11 @@ export interface paths {
                                 } | null;
                             } | null;
                             featuredVisit: {
+                                areas?: {
+                                    id: number;
+                                    name: string;
+                                    slug: string;
+                                }[];
                                 id: number;
                                 park: {
                                     name: string;
@@ -3449,6 +4036,11 @@ export interface paths {
                     content: {
                         "application/json": {
                             visits: {
+                                areas?: {
+                                    id: number;
+                                    name: string;
+                                    slug: string;
+                                }[];
                                 featuredImage: {
                                     /** Format: uri */
                                     url: string;
@@ -4215,6 +4807,11 @@ export interface paths {
                                             name: string;
                                             slug: string;
                                         } | null;
+                                        areas?: {
+                                            id: number;
+                                            name: string;
+                                            slug: string;
+                                        }[];
                                         trails?: {
                                             id: number;
                                             name: string;
@@ -4241,6 +4838,11 @@ export interface paths {
                                             name: string;
                                             slug: string;
                                         };
+                                        areas?: {
+                                            id: number;
+                                            name: string;
+                                            slug: string;
+                                        }[];
                                         trails?: {
                                             id: number;
                                             name: string;
@@ -4269,6 +4871,11 @@ export interface paths {
                                         };
                                         previousVisitDate: string;
                                         revisitCount: number;
+                                        areas?: {
+                                            id: number;
+                                            name: string;
+                                            slug: string;
+                                        }[];
                                         trails?: {
                                             id: number;
                                             name: string;
@@ -4306,6 +4913,11 @@ export interface paths {
                                                 typeLabel: string;
                                                 typeSlug: string;
                                             };
+                                            areas?: {
+                                                id: number;
+                                                name: string;
+                                                slug: string;
+                                            }[];
                                             trails?: {
                                                 id: number;
                                                 name: string;
@@ -4325,6 +4937,11 @@ export interface paths {
                                             typeLabel: string;
                                             typeSlug: string;
                                         };
+                                        areas?: {
+                                            id: number;
+                                            name: string;
+                                            slug: string;
+                                        }[];
                                         trails?: {
                                             id: number;
                                             name: string;
@@ -4914,6 +5531,11 @@ export interface paths {
                                             name: string;
                                             slug: string;
                                         } | null;
+                                        areas?: {
+                                            id: number;
+                                            name: string;
+                                            slug: string;
+                                        }[];
                                         trails?: {
                                             id: number;
                                             name: string;
@@ -4940,6 +5562,11 @@ export interface paths {
                                             name: string;
                                             slug: string;
                                         };
+                                        areas?: {
+                                            id: number;
+                                            name: string;
+                                            slug: string;
+                                        }[];
                                         trails?: {
                                             id: number;
                                             name: string;
@@ -4968,6 +5595,11 @@ export interface paths {
                                         };
                                         previousVisitDate: string;
                                         revisitCount: number;
+                                        areas?: {
+                                            id: number;
+                                            name: string;
+                                            slug: string;
+                                        }[];
                                         trails?: {
                                             id: number;
                                             name: string;
@@ -5005,6 +5637,11 @@ export interface paths {
                                                 typeLabel: string;
                                                 typeSlug: string;
                                             };
+                                            areas?: {
+                                                id: number;
+                                                name: string;
+                                                slug: string;
+                                            }[];
                                             trails?: {
                                                 id: number;
                                                 name: string;
@@ -5024,6 +5661,11 @@ export interface paths {
                                             typeLabel: string;
                                             typeSlug: string;
                                         };
+                                        areas?: {
+                                            id: number;
+                                            name: string;
+                                            slug: string;
+                                        }[];
                                         trails?: {
                                             id: number;
                                             name: string;
@@ -5155,6 +5797,11 @@ export interface paths {
                                             name: string;
                                             slug: string;
                                         } | null;
+                                        areas?: {
+                                            id: number;
+                                            name: string;
+                                            slug: string;
+                                        }[];
                                         trails?: {
                                             id: number;
                                             name: string;
@@ -5190,6 +5837,11 @@ export interface paths {
                                             name: string;
                                             slug: string;
                                         } | null;
+                                        areas?: {
+                                            id: number;
+                                            name: string;
+                                            slug: string;
+                                        }[];
                                         trails?: {
                                             id: number;
                                             name: string;
@@ -5253,6 +5905,11 @@ export interface paths {
                                             name: string;
                                             slug: string;
                                         };
+                                        areas?: {
+                                            id: number;
+                                            name: string;
+                                            slug: string;
+                                        }[];
                                         trails?: {
                                             id: number;
                                             name: string;
@@ -5523,6 +6180,11 @@ export interface paths {
                                             name: string;
                                             slug: string;
                                         } | null;
+                                        areas?: {
+                                            id: number;
+                                            name: string;
+                                            slug: string;
+                                        }[];
                                         trails?: {
                                             id: number;
                                             name: string;
@@ -5558,6 +6220,11 @@ export interface paths {
                                             name: string;
                                             slug: string;
                                         } | null;
+                                        areas?: {
+                                            id: number;
+                                            name: string;
+                                            slug: string;
+                                        }[];
                                         trails?: {
                                             id: number;
                                             name: string;
@@ -5621,6 +6288,11 @@ export interface paths {
                                             name: string;
                                             slug: string;
                                         };
+                                        areas?: {
+                                            id: number;
+                                            name: string;
+                                            slug: string;
+                                        }[];
                                         trails?: {
                                             id: number;
                                             name: string;
@@ -5767,6 +6439,11 @@ export interface paths {
                                 kind: "visit";
                                 tripStopOrder: number;
                                 visit: {
+                                    areas?: {
+                                        id: number;
+                                        name: string;
+                                        slug: string;
+                                    }[];
                                     author: string | null;
                                     /** Format: date-time */
                                     createdAt: string;
@@ -6165,6 +6842,11 @@ export interface paths {
                                 kind: "visit";
                                 tripStopOrder: number;
                                 visit: {
+                                    areas?: {
+                                        id: number;
+                                        name: string;
+                                        slug: string;
+                                    }[];
                                     author: string | null;
                                     /** Format: date-time */
                                     createdAt: string;
@@ -6498,6 +7180,11 @@ export interface paths {
                                 kind: "visit";
                                 tripStopOrder: number;
                                 visit: {
+                                    areas?: {
+                                        id: number;
+                                        name: string;
+                                        slug: string;
+                                    }[];
                                     author: string | null;
                                     /** Format: date-time */
                                     createdAt: string;
@@ -6693,6 +7380,11 @@ export interface paths {
                                 kind: "visit";
                                 tripStopOrder: number;
                                 visit: {
+                                    areas?: {
+                                        id: number;
+                                        name: string;
+                                        slug: string;
+                                    }[];
                                     author: string | null;
                                     /** Format: date-time */
                                     createdAt: string;
@@ -7765,6 +8457,11 @@ export interface paths {
                     content: {
                         "application/json": {
                             visits: {
+                                areas?: {
+                                    id: number;
+                                    name: string;
+                                    slug: string;
+                                }[];
                                 author: string | null;
                                 createdAt: string;
                                 excludeFromRoute: boolean;
@@ -7847,6 +8544,11 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
+                            areas?: {
+                                id: number;
+                                name: string;
+                                slug: string;
+                            }[];
                             author: string | null;
                             createdAt: string;
                             excludeFromRoute: boolean;
@@ -7979,6 +8681,7 @@ export interface paths {
             requestBody?: {
                 content: {
                     "application/json": {
+                        areaIds?: number[];
                         trailIds?: number[];
                         author?: string | null;
                         excludeFromRoute?: boolean;
@@ -8004,6 +8707,11 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
+                            areas?: {
+                                id: number;
+                                name: string;
+                                slug: string;
+                            }[];
                             author: string | null;
                             createdAt: string;
                             excludeFromRoute: boolean;
@@ -8122,6 +8830,11 @@ export interface paths {
                     content: {
                         "application/json": {
                             visits: {
+                                areas?: {
+                                    id: number;
+                                    name: string;
+                                    slug: string;
+                                }[];
                                 author: string | null;
                                 createdAt: string;
                                 excludeFromRoute: boolean;
@@ -8230,6 +8943,11 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
+                            areas?: {
+                                id: number;
+                                name: string;
+                                slug: string;
+                            }[];
                             author: string | null;
                             createdAt: string;
                             excludeFromRoute: boolean;

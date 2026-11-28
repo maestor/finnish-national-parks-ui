@@ -29,6 +29,7 @@ interface ParkBoundaryMapProps {
   };
   parkName: string;
   linkedTrails?: NonNullable<ParkDetail["linkedTrails"]>;
+  linkedAreas?: ParkDetail["linkedAreas"];
   visitedSlugs?: string[];
   selectedSlug?: string | null;
   previewSlug?: string | null;
@@ -38,10 +39,14 @@ interface ParkBoundaryMapProps {
   onReset?: () => void;
 }
 
+const EMPTY_AREAS: NonNullable<ParkDetail["linkedAreas"]> = [];
 const EMPTY_TRAILS: NonNullable<ParkDetail["linkedTrails"]> = [];
 const SOURCE_ID = "park-boundary";
 const FILL_LAYER_ID = "park-boundary-fill";
 const OUTLINE_LAYER_ID = "park-boundary-outline";
+const AREA_SOURCE_ID = "park-subareas";
+const AREA_FILL_ID = "park-subareas-fill";
+const AREA_OUTLINE_ID = "park-subareas-outline";
 const TRAIL_SOURCE_ID = "park-trails";
 const TRAIL_HALO_ID = "park-trails-halo";
 const TRAIL_LINE_ID = "park-trails-line";
@@ -68,6 +73,7 @@ export const ParkBoundaryMap = ({
   markerPoint,
   parkName,
   linkedTrails = EMPTY_TRAILS,
+  linkedAreas = EMPTY_AREAS,
   visitedSlugs = [],
   selectedSlug = null,
   previewSlug = null,
@@ -207,6 +213,70 @@ export const ParkBoundaryMap = ({
 
   useEffect(() => {
     const map = mapRef.current;
+    if (!map || !isMapLoaded || linkedAreas.length === 0) return;
+
+    const data: FeatureCollection = {
+      type: "FeatureCollection",
+      features: linkedAreas.flatMap(({ slug, boundaryGeoJson }) =>
+        boundaryGeoJson.features
+          .filter(({ geometry }) => geometry.type === "Polygon")
+          .map((feature) => ({ ...feature, properties: { slug } })),
+      ),
+    };
+    const beforeTrail = map.getLayer(TRAIL_HALO_ID) ? TRAIL_HALO_ID : undefined;
+    map.addSource(AREA_SOURCE_ID, { type: "geojson", data });
+    map.addLayer(
+      {
+        id: AREA_FILL_ID,
+        type: "fill",
+        source: AREA_SOURCE_ID,
+        paint: { "fill-color": "#2174ba", "fill-opacity": 0.14 },
+      },
+      beforeTrail,
+    );
+    map.addLayer(
+      {
+        id: AREA_OUTLINE_ID,
+        type: "line",
+        source: AREA_SOURCE_ID,
+        paint: { "line-color": "#155f9c", "line-width": 1.5 },
+      },
+      beforeTrail,
+    );
+    return () => {
+      if (destroyedRef.current) return;
+      map.removeLayer(AREA_OUTLINE_ID);
+      map.removeLayer(AREA_FILL_ID);
+      map.removeSource(AREA_SOURCE_ID);
+    };
+  }, [isMapLoaded, linkedAreas]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !isMapLoaded || linkedAreas.length === 0) return;
+    const selected: maplibregl.ExpressionSpecification = [
+      "==",
+      ["get", "slug"],
+      selectedSlug ?? "",
+    ];
+    const previewed: maplibregl.ExpressionSpecification = [
+      "==",
+      ["get", "slug"],
+      previewSlug ?? "",
+    ];
+    map.setPaintProperty(AREA_FILL_ID, "fill-opacity", [
+      "case",
+      selected,
+      0.32,
+      previewed,
+      0.25,
+      0.14,
+    ]);
+    map.setPaintProperty(AREA_OUTLINE_ID, "line-width", ["case", selected, 3, previewed, 2.5, 1.5]);
+  }, [isMapLoaded, linkedAreas, selectedSlug, previewSlug]);
+
+  useEffect(() => {
+    const map = mapRef.current;
     if (!map || !isMapLoaded || linkedTrails.length === 0) return;
     const data: FeatureCollection = {
       type: "FeatureCollection",
@@ -293,10 +363,32 @@ export const ParkBoundaryMap = ({
       source: TRAIL_SOURCE_ID,
       paint: { "line-color": "#000000", "line-opacity": 0, "line-width": 18 },
     });
+    return () => {
+      if (destroyedRef.current) return;
+      for (const id of [
+        TRAIL_HIT_ID,
+        TRAIL_ACTIVE_LINE_ID,
+        TRAIL_ACTIVE_HALO_ID,
+        TRAIL_PREVIEW_LINE_ID,
+        TRAIL_VISITED_HALO_ID,
+        TRAIL_VISITED_LINE_ID,
+        TRAIL_PREVIEW_HALO_ID,
+        TRAIL_LINE_ID,
+        TRAIL_HALO_ID,
+      ])
+        map.removeLayer(id);
+      map.removeSource(TRAIL_SOURCE_ID);
+    };
+  }, [isMapLoaded, linkedTrails]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !isMapLoaded || (linkedTrails.length === 0 && linkedAreas.length === 0)) return;
+    const canvas = map.getCanvas();
     let hoveredSlug: string | null = null;
     let touchStart: { x: number; y: number } | null = null;
     let lastTouch = 0;
-    const closestTrail = (point: maplibregl.Point) => {
+    const closestTrail = (point: maplibregl.Point, overArea: boolean) => {
       const hits = map.queryRenderedFeatures(
         [
           [point.x - 9, point.y - 9],
@@ -326,18 +418,32 @@ export const ParkBoundaryMap = ({
             Math.hypot(point.x - a.x - fraction * dx, point.y - a.y - fraction * dy),
           );
         }
-        distances.set(slug, Math.min(distances.get(slug) ?? Infinity, distance));
+        // Keep the wider trail hit target from swallowing nearby area interiors.
+        if (!overArea || distance <= 2) {
+          distances.set(slug, Math.min(distances.get(slug) ?? Infinity, distance));
+        }
       }
       return [...distances].sort((a, b) => a[1] - b[1] || a[0].localeCompare(b[0]))[0]?.[0] ?? null;
     };
+    const targetAt = (point: maplibregl.Point) => {
+      const area =
+        linkedAreas.length > 0
+          ? map.queryRenderedFeatures(point, { layers: [AREA_FILL_ID] })[0]?.properties?.slug
+          : null;
+      const areaSlug = typeof area === "string" ? area : null;
+      const trail = linkedTrails.length > 0 ? closestTrail(point, areaSlug !== null) : null;
+      return trail ?? areaSlug;
+    };
     const clearHover = () => {
+      canvas.style.cursor = "";
       hoveredSlug = null;
       setHoverLabel(null);
       callbacksRef.current.onPreview?.(null);
     };
     const onMove = (event: maplibregl.MapMouseEvent) => {
       if (Date.now() - lastTouch < 700) return;
-      const slug = closestTrail(event.point);
+      const slug = targetAt(event.point);
+      canvas.style.cursor = slug === null ? "" : "pointer";
       hoveredSlug = slug;
       callbacksRef.current.onPreview?.(slug);
       hoverPoint.current = event.point;
@@ -346,7 +452,7 @@ export const ParkBoundaryMap = ({
     };
     const onClick = (event: maplibregl.MapMouseEvent) => {
       if (Date.now() - lastTouch < 700) return;
-      const slug = hoveredSlug ?? closestTrail(event.point);
+      const slug = hoveredSlug ?? targetAt(event.point);
       if (slug !== null) callbacksRef.current.onPick?.(slug);
     };
     const onTouchStart = (event: maplibregl.MapTouchEvent) => {
@@ -359,11 +465,11 @@ export const ParkBoundaryMap = ({
       const start = touchStart;
       touchStart = null;
       if (!start || event.originalEvent.changedTouches.length !== 1) return;
-      const rect = map.getCanvas().getBoundingClientRect();
+      const rect = canvas.getBoundingClientRect();
       const touch = event.originalEvent.changedTouches[0];
       const point = new maplibregl.Point(touch.clientX - rect.left, touch.clientY - rect.top);
       if (Math.hypot(point.x - start.x, point.y - start.y) > 8) return;
-      const slug = closestTrail(point);
+      const slug = targetAt(point);
       if (slug !== null) callbacksRef.current.onPick?.(slug);
     };
     const onKey = (event: KeyboardEvent) => {
@@ -386,22 +492,9 @@ export const ParkBoundaryMap = ({
       map.off("click", onClick);
       map.off("touchstart", onTouchStart);
       map.off("touchend", onTouchEnd);
-      if (destroyedRef.current) return;
-      for (const id of [
-        TRAIL_HIT_ID,
-        TRAIL_ACTIVE_LINE_ID,
-        TRAIL_ACTIVE_HALO_ID,
-        TRAIL_PREVIEW_LINE_ID,
-        TRAIL_VISITED_HALO_ID,
-        TRAIL_VISITED_LINE_ID,
-        TRAIL_PREVIEW_HALO_ID,
-        TRAIL_LINE_ID,
-        TRAIL_HALO_ID,
-      ])
-        map.removeLayer(id);
-      map.removeSource(TRAIL_SOURCE_ID);
+      canvas.style.cursor = "";
     };
-  }, [isMapLoaded, linkedTrails, positionLabel]);
+  }, [isMapLoaded, linkedTrails, linkedAreas, positionLabel]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -419,11 +512,17 @@ export const ParkBoundaryMap = ({
       return;
     }
     const trail = linkedTrails.find((item) => item.slug === cameraRequest.slug);
-    if (!trail) return;
+    const area = linkedAreas.find((item) => item.slug === cameraRequest.slug);
     const bounds = new maplibregl.LngLatBounds();
-    for (const feature of trail.boundaryGeoJson.features) {
-      if (feature.geometry.type === "LineString")
-        for (const [lng, lat] of feature.geometry.coordinates) bounds.extend([lng, lat]);
+    for (const { geometry } of trail?.boundaryGeoJson.features ?? []) {
+      if (geometry.type === "LineString") {
+        for (const [lng, lat] of geometry.coordinates) bounds.extend([lng, lat]);
+      }
+    }
+    for (const { geometry } of area?.boundaryGeoJson.features ?? []) {
+      if (geometry.type === "Polygon") {
+        for (const [lng, lat] of geometry.coordinates.flat()) bounds.extend([lng, lat]);
+      }
     }
     if (!bounds.isEmpty()) {
       map.setMinZoom(MAP_MIN_ZOOM);
@@ -433,12 +532,14 @@ export const ParkBoundaryMap = ({
         duration: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? 0 : 600,
       });
     }
-  }, [isMapLoaded, linkedTrails, cameraRequest, boundingBox]);
+  }, [isMapLoaded, linkedTrails, linkedAreas, cameraRequest, boundingBox]);
 
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !isMapLoaded || linkedTrails.length === 0) return;
-    const hasActiveTrail = selectedSlug !== null || previewSlug !== null;
+    const previewingTrail = linkedTrails.some(({ slug }) => slug === previewSlug);
+    const hasActiveTrail =
+      previewingTrail || linkedTrails.some(({ slug }) => slug === selectedSlug);
     const inactiveFilter: maplibregl.FilterSpecification | null = hasActiveTrail
       ? [
           "all",
@@ -470,9 +571,9 @@ export const ParkBoundaryMap = ({
     map.setPaintProperty(
       TRAIL_VISITED_HALO_ID,
       "line-opacity",
-      previewSlug === null ? TRAIL_HALO_OPACITY : 0,
+      previewingTrail ? 0 : TRAIL_HALO_OPACITY,
     );
-    map.setPaintProperty(TRAIL_VISITED_LINE_ID, "line-opacity", previewSlug === null ? 1 : 0);
+    map.setPaintProperty(TRAIL_VISITED_LINE_ID, "line-opacity", previewingTrail ? 0 : 1);
     map.setFilter(TRAIL_VISITED_HALO_ID, visitedFilter);
     map.setFilter(TRAIL_VISITED_LINE_ID, visitedFilter);
     map.setFilter(TRAIL_ACTIVE_HALO_ID, selectedFilter);
@@ -482,12 +583,15 @@ export const ParkBoundaryMap = ({
   }, [selectedSlug, previewSlug, isMapLoaded, linkedTrails, visitedSlugs]);
 
   const hoveredTrail = linkedTrails.find((trail) => trail.slug === hoverLabel);
+  const hoveredName =
+    hoveredTrail?.name ?? linkedAreas.find((area) => area.slug === hoverLabel)?.name;
+  const hoveredLength = hoveredTrail?.lengthKm;
 
   return (
     <div>
       <div
         className={
-          linkedTrails.length
+          linkedTrails.length || linkedAreas.length
             ? "relative h-87.5 w-full overflow-hidden rounded-lg border md:h-107.5"
             : "relative h-80 w-full overflow-hidden rounded-lg border"
         }
@@ -498,20 +602,20 @@ export const ParkBoundaryMap = ({
           role="application"
           aria-label={t("boundaryAriaLabel", { parkName })}
         />
-        {hoveredTrail !== undefined && (
+        {hoveredName !== undefined && (
           <span
             ref={hoverElement}
             className={`${TOOLTIP_CONTENT_CLASS_NAME} absolute z-10 max-w-[min(calc(100%-1rem),20rem)]`}
           >
             <strong className="font-semibold">
-              {hoveredTrail.name}
-              {hoveredTrail.lengthKm != null && hoveredTrail.lengthKm !== 0
-                ? ` · ${hoveredTrail.lengthKm.toLocaleString("fi-FI")} km`
+              {hoveredName}
+              {hoveredLength != null && hoveredLength !== 0
+                ? ` · ${hoveredLength.toLocaleString("fi-FI")} km`
                 : ""}
             </strong>
           </span>
         )}
-        {linkedTrails.length > 0 && (
+        {(linkedTrails.length > 0 || linkedAreas.length > 0) && (
           <Button
             type="button"
             variant="ghost"

@@ -221,7 +221,14 @@ export const ParkForm = ({ park, linkedAreaSlugs = [] }: ParkFormProps) => {
       const refreshResults = await Promise.all(
         slugs.map((parkSlug) => revalidatePublicCache({ parkSlug, expireImmediately: true })),
       );
-      const refreshFailed = !refreshResults.every(Boolean);
+      const linkedRefreshFailed =
+        updatedPark.mainPark !== undefined &&
+        !(await revalidatePublicCache({
+          parkSlug: updatedPark.mainPark.slug,
+          refreshTripDetails: park.name !== updatedPark.name || park.slug !== updatedPark.slug,
+          expireImmediately: true,
+        }));
+      const refreshFailed = linkedRefreshFailed || !refreshResults.every(Boolean);
 
       startTransition(() => {
         router.replace(
@@ -229,6 +236,7 @@ export const ParkForm = ({ park, linkedAreaSlugs = [] }: ParkFormProps) => {
             updated: 1,
             refreshFailed: refreshFailed ? 1 : null,
             previousSlug: refreshFailed && updatedPark.slug !== park.slug ? park.slug : null,
+            linkedMainSlug: linkedRefreshFailed ? updatedPark.mainPark?.slug : null,
           }),
         );
         router.refresh();

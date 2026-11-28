@@ -6,6 +6,7 @@ import { revalidatePublicCache } from "@/lib/public-cache";
 interface PublicCacheRefreshNoticeProps {
   parkSlug?: string | null;
   parkSlugs?: Array<string | null | undefined>;
+  refreshTripDetails?: boolean | undefined;
   tripSlugs?: Array<string | null | undefined>;
   failureMessage: string;
   retryLabel: string;
@@ -17,6 +18,7 @@ export const PublicCacheRefreshNotice = ({
   parkSlug = null,
   parkSlugs = [],
   tripSlugs = [],
+  refreshTripDetails,
   failureMessage,
   retryLabel,
   retryingLabel,
@@ -36,7 +38,12 @@ export const PublicCacheRefreshNotice = ({
     const results = await Promise.all(
       targetTripSlugs.flatMap((tripSlug) =>
         targetParkSlugs.map((nextParkSlug) =>
-          revalidatePublicCache({ expireImmediately: true, parkSlug: nextParkSlug, tripSlug }),
+          revalidatePublicCache({
+            expireImmediately: true,
+            parkSlug: nextParkSlug,
+            tripSlug,
+            ...(refreshTripDetails === true ? { refreshTripDetails } : {}),
+          }),
         ),
       ),
     );

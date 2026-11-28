@@ -127,13 +127,15 @@ const ParkDetailContent = ({
   hasStaticAbout,
   slug,
   trailSlugs,
+  areaSlugs,
 }: {
   children: ReactNode;
   hasStaticAbout: boolean;
   slug: string;
   trailSlugs: string[];
+  areaSlugs: string[];
 }) => (
-  <ParkTrailNavigationProvider trailSlugs={trailSlugs}>
+  <ParkTrailNavigationProvider trailSlugs={trailSlugs} areaSlugs={areaSlugs}>
     <ParkWeatherProvider key={slug} parkSlug={slug} hasStaticAbout={hasStaticAbout}>
       {children}
     </ParkWeatherProvider>
@@ -195,6 +197,9 @@ export const ParkDetailPage = async ({ params, authenticated = false }: ParkDeta
         <ParkDetailContent
           slug={slug}
           hasStaticAbout={hasStaticAbout}
+          areaSlugs={
+            hasBoundaryGeoJson ? (publicPark.linkedAreas ?? []).map(({ slug }) => slug) : []
+          }
           trailSlugs={
             hasBoundaryGeoJson ? (publicPark.linkedTrails ?? []).map((trail) => trail.slug) : []
           }
@@ -318,7 +323,7 @@ export const ParkDetailPage = async ({ params, authenticated = false }: ParkDeta
                 );
                 const areaActions =
                   !hasStaticAbout && (parkUrl !== null || mapUrl !== null) ? (
-                    <ParkLocationMaterials>
+                    <ParkLocationMaterials key="location-materials">
                       <ParkMaterialLinks
                         parkUrl={parkUrl}
                         mapUrl={mapUrl}
@@ -329,8 +334,8 @@ export const ParkDetailPage = async ({ params, authenticated = false }: ParkDeta
                   ) : null;
                 if (
                   hasBoundaryGeoJson &&
-                  publicPark.linkedTrails &&
-                  publicPark.linkedTrails.length > 0
+                  ((publicPark.linkedTrails?.length ?? 0) > 0 ||
+                    (publicPark.linkedAreas?.length ?? 0) > 0)
                 )
                   return (
                     <ParkLocation
@@ -340,7 +345,8 @@ export const ParkDetailPage = async ({ params, authenticated = false }: ParkDeta
                       parkName={publicPark.name}
                       parkSlug={slug}
                       visits={visits}
-                      linkedTrails={publicPark.linkedTrails}
+                      linkedTrails={publicPark.linkedTrails ?? []}
+                      linkedAreas={publicPark.linkedAreas ?? []}
                       areaContent={<div className="mt-3">{areaContent}</div>}
                       areaActions={areaActions}
                     />

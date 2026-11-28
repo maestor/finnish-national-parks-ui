@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { PublicCacheRefreshNotice } from "@/components/admin/public-cache-refresh-notice";
 import { AppBreadcrumbs } from "@/components/layout/app-breadcrumbs";
 import { AreaTrails } from "@/components/parks/area-trails";
+import { ParkAreas } from "@/components/parks/park-areas";
 import { ParkEditTabs } from "@/components/parks/park-edit-tabs";
 import { ParkFeaturedImageSection } from "@/components/parks/park-featured-image-section";
 import { ParkForm } from "@/components/parks/park-form";
@@ -11,14 +12,19 @@ import { SnackbarNotice } from "@/components/providers/snackbar-notice";
 import { apiAuthFetch } from "@/lib/api";
 import type { paths } from "@/lib/api-types";
 import { buildPageMetadata } from "@/lib/page-metadata";
-import type { ParkDetail } from "@/lib/parks";
+import type { ParkAreaList, ParkDetail } from "@/lib/parks";
 import { appRoutes } from "@/lib/routes";
 
 export const dynamic = "force-dynamic";
 
 interface EditParkPageProps {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ updated?: string; refreshFailed?: string; previousSlug?: string }>;
+  searchParams: Promise<{
+    updated?: string;
+    refreshFailed?: string;
+    previousSlug?: string;
+    linkedMainSlug?: string;
+  }>;
 }
 
 export const generateMetadata = async () => {
@@ -32,7 +38,7 @@ export const generateMetadata = async () => {
 const EditParkPage = async ({ params, searchParams }: EditParkPageProps) => {
   const t = await getTranslations("controlPanel.parks.edit");
   const { slug } = await params;
-  const { updated, refreshFailed, previousSlug } = await searchParams;
+  const { updated, refreshFailed, previousSlug, linkedMainSlug } = await searchParams;
   const park = await apiAuthFetch<ParkDetail>(`/api/parks/${slug}`).catch(() => null);
 
   if (park === null) {
@@ -48,6 +54,13 @@ const EditParkPage = async ({ params, searchParams }: EditParkPageProps) => {
       ).trails
     : [];
 
+  const subareas = isArea
+    ? (
+        await apiAuthFetch<ParkAreaList>(`/api/admin/parks/${encodeURIComponent(slug)}/subareas`, {
+          cache: "no-store",
+        })
+      ).areas
+    : [];
   const linkedAreas =
     park.category.slug === "trails-and-routes"
       ? (
@@ -83,7 +96,13 @@ const EditParkPage = async ({ params, searchParams }: EditParkPageProps) => {
       {updated === "1" && refreshFailed !== "1" && <SnackbarNotice message={t("updatedNotice")} />}
       {refreshFailed === "1" && (
         <PublicCacheRefreshNotice
-          parkSlugs={[park.slug, previousSlug, ...linkedAreas.map((area) => area.slug)]}
+          parkSlugs={[
+            park.slug,
+            previousSlug,
+            linkedMainSlug,
+            ...linkedAreas.map((area) => area.slug),
+          ]}
+          refreshTripDetails={linkedMainSlug !== undefined}
           failureMessage={t("refreshFailedNotice")}
           retryLabel={t("retryCacheRefresh")}
           retryingLabel={t("retryingCacheRefresh")}
@@ -116,6 +135,7 @@ const EditParkPage = async ({ params, searchParams }: EditParkPageProps) => {
         <ParkEditTabs
           key={slug}
           details={details}
+          areas={<ParkAreas slug={slug} initialAreas={subareas} />}
           trails={<AreaTrails slug={slug} initialTrails={linkedTrails} />}
         />
       ) : (
