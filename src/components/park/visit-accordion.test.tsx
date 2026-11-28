@@ -142,6 +142,46 @@ describe("VisitAccordion", () => {
     );
   });
 
+  it("keeps free text in the header and shows linked areas before trails in details", () => {
+    const visit = {
+      ...visits[0],
+      areas: [
+        { id: 9, name: "Aulanko", slug: "aulanko" },
+        { id: 10, name: "Linnanpuisto", slug: "linnanpuisto" },
+      ],
+    };
+    const { rerender } = render(<VisitAccordion visits={[visit]} parkSlug="pallas" />);
+    const details = document.getElementById("visit-details-1");
+    if (!details) throw new Error("Expected expandable visit details");
+    const panel = within(details);
+    expect(screen.getByText("Talvireitti")).toBeVisible();
+    expect(panel.getByRole("heading", { name: "park.areasTitle" })).toBeVisible();
+    expect(panel.getByText("Aulanko")).toBeVisible();
+    expect(panel.getByText("Linnanpuisto")).toBeVisible();
+    expect(panel.queryByText("Talvireitti")).not.toBeInTheDocument();
+
+    rerender(
+      <VisitAccordion
+        parkSlug="pallas"
+        visits={[{ ...visit, route: "  ", trails: [{ id: 11, name: "Polku", slug: "polku" }] }]}
+      />,
+    );
+    expect(screen.getByText("Aulanko")).toBeVisible();
+    expect(screen.queryByRole("heading", { name: "park.areasTitle" })).not.toBeInTheDocument();
+    expect(panel.getByRole("heading", { name: "park.trailsTitle" })).toBeVisible();
+
+    rerender(
+      <VisitAccordion
+        parkSlug="pallas"
+        visits={[{ ...visit, trails: [{ id: 11, name: "Polku", slug: "polku" }] }]}
+      />,
+    );
+    expect(panel.getAllByRole("heading").map((heading) => heading.textContent)).toEqual([
+      "park.areasTitle",
+      "park.trailsTitle",
+    ]);
+  });
+
   it("shows expandable items for visits with notes, images or authors", () => {
     render(<VisitAccordion visits={visits} parkSlug="pallas" />);
 

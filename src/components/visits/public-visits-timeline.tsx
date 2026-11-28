@@ -23,7 +23,7 @@ import { ParkTypeBadge } from "@/components/park/park-type-badge";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { IMAGE_OVERLAY_LABEL_CLASS_NAME } from "@/components/ui/theme-styles";
-import { hasVisitTarget, VisitTarget } from "@/components/visits/visit-target";
+import { hasVisitTarget, VisitTargetBadges } from "@/components/visits/visit-target";
 import { cn } from "@/lib/cn";
 import { formatFinnishDate, formatFinnishDateRange } from "@/lib/fi-date";
 import { renderMultilineText } from "@/lib/multiline-text";
@@ -309,7 +309,7 @@ const PublicVisitsTimelineContent = ({
 
     return (
       <div className="mt-2 flex flex-wrap gap-1.5">
-        <VisitTarget
+        <VisitTargetBadges
           visit={visit}
           className={PUBLIC_ROUTE_BADGE_CLASS_NAME}
           icon={<MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />}

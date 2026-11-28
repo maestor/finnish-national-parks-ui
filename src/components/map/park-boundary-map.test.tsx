@@ -211,7 +211,6 @@ describe("ParkBoundaryMap", () => {
     expect(mockMap.setFilter).toHaveBeenCalledWith("park-trails-visited-line", [
       "all",
       ["in", ["get", "slug"], ["literal", ["pitka-reitti"]]],
-      ["!=", ["get", "slug"], "other"],
       ["!=", ["get", "slug"], "third"],
     ]);
     expect(mockMap.setPaintProperty).toHaveBeenCalledWith(
@@ -319,6 +318,7 @@ describe("ParkBoundaryMap", () => {
           id: 8,
           slug: "langinkoski",
           name: "Langinkoski",
+          areaKm2: 0.0125,
           boundaryGeoJson: {
             type: "FeatureCollection" as const,
             features: [
@@ -355,14 +355,22 @@ describe("ParkBoundaryMap", () => {
         },
       ],
     };
-    const { rerender } = render(<ParkBoundaryMap {...props} />, { wrapper: I18nProvider });
+    const areas = [
+      ...props.linkedAreas,
+      { ...props.linkedAreas[0], id: 9, slug: "aulanko", name: "Aulanko", areaKm2: null },
+    ];
+    const mapProps = {
+      ...props,
+      linkedAreas: areas,
+      visitedSlugs: ["langinkoski"],
+    };
+    const { rerender } = render(<ParkBoundaryMap {...mapProps} />, { wrapper: I18nProvider });
     expect(mockMap.addSource).toHaveBeenCalledWith("park-subareas", {
       type: "geojson",
       data: expect.objectContaining({
-        features: props.linkedAreas[0].boundaryGeoJson.features.map((feature) => ({
-          ...feature,
-          properties: { slug: "langinkoski" },
-        })),
+        features: areas.flatMap(({ slug, boundaryGeoJson }) =>
+          boundaryGeoJson.features.map((feature) => ({ ...feature, properties: { slug } })),
+        ),
       }),
     });
     expect(mockMap.addLayer).toHaveBeenCalledWith(
@@ -387,38 +395,52 @@ describe("ParkBoundaryMap", () => {
       layers: ["park-subareas-fill"],
     });
     expect(onPreview).toHaveBeenCalledWith("langinkoski");
-    expect(screen.getByText("Langinkoski")).toBeVisible();
+    expect(screen.getByText("Langinkoski · 12 500 m²")).toBeVisible();
     expect(mockMap.getCanvas().style.cursor).toBe("pointer");
-    rerender(<ParkBoundaryMap {...props} previewSlug="langinkoski" />);
-    expect(mockMap.setPaintProperty).toHaveBeenCalledWith("park-subareas-fill", "fill-opacity", [
+    expect(screen.queryByText("Käyty")).not.toBeInTheDocument();
+    expect(mockMap.setPaintProperty).toHaveBeenCalledWith(
+      "park-subareas-outline",
+      "line-dasharray",
+      [
+        "case",
+        ["in", ["get", "slug"], ["literal", ["langinkoski"]]],
+        ["literal", [2, 1]],
+        ["literal", [1, 0]],
+      ],
+    );
+    mockMap.setPaintProperty.mockClear();
+    rerender(<ParkBoundaryMap {...mapProps} previewSlug="langinkoski" selectedSlug="aulanko" />);
+    expect(mockMap.setPaintProperty).toHaveBeenCalledWith("park-subareas-outline", "line-opacity", [
       "case",
-      ["==", ["get", "slug"], ""],
-      0.32,
       ["==", ["get", "slug"], "langinkoski"],
-      0.25,
-      0.14,
+      1,
+      0.3,
     ]);
     act(() => click(point));
     expect(onPick).toHaveBeenCalledWith("langinkoski");
+    mockMap.queryRenderedFeatures.mockReturnValue([
+      { properties: { slug: "aulanko" }, geometry: { type: "Polygon", coordinates: [] } },
+    ]);
+    act(() => move(point));
+    expect(screen.getByText("Aulanko", { exact: true })).toBeVisible();
     mockMap.queryRenderedFeatures.mockReturnValue([]);
     act(() => move(point));
     expect(onPreview).toHaveBeenLastCalledWith(null);
     expect(mockMap.getCanvas().style.cursor).toBe("");
     mockMap.fitBounds.mockClear();
+    mockMap.setPaintProperty.mockClear();
     rerender(
       <ParkBoundaryMap
-        {...props}
+        {...mapProps}
         selectedSlug="langinkoski"
         cameraRequest={{ slug: "langinkoski", sequence: 1 }}
       />,
     );
-    expect(mockMap.setPaintProperty).toHaveBeenCalledWith("park-subareas-fill", "fill-opacity", [
+    expect(mockMap.setPaintProperty).toHaveBeenCalledWith("park-subareas-outline", "line-opacity", [
       "case",
       ["==", ["get", "slug"], "langinkoski"],
-      0.32,
-      ["==", ["get", "slug"], ""],
-      0.25,
-      0.14,
+      1,
+      0.3,
     ]);
     expect(mockMap.fitBounds).toHaveBeenCalledWith(
       [
@@ -427,12 +449,14 @@ describe("ParkBoundaryMap", () => {
       ],
       expect.any(Object),
     );
-    rerender(<ParkBoundaryMap {...props} cameraRequest={{ slug: null, sequence: 2 }} />);
-    expect(mockMap.setPaintProperty).toHaveBeenLastCalledWith(
-      "park-subareas-outline",
-      "line-width",
-      ["case", ["==", ["get", "slug"], ""], 3, ["==", ["get", "slug"], ""], 2.5, 1.5],
-    );
+    mockMap.setPaintProperty.mockClear();
+    rerender(<ParkBoundaryMap {...mapProps} cameraRequest={{ slug: null, sequence: 2 }} />);
+    expect(mockMap.setPaintProperty).toHaveBeenCalledWith("park-subareas-outline", "line-opacity", [
+      "case",
+      ["==", ["get", "slug"], ""],
+      1,
+      1,
+    ]);
   });
 
   it("does not move for an undrawable trail and keeps preview separate from selection", () => {
@@ -465,6 +489,63 @@ describe("ParkBoundaryMap", () => {
     expect(layers.indexOf("park-trails-active-line")).toBeGreaterThan(
       layers.indexOf("park-trails-line"),
     );
+  });
+
+  it("fades areas and trails outside the preview and restores selection when it clears", () => {
+    const area = {
+      id: 8,
+      slug: "langinkoski",
+      name: "Langinkoski",
+      boundaryGeoJson: mockBoundaryGeoJson,
+    };
+    const props = {
+      boundaryGeoJson: mockBoundaryGeoJson,
+      boundingBox: mockBoundingBox,
+      markerPoint: mockMarkerPoint,
+      parkName: "Test Park",
+      linkedTrails: [mockLinkedTrail],
+      linkedAreas: [area],
+      visitedSlugs: [mockLinkedTrail.slug],
+    };
+    const { rerender } = render(<ParkBoundaryMap {...props} />, { wrapper: I18nProvider });
+    const paint = (layer: string, property: string) =>
+      mockMap.setPaintProperty.mock.calls.findLast(
+        ([id, name]) => id === layer && name === property,
+      )?.[2];
+    const filter = (layer: string) =>
+      mockMap.setFilter.mock.calls.findLast(([id]) => id === layer)?.[1];
+
+    rerender(
+      <ParkBoundaryMap {...props} selectedSlug={mockLinkedTrail.slug} previewSlug={area.slug} />,
+    );
+    expect(paint("park-trails-line", "line-opacity")).toBe(0.5);
+    expect(paint("park-trails-visited-line", "line-opacity")).toBe(0);
+    expect(filter("park-trails-active-line")).toEqual(["==", ["get", "slug"], ""]);
+
+    rerender(
+      <ParkBoundaryMap {...props} selectedSlug={area.slug} previewSlug={mockLinkedTrail.slug} />,
+    );
+    expect(paint("park-subareas-fill", "fill-opacity")).toEqual([
+      "case",
+      ["==", ["get", "slug"], mockLinkedTrail.slug],
+      0.32,
+      0.05,
+    ]);
+    expect(filter("park-trails-preview-line")).toEqual([
+      "==",
+      ["get", "slug"],
+      mockLinkedTrail.slug,
+    ]);
+
+    rerender(<ParkBoundaryMap {...props} selectedSlug={area.slug} />);
+    expect(paint("park-subareas-fill", "fill-opacity")).toEqual([
+      "case",
+      ["==", ["get", "slug"], area.slug],
+      0.32,
+      0.05,
+    ]);
+    expect(paint("park-trails-line", "line-opacity")).toBe(1);
+    expect(paint("park-trails-visited-line", "line-opacity")).toBe(1);
   });
 
   it("selects the closest trail on its line and the area away from the line", () => {

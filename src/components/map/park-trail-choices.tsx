@@ -57,7 +57,7 @@ export const ParkTrailChoices = ({
             <>
               {" "}
               <Check className="h-4 w-4 shrink-0" aria-hidden="true" />
-              <span className="sr-only">{t("visitedTrail")}</span>
+              <span className="sr-only">{t("visitedLocation")}</span>
             </>
           )}
         </Button>

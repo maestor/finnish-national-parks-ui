@@ -171,7 +171,9 @@ describe("VisitForm", () => {
 
     expect(screen.getByLabelText(/controlPanel.visits.form.parkLabel/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/controlPanel.visits.form.dateLabel/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/controlPanel.visits.form.routeLabel/i)).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(/controlPanel.visits.form.routeLabel/i),
+    ).toHaveAccessibleDescription("controlPanel.visits.form.routeHelp");
     expect(screen.getByLabelText(/controlPanel.visits.form.authorLabel/i)).toBeInTheDocument();
     expect(screen.getByText(/controlPanel.visits.form.noteLabel/i)).toBeInTheDocument();
     expect(

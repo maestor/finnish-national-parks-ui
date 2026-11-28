@@ -2767,6 +2767,9 @@ export interface paths {
                                 id: number;
                                 name: string;
                                 slug: string;
+                                address?: string;
+                                areaKm2?: number | null;
+                                parkUrl?: string | null;
                                 boundaryGeoJson: {
                                     features: {
                                         geometry: {
@@ -2995,6 +2998,9 @@ export interface paths {
                                 id: number;
                                 name: string;
                                 slug: string;
+                                address?: string;
+                                areaKm2?: number | null;
+                                parkUrl?: string | null;
                                 boundaryGeoJson: {
                                     features: {
                                         geometry: {

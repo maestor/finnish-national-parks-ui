@@ -1,6 +1,6 @@
 import { apiPublicFetch } from "./api";
 import type { paths } from "./api-types";
-import { type FilterableMapPark, getParkTypeDisplayName } from "./parks";
+import { type FilterableMapPark, getParkTypeDisplayName, type Visit } from "./parks";
 import { PUBLIC_VISITS_TAG } from "./public-cache";
 import { appRoutes, createPathWithSearchParams } from "./routes";
 
@@ -291,6 +291,9 @@ export const createPublicVisitsHref = ({
 
   return query ? `${appRoutes.visits}?${query}` : appRoutes.visits;
 };
+
+export const getVisitDetailAreas = (visit: Pick<Visit, "route" | "areas">) =>
+  visit.route?.trim() ? visit.areas : undefined;
 
 export const createParkVisitHref = ({
   parkSlug,

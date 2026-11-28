@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import type { Visit } from "@/lib/parks";
 
 type Area = NonNullable<Visit["areas"]>[number];
@@ -10,51 +10,49 @@ export const hasVisitTarget = (visit: Target) =>
 export const VisitTarget = ({
   visit,
   label,
+  className,
+  primaryClassName,
+}: {
+  visit: Target;
+  label?: string;
+  className?: string;
+  primaryClassName?: string;
+}) => {
+  if (!hasVisitTarget(visit)) return null;
+  const text = visit.route?.trim() || visit.areas?.map(({ name }) => name).join(", ");
+  return (
+    <span className={className}>
+      <span className="min-w-0 wrap-anywhere">
+        {label !== undefined && <span className="mr-1 font-semibold">{label}</span>}
+        <span className={primaryClassName}>{text}</span>
+      </span>
+    </span>
+  );
+};
+
+export const VisitTargetBadges = ({
+  visit,
   icon,
   className,
   primaryClassName,
   renderArea,
 }: {
   visit: Target;
-  label?: string;
-  icon?: ReactNode;
-  className?: string;
+  icon: ReactNode;
+  className: string;
   primaryClassName?: string;
   renderArea?: (area: Area) => ReactNode;
 }) => {
-  if (!hasVisitTarget(visit)) return null;
   const text = visit.route?.trim();
-  return (
-    <span className={className}>
+  const badge = (key: number | string, content: ReactNode) => (
+    <span key={key} className={className}>
       {icon}
       <span className="min-w-0 wrap-anywhere">
-        {label !== undefined && <span className="mr-1 font-semibold">{label}</span>}
-        <span className={primaryClassName}>
-          {text || <VisitAreaNames areas={visit.areas ?? []} renderArea={renderArea} />}
-        </span>
-        {!!text && !!visit.areas?.length && (
-          <span className="mt-0.5 block text-sm font-normal">
-            <VisitAreaNames areas={visit.areas} renderArea={renderArea} />
-          </span>
-        )}
+        <span className={primaryClassName}>{content}</span>
       </span>
     </span>
   );
+  return text
+    ? badge("route", text)
+    : visit.areas?.map((area) => badge(area.id, renderArea ? renderArea(area) : area.name));
 };
-
-const VisitAreaNames = ({
-  areas,
-  renderArea,
-}: {
-  areas: Area[];
-  renderArea: ((area: Area) => ReactNode) | undefined;
-}) => (
-  <span className="wrap-anywhere">
-    {areas.map((area, index) => (
-      <Fragment key={area.id}>
-        {index !== 0 && ", "}
-        <span>{renderArea ? renderArea(area) : area.name}</span>
-      </Fragment>
-    ))}
-  </span>
-);

@@ -37,8 +37,8 @@ import { AppImage } from "@/components/ui/app-image";
 import { CopyLinkButton } from "@/components/ui/copy-link-button";
 import { MarkdownContent } from "@/components/ui/markdown-content";
 import { VisitImageGallery } from "@/components/visits/visit-image-gallery";
-import { VisitTarget } from "@/components/visits/visit-target";
-import { VisitTrailSection } from "@/components/visits/visit-trail-section";
+import { VisitLocationSections } from "@/components/visits/visit-location-sections";
+import { VisitTargetBadges } from "@/components/visits/visit-target";
 import { useAuth } from "@/hooks/use-auth";
 import { apiPublicFetch } from "@/lib/api";
 import { cn } from "@/lib/cn";
@@ -73,6 +73,8 @@ interface PublicTripPageProps {
 }
 
 interface ItineraryItemTarget {
+  id: number;
+  imageCount: number;
   isExpandable: boolean;
   kind: "stop" | "visit";
 }
@@ -170,6 +172,8 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
         ? [
             createTripItineraryItemKey("visit", item.visit.id),
             {
+              id: item.visit.id,
+              imageCount: item.visit.imageCount,
               isExpandable: tripVisitHasExpandableDetails(item.visit),
               kind: "visit" as const,
             },
@@ -177,6 +181,8 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
         : [
             createTripItineraryItemKey("stop", item.stop.id),
             {
+              id: item.stop.id,
+              imageCount: item.stop.imageCount,
               isExpandable: tripStopHasExpandableDetails(item.stop),
               kind: "stop" as const,
             },
@@ -390,12 +396,13 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
     };
   }, [trip.route, trip.slug]);
 
-  const ensureVisitDetailsLoaded = (visitId: number) => {
-    void loadVisitImages(visitId);
-  };
-
-  const ensureStopDetailsLoaded = (stopId: number) => {
-    void loadStopImages(stopId);
+  const ensureItineraryImagesLoaded = (target: ItineraryItemTarget | undefined) => {
+    if (!target || target.imageCount === 0) return;
+    if (target.kind === "visit") {
+      void loadVisitImages(target.id);
+    } else {
+      void loadStopImages(target.id);
+    }
   };
 
   useEffect(() => {
@@ -455,11 +462,7 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
       return;
     }
 
-    if (itemTarget.kind === "visit") {
-      ensureVisitDetailsLoaded(Number(itemKey.slice("visit:".length)));
-    } else {
-      ensureStopDetailsLoaded(Number(itemKey.slice("stop:".length)));
-    }
+    ensureItineraryImagesLoaded(itemTarget);
 
     if (itemTarget.isExpandable === false) {
       scrollToItineraryItem(itemKey);
@@ -476,13 +479,7 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
   };
 
   const toggleItineraryItem = (itemKey: string) => {
-    const itemTarget = itineraryItemTargets.get(itemKey);
-
-    if (itemTarget?.kind === "visit") {
-      ensureVisitDetailsLoaded(Number(itemKey.slice("visit:".length)));
-    } else if (itemTarget?.kind === "stop") {
-      ensureStopDetailsLoaded(Number(itemKey.slice("stop:".length)));
-    }
+    ensureItineraryImagesLoaded(itineraryItemTargets.get(itemKey));
 
     setOpenItemKey((currentOpenItemKey) => (currentOpenItemKey === itemKey ? null : itemKey));
   };
@@ -802,7 +799,7 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
                               )}
                             </div>
                             <div className="mt-3 flex flex-wrap gap-2">
-                              <VisitTarget
+                              <VisitTargetBadges
                                 visit={item.visit}
                                 className={ROUTE_BADGE_CLASS_NAME}
                                 icon={<MapPin className="h-3.5 w-3.5" aria-hidden="true" />}
@@ -832,7 +829,7 @@ export const PublicTripPage = ({ trip, isPreview = false }: PublicTripPageProps)
                               id={getItineraryDetailsPanelId(itemKey)}
                               className={`space-y-3 border-t border-border bg-control px-5 py-4 transition-opacity duration-300  ${isOpen ? "opacity-100" : "opacity-0"}`}
                             >
-                              <VisitTrailSection trails={item.visit.trails} headingLevel={4} />
+                              <VisitLocationSections visit={item.visit} headingLevel={4} />
                               {item.visit.note !== null && (
                                 <section className="space-y-3">
                                   <h4 className={DETAIL_SECTION_HEADING_CLASS_NAME}>

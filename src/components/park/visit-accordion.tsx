@@ -9,11 +9,11 @@ import { CopyLinkButton } from "@/components/ui/copy-link-button";
 import { MarkdownContent } from "@/components/ui/markdown-content";
 import { EditVisitLink } from "@/components/visits/edit-visit-link";
 import { VisitImageGallery } from "@/components/visits/visit-image-gallery";
-import { hasVisitTarget, VisitTarget } from "@/components/visits/visit-target";
-import { VisitTrailSection } from "@/components/visits/visit-trail-section";
+import { VisitLocationSections } from "@/components/visits/visit-location-sections";
+import { hasVisitTarget, VisitTargetBadges } from "@/components/visits/visit-target";
 import { formatFinnishDate } from "@/lib/fi-date";
 import type { Visit } from "@/lib/parks";
-import { createParkVisitHref } from "@/lib/public-visits";
+import { createParkVisitHref, getVisitDetailAreas } from "@/lib/public-visits";
 import { appRoutes } from "@/lib/routes";
 import { getVisitSeason, SEASON_EMOJIS } from "@/lib/seasons";
 
@@ -51,7 +51,13 @@ const HEADER_ACTION_CLASS_NAME =
 
 const hasExpandableContent = (visit: Visit) => {
   const hasImages = (visit.images?.length ?? 0) > 0;
-  return !!visit.note || !!visit.author || hasImages || (visit.trails?.length ?? 0) > 0;
+  return (
+    !!visit.note ||
+    !!visit.author ||
+    hasImages ||
+    (getVisitDetailAreas(visit)?.length ?? 0) > 0 ||
+    (visit.trails?.length ?? 0) > 0
+  );
 };
 
 const getSeasonPresentation = (dateStr: string): SeasonPresentation => {
@@ -264,7 +270,7 @@ export const VisitAccordion = ({
                       <span className="wrap-anywhere text-balance">{trip.name}</span>
                     </Link>
                   )}
-                  <VisitTarget
+                  <VisitTargetBadges
                     visit={visit}
                     className={`${WRAPPING_BADGE_CLASS_NAME} border-emerald-200/70 text-emerald-900 dark:border-emerald-300/15 dark:text-emerald-200`}
                     icon={<MapPin className="size-3.5 shrink-0" aria-hidden="true" />}
@@ -311,8 +317,8 @@ export const VisitAccordion = ({
                   className="overflow-hidden min-h-0"
                 >
                   <div className="space-y-3 border-t border-border bg-control px-4 py-3">
-                    <VisitTrailSection
-                      trails={visit.trails}
+                    <VisitLocationSections
+                      visit={visit}
                       headingLevel={3}
                       navigation={trailNavigation}
                     />

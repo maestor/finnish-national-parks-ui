@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { ParkDetail, Visit } from "@/lib/parks";
-import { getParkTrailVisits } from "./park-trail-visits";
+import { getParkLocationVisits } from "./park-location-visits";
 
-describe("getParkTrailVisits", () => {
+describe("getParkLocationVisits", () => {
   it("keeps only current trail slugs, deduplicates IDs, and orders same-day visits deterministically", () => {
     const trails = [{ slug: "member" }] as NonNullable<ParkDetail["linkedTrails"]>;
     const link = { id: 1, slug: "member", name: "Same" };
@@ -13,7 +13,7 @@ describe("getParkTrailVisits", () => {
       { id: 4, visitedOn: "2026-01-01", trails: [{ ...link, slug: "removed" }], route: "Same" },
       { id: 5, visitedOn: "2027-01-01" },
     ] as Visit[];
-    expect([...getParkTrailVisits(trails, visits)]).toEqual([
+    expect([...getParkLocationVisits(trails, visits)]).toEqual([
       [
         "member",
         [
@@ -23,6 +23,6 @@ describe("getParkTrailVisits", () => {
         ],
       ],
     ]);
-    expect(getParkTrailVisits([], visits).size).toBe(0);
+    expect(getParkLocationVisits([], visits).size).toBe(0);
   });
 });

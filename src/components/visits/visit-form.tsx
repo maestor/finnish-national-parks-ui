@@ -369,12 +369,16 @@ export const VisitForm = ({ parks, visitToEdit, defaultParkSlug }: VisitFormProp
         <Label htmlFor="route">{t("routeLabel")}</Label>
         <input
           id="route"
+          aria-describedby="visit-route-help"
           type="text"
           value={route}
           onChange={(e) => setRoute(e.target.value)}
           placeholder={t("routePlaceholder")}
           className={`${inputClassName} h-10`}
         />
+        <p id="visit-route-help" className="text-sm text-muted-foreground">
+          {t("routeHelp")}
+        </p>
       </div>
 
       <div className="space-y-2">

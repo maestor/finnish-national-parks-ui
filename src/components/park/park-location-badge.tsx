@@ -6,11 +6,11 @@ export const ParkLocationBadge = ({
   kind,
   children,
 }: {
-  kind: "address" | "trail";
+  kind: "address" | "area" | "trail";
   children: ReactNode;
 }) => (
   <span className={`${PUBLIC_META_BADGE_CLASS_NAME} max-w-full`}>
-    {kind === "address" ? (
+    {kind !== "trail" ? (
       <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
     ) : (
       <Route className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />

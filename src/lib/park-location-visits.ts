@@ -1,14 +1,11 @@
-import type { ParkDetail, Visit } from "@/lib/parks";
+import type { Visit } from "@/lib/parks";
 
-export const getParkTrailVisits = (
-  trails: NonNullable<ParkDetail["linkedTrails"]>,
-  visits: Visit[],
-) => {
+export const getParkLocationVisits = (locations: { slug: string }[], visits: Visit[]) => {
   const result = new Map<string, { id: number; visitedOn: string }[]>();
-  for (const trail of trails) result.set(trail.slug, []);
+  for (const location of locations) result.set(location.slug, []);
   for (const visit of visits) {
-    for (const trail of visit.trails ?? []) {
-      const entries = result.get(trail.slug);
+    for (const { slug } of [...(visit.trails ?? []), ...(visit.areas ?? [])]) {
+      const entries = result.get(slug);
       if (entries && !entries.some((entry) => entry.id === visit.id)) {
         entries.push({ id: visit.id, visitedOn: visit.visitedOn });
       }
