@@ -156,7 +156,7 @@ describe("ParkList", () => {
     expect(screen.getByText("controlPanel.parks.emptyFiltered")).toBeInTheDocument();
   });
 
-  it("lists visible and hidden linked areas with their main park and retains standalone tabs", async () => {
+  it("lists linked areas with their parent and restores a hidden area on unlink", async () => {
     const user = userEvent.setup();
     const main = { id: 14, name: "Hämeenlinnan kansallinen kaupunkipuisto", slug: "hameenlinna" };
     const linkedAreas = [
@@ -165,12 +165,15 @@ describe("ParkList", () => {
     ];
     const view = render(
       <ParkList
-        parks={parks}
-        removedParks={removedParks}
+        parks={[parks[0]]}
+        removedParks={[]}
         linkedTrails={[linkedTrail]}
         linkedAreas={linkedAreas}
       />,
     );
+    expect(screen.queryByRole("link", { name: parks[1].name })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("tab", { name: "controlPanel.parks.tabs.hidden" }));
+    expect(screen.queryByRole("link", { name: removedParks[0].name })).not.toBeInTheDocument();
     await user.click(screen.getByRole("tab", { name: "controlPanel.parks.tabs.linked" }));
     expect(
       screen.getByRole("heading", { name: "controlPanel.parks.linkedTrailsSection" }),
@@ -186,7 +189,7 @@ describe("ParkList", () => {
     view.rerender(
       <SnackbarProvider>
         <ParkList
-          parks={parks}
+          parks={[parks[0]]}
           removedParks={removedParks}
           linkedTrails={[linkedTrail]}
           linkedAreas={linkedAreas.slice(0, 1)}
@@ -200,10 +203,7 @@ describe("ParkList", () => {
       "/paikka/repovesi",
     );
     await user.click(screen.getByRole("tab", { name: "controlPanel.parks.tabs.visible" }));
-    expect(screen.getByRole("link", { name: parks[1].name })).toHaveAttribute(
-      "href",
-      "/hallinta/paikat/aulanko/muokkaa",
-    );
+    expect(screen.queryByRole("link", { name: parks[1].name })).not.toBeInTheDocument();
   });
 
   it("shows an empty linked-trails tab when no hidden trails are linked", async () => {

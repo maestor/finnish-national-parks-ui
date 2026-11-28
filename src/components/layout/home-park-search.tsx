@@ -132,6 +132,7 @@ export const HomeParkSearch = () => {
               park.type.name,
               park.address,
               ...park.trailNames,
+              ...(park.areaNames ?? []),
             ].some(matches),
         )
         .map((park) => ({ kind: "park", park }));

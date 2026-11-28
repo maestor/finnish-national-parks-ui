@@ -911,6 +911,7 @@ export interface paths {
                                     /** @enum {string} */
                                     slug: "outdoor-recreation-area" | "cultural-history-area" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
                                 };
+                                areaNames?: string[];
                                 trailNames: string[];
                                 visited: boolean;
                             }[];
@@ -2724,6 +2725,12 @@ export interface paths {
                                 /** @enum {string} */
                                 slug: "outdoor-recreation-area" | "cultural-history-area" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
                             };
+                            /** @description Parent of a linked area in an admin response */
+                            mainPark?: {
+                                id: number;
+                                name: string;
+                                slug: string;
+                            };
                             description: string | null;
                             featuredImage: {
                                 id: number;
@@ -2947,6 +2954,11 @@ export interface paths {
                                 /** @enum {string} */
                                 slug: "outdoor-recreation-area" | "cultural-history-area" | "hiking-area" | "wilderness-area" | "national-park" | "nature-reserve-area" | "walking-trail" | "nature-trail" | "hiking-trail";
                             };
+                            mainPark?: {
+                                id: number;
+                                name: string;
+                                slug: string;
+                            };
                             description: string | null;
                             featuredImage: {
                                 id: number;
@@ -3054,11 +3066,6 @@ export interface paths {
                             /** Format: date-time */
                             sourceEventDate: string | null;
                             updatedAt: string;
-                            mainPark?: {
-                                id: number;
-                                name: string;
-                                slug: string;
-                            };
                         };
                     };
                 };

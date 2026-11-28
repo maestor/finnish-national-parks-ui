@@ -724,6 +724,7 @@
         "title": "Muokkaa paikan tietoja",
         "description": "Päivitä paikan julkiset perustiedot ja hallinnan kannalta olennaiset lisätiedot.",
         "viewParkPage": "Siirry paikan sivulle",
+        "viewMainParkPage": "Siirry pääkohteen sivulle",
         "parkAreas": {
           "title": "Paikkaan liitetyt alueet",
           "empty": "Paikkaan ei ole liitetty alueita.",
