@@ -1990,20 +1990,23 @@ describe("App pages", () => {
     expect(screen.getByRole("heading", { name: "Pallas-Yllästunturi" })).toBeInTheDocument();
   });
 
-  it("keeps linked areas off the public park route for signed-in admins", async () => {
+  it("opens a linked area's detail for admins while keeping it off the public route", async () => {
     vi.mocked(apiFetch).mockRejectedValue(new ApiError(404, "linked area"));
-    vi.mocked(apiAuthFetch).mockResolvedValue({
-      ...publicPark,
-      mainPark: { id: 1, name: "Petikon luontovirkistysalue", slug: "petikko" },
-    });
+    vi.mocked(apiAuthFetch)
+      .mockResolvedValueOnce({
+        ...publicPark,
+        mainPark: { id: 1, name: "Petikon luontovirkistysalue", slug: "petikko" },
+      })
+      .mockRejectedValueOnce(new ApiError(404, "linked area visits"));
+    const params = Promise.resolve({ slug: publicPark.slug });
 
-    await renderPublicRoute(
-      await AuthenticatedParkPage({ params: Promise.resolve({ slug: publicPark.slug }) }),
-    );
-
-    expect(screen.getByText("park.detailTitle")).toBeInTheDocument();
+    const publicView = await renderPublicRoute(await ParkDetailPage({ params }));
     expect(screen.queryByRole("heading", { name: publicPark.name })).not.toBeInTheDocument();
-    expect(apiAuthFetch).toHaveBeenCalledTimes(1);
+    expect(apiAuthFetch).not.toHaveBeenCalled();
+    publicView.unmount();
+
+    await renderPublicRoute(await AuthenticatedParkPage({ params }));
+    expect(screen.getByRole("heading", { name: publicPark.name })).toBeInTheDocument();
   });
 
   it("renders the public visits page with selected year and month filters", async () => {
@@ -2633,7 +2636,8 @@ describe("App pages", () => {
     expect(screen.queryByText("controlPanel.parks.edit.updatedNotice")).not.toBeInTheDocument();
   });
 
-  it("links to the parent park from the linked area editor", async () => {
+  it("links to the area's page and the parent's editor from the linked area editor", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({ featuredImage: null, hasImages: false });
     vi.mocked(apiAuthFetch)
       .mockResolvedValueOnce({
         ...publicPark,
@@ -2649,10 +2653,15 @@ describe("App pages", () => {
       }),
     );
 
+    const parentArea = screen.getByRole("region", {
+      name: "controlPanel.parks.edit.mainParkTitle",
+    });
     expect(
-      screen.getByRole("link", { name: "controlPanel.parks.edit.viewMainParkPage" }),
-    ).toHaveAttribute("href", "/paikka/petikko");
-    expect(screen.queryByRole("link", { name: "controlPanel.parks.edit.viewParkPage" })).toBeNull();
+      within(parentArea).getByRole("link", { name: "Petikon luontovirkistysalue" }),
+    ).toHaveAttribute("href", "/hallinta/paikat/petikko/muokkaa");
+    expect(
+      screen.getByRole("link", { name: "controlPanel.parks.edit.viewParkPage" }),
+    ).toHaveAttribute("href", `/paikka/${publicPark.slug}`);
   });
 
   it("shows no area links for an unlinked trail", async () => {

@@ -306,7 +306,10 @@ reject extra path segments.
 
 Cookie-bearing park requests use the dynamic `/park-access/:slug` rewrite before
 public cache lookup. Keep `AUTH_COOKIE_NAME` aligned with the API. That route uses
-authenticated `no-store` reads for hidden detail and serves a noindex view.
+authenticated `no-store` reads for hidden and linked place details and serves a noindex view.
+The linked area editor places **Siirry paikan sivulle** above the parent area panel,
+where the parent name opens its editor.
+Linked areas appear through their parent in the public catalog.
 Admin-only quick links resolve after hydration so shared public HTML contains
 only published data. Weather stays out of HTML and offline caches and refreshes
 while the page is visible and online. When a park URL requests a specific visit, the server
